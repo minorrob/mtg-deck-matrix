@@ -83,7 +83,7 @@ const TOURS=[
      title:'Only this writes to Decks',
      copy:'Nothing has been bought, owned or reserved along the way. A deck is a plan until you say otherwise.'}]},
 
-  {id:'refine',name:'Refine a deck with the simulator',icon:'🜁',
+  {id:'refine',name:'Refine a deck with Measure',icon:'🜁',
    job:'I have a list. Make it better, and tell me how much better.',
    promise:'A measured score, a report, and swaps the engine proved.',
    needs:'draft',
@@ -144,7 +144,7 @@ const TOURS=[
      copy:'Add straight to a deck’s plan, a collection group, or your wish list, without leaving the graph.'},
     {view:'discover',selectors:['.cm-pick-actions','.cm-pane-tab[data-tab=list]','#cm-card-view'],
      title:'Or send them to the table',
-     copy:'Tick cards on the graph or in the List tab and Send to the table carries them to Cards → Table, where they arrive as cards you are considering — never as copies you own. Sort them into a group there and they become planned entries.'}]},
+     copy:'Tick cards on the graph or in the List tab and Send to the table carries them to Library → Table, where they arrive as cards you are considering — never as copies you own. Sort them into a group there and they become planned entries.'}]},
 
   {id:'collect',name:'Organize what you own',icon:'🜃',
    job:'Get my collection into the app, and into groups that match how I store it.',
@@ -294,7 +294,7 @@ const ACTS={
   openCommander(){const d=$('#cm-lab-commander');if(d&&!d.hidden)d.open=true;},
   openDefinition(){const d=$('#cm-lab-definition');if(d)d.open=true;},
   openFilters(){const p=$('#cm-filter-host');if(p&&!p.children.length)$('[data-action=roster-filters]')?.click();},
-  /* Export and the other page tools moved behind the Cards page's More menu, so a step about
+  /* Export and the other page tools moved behind the Library page's More menu, so a step about
      one has to open it first (sweep, PR 6). Opening an open menu is a no-op. */
   openMore(){if(!$('[data-action=export-view]'))$('[data-action=roster-more]')?.click();raise();},
   openMenu(){

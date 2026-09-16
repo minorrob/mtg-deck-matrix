@@ -30,7 +30,7 @@ let shownLimit=45;         // how many picker rows are drawn before "Show more"
 let pickerColors=[];       // the picker's colour-identity filter
 let runner=null;
 const choices=CrankCatalog.MECHANICS.map(([label])=>label);
-const STEPS=['User Input Captured','Initial 99 Cards Chosen','Simulator & 99 Refined','Simulator loops complete','Simulation Report','Completed Deck'];
+const STEPS=['User Input Captured','Initial 99 Cards Chosen','Measure & 99 Refined','Measure loops complete','Measurement Report','Completed Deck'];
 const COLORS=[['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green']];
 const total=rows=>(rows||[]).reduce((n,r)=>n+Number(r.quantity||1),0);
 const cardOf=id=>C.card(id)||C.catalog.get(id)||null;
@@ -767,7 +767,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     await ensureReadable(slots.map(r=>cardOf(r.cardId)));
     sayStatus('Looking for cards that fit this commander…');
     const pool=candidatesFor(leaders,slots,320);
-    if(!pool.length)throw Error('Nothing in the catalog is joined to this commander on the graph, so there is no candidate to try. Open Discover once so the graph loads, then refine again.');
+    if(!pool.length)throw Error('Nothing in the catalog is joined to this commander on the graph, so there is no candidate to try. Open Explore once so the graph loads, then refine again.');
     await C.commit({type:'cards',cards:pool},{renderView:false});
     await ensureReadable(pool);
 

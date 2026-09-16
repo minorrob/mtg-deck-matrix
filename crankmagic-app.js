@@ -69,11 +69,11 @@ function head(kicker,title,description,controls=''){return `<header class="cm-pa
    wants it. head() above survives only for the recovery screen, where its three lines are
    all information. */
 const HELP={};
-/* THE NAV OPENS THE PAGE YOU ARE ON. Each top-level entry can name its sub-pages -- Cards
+/* THE NAV OPENS THE PAGE YOU ARE ON. Each top-level entry can name its sub-pages -- Library
    its tabs, Decks its decks -- through SUBNAV, a function per view returning
    [{label, hash, count?, current}]. render() draws them under the entry whose group the
    current view belongs to; a deck's Ready to add list and the How page belong to Decks, and
-   the two redirect routes to Cards. On a phone the nav is a row, and the page's own tabs do
+   the two redirect routes to Library. On a phone the nav is a row, and the page's own tabs do
    this job, so the list is hidden there by the stylesheet. */
 const SUBNAV={},NAV_GROUP={how:'decks',pull:'decks',change:'decks',collection:'cards',shop:'cards'};
 function subnav(group){document.querySelectorAll('.cm-subnav').forEach(el=>el.remove());const items=SUBNAV[group]?.()||[],host=document.querySelector(`[data-nav="${group}"]`);if(!items.length||!host)return;
@@ -295,17 +295,17 @@ function standing(id){
   for(const r of rows){if(r.kind==='need')add(r.deckId,'To buy','buy',r.quantity);else if(r.kind==='lot'){if(r.placement==='Physical deck')add(r.deckId,'Physical deck','inbox',r.quantity);else if(r.placement==='Substitute')add(r.standInDeckId,'Substitute','standin',r.quantity);else if(r.placement==='Reserved')add(r.deckId,r.source==='ordered'?'Ordered':'Reserved',r.source==='ordered'?'ordered':'reserved',r.quantity);}}
   for(const x of draft)add(x.deck.id,'Draft list','draft',x.quantity);
   const open=`data-action="library-card" data-card="${esc(id)}"`;
-  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<button type="button" class="cm-pill ${esc(pillKind(l))}" ${open} title="Open Cards filtered to this card">${esc(l)} <strong>${n}</strong></button>`).join('')||'<span class="cm-muted">none</span>';
-  const assignment=[...decks.values()].map(x=>`<button type="button" class="cm-pill ${esc(x.kind)}" ${open} title="${esc(x.label)} · ${x.quantity} — open Cards filtered to this card">${esc(x.name)}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`).concat(planned.map(x=>`<button type="button" class="cm-pill draft" ${open} title="Planned in the group ${esc(x.group.name)}">${esc(x.group.name)} · planned${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`)).join('');
+  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<button type="button" class="cm-pill ${esc(pillKind(l))}" ${open} title="Open Library filtered to this card">${esc(l)} <strong>${n}</strong></button>`).join('')||'<span class="cm-muted">none</span>';
+  const assignment=[...decks.values()].map(x=>`<button type="button" class="cm-pill ${esc(x.kind)}" ${open} title="${esc(x.label)} · ${x.quantity} — open Library filtered to this card">${esc(x.name)}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`).concat(planned.map(x=>`<button type="button" class="cm-pill draft" ${open} title="Planned in the group ${esc(x.group.name)}">${esc(x.group.name)} · planned${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`)).join('');
   return `<div class="cm-standing"><p><span class="cm-standing-label">Status</span>${chips(status)}</p><p><span class="cm-standing-label">Assignment</span>${assignment||'<span class="cm-muted">no deck</span>'}</p></div>`;
 }
-/* THE TERMS THE GRAPH READS OFF THIS CARD, grouped as the Discover filters name them. They
+/* THE TERMS THE GRAPH READS OFF THIS CARD, grouped as the Explore filters name them. They
    were the bulk of the graph's card pop-up; here they sit under the rules text they come
    from, and Explore connections opens the card on the graph where each one is a filter. */
 const TERM_GROUPS=[['roles','Role'],['mechanics','Mechanic'],['tribes','Tribe'],['causes','Causes'],['triggers','Triggers on'],['produces','Produces'],['requires','Requires'],['multiplies','Multiplies'],['grants','Grants'],['extends','Extends'],['wants','Wants tribe'],['makes','Makes tribe'],['wantsStat','Wants stat'],['offersStat','Offers stat']];
 function graphTerms(c){const G=globalThis.CrankGraph;if(!G||typeof G.termsOf!=='function')return '';const t=G.termsOf(c);if(!t)return '';const p=globalThis.MtgCardClassify&&MtgCardClassify.purposeOf?MtgCardClassify.purposeOf(c):null;
   const rows=TERM_GROUPS.filter(([k])=>(t[k]||[]).length).map(([k,label])=>`<div class="cm-inspector-terms-row"><span>${esc(label)}</span>${t[k].map(v=>`<span class="cm-chip${p&&p.key===k&&p.value===v?' cm-chip-primary':''}"${p&&p.key===k&&p.value===v?` title="Primary Purpose — ${esc(p.label)}: ${esc(p.why)}"`:''}>${esc(v)}</span>`).join('')}</div>`);
-  return rows.length?`<div class="cm-inspector-terms"><h3>Terms the graph reads</h3>${rows.join('')}<p class="cm-muted">Each is a filter on Discover; Explore connections opens this card there.</p></div>`:'';}
+  return rows.length?`<div class="cm-inspector-terms"><h3>Terms the graph reads</h3>${rows.join('')}<p class="cm-muted">Each is a filter on Explore; Explore connections opens this card there.</p></div>`:'';}
 async function inspector(id){let c=cardOf(id);if(!c)throw Error('Card not found.');c=await catalog.details(c);modal(c.name,`<div class="cm-inspector"><div class="cm-inspector-art">${c.image?`<img src="${esc(c.image)}" alt="${esc(c.name)}" loading="lazy">`:'<div class="cm-note">Card image unavailable offline</div>'}${priceBlock(c)}</div><div><p>${mana(c.manaCost)} ${c.power!==null?esc(c.power+'/'+c.toughness):''}</p><p>${glossaryView.html(c.typeLine)}</p><div class="cm-oracle">${glossaryView.html(c.oracleText||'Full rules text has not been cached for this card.')}</div><p class="cm-terms-row">${termsToggle({card:id})}</p>${graphTerms(c)}${c.commander?`<div class="cm-plays-as"><h3>Plays as</h3><ul>${playsAs(c).map(x=>`<li>${x}</li>`).join('')||'<li>Rules text is needed to say; fetch it with Verify or open the card link.</li>'}</ul></div>`:''}<p class="cm-muted">${esc(c.source)} · ${c.verified?'Verified catalog identity':'Unverified identity'}</p></div></div><h3>Your copies and commitments</h3><div>${standing(id)}</div><div class="cm-actions">${button('Add copies','add-card',{card:id},true)}${button('View library records','library-card',{card:id})}${button('Explore connections','discover-card',{card:id})}${state.cards[id]&&!state.cards[id].verified?button('Verify supplemental identity','verify-identity',{card:id}):''}</div>`);}
 /* THE JOIN. A library card is a reference (schema 3); its facts live on the Card record at the
    catalog. Read a card here and nowhere else: the record when the catalog has it, the library's
@@ -314,7 +314,7 @@ const cardOf=id=>(catalog&&catalog.get(id))||state.cards[id]||null;
 const cardsOf=()=>Object.keys(state.cards).map(cardOf).filter(Boolean);
 const C={M,E,$,esc,uid,money,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;}};
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
-/* A HELP BODY MAY BE A FUNCTION. The Cards help reads its definitions from the glossary as
+/* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
 actions['page-help']=el=>{const h=HELP[el.dataset.help];if(h)modal(h.title,typeof h.body==='function'?h.body():h.body);};
 actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
