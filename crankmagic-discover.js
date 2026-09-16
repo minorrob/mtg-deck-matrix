@@ -130,7 +130,57 @@
     C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labelled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
     C.main.innerHTML = C.pageHead('Discover') + '<p role="status">Loading graph metadata…</p>';
 
-    const loaded = await C.catalog.loadGraph();
+    /* SCOPED LOADING: when there's a seed (deck/commander/card), load a neighborhood first
+       and defer the full corpus. Bootstrap the UI without waiting on ~37MB. */
+    const Scoped = globalThis.CrankGraphScoped;
+    const hasSeed = Scoped && Scoped.shouldUseScoped(params);
+    const seedInfo = hasSeed ? Scoped.getSeedFromParams(params, C.catalog) : null;
+    
+    let loaded = null;
+    let fullGraphPending = false;
+    
+    if (hasSeed && seedInfo) {
+      const status = C.main.querySelector('[role=status]');
+      if (status) status.textContent = 'Loading neighborhood for ' + (seedInfo.name || 'selected seed') + '…';
+      
+      try {
+        const seedCard = seedInfo.name ? C.catalog.exact(seedInfo.name) : null;
+        const graphUrl = C.assets && C.assets.graph ? C.assets.graph : 'data/graph.json?v=18';
+        
+        const scoped = await Scoped.loadScoped({
+          seedCard,
+          seedName: seedInfo.name,
+          depth: 3,
+          breadth: 30,
+          catalog: C.catalog,
+          graphUrl,
+          onProgress: (info) => {
+            if (status && info.phase === 'loading') {
+              status.textContent = `Loading graph… ${Math.round(info.done / info.total * 100)}%`;
+            }
+          }
+        });
+        
+        loaded = scoped.fullGraph || {cards: scoped.cards, played: scoped.played, scoped: true};
+        
+        if (scoped.scoped && !scoped.fullGraph) {
+          fullGraphPending = true;
+          setTimeout(() => {
+            Scoped.loadFull({graphUrl, catalog: C.catalog}).then(full => {
+              if (C.route().view === 'discover') {
+                console.log('Full graph loaded in background');
+              }
+            }).catch(err => console.warn('Background graph load failed:', err));
+          }, 100);
+        }
+      } catch (error) {
+        console.warn('Scoped load failed, falling back to full:', error);
+        loaded = await C.catalog.loadGraph();
+      }
+    } else {
+      loaded = await C.catalog.loadGraph();
+    }
+    
     if (C.route().view !== 'discover') return;
     /* The pairs are the weight of the graph and this is the one page that draws them, so
        they load here, once, with a line that says so -- not at install for every visitor. */
