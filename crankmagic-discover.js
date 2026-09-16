@@ -357,9 +357,42 @@
       for (const [group, key] of Object.entries(TERM_FACET)) for (const value of t[group] || []) chips.push(termChip(key, value, p));
       return chips.length ? `<h4>Its own terms</h4><div class="cm-term-chips">${chips.join('')}</div>` : '';
     }
+    /* WHICH CARD THE POP-UP IS ABOUT, so a second tap on the same node can close it (Rob,
+       16 September). The pop-up opens on a tap in Inspect; tapping that same card again is the
+       reader putting it down, not asking for it twice. Anywhere else still opens the new card. */
+    let popId = '';
+    /* WHAT YOU HOLD OF THIS CARD, AND WHO CLAIMS IT (Rob, 16 September). The graph could tell you
+       everything about a card except the two things you actually decide on: how many you have, and
+       whether any deck is waiting for it. A deck counts as claiming the card when it has a copy
+       reserved OR when the card is in its committed hundred and the copy has not arrived yet --
+       the second is the case that matters, because that is a deck still owed the card. No deck at
+       all says so in words rather than leaving a blank. */
+    function holdings(cardId) {
+      const lots = (C.state.lots || []).filter((l) => l.cardId === cardId);
+      const sum = (f) => lots.filter(f).reduce((n, l) => n + (Number(l.quantity) || 0), 0);
+      const decks = new Map();
+      for (const l of lots) if (l.allocation && l.allocation.deckId) decks.set(l.allocation.deckId, true);
+      for (const d of C.state.decks || []) {
+        if (d.archived || decks.has(d.id)) continue;
+        if ((d.slots || []).some((r) => r.cardId === cardId && r.committed)) decks.set(d.id, true);
+      }
+      const named = [...decks.keys()].map((id) => (C.state.decks || []).find((d) => d.id === id)).filter(Boolean).map((d) => d.name);
+      return {owned: sum((l) => l.source === 'owned'), ordered: sum((l) => l.source === 'ordered'),
+        watching: sum((l) => l.source === 'watching'), reserved: sum((l) => !!l.allocation), decks: named};
+    }
+    function holdingsHTML(cardId) {
+      const h = holdings(cardId);
+      const counts = [`${h.owned} owned`, `${h.reserved} reserved`];
+      if (h.ordered) counts.push(`${h.ordered} ordered`);
+      if (h.watching) counts.push(`${h.watching} watched`);
+      return `<p class="cm-holdings"><span class="cm-holdings-counts">${counts.join(' · ')}</span>`
+        + `<span class="cm-holdings-decks">${h.decks.length ? e(h.decks.join(' · ')) : '<em>Not assigned</em>'}</span></p>`;
+    }
     function showPop(hit) {
       const pop = $('#cm-graph-pop'); if (!pop) return;
       if (!hit) { hidePop(); return; }
+      if (hit.kind === 'node' && popId === hit.card.id && !pop.hidden) { hidePop(); return; }
+      popId = hit.kind === 'node' ? hit.card.id : '';
       const focus = graph?.current();
       if (hit.kind === 'node') {
         /* THE CARD POP-UP IS THE CARD AND ITS CONNECTION, NOTHING ELSE. The picture at large
@@ -374,10 +407,11 @@
         /* The picture at the inspector's size, the three buttons stacked on its left, the mana
            pips on the type line, and a narrower column for the rest (Rob, 14 September). */
         pop.innerHTML = `<header><strong>${e(hit.card.name)}</strong><button type="button" class="cm-pop-close" data-action="graph-pop-close" aria-label="Close">×</button></header>
-          <div class="cm-pop-body"><div class="cm-pop-side">${b('Focus here', 'graph-card', {id: hit.card.id}, true, {cls: 'compact'})}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)}, false, {cls: 'compact'})}<button type="button" class="v-button compact${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div>
+          <div class="cm-pop-body"><div class="cm-pop-side">${b('Focus here', 'graph-card', {id: hit.card.id}, true, {cls: 'compact'})}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)}, false, {cls: 'compact'})}<button type="button" class="v-button compact${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button>${buyMenu(hit.card, rec)}</div>
           <div class="cm-pop-art">${image ? `<img src="${e(image)}" alt="" loading="lazy">` : `<div class="cm-pop-noart" aria-hidden="true">${e(initials)}</div>`}</div><div class="cm-pop-meta">
           <p class="cm-pop-type">${rec.manaCost ? C.mana(rec.manaCost) : ''}<span class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</span></p>
           ${facts.length ? `<p class="cm-pop-facts">${facts.join(' · ')}</p>` : ''}
+          ${holdingsHTML(CrankCatalog.key(hit.card.name))}
           ${p ? `<div class="cm-term-chips">${termChip(p.key, p.value, p)}</div>` : ''}
           ${focus && focus.id !== hit.card.id ? `<h4>Joined to ${e(focus.name)} by</h4>${relationHTML(hit.relation, hit.card, focus)}` : '<p class="cm-muted">This is the focus. Tap another card to read how it joins.</p>'}
           </div></div>`;
@@ -411,7 +445,7 @@
       if (top + pop.offsetHeight > canvas.offsetTop + canvas.clientHeight - 6) top = Math.max(canvas.offsetTop + 6, canvas.offsetTop + canvas.clientHeight - pop.offsetHeight - 6);
       pop.style.left = left + 'px'; pop.style.top = top + 'px';
     }
-    function hidePop() { const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
+    function hidePop() { popId = ''; const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
     function modeHint(m) { return m === 'inspect' ? 'Tap a card for its terms and its link to the focus; tap a line for why two cards are joined.' : m === 'select' ? 'Tap cards to tick them, then add them to a group from the Card View.' : 'Tap a card to make it the focus; the card you came from stays at the left.'; }
     /* Escape is the way out of presentation mode as well as out of a pop-up, in that order:
        the mode hides the nav rail, so it needs an exit that does not depend on finding the
@@ -884,6 +918,7 @@
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
             <!-- ADD AND/OR BUY SITS WITH THE PRICE AND THE BRACKET, the two things it acts
                  on, rather than in a stack under the art with Inspect, which acts on the art. -->
+            ${holdingsHTML(CrankCatalog.key(c.name))}
             <div class="cm-card-view-buy">${buyMenu(c, rec)}</div>
           </div>
           <!-- INSPECT BELONGS TO THE ART, so it sits directly beneath it in the art's own
