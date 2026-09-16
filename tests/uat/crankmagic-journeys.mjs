@@ -595,6 +595,30 @@ try{
   await visitor.close();
   await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
 
+ /* A DECK FROM A LIST YOU HAVE NOT IMPORTED YET (Rob, 16 September). "The cards in a collection group"
+    with "Create a new collection group" was the one combination Start a new deck answered with a refusal:
+    a new group is empty, so it had nothing to start from. Continue now opens the import, and the rows it
+    reads land in the new group and come straight back as the deck's list -- no second trip through Cards. */
+ {await nav('Decks');await click('Create a deck');await page.getByRole('heading',{name:'Start a new deck',exact:true}).waitFor();
+  ok(/commander picker/.test(await page.locator('#cm-new-deck-road').innerText()),'the line under the selects names the road Continue takes');
+  {const one=await page.getByLabel('Start from').boundingBox(),two=await page.getByRole('dialog').getByLabel('Collection group').boundingBox();
+   eq(Math.round(one.width),Math.round(two.width),'the two selects are one width');eq(Math.round(one.x),Math.round(two.x),'and one left edge');}
+  await page.getByLabel('Start from').selectOption('group');await page.waitForTimeout(120);
+  ok(/paste a list/.test(await page.locator('#cm-new-deck-road').innerText()),'and it changes to the import when the group is a new one');
+  await click('Continue');await page.getByRole('heading',{name:'Import cards or a deck list',exact:true}).waitFor({timeout:30000});
+  eq(await page.getByLabel('New group name').inputValue(),'New deck list','the import opens named for what it is for');
+  await page.getByLabel('Or paste a list / CSV').fill('1 Krenko, Mob Boss\n1 Sol Ring\n1 Lightning Bolt');
+  await click('Parse input');await page.getByRole('heading',{name:'Review import',exact:true}).waitFor({timeout:60000});
+  await click('Import 3 reviewed rows');
+  await page.getByRole('heading',{name:'New deck from New deck list',exact:true}).waitFor({timeout:30000});
+  await page.locator('#cm-dialog [name=name]').fill('Journey list deck');await click('Create draft');await waitDialog();
+  {const s=await state(),g=s.groups.find(x=>x.name==='New deck list'),d=s.decks.find(x=>x.name==='Journey list deck');
+   ok(!!g,'the import made the group');ok(!!d,'and the deck came back from it without a trip through Cards');
+   eq(d.groupId,g.id,'the deck is attached to the group the list landed in');
+   eq(d.slots.filter(r=>r.purpose==='main').length,3,'all three rows came across as the deck’s list');}
+  /* Leave the route where the next walk expects it: a deck page belongs to a deck this library has. */
+  await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
+
  /* AN OLDER LIBRARY AFTER AN UPGRADE (schema 2 still in IndexedDB): the app read it migrated but saved against the
     raw copy, so every save failed with "Unsupported collection schema." — the toast Rob saw at boot and on a strategy
     tick. Now the first save migrates the stored copy and succeeds. */

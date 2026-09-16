@@ -303,18 +303,40 @@ function groupDeck(groupId){
    without touching either. The group select had no such default: it opened on whichever
    group happened to sort first and read as a demand to pick one. Its first option is now
    the thing that already happens when you say nothing. */
+/* THE FOUR ROADS, AND THE ONE THAT USED TO BE A WALL (Rob, 16 September). Two selects make
+   four combinations, and one of them -- the cards in a collection group, group not made yet --
+   answered Continue with a refusal: a new group is empty, and an empty group has no cards to
+   start a deck from. True, and useless. That combination now opens the app's own import, where
+   you upload a file or paste a list; the cards land in the new group and the deck is built from
+   them without a second trip. The line under the selects names the road each pair takes before
+   you press anything, so no combination has to be tried to find out what it does. */
 actions['new-deck']=()=>{
   const sources=filledGroups();
   if(!sources.length)return commanderDeck();
-  return form('Start a new deck',
-    s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')
+  const road=(how,groupId)=>{
+    const g=groupId?C.state.groups.find(x=>x.id===groupId):null;
+    if(how!=='group')return g?`Continue opens the commander picker. The deck is filed in ${g.name} and draws from it.`
+      :'Continue opens the commander picker. A collection group is made with the deck and named after it.';
+    if(!g)return 'Continue opens the import: upload a CSV, TSV, TXT or XLSX file, or paste a list. The cards land in a new collection group and the deck is built from them.';
+    const rows=groupRows(g),copies=rows.reduce((n,r)=>n+r.quantity,0);
+    return rows.length?`Continue brings ${copies} card${copies===1?'':'s'} across from ${g.name} as the deck’s list, and the deck stays attached to that group.`
+      :`${g.name} holds no cards yet. Choose a group that does, ask for a new one and import a list into it, or start from a commander.`;
+  };
+  const dialog=form('Start a new deck',
+    `<div class="cm-full">${s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')}</div>`
     +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
-    +note('Leave the group alone and one is made with the deck, named after it. Choose an existing group and the deck lives there instead — and if you are also starting from that group, its cards come across as the deck’s list.'),
+    +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
     v=>{
       if(v.how!=='group')return commanderDeck(v.groupId||undefined);
-      if(!v.groupId)throw Error('Choose which collection group to start from — a new empty group has no cards to start from. Or start from a commander instead.');
-      return groupDeck(v.groupId);
+      if(v.groupId)return groupDeck(v.groupId);
+      if(!C.importList)throw Error('The import module is not loaded, so a list cannot be read in. Start from a commander, or reload the page.');
+      return C.importList({name:'New deck list',after:gid=>groupDeck(gid)});
     },'Continue');
+  dialog.addEventListener('change',()=>{
+    const v=Object.fromEntries(new FormData(dialog)),box=dialog.querySelector('#cm-new-deck-road');
+    if(box)box.innerHTML=note(road(v.how,v.groupId));
+  });
+  return dialog;
 };
 actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.deckCap:225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
        ever over anything. The form shows the standing figures as placeholders and writes them

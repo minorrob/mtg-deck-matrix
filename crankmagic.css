@@ -38,6 +38,13 @@
 #matrix-v2 .cm-swap-card .v-button{min-height:32px;padding:5px 10px;font-size:12px;margin-top:auto}
 .cm-swap-price{margin-left:auto;color:#cfe3f7;font-variant-numeric:tabular-nums}
 @media (max-width:640px){.cm-swap-compare{grid-template-columns:1fr;gap:8px}.cm-swap-arrow{transform:rotate(90deg);justify-self:center}}
+/* THE SLOT PICKER ABOVE THE COMPARE (Discover's Swap for...). The dialog's grid is two
+   columns, so a bare select and a note landed beside each other at different heights and
+   different widths -- the sloppiness Rob called out. The picker is one full-width row with
+   its label on the left, its select flush to the compare block's right edge beneath it, and
+   both stacked at phone width. */
+#matrix-v2 .cm-swap-pick>label{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px}
+@media (max-width:640px){#matrix-v2 .cm-swap-pick>label{grid-template-columns:1fr;gap:7px}}
 
 /* Sits beside User Functions and reads as its equal in weight, not its heading. */
 #matrix-v2 .cm-user-menu>.v-button.cm-feedback{min-height:34px;padding:6px 11px;font-size:12px}
