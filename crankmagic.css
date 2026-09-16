@@ -1090,6 +1090,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-list-pop-row .cm-actions .v-button,.cm-list-pop-row .cm-actions .v-button.is-on{min-height:32px;padding:0 11px;font-size:12px}
 .cm-list-pop-row .cm-actions .v-button{background:#34485f;border-color:#5b7196;color:#f6faff}
 .cm-list-pop-row .cm-actions .v-button.primary{background:#8cc7ff;color:#081320;border-color:#8cc7ff}
+/* ADVANCED TOOLS DISCLOSURE (Explore B): progressive disclosure control for Filters, Trace, Lens */
+.cm-advanced-tools-disclosure{margin:6px 0 8px}
+.cm-advanced-tools-toggle{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid #3b5271;border-radius:8px;background:#1a2537;color:#c9dcf2;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.cm-advanced-tools-toggle:hover{background:#253a57;border-color:#4d6a99;color:#e6f0ff}
+.cm-advanced-tools-panel{transition:opacity .2s}
+.cm-advanced-tools-panel[hidden]{display:none}
 /* THE DISCOVER FILTER BAR: facets grouped by what they ask about, each a button to a dialog; a
    single-value facet is the toggle itself; the badge is the number of picks in that facet. */
 .cm-facet-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:6px 0 10px;padding:10px 14px;background:#171d2a;border:1px solid #344258;border-radius:10px}
