@@ -823,9 +823,27 @@
     /* The option dialog the lens and the trace share: a main slot to replace, the role's or the
        strategy's slots first, and the uncommitted `option` command on submit. */
     function optionDialog(deck, card, why, firstSlots = new Set()) {
-      const slots = deck.slots.filter((x) => x.purpose === 'main').map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
-      form(`Swap for ${card.name}`, s('Replaces (a main-deck slot)', 'slot', slots, slots[0] && slots[0][0]) + note(`${card.name} is linked to the slot as an upgrade option, uncommitted. ${deck.name}'s hundred does not change until you accept the option on the deck page.`),
-        async (v) => { await C.commit(CrankLens.swapCommand(deck, v.slot, card, why), {renderView: false}); C.notice(`${card.name} linked as an upgrade option in ${deck.name}.`); if (paneTab === 'trace') runTrace(false); else drawList(); });
+      const mains = deck.slots.filter((x) => x.purpose === 'main');
+      const slots = mains.map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
+      const firstSlot = slots[0] && slots[0][0];
+      /* THE TWO CARDS, THE WAY PROMOTE SHOWS THEM (Rob, 16 September). The deck page's Promote
+         dialog puts the outgoing and incoming cards side by side before the swap is agreed to;
+         a swap decided from a name in a dropdown is decided blind. The difference here is that
+         the outgoing card is the reader's to choose, so the panel is redrawn on every change of
+         the select rather than written once. */
+      const panel = (slotId) => {
+        const out = C.card(mains.find((x) => x.id === slotId)?.cardId);
+        return (out ? C.compareCards(out, card, {outLabel: 'Out of the deck', intoLabel: 'Into the deck'}) : '')
+          + note(`${card.name} is linked to ${out ? out.name + '’s' : 'the'} slot as an upgrade option, uncommitted. ${deck.name}’s hundred does not change until you accept the option on the deck page.`);
+      };
+      const f = form(`Swap for ${card.name}`,
+        `<div class="cm-full cm-swap-pick">${s('Replaces (a main-deck slot)', 'slot', slots, firstSlot)}</div><div class="cm-full" id="cm-swap-preview">${panel(firstSlot)}</div>`,
+        async (v) => { await C.commit(CrankLens.swapCommand(deck, v.slot, card, why), {renderView: false}); C.notice(`${card.name} linked as an upgrade option in ${deck.name}.`); if (paneTab === 'trace') runTrace(false); else drawList(); },
+        'Link as an option');
+      f.addEventListener('change', (ev) => {
+        if (!ev.target.matches('select[name=slot]')) return;
+        const box = f.querySelector('#cm-swap-preview'); if (box) box.innerHTML = panel(ev.target.value);
+      });
     }
     actions['lens-swap'] = (el) => {
       const r = lensResult(); if (!r) return;
