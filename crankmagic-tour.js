@@ -279,7 +279,7 @@ const MISSING={
     have:'Nothing yet — and that is the honest answer. Run the initial draft here and take this tour again; every step after this one describes a real list, and there is not one to describe.'},
   deck:{step:{view:'decks',selectors:['[data-action=open-lab]','[data-action=new-deck]','[data-action=import-list]'],
       title:'No decks yet',
-      copy:'This tour reads a deck you have already built, and your library is empty. Start one in Build, or import a list you already have.'},
+      copy:'This tour reads a deck you have already built, and your library is empty. Start one with New deck, or import a list you already have.'},
     have:'Nothing yet — and that is the honest answer. Build or import a deck and take this tour again; the rest of it reads a real deck’s report, and there is not one to read.'}};
 
 const has={
