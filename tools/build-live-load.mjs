@@ -137,7 +137,20 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
       if(!targetOf[deck].has(Live.fold(replaces))){notes.push(`Upgrade Path: ${name} (${deck}) comes in for "${replaces||'(none)'}", which is not in the ${deck} target; left out.`);continue;}
       if(targetOf[deck].has(Live.fold(name))){notes.push(`Upgrade Path: ${name} is already in the ${deck} target; left out.`);continue;}
       const key=deck+'|'+Live.fold(name);if(dupe.has(key))continue;dupe.add(key);
-      upgrades.push({deck,card:name,replaces,tier,price:cash(r[4]),why:typeof r[8]==='string'?r[8].trim():''});
+      upgrades.push({deck,card:name,replaces,tier,price:cash(r[4]),origin:'workbook',why:typeof r[8]==='string'?r[8].trim():''});
+    }
+    /* SWAPS OUT OF THE BENCH SURVIVE A REBUILD (Rob, 16 September). The Upgrade Path sheet is the
+       workbook's list of cards to BUY; a swap that costs nothing because the card is already on
+       the bench has no row there and would be wiped every time this runs. Rows marked
+       origin:'owned-swap' are carried from the committed file and re-checked against the rebuilt
+       targets, so one that has since been bought, cut or superseded drops out on its own. */
+    for(const u of (prior?.upgrades||[]).filter(u=>u&&u.origin==='owned-swap')){
+      const deck=String(u.deck||''),name=canon(String(u.card||'').trim()),replaces=u.replaces?canon(String(u.replaces).trim()):'';
+      if(!DECKS.includes(deck)||!name)continue;
+      if(!targetOf[deck].has(Live.fold(replaces))){notes.push(`Owned swap: ${name} (${deck}) comes in for "${replaces||'(none)'}", which is no longer in the ${deck} target; dropped.`);continue;}
+      if(targetOf[deck].has(Live.fold(name))){notes.push(`Owned swap: ${name} is already in the ${deck} target; dropped.`);continue;}
+      const key=deck+'|'+Live.fold(name);if(dupe.has(key))continue;dupe.add(key);
+      upgrades.push({deck,card:name,replaces,tier:Number(u.tier)||3,price:cash(u.price)??0,origin:'owned-swap',why:String(u.why||'').trim()});
     }
   }else notes.push('No Upgrade Path sheet; the committed upgrades were kept.');
   const upgradeKeys=new Set(upgrades.map(u=>u.deck+'|'+Live.fold(u.card)));

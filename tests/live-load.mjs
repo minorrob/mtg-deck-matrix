@@ -75,7 +75,10 @@ eq(real.state.decks.length,6);ok(real.state.decks.every(d=>d.status==='final'));
 ok(real.state.decks.every(d=>d.definition.mechanics.length>=2));
 {const d3=real.state.decks.find(d=>/^D3/.test(d.name)),main=d3.slots.filter(r=>r.purpose==='main').map(r=>real.cardOf(r.cardId));ok(C.deckMechanics(main,real.cardOf(d3.commanders[0])).some(m=>/Proliferate|Counters/.test(m)));}
 eq(real.issues.length,0);
-ok(real.summary.owned>700&&real.summary.toBuy>0&&real.summary.upgrades===67);
+/* 71 upgrades: the Upgrade Path sheet's 67, plus the four swaps out of the bench that carry
+   across a rebuild (origin:'owned-swap'). Those four cost nothing because Rob already owns the
+   card, so the workbook — which is a list of things to buy — has no row for them. */
+ok(real.summary.owned>700&&real.summary.toBuy>0&&real.summary.upgrades===71);
 ok(real.summary.options>=1&&real.summary.planned>=1);ok(real.state.decks.every(d=>d.groupId&&real.state.groups.some(g=>g.id===d.groupId)));
 M.validate(real.state);checks++;
 // and the committed saved state is that build, in the app's own backup format: it restores

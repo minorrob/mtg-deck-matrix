@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 6,
- "savedAt": "2026-09-14T03:18:19Z",
+ "savedAt": "2026-09-16T06:04:07Z",
  "workbook": "Treys_MtG_Master_v13.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
  "decks": [
@@ -3966,7 +3966,15 @@
     1
    ],
    [
+    "Ancestral Anger",
+    1
+   ],
+   [
     "Ao, the Dawn Sky",
+    1
+   ],
+   [
+    "Appeal to Eirdu",
     1
    ],
    [
@@ -3990,6 +3998,10 @@
     1
    ],
    [
+    "Ascendant Dustspeaker",
+    1
+   ],
+   [
     "Ashling, Rekindled // Ashling, Rimebound",
     1
    ],
@@ -3999,7 +4011,7 @@
    ],
    [
     "Attercop",
-    2
+    3
    ],
    [
     "Auntie's Sentence",
@@ -4026,6 +4038,10 @@
     1
    ],
    [
+    "Biblioplex Tomekeeper",
+    1
+   ],
+   [
     "Bilbo's Deadly Slice",
     1
    ],
@@ -4035,6 +4051,10 @@
    ],
    [
     "Blasphemous Act",
+    1
+   ],
+   [
+    "Blazing Firesinger // Seething Song",
     1
    ],
    [
@@ -4050,11 +4070,23 @@
     1
    ],
    [
+    "Bogslither's Embrace",
+    1
+   ],
+   [
+    "Boldwyr Aggressor",
+    1
+   ],
+   [
     "Bolrac-Clan Crusher",
     1
    ],
    [
     "Bombur, Gentle Dreamer",
+    1
+   ],
+   [
+    "Borrowed Knowledge",
     1
    ],
    [
@@ -4094,7 +4126,19 @@
     2
    ],
    [
+    "Charging Strifeknight",
+    1
+   ],
+   [
+    "Chelonian Tackle",
+    1
+   ],
+   [
     "Chitinous Graspling",
+    1
+   ],
+   [
+    "Chomping Changeling",
     1
    ],
    [
@@ -4134,6 +4178,10 @@
     1
    ],
    [
+    "Crude Bent Blade",
+    1
+   ],
+   [
     "Curious Farm Animals",
     1
    ],
@@ -4147,7 +4195,7 @@
    ],
    [
     "Dawn-Blessed Pennant",
-    1
+    2
    ],
    [
     "Dawn's Light Archer",
@@ -4159,6 +4207,10 @@
    ],
    [
     "Day of Judgment",
+    1
+   ],
+   [
+    "Daydream",
     1
    ],
    [
@@ -4194,6 +4246,10 @@
     2
    ],
    [
+    "Dwarven Mattock",
+    1
+   ],
+   [
     "Dwarven Mauler",
     1
    ],
@@ -4203,15 +4259,23 @@
    ],
    [
     "Dwarven Shortsword",
-    2
+    3
    ],
    [
     "Eagle of the Great Shelf",
     1
    ],
    [
+    "Eclipsed Realms",
+    1
+   ],
+   [
     "Eldrazi Ravager",
     2
+   ],
+   [
+    "Elvenking's Harper",
+    1
    ],
    [
     "Enchanted River's Grasp",
@@ -4238,6 +4302,10 @@
     1
    ],
    [
+    "Expressive Firedancer",
+    1
+   ],
+   [
     "Faerie Duelist",
     1
    ],
@@ -4258,15 +4326,31 @@
     1
    ],
    [
+    "Fields of Strife",
+    1
+   ],
+   [
     "Fire Nation Cadets",
     1
    ],
    [
-    "Flaring Cinder",
+    "Flame-Chain Mauler",
     1
    ],
    [
+    "Flamekin Gildweaver",
+    1
+   ],
+   [
+    "Flaring Cinder",
+    2
+   ],
+   [
     "Foggy Swamp Vinebender",
+    1
+   ],
+   [
+    "Follow the Lumarets",
     1
    ],
    [
@@ -4278,6 +4362,10 @@
     55
    ],
    [
+    "Fractal Anomaly",
+    1
+   ],
+   [
     "Front Porch Sentries",
     4
    ],
@@ -4287,6 +4375,10 @@
    ],
    [
     "Fynn, the Fangbearer",
+    1
+   ],
+   [
+    "Gandalf, Goblins' Bane // Flameshape",
     1
    ],
    [
@@ -4310,12 +4402,16 @@
     1
    ],
    [
+    "Giant Growth",
+    1
+   ],
+   [
     "Giant Koi",
     1
    ],
    [
     "Giant's Boulder",
-    2
+    3
    ],
    [
     "Gilt-Leaf's Embrace",
@@ -4346,6 +4442,10 @@
     1
    ],
    [
+    "Goldmeadow Nomad",
+    1
+   ],
+   [
     "Goldvein Pick",
     1
    ],
@@ -4355,7 +4455,7 @@
    ],
    [
     "Gollum, Silent Slinker // Meager Meal",
-    1
+    2
    ],
    [
     "Gran-Gran",
@@ -4372,6 +4472,10 @@
    [
     "Great Fierce Bee",
     2
+   ],
+   [
+    "Great Forest Druid",
+    1
    ],
    [
     "Gristle Glutton",
@@ -4395,10 +4499,18 @@
    ],
    [
     "Heirloom Auntie",
-    1
+    2
    ],
    [
     "Hemlock Vial",
+    1
+   ],
+   [
+    "Imperious Inkmage",
+    1
+   ],
+   [
+    "Impolite Entrance",
     1
    ],
    [
@@ -4406,8 +4518,12 @@
     1
    ],
    [
+    "Iron Hills",
+    2
+   ],
+   [
     "Iron Hills Stalwart",
-    1
+    2
    ],
    [
     "Ironsoul Enforcer",
@@ -4418,11 +4534,19 @@
     68
    ],
    [
+    "Joined Researchers // Secret Rendezvous",
+    1
+   ],
+   [
     "Jungle Barrier",
     1
    ],
    [
     "Kin-Tree Invocation",
+    1
+   ],
+   [
+    "Kinbinding",
     1
    ],
    [
@@ -4479,7 +4603,7 @@
    ],
    [
     "Long Lake Nuisance",
-    2
+    3
    ],
    [
     "Loyal Inventor",
@@ -4491,11 +4615,15 @@
    ],
    [
     "Lys Alana Informant",
+    2
+   ],
+   [
+    "Mage Tower Referee",
     1
    ],
    [
     "Magnificent End",
-    1
+    2
    ],
    [
     "Make Your Move",
@@ -4503,6 +4631,14 @@
    ],
    [
     "Maralen, Fae Ascendant",
+    1
+   ],
+   [
+    "Master's Councillors",
+    1
+   ],
+   [
+    "Masterful Flourish",
     1
    ],
    [
@@ -4519,7 +4655,7 @@
    ],
    [
     "Merrow Skyswimmer",
-    1
+    2
    ],
    [
     "Midnight Tilling",
@@ -4554,6 +4690,14 @@
     1
    ],
    [
+    "Mistmeadow Council",
+    1
+   ],
+   [
+    "Misty Mountains Raider",
+    1
+   ],
+   [
     "Moment of Glory",
     2
    ],
@@ -4570,11 +4714,19 @@
     1
    ],
    [
+    "Moonshadow",
+    1
+   ],
+   [
     "Mountain",
     48
    ],
    [
     "Mulch",
+    1
+   ],
+   [
+    "Muse's Encouragement",
     1
    ],
    [
@@ -4594,12 +4746,16 @@
     1
    ],
    [
+    "Noxious Newt",
+    1
+   ],
+   [
     "Odric, Lunarch Marshal",
     1
    ],
    [
     "Óin the Brave",
-    1
+    2
    ],
    [
     "Old Fat Spider",
@@ -4611,7 +4767,7 @@
    ],
    [
     "Old Thrush",
-    1
+    2
    ],
    [
     "Ordinary Bear",
@@ -4635,7 +4791,7 @@
    ],
    [
     "Patient Instructor",
-    1
+    2
    ],
    [
     "Pawn of Ulamog",
@@ -4652,6 +4808,10 @@
    [
     "Platypus-Bear",
     2
+   ],
+   [
+    "Plunder the Trollshaws",
+    1
    ],
    [
     "Portcullis Vine",
@@ -4714,7 +4874,23 @@
     1
    ],
    [
+    "Render Speechless",
+    1
+   ],
+   [
+    "Resonating Lute",
+    1
+   ],
+   [
+    "Retched Wretch",
+    1
+   ],
+   [
     "Rhox Faithmender",
+    1
+   ],
+   [
+    "Rime Chill",
     1
    ],
    [
@@ -4742,6 +4918,10 @@
     1
    ],
    [
+    "Royal Treatment",
+    1
+   ],
+   [
     "Rugged Highlands",
     1
    ],
@@ -4762,6 +4942,10 @@
     1
    ],
    [
+    "Shadow Urchin",
+    1
+   ],
+   [
     "Shore Lurker",
     1
    ],
@@ -4770,12 +4954,24 @@
     1
    ],
    [
+    "Silvergill Peddler",
+    1
+   ],
+   [
+    "Silverquill Charm",
+    1
+   ],
+   [
     "Simic Guildgate",
     1
    ],
    [
     "Smaug, the Great Calamity // Spew Flame",
-    2
+    3
+   ],
+   [
+    "Smaug, Wicked Worm",
+    1
    ],
    [
     "Spectacular Tactics",
@@ -4794,6 +4990,10 @@
     1
    ],
    [
+    "Stand Up for Yourself",
+    1
+   ],
+   [
     "Steady Progress",
     1
    ],
@@ -4806,6 +5006,10 @@
     1
    ],
    [
+    "Stone Docent",
+    1
+   ],
+   [
     "Stony Strength",
     1
    ],
@@ -4815,6 +5019,10 @@
    ],
    [
     "Stratosoarer",
+    1
+   ],
+   [
+    "Strixhaven Skycoach",
     1
    ],
    [
@@ -4851,7 +5059,7 @@
    ],
    [
     "Temporal Cleansing",
-    1
+    2
    ],
    [
     "Tempt with Vengeance",
@@ -4871,6 +5079,10 @@
    ],
    [
     "Thirsting Shade",
+    1
+   ],
+   [
+    "Thorin Oakenshield",
     1
    ],
    [
@@ -4906,6 +5118,10 @@
     1
    ],
    [
+    "Tom, Bert, and William",
+    1
+   ],
+   [
     "Tower Defense",
     1
    ],
@@ -4915,6 +5131,14 @@
    ],
    [
     "Triskaidekaphobia",
+    1
+   ],
+   [
+    "Troll Negotiations",
+    1
+   ],
+   [
+    "Troop of Ponies",
     1
    ],
    [
@@ -4943,7 +5167,7 @@
    ],
    [
     "Unwelcome Sprite",
-    1
+    2
    ],
    [
     "Vampire Hexmage",
@@ -4966,11 +5190,27 @@
     1
    ],
    [
+    "Vow to Erebor",
+    1
+   ],
+   [
+    "Wander Off",
+    1
+   ],
+   [
     "Wanderwine Distracter",
     1
    ],
    [
+    "Warg Tactics",
+    1
+   ],
+   [
     "Wartime Protestors",
+    1
+   ],
+   [
+    "Wary Farmer",
     1
    ],
    [
@@ -4991,7 +5231,7 @@
    ],
    [
     "Well-Worn Spatula",
-    1
+    2
    ],
    [
     "White Orchid Phantom",
@@ -5007,7 +5247,7 @@
    ],
    [
     "Wildvine Pummeler",
-    3
+    4
    ],
    [
     "Woodland Weavemaster",
@@ -5357,6 +5597,7 @@
    "replaces": "Seize the Spoils",
    "tier": 1,
    "price": 38.27,
+   "origin": "workbook",
    "why": "Mana equal to an opponent's hand plus three cards off the top. It is the turn where Quintorius goes from grinding to winning."
   },
   {
@@ -5365,6 +5606,7 @@
    "replaces": "Primary Research",
    "tier": 1,
    "price": 10.54,
+   "origin": "workbook",
    "why": "Every spell you cast from the graveyard is a card leaving the graveyard, so every one is also a Spirit. This is the deck's engine, not a value piece."
   },
   {
@@ -5373,6 +5615,7 @@
    "replaces": "Advanced Reconstruction",
    "tier": 2,
    "price": 7.52,
+   "origin": "workbook",
    "why": "Exiles a spell out of the graveyard and copies it. Two Quintorius triggers and a free sorcery in one card."
   },
   {
@@ -5381,6 +5624,7 @@
    "replaces": "Ceaseless Conflict",
    "tier": 2,
    "price": 5.01,
+   "origin": "workbook",
    "why": "Scales every combat instead of a five-mana spell that does not touch the graveyard."
   },
   {
@@ -5389,6 +5633,7 @@
    "replaces": "Lorehold Charm",
    "tier": 2,
    "price": 4.83,
+   "origin": "workbook",
    "why": "Four damage, or team indestructible through a wipe, or double strike. Three answers on one card instead of one."
   },
   {
@@ -5397,6 +5642,7 @@
    "replaces": "Currency Converter",
    "tier": 2,
    "price": 4.02,
+   "origin": "workbook",
    "why": "A free sacrifice outlet turns every Spirit into damage. The deck makes bodies and currently has no way to cash them in."
   },
   {
@@ -5405,6 +5651,7 @@
    "replaces": "Squee, the Immortal",
    "tier": 2,
    "price": 1.38,
+   "origin": "workbook",
    "why": "Repeatable creature recursion every turn, and the token is exiled at end of turn so the card leaves the graveyard again."
   },
   {
@@ -5413,6 +5660,7 @@
    "replaces": "Perpetual Timepiece",
    "tier": 3,
    "price": 4.04,
+   "origin": "workbook",
    "why": "Tutors any instant in the deck straight onto the stack. Consistency for a deck built on the right answer at the right time."
   },
   {
@@ -5421,6 +5669,7 @@
    "replaces": "Cathartic Reunion",
    "tier": 3,
    "price": 1.83,
+   "origin": "workbook",
    "why": "Two permanents back at instant speed for two mana, and two cards leaving the graveyard means two Spirits."
   },
   {
@@ -5429,6 +5678,7 @@
    "replaces": "Thrilling Discovery",
    "tier": 3,
    "price": 1.55,
+   "origin": "workbook",
    "why": "One mana of insurance against the wipe that otherwise ends your game."
   },
   {
@@ -5437,6 +5687,7 @@
    "replaces": "Farseek",
    "tier": 1,
    "price": 37.89,
+   "origin": "workbook",
    "why": "Tutors any creature to the battlefield, and for large X it is the game-ending pump. One card that is both the setup and the finish."
   },
   {
@@ -5445,6 +5696,7 @@
    "replaces": "Satyr Wayfinder",
    "tier": 1,
    "price": 24.17,
+   "origin": "workbook",
    "why": "Doubles every enter-the-battlefield trigger you have and shuts off every one your opponents have. In a deck built on ETBs this is two cards in one."
   },
   {
@@ -5453,6 +5705,7 @@
    "replaces": "Fblthp, the Lost",
    "tier": 1,
    "price": 17.33,
+   "origin": "workbook",
    "why": "With Chulane out, two cheap creatures bounce each other forever. This is the card that turns the deck from good value into a combo deck."
   },
   {
@@ -5461,6 +5714,7 @@
    "replaces": "Freed from the Real",
    "tier": 2,
    "price": 32.38,
+   "origin": "workbook",
    "why": "Blinks a nonland permanent every time you cast a noncreature spell. Free value on cards you were casting anyway."
   },
   {
@@ -5469,6 +5723,7 @@
    "replaces": "Reclamation Sage",
    "tier": 2,
    "price": 27.9,
+   "origin": "workbook",
    "why": "The best card selection in green. Fixes the draws where Chulane never lands."
   },
   {
@@ -5477,6 +5732,7 @@
    "replaces": "Approach of the Second Sun",
    "tier": 2,
    "price": 20.45,
+   "origin": "workbook",
    "why": "Same-turn kill off either infinite loop. Cut on second review; Approach does it for a third of the price."
   },
   {
@@ -5485,6 +5741,7 @@
    "replaces": "Unbreakable Formation",
    "tier": 2,
    "price": 15.52,
+   "origin": "workbook",
    "why": "Hexproof and indestructible at instant speed. Cut on second review in favour of Unbreakable Formation at $0.74."
   },
   {
@@ -5493,6 +5750,7 @@
    "replaces": "Kami of Ancient Law",
    "tier": 2,
    "price": 15.17,
+   "origin": "workbook",
    "why": "A card every time a nontoken creature enters. Chulane already draws you one; this doubles it."
   },
   {
@@ -5501,6 +5759,7 @@
    "replaces": "Mistmeadow Witch",
    "tier": 2,
    "price": 13.56,
+   "origin": "workbook",
    "why": "A blink outlet that costs three and needs no blue, and it grows the creature it blinks."
   },
   {
@@ -5509,6 +5768,7 @@
    "replaces": "Elvish Visionary",
    "tier": 3,
    "price": 9,
+   "origin": "workbook",
    "why": "A card on every creature spell instead of a card once."
   },
   {
@@ -5517,6 +5777,7 @@
    "replaces": "Coiling Oracle",
    "tier": 3,
    "price": 2.2,
+   "origin": "workbook",
    "why": "Two blinks for one card, and it can reset lands as well as creatures."
   },
   {
@@ -5525,6 +5786,7 @@
    "replaces": "Fuel for the Cause",
    "tier": 1,
    "price": 39.54,
+   "origin": "workbook",
    "why": "Overloaded it bounces every nonland permanent your opponents control at instant speed. It is the single best turn this deck can have."
   },
   {
@@ -5533,6 +5795,7 @@
    "replaces": "Viral Drake",
    "tier": 1,
    "price": 33.36,
+   "origin": "workbook",
    "why": "Doubles every counter you place and halves every counter your opponents get. Atraxa's proliferate becomes twice as fast and their proliferate stops working."
   },
   {
@@ -5541,6 +5804,7 @@
    "replaces": "Repel Calamity",
    "tier": 1,
    "price": 33.07,
+   "origin": "workbook",
    "why": "The wipe answer the deck does not have. Phases out everything you own and makes you untargetable until your next turn."
   },
   {
@@ -5549,6 +5813,7 @@
    "replaces": "Tragic Arrogance",
    "tier": 1,
    "price": 11.11,
+   "origin": "workbook",
    "why": "A one-sided wipe. Everything without a +1/+1 counter dies, and your board is made of +1/+1 counters."
   },
   {
@@ -5557,6 +5822,7 @@
    "replaces": "Valorous Stance",
    "tier": 2,
    "price": 15.52,
+   "origin": "workbook",
    "why": "Two mana to save the entire board. The second layer of wipe insurance behind Teferi's Protection."
   },
   {
@@ -5565,6 +5831,7 @@
    "replaces": "Fall of the First Civilization",
    "tier": 2,
    "price": 13.67,
+   "origin": "workbook",
    "why": "One-sided -1/-1 wipe plus a second proliferate every turn. Cut on second review; Fall of the First Civilization does the wipe job free."
   },
   {
@@ -5573,6 +5840,7 @@
    "replaces": "Wall of Resurgence",
    "tier": 2,
    "price": 10.77,
+   "origin": "workbook",
    "why": "A +1/+1 counter on every creature you control every time a creature enters. It compounds with every token and every proliferate."
   },
   {
@@ -5581,6 +5849,7 @@
    "replaces": "Guardian Scalelord",
    "tier": 2,
    "price": 7.75,
+   "origin": "workbook",
    "why": "Every creature with a counter becomes unblockable. It turns a stalled counters board into lethal."
   },
   {
@@ -5589,6 +5858,7 @@
    "replaces": "Plaguemaw Beast",
    "tier": 2,
    "price": 7.06,
+   "origin": "workbook",
    "why": "Doubles the counters on every creature you control whenever it attacks."
   },
   {
@@ -5597,6 +5867,7 @@
    "replaces": "Blight Rot",
    "tier": 3,
    "price": 9,
+   "origin": "workbook",
    "why": "A card on every creature spell in the deck with the most creatures."
   },
   {
@@ -5605,6 +5876,7 @@
    "replaces": "Tezzeret's Gambit",
    "tier": 3,
    "price": 4.24,
+   "origin": "workbook",
    "why": "One mana, and it gives a creature protection to dodge removal or to push damage through."
   },
   {
@@ -5613,6 +5885,7 @@
    "replaces": "Ichormoon Gauntlet",
    "tier": 3,
    "price": 0.92,
+   "origin": "workbook",
    "why": "Doubles every counter that would be placed on your creatures for four mana."
   },
   {
@@ -5621,6 +5894,7 @@
    "replaces": "Steady Progress",
    "tier": 3,
    "price": 0.81,
+   "origin": "workbook",
    "why": "Every creature you cast arrives with counters already on it. The Hexmage removes counters, which fights your own plan."
   },
   {
@@ -5629,6 +5903,7 @@
    "replaces": "Weathered Sentinels",
    "tier": 1,
    "price": 15.52,
+   "origin": "workbook",
    "why": "Two mana to protect the board you spent the game assembling."
   },
   {
@@ -5637,6 +5912,7 @@
    "replaces": "Canopy Gargantuan",
    "tier": 1,
    "price": 14.34,
+   "origin": "workbook",
    "why": "All damage to your creatures becomes +1/+1 counters instead. In a toughness deck it makes combat unlosable."
   },
   {
@@ -5645,6 +5921,7 @@
    "replaces": "Wall of Limbs",
    "tier": 2,
    "price": 18.21,
+   "origin": "workbook",
    "why": "Opponents cannot cast spells or activate abilities during your turn. Your wipe and your alpha both resolve untouched."
   },
   {
@@ -5653,6 +5930,7 @@
    "replaces": "Nyx-Fleece Ram",
    "tier": 2,
    "price": 8.44,
+   "origin": "workbook",
    "why": "A fifth global toughness-as-damage body. Cut from the order on second review; the deck has four already."
   },
   {
@@ -5661,6 +5939,7 @@
    "replaces": "Shield-Wall Sentinel",
    "tier": 2,
    "price": 8.43,
+   "origin": "workbook",
    "why": "Life equal to toughness every time a creature enters, and your creatures are all toughness."
   },
   {
@@ -5669,6 +5948,7 @@
    "replaces": "Slaughter the Strong",
    "tier": 2,
    "price": 6.58,
+   "origin": "workbook",
    "why": "Taxes every attack against you. A defensive deck should be nearly unattackable."
   },
   {
@@ -5677,6 +5957,7 @@
    "replaces": "Walking Bulwark",
    "tier": 2,
    "price": 2.15,
+   "origin": "workbook",
    "why": "Toughness with no ceiling, and Betor counts total toughness."
   },
   {
@@ -5685,6 +5966,7 @@
    "replaces": "Treefolk Umbra",
    "tier": 2,
    "price": 1.85,
+   "origin": "workbook",
    "why": "Indestructible and flying on top of the pump, so the creature survives wipes and gets through."
   },
   {
@@ -5693,6 +5975,7 @@
    "replaces": "Sapling of Colfenor",
    "tier": 2,
    "price": 0.33,
+   "origin": "workbook",
    "why": "A creature back from the graveyard every turn, for thirty-three cents."
   },
   {
@@ -5701,6 +5984,7 @@
    "replaces": "Portcullis Vine",
    "tier": 3,
    "price": 1.9,
+   "origin": "workbook",
    "why": "Plus zero plus two to the whole team pushes several creatures over Betor's next threshold at once."
   },
   {
@@ -5709,6 +5993,7 @@
    "replaces": "Carven Caryatid",
    "tier": 3,
    "price": 1.78,
+   "origin": "workbook",
    "why": "Ramp and fixing in the three-color deck with the fewest mana sources to spare."
   },
   {
@@ -5717,6 +6002,7 @@
    "replaces": "Nyx-Fleece Ram",
    "tier": 3,
    "price": 1.34,
+   "origin": "workbook",
    "why": "Life every time a defender blocks, which is every combat in this deck. (v12: Jaddi Offshoot left the deck; the Ram is the other lifegain wall.)"
   },
   {
@@ -5725,6 +6011,7 @@
    "replaces": "Wall of Mulch",
    "tier": 3,
    "price": 0.3,
+   "origin": "workbook",
    "why": "A 0/6 that returns to your hand every time it blocks. Thirty cents for an infinite blocker."
   },
   {
@@ -5733,6 +6020,7 @@
    "replaces": "Emptiness",
    "tier": 1,
    "price": 33.54,
+   "origin": "workbook",
    "why": "Every creature that dies on your side makes each opponent sacrifice one. With tokens dying constantly it dismantles three boards at once."
   },
   {
@@ -5741,6 +6029,7 @@
    "replaces": "Genesis Chamber",
    "tier": 1,
    "price": 17.01,
+   "origin": "workbook",
    "why": "The same effect as Grave Pact with flash, so it lands after a wipe and punishes it."
   },
   {
@@ -5749,6 +6038,7 @@
    "replaces": "Elspeth, Sun's Nemesis",
    "tier": 1,
    "price": 16.37,
+   "origin": "workbook",
    "why": "Play off the top of your library paying life instead of mana. In a deck already gaining life it is close to a free win."
   },
   {
@@ -5757,6 +6047,7 @@
    "replaces": "Intangible Virtue",
    "tier": 1,
    "price": 0.44,
+   "origin": "workbook",
    "why": "Every token you would make becomes a 4/4 Angel instead. Forty-four cents, and it is the biggest single upgrade on this entire tab."
   },
   {
@@ -5765,6 +6056,7 @@
    "replaces": "Pawn of Ulamog",
    "tier": 2,
    "price": 16.65,
+   "origin": "workbook",
    "why": "Fifth free outlet and two mana per body. Cut from the order on second review because four free outlets already exist; still the best single upgrade for the deck."
   },
   {
@@ -5773,6 +6065,7 @@
    "replaces": "Anointer Priest",
    "tier": 2,
    "price": 10.77,
+   "origin": "workbook",
    "why": "A +1/+1 counter on everything each time a creature enters. Your tokens stop being 1/1s."
   },
   {
@@ -5781,6 +6074,7 @@
    "replaces": "Impassioned Orator",
    "tier": 2,
    "price": 8.77,
+   "origin": "workbook",
    "why": "A treasure, a body and a card every turn, all optional, all at the cost of some life you are already gaining back."
   },
   {
@@ -5789,6 +6083,7 @@
    "replaces": "Rootborn Defenses",
    "tier": 2,
    "price": 5.59,
+   "origin": "workbook",
    "why": "Prevents the attack that would kill you and turns the damage into that many 1/1 fliers."
   },
   {
@@ -5797,6 +6092,7 @@
    "replaces": "Indulging Patrician",
    "tier": 2,
    "price": 5.28,
+   "origin": "workbook",
    "why": "Grows on every death and then dies into an army of Vampires."
   },
   {
@@ -5805,6 +6101,7 @@
    "replaces": "Tithe Taker",
    "tier": 2,
    "price": 1.92,
+   "origin": "workbook",
    "why": "Counters on your creatures and a 2/1 Inkling every time one with a counter dies."
   },
   {
@@ -5813,6 +6110,7 @@
    "replaces": "Welcoming Vampire",
    "tier": 2,
    "price": 1.07,
+   "origin": "workbook",
    "why": "Counters and cards every time an opponent is attacked, including by someone who is not you."
   },
   {
@@ -5821,6 +6119,7 @@
    "replaces": "Raise the Alarm",
    "tier": 3,
    "price": 2.3,
+   "origin": "workbook",
    "why": "Any card in the deck for four mana. Slow, but it finds Grave Pact or the Altar when the game demands it."
   },
   {
@@ -5829,6 +6128,7 @@
    "replaces": "Staff of the Storyteller",
    "tier": 3,
    "price": 2.25,
+   "origin": "workbook",
    "why": "A card each turn you made a token, which is nearly every turn."
   },
   {
@@ -5837,6 +6137,7 @@
    "replaces": "Raid Bombardment",
    "tier": 1,
    "price": 21.13,
+   "origin": "workbook",
    "why": "Every goblin gets plus one plus one for every other goblin. Thirty tokens becomes lethal instead of chip damage."
   },
   {
@@ -5845,6 +6146,7 @@
    "replaces": "Goblin Instigator",
    "tier": 1,
    "price": 16.24,
+   "origin": "workbook",
    "why": "Copy Krenko every turn. Each copy taps for goblins equal to your goblin count, and the count doubles as it goes."
   },
   {
@@ -5853,6 +6155,7 @@
    "replaces": "Beetleback Chief",
    "tier": 1,
    "price": 13.32,
+   "origin": "workbook",
    "why": "Look at the top six and put every goblin onto the battlefield. It refills a wiped board in one card."
   },
   {
@@ -5861,6 +6164,7 @@
    "replaces": "Thrill of Possibility",
    "tier": 1,
    "price": 10.5,
+   "origin": "workbook",
    "why": "Three mana untaps Krenko. With enough goblins producing mana, that is arbitrarily many goblins in one turn."
   },
   {
@@ -5869,6 +6173,7 @@
    "replaces": "Fanatical Firebrand",
    "tier": 2,
    "price": 9.37,
+   "origin": "workbook",
    "why": "One damage on turn two puts Krenko or Muxus onto the battlefield for free."
   },
   {
@@ -5877,6 +6182,7 @@
    "replaces": "Goblin Gathering",
    "tier": 2,
    "price": 6.55,
+   "origin": "workbook",
    "why": "Stacks the top of your library with exactly the goblins you need, in the order you need them."
   },
   {
@@ -5885,7 +6191,44 @@
    "replaces": "Outpost Siege",
    "tier": 2,
    "price": 4.39,
+   "origin": "workbook",
    "why": "Goblins you cast get menace and dead goblins come back off the top. Recursion in the color that has almost none."
+  },
+  {
+   "deck": "D4",
+   "card": "Great Forest Druid",
+   "replaces": "Saruli Caretaker",
+   "tier": 1,
+   "price": 0,
+   "origin": "owned-swap",
+   "why": "On the bench already. Felothar makes every creature assign damage equal to its toughness, so 0/4 hits for 4 where Saruli's 0/3 hits for 3 — and it taps for any colour on its own, where Saruli has to tap a second creature. Costs one more mana; saves $0.27 and a trip."
+  },
+  {
+   "deck": "D1",
+   "card": "Kinbinding",
+   "replaces": "Warleader's Call",
+   "tier": 2,
+   "price": 0,
+   "origin": "owned-swap",
+   "why": "On the bench already, against the biggest single line on the buy list ($7.12). Both are anthems paid for by creatures entering, and this deck floods 3/2 Spirits: Kinbinding scales with the flood and adds a 1/1 Kithkin every combat. You give up 1 damage to each opponent per token — real reach — and it costs 5 rather than 4."
+  },
+  {
+   "deck": "D4",
+   "card": "Chelonian Tackle",
+   "replaces": "Beast Within",
+   "tier": 2,
+   "price": 0,
+   "origin": "owned-swap",
+   "why": "On the bench already. Same cost, same colour: in a deck where damage equals toughness, +0/+10 then fight is a one-sided kill on almost anything and leaves no 3/3 behind, which Beast Within always does. You give up instant speed and the ability to hit a non-creature. Saves $0.73."
+  },
+  {
+   "deck": "D5",
+   "card": "Bogslither's Embrace",
+   "replaces": "Anguished Unmaking",
+   "tier": 3,
+   "price": 0,
+   "origin": "owned-swap",
+   "why": "On the bench already. Two-mana unconditional creature exile whose extra cost — a -1/-1 counter on one of your own — is close to free in an Aristocrats deck that wants its creatures to die. It does not touch a non-creature permanent, which is the whole point of Anguished Unmaking, so this is a saving ($1.40) rather than an upgrade."
   }
  ]
 }

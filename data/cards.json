@@ -1,8 +1,8 @@
 {
  "schema": "cards@2",
- "generatedAt": "2026-09-14T03:54:14.124Z",
+ "generatedAt": "2026-09-16T05:49:14.222Z",
  "generator": "tools/build-card-records.mjs",
- "count": 2131,
+ "count": 2186,
  "source": "Scryfall, through this tool and the graph bake's price snapshot of 2026-09-11",
  "cards": [
   {
@@ -2607,6 +2607,74 @@
    ]
   },
   {
+   "name": "Ancestral Anger",
+   "oracleId": "e0828e8d-f01f-4088-9123-6d923ddb3242",
+   "manaCost": "{R}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard.\nDraw a card.",
+   "keywords": [],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/6/c/6c5a93d6-d4ab-4062-bb3c-1b5330bf15ad.jpg?1783903672",
+   "imageSmall": "https://cards.scryfall.io/small/front/6/c/6c5a93d6-d4ab-4062-bb3c-1b5330bf15ad.jpg?1783903672",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689485%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/106/ancestral-anger?utm_source=api",
+   "price": 0.2,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.27,
+   "cheapestSet": "Innistrad: Crimson Vow",
+   "rank": 4827,
+   "isCommander": false,
+   "printings": 6,
+   "roles": [
+    "draw"
+   ],
+   "requires": [
+    "graveyard"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "draw-card"
+   ],
+   "produces": [
+    "card"
+   ],
+   "grants": [
+    "trample"
+   ]
+  },
+  {
    "name": "Ancient Copper Dragon",
    "oracleId": "48daee9d-ddaf-410f-8c3a-12fa1064ab56",
    "manaCost": "{4}{R}{R}",
@@ -4239,6 +4307,69 @@
    "tribes": [
     "Dragon",
     "Spirit"
+   ]
+  },
+  {
+   "name": "Appeal to Eirdu",
+   "oracleId": "cea09261-41a2-43e5-bf43-c4097e6615c6",
+   "manaCost": "{3}{W}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nOne or two target creatures each get +2/+1 until end of turn.",
+   "keywords": [
+    "Convoke"
+   ],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/6/8/68ce9752-21f9-48e9-bf48-7f76f1cecbc5.jpg?1783904510",
+   "imageSmall": "https://cards.scryfall.io/small/front/6/8/68ce9752-21f9-48e9-bf48-7f76f1cecbc5.jpg?1783904510",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F670954%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/5/appeal-to-eirdu?utm_source=api",
+   "price": 0.11,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.15,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 23117,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "mechanics": [
+    "convoke"
    ]
   },
   {
@@ -6854,6 +6985,81 @@
    ],
    "makes": [
     "Knight"
+   ]
+  },
+  {
+   "name": "Ascendant Dustspeaker",
+   "oracleId": "295f8b8d-102a-47af-93c2-f8182c5f11ca",
+   "manaCost": "{4}{W}",
+   "typeLine": "Creature — Orc Cleric",
+   "power": "3",
+   "toughness": "4",
+   "oracleText": "Flying\nWhen this creature enters, put a +1/+1 counter on another target creature you control.\nAt the beginning of combat on your turn, exile up to one target card from a graveyard.",
+   "keywords": [
+    "Flying"
+   ],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/d/e/de3de40b-a7ac-455e-add2-4e451b602d17.jpg?1783903706",
+   "imageSmall": "https://cards.scryfall.io/small/front/d/e/de3de40b-a7ac-455e-add2-4e451b602d17.jpg?1783903706",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689448%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/8/ascendant-dustspeaker?utm_source=api",
+   "price": 0.08,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.14,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 24062,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "counters"
+   ],
+   "causes": [
+    "cast-creature",
+    "counter-placed"
+   ],
+   "triggers": [
+    "combat-begin"
+   ],
+   "produces": [
+    "counter"
+   ],
+   "mechanics": [
+    "flying"
+   ],
+   "tribes": [
+    "Orc",
+    "Cleric"
    ]
   },
   {
@@ -11377,6 +11583,72 @@
    ]
   },
   {
+   "name": "Biblioplex Tomekeeper",
+   "oracleId": "08a0e845-9ef9-4de1-b9fe-4530357346ca",
+   "manaCost": "{4}",
+   "typeLine": "Artifact Creature — Construct",
+   "power": "3",
+   "toughness": "4",
+   "oracleText": "When this creature enters, choose up to one —\n• Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)\n• Target creature becomes unprepared.",
+   "keywords": [
+    "Prepared"
+   ],
+   "colorIdentity": [],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/b/f/bf2efdd9-d2b4-4bea-a5b9-dbb2eee4dfba.jpg?1783903623",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/f/bf2efdd9-d2b4-4bea-a5b9-dbb2eee4dfba.jpg?1783903623",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686567%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/247/biblioplex-tomekeeper?utm_source=api",
+   "price": 0.07,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.14,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 21438,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "artifacts"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-artifact"
+   ],
+   "mechanics": [
+    "prepared"
+   ],
+   "tribes": [
+    "Construct"
+   ]
+  },
+  {
    "name": "Big Game Hunter",
    "oracleId": "ab55834f-c935-4773-89c6-bec9712284eb",
    "manaCost": "{1}{B}{B}",
@@ -12537,6 +12809,79 @@
    ],
    "mechanics": [
     "enters-untapped"
+   ]
+  },
+  {
+   "name": "Blazing Firesinger // Seething Song",
+   "oracleId": "1bf505a7-292e-4642-83b6-8ff41ebe5d51",
+   "manaCost": "{2}{R} // {2}{R}",
+   "typeLine": "Creature — Dwarf Bard // Instant",
+   "power": "2",
+   "toughness": "3",
+   "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nAdd {R}{R}{R}{R}{R}.",
+   "keywords": [
+    "Prepared"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/3/b/3ba971e7-0b7a-4750-896f-7cf063e66b2a.jpg?1783903672",
+   "imageSmall": "https://cards.scryfall.io/small/front/3/b/3ba971e7-0b7a-4750-896f-7cf063e66b2a.jpg?1783903672",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689486%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/109/blazing-firesinger-seething-song?utm_source=api",
+   "price": 0.35,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.41,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 6051,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "ramp",
+    "creatures",
+    "instants"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-instant-sorcery"
+   ],
+   "produces": [
+    "mana"
+   ],
+   "mechanics": [
+    "prepared"
+   ],
+   "tribes": [
+    "Dwarf",
+    "Bard"
    ]
   },
   {
@@ -13996,6 +14341,69 @@
    ]
   },
   {
+   "name": "Bogslither's Embrace",
+   "oracleId": "21695c70-f746-4d77-b6d3-e2713a5c929e",
+   "manaCost": "{1}{B}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "As an additional cost to cast this spell, blight 1 or pay {3}. (To blight 1, put a -1/-1 counter on a creature you control.)\nExile target creature.",
+   "keywords": [
+    "Blight"
+   ],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/4/b/4beca2e7-9c6d-493b-b15f-69e483a8dfff.jpg?1783904471",
+   "imageSmall": "https://cards.scryfall.io/small/front/4/b/4beca2e7-9c6d-493b-b15f-69e483a8dfff.jpg?1783904471",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671924%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/94/bogslithers-embrace?utm_source=api",
+   "price": 0.18,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.31,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 10488,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "removal"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "mechanics": [
+    "blight"
+   ]
+  },
+  {
    "name": "Bojuka Bog",
    "oracleId": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
    "manaCost": "",
@@ -14117,6 +14525,85 @@
    ],
    "mechanics": [
     "tap-ability"
+   ]
+  },
+  {
+   "name": "Boldwyr Aggressor",
+   "oracleId": "ab32c671-7686-435b-a987-14a08f6790eb",
+   "manaCost": "{3}{R}{R}",
+   "typeLine": "Creature — Giant Warrior",
+   "power": "2",
+   "toughness": "5",
+   "oracleText": "Double strike\nOther Giants you control have double strike.",
+   "keywords": [
+    "Double strike"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/7/6/76bbccd2-8a90-49a7-921a-6565b495efdf.jpg?1783904452",
+   "imageSmall": "https://cards.scryfall.io/small/front/7/6/76bbccd2-8a90-49a7-921a-6565b495efdf.jpg?1783904452",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671659%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/125/boldwyr-aggressor?utm_source=api",
+   "price": 0.26,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.31,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 16603,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "grants": [
+    "double-strike"
+   ],
+   "extends": [
+    "double-strike"
+   ],
+   "mechanics": [
+    "double strike"
+   ],
+   "tribes": [
+    "Giant",
+    "Warrior"
+   ],
+   "wants": [
+    "Giant"
+   ],
+   "offersStat": [
+    "toughness"
    ]
   },
   {
@@ -14652,6 +15139,71 @@
    ],
    "mechanics": [
     "tap-ability"
+   ]
+  },
+  {
+   "name": "Borrowed Knowledge",
+   "oracleId": "0d6507b0-c986-49d1-aea3-77b2cf2a7433",
+   "manaCost": "{2}{R}{W}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Choose one —\n• Discard your hand, then draw cards equal to the number of cards in target opponent's hand.\n• Discard your hand, then draw cards equal to the number of cards discarded this way.",
+   "keywords": [],
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/a/3/a3226e14-554d-47c9-b8b6-dfeb53cc41ba.jpg?1783903647",
+   "imageSmall": "https://cards.scryfall.io/small/front/a/3/a3226e14-554d-47c9-b8b6-dfeb53cc41ba.jpg?1783903647",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688669%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/178/borrowed-knowledge?utm_source=api",
+   "price": 0.31,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.35,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 13178,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "draw-card",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "card"
    ]
   },
   {
@@ -19223,6 +19775,81 @@
    ]
   },
   {
+   "name": "Charging Strifeknight",
+   "oracleId": "b0b9a7c1-f515-4627-a050-b595d6641611",
+   "manaCost": "{2}{R}",
+   "typeLine": "Creature — Spirit Knight",
+   "power": "3",
+   "toughness": "3",
+   "oracleText": "Haste\n{T}, Discard a card: Draw a card.",
+   "keywords": [
+    "Haste"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/9/9/9940d992-1ba1-40ec-9b93-17d773452c4b.jpg?1783903672",
+   "imageSmall": "https://cards.scryfall.io/small/front/9/9/9940d992-1ba1-40ec-9b93-17d773452c4b.jpg?1783903672",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689487%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/110/charging-strifeknight?utm_source=api",
+   "price": 0.21,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.24,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 18781,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw",
+    "creatures",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-creature",
+    "draw-card",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "card"
+   ],
+   "mechanics": [
+    "haste",
+    "tap-ability"
+   ],
+   "tribes": [
+    "Spirit",
+    "Knight"
+   ]
+  },
+  {
    "name": "Charmbreaker Devils",
    "oracleId": "1b9df437-6988-4ddc-80c4-893e11076067",
    "manaCost": "{5}{R}",
@@ -19440,6 +20067,66 @@
    "tribes": [
     "Human",
     "Rogue"
+   ]
+  },
+  {
+   "name": "Chelonian Tackle",
+   "oracleId": "8c1c519a-6edd-4204-b825-b0feca5afa42",
+   "manaCost": "{2}{G}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature you control gets +0/+10 until end of turn. Then it fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+   "keywords": [
+    "Fight"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/a/8/a82a4d8c-4105-4923-85a2-ef58241f725c.jpg?1783903661",
+   "imageSmall": "https://cards.scryfall.io/small/front/a/8/a82a4d8c-4105-4923-85a2-ef58241f725c.jpg?1783903661",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689502%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/142/chelonian-tackle?utm_source=api",
+   "price": 0.22,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.3,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 18402,
+   "isCommander": false,
+   "printings": 1,
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "mechanics": [
+    "fight"
    ]
   },
   {
@@ -25008,6 +25695,70 @@
    ]
   },
   {
+   "name": "Crude Bent Blade",
+   "oracleId": "eec81460-899d-4b4c-b33c-ce2ca704df17",
+   "manaCost": "{2}{B}",
+   "typeLine": "Artifact — Equipment",
+   "power": null,
+   "toughness": null,
+   "oracleText": "When this Equipment enters, target opponent sacrifices a creature of their choice.\nEquipped creature gets +2/+1.\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+   "keywords": [
+    "Equip"
+   ],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/f/a/fa8fd3c4-bd00-485d-80b1-2b67f5786fce.jpg?1785496297",
+   "imageSmall": "https://cards.scryfall.io/small/front/f/a/fa8fd3c4-bd00-485d-80b1-2b67f5786fce.jpg?1785496297",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709488%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/63/crude-bent-blade?utm_source=api",
+   "price": 0.15,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.27,
+   "cheapestSet": "The Hobbit",
+   "rank": 20962,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "artifacts"
+   ],
+   "causes": [
+    "creature-dies",
+    "cast-artifact"
+   ],
+   "mechanics": [
+    "equip"
+   ]
+  },
+  {
    "name": "Cruel Celebrant",
    "oracleId": "3ee78cfc-0e9e-4737-a7e2-b42f94228040",
    "manaCost": "{W}{B}",
@@ -27548,6 +28299,72 @@
    "causes": [
     "creature-dies",
     "cast-instant-sorcery"
+   ]
+  },
+  {
+   "name": "Daydream",
+   "oracleId": "094c4486-6cae-4268-850e-ff0082e5ad10",
+   "manaCost": "{W}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Exile target creature you control, then return that card to the battlefield under its owner's control with a +1/+1 counter on it.\nFlashback {2}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "keywords": [
+    "Flashback"
+   ],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/e/2/e2b16cb2-b8b2-45df-9695-3c16e9d89e28.jpg?1783903707",
+   "imageSmall": "https://cards.scryfall.io/small/front/e/2/e2b16cb2-b8b2-45df-9695-3c16e9d89e28.jpg?1783903707",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688650%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/9/daydream?utm_source=api",
+   "price": 0.36,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.5,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 8384,
+   "isCommander": false,
+   "printings": 2,
+   "roles": [
+    "removal",
+    "protection",
+    "blink"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-instant-sorcery"
+   ],
+   "mechanics": [
+    "flashback"
    ]
   },
   {
@@ -34889,6 +35706,65 @@
    ]
   },
   {
+   "name": "Eclipsed Realms",
+   "oracleId": "5715ed43-395c-4877-99a7-8e28e7bf9dce",
+   "manaCost": "",
+   "typeLine": "Land",
+   "power": null,
+   "toughness": null,
+   "oracleText": "As this land enters, choose Elemental, Elf, Faerie, Giant, Goblin, Kithkin, Merfolk, or Treefolk.\n{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast a spell of the chosen type or activate an ability of a source of the chosen type.",
+   "keywords": [],
+   "colorIdentity": [],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/a/1/a174f0db-8b4f-4c37-9583-44c92d37b9c0.jpg?1783904396",
+   "imageSmall": "https://cards.scryfall.io/small/front/a/1/a174f0db-8b4f-4c37-9583-44c92d37b9c0.jpg?1783904396",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671582%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/263/eclipsed-realms?utm_source=api",
+   "price": 0.72,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 1.01,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 3261,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "lands"
+   ],
+   "produces": [
+    "mana"
+   ],
+   "mechanics": [
+    "enters-untapped"
+   ]
+  },
+  {
    "name": "Eerie Interlude",
    "oracleId": "0634091a-a74c-4cea-b6d1-7324a725554a",
    "manaCost": "{2}{W}",
@@ -36288,6 +37164,71 @@
    "tribes": [
     "Elemental",
     "Fish"
+   ]
+  },
+  {
+   "name": "Elvenking's Harper",
+   "oracleId": "7d070a95-49ea-4aea-b512-dbb0006a00ee",
+   "manaCost": "{1}{U}",
+   "typeLine": "Creature — Elf Bard",
+   "power": "2",
+   "toughness": "2",
+   "oracleText": "{4}{U}: Target creature can't be blocked this turn.",
+   "keywords": [],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/9/c/9c50656d-c74a-4e90-9ef7-afa237682516.jpg?1785497043",
+   "imageSmall": "https://cards.scryfall.io/small/front/9/c/9c50656d-c74a-4e90-9ef7-afa237682516.jpg?1785497043",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709475%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/38/elvenkings-harper?utm_source=api",
+   "price": 0.1,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.25,
+   "cheapestSet": "The Hobbit",
+   "rank": 21862,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "grants": [
+    "unblockable"
+   ],
+   "tribes": [
+    "Elf",
+    "Bard"
    ]
   },
   {
@@ -39598,6 +40539,83 @@
    ],
    "mechanics": [
     "equip"
+   ]
+  },
+  {
+   "name": "Expressive Firedancer",
+   "oracleId": "f1812d69-c016-4bc3-b899-ed47f5e893e5",
+   "manaCost": "{1}{R}",
+   "typeLine": "Creature — Human Sorcerer",
+   "power": "2",
+   "toughness": "2",
+   "oracleText": "Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature also gains double strike until end of turn.",
+   "keywords": [
+    "Opus"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/2/5/259b8c45-6241-4206-a34e-34c7f401f47b.jpg?1783903669",
+   "imageSmall": "https://cards.scryfall.io/small/front/2/5/259b8c45-6241-4206-a34e-34c7f401f47b.jpg?1783903669",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688520%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/114/expressive-firedancer?utm_source=api",
+   "price": 0.05,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.17,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 22335,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "requires": [
+    "instants"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "triggers": [
+    "cast-spell",
+    "cast-instant-sorcery"
+   ],
+   "grants": [
+    "double-strike"
+   ],
+   "mechanics": [
+    "opus"
+   ],
+   "tribes": [
+    "Human",
+    "Sorcerer"
    ]
   },
   {
@@ -43236,6 +44254,145 @@
    ]
   },
   {
+   "name": "Flame-Chain Mauler",
+   "oracleId": "d6eef6a7-0cf4-4ee8-90e0-727a283c3be9",
+   "manaCost": "{1}{R}",
+   "typeLine": "Creature — Elemental Warrior",
+   "power": "2",
+   "toughness": "2",
+   "oracleText": "{1}{R}: This creature gets +1/+0 and gains menace until end of turn. (It can't be blocked except by two or more creatures.)",
+   "keywords": [],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/7/5/752d7e8e-0dd0-4ace-9c89-a8f9ce73775e.jpg?1783904447",
+   "imageSmall": "https://cards.scryfall.io/small/front/7/5/752d7e8e-0dd0-4ace-9c89-a8f9ce73775e.jpg?1783904447",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671502%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/138/flame-chain-mauler?utm_source=api",
+   "price": 0.1,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.12,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 25498,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "grants": [
+    "menace"
+   ],
+   "tribes": [
+    "Elemental",
+    "Warrior"
+   ]
+  },
+  {
+   "name": "Flamekin Gildweaver",
+   "oracleId": "bc8427fb-e5ee-4b44-9a4f-6d9f01b4b896",
+   "manaCost": "{3}{R}",
+   "typeLine": "Creature — Elemental Sorcerer",
+   "power": "4",
+   "toughness": "3",
+   "oracleText": "Trample\nWhen this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+   "keywords": [
+    "Treasure",
+    "Trample"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/b/1/b1628ece-a028-49d4-9065-ee997838c20a.jpg?1783904447",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/1/b1628ece-a028-49d4-9065-ee997838c20a.jpg?1783904447",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671586%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/140/flamekin-gildweaver?utm_source=api",
+   "price": 0.12,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.17,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 19552,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "ramp",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "produces": [
+    "treasure",
+    "token"
+   ],
+   "mechanics": [
+    "treasure",
+    "trample"
+   ],
+   "tribes": [
+    "Elemental",
+    "Sorcerer"
+   ]
+  },
+  {
    "name": "Flaming Fist",
    "oracleId": "cdaefc96-4560-43bb-9514-bf87657bd481",
    "manaCost": "{2}{W}",
@@ -44064,6 +45221,66 @@
    ],
    "produces": [
     "card"
+   ]
+  },
+  {
+   "name": "Follow the Lumarets",
+   "oracleId": "5bb38d08-582e-43aa-9507-7c20759978ec",
+   "manaCost": "{1}{G}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this turn, you may instead reveal two creature and/or land cards from among them and put them into your hand. Put the rest on the bottom of your library in a random order.",
+   "keywords": [
+    "Infusion"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/f/9/f9488480-2b6c-40bc-a93e-29fb1292a2e4.jpg?1783903659",
+   "imageSmall": "https://cards.scryfall.io/small/front/f/9/f9488480-2b6c-40bc-a93e-29fb1292a2e4.jpg?1783903659",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689506%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/148/follow-the-lumarets?utm_source=api",
+   "price": 0.11,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.2,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 16481,
+   "isCommander": false,
+   "printings": 1,
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "mechanics": [
+    "infusion"
    ]
   },
   {
@@ -45094,6 +46311,74 @@
    ],
    "produces": [
     "card"
+   ]
+  },
+  {
+   "name": "Fractal Anomaly",
+   "oracleId": "644379e7-782e-48e1-9b47-c4dc62e62d85",
+   "manaCost": "{U}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it, where X is the number of cards you've drawn this turn.",
+   "keywords": [],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/e/1/e1975a61-aef0-49a6-a6d6-c3a37e2e2b22.jpg?1783903693",
+   "imageSmall": "https://cards.scryfall.io/small/front/e/1/e1975a61-aef0-49a6-a6d6-c3a37e2e2b22.jpg?1783903693",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688816%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/50/fractal-anomaly?utm_source=api",
+   "price": 0.23,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.26,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 16621,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "instants",
+    "counters"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-instant-sorcery",
+    "counter-placed"
+   ],
+   "produces": [
+    "counter",
+    "token"
+   ],
+   "makes": [
+    "Fractal"
    ]
   },
   {
@@ -46526,6 +47811,78 @@
    ],
    "tribes": [
     "Avatar",
+    "Wizard"
+   ]
+  },
+  {
+   "name": "Gandalf, Goblins' Bane // Flameshape",
+   "oracleId": "f48f2a9b-4ba5-4984-8180-3950889bba65",
+   "manaCost": "{2}{R} // {1}{R}",
+   "typeLine": "Legendary Creature — Avatar Wizard // Sorcery — Adventure",
+   "power": "2",
+   "toughness": "3",
+   "oracleText": "Whenever you cast a noncreature spell, Gandalf gets +1/+1 until end of turn and deals 1 damage to each opponent.\n//\nLook at the top two cards of your library and exile them face down. For as long as they remain exiled, you may play them if you control a Wizard.",
+   "keywords": [],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "mythic",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/9/b/9b0d29a1-7da9-4fb3-8536-8ff8d8acae0b.jpg?1784376993",
+   "imageSmall": "https://cards.scryfall.io/small/front/9/b/9b0d29a1-7da9-4fb3-8536-8ff8d8acae0b.jpg?1784376993",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707045%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/96/gandalf-goblins-bane-flameshape?utm_source=api",
+   "price": 4.65,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 7.14,
+   "cheapestSet": "The Hobbit",
+   "rank": 10665,
+   "isCommander": true,
+   "printings": 3,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-instant-sorcery",
+    "cast-legendary",
+    "life-loss"
+   ],
+   "triggers": [
+    "cast-spell",
+    "cast-instant-sorcery"
+   ],
+   "tribes": [
+    "Avatar",
+    "Wizard"
+   ],
+   "wants": [
     "Wizard"
    ]
   },
@@ -48079,6 +49436,64 @@
    ],
    "tribes": [
     "Insect"
+   ]
+  },
+  {
+   "name": "Giant Growth",
+   "oracleId": "5748ebf1-24e3-499d-ab7c-c2cebd462a24",
+   "manaCost": "{G}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature gets +3/+3 until end of turn.",
+   "keywords": [],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Marvel Super Heroes",
+   "setCode": "msh",
+   "image": "https://cards.scryfall.io/normal/front/f/d/fd1f95bf-48ea-455a-8a6c-0249b11c8900.jpg?1783902918",
+   "imageSmall": "https://cards.scryfall.io/small/front/f/d/fd1f95bf-48ea-455a-8a6c-0249b11c8900.jpg?1783902918",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697046%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/msh/167/giant-growth?utm_source=api",
+   "price": 0.19,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.15,
+   "cheapestSet": "Magic 2011",
+   "rank": 3336,
+   "isCommander": false,
+   "printings": 64,
+   "roles": [
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
    ]
   },
   {
@@ -51031,6 +52446,75 @@
    ]
   },
   {
+   "name": "Goldmeadow Nomad",
+   "oracleId": "79dfe2eb-82b9-4dae-95c8-58fdf9006bc7",
+   "manaCost": "{W}",
+   "typeLine": "Creature — Kithkin Scout",
+   "power": "1",
+   "toughness": "2",
+   "oracleText": "{W}, Exile this card from your graveyard: Create a 1/1 green and white Kithkin creature token. Activate only as a sorcery.",
+   "keywords": [],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/0/0/00ddbe6c-11de-4bc6-aabe-d6d8385a838a.jpg?1783904506",
+   "imageSmall": "https://cards.scryfall.io/small/front/0/0/00ddbe6c-11de-4bc6-aabe-d6d8385a838a.jpg?1783904506",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671632%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/18/goldmeadow-nomad?utm_source=api",
+   "price": 0.2,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.22,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 18760,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-creature"
+   ],
+   "produces": [
+    "token"
+   ],
+   "tribes": [
+    "Kithkin",
+    "Scout"
+   ],
+   "makes": [
+    "Kithkin"
+   ]
+  },
+  {
    "name": "Goldspan Dragon",
    "oracleId": "716b3ea2-45b7-4a8f-af72-de7f4e510eff",
    "manaCost": "{3}{R}{R}",
@@ -52524,6 +54008,78 @@
    ],
    "tribes": [
     "Insect"
+   ]
+  },
+  {
+   "name": "Great Forest Druid",
+   "oracleId": "5cb6ebf7-6a75-4464-9e39-e171fcb52de3",
+   "manaCost": "{1}{G}",
+   "typeLine": "Creature — Treefolk Druid",
+   "power": "0",
+   "toughness": "4",
+   "oracleText": "{T}: Add one mana of any color.",
+   "keywords": [],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/8/7/8793a19e-6743-4031-86d9-2ff55f384549.jpg?1783904428",
+   "imageSmall": "https://cards.scryfall.io/small/front/8/7/8793a19e-6743-4031-86d9-2ff55f384549.jpg?1783904428",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671508%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/178/great-forest-druid?utm_source=api",
+   "price": 0.25,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.32,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 5688,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "ramp",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "produces": [
+    "mana"
+   ],
+   "mechanics": [
+    "tap-ability"
+   ],
+   "tribes": [
+    "Treefolk",
+    "Druid"
+   ],
+   "offersStat": [
+    "toughness"
    ]
   },
   {
@@ -58812,6 +60368,144 @@
    ]
   },
   {
+   "name": "Imperious Inkmage",
+   "oracleId": "fcd31653-4964-46a6-820c-f17e8cbaa1fa",
+   "manaCost": "{1}{W}{B}",
+   "typeLine": "Creature — Orc Warlock",
+   "power": "3",
+   "toughness": "3",
+   "oracleText": "Vigilance\nWhen this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+   "keywords": [
+    "Surveil",
+    "Vigilance"
+   ],
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/d/5/d5df1c3f-2536-4476-b8cd-34b026c38366.jpg?1783903642",
+   "imageSmall": "https://cards.scryfall.io/small/front/d/5/d5df1c3f-2536-4476-b8cd-34b026c38366.jpg?1783903642",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689523%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/195/imperious-inkmage?utm_source=api",
+   "price": 0.07,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.15,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 25336,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-creature",
+    "graveyard-entry"
+   ],
+   "mechanics": [
+    "surveil",
+    "vigilance"
+   ],
+   "tribes": [
+    "Orc",
+    "Warlock"
+   ]
+  },
+  {
+   "name": "Impolite Entrance",
+   "oracleId": "b77764fe-bc79-410a-995a-ac392f5b46b8",
+   "manaCost": "{R}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature gains trample and haste until end of turn.\nDraw a card.",
+   "keywords": [],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/4/5/45be88d8-0be1-47a2-a1c1-d6e693fc706f.jpg?1783904443",
+   "imageSmall": "https://cards.scryfall.io/small/front/4/5/45be88d8-0be1-47a2-a1c1-d6e693fc706f.jpg?1783904443",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671503%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/146/impolite-entrance?utm_source=api",
+   "price": 0.33,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.39,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 6144,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "draw-card"
+   ],
+   "produces": [
+    "card"
+   ],
+   "grants": [
+    "trample",
+    "haste"
+   ]
+  },
+  {
    "name": "Imprisoned in the Moon",
    "oracleId": "339a7418-9a29-4eae-a3c2-ea590d175936",
    "manaCost": "{2}{U}",
@@ -60670,6 +62364,76 @@
    ]
   },
   {
+   "name": "Iron Hills",
+   "oracleId": "a71e8d07-1a49-47a0-834e-de87d750a200",
+   "manaCost": "",
+   "typeLine": "Land",
+   "power": null,
+   "toughness": null,
+   "oracleText": "This land enters tapped.\n{T}: Add {R} or {W}.\n{2}{R}{W}, {T}, Sacrifice this land: Put two +1/+1 counters on target Dwarf you control. Activate only as a sorcery.",
+   "keywords": [],
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/7/8/78045c43-5cbe-48ff-837d-e7c6baac2937.jpg?1785323594",
+   "imageSmall": "https://cards.scryfall.io/small/front/7/8/78045c43-5cbe-48ff-837d-e7c6baac2937.jpg?1785323594",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708822%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/185/iron-hills?utm_source=api",
+   "price": 0.16,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.25,
+   "cheapestSet": "The Hobbit",
+   "rank": 14538,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "lands",
+    "counters"
+   ],
+   "causes": [
+    "counter-placed"
+   ],
+   "produces": [
+    "mana",
+    "counter"
+   ],
+   "mechanics": [
+    "enters-tapped"
+   ],
+   "wants": [
+    "Dwarf"
+   ]
+  },
+  {
    "name": "Iron Myr",
    "oracleId": "6c5cbab6-ee27-46f5-97a7-df85698d1e9f",
    "manaCost": "{2}",
@@ -61975,6 +63739,85 @@
    ],
    "produces": [
     "mana"
+   ]
+  },
+  {
+   "name": "Joined Researchers // Secret Rendezvous",
+   "oracleId": "ec744a2d-4a33-4807-bce0-d95cd5277b1f",
+   "manaCost": "{1}{W} // {1}{W}{W}",
+   "typeLine": "Creature — Human Cleric Wizard // Sorcery",
+   "power": "2",
+   "toughness": "2",
+   "oracleText": "First strike\nAt the beginning of each end step, if an opponent has more cards in hand than you, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nYou and target opponent each draw three cards.",
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "rare",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/1/e/1ebaafe0-3a9a-424c-8698-d26e7be45343.jpg?1783903702",
+   "imageSmall": "https://cards.scryfall.io/small/front/1/e/1ebaafe0-3a9a-424c-8698-d26e7be45343.jpg?1783903702",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686532%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/23/joined-researchers-secret-rendezvous?utm_source=api",
+   "price": 0.37,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.39,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 7989,
+   "isCommander": false,
+   "printings": 3,
+   "roles": [
+    "draw",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-instant-sorcery",
+    "draw-card"
+   ],
+   "triggers": [
+    "end-step"
+   ],
+   "produces": [
+    "card"
+   ],
+   "mechanics": [
+    "first strike",
+    "prepared"
+   ],
+   "tribes": [
+    "Human",
+    "Cleric",
+    "Wizard"
    ]
   },
   {
@@ -64403,6 +66246,74 @@
    ],
    "wantsStat": [
     "toughness"
+   ]
+  },
+  {
+   "name": "Kinbinding",
+   "oracleId": "da35de40-6fde-4018-bda8-b0ae91ed872a",
+   "manaCost": "{3}{W}{W}",
+   "typeLine": "Enchantment",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Creatures you control get +X/+X, where X is the number of creatures that entered the battlefield under your control this turn.\nAt the beginning of combat on your turn, create a 1/1 green and white Kithkin creature token.",
+   "keywords": [],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "rare",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/b/6/b6e35fd5-de7e-40a8-a23c-00d07fd1ac56.jpg?1783904504",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/6/b6e35fd5-de7e-40a8-a23c-00d07fd1ac56.jpg?1783904504",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F670961%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/20/kinbinding?utm_source=api",
+   "price": 0.36,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.24,
+   "cheapestSet": "Lorwyn Eclipsed Promos",
+   "rank": 6911,
+   "isCommander": false,
+   "printings": 4,
+   "requires": [
+    "creatures"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-enchantment"
+   ],
+   "triggers": [
+    "combat-begin"
+   ],
+   "produces": [
+    "token"
+   ],
+   "makes": [
+    "Kithkin"
    ]
   },
   {
@@ -70983,6 +72894,75 @@
    ]
   },
   {
+   "name": "Mage Tower Referee",
+   "oracleId": "3f27988b-0863-4cc1-8eb9-83bd0cd8561c",
+   "manaCost": "{2}",
+   "typeLine": "Artifact Creature — Construct",
+   "power": "2",
+   "toughness": "1",
+   "oracleText": "Whenever you cast a multicolored spell, put a +1/+1 counter on this creature.",
+   "keywords": [],
+   "colorIdentity": [],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/1/c/1ceb704a-97a8-49f9-b799-30f001404144.jpg?1783903622",
+   "imageSmall": "https://cards.scryfall.io/small/front/1/c/1ceb704a-97a8-49f9-b799-30f001404144.jpg?1783903622",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689534%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/249/mage-tower-referee?utm_source=api",
+   "price": 0.05,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.13,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 23762,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "artifacts",
+    "counters"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-artifact",
+    "counter-placed"
+   ],
+   "triggers": [
+    "cast-spell"
+   ],
+   "produces": [
+    "counter"
+   ],
+   "tribes": [
+    "Construct"
+   ]
+  },
+  {
    "name": "Mage's Guile",
    "oracleId": "f371cdaf-7ab8-4555-8c96-61dfbf8c0179",
    "manaCost": "{1}{U}",
@@ -72626,6 +74606,140 @@
    ],
    "makes": [
     "Citizen"
+   ]
+  },
+  {
+   "name": "Master's Councillors",
+   "oracleId": "b9079564-5c86-4765-988a-f2334e016fa6",
+   "manaCost": "{1}{U}",
+   "typeLine": "Creature — Human Advisor",
+   "power": "1",
+   "toughness": "3",
+   "oracleText": "Vigilance\nThis creature gets +2/+0 for each graveyard with seven or more cards in it.\nWhenever you draw your second card each turn, target player mills three cards. (They put the top three cards of their library into their graveyard.)",
+   "keywords": [
+    "Vigilance",
+    "Mill"
+   ],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/a/d/addcefdd-e012-4adf-9052-e60376a8d2d3.jpg?1784798124",
+   "imageSmall": "https://cards.scryfall.io/small/front/a/d/addcefdd-e012-4adf-9052-e60376a8d2d3.jpg?1784798124",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707486%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/47/masters-councillors?utm_source=api",
+   "price": 0.16,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.22,
+   "cheapestSet": "The Hobbit",
+   "rank": 23571,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "triggers": [
+    "draw-card"
+   ],
+   "mechanics": [
+    "vigilance",
+    "mill"
+   ],
+   "tribes": [
+    "Human",
+    "Advisor"
+   ]
+  },
+  {
+   "name": "Masterful Flourish",
+   "oracleId": "1cb419cc-d8e4-4676-987f-089cebccc374",
+   "manaCost": "{B}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature you control gets +1/+0 and gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+   "keywords": [],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/8/d/8d93d14d-7760-4af2-a237-2df326dd28d3.jpg?1783903678",
+   "imageSmall": "https://cards.scryfall.io/small/front/8/d/8d93d14d-7760-4af2-a237-2df326dd28d3.jpg?1783903678",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689474%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/89/masterful-flourish?utm_source=api",
+   "price": 0.2,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.23,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 12425,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "protection",
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "grants": [
+    "indestructible"
    ]
   },
   {
@@ -75623,6 +77737,76 @@
    ]
   },
   {
+   "name": "Mistmeadow Council",
+   "oracleId": "9acfec0d-05a0-4b28-a883-e6863f1cb773",
+   "manaCost": "{4}{G}",
+   "typeLine": "Creature — Kithkin Advisor",
+   "power": "4",
+   "toughness": "3",
+   "oracleText": "This spell costs {1} less to cast if you control a Kithkin.\nWhen this creature enters, draw a card.",
+   "keywords": [],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/d/4/d4a7c9bc-81c8-4c31-96a9-eb6ba7715e7f.jpg?1783904429",
+   "imageSmall": "https://cards.scryfall.io/small/front/d/4/d4a7c9bc-81c8-4c31-96a9-eb6ba7715e7f.jpg?1783904429",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671677%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/183/mistmeadow-council?utm_source=api",
+   "price": 0.06,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.12,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 21544,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature",
+    "draw-card"
+   ],
+   "produces": [
+    "card"
+   ],
+   "tribes": [
+    "Kithkin",
+    "Advisor"
+   ],
+   "wants": [
+    "Kithkin"
+   ]
+  },
+  {
    "name": "Mistmeadow Witch",
    "oracleId": "38e274e2-bd04-48de-a1df-44f0ee987ba8",
    "manaCost": "{1}{W/U}",
@@ -75742,6 +77926,83 @@
    ],
    "mechanics": [
     "enters-tapped"
+   ]
+  },
+  {
+   "name": "Misty Mountains Raider",
+   "oracleId": "c394b767-620c-4310-b78f-ece312259e46",
+   "manaCost": "{4}{R}",
+   "typeLine": "Creature — Goblin Soldier",
+   "power": "4",
+   "toughness": "4",
+   "oracleText": "Whenever you attack, amass Goblins 2. (Put two +1/+1 counters on an Army you control. It's also a Goblin. If you don't control an Army, create a 0/0 black Goblin Army creature token first.)",
+   "keywords": [
+    "Amass"
+   ],
+   "colorIdentity": [
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "uncommon",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/6/d/6dff14cd-b60b-48f4-9d9f-c9019b55df4c.jpg?1785152178",
+   "imageSmall": "https://cards.scryfall.io/small/front/6/d/6dff14cd-b60b-48f4-9d9f-c9019b55df4c.jpg?1785152178",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708211%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/105/misty-mountains-raider?utm_source=api",
+   "price": 0.21,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.26,
+   "cheapestSet": "The Hobbit",
+   "rank": 15305,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "counters"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-creature",
+    "counter-placed"
+   ],
+   "triggers": [
+    "attack"
+   ],
+   "produces": [
+    "counter",
+    "token"
+   ],
+   "mechanics": [
+    "amass"
+   ],
+   "tribes": [
+    "Goblin",
+    "Soldier"
    ]
   },
   {
@@ -76893,6 +79154,75 @@
    ]
   },
   {
+   "name": "Moonshadow",
+   "oracleId": "a3635b3f-839c-4fe5-83a5-7c70e8630184",
+   "manaCost": "{B}",
+   "typeLine": "Creature — Elemental",
+   "power": "7",
+   "toughness": "7",
+   "oracleText": "Menace\nThis creature enters with six -1/-1 counters on it.\nWhenever one or more permanent cards are put into your graveyard from anywhere while this creature has a -1/-1 counter on it, remove a -1/-1 counter from this creature.",
+   "keywords": [
+    "Menace"
+   ],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "mythic",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/2/5/2573e694-eaa0-42ca-b470-2ab507cbcec1.jpg?1783904461",
+   "imageSmall": "https://cards.scryfall.io/small/front/2/5/2573e694-eaa0-42ca-b470-2ab507cbcec1.jpg?1783904461",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671780%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/110/moonshadow?utm_source=api",
+   "price": 13.04,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 13.25,
+   "cheapestSet": "Lorwyn Eclipsed Promos",
+   "rank": 8395,
+   "isCommander": false,
+   "printings": 5,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "triggers": [
+    "graveyard-entry"
+   ],
+   "mechanics": [
+    "menace"
+   ],
+   "tribes": [
+    "Elemental"
+   ]
+  },
+  {
    "name": "Moonshaker Cavalry",
    "oracleId": "b3f16f34-d78c-4b61-821b-05fc6bd0da37",
    "manaCost": "{5}{W}{W}{W}",
@@ -77972,6 +80302,78 @@
    ],
    "offersStat": [
     "toughness"
+   ]
+  },
+  {
+   "name": "Muse's Encouragement",
+   "oracleId": "62421084-96e6-40dd-8d34-7c8c1091d4a4",
+   "manaCost": "{4}{U}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Create a 3/3 blue and red Elemental creature token with flying.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+   "keywords": [
+    "Surveil"
+   ],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/c/5/c59e0004-1d6a-42a1-8ce4-31da2af2e1bf.jpg?1783903689",
+   "imageSmall": "https://cards.scryfall.io/small/front/c/5/c59e0004-1d6a-42a1-8ce4-31da2af2e1bf.jpg?1783903689",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688518%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/61/muses-encouragement?utm_source=api",
+   "price": 0.07,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.06,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 23211,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "instants",
+    "graveyard"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-instant-sorcery",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "token"
+   ],
+   "mechanics": [
+    "surveil"
+   ],
+   "makes": [
+    "Elemental"
    ]
   },
   {
@@ -81450,6 +83852,77 @@
    ],
    "mechanics": [
     "protection"
+   ]
+  },
+  {
+   "name": "Noxious Newt",
+   "oracleId": "1232c461-643c-40a3-901e-09b665f817da",
+   "manaCost": "{1}{G}",
+   "typeLine": "Creature — Salamander",
+   "power": "1",
+   "toughness": "2",
+   "oracleText": "Deathtouch\n{T}: Add {G}.",
+   "keywords": [
+    "Deathtouch"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/3/a/3a028306-c5d7-4f8f-b6f4-0d103fd47000.jpg?1783903656",
+   "imageSmall": "https://cards.scryfall.io/small/front/3/a/3a028306-c5d7-4f8f-b6f4-0d103fd47000.jpg?1783903656",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689511%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/155/noxious-newt?utm_source=api",
+   "price": 0.27,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.37,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 6746,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "ramp",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "produces": [
+    "mana"
+   ],
+   "mechanics": [
+    "deathtouch",
+    "tap-ability"
+   ],
+   "tribes": [
+    "Salamander"
    ]
   },
   {
@@ -94543,6 +97016,69 @@
    ]
   },
   {
+   "name": "Render Speechless",
+   "oracleId": "6fdddab4-fcc9-4622-9c17-c69f9d4bca08",
+   "manaCost": "{2}{W}{B}",
+   "typeLine": "Sorcery",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.\nPut two +1/+1 counters on up to one target creature.",
+   "keywords": [],
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/2/5/25bbb1c7-14e8-444f-ab98-e95f50927460.jpg?1783903633",
+   "imageSmall": "https://cards.scryfall.io/small/front/2/5/25bbb1c7-14e8-444f-ab98-e95f50927460.jpg?1783903633",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689527%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/220/render-speechless?utm_source=api",
+   "price": 0.07,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.15,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 21121,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "counters"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "counter-placed"
+   ],
+   "produces": [
+    "counter"
+   ]
+  },
+  {
    "name": "Renewed Solidarity",
    "oracleId": "bea3ff6e-7649-4e51-b2ad-763f9ac2d4b8",
    "manaCost": "{2}{W}",
@@ -94945,6 +97481,78 @@
    ]
   },
   {
+   "name": "Resonating Lute",
+   "oracleId": "9263287d-f782-4318-9ab8-e2e5f8107f5e",
+   "manaCost": "{2}{U}{R}",
+   "typeLine": "Artifact",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Lands you control have \"{T}: Add two mana of any one color. Spend this mana only to cast instant and sorcery spells.\"\n{T}: Draw a card. Activate only if you have seven or more cards in your hand.",
+   "keywords": [],
+   "colorIdentity": [
+    "R",
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "rare",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/6/e/6ef168d6-28f2-4c24-9bfa-82c35663b729.jpg?1783903631",
+   "imageSmall": "https://cards.scryfall.io/small/front/6/e/6ef168d6-28f2-4c24-9bfa-82c35663b729.jpg?1783903631",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688477%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/221/resonating-lute?utm_source=api",
+   "price": 1.18,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 1.69,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 2967,
+   "isCommander": false,
+   "printings": 3,
+   "roles": [
+    "ramp",
+    "draw",
+    "artifacts"
+   ],
+   "requires": [
+    "lands"
+   ],
+   "causes": [
+    "cast-artifact",
+    "draw-card"
+   ],
+   "produces": [
+    "mana",
+    "card"
+   ],
+   "mechanics": [
+    "tap-ability"
+   ]
+  },
+  {
    "name": "Restoration Angel",
    "oracleId": "dfbd3afc-9905-4cff-a4f4-df08a4d0a7fa",
    "manaCost": "{3}{W}",
@@ -95014,6 +97622,71 @@
    ],
    "wants": [
     "Angel"
+   ]
+  },
+  {
+   "name": "Retched Wretch",
+   "oracleId": "0d3b6e27-2f8b-42e0-9490-7b134e84bb6b",
+   "manaCost": "{2}{B}",
+   "typeLine": "Creature — Goblin",
+   "power": "4",
+   "toughness": "2",
+   "oracleText": "When this creature dies, if it had a -1/-1 counter on it, return it to the battlefield under its owner's control and it loses all abilities.",
+   "keywords": [],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/c/7/c7a4d7f1-976a-4a28-97a9-ff089a241c9d.jpg?1783904456",
+   "imageSmall": "https://cards.scryfall.io/small/front/c/7/c7a4d7f1-976a-4a28-97a9-ff089a241c9d.jpg?1783904456",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671656%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/117/retched-wretch?utm_source=api",
+   "price": 0.13,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.19,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 21478,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "creature-etb",
+    "cast-creature"
+   ],
+   "tribes": [
+    "Goblin"
+   ],
+   "offersStat": [
+    "power"
    ]
   },
   {
@@ -95810,6 +98483,75 @@
    ],
    "offersStat": [
     "toughness"
+   ]
+  },
+  {
+   "name": "Rime Chill",
+   "oracleId": "bad84deb-3f2c-46fd-9dcb-4e3ba9732769",
+   "manaCost": "{6}{U}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Vivid — This spell costs {1} less to cast for each color among permanents you control.\nTap up to two target creatures. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nDraw a card.",
+   "keywords": [
+    "Vivid"
+   ],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/a/9/a9a425f4-2103-4f96-88a0-91fe554037d7.jpg?1783904483",
+   "imageSmall": "https://cards.scryfall.io/small/front/a/9/a9a425f4-2103-4f96-88a0-91fe554037d7.jpg?1783904483",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671900%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/64/rime-chill?utm_source=api",
+   "price": 0.1,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.14,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 21988,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw",
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "draw-card"
+   ],
+   "produces": [
+    "card",
+    "counter"
+   ],
+   "mechanics": [
+    "vivid"
    ]
   },
   {
@@ -97078,6 +99820,76 @@
    "tribes": [
     "Human",
     "Assassin"
+   ]
+  },
+  {
+   "name": "Royal Treatment",
+   "oracleId": "fd0f8fdc-4065-41f4-b8fb-ecb8f185774d",
+   "manaCost": "{G}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Target creature you control gains hexproof until end of turn. Create a Royal Role token attached to that creature. (If you control another Role on it, put that one into the graveyard. Enchanted creature gets +1/+1 and has ward {1}.)",
+   "keywords": [
+    "Role token"
+   ],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Wilds of Eldraine",
+   "setCode": "woe",
+   "image": "https://cards.scryfall.io/normal/front/b/6/b6516b8f-ecfb-401e-ba8e-bf561aa2be64.jpg?1783915078",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/6/b6516b8f-ecfb-401e-ba8e-bf561aa2be64.jpg?1783915078",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512823%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/woe/183/royal-treatment?utm_source=api",
+   "price": 0.31,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.4,
+   "cheapestSet": "Wilds of Eldraine",
+   "rank": 3044,
+   "isCommander": false,
+   "printings": 4,
+   "roles": [
+    "protection",
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "produces": [
+    "token"
+   ],
+   "grants": [
+    "hexproof"
+   ],
+   "mechanics": [
+    "role token"
    ]
   },
   {
@@ -101938,6 +104750,73 @@
    ]
   },
   {
+   "name": "Shadow Urchin",
+   "oracleId": "86bd332f-ba61-49a4-ad31-de4d7e3638c6",
+   "manaCost": "{2}{B/R}",
+   "typeLine": "Creature — Ouphe",
+   "power": "3",
+   "toughness": "4",
+   "oracleText": "Whenever this creature attacks, blight 1. (Put a -1/-1 counter on a creature you control.)\nWhenever a creature you control with one or more counters on it dies, exile that many cards from the top of your library. Until your next end step, you may play those cards.",
+   "keywords": [
+    "Blight"
+   ],
+   "colorIdentity": [
+    "B",
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "rare",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/4/e/4e54c39b-6149-467b-a9a8-7ad09ca0cbd4.jpg?1783904402",
+   "imageSmall": "https://cards.scryfall.io/small/front/4/e/4e54c39b-6149-467b-a9a8-7ad09ca0cbd4.jpg?1783904402",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F672018%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/242/shadow-urchin?utm_source=api",
+   "price": 0.26,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.35,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 14558,
+   "isCommander": false,
+   "printings": 3,
+   "roles": [
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature"
+   ],
+   "mechanics": [
+    "blight"
+   ],
+   "tribes": [
+    "Ouphe"
+   ]
+  },
+  {
    "name": "Shadowspear",
    "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
    "manaCost": "{1}",
@@ -104677,6 +107556,75 @@
    ]
   },
   {
+   "name": "Silvergill Peddler",
+   "oracleId": "08688903-d9cc-4d57-ba91-14a8523551b9",
+   "manaCost": "{2}{U}",
+   "typeLine": "Creature — Merfolk Citizen",
+   "power": "2",
+   "toughness": "3",
+   "oracleText": "Whenever this creature becomes tapped, draw a card, then discard a card.",
+   "keywords": [],
+   "colorIdentity": [
+    "U"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/f/e/feba2bb6-6005-4ade-a4c5-97bbd54b43a3.jpg?1783904482",
+   "imageSmall": "https://cards.scryfall.io/small/front/f/e/feba2bb6-6005-4ade-a4c5-97bbd54b43a3.jpg?1783904482",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671472%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/70/silvergill-peddler?utm_source=api",
+   "price": 0.15,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.17,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 18540,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "draw",
+    "creatures",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-creature",
+    "draw-card",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "card"
+   ],
+   "tribes": [
+    "Merfolk",
+    "Citizen"
+   ]
+  },
+  {
    "name": "Silverquill Campus",
    "oracleId": "2b65eb80-6fb7-429f-81f2-2fe125eba634",
    "manaCost": "",
@@ -104716,6 +107664,74 @@
    "mechanics": [
     "scry",
     "enters-tapped"
+   ]
+  },
+  {
+   "name": "Silverquill Charm",
+   "oracleId": "d985b12e-2731-4ccf-9f51-90218b20b42a",
+   "manaCost": "{W}{B}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Choose one —\n• Put two +1/+1 counters on target creature.\n• Exile target creature with power 2 or less.\n• Each opponent loses 3 life and you gain 3 life.",
+   "keywords": [],
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/3/e/3eb73579-f1c6-4762-81d2-9568ab501fac.jpg?1783903631",
+   "imageSmall": "https://cards.scryfall.io/small/front/3/e/3eb73579-f1c6-4762-81d2-9568ab501fac.jpg?1783903631",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686607%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/225/silverquill-charm?utm_source=api",
+   "price": 0.23,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.31,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 11884,
+   "isCommander": false,
+   "printings": 2,
+   "roles": [
+    "removal",
+    "instants",
+    "counters"
+   ],
+   "causes": [
+    "cast-instant-sorcery",
+    "counter-placed",
+    "life-gain",
+    "life-loss"
+   ],
+   "produces": [
+    "life",
+    "counter"
    ]
   },
   {
@@ -106696,6 +109712,87 @@
    ],
    "wantsStat": [
     "toughness"
+   ]
+  },
+  {
+   "name": "Smaug, Wicked Worm",
+   "oracleId": "20535126-f811-4386-bdce-d73f30691724",
+   "manaCost": "{3}{B}{R}",
+   "typeLine": "Legendary Creature — Dragon",
+   "power": "5",
+   "toughness": "5",
+   "oracleText": "Flying\nWhen Smaug enters, create X tapped Treasure tokens, where X is the number of artifacts your opponents control.\nWhenever you cast a spell, if mana from a Treasure was spent to cast it, you draw a card and lose 1 life.",
+   "keywords": [
+    "Flying",
+    "Treasure"
+   ],
+   "colorIdentity": [
+    "B",
+    "R"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "rare",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+   "imageSmall": "https://cards.scryfall.io/small/front/1/9/19cc91f0-e724-41ac-b6d8-9a293bd63b42.jpg?1785323313",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709006%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/164/smaug-wicked-worm?utm_source=api",
+   "price": 1.5,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 1.98,
+   "cheapestSet": "The Hobbit",
+   "rank": 7845,
+   "isCommander": true,
+   "printings": 3,
+   "roles": [
+    "ramp",
+    "draw",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-legendary",
+    "draw-card"
+   ],
+   "triggers": [
+    "cast-spell"
+   ],
+   "produces": [
+    "treasure",
+    "card",
+    "token"
+   ],
+   "mechanics": [
+    "flying",
+    "treasure"
+   ],
+   "tribes": [
+    "Dragon"
    ]
   },
   {
@@ -111097,6 +114194,69 @@
    ]
   },
   {
+   "name": "Stand Up for Yourself",
+   "oracleId": "00e94b75-ad31-4e1f-b3be-eed7cd3e4d76",
+   "manaCost": "{2}{W}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Destroy target creature with power 3 or greater.",
+   "keywords": [],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/b/7/b756ca13-b904-4510-9bbb-5bc2864abfbd.jpg?1783903698",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/7/b756ca13-b904-4510-9bbb-5bc2864abfbd.jpg?1783903698",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688970%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/34/stand-up-for-yourself?utm_source=api",
+   "price": 0.09,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.17,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 21666,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "removal",
+    "instants"
+   ],
+   "causes": [
+    "creature-dies",
+    "cast-instant-sorcery"
+   ],
+   "wantsStat": [
+    "power"
+   ]
+  },
+  {
    "name": "Star Athlete",
    "oracleId": "fb03befb-b4e4-4ae9-908d-a16d5b03b054",
    "manaCost": "{1}{R}{R}",
@@ -112222,6 +115382,79 @@
    ],
    "wantsStat": [
     "power"
+   ]
+  },
+  {
+   "name": "Stone Docent",
+   "oracleId": "dbb1690a-f6f5-459c-9d7f-cb6541fb6688",
+   "manaCost": "{1}{W}",
+   "typeLine": "Creature — Spirit Chimera",
+   "power": "3",
+   "toughness": "1",
+   "oracleText": "{W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery. (Look at the top card of your library. You may put it into your graveyard.)",
+   "keywords": [
+    "Surveil"
+   ],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/c/2/c2abfffb-bf36-44af-9a27-6e109e4d77dd.jpg?1783903696",
+   "imageSmall": "https://cards.scryfall.io/small/front/c/2/c2abfffb-bf36-44af-9a27-6e109e4d77dd.jpg?1783903696",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689456%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/36/stone-docent?utm_source=api",
+   "price": 0.07,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.12,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 24211,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-creature",
+    "life-gain",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "life"
+   ],
+   "mechanics": [
+    "surveil"
+   ],
+   "tribes": [
+    "Spirit",
+    "Chimera"
    ]
   },
   {
@@ -113547,6 +116780,69 @@
    ],
    "mechanics": [
     "enters-untapped"
+   ]
+  },
+  {
+   "name": "Strixhaven Skycoach",
+   "oracleId": "e286a191-39d4-4073-b844-11d2aba911b4",
+   "manaCost": "{3}",
+   "typeLine": "Artifact — Vehicle",
+   "power": "3",
+   "toughness": "2",
+   "oracleText": "Flying\nWhen this Vehicle enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.\nCrew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)",
+   "keywords": [
+    "Flying",
+    "Crew"
+   ],
+   "colorIdentity": [],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/8/7/87741fbb-b426-4f83-a358-587b0907f081.jpg?1783903621",
+   "imageSmall": "https://cards.scryfall.io/small/front/8/7/87741fbb-b426-4f83-a358-587b0907f081.jpg?1783903621",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688975%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/252/strixhaven-skycoach?utm_source=api",
+   "price": 0.19,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.27,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 19302,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "artifacts"
+   ],
+   "causes": [
+    "cast-artifact"
+   ],
+   "mechanics": [
+    "flying",
+    "crew"
    ]
   },
   {
@@ -123197,6 +126493,84 @@
    ]
   },
   {
+   "name": "Thorin Oakenshield",
+   "oracleId": "bdd41af0-bbd1-4ecd-a699-99f006f5e5ce",
+   "manaCost": "{R}{W}",
+   "typeLine": "Legendary Creature — Dwarf Noble",
+   "power": "3",
+   "toughness": "2",
+   "oracleText": "Trample\nStoried (If you control three or more artifacts, legendaries, and/or Sagas, you have an enduring story for the rest of the game.)\nAs long as you have an enduring story, artifacts and creatures you control have ward {1}.",
+   "keywords": [
+    "Trample",
+    "Storied"
+   ],
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/c/7/c7e18609-d1ed-4829-be11-f2ce2cfcbc49.jpg?1784377040",
+   "imageSmall": "https://cards.scryfall.io/small/front/c/7/c7e18609-d1ed-4829-be11-f2ce2cfcbc49.jpg?1784377040",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707066%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/165/thorin-oakenshield?utm_source=api",
+   "price": 0.24,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.28,
+   "cheapestSet": "The Hobbit",
+   "rank": 10184,
+   "isCommander": true,
+   "printings": 2,
+   "roles": [
+    "protection",
+    "creatures"
+   ],
+   "causes": [
+    "cast-creature",
+    "cast-legendary"
+   ],
+   "grants": [
+    "ward"
+   ],
+   "extends": [
+    "ward"
+   ],
+   "mechanics": [
+    "trample",
+    "storied"
+   ],
+   "tribes": [
+    "Dwarf",
+    "Noble"
+   ]
+  },
+  {
    "name": "Thornbite Staff",
    "oracleId": "dae4815e-9025-4993-ab46-52a3f1a7219e",
    "manaCost": "{2}",
@@ -125613,6 +128987,86 @@
    ],
    "produces": [
     "card"
+   ]
+  },
+  {
+   "name": "Tom, Bert, and William",
+   "oracleId": "0ea58cfe-b37c-49a6-a3be-7e60065b8238",
+   "manaCost": "{3}{B}{G}",
+   "typeLine": "Legendary Creature — Troll",
+   "power": "5",
+   "toughness": "5",
+   "oracleText": "{1}, Sacrifice another creature: Draw cards equal to the sacrificed creature's power, then discard a card.\nWhen Tom, Bert, and William die, if they were a creature, return them to the battlefield. They're an artifact. (They're no longer a creature.)",
+   "keywords": [],
+   "colorIdentity": [
+    "B",
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "rare",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+   "imageSmall": "https://cards.scryfall.io/small/front/2/1/211a9764-3c60-46ba-bb53-e6692640ec8f.jpg?1783902784",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693006%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/169/tom-bert-and-william?utm_source=api",
+   "price": 0.3,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.38,
+   "cheapestSet": "The Hobbit",
+   "rank": 13080,
+   "isCommander": true,
+   "printings": 3,
+   "roles": [
+    "draw",
+    "sac-outlet",
+    "creatures",
+    "graveyard"
+   ],
+   "requires": [
+    "creatures"
+   ],
+   "causes": [
+    "creature-etb",
+    "creature-dies",
+    "cast-creature",
+    "cast-legendary",
+    "draw-card",
+    "sacrifice",
+    "graveyard-entry"
+   ],
+   "produces": [
+    "card"
+   ],
+   "tribes": [
+    "Troll"
+   ],
+   "wantsStat": [
+    "power"
    ]
   },
   {
@@ -128033,6 +131487,70 @@
    ],
    "mechanics": [
     "fight"
+   ]
+  },
+  {
+   "name": "Troop of Ponies",
+   "oracleId": "bb52b3c3-09f0-4506-b7c0-250ab0b91866",
+   "manaCost": "{2}",
+   "typeLine": "Creature — Horse",
+   "power": "2",
+   "toughness": "1",
+   "oracleText": "{2}, {T}, Sacrifice this creature: Search your library for up to two basic land cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle.",
+   "keywords": [],
+   "colorIdentity": [],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "uncommon",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/0/b/0b4b1c59-bcec-4779-9e27-0e6f9feb4e11.jpg?1785639568",
+   "imageSmall": "https://cards.scryfall.io/small/front/0/b/0b4b1c59-bcec-4779-9e27-0e6f9feb4e11.jpg?1785639568",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709552%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/3/troop-of-ponies?utm_source=api",
+   "price": 0.31,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.43,
+   "cheapestSet": "The Hobbit",
+   "rank": 9209,
+   "isCommander": false,
+   "printings": 2,
+   "roles": [
+    "ramp",
+    "creatures"
+   ],
+   "causes": [
+    "land-drop",
+    "cast-creature"
+   ],
+   "mechanics": [
+    "tap-ability"
+   ],
+   "tribes": [
+    "Horse"
    ]
   },
   {
@@ -134357,6 +137875,68 @@
    ]
   },
   {
+   "name": "Vow to Erebor",
+   "oracleId": "f8961618-ae68-4d13-84eb-8b5464ce4971",
+   "manaCost": "{1}{W}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Untap target creature you control. It gets +2/+2 until end of turn. If it's a Dwarf, you may attach an Equipment you control to it.",
+   "keywords": [],
+   "colorIdentity": [
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+   "imageSmall": "https://cards.scryfall.io/small/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709466%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/31/vow-to-erebor?utm_source=api",
+   "price": 0.15,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.17,
+   "cheapestSet": "The Hobbit",
+   "rank": 17128,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "untap",
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ],
+   "wants": [
+    "Dwarf"
+   ]
+  },
+  {
    "name": "Voyager Staff",
    "oracleId": "4573f044-7011-412e-81bd-ae8d0c21283b",
    "manaCost": "{1}",
@@ -136095,6 +139675,65 @@
    ]
   },
   {
+   "name": "Wander Off",
+   "oracleId": "b14d3226-adc2-4bdd-9e69-fefdc946ac04",
+   "manaCost": "{3}{B}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Exile target creature.",
+   "keywords": [],
+   "colorIdentity": [
+    "B"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+   },
+   "rarity": "common",
+   "setName": "Secrets of Strixhaven",
+   "setCode": "sos",
+   "image": "https://cards.scryfall.io/normal/front/3/d/3d409512-50b9-4a38-91b0-19ba25227992.jpg?1783903675",
+   "imageSmall": "https://cards.scryfall.io/small/front/3/d/3d409512-50b9-4a38-91b0-19ba25227992.jpg?1783903675",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689483%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/sos/104/wander-off?utm_source=api",
+   "price": 0.11,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.22,
+   "cheapestSet": "Secrets of Strixhaven",
+   "rank": 15903,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "removal",
+    "instants"
+   ],
+   "causes": [
+    "cast-instant-sorcery"
+   ]
+  },
+  {
    "name": "Wanderer's Twig",
    "oracleId": "fd15a4b0-abd7-4bae-8331-81b85c94fce8",
    "manaCost": "{1}",
@@ -136373,6 +140012,77 @@
    ]
   },
   {
+   "name": "Warg Tactics",
+   "oracleId": "d1663b51-37a1-45a0-b477-2d3e7dd0828e",
+   "manaCost": "{1}{G}",
+   "typeLine": "Instant",
+   "power": null,
+   "toughness": null,
+   "oracleText": "Choose one —\n• Destroy target creature with flying.\n• Put a +1/+1 counter on target creature you control. It gains trample and hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+   "keywords": [],
+   "colorIdentity": [
+    "G"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "The Hobbit",
+   "setCode": "hob",
+   "image": "https://cards.scryfall.io/normal/front/b/0/b06d9cee-bb0f-4fe7-ab2a-b55d36461aec.jpg?1785497168",
+   "imageSmall": "https://cards.scryfall.io/small/front/b/0/b06d9cee-bb0f-4fe7-ab2a-b55d36461aec.jpg?1785497168",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709637%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/hob/139/warg-tactics?utm_source=api",
+   "price": 0.19,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.25,
+   "cheapestSet": "The Hobbit",
+   "rank": 17838,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "removal",
+    "protection",
+    "instants",
+    "counters"
+   ],
+   "causes": [
+    "creature-dies",
+    "cast-instant-sorcery",
+    "counter-placed"
+   ],
+   "produces": [
+    "counter"
+   ],
+   "grants": [
+    "hexproof",
+    "flying",
+    "trample"
+   ]
+  },
+  {
    "name": "Warping Wail",
    "oracleId": "c8b9fa02-0a0c-4a87-9a00-3c1c7e2f4bfd",
    "manaCost": "{1}{C}",
@@ -136493,6 +140203,79 @@
    ],
    "wantsStat": [
     "power"
+   ]
+  },
+  {
+   "name": "Wary Farmer",
+   "oracleId": "63eed1f5-442f-433d-989c-397b88543162",
+   "manaCost": "{1}{G/W}{G/W}",
+   "typeLine": "Creature — Kithkin Citizen",
+   "power": "3",
+   "toughness": "3",
+   "oracleText": "At the beginning of your end step, if another creature entered the battlefield under your control this turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "keywords": [
+    "Surveil"
+   ],
+   "colorIdentity": [
+    "G",
+    "W"
+   ],
+   "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+   },
+   "rarity": "common",
+   "setName": "Lorwyn Eclipsed",
+   "setCode": "ecl",
+   "image": "https://cards.scryfall.io/normal/front/2/2/22d20c0d-176d-49c9-aa0b-2c5778548cc5.jpg?1783904399",
+   "imageSmall": "https://cards.scryfall.io/small/front/2/2/22d20c0d-176d-49c9-aa0b-2c5778548cc5.jpg?1783904399",
+   "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671524%3Fpage%3D1",
+   "scryfallUrl": "https://scryfall.com/card/ecl/251/wary-farmer?utm_source=api",
+   "price": 0.14,
+   "priceUpdated": "2026-09-16",
+   "priceFoil": 0.14,
+   "cheapestSet": "Lorwyn Eclipsed",
+   "rank": 19459,
+   "isCommander": false,
+   "printings": 1,
+   "roles": [
+    "creatures",
+    "graveyard"
+   ],
+   "causes": [
+    "cast-creature",
+    "graveyard-entry"
+   ],
+   "triggers": [
+    "end-step"
+   ],
+   "mechanics": [
+    "surveil"
+   ],
+   "tribes": [
+    "Kithkin",
+    "Citizen"
    ]
   },
   {
