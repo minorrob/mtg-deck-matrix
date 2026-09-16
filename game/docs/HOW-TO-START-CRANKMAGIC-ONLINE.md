@@ -22,7 +22,9 @@ crankmagic_openai_api
 
 The password/value is the OpenAI API key. The username is only a label. The key stays in Windows Credential Manager and is never placed in the page, URL, game log, or deck export. GPT-5.6 Luna is the default model; Terra is the optional stronger model.
 
-## One-time setup for remote friends
+## One-time setup on the host computer only
+
+Your friends do **not** install Cloudflare, CrankMagic, Forge, Java, or any browser extension. They only open their private HTTPS invitation in a normal browser.
 
 Install Cloudflare's tunnel client once from Windows PowerShell:
 
@@ -39,7 +41,7 @@ The tunnel exposes only the restricted guest gateway. CrankMagic's admin/setup s
 
    ```powershell
    cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-   .\game\tools\start-crankmagic.ps1 -RemoteGuests
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1" -RemoteGuests
    ```
 
 3. Wait for this message:
@@ -70,13 +72,35 @@ Running the startup command again is safe. It retains a healthy host and any act
 
 If CrankMagic opens an existing table, choose **Return to game** to resume it. To deliberately replace it, use **Game setup → End current game**, then configure the new table. Ending a game is final and should only be used when you no longer need that position.
 
+## Play alone against three AI players
+
+Solo play is ready to use. It does not need the remote-guest tunnel, so you can start the local host with:
+
+```powershell
+cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
+```
+
+Then open [CrankMagic Online](http://127.0.0.1:8768/app/#game) and:
+
+1. Open **Game setup**.
+2. Set **Human players** to **1** and **AI players** to **3**.
+3. Choose your deck, bracket, and maximum deck cost.
+4. For each AI seat, choose its commander/deck or select the random commander option. Set its play style and difficulty independently.
+5. Select **OpenAI** and **GPT-5.6 Luna** for API-powered opponents. The app reads `crankmagic_openai_api` from Windows Credential Manager; the key is not sent to the browser. Use Terra only when you want stronger reasoning at higher cost. You can instead select native Forge AI for seats that should not use the API.
+6. Select **Prepare decks**. Review any budget, legality, or native-AI compatibility messages and resolve blocking issues.
+7. Select **Launch game**. CrankMagic starts Forge, applies a fresh random seed to every 99-card library, seats all three AI players, and opens your board.
+8. Keep or mulligan your opening hand, then play from the browser. The AI seats take their turns automatically at the selected difficulty; required human choices and response windows appear in the game UI.
+
+When the game ends, save the match feedback and deck report if prompted. For an early stop, use **Game setup → End current game → End game · keep journal**, then run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"` from the repository folder.
+
 ## Set up a four-player game and email the invitations
 
 1. In **Game setup**, choose the total mix you want. For two people and two bots, select **2 human players** and **2 AI players**. You can instead use three or four human seats.
 2. Choose the decks, AI controller, model, and difficulty, then select **Prepare decks** and **Open lobby**.
 3. Each unclaimed human seat shows a QR code, private invitation link, and email-address field. Enter that friend's address and select **Email invitation**.
 4. Your default email app opens a prepared message containing that seat's private link. Review it and press **Send**.
-5. Your friend opens the link in a desktop or landscape mobile browser. The single-use link claims only that reserved seat, then disappears from the browser address. It expires after about four hours and should not be forwarded.
+5. Your friend clicks the link in Chrome, Edge, Safari, or another current browser. No installation or Cloudflare account is required. The single-use link claims only that reserved seat, then disappears from the browser address. It expires after about four hours and should not be forwarded.
 6. Each friend chooses or uploads their own deck and presses **Ready**. When every occupied human seat is ready, the shared ten-second countdown begins and Forge launches the game.
 
 The invitation screen clearly identifies local-only links. If an email button is disabled or a link starts with `127.0.0.1`, shut down cleanly and restart with `-RemoteGuests` before sending it. A new quick-tunnel address is created on each remote startup, so use invitations from the current lobby only.
@@ -114,7 +138,7 @@ These files are ignored by Git. They can contain local runtime details and shoul
 
    ```powershell
    cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-   .\game\tools\stop-crankmagic.ps1
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"
    ```
 
 5. Wait for `CrankMagic Online and its guest tunnel are stopped.`
@@ -122,3 +146,5 @@ These files are ignored by Git. They can contain local runtime details and shoul
 The stop helper refuses to terminate a live Forge match. If it reports an active game, return to the Play screen and use **End current game** first. Do not kill Node, Forge, Java, or cloudflared in Task Manager during a match; that leaves an interrupted position instead of a completed game record.
 
 Closing only the browser intentionally leaves the host running so players can reconnect. Use the sequence above when the table is finished for the day.
+
+The `-ExecutionPolicy Bypass` option applies only to the single startup or shutdown process. It does not permanently change the Windows execution policy.
