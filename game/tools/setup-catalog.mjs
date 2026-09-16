@@ -133,9 +133,11 @@ export async function prepareGuestDeck(member,input,settings){
   let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat};
   if(input?.source==='upload'){
     const parsed=parseMoxfieldTwoColumn(input.csv,{name:input.name||`Player ${member.seatId+1} deck`}),created=await importWorkshopDeck(parsed);request={...request,source:'library',deckId:created.id,commander:created.commander};
+  }else if(input?.source==='crankmagic'){
+    const created=await importWorkshopDeck(input.handoff);request={...request,source:'library',deckId:created.id,commander:created.commander};
   }else if(input?.source==='preloaded'||(input?.source==='library'&&member.seatId===0))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
   else if(['lab','archidekt'].includes(input?.source))request={...request,source:input.source,commander:input.commander,archidektUrl:input.archidektUrl};
-  else throw Error('Choose an uploaded, saved, preloaded, Deck Lab or Archidekt deck');
+  else throw Error('Choose a CrankMagic deck, upload, preloaded deck, Deck Lab deck, or Archidekt deck');
   const seed=randomInt(1,2147483647),seat=await prepareSeat(request,{...settings,humans:Math.max(member.seatId+1,settings.humans||1)},seed);
   return {id:`deck-version:${randomUUID()}`,validated:true,commander:seat.deck.commanders.map(c=>c.name).join(' + '),snapshot:seat,deckHash:seat.deck.gameplayHash,createdAt:new Date().toISOString()};
 }

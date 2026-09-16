@@ -17,6 +17,7 @@ const routes=new Map([
   ['GET /match/view',['view',0,true]],
   ['GET /match/report',['report',0,true]],
   ['POST /match/action',['action',65536,true]],
+  ['POST /match/force-pass',['forcePass',1024,true]],
   ['POST /match/feedback',['feedback',32768,true]]
 ]);
 const publicFiles=new Map([

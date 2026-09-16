@@ -21,7 +21,7 @@ new ResizeObserver(reportCanvasSize).observe(document.body);
 window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===window.parent&&event.data?.type==='crankmagic-viewport'&&Number.isFinite(event.data.height))document.body.style.setProperty('--table-viewport',Math.max(400,Math.min(4000,event.data.height))+'px');});
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
-let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,aiPrompting=false,noticeUntil=0,lastDecision='';
+let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,aiPrompting=false,forcingPass=false,noticeUntil=0,lastDecision='';
 const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null,holdResponsesTurn=null;
 let primarySeat=viewerSeatId,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 let hideOpponents=false,hideInformation=false;
@@ -433,6 +433,8 @@ function render(){
   const f=frame();$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
   $('prev').disabled=index===0;$('next').disabled=index===data.frames.length-1;
   follow.textContent='Follow active player: '+(followActive?'on':'off');
+  forcePass.disabled=!!forcingPass||!live||turnPlayer()?.playerId!==viewerSeatId;
+  forcePass.textContent=forcingPass?'Forcing pass…':'Force pass step';
   const activeSeat=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);promptAi.hidden=!live||guestMode||activeSeat?.kind!=='ai';promptAi.disabled=aiPrompting;promptAi.textContent=aiPrompting?'Prompting AI…':activeSeat?'Prompt '+(activeSeat.name||'AI'):'Prompt AI';
   if(followActive&&followedTurn!==f.turn&&turnPlayer()){primarySeat=turnPlayer().playerId;followedTurn=f.turn;}
   for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);if(p.playerId===primarySeat)opponents.after(seat);else opponents.append(seat);renderSeat(p);}
@@ -444,7 +446,20 @@ const follow=button('Follow active player: off',()=>{followActive=!followActive;
 function setPrimarySeat(playerId){const f=frame();if(!f?.players.some(player=>player.playerId===playerId))return;primarySeat=playerId;followActive=false;followedTurn=null;follow.textContent='Follow active player: off';refreshBoards();}
 const myBoard=button('My board',()=>setPrimarySeat(viewerSeatId));myBoard.title='Show your playmat in the main board area';
 const holdResponses=button('Hold priority',()=>{const turn=frame()?.turn;if(turn==null||turnPlayer()?.playerId===viewerSeatId){notifyAction('Priority is already yours. Use a card or board ability when you are ready.');return;}holdResponsesTurn=holdResponsesTurn===turn?null:turn;holdResponses.textContent=holdResponsesTurn===turn?'Resume auto-pass':'Hold priority';holdResponses.title=holdResponsesTurn===turn?'Priority will stop for your instant-speed actions this turn.':'Keep priority stops available during the active opponent’s turn.';lastDecision='';renderDecision();});holdResponses.title='Keep priority stops available during the active opponent’s turn.';
-$('view-deck').before(follow,myBoard,holdResponses);
+const forcePass=button('Force pass step',async()=>{
+  const active=turnPlayer();
+  if(!live||active?.playerId!==viewerSeatId){notifyAction('Only the active player can force-pass their own step.');return;}
+  if(forcingPass)return;forcingPass=true;forcePass.disabled=true;forcePass.textContent='Forcing pass…';
+  try{
+    if(!guestMode&&!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
+    const response=await fetch(guestMode?'/match/force-pass':'/api/force-pass',{method:'POST',headers:guestMode?{Authorization:'Bearer '+seatSession?.capability,'Content-Type':'application/json'}:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:'{}'}),result=await response.json();
+    if(!response.ok)throw Error(result.error||'Forge could not force-pass this step');
+    notifyAction(result.mode==='advanced-phase'?'Forge advanced one stalled step.':'Forge cancelled the current input.');
+    await refreshLiveView();
+  }catch(error){notifyAction(error.message);}finally{forcingPass=false;render();}
+});
+forcePass.title='Recovery control for a stalled step. It never targets cards, pays costs, or resolves a stack.';
+$('view-deck').before(follow,myBoard,holdResponses,forcePass);
 const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';
 $('view-deck').before(promptAi);
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);

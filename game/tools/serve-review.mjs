@@ -65,7 +65,7 @@ const runtimeOptions={directory:resolve(root,'game/.local/tables'),bridge:browse
 let tableRuntime=null,hostInvitations=[];
 try{tableRuntime=restoreLocalTableRuntime(runtimeOptions);if(tableRuntime){await tableRuntime.recover();const table=tableRuntime.view(),engine=liveStatus();if(table.phase==='playing'&&(!['starting','ready','playing'].includes(engine.status)||table.matchId!==engine.matchId)){tableRuntime.abandon();tableRuntime=null;console.warn('An interrupted multiplayer table was closed. Its game logs remain available.');}}}
 catch(error){tableRuntime=null;console.warn('Multiplayer table recovery needs attention: '+error.message);}
-const guestService={};for(const method of ['authenticate','join','table','deck','ready','heartbeat','exit','rematch','view','action','report','feedback'])guestService[method]=(...args)=>{if(!tableRuntime)throw Object.assign(Error('This table is not accepting players'),{status:409});return tableRuntime.guest[method](...args);};
+const guestService={};for(const method of ['authenticate','join','table','deck','ready','heartbeat','exit','rematch','view','action','forcePass','report','feedback'])guestService[method]=(...args)=>{if(!tableRuntime)throw Object.assign(Error('This table is not accepting players'),{status:409});return tableRuntime.guest[method](...args);};
 const guestGateway=createGuestGateway({host:guestHost,port:guestPort,publicOrigin:process.env.COMMANDER_GUEST_PUBLIC_ORIGIN||undefined,service:guestService,readPublicFile:async name=>{const path=guestAssets.get(name);if(!path)throw Error('Unknown public file');return readFile(resolve(root,path));}});
 const guestInfo=await guestGateway.listen();
 const remoteGuestsAvailable=/^https:\/\//.test(guestInfo.origin);
@@ -99,6 +99,7 @@ createServer(async(req,res)=>{
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);text='';
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
+      if(pathname==='/api/force-pass'){if(!tableRuntime)throw Error('No active table is available to force-pass');return reply(200,await tableRuntime.forcePass());}
       if(pathname==='/api/ai-pilots/prompt'){
         if(!soloPilotRunner)throw Error('No API-controlled AI player is running in this local game');
         const result=soloPilotRunner.nudge(Number.isInteger(body.seatId)?body.seatId:null);

@@ -8,6 +8,22 @@
     await C.commit({type:'game',gameId:`game:online:${report.matchId}:${report.seatId}`,deckId,outcome:report.outcome,playedAt:report.completedAt,finish:report.finish,pod:report.podSize,bracket:report.bracket,turns:report.turns,seat:report.seatId+1,opponents,notes:report.playerFeedback?.notes||'CrankMagic Online match. Open the report from game history for event telemetry and deck signals.',online:report});
     C.notice('Online game report attached to '+deck.name+'.');return 'attached';
   }
+  let invitedDeckRequest=null;
+  const trustedGuestOrigin=origin=>/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(origin)||/^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(origin);
+  C.onlineDeckRequest=()=>invitedDeckRequest&&{requestId:invitedDeckRequest.requestId};
+  C.sendDeckToInvitedGame=deck=>{
+    if(!invitedDeckRequest)throw Error('No invited game is waiting for a deck.');
+    const commanderIds=new Set(deck.commanders),commanders=deck.commanders.map(id=>C.card(id)?.name),rows=deck.slots.filter(row=>row.purpose==='main'&&!commanderIds.has(row.cardId)).map(row=>({name:C.card(row.cardId)?.name,quantity:row.quantity}));
+    if(!deck.name||commanders.some(name=>!name)||rows.some(row=>!row.name))throw Error('Resolve unknown cards in this deck before using it in a game.');
+    invitedDeckRequest.source.postMessage({type:'crankmagic-online-deck-selected',requestId:invitedDeckRequest.requestId,handoff:{schema:'CrankMagicDeckHandoff@1',name:deck.name,sourceDeckId:deck.id,sourceDeckVersion:deck.version,sourceRevision:C.state.revision,commanders,rows}},invitedDeckRequest.origin);
+    invitedDeckRequest=null;C.notice('Deck sent to your invited CrankMagic Online table.');
+  };
+  window.addEventListener('message',event=>{
+    const value=event.data;if(value?.type!=='crankmagic-online-deck-request'||typeof value.requestId!=='string'||!trustedGuestOrigin(event.origin)||!event.source)return;
+    invitedDeckRequest={origin:event.origin,source:event.source,requestId:value.requestId};
+    if(C.route().view==='decks')C.render();
+    C.notice('An invited CrankMagic Online table is waiting. Open the deck you want, then choose Use in invited game.');
+  });
   C.views.game=async()=>{
     const local=location.hostname==='127.0.0.1';
     const decks=C.state.decks.filter(d=>!d.archived);

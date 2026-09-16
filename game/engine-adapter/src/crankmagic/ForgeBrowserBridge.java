@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 import forge.game.Game;
 import forge.game.card.Card;
 import forge.game.card.CardView;
+import forge.game.phase.PhaseType;
 import forge.game.player.PlayerView;
 import forge.game.event.GameEvent;
 import forge.interfaces.IGameController;
@@ -54,6 +55,7 @@ public final class ForgeBrowserBridge {
                 if(!token.equals(exchange.getRequestHeaders().getFirst("X-CrankMagic-Bridge")))throw new IllegalArgumentException("Invalid bridge session");
                 if(exchange.getRequestMethod().equals("GET")&&exchange.getRequestURI().getPath().equals("/view"))result=view();
                 else if(exchange.getRequestMethod().equals("POST")&&exchange.getRequestURI().getPath().equals("/concede"))result=concede();
+                else if(exchange.getRequestMethod().equals("POST")&&exchange.getRequestURI().getPath().equals("/force-pass"))result=forcePass();
                 else if(exchange.getRequestMethod().equals("POST")&&exchange.getRequestURI().getPath().equals("/action")){
                     byte[] bytes=exchange.getRequestBody().readNBytes(65537);if(bytes.length>65536)throw new IllegalArgumentException("Action too large");
                     result=action(JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject());
@@ -85,6 +87,40 @@ public final class ForgeBrowserBridge {
         if(viewer().conceded())return ForgeProbe.obj("accepted",true,"conceded",true);
         SwingUtilities.invokeLater(()->{controller.concede();record("browser-seat-conceded",ForgeProbe.obj("playerId",viewer()==null?seatId:viewer().getId()));snapshot();});
         return ForgeProbe.obj("accepted",true,"conceded",true);
+    }
+    /**
+     * Recovery control for a stalled current step. This is intentionally narrower than a
+     * general engine command: only the seat that owns the active turn may use it, it never
+     * chooses a target or pays a cost, and it refuses to run with a stack or browser choice.
+     */
+    Map<String,Object> forcePass() throws Exception {
+        final forge.player.PlayerControllerHuman human;
+        final PhaseType phase;
+        synchronized(this){
+            if(!(controller instanceof forge.player.PlayerControllerHuman value)||game==null||viewer()==null)throw new IllegalArgumentException("This seat is not ready to pass a step");
+            if(actionInFlight||pending!=null||!fallback.isEmpty())throw new IllegalArgumentException("Complete the current decision before forcing a pass");
+            if(game.getStack().isEmpty()==false)throw new IllegalArgumentException("Resolve or pass the stack normally before forcing a phase");
+            if(game.getPhaseHandler().getPlayerTurn()!=viewer())throw new IllegalArgumentException("Only the active player may force their own step");
+            human=value;phase=game.getPhaseHandler().getPhase();
+            if(phase==null)throw new IllegalArgumentException("Forge has not started a phase yet");
+            actionInFlight=true;
+        }
+        final boolean[] cancelled={false};
+        try{
+            SwingUtilities.invokeAndWait(()->{
+                var input=human.getInputQueue().getInput();
+                if(input!=null){
+                    human.selectButtonCancel();cancelled[0]=true;
+                    record("browser-force-pass-input",ForgeProbe.obj("phase",String.valueOf(phase),"inputType",input.getClass().getSimpleName()));
+                }else{
+                    PhaseType next=PhaseType.getNext(phase,viewer().isPhasesReversed());
+                    if(!game.getPhaseHandler().devAdvanceToPhase(next,null))throw new IllegalStateException("Forge could not safely advance this step");
+                    record("browser-force-pass-step",ForgeProbe.obj("fromPhase",String.valueOf(phase),"toPhase",String.valueOf(next),"turn",game.getPhaseHandler().getTurn()));
+                }
+                snapshot();
+            });
+            return ForgeProbe.obj("accepted",true,"mode",cancelled[0]?"cancelled-input":"advanced-phase","fromPhase",String.valueOf(phase));
+        }finally{synchronized(this){actionInFlight=false;revision++;}}
     }
     void record(String kind,Object value){
         JsonObject payload=ForgeProbe.JSON.toJsonTree(value).getAsJsonObject();

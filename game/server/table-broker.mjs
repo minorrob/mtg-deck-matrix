@@ -74,6 +74,10 @@ export class TableBroker{
   async rematch(member,input){let table=this.#transition({type:'rematch-vote',seatId:member.seatId,accept:input?.accept===true});if(table.seats.filter(s=>s.kind==='human'&&s.occupied).every(s=>s.connected&&s.rematch===true))table=this.#transition({type:'next-selection',seatId:member.seatId});return {table:publicTable(table,member)};}
   async view(member){if(!['playing','rematch'].includes(this.#state.table.phase))throw Error('No match is active');const value=await this.#bridge(member.seatId,'view');if(value.viewerSeatId!==member.seatId||value.viewerPlayerId!==member.seatId)throw Object.assign(Error('Engine returned the wrong private view'),{status:502});return value;}
   async action(member,input){validateAction(input);if(this.#state.table.phase!=='playing'||input.matchId!==this.#state.table.matchId)throw Error('Wrong or inactive match');const {matchId,...action}=input;return this.#bridge(member.seatId,'action',action);}
+  async forcePass(member){
+    if(this.#state.table.phase!=='playing')throw Error('No active match is available to force-pass');
+    return this.#bridge(member.seatId,'force-pass',{});
+  }
   async report(member){const matchId=this.#state.table.matchId||this.#state.lastMatchId;if(!matchId||typeof this.#report!=='function')throw Error('No completed match report is available');return this.#report(member.seatId,matchId);}
   async feedback(member,input){
     const matchId=this.#state.table.matchId||this.#state.lastMatchId;

@@ -8,7 +8,7 @@ const make=async()=>{
   const service={
     authenticate:async token=>{if(token!=='seat-secret')throw Object.assign(Error('Seat session required'),{status:401});return member;},
     join:async input=>{calls.push(['join',input]);return {capability:'seat-secret',seatId:2};},
-    table:async who=>({who}),deck:async(who,input)=>({who,input}),ready:async(who,input)=>({who,input}),heartbeat:async who=>({who}),exit:async who=>({who}),rematch:async(who,input)=>({who,input}),view:async who=>({viewerSeatId:who.seatId}),action:async(who,input)=>({who,input}),report:async who=>({viewerSeatId:who.seatId,schema:'CrankMagicOnlineMatchReport@1'}),feedback:async(who,input)=>({who,input})
+    table:async who=>({who}),deck:async(who,input)=>({who,input}),ready:async(who,input)=>({who,input}),heartbeat:async who=>({who}),exit:async who=>({who}),rematch:async(who,input)=>({who,input}),view:async who=>({viewerSeatId:who.seatId}),action:async(who,input)=>({who,input}),forcePass:async who=>({who,accepted:true}),report:async who=>({viewerSeatId:who.seatId,schema:'CrankMagicOnlineMatchReport@1'}),feedback:async(who,input)=>({who,input})
   };
   const gateway=createGuestGateway({service,readPublicFile:async name=>name==='guest.html'?'<h1>Join</h1>':'export default true'}),info=await gateway.listen();
   return {gateway,info,calls};
@@ -20,7 +20,7 @@ const rawRequest=(info,path,{method='GET',headers={},body=''}={})=>new Promise((
 
 test('guest gateway exposes only its fixed public files and route allowlist',async t=>{
   const {gateway,info}=await make();t.after(()=>gateway.close());
-  assert.deepEqual([...GUEST_ROUTE_KEYS].sort(),['GET /match/view','GET /match/report','GET /table','POST /match/action','POST /match/feedback','POST /table/deck','POST /table/exit','POST /table/heartbeat','POST /table/join','POST /table/ready','POST /table/rematch'].sort());
+  assert.deepEqual([...GUEST_ROUTE_KEYS].sort(),['GET /match/view','GET /match/report','GET /table','POST /match/action','POST /match/force-pass','POST /match/feedback','POST /table/deck','POST /table/exit','POST /table/heartbeat','POST /table/join','POST /table/ready','POST /table/rematch'].sort());
   assert.equal((await request(info.origin,'/')).status,200);
   for(const path of ['/api/setup','/api/import-deck','/match.json','/game/.local/../manifest.json','/../package.json','/%2e%2e/%2e%2e/manifest.json'])assert.equal((await request(info.origin,path)).status,404,path);
 });
@@ -38,6 +38,8 @@ test('secured routes resolve membership from the bearer capability',async t=>{
   const view=await request(info.origin,'/match/view',{headers:{Authorization:'Bearer seat-secret'}});assert.equal(view.status,200);assert.equal((await view.json()).viewerSeatId,2);
   const action=await request(info.origin,'/match/action',{method:'POST',headers:{Origin:info.origin,Authorization:'Bearer seat-secret','Content-Type':'application/json'},body:JSON.stringify({targetId:1,seatId:0})});
   assert.equal(action.status,200);assert.equal((await action.json()).who.seatId,2);
+  const forcePass=await request(info.origin,'/match/force-pass',{method:'POST',headers:{Origin:info.origin,Authorization:'Bearer seat-secret','Content-Type':'application/json'},body:'{}'});
+  assert.equal(forcePass.status,200);assert.equal((await forcePass.json()).who.seatId,2);
   assert.equal((await request(info.origin,'/match/action',{method:'POST',headers:{Origin:info.origin,Authorization:'Bearer seat-secret','Content-Type':'application/json'},body:'x'.repeat(65537)})).status,413);
 });
 

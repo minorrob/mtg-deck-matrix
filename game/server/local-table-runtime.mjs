@@ -50,7 +50,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     heartbeat:(member,input)=>broker.heartbeat(member,input),
     exit:(member,input)=>broker.exit(member,input),
     async rematch(member,input){const result=await broker.rematch(member,input);if(result.table.phase==='selecting'){for(const seat of result.table.seats.filter(s=>s.kind==='ai'))await broker.ready({seatId:seat.seatId},{ready:true});}await scheduleIfReady();return broker.table(member);},
-    async view(member){await broker.heartbeat(member);await runtime.poll();return broker.view(member);},action:(member,input)=>broker.action(member,input),report:member=>broker.report(member),feedback:(member,input)=>broker.feedback(member,input)
+    async view(member){await broker.heartbeat(member);await runtime.poll();return broker.view(member);},action:(member,input)=>broker.action(member,input),forcePass:member=>broker.forcePass(member),report:member=>broker.report(member),feedback:(member,input)=>broker.feedback(member,input)
   };
   runtime={
     broker,
@@ -60,7 +60,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     async deck(input){return broker.deck({seatId:0},input);},
     async ready(ready){await broker.hostReady(ready);return scheduleIfReady();},
     async rematch(accept){const result=await broker.rematch({seatId:0},{accept});if(result.table.phase==='selecting'){for(const seat of result.table.seats.filter(s=>s.kind==='ai'))await broker.ready({seatId:seat.seatId},{ready:true});}await scheduleIfReady();return broker.hostView();},
-    report(){return broker.report({seatId:0});},feedback(input){return broker.feedback({seatId:0},input);},
+    report(){return broker.report({seatId:0});},feedback(input){return broker.feedback({seatId:0},input);},forcePass(){return broker.forcePass({seatId:0});},
     async start(){
       const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a cancelled countdown or launch failure. */}},delay);return table;
     },
