@@ -52,7 +52,7 @@ try{
  await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
  /* The deck page opens on Overview; the hundred is its Cards tab, and the full table with actions is one button from there. */
- await page.getByRole('tab',{name:/^Cards/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'the Cards tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
+ await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
  await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
  await actionsFor('Mountain','Ordered');await rung('Owned',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
  /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
@@ -166,7 +166,7 @@ try{
     the tile caption show the result. */
  await click('Log a game');await page.getByLabel('Card that won it').selectOption({label:'Krenko, Mob Boss'});await page.getByLabel('Finish').selectOption('1');await click('Save game record');await waitDialog();
  /* Saving lands on History; the tab is clicked as well so the read-back does not hang on the jump. */
- await page.getByRole('tab',{name:/^History/}).click();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
+ await page.getByRole('tab',{name:/^Overview/}).click();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
  {const g=current.games[current.games.length-1];eq(g.outcome,'win');eq(g.finish,1);eq(g.pod,4);eq(g.mvpCardId,CrankKey('Krenko, Mob Boss'));}
  eq(await page.locator('.cm-record-table tbody tr').count(),1);
  await click('More');await click('Watched');await click('Confirm change');await waitDialog();current=await state();
@@ -182,7 +182,7 @@ try{
  await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).first().getByRole('button').first().click();await page.locator('.cm-deck-next').waitFor();
  /* The hundred at a glance on the Overview (Rob, 14 September): the curve, two breakdown bars with keys, the key strategy in the vocabulary's words. */
  eq(await page.locator('#cm-sec-glance .cm-breakdown').count(),2,'the hundred by type and by Primary Purpose');ok((await page.locator('#cm-sec-glance .cm-breakdown-key li').count())>=3,'with their keys');eq(await page.locator('#cm-sec-glance .cm-curve').count(),1,'and the curve');ok(/key strategy/i.test(await page.locator('#cm-sec-glance').innerText()),'and the key strategy (the heading is set in capitals by CSS, so innerText reads it that way)');
- await page.getByRole('tab',{name:/^History/}).click();await page.locator('.cm-history-table').waitFor();await click('View report');await page.getByRole('dialog').getByRole('button',{name:'Spin off as a new deck'}).click();
+ await page.getByRole('tab',{name:/^Overview/}).click();await page.locator('.cm-history-table').waitFor();await click('View report');await page.getByRole('dialog').getByRole('button',{name:'Spin off as a new deck'}).click();
  await page.waitForFunction(id=>location.hash.includes('deck=')&&!decodeURIComponent(location.hash).includes(id),labDeck.id,{timeout:45000});await page.locator('.cm-deck-summary').waitFor({timeout:45000});current=await state();
  const spun=current.decks.find(d=>d.name.startsWith('Constructive run · 61.5 pts'));ok(spun&&spun.id!==labDeck.id);eq(spun.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0),labDeck.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0));eq(spun.commanders,labDeck.commanders);
  ok(current.reports.some(r=>r.deckId===spun.id&&r.spunOffFrom&&r.spunOffFrom.deckId===labDeck.id));eq(current.decks.find(d=>d.id===labDeck.id).slots.length,labDeck.slots.length);
@@ -414,7 +414,7 @@ try{
     const d=st.decks.find(x=>x.id===journey.id),seat=d.slots.find(r=>r.id===lot.standInFor);
     ok(!!seat,'and it names a seat on the deck it went into');
     eq((st.cards[seat.cardId]||{}).name,heldSeat,'the seat the form offered');
-    await page.goto(BASE+'/'+ENTRY+'#decks?deck='+encodeURIComponent(journey.id)+'&tab=cards');
+    await page.goto(BASE+'/'+ENTRY+'#decks?deck='+encodeURIComponent(journey.id)+'&tab=hundred');
     await page.locator('.cm-deck-cards').waitFor({timeout:30000});
     ok(/held by /.test(await page.locator('.cm-deck-cards').innerText()),'the deck\'s list says the seat is held by the substitute');
     await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop');await page.locator('.cm-tt-mat').waitFor({timeout:30000});

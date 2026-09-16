@@ -196,16 +196,16 @@ const TOURS=[
      copy:'Points on a fixed protocol: six seeds of 20,000 games against sampled opponents. Comparable only with another score from that same protocol, and the app says so when two differ.'},
     /* A deck with no runs yet shows the panel's empty state, where neither button exists — so the
        step falls back to the panel itself rather than pointing at nothing (sweep, PR 6). */
-    {view:'decks',params:()=>({...firstDeck(),tab:'history'}),selectors:['[data-action=deck-evidence]','[data-action=compare-reports]','#cm-sec-history'],
+    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-evidence]','[data-action=compare-reports]','#cm-sec-history'],
      title:'The report is where the detail lives',
      copy:'How often you win, how fast, how much you cast in a turn, the turn the games ended — and the per-card cast rates. A card cast in 2% of games is a card to replace, and that list is the one the refiner works from.'},
-    /* The curve and the counts live on the deck's Cards tab, not its Overview — the step used to
+    /* The curve and the counts live on the deck's The hundred tab, not its Overview — the step used to
        land on Overview and point at nothing (sweep, PR 6). */
-    {view:'decks',params:()=>({...firstDeck(),tab:'cards'}),selectors:['.cm-curve','.cm-count-list','#cm-sec-cards'],
+    {view:'decks',params:()=>({...firstDeck(),tab:'hundred'}),selectors:['.cm-curve','.cm-count-list','#cm-sec-cards'],
      title:'The shape, before any simulation',
      copy:'The curve and the counts tell you things a score cannot: too few lands, nothing to do on turn two, or eleven cards that all want the same slot.'},
-    /* And the recommendations live on the Guide tab, for the same reason. */
-    {view:'decks',params:()=>({...firstDeck(),tab:'guide'}),selectors:['[data-action=deck-suggestions]','#cm-sec-swot','[data-action=compare-decks]'],
+    /* And the recommendations live on the Overview tab now (Phase 1 PR4), for the same reason. */
+    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-suggestions]','#cm-sec-swot','[data-action=compare-decks]'],
      title:'And what to do about it',
      copy:'Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
 
