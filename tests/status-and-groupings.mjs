@@ -22,7 +22,7 @@ const labels = M.STATUS.map((s) => s.label);
 eq(new Set(labels).size, labels.length, "every status label is unique");
 eq(M.STATUS.map((s) => s.order), M.STATUS.map((_, i) => i), "the orders are the positions, in the order the work happens");
 ok(labels[0] === "Physical deck" && labels.includes("To buy") && labels.includes("Draft list"), "the words the pages use are in it");
-eq(M.statusOf({kind: "need"}), "To buy"); eq(M.statusOf({kind: "draft"}), "Draft list"); eq(M.statusOf({kind: "option"}), "Suggestion"); eq(M.statusOf({kind: "entry"}), "Planned");
+eq(M.statusOf({kind: "need"}), "To buy"); eq(M.statusOf({kind: "draft"}), "Draft list"); eq(M.statusOf({kind: "option"}), "Suggestion"); eq(M.statusOf({kind: "entry", groupId: "group:to-buy"}), "Wanted"); eq(M.statusOf({kind: "entry", groupId: "other"}), "Planned");
 eq(M.statusOf({kind: "lot", source: "watching", placement: "Bench"}), "Watched"); eq(M.statusOf({kind: "lot", source: "ordered", placement: "Reserved"}), "Ordered"); eq(M.statusOf({kind: "lot", source: "owned", placement: "Physical deck"}), "Physical deck");
 eq(M.statusTone("Reserved"), "reserved", "a reserved copy's pill is reserved, not watch (the deck page used to say watch)");
 eq(M.statusTone("nothing"), "draft", "an unknown label gets the quiet tone"); eq(M.statusOrder("nothing"), M.STATUS.length, "and sorts last");

@@ -23,12 +23,12 @@
     {id:'inbox',label:'Physical deck',tone:'inbox',order:0},{id:'standin',label:'Substitute',tone:'standin',order:1},
     {id:'reserved',label:'Reserved',tone:'reserved',order:2},{id:'bench',label:'Bench',tone:'pull',order:3},
     {id:'ordered',label:'Ordered',tone:'ordered',order:4},{id:'watched',label:'Watched',tone:'watch',order:5},
-    {id:'buy',label:'To buy',tone:'buy',order:6},{id:'draft',label:'Draft list',tone:'draft',order:7},
-    {id:'suggestion',label:'Suggestion',tone:'draft',order:8},{id:'planned',label:'Planned',tone:'draft',order:9},
-    {id:'unassigned',label:'Unassigned',tone:'draft',order:10}];
+    {id:'wanted',label:'Wanted',tone:'watch',order:6},{id:'buy',label:'To buy',tone:'buy',order:7},
+    {id:'draft',label:'Draft list',tone:'draft',order:8},{id:'suggestion',label:'Suggestion',tone:'draft',order:9},
+    {id:'planned',label:'Planned',tone:'draft',order:10},{id:'unassigned',label:'Unassigned',tone:'draft',order:11}];
   const statusByLabel=new Map(STATUS.map(s=>[s.label,s]));
-  /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry Planned, then the copy's own source or placement. */
-  const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?'Planned':r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement==='Bench'&&r.shortlistedFor?'Watched':r.placement;
+  /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry in To Buy is Wanted (the want list), other entries Planned, then the copy's own source or placement. */
+  const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?(r.groupId==='group:to-buy'?'Wanted':'Planned'):r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement==='Bench'&&r.shortlistedFor?'Watched':r.placement;
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
   const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
   const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];

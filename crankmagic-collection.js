@@ -1090,6 +1090,7 @@ const sheetPrice=r=>Number.isFinite(r.card.price)&&r.card.price>=0?r.card.price:
 const shortDeck=d=>{const m=d.name.match(/^(D\d+)\b/);return m?m[1]:d.name.length>18?d.name.slice(0,17)+'…':d.name;};
 function primary(r){if(r.kind==='fold'){const parts=r.partRows;if(parts.every(p=>p.kind==='need'||p.kind==='lot'&&M.PLANNED.includes(p.source)))return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;if(parts.every(p=>p.kind==='lot'&&p.source==='ordered'))return `<button class="v-button primary compact cm-row-buy" data-action="shop-arrive" data-record="${e(r.recordId)}">Arrived</button>`;return '';}
   if(r.kind==='need'||r.kind==='lot'&&M.PLANNED.includes(r.source))return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;
+  if(r.kind==='entry')return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;
   if(r.kind==='lot'&&r.source==='ordered')return `<button class="v-button primary compact cm-row-buy" data-action="shop-arrive" data-record="${e(r.recordId)}">Arrived</button>`;
   if(r.kind==='lot'&&r.source==='owned'&&r.allocation&&r.placement!=='Physical deck'){const d=M.deck(C.state,r.allocation.deckId);return `<button class="v-button primary compact cm-row-buy" data-action="place-now" data-record="${e(r.recordId)}" title="Record that this copy is in ${e(d.name)}’s physical deck">Put in ${e(shortDeck(d))}</button>`;}
   if(r.kind==='lot'&&r.placement==='Substitute')return `<button class="v-button compact cm-row-buy" data-action="place-row" data-record="${e(r.recordId)}" title="Move this substitute back to the Bench">To bench</button>`;
@@ -1098,11 +1099,19 @@ function primary(r){if(r.kind==='fold'){const parts=r.partRows;if(parts.every(p=
 /* One tap: the whole lot into the box it is reserved for. */
 actions['place-now']=async el=>{const r=findRow(el.dataset.record);if(!r||r.kind!=='lot'||!r.allocation)throw Error('Only a copy reserved to a deck can go into its physical deck.');const l=M.lot(C.state,r.id),d=M.deck(C.state,l.allocation.deckId);await commit({type:'place',lotId:l.id,deckId:d.id,quantity:l.quantity,confirmed:true});C.notice(`${r.card.name} is in ${d.name}’s physical deck.`);};
 /* A folded row buys for every deck that wants the card: one command per part, one batch. */
-function tapCommand(r,to){const paid=sheetPrice(r);if(r.kind==='need')return {type:'acquire',cards:[r.card],lot:{cardId:r.cardId,quantity:r.quantity,source:to,printing:{...(r.printing||{})},location:{kind:'bench',box:''},notes:'',paid,paidSource:'catalog'},deckId:r.deckId,slotId:r.slotId};const l=M.lot(C.state,r.id);return {type:'source',source:to,lotId:l.id,quantity:l.quantity,paid,paidSource:'catalog',confirmed:true};}
+function tapCommand(r,to){const paid=sheetPrice(r);if(r.kind==='need')return {type:'acquire',cards:[r.card],lot:{cardId:r.cardId,quantity:r.quantity,source:to,printing:{...(r.printing||{})},location:{kind:'bench',box:''},notes:'',paid,paidSource:'catalog'},deckId:r.deckId,slotId:r.slotId};if(r.kind==='entry')return {type:'entry-buy',groupId:r.groupId,entryId:r.id,cardId:r.cardId,card:r.card,quantity:r.quantity,source:to,printing:{...(r.printing||{})},paid,paidSource:'catalog'};const l=M.lot(C.state,r.id);return {type:'source',source:to,lotId:l.id,quantity:l.quantity,paid,paidSource:'catalog',confirmed:true};}
 async function oneTap(el,to){const r=findRow(el.dataset.record);if(!r)throw Error('That row changed. Refresh the view.');
   const parts=r.kind==='fold'?r.partRows.filter(buyable):[r];if(!parts.length||!buyable(r)&&r.kind!=='fold')throw Error('This copy is already recorded as owned.');
-  const commands=parts.map(p=>tapCommand(p,to));
-  await commit(commands.length===1?commands[0]:{type:'batch',commands,summary:`${to==='owned'?'Bought':'Ordered'} ${r.card.name} for ${parts.length} decks`});
+  const commands=[];
+  for(const p of parts){
+    const cmd=tapCommand(p,to);
+    if(cmd.type==='entry-buy'){
+      /* Entry buy must be atomic: acquire the copy AND remove the entry in one batch */
+      commands.push({type:'acquire',cards:[cmd.card],lot:{cardId:cmd.cardId,quantity:cmd.quantity,source:cmd.source,printing:cmd.printing,location:{kind:'bench',box:''},notes:'',paid:cmd.paid,paidSource:cmd.paidSource}});
+      commands.push({type:'removeGroupEntries',groupId:cmd.groupId,entryIds:[cmd.entryId],quantity:cmd.quantity});
+    }else{commands.push(cmd);}
+  }
+  await commit(commands.length===1?commands[0]:{type:'batch',commands,summary:`${to==='owned'?'Bought':'Ordered'} ${r.card.name}${parts.some(p=>p.kind==='entry')?' and consumed want list entry':parts.length>1?' for '+parts.length+' decks':''}`});
   return r;}
 actions['shop-buy']=async el=>{const r=await oneTap(el,'owned');C.notice(`${r.quantity>1?r.quantity+' × ':''}${r.card.name} ${r.quantity>1?'are':'is'} yours — on the Bench until you put ${r.quantity>1?'them':'it'} in a physical deck${sheetPrice(r)!==null?', '+C.money(sheetPrice(r))+' recorded as paid':''}. Undo is in the header menu.`);};
 actions['shop-order']=async el=>{const r=await oneTap(el,'ordered');C.notice(`${r.card.name} marked Ordered${sheetPrice(r)!==null?' at '+C.money(sheetPrice(r)):''}. Arrived is on the row when it lands.`);};
@@ -1364,7 +1373,7 @@ function printing(v,prior={}){return {...prior,set:v.set,collector:v.collector,f
    source and printing, which is what makes "two more owned" read as one record of five. */
 const COPY_MAX = 6;
 const copyRow = (i, source = 'owned', qty = 1) => `<div class="cm-copy-row" data-i="${i}">`
-  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','Ordered'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
+  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','Ordered'],['wanted','Wanted'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
   +`<span class="cm-copy-count" role="group" aria-label="How many copies">`
   +`<button type="button" data-copy="less" data-i="${i}" aria-label="One fewer">&#8249;</button>`
   +`<input type="number" name="qty${i}" value="${qty}" min="1" max="1000000" required aria-label="Copies">`
@@ -1378,14 +1387,26 @@ async function acquire(c){
     +`<div class="cm-form-grid">${printFields()}${f('Box / location','box')}${f('Price paid','paid','','type="number" min="0" step="0.01"')}`
     +`<label class="cm-full">Notes<textarea name="notes"></textarea></label></div></details></div>`,
     async v=>{
-      const rows=[];
-      for(let i=0;i<COPY_MAX;i++){const src=v['source'+i];if(!src)continue;const q=Number(v['qty'+i]);if(!Number.isFinite(q)||q<1)throw Error('Every row needs at least one copy. Remove the row or raise its count.');rows.push({source:src,quantity:q});}
-      if(!rows.length)throw Error('Add at least one row.');
+      const wantedRows=[],copyRows=[];
+      for(let i=0;i<COPY_MAX;i++){const src=v['source'+i];if(!src)continue;const q=Number(v['qty'+i]);if(!Number.isFinite(q)||q<1)throw Error('Every row needs at least one copy. Remove the row or raise its count.');
+        if(src==='wanted')wantedRows.push({quantity:q});else copyRows.push({source:src,quantity:q});}
+      if(!wantedRows.length&&!copyRows.length)throw Error('Add at least one row.');
       let exact=c,p=printing(v);
       if(p.set&&p.collector){exact=await C.catalog.resolve(c.name,{printing:p});if(!exact)throw Error('No exact printing found. Check the set and collector number.');p.id=exact.scryfallId;}
-      const one=r=>({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:r.quantity,source:r.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)}});
-      const say=rows.map(r=>`${r.quantity} ${C.source(r.source).toLowerCase()}`).join(', ');
-      await commit(rows.length===1?one(rows[0]):{type:'batch',commands:rows.map(one),summary:`Recorded ${say} ${exact.name}`});
+      const commands=[];
+      /* Wanted rows file planned entries into the To Buy group (the want list), NOT acquire. */
+      if(wantedRows.length){
+        const toBuy=C.state.groups.find(g=>g.id==='group:to-buy');
+        if(!toBuy)throw Error('The To Buy group does not exist. This should not happen.');
+        commands.push({type:'groupEntries',groupId:toBuy.id,cards:[exact],entries:wantedRows.map(r=>({cardId:exact.id,quantity:r.quantity,notes:v.notes||''}))});
+      }
+      /* Copy rows (Owned/Ordered/Watched) create lots via acquire. */
+      if(copyRows.length){
+        const one=r=>({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:r.quantity,source:r.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)}});
+        commands.push(...copyRows.map(one));
+      }
+      const say=[...wantedRows.map(r=>`${r.quantity} wanted`),...copyRows.map(r=>`${r.quantity} ${C.source(r.source).toLowerCase()}`)].join(', ');
+      await commit(commands.length===1?commands[0]:{type:'batch',commands,summary:`Recorded ${say} ${exact.name}`});
     },'Add copies');
   /* One listener for the whole dialog: the rows are rebuilt as the reader adds and drops them,
      so nothing is bound per row. The extras open themselves the moment a row says Owned. */
