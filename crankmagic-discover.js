@@ -1232,7 +1232,7 @@
     const forceOpenTools = params.get('trace') === '1' || !!params.get('lens');
     advancedToolsOpen = forceOpenTools || getAdvancedToolsState();
     const startFocus = (commanderCard || namedCard || rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
-      || data.cards.find((c) => c.name === 'Atraxa, Praetors' Voice' || c.name === "Atraxa, Praetors' Voice")
+      || data.cards.find((c) => c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
       || data.cards[0]);
 
