@@ -24,6 +24,7 @@ const publicFiles=new Map([
   ['/guest.mjs',['text/javascript; charset=utf-8','guest.mjs']],
   ['/guest.css',['text/css; charset=utf-8','guest.css']],
   ['/play',['text/html; charset=utf-8','review.html']],
+  ['/guest-play-boot.js',['text/javascript; charset=utf-8','guest-play-boot.js']],
   ['/live-poll.mjs',['text/javascript; charset=utf-8','live-poll.mjs']],
   ['/review.mjs',['text/javascript; charset=utf-8','review.mjs']],
   ['/review.css',['text/css; charset=utf-8','review.css']],

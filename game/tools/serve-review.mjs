@@ -21,6 +21,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const guestPort=Number(process.env.COMMANDER_GUEST_PORT||8769),guestHost=process.env.COMMANDER_GUEST_BIND||'127.0.0.1';
 if(!Number.isInteger(guestPort)||guestPort<1024||guestPort>65535)throw Error('Invalid guest port');
 const files=new Map([['/review',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+files.set('/guest-play-boot.js',['game/ui/guest-play-boot.js','text/javascript']);
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
 files.set('/live-poll.mjs',['game/ui/live-poll.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
@@ -44,7 +45,7 @@ const mime={js:'text/javascript',css:'text/css',html:'text/html',json:'applicati
 for(const path of publicPaths)files.set('/app/'+path,[path,mime[path.split('.').at(-1)]]);
 files.set('/app/',['index.html','text/html']);
 const guestAssets=new Map([
-  ...['guest.html','guest.mjs','guest.css','review.html','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
+  ...['guest.html','guest.mjs','guest.css','review.html','guest-play-boot.js','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
   ['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])
