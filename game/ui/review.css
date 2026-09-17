@@ -9,3 +9,13 @@
 /* Keep the information rail aligned with the complete table, including the hand. */
 @media (min-width:941px){main{align-items:stretch}aside{align-self:stretch;height:auto;max-height:none;min-height:100%}aside .inspector,aside .events,aside .tracker-pane,aside .combat-pane{min-height:0;overflow:auto}aside .inspector,aside .events,aside .tracker-pane,aside .combat-pane:not([hidden]){flex:1 1 auto}}
 .primary-seat{outline:2px solid color-mix(in srgb,var(--seat) 65%,#6be5ff);outline-offset:2px}
+
+/* Green acknowledgment for successful actions */
+.action-acknowledged{background:#1a4d3a!important;border-color:#3ed67e!important;color:#7ef9bd!important;font-weight:700}
+.action-acknowledged:hover{background:#1a4d3a!important;border-color:#3ed67e!important}
+
+/* Native fallback notice */
+.nativefallback-notice{padding:10px;background:#3a2a1d;border:1px solid #8c6a3f;border-radius:8px;color:#f5d89e;margin-bottom:10px}
+
+/* Decision debug info */
+.decision-debug-info{font-size:10px;font-family:ui-monospace,monospace;color:#78a8c7;background:#0e1e2e;border:1px solid #2e4e6e;padding:8px;border-radius:6px;margin-top:8px;word-break:break-all}

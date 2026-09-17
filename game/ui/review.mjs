@@ -13,6 +13,8 @@ const $=id=>document.getElementById(id);
 const guestMode=location.pathname==='/play';
 let seatSession=null;if(guestMode)try{seatSession=JSON.parse(sessionStorage.getItem('crankmagic-seat-session')||'null');}catch{/* The lobby will replace a corrupt browser-only session. */}
 let viewerSeatId=Number.isSafeInteger(seatSession?.seatId)?seatSession.seatId:0;
+const debugDecisions=new URLSearchParams(location.search).has('debugDecisions');
+let lastActionSuccess=null;
 document.body.classList.add('table-view');
 const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
 $('seat-1').before(opponents);for(const id of [1,2,3])opponents.append($('seat-'+id));
@@ -483,7 +485,12 @@ async function gameAction(action,guard){
     if(guard&&!guard(fresh))return false;
     validateActionRevision(observedRevision,fresh,action.kind,!!guard);
     const response=await fetch(guestMode?'/match/action':'/api/game-action',{method:'POST',headers:{'Content-Type':'application/json',...(guestMode?{Authorization:'Bearer '+seatSession.capability}:{'X-Commander-Token':gameToken})},body:JSON.stringify({...action,...(guestMode?{matchId:fresh.matchId}:{}),revision:fresh.revision,actionId:crypto.randomUUID()})});
-    const result=await response.json();if(!response.ok)throw Error(result.error);return true;
+    const result=await response.json();if(!response.ok)throw Error(result.error);
+    const ackTimestamp=Date.now();
+    lastActionSuccess={timestamp:ackTimestamp,action:action.kind};
+    setTimeout(()=>{if(lastActionSuccess?.timestamp===ackTimestamp)lastActionSuccess=null;renderDecision();},1500);
+    renderDecision();
+    return true;
   }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;if(livePolling)setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),50);}
 }
 function downloadMatchReport(){if(!completionReport)return;const url=URL.createObjectURL(new Blob([JSON.stringify(completionReport,null,2)],{type:'application/json'})),a=el('a');a.href=url;a.download=`crankmagic-match-${completionReport.matchId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -569,7 +576,7 @@ function renderDecision(){
       options.replaceChildren();prompt.textContent='Playing your card…';gameAction({kind:'answer',choiceId:q.id,indices:[q.options[0].index]}).then(ok=>{if(!ok)lastDecision='';});return;
     }
     if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
-      if(q.mode==='draw')options.append(button('Draw card',drawStepCard,'primary-action'));
+      if(q.mode==='draw')options.append(button(lastActionSuccess&&lastActionSuccess.action==='answer'?'✓ Acknowledged':'Draw card',drawStepCard,'primary-action'+(lastActionSuccess&&lastActionSuccess.action==='answer'?' action-acknowledged':'')));
       else if(q.mode==='order'){
         options.append(el('p','fine',q.min===q.max?'Arrange all items in the requested order, then confirm.':`Choose ${q.min}–${q.max} items and arrange their order, then confirm.`));
         for(const option of q.options){const row=el('div','ordered-choice');row.dataset.index=option.index;const selected=el('input');selected.type='checkbox';selected.checked=q.min===q.options.length||q.selectedIndices?.includes(option.index);selected.disabled=q.min===q.options.length;selected.setAttribute('aria-label','Include '+option.label);row.append(selected,el('span','',option.label));row.append(button('↑',()=>{const previous=row.previousElementSibling;if(previous?.classList.contains('ordered-choice'))options.insertBefore(row,previous);}),button('↓',()=>{const next=row.nextElementSibling;if(next?.classList.contains('ordered-choice'))options.insertBefore(next,row);}));row.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-label',`Move ${option.label} ${i?'down':'up'}`));options.append(row);}
@@ -615,9 +622,43 @@ function renderDecision(){
         pick.append(el('span','',card.name||'Selectable card'));tray.append(pick);
       }
     }
-    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===viewerSeatId&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok==='Auto'?'Pay cost':ui.ok||'Continue',()=>{if(ui.ok==='Auto')approvedPayment=paymentId;gameAction({kind:'ok'});});confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
+    const confirmLabel=priority&&ui.ok==='OK'?(turnPlayer()?.playerId===viewerSeatId&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok==='Auto'?'Pay cost':ui.ok||'Continue';
+    const confirm=button(lastActionSuccess&&lastActionSuccess.action==='ok'?'✓ Acknowledged':confirmLabel,()=>{if(ui.ok==='Auto')approvedPayment=paymentId;gameAction({kind:'ok'});});
+    confirm.title=priority?'Finish acting for now and let the other players respond.':'';
+    confirm.disabled=!ui.okEnabled||!!ui.nativeFallback||(lastActionSuccess&&lastActionSuccess.action==='ok');
+    if(lastActionSuccess&&lastActionSuccess.action==='ok')confirm.classList.add('action-acknowledged');
+    
+    if(ui.nativeFallback){
+      const fallbackNotice=el('p','nativefallback-notice',ui.nativeFallback+' The browser control is temporarily unavailable.');
+      options.append(fallbackNotice);
+    }
+    
+    if(!ui.okEnabled&&!ui.nativeFallback&&ui.ok){
+      const viewerHasControl=live.viewerSeatId!=null&&live.state?.priorityPlayerId===live.viewerSeatId;
+      const isConfirmDecision=/keep|mulligan|starting player/i.test(ui.prompt||'');
+      if(!viewerHasControl&&isConfirmDecision){
+        const actingPlayer=frame()?.players.find(p=>p.playerId===live.state?.priorityPlayerId);
+        prompt.textContent=actingPlayer?`Waiting for ${names[actingPlayer.playerId]} to decide…`:'Waiting for another player to decide…';
+        confirm.hidden=true;
+      }
+    }
+    
+    buttons.append(confirm);
+    
+    if(debugDecisions){
+      const debugInfo=el('p','decision-debug-info',`Debug: viewerSeat=${viewerSeatId} ok=${ui.ok} okEnabled=${ui.okEnabled} nativeFallback=${!!ui.nativeFallback} inputType=${ui.inputType||'none'} revision=${live?.revision||0}`);
+      options.append(debugInfo);
+    }
     if(priority&&hasPriority()&&turnPlayer()?.playerId!==viewerSeatId){const hold=button(holdResponsesTurn===frame().turn?'Resume auto-pass':'Hold responses this turn',()=>{holdResponsesTurn=holdResponsesTurn===frame().turn?null:frame().turn;lastDecision='';renderDecision();});hold.title='Keep priority stops available while this opponent finishes their turn.';buttons.append(hold);}
-    if(ui.cancelEnabled){const yielding=priority&&ui.cancel==='End Turn'&&turnPlayer()?.playerId!==viewerSeatId;const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===viewerSeatId?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>{if(yielding){yieldTurn=frame().turn;gameAction({kind:'ok'});}else gameAction({kind:'cancel'});});cancel.title=yielding?'Skip empty stops this turn. Spells, abilities and required choices still allow a response.':'';cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
+    if(ui.cancelEnabled){
+      const yielding=priority&&ui.cancel==='End Turn'&&turnPlayer()?.playerId!==viewerSeatId;
+      const cancelLabel=priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===viewerSeatId?'End my turn':'Yield through this turn'):ui.cancel||'Cancel';
+      const cancel=button(lastActionSuccess&&lastActionSuccess.action==='cancel'?'✓ Acknowledged':cancelLabel,()=>{if(yielding){yieldTurn=frame().turn;gameAction({kind:'ok'});}else gameAction({kind:'cancel'});});
+      cancel.title=yielding?'Skip empty stops this turn. Spells, abilities and required choices still allow a response.':'';
+      cancel.disabled=!!ui.nativeFallback||(lastActionSuccess&&lastActionSuccess.action==='cancel');
+      if(lastActionSuccess&&lastActionSuccess.action==='cancel')cancel.classList.add('action-acknowledged');
+      buttons.append(cancel);
+    }
     if(ui.selectables.length&&!hiddenCandidates.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
     const startingPlayer=/who would you like to start|starting player|start this game/i.test(ui.prompt);
