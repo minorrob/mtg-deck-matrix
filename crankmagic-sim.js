@@ -338,19 +338,21 @@
 
   /* ---------------------------------------------------------------- Hosted Play export */
 
-  /* MEASURE-ONLY EXPORT FOR HOSTED PLAY LOBBY SIM REPORT.
+  /* MEASURE-ONLY EXPORT FOR HOSTED PLAY LOBBY SIM REPORT — PURE CORE.
    *
-   * Hosted Play (Online) calls this to generate a simulation report for a deck or frozen
-   * lineup. The report goes back to Online, which hands it to Collection to attach. This
-   * export owns the measurement; Collection owns attaching; Online owns seating chrome.
+   * This is the pure measurement core. Hosted Play calls the wrapper (C.measurePublished in
+   * crankmagic-lab.js) which defaults state/config/opponents and handles card text hydration.
+   * Tests call this core directly with injected dependencies.
+   *
+   * Two-layer design:
+   *   - C.measurePublished (crankmagic-lab.js): thin wrapper, defaults state/config/opponents
+   *   - CrankSim.measurePublished (this): pure core, testable with injected dependencies
    *
    * Contract:
-   *   - Inputs: { deckId, state } OR { lineup }, plus optional { onProgress, config, opponents, table }
+   *   - Inputs: { state, deckId } OR { lineup }, plus config, opponents, and optional onProgress
    *   - Protocol: published only (6×20k = 120k). Refuses preview/refine.
    *   - Output: { report } where report is packFor(...) evidence pack
-   *   - Fidelity honesty: limits already in packFor; no calibrated-human claims added
-   *
-   * Online can call without Lab chrome or model-layer access. */
+   *   - Fidelity honesty: limits already in packFor; no calibrated-human claims added */
   async function measurePublished(request) {
     const opts = request || {};
     
