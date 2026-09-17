@@ -8,13 +8,19 @@ The release proof covers a four-seat table with two humans and two GPT-5 Mini pl
 
 ### Host URLs
 
-When you start the host, these URLs become available:
+When you start the host, these URLs become available **for the host only**:
 
 - **Host root** `http://127.0.0.1:8768/` — automatically redirects to the live game setup
 - **Live game setup** `http://127.0.0.1:8768/app/#game` — the primary entry point for hosting and playing
 - **Recorded review** `http://127.0.0.1:8768/review` — view a saved match recording (only when available)
 
-**For guests:** Do not share these local URLs with friends. Guests use only the private HTTPS invitation links sent from your lobby. Each invitation contains a secure token and the temporary tunnel address.
+**CRITICAL: Guest invitations are different.** Do not share these local `127.0.0.1` URLs with guests. Guests use **only** the private HTTPS invitation links created from your lobby. Each invitation has the format:
+
+```
+{guestOrigin}/#table={tableId}&invite={token}
+```
+
+The guest tunnel origin (e.g., `https://xyz.trycloudflare.com`) serves **only** invitation links with the `#table=…&invite=…` format. Paths like `/app/#game` on the guest origin correctly return 404 and must not be used by guests.
 
 CrankMagic Online is already prepared in:
 

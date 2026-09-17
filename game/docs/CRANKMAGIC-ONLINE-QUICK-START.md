@@ -45,6 +45,8 @@ Double-clicking the shortcut starts the local host with remote guests enabled, o
 
    Opening the host root `http://127.0.0.1:8768/` automatically redirects to the live game setup. Recorded match reviews are available at `/review` when a saved match exists.
 
+   **Note:** These `127.0.0.1` URLs are for the host only. Guest invitations use a different HTTPS origin with `#table={tableId}&invite={token}` format.
+
 Forge starts automatically when the table launches. Do not start Forge separately.
 
 ## 2A. Start a solo game against three AI players
@@ -87,6 +89,8 @@ Friends need only a current web browser. They do **not** install Cloudflare, Cra
 11. Forge launches automatically. Each person selects **Enter the game** and keeps or mulligans their private opening hand.
 
 Keep the host computer on and connected for the whole match. Each invitation is private, single-use, and expires after about four hours.
+
+**Guest URLs:** Guest invitation links have the format `{guestOrigin}/#table={tableId}&invite={token}` where `{guestOrigin}` is the temporary HTTPS tunnel address (e.g., `https://xyz.trycloudflare.com`). Guests use **only** these complete invitation links. Bare paths like `/app/#game` on the guest origin correctly return 404.
 
 ## 3. Basic play controls
 
