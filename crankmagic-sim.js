@@ -336,6 +336,84 @@
     return {measure, cancel, stop, get busy() { return Boolean(live); }};
   }
 
+  /* ---------------------------------------------------------------- Hosted Play export */
+
+  /* MEASURE-ONLY EXPORT FOR HOSTED PLAY LOBBY SIM REPORT — PURE CORE.
+   *
+   * This is the pure measurement core. Hosted Play calls the wrapper (C.measurePublished in
+   * crankmagic-lab.js) which defaults state/config/opponents and handles card text hydration.
+   * Tests call this core directly with injected dependencies.
+   *
+   * Two-layer design:
+   *   - C.measurePublished (crankmagic-lab.js): thin wrapper, defaults state/config/opponents
+   *   - CrankSim.measurePublished (this): pure core, testable with injected dependencies
+   *
+   * Contract:
+   *   - Inputs: { state, deckId } OR { lineup }, plus config, opponents, and optional onProgress
+   *   - Protocol: published only (6×20k = 120k). Refuses preview/refine.
+   *   - Output: { report } where report is packFor(...) evidence pack
+   *   - Fidelity honesty: limits already in packFor; no calibrated-human claims added */
+  async function measurePublished(request) {
+    const opts = request || {};
+    
+    if (!opts.lineup && !opts.deckId) {
+      throw new Error("measurePublished requires { deckId, state } or { lineup }");
+    }
+
+    let lineup, cover;
+
+    if (opts.lineup) {
+      // Frozen lineup provided directly
+      lineup = opts.lineup;
+      cover = coverage(lineup);
+    } else {
+      // Build lineup from deckId + state
+      if (!opts.state) throw new Error("deckId requires state");
+      const deck = (opts.state.decks || []).find(d => d.id === opts.deckId);
+      if (!deck) throw new Error("Deck not found: " + opts.deckId);
+      
+      const cardOf = (id) => opts.state.cards[id];
+      lineup = lineupFor(opts.state, deck, cardOf);
+      cover = coverage(lineup);
+    }
+
+    assertMeasurable(cover, 'published');
+
+    const plan = protocolFor('published');
+    const runner = opts.runner || createRunner(opts.runnerOptions);
+    
+    if (runner.busy) throw new Error('A measurement is already running.');
+
+    // Load config/opponents if not provided
+    const config = opts.config;
+    const opponents = opts.opponents;
+    const table = opts.table || (config && config.table) || 'mixed-pod';
+    
+    if (!config || !opponents) {
+      throw new Error("measurePublished requires config and opponents");
+    }
+
+    const result = await runner.measure({
+      protocol: 'published',
+      lineup,
+      config,
+      opponents,
+      table,
+      onProgress: opts.onProgress
+    });
+
+    const seatCount = (opponents.tables[table] || []).length;
+    const report = packFor(result, {
+      protocol: 'published',
+      table,
+      seatCount,
+      cardsVersion: opts.cardsVersion || 'unknown',
+      coverage: cover
+    });
+
+    return { report };
+  }
+
   return {
     ENGINE_GENERATION,
     ENGINE_SCRIPTS,
@@ -346,6 +424,7 @@
     coverage,
     assertMeasurable,
     packFor,
-    createRunner
+    createRunner,
+    measurePublished
   };
 });
