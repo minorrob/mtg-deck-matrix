@@ -307,18 +307,32 @@ Available as:
 - **`C.attachDeckReport(...)`** (preferred)
 - **`CrankCollection.attachDeckReport(...)`**
 
+**Called by:** Hosted Play/Measure after published 120k simulation completes
+
 ### Signature (LOCKED)
 
 ```javascript
 C.attachDeckReport({
-  deckId: string,           // Target deck ID
-  report: {                 // Report object
+  deckId: string,           // Target deck ID (seat.deckId from ensureLobbyDraft)
+  report: {                 // Full CrankSim.packFor() report object (accept as-is)
     protocol: string,       // Required: report protocol/format
     deckFingerprint: string, // Required: deck fingerprint for validation
-    ...                     // Other report fields (metrics, data, etc.)
+    limits: {...},          // Preserved: simulation limits
+    versions: {...},        // Preserved: engine versions
+    conditions: {...},      // Preserved: simulation conditions
+    metrics: {...},         // Preserved: win rate, score, etc.
+    coverage: {...},        // Preserved: coverage stats
+    origin?: 'measured',    // Optional: 'measured' for published sims
+    kind?: 'report',        // Optional: 'report' type marker
+    ...                     // All other fields preserved (honesty fields, etc.)
   }
 })
 ```
+
+**Accepts full `CrankSim.packFor()` payload as-is:**
+- Preserves ALL fields (limits/protocol/deckFingerprint/versions/conditions/metrics/coverage/etc.)
+- Does NOT reinterpret or strip honesty fields
+- Validates `origin: 'measured'` and `kind: 'report'` when present
 
 Internal parameters (commit, state) injected by app wiring.
 
@@ -337,20 +351,24 @@ Promise<{
 1. **Validates report fields:**
    - Requires `report.protocol` (string)
    - Requires `report.deckFingerprint` (string)
+   - Accepts full `CrankSim.packFor()` object as-is
 
 2. **Fingerprint validation:**
-   - Computes current deck fingerprint from commanders + main slots
+   - Computes current deck fingerprint from commanders + main slots (draft deck hundred)
    - Refuses if `report.deckFingerprint` doesn't match current deck
    - Returns `{ ok: false, error: 'Report fingerprint does not match...' }`
 
 3. **Never creates Owned lots**
    - Only attaches report to `state.reports`
    - Wraps `C.commit({ type: 'report', deckId, report })`
+   - Preserves entire report object unchanged
 
 ### Usage Example
 
 ```javascript
-// After simulation completes:
+// After published 120k simulation completes:
+
+// 1. Compute fingerprint from draft deck hundred
 const fingerprint = JSON.stringify({
   commanders: [...deck.commanders].sort(),
   slots: deck.slots.filter(r => r.purpose === 'main')
@@ -358,23 +376,43 @@ const fingerprint = JSON.stringify({
     .sort((a, b) => a[0].localeCompare(b[0]))
 });
 
+// 2. Get full CrankSim.packFor() report (with ALL fields)
+const packedReport = CrankSim.packFor({
+  protocol: 'crankmagic-commander-2026-09',
+  deckFingerprint: fingerprint,
+  limits: { games: 120000, seeds: 6 },
+  versions: { engine: '1.0.0', rules: '2026-09' },
+  conditions: { bracket: 2, pod: 4 },
+  metrics: {
+    score: { value: 42, standardError: 1.2 },
+    winRate: { value: 25.3 },
+    averageWinTurn: { value: 8.5 }
+  },
+  coverage: { /* ... */ },
+  origin: 'measured',
+  kind: 'report'
+  // ... all other fields preserved (honesty, run details, etc.)
+});
+
+// 3. Attach to draft deck created by ensureLobbyDraft
 const result = await C.attachDeckReport({
-  deckId: 'deck:lobby:...',
-  report: {
-    protocol: 'simulation-v1',
-    deckFingerprint: fingerprint,
-    metrics: { score: { value: 42 }, winRate: { value: 25 } },
-    origin: 'measured'
-  }
+  deckId: seat.deckId,  // From ensureLobbyDraft result
+  report: packedReport   // Full object as-is
 });
 
 if (!result.ok) {
-  console.error(result.error);
+  console.error(result.error);  // e.g., fingerprint mismatch
   return;
 }
 
-// Success - report attached to deck
+// Success - report attached to deck with all fields preserved
 ```
+
+**Integration Flow:**
+1. Hosted Play calls `ensureLobbyDraft()` → gets `seat.deckId`
+2. Published 120k simulation runs → gets `CrankSim.packFor()` report
+3. Hosted Play/Measure calls `attachDeckReport({ deckId: seat.deckId, report })`
+4. Report appears in Decks → deck overview → Reports section
 
 ### Reports UI
 

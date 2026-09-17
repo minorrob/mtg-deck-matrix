@@ -231,11 +231,17 @@
   /**
    * Attach a simulation report to a draft deck.
    * 
-   * Called by Hosted Play or Measure after simulation completes.
+   * Called by Hosted Play or Measure after published 120k simulation completes.
+   * 
+   * Accepts the full CrankSim.packFor() payload as-is:
+   * - Requires protocol + deckFingerprint
+   * - Preserves ALL fields: limits/protocol/deckFingerprint/versions/conditions/metrics/coverage/etc.
+   * - Does NOT reinterpret or strip honesty fields
+   * - origin: 'measured', kind: 'report' when present
    * 
    * @param {Object} options - Configuration options
-   * @param {string} options.deckId - Target deck ID
-   * @param {Object} options.report - Report object with protocol + deckFingerprint
+   * @param {string} options.deckId - Target deck ID (seat.deckId from ensureLobbyDraft)
+   * @param {Object} options.report - Full CrankSim.packFor() report object
    * @param {Function} options.commit - Commit function for Collection commands
    * @param {Object} options.state - Current Collection state
    * 

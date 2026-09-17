@@ -905,6 +905,84 @@ describe('collection-lobby-draft', () => {
       expect(deck1Reports[1].protocol).toBe('test-protocol-v2');
       expect(deck2Reports[0].protocol).toBe('test-protocol-v1');
     });
+
+    test('preserves all report fields from CrankSim.packFor() as-is', async () => {
+      const state = createMockState();
+      
+      // Create a draft deck
+      const slots = [
+        { cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' },
+        { cardId: 'card:sol-ring', quantity: 1, purpose: 'main' }
+      ];
+      
+      let result = CrankCollection.apply(state, {
+        id: 'setup-1',
+        type: 'createDeck',
+        deckId: 'deck:test',
+        name: 'Test Deck',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss'], MOCK_CATALOG['Sol Ring']],
+        slots
+      });
+      Object.assign(state, result.state);
+
+      const fingerprint = JSON.stringify({
+        commanders: ['card:krenko-mob-boss'],
+        slots: [
+          ['card:krenko-mob-boss', 1],
+          ['card:sol-ring', 1]
+        ]
+      });
+
+      // Full CrankSim.packFor() report with ALL fields
+      const fullReport = {
+        protocol: 'crankmagic-commander-2026-09',
+        deckFingerprint: fingerprint,
+        limits: { games: 120000, seeds: 6 },
+        versions: { engine: '1.0.0', rules: '2026-09' },
+        conditions: { bracket: 2, pod: 4 },
+        metrics: {
+          score: { value: 42, standardError: 1.2 },
+          winRate: { value: 25.3 },
+          averageWinTurn: { value: 8.5 }
+        },
+        coverage: { cardsSeen: 95, cardsPlayed: 87 },
+        origin: 'measured',
+        kind: 'report',
+        honestyFields: { simulationId: 'sim-123', runtime: 3600 },
+        runDetails: { startedAt: '2026-09-17T20:00:00Z', completedAt: '2026-09-17T21:00:00Z' }
+      };
+
+      const mockCommit = async (command, options) => {
+        const result = CrankCollection.apply(state, { id: 'test-preserve', ...command });
+        Object.assign(state, result.state);
+        return result;
+      };
+
+      const attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test',
+        report: fullReport,
+        commit: mockCommit,
+        state
+      });
+
+      expect(attachResult.ok).toBe(true);
+      
+      // Verify ALL fields are preserved in state.reports
+      const savedReport = state.reports[0];
+      expect(savedReport.protocol).toBe('crankmagic-commander-2026-09');
+      expect(savedReport.deckFingerprint).toBe(fingerprint);
+      expect(savedReport.limits).toEqual({ games: 120000, seeds: 6 });
+      expect(savedReport.versions).toEqual({ engine: '1.0.0', rules: '2026-09' });
+      expect(savedReport.conditions).toEqual({ bracket: 2, pod: 4 });
+      expect(savedReport.metrics.score.value).toBe(42);
+      expect(savedReport.coverage).toEqual({ cardsSeen: 95, cardsPlayed: 87 });
+      expect(savedReport.origin).toBe('measured');
+      expect(savedReport.kind).toBe('report');
+      // Honesty fields preserved
+      expect(savedReport.honestyFields).toEqual({ simulationId: 'sim-123', runtime: 3600 });
+      expect(savedReport.runDetails).toEqual({ startedAt: '2026-09-17T20:00:00Z', completedAt: '2026-09-17T21:00:00Z' });
+    });
   });
 });
 
