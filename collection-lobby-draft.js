@@ -164,17 +164,18 @@
       }
     }
 
-    // Prepare slots (commanders + main deck cards)
+    // Prepare slots: commanders WITHOUT purpose (don't count toward 100) + main deck WITH purpose:'main'
+    // Only slots with purpose:'main' count toward the 100-card requirement
     const slots = [
       ...resolvedCommanders.map(cmd => ({
         cardId: cmd.cardId,
-        quantity: 1,
-        purpose: 'main'
+        quantity: 1
+        // NO purpose field - commanders don't count toward the 100
       })),
       ...resolvedCards.map(card => ({
         cardId: card.cardId,
         quantity: card.quantity,
-        purpose: 'main'
+        purpose: 'main' // These count toward the 100-card main deck
       }))
     ];
 
