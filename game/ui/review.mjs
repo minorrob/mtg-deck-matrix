@@ -7,20 +7,21 @@ import {createLivePoller} from '/live-poll.mjs';
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
 import '/handoff.mjs';
-import '/app/card-classify.js';
-import '/app/crankmagic-facets.js';
+// Lazy-load workshop classification modules — not needed for guest live connect
+let cardClassifyLoaded=false,facetsLoaded=false;
+async function ensureCardClassify(){if(!cardClassifyLoaded){await import('/app/card-classify.js').catch(()=>{});cardClassifyLoaded=true;}}
+async function ensureFacets(){if(!facetsLoaded){await import('/app/crankmagic-facets.js').catch(()=>{});facetsLoaded=true;}}
 const $=id=>document.getElementById(id);
 const guestMode=location.pathname==='/play';
 let seatSession=null;if(guestMode)try{seatSession=JSON.parse(sessionStorage.getItem('crankmagic-seat-session')||'null');}catch{/* The lobby will replace a corrupt browser-only session. */}
 let viewerSeatId=Number.isSafeInteger(seatSession?.seatId)?seatSession.seatId:0;
 const debugDecisions=new URLSearchParams(location.search).has('debugDecisions');
 let lastActionSuccess=null;
-// Guest-specific early initialization: set UI state before any imports/fetches that might fail
+// Guest-specific global error handlers (module-level failures are now caught by inline HTML script)
 if(guestMode){
-  // Add global error handler to catch any module loading failures
   window.addEventListener('error',event=>{
     try{
-      const msg='Guest boot error: '+(event.error?.message||event.message||'Unknown error');
+      const msg='Guest error: '+(event.error?.message||event.message||'Unknown error');
       $('notice').textContent=msg;
       $('phase').textContent='Connection failed';
       console.error('Guest module error:',event.error||event);
@@ -28,28 +29,12 @@ if(guestMode){
   });
   window.addEventListener('unhandledrejection',event=>{
     try{
-      const msg='Guest boot rejected: '+(event.reason?.message||String(event.reason)||'Promise rejected');
+      const msg='Guest rejected: '+(event.reason?.message||String(event.reason)||'Promise rejected');
       $('notice').textContent=msg;
       $('phase').textContent='Connection failed';
       console.error('Guest promise rejection:',event.reason);
     }catch{}
   });
-  try{
-    $('preview').textContent='CONNECTING TO TABLE…';
-    $('phase').textContent='Connecting to your live table…';
-    const scrubber=document.querySelector('.scrubber');
-    if(scrubber)scrubber.hidden=true;
-    const brand=document.querySelector('.brand');
-    if(brand)brand.remove();
-    const workshop=document.querySelector('.workshop-link');
-    if(workshop)workshop.remove();
-  }catch(error){
-    // If early DOM manipulation fails, show error in notice
-    try{
-      $('notice').textContent='Boot error: '+error.message;
-      $('phase').textContent='Connection failed';
-    }catch{}
-  }
 }
 document.body.classList.add('table-view');
 const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
@@ -187,15 +172,18 @@ async function deckView(){
   if(!deck){showDialog('Your deck',el('p','fine','Your deck will be available after the table connects.'));return;}
   body.append(el('p','fine',`${deck.name} · ${deck.total} cards in your starting list. Filters describe card abilities; fired mechanics are recorded separately during play.`));
   const loading=el('p','fine','Loading card filters…');body.append(loading);showDialog('Your deck · starting list',body);$('detail').classList.add('deck-dialog');
+  // Lazy-load workshop modules only when viewing deck
+  await ensureCardClassify();
+  await ensureFacets();
   // Reuse the app's public classifications. Never join historical ownership/deck flags.
   deckFacts??=Promise.all(['/app/data/cards.json','/app/data/graph.json'].map(url=>fetch(url).then(r=>{if(!r.ok)throw Error('Card catalog unavailable');return r.json();}))).catch(()=>{deckFacts=null;return null;});
   const facts=await deckFacts;if(!body.isConnected)return;loading.remove();
   const lookup=cards=>{const m=new Map();for(const c of cards){if(c.oracleId||c.id)m.set(c.oracleId||c.id,c);m.set(c.name,c);}return m;};
   const catalog=lookup(facts?.[0]?.cards||[]),graph=lookup(facts?.[1]?.cards||[]),snapshot=lookup(seat.mechanics?.cards||[]);
-  const facets=globalThis.CrankFacets.FACETS.filter(f=>!f.mine&&!['colors','mv','lands'].includes(f.key));
+  const facets=globalThis.CrankFacets?.FACETS?.filter(f=>!f.mine&&!['colors','mv','lands'].includes(f.key))||[];
   const rows=[...deck.commanders.map(c=>({...c,section:'Commander'})),...deck.library.map(c=>({...c,section:'Main deck'}))].map(entry=>{
     const find=m=>m.get(entry.oracleId)||m.get(entry.name)||{},raw={...find(catalog),...find(snapshot),...entry},g=find(graph);
-    const tags=globalThis.MtgCardClassify.classify({typeLine:raw.typeLine,oracleText:raw.oracleText,keywords:raw.keywords||[],card_faces:raw.faces||[]});
+    const tags=globalThis.MtgCardClassify?.classify?.({typeLine:raw.typeLine,oracleText:raw.oracleText,keywords:raw.keywords||[],card_faces:raw.faces||[]})||{};
     const row={...raw,...tags,type:raw.typeLine,mv:raw.manaValue??g.mv??null,rarity:raw.rarity||g.rarity||'',deckEntry:true,art:entry.art?.normal||visibleArtwork.get(entry.name)};
     for(const f of facets)if(Array.isArray(tags[f.key])||Array.isArray(raw[f.key])||Array.isArray(g[f.key]))row[f.key]=[...new Set([...(tags[f.key]||[]),...(raw[f.key]||[]),...(g[f.key]||[])])];
     return row;
