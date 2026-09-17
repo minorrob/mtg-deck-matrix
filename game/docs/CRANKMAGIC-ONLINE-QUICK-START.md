@@ -43,6 +43,8 @@ Double-clicking the shortcut starts the local host with remote guests enabled, o
 
 5. Open [CrankMagic Online](http://127.0.0.1:8768/app/#game) in Chrome or Edge.
 
+   Opening the host root `http://127.0.0.1:8768/` automatically redirects to the live game setup. Recorded match reviews are available at `/review` when a saved match exists.
+
 Forge starts automatically when the table launches. Do not start Forge separately.
 
 ## 2A. Start a solo game against three AI players

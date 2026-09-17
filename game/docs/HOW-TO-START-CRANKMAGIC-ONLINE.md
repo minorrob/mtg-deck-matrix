@@ -6,6 +6,16 @@ The release proof covers a four-seat table with two humans and two GPT-5 Mini pl
 
 ## First-time checks
 
+### Host URLs
+
+When you start the host, these URLs become available:
+
+- **Host root** `http://127.0.0.1:8768/` — automatically redirects to the live game setup
+- **Live game setup** `http://127.0.0.1:8768/app/#game` — the primary entry point for hosting and playing
+- **Recorded review** `http://127.0.0.1:8768/review` — view a saved match recording (only when available)
+
+**For guests:** Do not share these local URLs with friends. Guests use only the private HTTPS invitation links sent from your lobby. Each invitation contains a secure token and the temporary tunnel address.
+
 CrankMagic Online is already prepared in:
 
 ```text
