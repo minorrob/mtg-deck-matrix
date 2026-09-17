@@ -157,7 +157,7 @@ function createMockState() {
 }
 
 describe('collection-lobby-draft', () => {
-  describe('ensureLobbyDraftDeck', () => {
+  describe('ensureLobbyDraft', () => {
     test('resolves all names and creates draft deck successfully', async () => {
       const state = createMockState();
       let committedCommand = null;
@@ -169,9 +169,9 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Test Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const result = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Test Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 },
           { name: 'Lightning Bolt', quantity: 1 },
@@ -185,6 +185,7 @@ describe('collection-lobby-draft', () => {
       expect(result.ok).toBe(true);
       expect(result.unresolved).toEqual([]);
       expect(result.deckId).toBeTruthy();
+      expect(result.summary).toBeTruthy();
       expect(result.commanders).toHaveLength(1);
       expect(result.commanders[0]).toEqual({
         name: 'Krenko, Mob Boss',
@@ -213,9 +214,9 @@ describe('collection-lobby-draft', () => {
       const state = createMockState();
       const mockCommit = jest.fn();
 
-      const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Test Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const result = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Test Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 },
           { name: 'Unknown Card Name', quantity: 1 },
@@ -227,7 +228,7 @@ describe('collection-lobby-draft', () => {
       });
 
       expect(result.ok).toBe(false);
-      expect(result.unresolved).toEqual(['Unknown Card Name', 'Another Missing Card']);
+      expect(result.unresolved).toEqual([{ name: 'Unknown Card Name' }, { name: 'Another Missing Card' }]);
       expect(result.deckId).toBeNull();
       expect(result.commanders).toEqual([]);
       expect(result.cards).toEqual([]);
@@ -238,9 +239,9 @@ describe('collection-lobby-draft', () => {
       const state = createMockState();
       const mockCommit = jest.fn();
 
-      const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Test Deck',
-        commanders: ['Unknown Commander'],
+      const result = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Test Deck',
+        commanders: [{ name: 'Unknown Commander' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 }
         ],
@@ -250,7 +251,7 @@ describe('collection-lobby-draft', () => {
       });
 
       expect(result.ok).toBe(false);
-      expect(result.unresolved).toEqual(['Unknown Commander']);
+      expect(result.unresolved).toEqual([{ name: 'Unknown Commander' }]);
       expect(result.deckId).toBeNull();
       expect(mockCommit).not.toHaveBeenCalled();
     });
@@ -282,17 +283,17 @@ describe('collection-lobby-draft', () => {
         return { state, summary: 'Mock commit' };
       };
 
-      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Updated Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Updated Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 },
           { name: 'Mountain', quantity: 50 }
         ],
+        existingDeckId: 'deck:existing',
         catalogExact: mockCatalogExact,
         commit: mockCommit,
-        state,
-        existingDeckId: 'deck:existing'
+        state
       });
 
       expect(updateResult.ok).toBe(true);
@@ -338,16 +339,16 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'New Draft Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'New Draft Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 }
         ],
+        existingDeckId: 'deck:finalized',
         catalogExact: mockCatalogExact,
         commit: mockCommit,
-        state,
-        existingDeckId: 'deck:finalized'
+        state
       });
 
       expect(updateResult.ok).toBe(true);
@@ -398,16 +399,16 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'New Draft Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const updateResult = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'New Draft Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 }
         ],
+        existingDeckId: 'deck:archived',
         catalogExact: mockCatalogExact,
         commit: mockCommit,
-        state,
-        existingDeckId: 'deck:archived'
+        state
       });
 
       expect(updateResult.ok).toBe(true);
@@ -424,9 +425,9 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Test Deck',
-        commanders: ['Krenko, Mob Boss'],
+      await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Test Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 },
           { name: 'Mountain', quantity: 50 }
@@ -477,9 +478,9 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Partner Deck',
-        commanders: ['Partner A', 'Partner B'],
+      const result = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Partner Deck',
+        commanders: [{ name: 'Partner A' }, { name: 'Partner B' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 }
         ],
@@ -499,19 +500,19 @@ describe('collection-lobby-draft', () => {
       const mockCommit = jest.fn();
 
       await expect(
-        CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-          commanders: ['Krenko, Mob Boss'],
+        CrankCollectionLobbyDraft.ensureLobbyDraft({
+          commanders: [{ name: 'Krenko, Mob Boss' }],
           cards: [],
           catalogExact: mockCatalogExact,
           commit: mockCommit,
           state
         })
-      ).rejects.toThrow('Deck name is required');
+      ).rejects.toThrow('seatLabel is required');
 
       await expect(
-        CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-          name: 'Test',
-          commanders: ['Krenko, Mob Boss'],
+        CrankCollectionLobbyDraft.ensureLobbyDraft({
+          seatLabel: 'Test',
+          commanders: [{ name: 'Krenko, Mob Boss' }],
           cards: [],
           commit: mockCommit,
           state
@@ -519,9 +520,9 @@ describe('collection-lobby-draft', () => {
       ).rejects.toThrow('catalogExact resolver function is required');
 
       await expect(
-        CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-          name: 'Test',
-          commanders: ['Krenko, Mob Boss'],
+        CrankCollectionLobbyDraft.ensureLobbyDraft({
+          seatLabel: 'Test',
+          commanders: [{ name: 'Krenko, Mob Boss' }],
           cards: [],
           catalogExact: mockCatalogExact,
           state
@@ -534,9 +535,9 @@ describe('collection-lobby-draft', () => {
       const mockCommit = jest.fn();
 
       await expect(
-        CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-          name: 'Test',
-          commanders: ['Krenko, Mob Boss'],
+        CrankCollectionLobbyDraft.ensureLobbyDraft({
+          seatLabel: 'Test',
+          commanders: [{ name: 'Krenko, Mob Boss' }],
           cards: [
             { name: 'Sol Ring', quantity: 0 }
           ],
@@ -547,9 +548,9 @@ describe('collection-lobby-draft', () => {
       ).rejects.toThrow('Invalid quantity');
 
       await expect(
-        CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-          name: 'Test',
-          commanders: ['Krenko, Mob Boss'],
+        CrankCollectionLobbyDraft.ensureLobbyDraft({
+          seatLabel: 'Test',
+          commanders: [{ name: 'Krenko, Mob Boss' }],
           cards: [
             { name: 'Sol Ring', quantity: 1.5 }
           ],
@@ -568,9 +569,9 @@ describe('collection-lobby-draft', () => {
         return result;
       };
 
-      const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-        name: 'Type Test Deck',
-        commanders: ['Krenko, Mob Boss'],
+      const result = await CrankCollectionLobbyDraft.ensureLobbyDraft({
+        seatLabel: 'Type Test Deck',
+        commanders: [{ name: 'Krenko, Mob Boss' }],
         cards: [
           { name: 'Sol Ring', quantity: 1 },
           { name: 'Lightning Bolt', quantity: 1 },

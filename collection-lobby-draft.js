@@ -1,9 +1,13 @@
 /* Collection-owned helper for Play lobby Apply → real Decks draft (Design C / ownership invariants)
  *
  * When lobby Apply runs (paste / library / Build from Commander build-100), Hosted Play calls
- * ensureLobbyDraftDeck() so a **draft appears under Decks** with full catalog metadata (typeLine etc.).
+ * ensureLobbyDraft() from buildSeatFromValues so a **draft appears under Decks** with full 
+ * catalog metadata (typeLine etc.).
+ *
  * Type bars read seat rows' `typeLine` or `C.card(cardId).typeLine`. Ready stays Hosted Play's
  * `seatMappedOk` — we leave seats/catalog with exact cardIds + typeLines.
+ *
+ * Export: C.ensureLobbyDraft(...) and CrankCollection.ensureLobbyDraft(...)
  *
  * This module is IN: new helper module + wire/export where Collection already exposes APIs; tests.
  * This module is OUT: crankmagic-game.js, crankmagic-online.js, seat chrome, Forge engine.
@@ -11,43 +15,52 @@
 (function(root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  if (root) root.CrankCollectionLobbyDraft = api;
+  if (root) {
+    root.CrankCollectionLobbyDraft = api;
+    // Also export on CrankCollection if it exists
+    if (root.CrankCollection) {
+      root.CrankCollection.ensureLobbyDraft = api.ensureLobbyDraft;
+    }
+  }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
   'use strict';
 
   /**
    * Ensure a lobby draft deck exists in Collection with full catalog metadata.
    * 
+   * Called by Hosted Play buildSeatFromValues after lobby Apply (paste/library/build-100).
+   * 
    * @param {Object} options - Configuration options
-   * @param {string} options.name - Deck name
-   * @param {string[]} options.commanders - Array of commander card names (exact match required)
-   * @param {Array<{name: string, quantity: number}>} options.cards - Array of {name, quantity} for main deck
+   * @param {string} options.seatLabel - Deck name (seat label)
+   * @param {Array<{name: string}>} options.commanders - Commander names (exact match required)
+   * @param {Array<{name: string, quantity: number}>} options.cards - Main deck cards
+   * @param {string} [options.existingDeckId] - Optional: pass seat.deckId for re-Apply
    * @param {Function} options.catalogExact - Catalog resolver function (name => card object or null)
    * @param {Function} options.commit - Commit function for Collection commands
    * @param {Object} options.state - Current Collection state
-   * @param {string} [options.existingDeckId] - Optional: deck ID to update if it's still a draft
    * 
    * @returns {Promise<Object>} Result object:
    *   - {boolean} ok - Whether operation succeeded
    *   - {string|null} deckId - Created/updated deck ID (null if failed)
-   *   - {string[]} unresolved - Array of card names that failed exact match
-   *   - {Array<{name, cardId, typeLine, colorIdentity}>} commanders - Resolved commander data
-   *   - {Array<{name, quantity, cardId, typeLine, colorIdentity}>} cards - Resolved card data
+   *   - {Array<{name, line?}>} unresolved - Card names that failed exact match
+   *   - {Array<{name, cardId, typeLine, colorIdentity}>} commanders - Resolved commanders
+   *   - {Array<{name, quantity, cardId, typeLine, colorIdentity}>} cards - Resolved cards
+   *   - {string} [summary] - Optional success message
    */
-  async function ensureLobbyDraftDeck(options) {
+  async function ensureLobbyDraft(options) {
     const {
-      name,
+      seatLabel,
       commanders = [],
       cards = [],
+      existingDeckId = null,
       catalogExact,
       commit,
-      state,
-      existingDeckId = null
+      state
     } = options;
 
     // Validate required parameters
-    if (!name || typeof name !== 'string') {
-      throw new Error('Deck name is required');
+    if (!seatLabel || typeof seatLabel !== 'string') {
+      throw new Error('seatLabel is required');
     }
     if (!catalogExact || typeof catalogExact !== 'function') {
       throw new Error('catalogExact resolver function is required');
@@ -65,15 +78,17 @@
     const catalogCards = [];
 
     // Resolve commanders
-    for (const commanderName of commanders) {
+    for (const commanderEntry of commanders) {
+      const commanderName = commanderEntry?.name;
+      
       if (!commanderName || typeof commanderName !== 'string') {
-        unresolved.push(commanderName || '(empty commander name)');
+        unresolved.push({ name: commanderName || '(empty commander name)' });
         continue;
       }
 
       const card = catalogExact(commanderName);
       if (!card || !card.id) {
-        unresolved.push(commanderName);
+        unresolved.push({ name: commanderName });
         continue;
       }
 
@@ -95,7 +110,7 @@
       const { name: cardName, quantity } = cardEntry;
 
       if (!cardName || typeof cardName !== 'string') {
-        unresolved.push(cardName || '(empty card name)');
+        unresolved.push({ name: cardName || '(empty card name)' });
         continue;
       }
 
@@ -105,7 +120,7 @@
 
       const card = catalogExact(cardName);
       if (!card || !card.id) {
-        unresolved.push(cardName);
+        unresolved.push({ name: cardName });
         continue;
       }
 
@@ -164,28 +179,31 @@
 
     // Execute the command
     try {
+      let summary;
       if (isUpdate) {
         // Update existing draft deck
         await commit({
           type: 'editDeck',
           deckId,
-          name,
+          name: seatLabel,
           commanders: resolvedCommanders.map(c => c.cardId),
           cards: catalogCards,
           slots
         }, { renderView: false });
+        summary = `Updated draft deck: ${seatLabel}`;
       } else {
         // Create new draft deck
         deckId = `deck:lobby:${Date.now()}:${Math.random().toString(36).substr(2, 9)}`;
         await commit({
           type: 'createDeck',
           deckId,
-          name,
+          name: seatLabel,
           commanders: resolvedCommanders.map(c => c.cardId),
           cards: catalogCards,
           slots
           // omit groupId → auto group creation
         }, { renderView: false });
+        summary = `Created draft deck: ${seatLabel}`;
       }
 
       return {
@@ -193,7 +211,8 @@
         deckId,
         unresolved: [],
         commanders: resolvedCommanders,
-        cards: resolvedCards
+        cards: resolvedCards,
+        summary
       };
     } catch (error) {
       // If commit fails, return failure
@@ -203,12 +222,12 @@
         deckId: null,
         commanders: resolvedCommanders,
         cards: resolvedCards,
-        error: error.message
+        summary: `Failed: ${error.message}`
       };
     }
   }
 
   return {
-    ensureLobbyDraftDeck
+    ensureLobbyDraft
   };
 });

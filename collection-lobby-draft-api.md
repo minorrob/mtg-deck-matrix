@@ -2,11 +2,12 @@
 
 **Status:** DRAFT PR / START-TEST HOLD  
 **Owner:** Collection  
-**Consumer:** Hosted Play (lobby Apply operations)
+**Consumer:** Hosted Play (buildSeatFromValues)  
+**Contract:** LOCKED ✓
 
 ## Overview
 
-When lobby Apply runs (paste / library / Build from Commander build-100), Hosted Play calls `ensureLobbyDraftDeck()` to create a **draft deck under Decks** with full catalog metadata (typeLine, colorIdentity, etc.).
+When lobby Apply runs (paste / library / Build from Commander build-100), Hosted Play calls `C.ensureLobbyDraft()` from `buildSeatFromValues` to create a **draft deck under Decks** with full catalog metadata (typeLine, colorIdentity, etc.).
 
 This helper ensures:
 - Exact-name resolution for all commanders and cards via catalog
@@ -15,184 +16,247 @@ This helper ensures:
 - Ready state stays Hosted Play's `seatMappedOk` (we provide exact cardIds + typeLines for seats)
 - No Owned/Ordered lots are created (only draft deck)
 
-## API
+## Export
 
-### `ensureLobbyDraftDeck(options)`
+Available as:
+- **`C.ensureLobbyDraft(...)`** (preferred) — wired in app initialization
+- **`CrankCollection.ensureLobbyDraft(...)`** — also available on Collection model
 
-Creates or updates a draft deck in Collection from lobby Apply data.
+Hosted Play calls from `buildSeatFromValues` after the list is known.
 
-#### Parameters
+## API Signature (LOCKED)
+
+```javascript
+C.ensureLobbyDraft({
+  seatLabel: string,                 // Deck name (seat label)
+  commanders: Array<{ name: string }>,  // Commander names (exact match required)
+  cards: Array<{                     // Main deck cards
+    name: string,                    // Card name (exact match required)
+    quantity: number                 // Positive integer
+  }>,
+  existingDeckId?: string            // Optional: pass seat.deckId for re-Apply
+})
+```
+
+### Internal Parameters (provided by app wiring)
+
+The following are injected by the app and not passed by Hosted Play:
 
 ```javascript
 {
-  // Required
-  name: string,                  // Deck name
-  commanders: string[],          // Commander card names (exact match required)
-  cards: Array<{                 // Main deck cards
-    name: string,                // Card name (exact match required)
-    quantity: number             // Positive integer
-  }>,
-  catalogExact: Function,        // Catalog resolver: name => card object or null
-  commit: Function,              // Collection commit function
-  state: Object,                 // Current Collection state
-
-  // Optional
-  existingDeckId: string|null    // If provided and deck is draft, updates it;
-                                 // if final/archived/missing, creates new
+  catalogExact: Function,            // Catalog resolver: name => card object or null
+  commit: Function,                  // Collection commit function
+  state: Object                      // Current Collection state
 }
 ```
 
-#### Returns
+## Return Value (LOCKED)
 
 ```javascript
 Promise<{
-  ok: boolean,                   // Operation succeeded
-  deckId: string|null,           // Created/updated deck ID (null if failed)
-  unresolved: string[],          // Card names that failed exact match
-  commanders: Array<{            // Resolved commander metadata
+  ok: boolean,                       // Operation succeeded
+  deckId: string|null,               // Created/updated deck ID (null if failed)
+  unresolved: Array<{                // Card names that failed exact match
+    name: string,
+    line?: number                    // Optional line number (for future paste context)
+  }>,
+  commanders: Array<{                // Resolved commander metadata
     name: string,
     cardId: string,
     typeLine: string,
     colorIdentity: string[]
   }>,
-  cards: Array<{                 // Resolved card metadata
+  cards: Array<{                     // Resolved card metadata
     name: string,
     quantity: number,
     cardId: string,
     typeLine: string,
     colorIdentity: string[]
   }>,
-  error?: string                 // Error message if commit failed
+  summary?: string                   // Optional success/error message
 }>
 ```
 
 ## Usage Example
 
 ```javascript
-const CrankCollectionLobbyDraft = require('./collection-lobby-draft.js');
-
-// In Hosted Play lobby Apply handler:
-const result = await CrankCollectionLobbyDraft.ensureLobbyDraftDeck({
-  name: 'Krenko Goes Wide',
-  commanders: ['Krenko, Mob Boss'],
+// In Hosted Play buildSeatFromValues (after lobby Apply):
+const result = await C.ensureLobbyDraft({
+  seatLabel: 'Krenko Goes Wide',
+  commanders: [
+    { name: 'Krenko, Mob Boss' }
+  ],
   cards: [
     { name: 'Sol Ring', quantity: 1 },
     { name: 'Lightning Bolt', quantity: 1 },
     { name: 'Mountain', quantity: 50 },
     // ... 97 more cards
   ],
-  catalogExact: C.catalog.exact,  // Your catalog resolver
-  commit: C.commit,               // Your Collection commit function
-  state: C.state,                 // Current Collection state
-  existingDeckId: null            // Or previous lobby deck ID for re-Apply
+  existingDeckId: seat.deckId  // For re-Apply; null for first Apply
 });
 
 if (!result.ok) {
   // Handle unresolved cards
-  console.error('Unresolved cards:', result.unresolved);
-  // Show error UI to user
+  showUnresolvedCardsError(result.unresolved);
   return;
 }
 
 // Success - use result.deckId, result.commanders, result.cards
 // to write seat rows with exact cardIds and typeLines
+seat.deckId = result.deckId;
 writeSeatRows(result.commanders, result.cards);
 ```
 
-## Type Bar Contract
+## Behavior
 
-For Hosted Play type bar rendering, the result provides `typeLine` for each card:
+### Exact-Name Resolution
 
-- **Buckets:** Land, Creature, Instant, Sorcery, Artifact, Enchantment, Planeswalker
-- **Other:** Cards with missing typeLine AND unresolved cardId
-- **All-Other:** All cards in Other bucket
+1. All commander names must resolve via `catalogExact(name)`
+2. All card names must resolve via `catalogExact(name)`
+3. If **any** name fails: returns `{ ok: false, unresolved: [...] }` immediately
+4. No deck is created/modified if any name is unresolved
 
-Seat rows can read `typeLine` directly from the result arrays:
+### Draft Deck Creation
 
-```javascript
-// From result
-const commander = result.commanders[0];
-console.log(commander.typeLine); // "Legendary Creature — Goblin Warrior"
+On success:
+- Calls `commit({ type: 'createDeck', ... })` with full catalog metadata
+- Omits `groupId` → auto Collection group created
+- Deck status is `'draft'`
+- Never creates Owned/Ordered lots
 
-const card = result.cards.find(c => c.name === 'Sol Ring');
-console.log(card.typeLine); // "Artifact"
-```
-
-## Re-Apply Behavior
+### Re-Apply Behavior
 
 When `existingDeckId` is provided:
 
-1. **If deck is draft** → `editDeck` with new commanders/slots
+1. **If deck is still draft** → `editDeck` with new commanders/slots
 2. **If deck is final/archived/missing** → `createDeck` new draft
 
-This allows users to edit a lobby deck and re-Apply without creating duplicates.
+This prevents duplicate decks when user edits lobby and re-Applies.
+
+### Return Mirror for Seats
+
+Result includes resolved metadata so Hosted Play can write seat rows **without reading Decks UI**:
+
+- `commanders[]` — resolved with cardId, typeLine, colorIdentity
+- `cards[]` — resolved with cardId, typeLine, colorIdentity
+
+Seat rows read `typeLine` directly from result arrays.
+
+## Type Bar Contract
+
+For Hosted Play type bar rendering:
+
+**Buckets:** Land, Creature, Instant, Sorcery, Artifact, Enchantment, Planeswalker, Other
+
+- Helper populates `typeLine` for every resolved card (from catalog `card.typeLine`)
+- Type bars read seat rows' `typeLine` or `C.card(cardId).typeLine`
+- **Other bucket:** missing typeLine AND unresolved cardId
+
+### Example Type Bar Logic
+
+```javascript
+function typeBarBucket(row) {
+  const typeLine = row.typeLine || C.card(row.cardId)?.typeLine || '';
+  
+  if (typeLine.includes('Land')) return 'Land';
+  if (typeLine.includes('Creature')) return 'Creature';
+  if (typeLine.includes('Instant')) return 'Instant';
+  if (typeLine.includes('Sorcery')) return 'Sorcery';
+  if (typeLine.includes('Artifact')) return 'Artifact';
+  if (typeLine.includes('Enchantment')) return 'Enchantment';
+  if (typeLine.includes('Planeswalker')) return 'Planeswalker';
+  
+  return 'Other';  // Missing typeLine or unresolved
+}
+```
 
 ## Error Handling
 
 ### Unresolved Names
 
 If any commander or card name fails exact catalog match:
-- `ok: false`
-- `unresolved: ['Card Name', ...]` lists failed names
-- `deckId: null`
-- No deck is created/modified
+
+```javascript
+{
+  ok: false,
+  deckId: null,
+  unresolved: [
+    { name: 'Unknown Card Name' },
+    { name: 'Another Missing' }
+  ],
+  commanders: [],
+  cards: [],
+  summary: undefined
+}
+```
+
+No deck is created/modified. Show error UI with unresolved list.
 
 ### Commit Failure
 
-If Collection commit throws:
-- `ok: false`
-- `error: "Error message"`
-- Resolved metadata still returned for debugging
-
-## Integration Points
-
-### Where to Wire
-
-Export `CrankCollectionLobbyDraft` alongside other Collection APIs:
+If Collection commit throws (e.g., validation error):
 
 ```javascript
-// In your app initialization (e.g., crankmagic-app.js)
-const CrankCollectionLobbyDraft = require('./collection-lobby-draft.js');
-
-// Make available to Hosted Play
-C.collectionLobbyDraft = CrankCollectionLobbyDraft;
+{
+  ok: false,
+  deckId: null,
+  unresolved: [],
+  commanders: [...],  // Still returned for debugging
+  cards: [...],
+  summary: 'Failed: error message'
+}
 ```
 
-### Hosted Play Call Site
+Resolved metadata still returned for debugging context.
 
-In lobby Apply handler (NOT in crankmagic-game.js or crankmagic-online.js):
+## Integration
+
+### App Wiring (crankmagic-app.js or similar)
+
+Wire the helper during app initialization:
 
 ```javascript
-// Hosted Play lobby Apply
-async function applyLobbyDeck(lobbyData) {
-  const result = await C.collectionLobbyDraft.ensureLobbyDraftDeck({
-    name: lobbyData.deckName,
-    commanders: lobbyData.commanders,
-    cards: lobbyData.cards,
+// After Collection model is initialized
+const CrankCollectionLobbyDraft = require('./collection-lobby-draft.js');
+
+// Export on C for Hosted Play
+C.ensureLobbyDraft = async (options) => {
+  return CrankCollectionLobbyDraft.ensureLobbyDraft({
+    ...options,
     catalogExact: C.catalog.exact,
     commit: C.commit,
-    state: C.state,
-    existingDeckId: lobbyData.lastDeckId
+    state: C.state
+  });
+};
+```
+
+### Hosted Play Call Site (buildSeatFromValues)
+
+```javascript
+// In buildSeatFromValues (NOT crankmagic-game.js / crankmagic-online.js)
+async function buildSeatFromValues(seatLabel, commanderNames, cardList, existingDeckId) {
+  const result = await C.ensureLobbyDraft({
+    seatLabel,
+    commanders: commanderNames.map(name => ({ name })),
+    cards: cardList.map(({ name, quantity }) => ({ name, quantity })),
+    existingDeckId: existingDeckId || null
   });
 
   if (!result.ok) {
     showUnresolvedCardsError(result.unresolved);
-    return;
+    return null;
   }
 
-  // Write seat rows with result.commanders and result.cards
-  // (cardId, typeLine, colorIdentity all populated)
-  updateSeats(result);
+  // Write seat rows with result metadata
+  const seat = {
+    deckId: result.deckId,
+    commanders: result.commanders,
+    cards: result.cards
+  };
   
-  // Store deckId for future re-Apply
-  lobbyData.lastDeckId = result.deckId;
+  return seat;
 }
 ```
-
-## Files
-
-- **IN:** `collection-lobby-draft.js` (new helper), `collection-lobby-draft.test.js` (unit tests)
-- **OUT:** crankmagic-game.js, crankmagic-online.js, seat chrome, Forge engine, Discover/Lab/sim, Wanted/Design C rewrites
 
 ## Testing
 
@@ -200,22 +264,43 @@ Run unit tests:
 
 ```bash
 node collection-lobby-draft.test.js
+# 11 passed, 0 failed ✓
 ```
 
-Tests cover:
+### Test Coverage
+
 - ✓ Resolve success (all names match)
 - ✓ Unresolved list (some names don't match)
 - ✓ createDeck draft (new deck created)
 - ✓ Re-apply editDeck (update existing draft)
+- ✓ Re-apply createDeck (when final/archived)
 - ✓ No Owned/Ordered lots created
 - ✓ Partner commanders (multiple commanders)
 - ✓ Parameter validation
-- ✓ Type-bar metadata
+- ✓ Type-bar metadata (typeLine populated)
+- ✓ Summary field populated
+
+## Files
+
+- **Module:** `collection-lobby-draft.js` (helper implementation)
+- **Tests:** `collection-lobby-draft.test.js` (11 unit tests)
+- **Docs:** `collection-lobby-draft-api.md` (this file)
+
+**OUT:** crankmagic-game.js, crankmagic-online.js, seat chrome, Forge engine, Discover/Lab/sim
+
+## Design C / Ownership Invariants
+
+- ✅ Only draft decks created (never Owned/Ordered lots)
+- ✅ Full catalog metadata (typeLine, colorIdentity) for seat rendering
+- ✅ Exact-name resolution (fail-fast if any name unresolved)
+- ✅ Re-Apply behavior (edit draft, create new if final)
+- ✅ Ready state stays Hosted Play's `seatMappedOk` (we provide exact cardIds + typeLines)
+- ✅ Contract LOCKED — signature and return value final
 
 ## Notes
 
-- This is a **DRAFT PR** with **START-TEST HOLD** — code + unit tests only
-- Do not merge; do not touch Online files
-- Design C / ownership invariants: only draft decks, never Owned lots
-- Ready state is Hosted Play's responsibility (seatMappedOk)
-- Collection provides exact catalog metadata for seat rows
+- **DRAFT PR / START-TEST HOLD** — code + unit tests only; not UAT/prod ready
+- **Do not merge** — for integration review only
+- Hosted Play wires call sites; Collection does not edit crankmagic-game.js
+- Export name: `C.ensureLobbyDraft(...)` (preferred)
+- Contract LOCKED: signature and return value are final ✓
