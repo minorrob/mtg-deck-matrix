@@ -26,11 +26,15 @@ test('serve-review.mjs redirects root to live game setup',async()=>{
   assert.ok(source.includes("res.writeHead(302"),"Redirect should use 302 status");
 });
 
-test('review.html page contains recorded table UI',async()=>{
-  // Verify the review page structure remains intact
+test('review.html page contains game UI with neutral initial state',async()=>{
+  // Verify the review page has neutral initial state that works for both guest and recorded modes
+  // The JavaScript (review.mjs) sets the appropriate mode-specific text dynamically:
+  //   - Guest mode: "CONNECTING TO TABLE…" → "LIVE TABLE · INVITED SEAT"
+  //   - Recorded mode: "RECORDED TABLE" 
+  //   - Live host mode: "LIVE TABLE · LOCAL HOST"
   const html=await readFile(resolve(root,'game/ui/review.html'),'utf-8');
-  assert.ok(html.includes('RECORDED TABLE'),'Review page should identify as recorded table');
-  assert.ok(html.includes('Loading recorded game'),'Review page should show loading state');
+  assert.ok(html.includes('LOADING…'),'Review page should have neutral loading state');
+  assert.ok(html.includes('Loading…'),'Review page should show neutral loading message');
   assert.ok(html.includes('Game setup'),'Review page should have game setup button');
 });
 
