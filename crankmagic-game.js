@@ -250,33 +250,138 @@
      The list is a starting hundred, not a measured one, so the seat carries no score and the pod
      read says the read is partial. */
   const BUDGET = (globalThis.CrankRules && globalThis.CrankRules.RULES.deckCap) || 225;
+  /* Build from Commander → real Deck Labs engine (draft-builder.js / CrankDraft), same path as Lab.
+     STANDING RULE: never seat a stub/partial/illegal list. Only basic lands may duplicate. */
   async function generatedSeat(name, budget, you) {
     const B = globalThis.CrankDraft;
-    if (!B) throw Error("The draft builder has not loaded yet.");
-    if (!name) throw Error("Name the commander to build from.");
-    const found = C.catalog && C.catalog.exact ? C.catalog.exact(name) : null;
+    if (!B || typeof B.build !== "function") {
+      throw Error("Deck Labs builder (CrankDraft) has not loaded. Build from Commander is unavailable — use Library or Paste.");
+    }
+    if (!name) throw Error("Pick a commander to build from.");
+    if (!C.catalog || typeof C.catalog.all !== "function") throw Error("The card catalog has not loaded yet.");
+    let found = C.catalog.exact ? C.catalog.exact(name) : null;
     if (!found) throw Error(`The catalog has no card called ${name}. Check the spelling, or paste the list instead.`);
-    /* The whole catalog is the pool, the way the Lab drafts; the builder does the filtering by
-       colour identity and legality itself, and it reads the bracket's Game Changer cap from the
-       same ceiling the lobby set. */
-    const pool = C.catalog.all();
-    /* NO PER-CARD CAP ON AN OPPONENT. The house's $30 rule is Rob's buying rule, and applying it
-       to a deck someone else is imagined to own would refuse this table exactly the cards that
-       make a bracket what it is. The total budget is the realistic constraint — what this player
-       spent — and the builder's own splurge limit already stops one card eating half of it.
-       `fitBracket` is what makes the bracket a target rather than a ceiling. */
-    const built = B.build({commanders: [found], cards: pool, definition: {bracketCeiling: lobby.bracket, budget, perCardCap: null, fitBracket: true}});
+    if (typeof C.catalog.details === "function") {
+      try { found = await C.catalog.details(found); } catch (_) { /* keep exact hit */ }
+    }
+    if (typeof C.catalog.loadGraph === "function") {
+      try { await C.catalog.loadGraph(); } catch (_) { /* draft without graph seed */ }
+    }
+    const pool = C.catalog.all() || [];
+    if (pool.length < 500) {
+      throw Error("Card catalog is too thin to run Deck Labs build-100. Refresh data and try again.");
+    }
+    const bracketN = Number(lobby.bracket) || 3;
+    const budgetN = budget === "" || budget === undefined || budget === null ? null : Number(budget);
+    const M = C.M;
+    const definition = (M && typeof M.defaultDefinition === "function")
+      ? Object.assign(M.defaultDefinition({
+          baseBracket: bracketN,
+          bracketCeiling: bracketN,
+          budget: Number.isFinite(budgetN) ? budgetN : null,
+          perCardCap: null,
+        }), {fitBracket: true})
+      : {baseBracket: bracketN, bracketCeiling: bracketN, budget: Number.isFinite(budgetN) ? budgetN : null, perCardCap: null, fitBracket: true};
+
+    let seed = null;
+    if (globalThis.CrankTrace && globalThis.CrankStrategies && globalThis.CrankGraph) {
+      try {
+        const identity = new Set(found.colorIdentity || []);
+        const world = pool.filter((c) => c.id !== found.id
+          && c.verified
+          && c.legalities && c.legalities.commander === "legal"
+          && (c.colorIdentity || []).every((x) => identity.has(x)));
+        const strategies = CrankStrategies.forDeck({
+          commanderStrategies: CrankStrategies.derive(found),
+          mechanics: definition.mechanics || [],
+          ticked: null,
+        });
+        const traced = CrankTrace.trace(found, world, CrankGraph.relate, strategies, {beam: {1: 60, 2: 40, 3: 30}});
+        seed = CrankTrace.seedFrom(traced);
+      } catch (_) { seed = null; }
+    }
+
+    const built = B.build({
+      commanders: [found],
+      cards: pool,
+      definition,
+      available: {},
+      benchOnly: false,
+      seed,
+    });
+    const cmdIds = new Set([found.id].filter(Boolean));
+    const slots99 = (built.slots || []).filter((r) => !cmdIds.has(r.cardId));
+    const chosen99 = slots99.reduce((n, r) => n + (Number(r.quantity) || 1), 0);
+    if (!chosen99) {
+      throw Error("Deck Labs could not choose any of the 99. "
+        + ((built.issues && built.issues.length) ? built.issues.join(" ") : "Check commander legality and table limits."));
+    }
+    if (chosen99 < 90) {
+      throw Error(`Deck Labs returned a partial list (${chosen99} of 99) — not seating it. `
+        + ((built.issues && built.issues.slice(0, 3).join(" ")) || "Loosen budget/limits or pick another commander."));
+    }
+
     const byId = new Map(pool.map((c) => [c.id, c]));
-    const cards = (built.slots || []).map((r) => { const c = byId.get(r.cardId) || {}; return {
-      name: c.name || r.cardId, quantity: r.quantity || 1, cardId: r.cardId, gameChanger: !!c.gameChanger,
-      colorIdentity: c.colorIdentity || [], typeLine: c.typeLine || "", edhrecRank: c.edhrecRank, price: c.price}; });
-    const bracket = L.bracketOf(lobby.bracket), fit = built.bracketFit;
-    /* A deck that could not reach its bracket says so at the moment it is seated rather than
-       leaving the reader to notice the Game Changer count on the card. */
-    if (fit && fit.short) C.notice(`${found.name} was built to fit bracket ${bracket.n}, but ${C.money(budget)} only reached ${fit.carried} of the ${fit.allowed} Game Changers it allows. Raise the budget for a fuller bracket ${bracket.n} opponent.`);
-    return L.seat({name: `${found.name} (generated · bracket ${bracket.n} · ${C.money(budget)})`, kind: "generated", you,
-      commanders: [{name: found.name, cardId: found.id, colorIdentity: found.colorIdentity || []}],
-      cards, score: null, scoreWhy: `Built to fit bracket ${bracket.n} (${bracket.name}) and ${C.money(budget)}${fit && fit.short ? `, though it came up ${fit.short} Game Changer${fit.short === 1 ? "" : "s"} short of the bracket's allowance` : ""}. Never measured: the simulator has not played this list.`});
+    byId.set(found.id, found);
+    const basicRe = (L && L.BASIC) ? L.BASIC : /^(Plains|Island|Swamp|Mountain|Forest|Wastes|Snow-Covered (Plains|Island|Swamp|Mountain|Forest))$/;
+    const cards = [];
+    const seenNonbasic = new Set();
+    for (const r of slots99) {
+      const c = byId.get(r.cardId) || {};
+      const nm = c.name || String(r.cardId || "");
+      if (!nm) continue;
+      const typeLine = c.typeLine || "";
+      const basic = /Basic/i.test(typeLine) || basicRe.test(nm);
+      const quantity = Number(r.quantity) || 1;
+      if (!basic && quantity > 1) {
+        throw Error(`Deck Labs returned an illegal duplicate (${quantity}x ${nm}). Only basic lands may duplicate.`);
+      }
+      const key = nm.toLowerCase();
+      if (!basic) {
+        if (seenNonbasic.has(key)) throw Error(`Deck Labs returned a duplicate non-basic: ${nm}.`);
+        seenNonbasic.add(key);
+      }
+      cards.push({
+        name: nm,
+        quantity,
+        cardId: r.cardId || c.id || "",
+        gameChanger: !!c.gameChanger,
+        colorIdentity: c.colorIdentity || [],
+        typeLine,
+        basic,
+        edhrecRank: c.edhrecRank,
+        price: c.price,
+      });
+    }
+
+    const bracket = L.bracketOf(lobby.bracket);
+    const fit = built.bracketFit;
+    if (fit && fit.short) {
+      C.notice(`${found.name} reached ${fit.carried} of ${fit.allowed} Game Changers for bracket ${bracket.n}.`);
+    }
+    const seat = L.seat({
+      name: `${found.name} (Labs · bracket ${bracket.n}${Number.isFinite(budgetN) ? ` · ${C.money(budgetN)}` : ""})`,
+      kind: "generated",
+      you,
+      commanders: [{
+        name: found.name,
+        cardId: found.id,
+        colorIdentity: found.colorIdentity || [],
+        typeLine: found.typeLine || "",
+      }],
+      cards,
+      score: null,
+      scoreWhy: `Built with Deck Labs (CrankDraft) to bracket ${bracket.n} (${bracket.name})${Number.isFinite(budgetN) ? ` and ${C.money(budgetN)}` : ""}. Never measured.`,
+    });
+    const check = L.validate(seat, {
+      bracket: lobby.bracket,
+      gameChangers: lobby.cap === "" ? undefined : lobby.cap,
+    });
+    if (!check.ok) {
+      const why = ((check.issues || []).find((i) => i.severity === "blocking") || (check.issues || [])[0] || {}).why;
+      throw Error(why || "Built list failed Commander seat checks — not seating it.");
+    }
+    return seat;
   }
 
   /* ---------------------------------------------------------------- the two ways forward */
