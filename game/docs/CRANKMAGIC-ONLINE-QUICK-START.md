@@ -55,7 +55,7 @@ Forge starts automatically when the table launches. Do not start Forge separatel
 6. Configure each AI seat:
    - Choose its commander/deck or select random commander.
    - Choose its play style and difficulty.
-   - Select **OpenAI** and **GPT-5.6 Luna** for the normal API-powered opponent, or native Forge AI for a seat that should not use the API.
+   - Select **OpenAI** and **GPT-5 Mini** for the normal API-powered opponent, or native Forge AI for a seat that should not use the API.
 7. Select **Prepare decks**.
 8. Resolve any blocking legality, budget, or deck warnings.
 9. Select **Launch game**.
