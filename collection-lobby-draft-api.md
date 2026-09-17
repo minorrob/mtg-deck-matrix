@@ -1,20 +1,22 @@
-# Collection Lobby Draft API
+# Collection Lobby Draft & Report API
 
 **Status:** DRAFT PR / START-TEST HOLD  
 **Owner:** Collection  
-**Consumer:** Hosted Play (buildSeatFromValues)  
+**Consumer:** Hosted Play (ensureLobbyDraft) + Hosted Play/Measure (attachDeckReport)  
 **Contract:** LOCKED ✓
 
 ## Overview
 
-When lobby Apply runs (paste / library / Build from Commander build-100), Hosted Play calls `C.ensureLobbyDraft()` from `buildSeatFromValues` to create a **draft deck under Decks** with full catalog metadata (typeLine, colorIdentity, etc.).
+Two exports for Hosted Play integration:
 
-This helper ensures:
-- Exact-name resolution for all commanders and cards via catalog
-- Draft deck creation with proper Collection format
-- Full metadata for type-bar rendering (typeLine)
-- Ready state stays Hosted Play's `seatMappedOk` (we provide exact cardIds + typeLines for seats)
-- No Owned/Ordered lots are created (only draft deck)
+1. **`C.ensureLobbyDraft()`** — When lobby Apply runs (paste / library / Build from Commander build-100), Hosted Play calls this from `buildSeatFromValues` to create a **draft deck under Decks** with full catalog metadata (typeLine, colorIdentity, etc.).
+
+2. **`C.attachDeckReport()`** — After simulation completes (Hosted Play or Measure), attach the report to the draft deck with fingerprint validation.
+
+Both ensure:
+- No Owned/Ordered lots are created
+- Full catalog metadata for rendering
+- Fingerprint validation (attachDeckReport)
 
 ## Export
 
@@ -297,10 +299,94 @@ node collection-lobby-draft.test.js
 - ✅ Ready state stays Hosted Play's `seatMappedOk` (we provide exact cardIds + typeLines)
 - ✅ Contract LOCKED — signature and return value final
 
+## API 2: attachDeckReport (LOCKED)
+
+### Export
+
+Available as:
+- **`C.attachDeckReport(...)`** (preferred)
+- **`CrankCollection.attachDeckReport(...)`**
+
+### Signature (LOCKED)
+
+```javascript
+C.attachDeckReport({
+  deckId: string,           // Target deck ID
+  report: {                 // Report object
+    protocol: string,       // Required: report protocol/format
+    deckFingerprint: string, // Required: deck fingerprint for validation
+    ...                     // Other report fields (metrics, data, etc.)
+  }
+})
+```
+
+Internal parameters (commit, state) injected by app wiring.
+
+### Return Value (LOCKED)
+
+```javascript
+Promise<{
+  ok: boolean,              // Operation succeeded
+  error?: string,           // Error message if failed
+  summary?: string          // Success message
+}>
+```
+
+### Behavior
+
+1. **Validates report fields:**
+   - Requires `report.protocol` (string)
+   - Requires `report.deckFingerprint` (string)
+
+2. **Fingerprint validation:**
+   - Computes current deck fingerprint from commanders + main slots
+   - Refuses if `report.deckFingerprint` doesn't match current deck
+   - Returns `{ ok: false, error: 'Report fingerprint does not match...' }`
+
+3. **Never creates Owned lots**
+   - Only attaches report to `state.reports`
+   - Wraps `C.commit({ type: 'report', deckId, report })`
+
+### Usage Example
+
+```javascript
+// After simulation completes:
+const fingerprint = JSON.stringify({
+  commanders: [...deck.commanders].sort(),
+  slots: deck.slots.filter(r => r.purpose === 'main')
+    .map(r => [r.cardId, r.quantity])
+    .sort((a, b) => a[0].localeCompare(b[0]))
+});
+
+const result = await C.attachDeckReport({
+  deckId: 'deck:lobby:...',
+  report: {
+    protocol: 'simulation-v1',
+    deckFingerprint: fingerprint,
+    metrics: { score: { value: 42 }, winRate: { value: 25 } },
+    origin: 'measured'
+  }
+});
+
+if (!result.ok) {
+  console.error(result.error);
+  return;
+}
+
+// Success - report attached to deck
+```
+
+### Reports UI
+
+Reports attached via `attachDeckReport()` appear in **Decks → deck overview → Reports** section:
+- Simple list format (no Measure wizard chrome)
+- Shows: protocol, timestamp, list status (current/historical), origin
+- Visible for all reports attached to the deck (`state.reports.filter(r => r.deckId === deckId)`)
+
 ## Notes
 
 - **DRAFT PR / START-TEST HOLD** — code + unit tests only; not UAT/prod ready
 - **Do not merge** — for integration review only
 - Hosted Play wires call sites; Collection does not edit crankmagic-game.js
-- Export name: `C.ensureLobbyDraft(...)` (preferred)
-- Contract LOCKED: signature and return value are final ✓
+- Export names: `C.ensureLobbyDraft(...)` + `C.attachDeckReport(...)` (both preferred)
+- Contracts LOCKED: signatures and return values are final ✓
