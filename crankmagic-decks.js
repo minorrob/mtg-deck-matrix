@@ -38,6 +38,14 @@ function historyHTML(d){
   if(!reports.length)return `<section class="v-panel cm-history" id="cm-sec-history"><h2>Simulation history</h2><p>No measurement yet. Measure this deck and every run is kept here — the score, what it measured, and which list it measured.</p><div class="cm-actions">${b('Measure this deck','measure-deck',{deck:d.id},true)}${status}</div><p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and files the report here when it finishes.</p></section>`;
   return `<section class="v-panel cm-history" id="cm-sec-history"><h2>Simulation history</h2><p class="cm-muted">${reports.length} measured run${reports.length===1?'':'s'}, newest first. A run is filed the moment it finishes; a list change makes earlier runs historical, not wrong.</p><div class="cm-table-wrap"><table class="cm-table cm-history-table"><thead><tr><th scope="col">When</th><th scope="col">Protocol</th><th scope="col">Score</th><th scope="col">Win rate</th><th scope="col">Avg win turn</th><th scope="col">Games</th><th scope="col">List</th><th scope="col">Report</th></tr></thead><tbody>${reports.map(r=>`<tr><td data-label="When">${e(when(r.importedAt))}</td><td data-label="Protocol">${e(r.protocol)}</td><td data-label="Score"><strong>${metric(r,'score')}</strong>${r.metrics&&r.metrics.scoreStandardError?` <small class="cm-muted">± ${metric(r,'scoreStandardError')}</small>`:''}</td><td data-label="Win rate">${metric(r,'winRate','%')}</td><td data-label="Avg win turn">${metric(r,'averageWinTurn')}</td><td data-label="Games">${((r.run&&r.run.games)||0).toLocaleString()}</td><td data-label="List">${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}</td><td data-label="Report">${b('View report','deck-report',{deck:d.id,report:r.id},false,{cls:'compact'})}</td></tr>`).join('')}</tbody></table></div><div class="cm-actions">${b('Measure again','measure-deck',{deck:d.id})}${reports.length>1?b('Compare two runs','compare-reports',{deck:d.id}):''}${b('Reports & advice','deck-evidence',{deck:d.id})}${status}</div></section>`;
 }
+/* ALL REPORTS attached to this deck (Hosted Play + Measure + imported). Simple list for
+   deck overview, no Measure wizard chrome. */
+function reportsHTML(d){
+  const allReports=C.state.reports.filter(r=>r.deckId===d.id);
+  if(!allReports.length)return '';
+  const fp=M.fingerprint(d);
+  return `<section class="v-panel cm-reports" id="cm-sec-reports"><h2>Reports</h2><p class="cm-muted">${allReports.length} report${allReports.length===1?'':'s'} attached to this deck. Reports from simulations, play sessions, or imported data.</p><ul class="cm-reports-list">${allReports.slice().reverse().map(r=>`<li><strong>${e(r.protocol||'Unknown protocol')}</strong> · ${e(when(r.importedAt))} · ${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}${r.origin?` · <span class="cm-muted">${e(r.origin)}</span>`:''}</li>`).join('')}</ul></section>`;
+}
 /* NO ART, NO EMPTY PANEL. A deck whose commander has no cached picture used to be a dark
    rectangle with text at the bottom; the commander's initials, faint, in the deck's own two
    colours, say what the tile is from across the room. */
@@ -164,7 +172,7 @@ const guideSection=()=>`<div class="cm-grid-2"><section class="v-panel" id="cm-s
 const body={
   overview:()=>{
     if(!cards.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">This deck has no cards yet. Start building your hundred or import a list.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}${b('Import a list','wizard-import')}${b('Auto-build in Lab','wizard-lab')}</div><p class="cm-muted">Or finalize this deck and add cards from The hundred tab.</p></section>`;
-    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Finalize offers to raise the cap or trim the list.`,true):'')+stats(d)+`<p class="cm-deck-next" id="cm-deck-next"><strong>Next:</strong> ${e(nextLine(d,ready))}</p>`+glance(d,cards,curve,max,types)+recordHTML(d)+historyHTML(d)+guideSection();
+    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Finalize offers to raise the cap or trim the list.`,true):'')+stats(d)+`<p class="cm-deck-next" id="cm-deck-next"><strong>Next:</strong> ${e(nextLine(d,ready))}</p>`+glance(d,cards,curve,max,types)+recordHTML(d)+historyHTML(d)+reportsHTML(d)+guideSection();
   },
   hundred:()=>cardsTab(d,cards,curve,max,types),
   upgrades:()=>workingHTML(d)+upgradesHTML(d),
