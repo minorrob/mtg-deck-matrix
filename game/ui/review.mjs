@@ -28,6 +28,7 @@ const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appl
 let primarySeat=viewerSeatId,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 let hideOpponents=false,hideInformation=false;
 let cardZoom=100;try{const saved=Number(localStorage.getItem('crankmagic-card-zoom'));if(saved>=32&&saved<=140)cardZoom=saved;}catch{}
+const acknowledgedDecisions=new Map();
 const zoneLayouts=new Map(),cardLayoutObserver=new ResizeObserver(entries=>{for(const {target}of entries)zoneLayouts.get(target)?.();});
 function releaseCardLayouts(root){for(const zone of root.querySelectorAll('.mat-zone')){cardLayoutObserver.unobserve(zone);zoneLayouts.delete(zone);}}
 let lastActionError='';
@@ -447,7 +448,7 @@ function setPrimarySeat(playerId){const f=frame();if(!f?.players.some(player=>pl
 const myBoard=button('My board',()=>setPrimarySeat(viewerSeatId));myBoard.title='Show your playmat in the main board area';
 const holdResponses=button('Hold priority',()=>{const turn=frame()?.turn;if(turn==null||turnPlayer()?.playerId===viewerSeatId){notifyAction('Priority is already yours. Use a card or board ability when you are ready.');return;}holdResponsesTurn=holdResponsesTurn===turn?null:turn;holdResponses.textContent=holdResponsesTurn===turn?'Resume auto-pass':'Hold priority';holdResponses.title=holdResponsesTurn===turn?'Priority will stop for your instant-speed actions this turn.':'Keep priority stops available during the active opponent’s turn.';lastDecision='';renderDecision();});holdResponses.title='Keep priority stops available during the active opponent’s turn.';
 $('view-deck').before(follow,myBoard,holdResponses);
-const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';
+const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';promptAi.id='prompt-ai-button';
 $('view-deck').before(promptAi);
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
 const zoomControl=el('label','card-zoom-control','Card size '),zoomSlider=el('input'),zoomOutput=el('output','',cardZoom+'%');zoomSlider.type='range';zoomSlider.min='32';zoomSlider.max='140';zoomSlider.step='1';zoomSlider.value=cardZoom;zoomSlider.setAttribute('aria-label','Board card size');zoomControl.append(zoomSlider,zoomOutput);const setCardZoom=value=>{cardZoom=Math.max(32,Math.min(140,Number(value)));zoomSlider.value=cardZoom;zoomOutput.textContent=cardZoom===32?'Compact · 6 × 3':cardZoom+'%';try{localStorage.setItem('crankmagic-card-zoom',cardZoom);}catch{}for(const layout of zoneLayouts.values())layout();};zoomSlider.addEventListener('input',()=>setCardZoom(zoomSlider.value));viewOptions.append(zoomControl,button('Compact cards · 6 × 3',()=>setCardZoom(32)),button('Reset card size',()=>setCardZoom(100)));
@@ -460,7 +461,10 @@ $('close-focus').addEventListener('click',()=>$('focus').close());
 $('focus').addEventListener('close',mountControls);
 for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
 $('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-zoom',e.target.value+'%');$('focus').style.setProperty('--focus-scale',e.target.value/100);$('focus-size-value').textContent=e.target.value+'%';});
-$('view-hand').addEventListener('click',()=>zoneView(frame().players.find(p=>p.playerId===viewerSeatId),'Hand'));
+$('view-hand').addEventListener('click',()=>{
+  const viewer=frame().players.find(p=>p.playerId===viewerSeatId);
+  if(viewer)focusBoard(viewer);else notifyAction('Connect to a live table to view your hand.');
+});
 $('view-deck').addEventListener('click',deckView);
 $('notice').textContent='Real recorded engine states · Native AI proof · Human play, API pilots and measured reports are still being built.';
 $('setup').textContent=guestMode?'Table lobby':'Game setup';
@@ -488,6 +492,11 @@ async function gameAction(action,guard){
     const result=await response.json();if(!response.ok)throw Error(result.error);
     const ackTimestamp=Date.now();
     lastActionSuccess={timestamp:ackTimestamp,action:action.kind};
+    // Track specific mulligan/confirm decisions to prevent double acknowledgment
+    if(action.kind==='ok'&&/keep|mulligan|starting player/i.test(fresh.ui.prompt||'')){
+      const decisionKey=`${fresh.matchId||''}:${fresh.state?.turn||0}:${viewerSeatId}:${fresh.ui.prompt}`;
+      acknowledgedDecisions.set(decisionKey,ackTimestamp);
+    }
     setTimeout(()=>{if(lastActionSuccess?.timestamp===ackTimestamp)lastActionSuccess=null;renderDecision();},1500);
     renderDecision();
     return true;
@@ -559,7 +568,27 @@ function renderDecision(){
   }
   const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision){controls.hidden=!!(cardMenu&&ui.choice?.title==='Choose an ability'&&ui.choice.options.length>1);return;}lastDecision=decisionKey;
   const priority=/^Priority:/m.test(ui.prompt);
-  prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===viewerSeatId?'Your action · play a card or use a board ability.':holdResponsesTurn===frame().turn?'Priority held · play an instant, flash card, or ability, then pass.':'Resolving the current action…'):'Waiting for the active player…'):ui.prompt);
+  // Determine if the viewer is the decider for this prompt. For priority decisions, check hasPriority().
+  // For other decisions (phase advance, mulligan, etc.), check if okEnabled is true.
+  const viewerIsDecider=priority?hasPriority():ui.okEnabled;
+  const viewerIsTurnPlayer=turnPlayer()?.playerId===viewerSeatId;
+  
+  // Set prompt text: show action prompt if viewer is the decider, otherwise show appropriate waiting message
+  if(ui.nativeFallback){
+    prompt.textContent=ui.nativeFallback;
+  }else if(ui.choice?.title){
+    prompt.textContent=ui.choice.title;
+  }else if(priority){
+    if(hasPriority()){
+      prompt.textContent=viewerIsTurnPlayer?'Your action · play a card or use a board ability.':holdResponsesTurn===frame().turn?'Priority held · play an instant, flash card, or ability, then pass.':'Resolving the current action…';
+    }else{
+      prompt.textContent='Waiting for the active player…';
+    }
+  }else{
+    // For non-priority decisions (phase advance, mulligan, etc.)
+    prompt.textContent=ui.prompt;
+  }
+  
   buttons.replaceChildren();decisionArt.replaceChildren();
   if(ui.choice){const q=ui.choice;
     if(q.title==='Choose an ability'&&cardMenu&&q.options.length>1){
@@ -623,19 +652,26 @@ function renderDecision(){
       }
     }
     const confirmLabel=priority&&ui.ok==='OK'?(turnPlayer()?.playerId===viewerSeatId&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok==='Auto'?'Pay cost':ui.ok||'Continue';
-    const confirm=button(lastActionSuccess&&lastActionSuccess.action==='ok'?'✓ Acknowledged':confirmLabel,()=>{if(ui.ok==='Auto')approvedPayment=paymentId;gameAction({kind:'ok'});});
+    
+    // Check if this specific decision was already acknowledged (for mulligan/confirm decisions)
+    const isConfirmDecision=/keep|mulligan|starting player/i.test(ui.prompt||'');
+    const currentDecisionKey=`${live.matchId||''}:${frame()?.turn||0}:${viewerSeatId}:${ui.prompt}`;
+    const alreadyAcknowledged=isConfirmDecision&&acknowledgedDecisions.has(currentDecisionKey);
+    
+    const confirm=button((lastActionSuccess&&lastActionSuccess.action==='ok')||alreadyAcknowledged?'✓ Acknowledged':confirmLabel,()=>{if(ui.ok==='Auto')approvedPayment=paymentId;gameAction({kind:'ok'});});
     confirm.title=priority?'Finish acting for now and let the other players respond.':'';
-    confirm.disabled=!ui.okEnabled||!!ui.nativeFallback||(lastActionSuccess&&lastActionSuccess.action==='ok');
-    if(lastActionSuccess&&lastActionSuccess.action==='ok')confirm.classList.add('action-acknowledged');
+    confirm.disabled=!ui.okEnabled||!!ui.nativeFallback||(lastActionSuccess&&lastActionSuccess.action==='ok')||alreadyAcknowledged;
+    if((lastActionSuccess&&lastActionSuccess.action==='ok')||alreadyAcknowledged)confirm.classList.add('action-acknowledged');
     
     if(ui.nativeFallback){
       const fallbackNotice=el('p','nativefallback-notice',ui.nativeFallback+' The browser control is temporarily unavailable.');
       options.append(fallbackNotice);
     }
     
+    // For decisions where okEnabled is false, check if we should show waiting copy
+    // Only show waiting copy if the viewer truly doesn't have control (different seat has priority/decision)
     if(!ui.okEnabled&&!ui.nativeFallback&&ui.ok){
       const viewerHasControl=live.viewerSeatId!=null&&live.state?.priorityPlayerId===live.viewerSeatId;
-      const isConfirmDecision=/keep|mulligan|starting player/i.test(ui.prompt||'');
       if(!viewerHasControl&&isConfirmDecision){
         const actingPlayer=frame()?.players.find(p=>p.playerId===live.state?.priorityPlayerId);
         prompt.textContent=actingPlayer?`Waiting for ${names[actingPlayer.playerId]} to decide…`:'Waiting for another player to decide…';
@@ -658,6 +694,49 @@ function renderDecision(){
       cancel.disabled=!!ui.nativeFallback||(lastActionSuccess&&lastActionSuccess.action==='cancel');
       if(lastActionSuccess&&lastActionSuccess.action==='cancel')cancel.classList.add('action-acknowledged');
       buttons.append(cancel);
+    }
+    
+    // Auto-pass button: always visible, forces passing through remaining steps and ending turn
+    if(turnPlayer()?.playerId===viewerSeatId&&!frame().gameOver){
+      const autoPass=button('Auto-pass turn',async()=>{
+        // Check if there's active priority/stack that makes this dangerous
+        const dangerous=priority&&hasPriority()&&frame().stackSize>0;
+        if(dangerous&&!confirm('The stack has responses. Auto-pass will pass priority and continue through all remaining steps. Continue?'))return;
+        
+        const startTurn=frame().turn;let attempts=0;const maxAttempts=50;
+        while(frame().turn===startTurn&&attempts<maxAttempts&&!frame().gameOver){
+          attempts++;
+          if(!ui.okEnabled||ui.nativeFallback||ui.choice)break;
+          const success=await gameAction({kind:'ok'},fresh=>fresh.state?.turn===startTurn&&fresh.ui?.okEnabled);
+          if(!success)break;
+          await new Promise(resolve=>setTimeout(resolve,100));
+        }
+        if(frame().turn!==startTurn)notifyAction('Turn passed.');
+        else notifyAction('Auto-pass stopped. Complete the current decision or use the main Continue button.');
+      },'auto-pass-button');
+      autoPass.title='Pass priority and advance through all remaining phases to end your turn.';
+      buttons.append(autoPass);
+    }
+    
+    // End Game button: always visible during live play
+    if(live&&!frame().gameOver){
+      const endGame=button('End game',async()=>{
+        if(!confirm('End this game and return to setup?\n\nThe local journal will be kept, but the live position cannot be resumed.'))return;
+        try{
+          if(guestMode){
+            notifyAction('Guest seats cannot end the match. Ask the host to end the game.');return;
+          }
+          if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
+          const response=await fetch('/api/close-game',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken}});
+          const result=await response.json();
+          if(!response.ok)throw Error(result.error||'Unable to end game');
+          window.dispatchEvent(new Event('crankmagic-game-closed'));
+          notifyAction('Game ended. Returning to setup...');
+          setTimeout(()=>guestMode?location.assign('/'):openGameSetup(),500);
+        }catch(error){notifyAction(error.message);}
+      },'end-game-button');
+      endGame.title='End this game and return to setup. The journal will be kept.';
+      buttons.append(endGame);
     }
     if(ui.selectables.length&&!hiddenCandidates.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
