@@ -189,12 +189,66 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
     await C.commit({type:'report',deckId:d.id,report});
     return {report,result};
   }
+/* MEASURE-ONLY EXPORT FOR HOSTED PLAY (Rob, 17 September).
+ *
+ * Hosted Play calls this to generate a simulation report without filing it. The report goes
+ * back to Online, which hands it to Collection to attach via attachDeckReport. This wrapper
+ * owns calling the measurement core; Collection owns attaching; Online owns seating chrome.
+ *
+ * Accepts { deckId } OR { lineup }, plus optional { onProgress }.
+ * Defaults state, config and opponents so Hosted Play does not pass them.
+ * Returns { report } — the packFor evidence pack, unattached.
+ *
+ * Unlike measureDeck, this does NOT file the report. That is Collection's attachDeckReport. */
+async function measurePublished(opts){
+  const {deckId,lineup,onProgress}=opts||{};
+  if(!deckId&&!lineup)throw Error('measurePublished requires { deckId } or { lineup }');
+  
+  // Load config/opponents the same way measureDeck does
+  const [config,opponents]=await simInputs();
+  
+  // Hydrate card text if needed when using deckId path
+  let finalLineup=lineup;
+  if(deckId){
+    const d=M.deck(C.state,deckId);
+    let deckLineup=CrankSim.lineupFor(C.state,d,C.card);
+    let cover=CrankSim.coverage(deckLineup);
+    
+    if(cover.ratio<.95){
+      const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});
+      try{
+        const got=await C.catalog.hydrate(need,{onProgress:m=>onProgress?.({done:m.done,total:m.total,status:'fetching'})});
+        if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});
+      }catch(err){
+        throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached ('+err.message+').');
+      }
+      deckLineup=CrankSim.lineupFor(C.state,d,C.card);
+      cover=CrankSim.coverage(deckLineup);
+      if(cover.ratio<.95)throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}.`);
+    }
+    finalLineup=deckLineup;
+  }
+  
+  // Call the pure core with all dependencies
+  const {report}=await CrankSim.measurePublished({
+    lineup:finalLineup,
+    config,
+    opponents,
+    table:config.table,
+    cardsVersion:CrankAssets.cards,
+    onProgress
+  });
+  
+  return {report};
+}
+
 /* THE HUNDRED A REPORT MEASURED, kept on the report itself. The fingerprint proves which
    list it was; the list lets a later reader do something with it -- spin it off as a deck of
    its own from the deck page -- without the Lab's preview still being around. */
 function listOf(subject){return (subject.slots||[]).filter(r=>r.purpose==='main').map(r=>({cardId:r.cardId,quantity:r.quantity}));}
 C.reportHTML=(r,def)=>reportHTML(r,def);
 C.measureDeck=measureDeck;
+C.measurePublished=measurePublished;
 
 views.lab=async()=>{
   preview=preview||restorePreview();

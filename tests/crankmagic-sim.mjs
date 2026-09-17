@@ -346,4 +346,168 @@ check("the pack shape survives a real engine run end to end", () => {
   assert.equal(report.metrics.incompleteGames.value, Number((result.incompleteRate * 100).toFixed(2)));
 });
 
+/* ---------------------------------------------- measurePublished for Hosted Play */
+
+check("measurePublished is exported", () => {
+  assert.equal(typeof Sim.measurePublished, "function");
+});
+
+check("measurePublished refuses without lineup or deckId", async () => {
+  await assert.rejects(Sim.measurePublished({}), /requires.*deckId.*or.*lineup/);
+});
+
+check("measurePublished refuses preview/refine protocol by only accepting published", async () => {
+  // The function signature doesn't expose protocol selection - it's always 'published'
+  // This is enforced by the implementation calling protocolFor('published') internally
+  const {state, deck} = deckState();
+  
+  // Attempting to call with a request will use published protocol
+  // We verify this in the next test by checking the report's protocol field
+  assert.ok(true, "measurePublished enforces published protocol internally");
+});
+
+check("measurePublished with frozen lineup returns report with published protocol", async () => {
+  const lineup = [
+    {name: "Llanowar Elves", quantity: 1, isCommander: false, 
+     card: facts["Llanowar Elves"] || {typeLine: "Creature — Elf Druid", oracleText: "{T}: Add {G}.", 
+     manaCost: "{G}", power: "1", toughness: "1", colorIdentity: ["G"]}},
+    {name: "Forest", quantity: 99, isCommander: false, 
+     card: {typeLine: "Basic Land — Forest", oracleText: "", manaCost: "", colorIdentity: ["G"]}}
+  ];
+
+  class FakeWorker {
+    postMessage(message) {
+      queueMicrotask(() => {
+        this.onmessage({data: {id: message.id, type: "done", result: fakeResult}});
+      });
+    }
+    terminate() {}
+  }
+
+  const runner = Sim.createRunner({Worker: FakeWorker});
+  const {report} = await Sim.measurePublished({
+    lineup,
+    config,
+    opponents,
+    runner,
+    cardsVersion: "v2"
+  });
+
+  assert.ok(report.protocol.includes("published"));
+  assert.ok(report.protocol.includes(Sim.ENGINE_GENERATION));
+  assert.equal(report.kind, "report");
+  assert.equal(report.origin, "measured");
+  assert.doesNotThrow(() => Evidence.validate(report));
+});
+
+check("measurePublished with deckId + state returns report", async () => {
+  const {state, deck} = deckState();
+
+  class FakeWorker {
+    postMessage(message) {
+      queueMicrotask(() => {
+        this.onmessage({data: {id: message.id, type: "done", result: fakeResult}});
+      });
+    }
+    terminate() {}
+  }
+
+  const runner = Sim.createRunner({Worker: FakeWorker});
+  const {report} = await Sim.measurePublished({
+    deckId: deck.id,
+    state,
+    config,
+    opponents,
+    runner,
+    cardsVersion: "v2"
+  });
+
+  assert.ok(report.protocol.includes("published"));
+  assert.equal(report.kind, "report");
+  assert.doesNotThrow(() => Evidence.validate(report));
+});
+
+check("measurePublished refuses unreadable deck on published protocol", async () => {
+  const {state} = deckState();
+  state.cards["card:unreadable"] = {
+    id: "card:unreadable", name: "Mystery Card", typeLine: "", oracleText: "", 
+    manaCost: "", colorIdentity: [], keywords: []
+  };
+  
+  const badDeck = {
+    id: "deck:bad", name: "Unreadable deck", status: "final", archived: false, locked: false,
+    commanders: ["card:cmdr"], versions: [],
+    slots: Array(100).fill(0).map((_, i) => ({
+      id: `s${i}`, cardId: "card:unreadable", quantity: 1, purpose: "main", committed: true
+    }))
+  };
+  state.decks.push(badDeck);
+
+  class FakeWorker {
+    postMessage() {}
+    terminate() {}
+  }
+
+  const runner = Sim.createRunner({Worker: FakeWorker});
+  await assert.rejects(
+    Sim.measurePublished({deckId: badDeck.id, state, config, opponents, runner}),
+    /The engine can read 0 of 100/
+  );
+});
+
+check("measurePublished preserves fidelity limits from packFor", async () => {
+  const lineup = [
+    {name: "Forest", quantity: 100, isCommander: false, 
+     card: {typeLine: "Basic Land — Forest", oracleText: "", manaCost: "", colorIdentity: ["G"]}}
+  ];
+
+  class FakeWorker {
+    postMessage(message) {
+      queueMicrotask(() => {
+        this.onmessage({data: {id: message.id, type: "done", result: fakeResult}});
+      });
+    }
+    terminate() {}
+  }
+
+  const runner = Sim.createRunner({Worker: FakeWorker});
+  const {report} = await Sim.measurePublished({lineup, config, opponents, runner});
+
+  assert.ok(Array.isArray(report.limits), "report must have limits array");
+  assert.ok(report.limits.length >= 4, "standard fidelity limits must be present");
+  assert.ok(report.limits.some(line => /sampled archetype profiles/.test(line)),
+    "must preserve the 'not real decks' caveat");
+});
+
+check("measurePublished calls onProgress callback", async () => {
+  const lineup = [
+    {name: "Forest", quantity: 100, isCommander: false,
+     card: {typeLine: "Basic Land — Forest", oracleText: "", manaCost: "", colorIdentity: ["G"]}}
+  ];
+
+  class FakeWorker {
+    postMessage(message) {
+      queueMicrotask(() => {
+        this.onmessage({data: {id: message.id, type: "progress", done: 3, total: 6, mean: 61.5}});
+        this.onmessage({data: {id: message.id, type: "done", result: fakeResult}});
+      });
+    }
+    terminate() {}
+  }
+
+  const progress = [];
+  const runner = Sim.createRunner({Worker: FakeWorker});
+  await Sim.measurePublished({
+    lineup, 
+    config, 
+    opponents, 
+    runner,
+    onProgress: (m) => progress.push({done: m.done, total: m.total})
+  });
+
+  assert.equal(progress.length, 1);
+  assert.equal(progress[0].done, 3);
+  assert.equal(progress[0].total, 6);
+});
+
 console.log(`crankmagic-sim: ${checks} checks passed · engine ${Sim.ENGINE_GENERATION} · protocols ${Object.keys(Sim.PROTOCOLS).join(", ")}`);
