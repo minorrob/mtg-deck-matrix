@@ -20,7 +20,7 @@ const authority='127.0.0.1:'+port,origin='http://'+authority;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const guestPort=Number(process.env.COMMANDER_GUEST_PORT||8769),guestHost=process.env.COMMANDER_GUEST_BIND||'127.0.0.1';
 if(!Number.isInteger(guestPort)||guestPort<1024||guestPort>65535)throw Error('Invalid guest port');
-const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+const files=new Map([['/review',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
 files.set('/live-poll.mjs',['game/ui/live-poll.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
@@ -146,6 +146,8 @@ createServer(async(req,res)=>{
       return reply(404,{error:'Unknown operation'});
     }catch(e){return reply(400,{error:e.message});}
   }
+  // Redirect root to live game setup
+  if(req.method==='GET'&&pathname==='/'){res.writeHead(302,{'Location':'/app/#game','Cache-Control':'no-store'});res.end();return;}
   const entry=files.get(pathname);
   if(req.method!=='GET'||!entry){res.writeHead(404);res.end();return;}
   try {const body=await readFile(resolve(root,entry[0]));res.writeHead(200,{'Content-Type':entry[1]+'; charset=utf-8','Cache-Control':'no-store',
