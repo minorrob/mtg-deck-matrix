@@ -15,6 +15,42 @@ let seatSession=null;if(guestMode)try{seatSession=JSON.parse(sessionStorage.getI
 let viewerSeatId=Number.isSafeInteger(seatSession?.seatId)?seatSession.seatId:0;
 const debugDecisions=new URLSearchParams(location.search).has('debugDecisions');
 let lastActionSuccess=null;
+// Guest-specific early initialization: set UI state before any imports/fetches that might fail
+if(guestMode){
+  // Add global error handler to catch any module loading failures
+  window.addEventListener('error',event=>{
+    try{
+      const msg='Guest boot error: '+(event.error?.message||event.message||'Unknown error');
+      $('notice').textContent=msg;
+      $('phase').textContent='Connection failed';
+      console.error('Guest module error:',event.error||event);
+    }catch{}
+  });
+  window.addEventListener('unhandledrejection',event=>{
+    try{
+      const msg='Guest boot rejected: '+(event.reason?.message||String(event.reason)||'Promise rejected');
+      $('notice').textContent=msg;
+      $('phase').textContent='Connection failed';
+      console.error('Guest promise rejection:',event.reason);
+    }catch{}
+  });
+  try{
+    $('preview').textContent='CONNECTING TO TABLE…';
+    $('phase').textContent='Connecting to your live table…';
+    const scrubber=document.querySelector('.scrubber');
+    if(scrubber)scrubber.hidden=true;
+    const brand=document.querySelector('.brand');
+    if(brand)brand.remove();
+    const workshop=document.querySelector('.workshop-link');
+    if(workshop)workshop.remove();
+  }catch(error){
+    // If early DOM manipulation fails, show error in notice
+    try{
+      $('notice').textContent='Boot error: '+error.message;
+      $('phase').textContent='Connection failed';
+    }catch{}
+  }
+}
 document.body.classList.add('table-view');
 const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
 $('seat-1').before(opponents);for(const id of [1,2,3])opponents.append($('seat-'+id));
@@ -780,16 +816,15 @@ function applyLiveView(value){
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent=guestMode?'LIVE TABLE · INVITED SEAT':'LIVE TABLE · LOCAL HOST';document.querySelector('.scrubber').hidden=true;
       const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt,[...pendingCasts.values()].map(c=>[c.cardId,c.stage])]);if(key!==lastState&&draggingCard===null&&!resizingBoard&&!decisionPointer){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
       renderDecision();renderHistory();renderGuidance();renderCombat();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
+    }else if(guestMode){
+      $('phase').textContent='Waiting for the game to finish starting…';
+      $('notice').textContent='The match is being set up. This will only take a moment.';
     }
 }
 window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
 window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
-if(guestMode){
-  document.querySelector('.brand')?.remove();document.querySelector('.workshop-link')?.remove();$('setup').textContent='Table lobby';
-  $('preview').textContent='CONNECTING TO TABLE…';$('phase').textContent='Connecting to your live table…';
-  document.querySelector('.scrubber').hidden=true;
-}
+if(guestMode)$('setup').textContent='Table lobby';
 if(!new URLSearchParams(location.search).has('replay')){
   if(guestMode){
     document.body.classList.remove('setup-screen');
