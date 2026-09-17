@@ -122,6 +122,27 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   }
   ordered.sort(byName);
   const buy=cards.filter(c=>c.buy).map(c=>[c.name,c.buy,c.price]).sort(byName);
+  /* PRESERVE TO BUY GROUP ENTRIES (WANTED) FROM PRIOR STATE. The workbook's Buy Count is
+     what the owner typed for deck shortfalls; entries manually added via the UI (Wanted
+     entries in the To Buy group) are not in the workbook, so they must be carried forward
+     from the committed file to survive a rebuild (Design C, PR #250 / a9e0797). An entry
+     counts as Wanted when it is in the prior buy list but NOT in the workbook's Buy Count.
+     Merge them in, preserving their prices and avoiding duplication. */
+  if(prior?.buy){
+    const buyMap=new Map(buy.map(r=>[Live.fold(r[0]),r]));
+    const preserved=[];
+    for(const [name,qty,price] of prior.buy){
+      const key=Live.fold(name);
+      if(!buyMap.has(key)){
+        preserved.push([canon(name),qty,price]);
+      }
+    }
+    if(preserved.length){
+      buy.push(...preserved);
+      buy.sort(byName);
+      notes.push(`${preserved.length} To Buy group entr${preserved.length===1?'y':'ies'} (Wanted) preserved from prior state: ${few(preserved.map(r=>r[0]))}`);
+    }
+  }
   if(received.length)notes.push(`${received.length} Ordered entr${received.length===1?'y was':'ies were'} already received (Own covers the targets) and are not in flight: ${few(received)}`);
   if(noHome.length)notes.push(`Ordered with nothing owned and no deck targeting it, kept as in flight: ${few(noHome)}`);
   if(buyIssues.length)notes.push('Buy Count disagrees with Own/Ordered/targets on '+buyIssues.length+' row(s): '+few(buyIssues));
