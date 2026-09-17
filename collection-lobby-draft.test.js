@@ -593,6 +593,319 @@ describe('collection-lobby-draft', () => {
       expect(result.commanders[0].typeLine).toContain('Creature');
     });
   });
+
+  describe('attachDeckReport', () => {
+    test('attaches report successfully when fingerprint matches', async () => {
+      const state = createMockState();
+      
+      // Create a draft deck
+      const slots = [
+        { cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' },
+        { cardId: 'card:sol-ring', quantity: 1, purpose: 'main' },
+        { cardId: 'card:mountain', quantity: 98, purpose: 'main' }
+      ];
+      
+      let result = CrankCollection.apply(state, {
+        id: 'setup-1',
+        type: 'createDeck',
+        deckId: 'deck:test',
+        name: 'Test Deck',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss'], MOCK_CATALOG['Sol Ring'], MOCK_CATALOG['Mountain']],
+        slots
+      });
+      Object.assign(state, result.state);
+
+      // Compute fingerprint
+      const fingerprint = JSON.stringify({
+        commanders: ['card:krenko-mob-boss'],
+        slots: [
+          ['card:krenko-mob-boss', 1],
+          ['card:mountain', 98],
+          ['card:sol-ring', 1]
+        ]
+      });
+
+      let committedCommand = null;
+      const mockCommit = async (command, options) => {
+        committedCommand = command;
+        const result = CrankCollection.apply(state, { id: 'test-attach', ...command });
+        Object.assign(state, result.state);
+        return result;
+      };
+
+      const attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: fingerprint,
+          data: { some: 'report data' }
+        },
+        commit: mockCommit,
+        state
+      });
+
+      expect(attachResult.ok).toBe(true);
+      expect(attachResult.summary).toBeTruthy();
+      expect(committedCommand.type).toBe('report');
+      expect(committedCommand.deckId).toBe('deck:test');
+      
+      // Verify report was added to state
+      expect(state.reports).toHaveLength(1);
+      expect(state.reports[0].deckId).toBe('deck:test');
+    });
+
+    test('refuses report when fingerprint does not match', async () => {
+      const state = createMockState();
+      
+      // Create a draft deck
+      const slots = [
+        { cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' },
+        { cardId: 'card:sol-ring', quantity: 1, purpose: 'main' },
+        { cardId: 'card:mountain', quantity: 98, purpose: 'main' }
+      ];
+      
+      let result = CrankCollection.apply(state, {
+        id: 'setup-1',
+        type: 'createDeck',
+        deckId: 'deck:test',
+        name: 'Test Deck',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss'], MOCK_CATALOG['Sol Ring'], MOCK_CATALOG['Mountain']],
+        slots
+      });
+      Object.assign(state, result.state);
+
+      const mockCommit = jest.fn();
+
+      const attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: 'wrong-fingerprint',
+          data: { some: 'report data' }
+        },
+        commit: mockCommit,
+        state
+      });
+
+      expect(attachResult.ok).toBe(false);
+      expect(attachResult.error).toContain('fingerprint does not match');
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
+    test('refuses report when deck not found', async () => {
+      const state = createMockState();
+      const mockCommit = jest.fn();
+
+      const attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:nonexistent',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: 'any-fingerprint',
+          data: { some: 'report data' }
+        },
+        commit: mockCommit,
+        state
+      });
+
+      expect(attachResult.ok).toBe(false);
+      expect(attachResult.error).toBe('Deck not found');
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
+
+    test('validates required report fields', async () => {
+      const state = createMockState();
+      const mockCommit = jest.fn();
+
+      await expect(
+        CrankCollectionLobbyDraft.attachDeckReport({
+          report: {
+            protocol: 'test-protocol-v1',
+            deckFingerprint: 'fingerprint'
+          },
+          commit: mockCommit,
+          state
+        })
+      ).rejects.toThrow('deckId is required');
+
+      await expect(
+        CrankCollectionLobbyDraft.attachDeckReport({
+          deckId: 'deck:test',
+          report: {
+            deckFingerprint: 'fingerprint'
+          },
+          commit: mockCommit,
+          state
+        })
+      ).rejects.toThrow('report.protocol is required');
+
+      await expect(
+        CrankCollectionLobbyDraft.attachDeckReport({
+          deckId: 'deck:test',
+          report: {
+            protocol: 'test-protocol-v1'
+          },
+          commit: mockCommit,
+          state
+        })
+      ).rejects.toThrow('report.deckFingerprint is required');
+    });
+
+    test('never creates Owned lots when attaching report', async () => {
+      const state = createMockState();
+      
+      // Create a draft deck
+      const slots = [
+        { cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' },
+        { cardId: 'card:sol-ring', quantity: 1, purpose: 'main' }
+      ];
+      
+      let result = CrankCollection.apply(state, {
+        id: 'setup-1',
+        type: 'createDeck',
+        deckId: 'deck:test',
+        name: 'Test Deck',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss'], MOCK_CATALOG['Sol Ring']],
+        slots
+      });
+      Object.assign(state, result.state);
+
+      const fingerprint = JSON.stringify({
+        commanders: ['card:krenko-mob-boss'],
+        slots: [
+          ['card:krenko-mob-boss', 1],
+          ['card:sol-ring', 1]
+        ]
+      });
+
+      const mockCommit = async (command, options) => {
+        const result = CrankCollection.apply(state, { id: 'test-attach', ...command });
+        Object.assign(state, result.state);
+        return result;
+      };
+
+      await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: fingerprint,
+          data: { some: 'report data' }
+        },
+        commit: mockCommit,
+        state
+      });
+
+      // Verify no lots were created
+      expect(state.lots).toHaveLength(0);
+      
+      // Verify report exists
+      expect(state.reports).toHaveLength(1);
+    });
+
+    test('reports are visible for deck in Collection state', async () => {
+      const state = createMockState();
+      
+      // Create two decks
+      let result = CrankCollection.apply(state, {
+        id: 'setup-1',
+        type: 'createDeck',
+        deckId: 'deck:test1',
+        name: 'Test Deck 1',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss']],
+        slots: [{ cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' }]
+      });
+      Object.assign(state, result.state);
+
+      result = CrankCollection.apply(state, {
+        id: 'setup-2',
+        type: 'createDeck',
+        deckId: 'deck:test2',
+        name: 'Test Deck 2',
+        commanders: ['card:krenko-mob-boss'],
+        cards: [MOCK_CATALOG['Krenko, Mob Boss']],
+        slots: [{ cardId: 'card:krenko-mob-boss', quantity: 1, purpose: 'main' }]
+      });
+      Object.assign(state, result.state);
+
+      // Attach reports to both decks
+      const fp1 = JSON.stringify({
+        commanders: ['card:krenko-mob-boss'],
+        slots: [['card:krenko-mob-boss', 1]]
+      });
+
+      let commitCounter = 0;
+      const mockCommit = async (command) => {
+        commitCounter++;
+        const result = CrankCollection.apply(state, { id: 'commit-' + Date.now() + '-' + commitCounter, ...command });
+        Object.assign(state, result.state);
+        return result;
+      };
+
+      // Attach first report to deck1
+      let attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test1',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: fp1,
+          origin: 'measured'
+        },
+        commit: mockCommit,
+        state
+      });
+      if (!attachResult.ok) {
+        console.error('First attach failed:', attachResult.error);
+      }
+      expect(attachResult.ok).toBe(true);
+
+      // Attach second report to deck1
+      attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test1',
+        report: {
+          protocol: 'test-protocol-v2',
+          deckFingerprint: fp1,
+          origin: 'imported'
+        },
+        commit: mockCommit,
+        state
+      });
+      if (!attachResult.ok) {
+        console.error('Second attach failed:', attachResult.error);
+      }
+      expect(attachResult.ok).toBe(true);
+
+      // Attach report to deck2
+      attachResult = await CrankCollectionLobbyDraft.attachDeckReport({
+        deckId: 'deck:test2',
+        report: {
+          protocol: 'test-protocol-v1',
+          deckFingerprint: fp1,
+          origin: 'measured'
+        },
+        commit: mockCommit,
+        state
+      });
+      if (!attachResult.ok) {
+        console.error('Third attach failed:', attachResult.error);
+      }
+      expect(attachResult.ok).toBe(true);
+
+      // Verify reports are in state and properly separated by deck
+      expect(state.reports).toHaveLength(3);
+      
+      const deck1Reports = state.reports.filter(r => r.deckId === 'deck:test1');
+      const deck2Reports = state.reports.filter(r => r.deckId === 'deck:test2');
+      
+      expect(deck1Reports).toHaveLength(2);
+      expect(deck2Reports).toHaveLength(1);
+      
+      expect(deck1Reports[0].protocol).toBe('test-protocol-v1');
+      expect(deck1Reports[1].protocol).toBe('test-protocol-v2');
+      expect(deck2Reports[0].protocol).toBe('test-protocol-v1');
+    });
+  });
 });
 
 // Run tests if executed directly

@@ -20,6 +20,7 @@
     // Also export on CrankCollection if it exists
     if (root.CrankCollection) {
       root.CrankCollection.ensureLobbyDraft = api.ensureLobbyDraft;
+      root.CrankCollection.attachDeckReport = api.attachDeckReport;
     }
   }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
@@ -227,7 +228,97 @@
     }
   }
 
+  /**
+   * Attach a simulation report to a draft deck.
+   * 
+   * Called by Hosted Play or Measure after simulation completes.
+   * 
+   * @param {Object} options - Configuration options
+   * @param {string} options.deckId - Target deck ID
+   * @param {Object} options.report - Report object with protocol + deckFingerprint
+   * @param {Function} options.commit - Commit function for Collection commands
+   * @param {Object} options.state - Current Collection state
+   * 
+   * @returns {Promise<Object>} Result object:
+   *   - {boolean} ok - Whether operation succeeded
+   *   - {string} [error] - Error message if failed
+   *   - {string} [summary] - Success message
+   */
+  async function attachDeckReport(options) {
+    const {
+      deckId,
+      report,
+      commit,
+      state
+    } = options;
+
+    // Validate required parameters
+    if (!deckId || typeof deckId !== 'string') {
+      throw new Error('deckId is required');
+    }
+    if (!report || typeof report !== 'object') {
+      throw new Error('report object is required');
+    }
+    if (!report.protocol || typeof report.protocol !== 'string') {
+      throw new Error('report.protocol is required');
+    }
+    if (!report.deckFingerprint || typeof report.deckFingerprint !== 'string') {
+      throw new Error('report.deckFingerprint is required');
+    }
+    if (!commit || typeof commit !== 'function') {
+      throw new Error('commit function is required');
+    }
+    if (!state || !state.decks) {
+      throw new Error('Collection state is required');
+    }
+
+    // Find the deck
+    const deck = state.decks.find(d => d.id === deckId);
+    if (!deck) {
+      return {
+        ok: false,
+        error: 'Deck not found'
+      };
+    }
+
+    // Compute current deck fingerprint (same logic as Collection model)
+    const currentFingerprint = JSON.stringify({
+      commanders: [...deck.commanders].sort(),
+      slots: deck.slots.filter(r => r.purpose === 'main')
+        .map(r => [r.cardId, r.quantity])
+        .sort((a, b) => a[0].localeCompare(b[0]))
+    });
+
+    // Check fingerprint match
+    if (report.deckFingerprint !== currentFingerprint) {
+      return {
+        ok: false,
+        error: 'Report fingerprint does not match current deck list. The deck may have been modified since the simulation.'
+      };
+    }
+
+    // Attach the report
+    try {
+      await commit({
+        type: 'report',
+        deckId,
+        report
+      }, { renderView: false });
+
+      return {
+        ok: true,
+        summary: `Attached simulation report to ${deck.name}`
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error.message
+      };
+    }
+  }
+
   return {
-    ensureLobbyDraft
+    ensureLobbyDraft,
+    attachDeckReport
   };
 });
