@@ -7,14 +7,35 @@ import {createLivePoller} from '/live-poll.mjs';
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
 import '/handoff.mjs';
-import '/app/card-classify.js';
-import '/app/crankmagic-facets.js';
+// Lazy-load workshop classification modules — not needed for guest live connect
+let cardClassifyLoaded=false,facetsLoaded=false;
+async function ensureCardClassify(){if(!cardClassifyLoaded){await import('/app/card-classify.js').catch(()=>{});cardClassifyLoaded=true;}}
+async function ensureFacets(){if(!facetsLoaded){await import('/app/crankmagic-facets.js').catch(()=>{});facetsLoaded=true;}}
 const $=id=>document.getElementById(id);
 const guestMode=location.pathname==='/play';
 let seatSession=null;if(guestMode)try{seatSession=JSON.parse(sessionStorage.getItem('crankmagic-seat-session')||'null');}catch{/* The lobby will replace a corrupt browser-only session. */}
 let viewerSeatId=Number.isSafeInteger(seatSession?.seatId)?seatSession.seatId:0;
 const debugDecisions=new URLSearchParams(location.search).has('debugDecisions');
 let lastActionSuccess=null;
+// Guest-specific global error handlers (module-level failures are now caught by inline HTML script)
+if(guestMode){
+  window.addEventListener('error',event=>{
+    try{
+      const msg='Guest error: '+(event.error?.message||event.message||'Unknown error');
+      $('notice').textContent=msg;
+      $('phase').textContent='Connection failed';
+      console.error('Guest module error:',event.error||event);
+    }catch{}
+  });
+  window.addEventListener('unhandledrejection',event=>{
+    try{
+      const msg='Guest rejected: '+(event.reason?.message||String(event.reason)||'Promise rejected');
+      $('notice').textContent=msg;
+      $('phase').textContent='Connection failed';
+      console.error('Guest promise rejection:',event.reason);
+    }catch{}
+  });
+}
 document.body.classList.add('table-view');
 const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
 $('seat-1').before(opponents);for(const id of [1,2,3])opponents.append($('seat-'+id));
@@ -151,15 +172,18 @@ async function deckView(){
   if(!deck){showDialog('Your deck',el('p','fine','Your deck will be available after the table connects.'));return;}
   body.append(el('p','fine',`${deck.name} · ${deck.total} cards in your starting list. Filters describe card abilities; fired mechanics are recorded separately during play.`));
   const loading=el('p','fine','Loading card filters…');body.append(loading);showDialog('Your deck · starting list',body);$('detail').classList.add('deck-dialog');
+  // Lazy-load workshop modules only when viewing deck
+  await ensureCardClassify();
+  await ensureFacets();
   // Reuse the app's public classifications. Never join historical ownership/deck flags.
   deckFacts??=Promise.all(['/app/data/cards.json','/app/data/graph.json'].map(url=>fetch(url).then(r=>{if(!r.ok)throw Error('Card catalog unavailable');return r.json();}))).catch(()=>{deckFacts=null;return null;});
   const facts=await deckFacts;if(!body.isConnected)return;loading.remove();
   const lookup=cards=>{const m=new Map();for(const c of cards){if(c.oracleId||c.id)m.set(c.oracleId||c.id,c);m.set(c.name,c);}return m;};
   const catalog=lookup(facts?.[0]?.cards||[]),graph=lookup(facts?.[1]?.cards||[]),snapshot=lookup(seat.mechanics?.cards||[]);
-  const facets=globalThis.CrankFacets.FACETS.filter(f=>!f.mine&&!['colors','mv','lands'].includes(f.key));
+  const facets=globalThis.CrankFacets?.FACETS?.filter(f=>!f.mine&&!['colors','mv','lands'].includes(f.key))||[];
   const rows=[...deck.commanders.map(c=>({...c,section:'Commander'})),...deck.library.map(c=>({...c,section:'Main deck'}))].map(entry=>{
     const find=m=>m.get(entry.oracleId)||m.get(entry.name)||{},raw={...find(catalog),...find(snapshot),...entry},g=find(graph);
-    const tags=globalThis.MtgCardClassify.classify({typeLine:raw.typeLine,oracleText:raw.oracleText,keywords:raw.keywords||[],card_faces:raw.faces||[]});
+    const tags=globalThis.MtgCardClassify?.classify?.({typeLine:raw.typeLine,oracleText:raw.oracleText,keywords:raw.keywords||[],card_faces:raw.faces||[]})||{};
     const row={...raw,...tags,type:raw.typeLine,mv:raw.manaValue??g.mv??null,rarity:raw.rarity||g.rarity||'',deckEntry:true,art:entry.art?.normal||visibleArtwork.get(entry.name)};
     for(const f of facets)if(Array.isArray(tags[f.key])||Array.isArray(raw[f.key])||Array.isArray(g[f.key]))row[f.key]=[...new Set([...(tags[f.key]||[]),...(raw[f.key]||[]),...(g[f.key]||[])])];
     return row;
@@ -469,7 +493,10 @@ $('view-deck').addEventListener('click',deckView);
 $('notice').textContent='Real recorded engine states · Native AI proof · Human play, API pilots and measured reports are still being built.';
 $('setup').textContent=guestMode?'Table lobby':'Game setup';
 $('setup').addEventListener('click',()=>guestMode?location.assign('/'):openGameSetup().catch(error=>showDialog('Game setup',el('p','fine',error.message))));
-if(data.frames.length){render();const c=data.pod.seats[0]?.deck.commanders[0];if(c&&new URLSearchParams(location.search).has('replay'))inspect({name:c.name,art:c.art.normal,typeLine:c.typeLine,cardId:'commander'},1,true);else $('inspector').replaceChildren(el('p','fine','Select any visible card to inspect it.'));}
+if(data.frames.length){
+  if(!guestMode)$('preview').textContent='RECORDED TABLE';
+  render();const c=data.pod.seats[0]?.deck.commanders[0];if(c&&new URLSearchParams(location.search).has('replay'))inspect({name:c.name,art:c.art.normal,typeLine:c.typeLine,cardId:'commander'},1,true);else $('inspector').replaceChildren(el('p','fine','Select any visible card to inspect it.'));
+}
 
 const liveButton=button('Join live table',startLive,'join-live');document.querySelector('header').append(liveButton);
 const controls=el('section','live-controls');controls.hidden=true;controls.setAttribute('aria-label','Your game decision');document.querySelector('.hand').prepend(controls);
@@ -757,9 +784,11 @@ const livePoller=createLivePoller({
     const response=await fetch(guestMode?'/match/view':'/api/game-view',{signal,headers:guestMode?{Authorization:'Bearer '+seatSession?.capability}:{}});
     const value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Unable to read the table'),{status:response.status});return value;
   },apply:applyLiveView,interval:()=>pendingCasts.size?250:750,
-  onError:(error,{fatal})=>{
+  onError:(error,{fatal,failures})=>{
     liveButton.textContent=fatal?'Table access ended':'Reconnecting…';liveButton.disabled=!fatal;
-    $('notice').textContent=fatal?error.message+' Return to the table lobby.':'Connection interrupted. Reconnecting to the live table…';
+    const baseMessage=fatal?error.message+' Return to the table lobby.':'Connection interrupted. Reconnecting to the live table…';
+    $('notice').textContent=baseMessage;
+    if(guestMode&&failures>=1)$('phase').textContent=fatal?'Connection failed':'Connecting… (attempt '+failures+')';
     if(fatal)livePolling=false;
   }
 });
@@ -775,11 +804,20 @@ function applyLiveView(value){
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent=guestMode?'LIVE TABLE · INVITED SEAT':'LIVE TABLE · LOCAL HOST';document.querySelector('.scrubber').hidden=true;
       const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt,[...pendingCasts.values()].map(c=>[c.cardId,c.stage])]);if(key!==lastState&&draggingCard===null&&!resizingBoard&&!decisionPointer){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
       renderDecision();renderHistory();renderGuidance();renderCombat();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
+    }else if(guestMode){
+      $('phase').textContent='Waiting for the game to finish starting…';
+      $('notice').textContent='The match is being set up. This will only take a moment.';
     }
 }
 window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
 window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
-if(guestMode){document.querySelector('.brand')?.remove();document.querySelector('.workshop-link')?.remove();$('setup').textContent='Table lobby';}
-if(!new URLSearchParams(location.search).has('replay')){if(guestMode){document.body.classList.remove('setup-screen');await startLive();}else{document.body.classList.add('setup-screen');await openGameSetup();}}
+if(guestMode)$('setup').textContent='Table lobby';
+if(!new URLSearchParams(location.search).has('replay')){
+  if(guestMode){
+    document.body.classList.remove('setup-screen');
+    try{await startLive();}
+    catch(error){$('notice').textContent='Connection failed: '+error.message+' · Return to the table lobby.';$('phase').textContent='Connection failed';}
+  }else{document.body.classList.add('setup-screen');await openGameSetup();}
+}
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==window.parent||window.parent===window)return;if(event.data?.type==='crankmagic-setup')openGameSetup(event.data.imported).catch(error=>{$('notice').textContent=error.message;});});
