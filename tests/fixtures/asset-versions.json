@@ -98,8 +98,8 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 209,
-      "sha": "048d3a32e019a33a"
+      "version": 210,
+      "sha": "d699f6cd80b8364e"
     },
     "crankmagic-assets.js": {
       "version": 27,
@@ -234,8 +234,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 209,
-      "sha": "cd029880c3b8300c"
+      "version": 210,
+      "sha": "c73535efadcc8bc7"
     },
     "crankmagic-tabletop.js": {
       "version": 16,
