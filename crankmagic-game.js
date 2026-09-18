@@ -26,21 +26,6 @@
       : Math.random().toString(36).slice(2, 10);
     return opp.inviteId;
   }
-  function inviteUrl(opp) {
-    if (opp && opp.liveInviteLink) return String(opp.liveInviteLink);
-    const id = ensureInviteId(opp);
-    const guestOrigin = (typeof cachedGuestOrigin === "string" && cachedGuestOrigin)
-      ? cachedGuestOrigin.replace(/\/$/, "")
-      : "";
-    if (guestOrigin) {
-      /* Legacy workshop seat code — live guest join needs #table=&invite= from ensureLiveInvite. */
-      return guestOrigin + "/#seat=" + encodeURIComponent(id);
-    }
-    const base = (typeof location !== "undefined" && location.href)
-      ? location.href.split("#")[0]
-      : "";
-    return base + "#play?seat=" + encodeURIComponent(id);
-  }
   function humanOppSeatIdMap() {
     const map = new Map();
     let next = 1;
@@ -2092,6 +2077,21 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
       const token = setup && setup.token;
       if (!token) throw new Error('Host /api/setup did not return a token. Is serve-review running?');
       const config = await lobbyBuildPrepareConfig(token, setup.defaults, setup.decks || []);
+      /* An invitation is bound to the table id it was issued against. Email Invite opens the
+         lobby itself when none is open, so by the time Start is pressed a table is usually
+         already accepting guests. Preparing a second one mints a new table id and every link
+         already emailed reads as "Invitation expired or unavailable" the moment a guest opens
+         it. Reuse the open table instead. */
+      if (config.humans > 1) {
+        const open = await lobbyApi('/api/table').catch(() => null);
+        if (open && open.table && ['selecting', 'rematch'].includes(open.table.phase)) {
+          applyServerInvitations(open.invitations || []);
+          startInFlight = false;
+          redraw();
+          C.notice('Private lobby is already open. The links you have sent are still good — the game starts once every seat is Ready.');
+          return;
+        }
+      }
       C.notice(`Preparing ${config.seats.length} seats (native Forge AI)…`);
       const prepared = await lobbyApi('/api/prepare', {method: 'POST', token, body: config});
       if (!prepared || !prepared.id) throw new Error('Prepare did not return an id.');

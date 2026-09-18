@@ -162,6 +162,11 @@ createServer(async(req,res)=>{
           if(pod.schema==='CommanderLobbyPack@1'){
             if(pod.reservedHumanSeats.length&& !remoteGuestsAvailable)throw Error('Remote guests are unavailable. Restart CrankMagic Online with Remote Guests enabled before creating a human lobby.');
             if(tableRuntime&&!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the current multiplayer table before opening another');
+            // Every invitation is sealed to the table id it was issued against, so replacing a table
+            // silently voids each link already emailed. The guest sees "Invitation expired or
+            // unavailable" on a link that was minted minutes ago. Refuse instead, and make a caller
+            // that really means to discard them say so.
+            if(tableRuntime&&hostInvitations.length&&body.replace!==true)throw Error('This table already has invitations out. Opening another would void every link you have sent. Close the table first, or start again with replace set, to discard them on purpose.');
             tableRuntime?.close();tableRuntime=createLocalTableRuntime({...runtimeOptions,lobby:pod});
             await tableRuntime.ready(true);hostInvitations=pod.reservedHumanSeats.map(({seatId})=>{const issued=tableRuntime.invite(seatId,14_400_000);return {seatId,expiresIn:issued.expiresIn,link:`${guestInfo.origin}/#table=${encodeURIComponent(issued.tableId)}&invite=${encodeURIComponent(issued.invite)}`};});
             prepared.delete(body.id);return reply(200,{lobby:true,table:tableRuntime.view(),invitations:hostInvitations,guestOrigin:guestInfo.origin});

@@ -38,3 +38,21 @@ test('invitations are single-use, scoped, revocable and never let the caller cho
   assert.throws(()=>access.redeem(second,{...context,claim:()=>{}}));access.release('a',1);assert.throws(()=>access.authorize(session,context));
   const expired=access.invite({...context,seatId:2,ttl:1});assert.throws(()=>access.redeem(expired,{...context,now:1,claim:()=>{}}));
 });
+
+/* Replacing a table voids every invitation already sent for the old one. This is not a quirk of
+ * the capability check -- it is the whole point of sealing an invite to a table id -- but it was
+ * reachable from the lobby: Email Invite opened a table and mailed a link bound to it, then Start
+ * prepared a second table, and the guest opening a link sent minutes earlier was told the
+ * invitation had expired. The host and the server both refuse that replacement now; this holds
+ * the invariant they are protecting. */
+test('an invitation is sealed to its table, so a replacement table rejects every link already sent',()=>{
+  const access=new SeatAccess();
+  const invite=access.invite({tableId:'table-a',seatId:1,generation:0,now:0});
+  assert.throws(
+    ()=>access.redeem(invite,{tableId:'table-b',generation:0,now:1,claim:()=>{}}),
+    /Invitation expired or unavailable/,
+    'a link minted for one table must not open a seat at another');
+  let claimed;
+  access.redeem(invite,{tableId:'table-a',generation:0,now:1,claim:seat=>claimed=seat});
+  assert.equal(claimed,1,'the same link still opens its own table');
+});

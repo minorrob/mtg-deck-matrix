@@ -9,6 +9,12 @@
 #
 #   ./runtests.sh            every suite
 #   ./runtests.sh -q         one line per suite, output only from the ones that fail
+#
+# BOTH TREES, ONE RUNNER. game/tests/ holds the CrankMagic Online suites -- the table
+# lifecycle, the broker, the guest gateway, the pilots. They lived outside this loop for
+# long enough that a green run here said nothing about whether a game could be played,
+# and the one suite that had the stale-asset drift pinned went unrun while guests were
+# handed dead invitations. A suite nobody runs is a suite that does not exist.
 set -u
 
 quiet=0
@@ -16,7 +22,7 @@ quiet=0
 
 failed=""
 count=0
-for f in tests/*.mjs; do
+for f in tests/*.mjs game/tests/*.test.mjs; do
   count=$((count + 1))
   if [ "$quiet" -eq 1 ]; then
     out=$(node "$f" 2>&1)

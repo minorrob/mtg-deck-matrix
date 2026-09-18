@@ -393,6 +393,9 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 
 ## Verify before pushing
 
+`runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
+suites in `game/tests/`. It exits non-zero when any of them fails.
+
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
@@ -427,7 +430,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 62 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 65 Node suites here, plus 22 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -446,6 +449,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-core` — `tests/crankmagic-core.mjs`
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
+- `crankmagic-graph-scoped` — `tests/crankmagic-graph-scoped.mjs`
+- `explore-scope` — `tests/explore-scope.mjs`
+- `explore-progressive-disclosure` — `tests/explore-progressive-disclosure.mjs`
 - `crankmagic-loops` — `tests/crankmagic-loops.mjs`
 - `crankmagic-lens` — `tests/crankmagic-lens.mjs`
 - `commander-strategies` — `tests/commander-strategies.mjs`
