@@ -209,23 +209,23 @@ Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven a
 
 `next-selection` proceeds once everyone asked has answered, keeps the seats that said yes with their decks intact so "same deck" is one click, and releases the rest; a `rematch-deadline` counts silence as a decline after two minutes. Releasing a seat exposed an older deadlock of the same family — `countdown` required every seat in the array to be occupied, so *any* departure locked the table out of its next game — now fixed. A released seat loses its capability, as `exit` and `expire` already did.
 
-### Track D — At the table (spec 8–10)
+### Track D — At the table (spec 8–10) — **DONE**
 
-| ID | Work |
-|---|---|
-| D.1 | "Skip to end" / Auto-pass, distinct from `Yield` (D6) |
-| D.2 | Surface `pilotStatus()` per AI seat so a stall is visible before pressing; escalating prompt: re-evaluate → cancel in-flight → force a legal default (D4) |
-| D.3 | Freeze telemetry — every force-advance and force-prompt with the preceding 10 engine revisions |
+| ID | Work | Result |
+|---|---|---|
+| D.1 | "Skip to end" | `maySkipToEndOfTurn` covers what auto-pass deliberately refuses: your *own* turn. Opt-in, expires with the turn, stops for any choice and for a non-empty stack. It also gave `yieldTurn` a job — it had been threaded through the render loop and into `mayAutoPassPriority`, which never read it. |
+| D.2 | Pilot status + escalation | `GET /api/ai-pilots` says whether a seat is stuck or thinking. `POST /api/ai-pilots/prompt {seatId, force:true}` locks in a legal decision when re-asking has already failed. |
+| D.3 | Freeze telemetry | A forced action records the position it was forced in — turn, phase, priority, stack size, prompt, choice, and every pilot's state. The old entry named the action alone. |
 
-### Track E — Close the loop (spec 11 + §1)
+### Track E — Close the loop (spec 11 + §1) — **E.1 and E.5 done; E.3 outstanding**
 
-| ID | Work |
-|---|---|
-| E.1 | **Rematch: drop-the-rest, not unanimity.** Proceed when the yes-voters have re-readied and ≥2 seats remain; release `false`/`null` seats at that moment. Add a `rematch-deadline` transition so a no-answer resolves on the clock. (D7) |
-| E.2 | Same-deck fast path — reuse the existing `deckVersion`, skip re-validation |
-| E.3 | **Land #264–#267** — `ensureLobbyDraft`, `attachDeckReport`, `measurePublished`. These are the lobby→create and refine→play edges of §1. |
-| E.4 | Server-side 99-engine repair loop with Forge resolvability in the predicate; backfill from the legal *candidate pool*, not basic lands; deterministic, bounded, with a swap log (D8) |
-| E.5 | Guest library access behind a host setting (D10); broaden paste parsing beyond Moxfield two-column (§3.3) |
+| ID | Work | Result |
+|---|---|---|
+| E.1 | Rematch drops the rest | **Done.** See above. |
+| E.2 | Same-deck fast path | **Done at the contract level** — a staying seat keeps its `deckVersion`, so "same deck" is just Ready Up. The explicit two-button affordance is UI, with C.1. |
+| E.3 | **Land #264–#267** | **Outstanding, and the highest-value item left.** `ensureLobbyDraft`, `attachDeckReport`, `measurePublished` are the lobby→create and refine→play edges of §1. Without them decks built in the lobby die in the lobby. |
+| E.4 | Server-side 99-engine repair loop | **Outstanding.** The screen does GC strip/backfill; the server builder still throws on a violation, and its last-resort backfill is basic lands, which yields a legal 100 that is not a deck. |
+| E.5 | Paste parsing and guest library | **Done.** The invitation email asks for `[Count] [Card Name]` with the commander first and suggests exporting to Excel; the parser took comma-separated columns with the commander last. Every instruction in that email produced a parse failure. `parseDeckList` now reads space, comma and tab separation, `1x`, bare names, section headers, set codes and collector numbers, commander first or last, with per-line errors. A guest can use a host library deck when the host shares it. |
 
 ### Track F — Make the rules enforceable
 
@@ -240,12 +240,10 @@ Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven a
 ## 9. Sequencing
 
 ```
-Track A   →  DONE. Trees converged, pins aligned, invite bug fixed.
-Track B   →  DONE against fixtures. Needs the §12 live pass.
-Track E.1 →  DONE. Rematch no longer deadlocks; so no longer does any departure.
-Track C   →  C.3/C.4/C.5 DONE. C.1 and C.2 are UI; C.6 needs a machine that compiles Java.
-Next      →  Track D, Track E.2–E.5, then C.1/C.2
-Continuous → Track F  (F.1 is the one that stops the bleeding)
+Tracks A, B, D, E.1, E.5, C.3–C.5   →  DONE. All against fixtures; §12 is the live pass.
+Next                                →  E.3 (land #264-#267: the loop's missing edges)
+Then                                →  C.1/C.2 UI, E.4, C.6 (needs a machine that compiles Java)
+Continuous                          →  Track F  (F.1 is the one that stops the bleeding)
 ```
 
 ## 10. Definition of done
@@ -259,12 +257,12 @@ Continuous → Track F  (F.1 is the one that stops the bleeding)
 
 ## 11. Game-day fallback
 
-Tracks A, B, C.3–C.5 and E.1 closed the invitation failure, the unverifiable decks, the dead Force Prompt, the missing unstick, the rematch deadlock and the silent launch. What is still open at the table:
+What is still open at the table:
 
 - **No visible first-player roll** (C.6) — Forge decides silently. Nothing breaks; you just do not see the roll.
-- Guests cannot pick a host library deck (D10); the paste parser still only accepts Moxfield two-column (Track E.5).
-- An unrecognized card is now *refused with its name and suggestions*, but the swap still means editing the list yourself (C.1).
-- **Prompt AI and force-advance are proven by unit tests, not by a live game.** Step 7 of §12.
+- An unrecognized card is refused with its name and suggestions, but the swap still means editing the list yourself (C.1).
+- The server-side 99 engine still throws on a violation rather than repairing (E.4). The lobby screen's own strip-and-backfill covers the Build-from-Commander path.
+- **Everything in B, C.4, C.5 and D is proven by unit tests, not by a live game.** §12.
 
 ## 12. Verify it live — the run-book for a local session
 
@@ -310,6 +308,22 @@ Invoke-RestMethod -Method Post http://127.0.0.1:8768/api/table/force-advance -He
 
 Expect `ok:true` with the label of the action taken, and a line appended to `force-advance.ndjson` beside the match journal.
 
-**What to send back:** the doctor output, step 3's list, and anything red. Steps 4, 6 and 7 are pass/fail by eye.
+**8 — The paste path, which nobody has ever been able to use.** Take the invitation email's own
+example format and paste it as a guest:
+
+```
+1 Chulane, Teller of Tales
+
+1 Sol Ring
+98 Forest
+```
+
+Expect it to import. Then try it with the commander at the bottom instead, and once more pasted
+straight out of a spreadsheet. All three should work; before this they all failed.
+
+**9 — Skip to end, during your own turn.** Main phase done, press it, and confirm it runs you to
+end of turn and stops at the first real choice.
+
+**What to send back:** the doctor output, step 3's list, and anything red. Steps 4 and 6 through 9 are pass/fail by eye.
 
 Once step 6 passes live, the remaining game-day risk is §11 — and none of it stops a game starting.
