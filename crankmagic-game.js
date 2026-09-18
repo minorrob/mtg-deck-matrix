@@ -288,6 +288,22 @@
     return {commanders, cards};
   }
 
+  /* A SEAT THE DRAFT BUILDER MAKES IS BUILT TO A BUDGET AND A BRACKET (Rob, 15 September; game
+     plan §9). The alternative was matching it to your deck's measured score, which produces a
+     sparring partner rather than an opponent: it is built AROUND you, so beating it says only
+     that the generator aimed well.
+
+     TWO CONSTRAINTS, AND THEY ARE DIFFERENT KINDS OF THING. The bracket is the TABLE'S and binds
+     every seat alike — it is what caps the Game Changers, and a generated deck has no more right
+     to ignore it than an imported one does. The budget is THIS SEAT'S, because what an opponent
+     spent is a fact about that opponent rather than a rule of the table. Both are constraints the
+     real world actually imposes, so the result means something outside this app: the pod read can
+     say "you are the deck to beat by 12" and be describing a real gap rather than a knob set to
+     zero. The house's own deck cap is the budget's default and its per-card ceiling comes from the
+     same rules the Shop reads.
+
+     The list is a starting hundred, not a measured one, so the seat carries no score and the pod
+     read says the read is partial. */
   /* Build from Commander → real Deck Labs engine (draft-builder.js / CrankDraft), same path as Lab.
      STANDING RULE: never seat a stub/partial/illegal list. Only basic lands may duplicate. */
   async function generatedSeat(name, budget, you, defOverride) {

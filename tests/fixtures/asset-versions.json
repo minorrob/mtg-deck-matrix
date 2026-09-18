@@ -81,6 +81,10 @@
       "version": 6,
       "sha": "cb61bc0fb5083d16"
     },
+    "collection-lobby-draft.js": {
+      "version": 1,
+      "sha": "93f348c107ea28c7"
+    },
     "collection-model.js": {
       "version": 35,
       "sha": "bb7e92a47e1a6ee0"
@@ -98,8 +102,8 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 213,
-      "sha": "d349723794080643"
+      "version": 214,
+      "sha": "7d500ed39cda8ce8"
     },
     "crankmagic-assets.js": {
       "version": 27,
@@ -126,8 +130,8 @@
       "sha": "a9d5683056347d72"
     },
     "crankmagic-decks.js": {
-      "version": 54,
-      "sha": "dd9a654b3bb9932f"
+      "version": 55,
+      "sha": "75ec91865788614e"
     },
     "crankmagic-design.css": {
       "version": 5,
@@ -150,8 +154,8 @@
       "sha": "4435ee146e381a16"
     },
     "crankmagic-game.js": {
-      "version": 38,
-      "sha": "bca7e7f5c9b04401"
+      "version": 39,
+      "sha": "3a359f85230c0923"
     },
     "crankmagic-glossary.js": {
       "version": 2,
@@ -174,8 +178,8 @@
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 49,
-      "sha": "e16652a865df6bde"
+      "version": 50,
+      "sha": "99adf75f278c1fd3"
     },
     "crankmagic-lens.js": {
       "version": 1,
@@ -226,16 +230,16 @@
       "sha": "1b6ab205430f283b"
     },
     "crankmagic-sim.js": {
-      "version": 18,
-      "sha": "d7bc7ed62b5a1cf5"
+      "version": 20,
+      "sha": "bdf4032df94f3894"
     },
     "crankmagic-strategies.js": {
       "version": 2,
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 213,
-      "sha": "79b082e7a225ada5"
+      "version": 214,
+      "sha": "544ed07d410c8ee8"
     },
     "crankmagic-tabletop.js": {
       "version": 16,
