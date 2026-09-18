@@ -280,6 +280,19 @@ Every command starts from the project folder:
 cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
 ```
 
+### Getting the branch
+
+The working checkout is a single-branch clone, so `git fetch origin <branch>` leaves the branch in
+`FETCH_HEAD` without creating a name you can check out, and the checkout then fails with *pathspec
+did not match*. Name both sides and it works:
+
+```powershell
+git fetch origin claude/sleepy-carson-saeway:claude/sleepy-carson-saeway
+git checkout claude/sleepy-carson-saeway
+```
+
+Restart the app after switching; it reads its code from disk at startup.
+
 ### The checks that need no game
 
 **1 — Every suite, on the real machine.**
