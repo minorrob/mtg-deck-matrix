@@ -75,6 +75,29 @@ Do not change the engine, adapter, or pod between pause and resume. Recovery che
 - `.local/` is ignored. Raw engine journals and RNG tapes contain private match information and **must never be sent to an AI pilot or displayed as a live public log**. The preview exporter is restricted to this diagnostic fixture's visible zones and seat 0 hand; general information-flow certification is pending.
 - No API key, API spend, live collection edit, report import, website deployment, or hosted bridge is implemented in this checkpoint.
 
+## Before you host
+
+```powershell
+node game/tools/doctor.mjs
+```
+
+One answer to "can this computer host a game tonight?": the Node runtime, the Forge card database
+and its script count, the Java runtime, whether anything already holds the host port, the Windows
+credential for API pilots, and cloudflared for remote guests. It exits non-zero when something
+blocks a game, and distinguishes that from a warning (API pilots or remote guests will not work,
+the rest will) and from a check that does not apply to this machine. The desktop launcher runs it
+through `GET /api/doctor` and refuses to report "Ready to play" over a blocking problem.
+
+Point it at a Forge checkout elsewhere with `CRANKMAGIC_FORGE_ROOT`, and a JDK with
+`CRANKMAGIC_JDK_ROOT`.
+
+## When the table will not move
+
+`POST /api/table/force-advance {"seatId":n}` clears the decision the named seat is sitting on. It
+takes a legal action from the same enumerator the AI pilots use, so Forge validates it exactly as
+it validates a click, and every use is written to `force-advance.ndjson` beside the match journal.
+Host-only: it is deliberately absent from the guest gateway's routes.
+
 ## Validation
 
 ```powershell

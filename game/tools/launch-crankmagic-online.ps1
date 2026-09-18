@@ -91,8 +91,22 @@ try {
         $guestUrl = $record.guestPublicOrigin
     }
 
+    # Pre-flight before anyone is invited. The host answers it, so this needs no Node of its own.
+    # A blocking problem is worth seeing now rather than after the invitations go out.
+    $blocking = $null
+    try {
+        $doctor = Invoke-RestMethod "http://127.0.0.1:8768/api/doctor" -TimeoutSec 10
+        if (-not $doctor.ok) { $blocking = ($doctor.checks | Where-Object { $_.status -eq 'fail' } | ForEach-Object { "$($_.label): $($_.detail)" }) -join '  ' }
+    } catch { $blocking = $null }
+
     $window.Open.Enabled = $true
     if (-not $NoBrowser) { Start-Process $playUrl }
+
+    if ($blocking) {
+        Set-Status $window '✕' 'Not ready to host' $blocking ([System.Drawing.Color]::FromArgb(255, 112, 112))
+        [void]$window.Form.ShowDialog()
+        return
+    }
 
     if ($RemoteGuests -and -not $guestUrl) {
         Set-Status $window '⚠' 'Local game ready; guest link unavailable' 'The Play page is open. Stop the host only after any active game ends, then start again to create a remote guest link.' ([System.Drawing.Color]::FromArgb(255, 210, 90))

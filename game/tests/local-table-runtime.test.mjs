@@ -50,3 +50,30 @@ test('an active table restores its exact launch pack and can rearm API pilots af
   const first=createLocalTableRuntime(options),invitation=first.invite(1),session=await first.guest.join(invitation),member=await first.guest.authenticate(session.capability);await first.guest.deck(member,{});await first.ready(true);await first.guest.ready(member,{ready:true});now=5000;await first.poll();assert.equal(first.view().phase,'playing');const matchId=first.view().matchId;first.close();
   const restored=restoreLocalTableRuntime({...options,lobby:undefined});t.after(()=>restored.close());assert.ok(restored);assert.deepEqual(restored.armPilots(),[{seatId:2}]);assert.equal(armed.at(-1).matchId,matchId);assert.equal(armed.at(-1).seats[1].seatId,1);
 });
+
+/* Force Prompt is the host's lever for an AI that has stopped moving, and it reached only the solo
+ * runner: on a lobby table -- the one shape with other people sitting at it -- it answered that no
+ * API-controlled AI was running, however stuck the seat was. The table runtime carries its own
+ * pilots, so it has to be able to prompt them. */
+test('the host can prompt a stuck AI seat at a multiplayer table',async t=>{
+  let now=0,engine={status:'idle'};const nudged=[];
+  const runtime=createLocalTableRuntime({directory:resolve(mkdtempSync(resolve(tmpdir(),'crankmagic-nudge-')),'tables'),
+    lobby:lobby(),clock:()=>now,status:()=>engine,bridge:async seat=>({viewerSeatId:seat}),
+    launch:async pod=>{engine={status:'playing',matchId:pod.matchId};},
+    createPilots:()=>({stop(){},status(){return [{seatId:2}];},nudge(seatId){nudged.push(seatId);return {prompted:1,waitingForForge:0};}}),
+    resolveGuestDeck:async member=>({id:'guest-deck-v1',validated:true,commander:'Guest Commander',snapshot:prepared(member.seatId,'human','Friend')})});
+  t.after(()=>runtime.close());
+
+  // Before a match is running there are no pilots, and saying so is the honest answer.
+  assert.throws(()=>runtime.nudge(2),/No API-controlled AI player is running at this table/);
+
+  const invite=runtime.invite(1),session=await runtime.guest.join(invite),member=await runtime.guest.authenticate(session.capability);
+  await runtime.guest.deck(member,{source:'upload'});await runtime.ready(true);await runtime.guest.ready(member,{ready:true});
+  now=5000;await runtime.poll();await runtime.poll();
+  assert.equal(runtime.view().phase,'playing');
+
+  assert.deepEqual(runtime.nudge(2),{prompted:1,waitingForForge:0});
+  assert.deepEqual(nudged,[2],'the named seat is the seat prompted');
+  runtime.nudge(null);
+  assert.deepEqual(nudged,[2,null],'no seat named prompts every running pilot');
+});

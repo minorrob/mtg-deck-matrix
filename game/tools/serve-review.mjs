@@ -5,11 +5,13 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {setupCatalog,prepareSetup,prepareLobby,importWorkshopDeck} from './setup-catalog.mjs';
+import {setupCatalog,prepareSetup,prepareLobby,importWorkshopDeck,FORGE_ROOT} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,livePod,browserBridge,browserBridgeForSeat,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
 import {createGuestGateway} from '../server/guest-gateway.mjs';
 import {createLocalTableRuntime,restoreLocalTableRuntime} from '../server/local-table-runtime.mjs';
 import {createApiPilotRunner} from './ai-pilot.mjs';
+import {chooseForcedAction} from './force-advance.mjs';
+import {runDoctor} from './doctor.mjs';
 import {createOpenAIChoiceProvider,createAnthropicChoiceProvider} from './api-choice-provider.mjs';
 import {loadMatchReport,saveMatchFeedback} from './match-report.mjs';
 import {DEFAULT_OPENAI_MODEL,OPENAI_MODELS,loadOpenAiCredential} from './windows-credential.mjs';
@@ -91,6 +93,10 @@ createServer(async(req,res)=>{
       return reply(405,{error:'Read-only health check'});
     }
     if(req.method==='GET'&&pathname==='/api/setup')return reply(200,{...setupCatalog(),token,guestOrigin:guestInfo.origin,aiCredential:{openaiAvailable:!!storedOpenAiSession,source:storedOpenAiSession?.source||null,defaultModel:DEFAULT_OPENAI_MODEL}});
+    /* Pre-flight, answered by the host so the launcher, the Play page and the CLI all read the
+       same verdict. Read-only and unauthenticated, exactly like /api/health: it reports which
+       local components are present, never their contents. */
+    if(req.method==='GET'&&pathname==='/api/doctor')return reply(200,await runDoctor({forgeRoot:FORGE_ROOT,port,cloudflared:!!guestInfo.origin,probe:async()=>({product:'CrankMagic Online',protocol:1})}));
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{await tableRuntime?.poll();return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}
     if(req.method==='GET'&&pathname==='/api/match-report'){try{const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.report():loadMatchReport(engine.directory,0));}catch(e){return reply(409,{error:e.message});}}
@@ -102,9 +108,30 @@ createServer(async(req,res)=>{
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);text='';
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
+      /* Host-only failsafe for a table parked on a step nobody can clear. Same-origin and
+         token-gated like every other mutation here, and deliberately absent from the guest
+         gateway's route table: a guest may answer their own decisions, not other people's. */
+      if(pathname==='/api/table/force-advance'){
+        const seatId=Number.isInteger(body.seatId)?body.seatId:null;
+        if(seatId===null||seatId<0||seatId>3)throw Error('Name the seat to advance');
+        const view=await browserBridgeForSeat(seatId,'view');
+        const forced=chooseForcedAction(view,seatId);
+        if(!forced)throw Error('That seat has no decision waiting, so there is nothing to advance.');
+        const request={...forced.request,actionId:randomUUID()};
+        await browserBridgeForSeat(seatId,'action',request);
+        // Forcing someone else's decision is a thing the match record should always be able to show.
+        const directory=liveStatus().directory;
+        if(directory)try{appendFileSync(resolve(directory,'force-advance.ndjson'),JSON.stringify({schema:'CrankMagicForceAdvance@1',at:new Date().toISOString(),matchId:liveStatus().matchId,seatId,revision:view.revision,choiceId:forced.choiceId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId})+'\n');}catch{/* the journal is evidence, never a reason to block the table */}
+        return reply(200,{ok:true,seatId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId});
+      }
       if(pathname==='/api/ai-pilots/prompt'){
-        if(!soloPilotRunner)throw Error('No API-controlled AI player is running in this local game');
-        const result=soloPilotRunner.nudge(Number.isInteger(body.seatId)?body.seatId:null);
+        // A multiplayer table keeps its pilots on the table runtime; a solo game keeps them here.
+        // Ask the table first, because that is the shape with other people waiting on the answer.
+        const seatId=Number.isInteger(body.seatId)?body.seatId:null;
+        let result=null,tableError=null;
+        if(tableRuntime){try{result=tableRuntime.nudge(seatId);}catch(error){tableError=error;}}
+        if(!result&&soloPilotRunner)result=soloPilotRunner.nudge(seatId);
+        if(!result)throw tableError||Error('No API-controlled AI player is running in this game');
         if(!result.prompted)throw Error('That AI seat is not running');
         return reply(200,{ok:true,...result});
       }
@@ -183,7 +210,9 @@ createServer(async(req,res)=>{
       }
       if(pathname==='/api/lobby-close'){if(!tableRuntime)throw Error('No multiplayer lobby is open');if(!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the active match before closing its table');tableRuntime.abandon();tableRuntime=null;hostInvitations=[];return reply(200,{closed:true});}
       return reply(404,{error:'Unknown operation'});
-    }catch(e){return reply(400,{error:e.message});}
+    // A deck refused for naming cards Forge does not have travels with the list, so the page can
+    // offer a swap instead of printing a sentence and leaving the guest to re-read it.
+    }catch(e){return reply(400,{error:e.message,...(e.unresolved?{unresolved:e.unresolved}:{}),...(e.forgeUnavailable?{forgeUnavailable:true}:{}),...(Number.isSafeInteger(e.seatId)?{seatId:e.seatId}:{})});}
   }
   // Redirect root to live game setup
   if(req.method==='GET'&&pathname==='/'){res.writeHead(302,{'Location':'/app/#game','Cache-Control':'no-store'});res.end();return;}

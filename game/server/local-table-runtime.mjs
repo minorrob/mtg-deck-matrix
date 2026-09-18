@@ -67,6 +67,10 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     async poll(){await broker.disconnectExpired();return launchWhenDue();},
     async recover(){const current=broker.hostView();if(current.phase==='countdown'){const delay=Math.max(0,current.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{}},delay);}if(current.phase==='starting')await launchWhenDue();return current;},
     pilotStatus(){return pilotRunner?.status()||[];},
+    /* Force Prompt reaches the pilots of a multiplayer table. It used to reach only the solo
+       runner, so on the one table shape that has other people at it -- the lobby -- the host's
+       control for an AI that had stopped moving answered that no AI was running. */
+    nudge(seatId){if(!pilotRunner)throw Error('No API-controlled AI player is running at this table');return pilotRunner.nudge(Number.isSafeInteger(seatId)?seatId:null);},
     armPilots(){if(!activePod)throw Error('This table has no active match to pilot');const engine=status();if(engine.matchId!==activePod.matchId||!['ready','playing'].includes(engine.status))throw Error('The active Forge match is not ready');pilotRunner?.stop();pilotRunner=createPilots?.(activePod)||null;return runtime.pilotStatus();},
     abandon(){clearTimeout(timer);pilotRunner?.stop();saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:true});},
     close(){clearTimeout(timer);pilotRunner?.stop();}
