@@ -267,52 +267,88 @@ What is still open at the table:
 - The server-side 99 engine still throws on a violation rather than repairing (E.4). The lobby screen's own strip-and-backfill covers the Build-from-Commander path.
 - **Everything in B, C.4, C.5 and D is proven by unit tests, not by a live game.** §12.
 
-## 12. Verify it live — the run-book for a local session
+## 12. Verify it live — the run-book
 
-Everything in Track B is proven against fixtures. Fixtures cannot tell you whether *this* Forge checkout resolves *these* decks, and that gap is exactly where this project has been over-trusting green tests. Run this on the host, in order. It takes about fifteen minutes and needs no game.
+Everything above is proven against fixtures. A fixture cannot say whether *this* Forge checkout
+resolves *these* decks, and that gap is where this project has been over-trusting green suites.
+This is the pass that closes it. Fifteen minutes, no game required until step 5.
 
-**1 — The suites, on the real machine.**
+Each step is one command to paste into **Windows PowerShell**, or one thing to do in the app.
+Every command starts from the project folder:
 
 ```powershell
 cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+```
+
+### The checks that need no game
+
+**1 — Every suite, on the real machine.**
+
+```powershell
 bash runtests.sh -q
 ```
 
-Expect `90 suites passed.` and exit 0. On Windows the `browser-geometry` and `page-budget` suites may fail at a Unix-oriented Playwright import before any assertion — that is a known checkout artefact, not a regression. Anything else red, stop and send it.
+Expect the last line to read `92 suites passed.` On Windows, `browser-geometry` and `page-budget`
+may fail at a Unix-oriented Playwright import before any assertion — a known checkout artefact, not
+a regression. Anything else red, stop and send it.
 
-**2 — The doctor, which is the whole point of B.5.**
+**2 — Can this computer host tonight?**
 
 ```powershell
 node game/tools/doctor.mjs
 ```
 
-Expect every line `ok`, except `Local host` as `warn` if the host is not running yet. **The line that matters is `Forge card database`** — it should report tens of thousands of card scripts. If it reports a failure, the Forge checkout is not where the app expects it; set `CRANKMAGIC_FORGE_ROOT` and re-run.
+Expect every line `ok`, except `Local host` as `warn` when the host is not running yet. The line
+that matters is **Forge card database** — it should report tens of thousands of card scripts. A
+failure there means Forge is not where the app expects it; set `CRANKMAGIC_FORGE_ROOT` and re-run.
 
-**3 — Prove the resolver against the real card database.** This is the single most valuable check, because it is the one no fixture can stand in for:
-
-```powershell
-node -e "const{buildForgeCardIndex}=await import('./game/contracts/forge-card-index.mjs');const i=buildForgeCardIndex(process.env.CRANKMAGIC_FORGE_ROOT||'../forge');console.log(i.scripts+' scripts, '+i.names+' names');for(const n of ['Sol Ring','Malakir Rebirth // Malakir Mire',\"Lim-D\u00fbl's Vault\",'\u00c6therize','J\u00f6tun Grunt','Fire // Ice','Boseiju, Who Endures'])console.log((i.resolve(n)?'OK  ':'MISS')+'  '+n)" --input-type=module
-```
-
-Every line should read `OK`. A `MISS` means Forge names that card differently than expected and the ladder needs another rung — send the output.
-
-**4 — Prove the gate blocks.** Start the host, open Game setup, and try to prepare a deck containing a card Forge does not have (any invented name in a pasted list will do). Expect a refusal naming the card, **before** Ready Up becomes available. Previously this passed preparation and failed at engine load.
-
-**5 — A solo table to turn 3.** One human, three AI. Confirms Forge launches, the bridge is green, and the decks the doctor blessed actually load.
-
-**6 — The guest path, on a clean browser.** Set up two humans, Email Invite yourself, then **press Start** — the sequence that used to void the link — and open the emailed link in a browser with no history for the site. Expect the seat lobby, not an expiry. This is the Track A fix and it is the one that most needs a live pass, because a contract test proved the invariant, not the round trip.
-
-**7 — The two new host levers, during that game.** With an API-piloted AI seat, press **Prompt AI** (expect a response, not "no AI is running"), and call force-advance on a seat sitting on a decision:
+**3 — Does Forge know every card in your decks?** The single most valuable check, because it is the
+one no fixture can stand in for:
 
 ```powershell
-$t=(Invoke-RestMethod http://127.0.0.1:8768/api/setup).token
-Invoke-RestMethod -Method Post http://127.0.0.1:8768/api/table/force-advance -Headers @{'X-Commander-Token'=$t;'Origin'='http://127.0.0.1:8768'} -ContentType 'application/json' -Body '{"seatId":1}'
+node game/tools/check-my-decks.mjs
 ```
 
-Expect `ok:true` with the label of the action taken, and a line appended to `force-advance.ndjson` beside the match journal.
+Expect `OK` for all six decks and for the seven awkward names underneath. Any `MISS` means Forge
+spells that card differently than expected — send the output.
 
-**8 — The paste path, which nobody has ever been able to use.** Take the invitation email's own
-example format and paste it as a guest:
+**4 — Does the gate actually block?** Start the host, open **Game setup**, and try to prepare a deck
+containing a card Forge does not have — any invented name pasted into a list will do. Expect a
+refusal naming the card, **before** Ready Up becomes available. This used to pass preparation and
+fail at engine load with everyone waiting.
+
+**5 — A solo table to turn 3.** One human, three AI. Confirms Forge launches, the bridge is green,
+and the decks step 3 blessed actually load.
+
+### The checks that need the guest path
+
+**6 — The invitation, on a clean browser.** The most important step here. Set up two humans, Email
+Invite yourself, then **press Start** — the sequence that used to void the link — and open the
+emailed link in a browser with no history for the site. Expect the seat lobby, not an expiry.
+
+While the countdown runs, check the engine started with it rather than after it:
+
+```powershell
+(Invoke-RestMethod http://127.0.0.1:8768/api/table/readiness).launch.stage
+```
+
+Expect `engine-spawning` or `engine-spawned` **before** the countdown reaches zero.
+
+**7 — The two host levers, during that game.** With an API-piloted AI seat, press **Prompt AI**
+(expect a response, not "no AI is running"). Then force a seat that is sitting on a decision:
+
+```powershell
+$t = (Invoke-RestMethod http://127.0.0.1:8768/api/setup).token
+Invoke-RestMethod -Method Post http://127.0.0.1:8768/api/table/force-advance `
+  -Headers @{'X-Commander-Token'=$t; 'Origin'='http://127.0.0.1:8768'} `
+  -ContentType 'application/json' -Body '{"seatId":1}'
+```
+
+Expect `ok : True` and the label of the action taken, plus a line appended to
+`force-advance.ndjson` beside the match journal.
+
+**8 — The paste path, which nobody has ever been able to use.** Paste the invitation email's own
+example format as a guest:
 
 ```
 1 Chulane, Teller of Tales
@@ -321,12 +357,15 @@ example format and paste it as a guest:
 98 Forest
 ```
 
-Expect it to import. Then try it with the commander at the bottom instead, and once more pasted
-straight out of a spreadsheet. All three should work; before this they all failed.
+Expect it to import. Then try the same list with the commander at the bottom, and once more pasted
+straight out of a spreadsheet. All three should work; before this, all three failed.
 
-**9 — Skip to end, during your own turn.** Main phase done, press it, and confirm it runs you to
-end of turn and stops at the first real choice.
+**9 — Skip to end, on your own turn.** Main phase done, press it, and confirm it runs to end of turn
+and stops at the first real choice.
 
-**What to send back:** the doctor output, step 3's list, and anything red. Steps 4 and 6 through 9 are pass/fail by eye.
+### What to send back
 
-Once step 6 passes live, the remaining game-day risk is §11 — and none of it stops a game starting.
+Steps 1, 2, 3 and 7 print output — send it. Steps 4, 5, 6, 8 and 9 are pass/fail by eye.
+
+If you only have time for three: **2, 3 and 6.** Step 6 especially — the invitation fix is proven
+today by a contract test holding the invariant, not by a link actually opening.

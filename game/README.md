@@ -78,6 +78,12 @@ Do not change the engine, adapter, or pod between pause and resume. Recovery che
 ## Before you host
 
 ```powershell
+node game/tools/doctor.mjs        # can this computer host a game tonight?
+node game/tools/check-my-decks.mjs # does Forge know every card in the library?
+```
+
+
+```powershell
 node game/tools/doctor.mjs
 ```
 
