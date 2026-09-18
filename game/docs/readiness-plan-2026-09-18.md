@@ -21,10 +21,10 @@ CrankMagic Online is not a separate product bolted onto the workshop — it is t
 
 | Loop edge | Mechanism | State |
 |---|---|---|
-| build → play | Lobby seats a validated hundred | **Broken at the Forge mapping gate** (D1) |
+| build → play | Lobby seats a validated hundred | **Built** (B.1/B.2). A deck Forge cannot load is now refused in the lobby. |
 | play → refine | `attachMatchReport` writes the match onto the deck (`crankmagic-online.js`) | **Built.** This is the return edge and it exists. |
-| lobby → create | Applying a deck in the lobby should mint a real Decks draft with full metadata | **Missing.** `ensureLobbyDraft` sits unmerged in #264/#267. |
-| refine → play | 120k simulation report attaches to the deck, readable from Decks | **Partial.** `measurePublished` unmerged in #265/#267. |
+| lobby → create | Applying a deck in the lobby mints a real Decks draft with full metadata | **Built** (E.3). |
+| refine → play | 120k simulation report attaches to the deck, readable from Decks | **Built** (E.3). |
 
 So the Track 5 items below are not nice-to-haves. Without them the loop is a line, not a circle: decks built in the lobby die in the lobby, and games played teach the workshop nothing.
 
@@ -217,13 +217,13 @@ Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven a
 | D.2 | Pilot status + escalation | `GET /api/ai-pilots` says whether a seat is stuck or thinking. `POST /api/ai-pilots/prompt {seatId, force:true}` locks in a legal decision when re-asking has already failed. |
 | D.3 | Freeze telemetry | A forced action records the position it was forced in — turn, phase, priority, stack size, prompt, choice, and every pilot's state. The old entry named the action alone. |
 
-### Track E — Close the loop (spec 11 + §1) — **E.1 and E.5 done; E.3 outstanding**
+### Track E — Close the loop (spec 11 + §1) — **E.1, E.3 and E.5 done; E.4 outstanding**
 
 | ID | Work | Result |
 |---|---|---|
 | E.1 | Rematch drops the rest | **Done.** See above. |
 | E.2 | Same-deck fast path | **Done at the contract level** — a staying seat keeps its `deckVersion`, so "same deck" is just Ready Up. The explicit two-button affordance is UI, with C.1. |
-| E.3 | **Land #264–#267** | **Outstanding, and the highest-value item left.** `ensureLobbyDraft`, `attachDeckReport`, `measurePublished` are the lobby→create and refine→play edges of §1. Without them decks built in the lobby die in the lobby. |
+| E.3 | Land #264–#267 | **Done.** #267 is the clean combination of the other three. `ensureLobbyDraft` mints a real Decks draft when a seat is applied (`crankmagic-game.js:579`); `attachDeckReport` files a simulation report against the deck it measured (`:1829`); `measurePublished` is the wrapper behind Generate Simulation Report. Neither helper creates Owned lots, so seating a deck never claims you own the cards. All five `crankmagic-game.js` conflicts resolved to the Personal-HP side, which is a later evolution of #266 and already contains it. |
 | E.4 | Server-side 99-engine repair loop | **Outstanding.** The screen does GC strip/backfill; the server builder still throws on a violation, and its last-resort backfill is basic lands, which yields a legal 100 that is not a deck. |
 | E.5 | Paste parsing and guest library | **Done.** The invitation email asks for `[Count] [Card Name]` with the commander first and suggests exporting to Excel; the parser took comma-separated columns with the commander last. Every instruction in that email produced a parse failure. `parseDeckList` now reads space, comma and tab separation, `1x`, bare names, section headers, set codes and collector numbers, commander first or last, with per-line errors. A guest can use a host library deck when the host shares it. |
 
@@ -240,11 +240,14 @@ Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven a
 ## 9. Sequencing
 
 ```
-Tracks A, B, D, E.1, E.5, C.3–C.5   →  DONE. All against fixtures; §12 is the live pass.
-Next                                →  E.3 (land #264-#267: the loop's missing edges)
-Then                                →  C.1/C.2 UI, E.4, C.6 (needs a machine that compiles Java)
-Continuous                          →  Track F  (F.1 is the one that stops the bleeding)
+A, B, D, C.3–C.5, E.1, E.3, E.5  →  DONE, all against fixtures. §12 is the live pass.
+Next                             →  C.1/C.2 UI (swap dialog, connection panel)
+Then                             →  E.4 (server-side repair loop), C.6 (needs a machine that compiles Java)
+Continuous                       →  Track F  (F.1 is the one that stops the bleeding)
 ```
+
+**The loop is closed.** Every edge of create → refine → acquire → build → play → refine now exists
+in code. What remains is polish on the edges, not missing edges.
 
 ## 10. Definition of done
 
