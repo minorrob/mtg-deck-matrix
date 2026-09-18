@@ -25,10 +25,10 @@ The guest tunnel origin (e.g., `https://xyz.trycloudflare.com`) serves **only** 
 CrankMagic Online is already prepared in:
 
 ```text
-C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c
+C:\Users\robmi\CrankMagic\repo
 ```
 
-The Forge rules engine and Java runtime are installed beside the project. You do **not** need to start Forge yourself; CrankMagic launches it when you launch a table.
+The Forge rules engine and Java runtime are installed beside the project, at `C:\Users\robmi\CrankMagic\forge` and `C:\Users\robmi\CrankMagic\runtime\jdk-17.0.20.1+1`, and are found through the user-level environment variables `CRANKMAGIC_FORGE_ROOT` and `CRANKMAGIC_JDK_ROOT`. You do **not** need to start Forge yourself; CrankMagic launches it when you launch a table.
 
 For API-powered opponents, Windows Credential Manager must contain a **Generic credential** named:
 
@@ -56,7 +56,7 @@ The tunnel exposes only the restricted guest gateway. CrankMagic's admin/setup s
 2. Run these two commands:
 
    ```powershell
-   cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+   cd "C:\Users\robmi\CrankMagic\repo"
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1" -RemoteGuests
    ```
 
@@ -93,7 +93,7 @@ If CrankMagic opens an existing table, choose **Return to game** to resume it. T
 Solo play is ready to use. It does not need the remote-guest tunnel, so you can start the local host with:
 
 ```powershell
-cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+cd "C:\Users\robmi\CrankMagic\repo"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
 ```
 
@@ -153,7 +153,7 @@ These files are ignored by Git. They can contain local runtime details and shoul
 4. In Windows PowerShell, run:
 
    ```powershell
-   cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+   cd "C:\Users\robmi\CrankMagic\repo"
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"
    ```
 
