@@ -1,6 +1,6 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
-import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority} from '/action-policy.mjs';
+import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn} from '/action-policy.mjs';
 import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart.
@@ -471,7 +471,15 @@ const follow=button('Follow active player: off',()=>{followActive=!followActive;
 function setPrimarySeat(playerId){const f=frame();if(!f?.players.some(player=>player.playerId===playerId))return;primarySeat=playerId;followActive=false;followedTurn=null;follow.textContent='Follow active player: off';refreshBoards();}
 const myBoard=button('My board',()=>setPrimarySeat(viewerSeatId));myBoard.title='Show your playmat in the main board area';
 const holdResponses=button('Hold priority',()=>{const turn=frame()?.turn;if(turn==null||turnPlayer()?.playerId===viewerSeatId){notifyAction('Priority is already yours. Use a card or board ability when you are ready.');return;}holdResponsesTurn=holdResponsesTurn===turn?null:turn;holdResponses.textContent=holdResponsesTurn===turn?'Resume auto-pass':'Hold priority';holdResponses.title=holdResponsesTurn===turn?'Priority will stop for your instant-speed actions this turn.':'Keep priority stops available during the active opponent’s turn.';lastDecision='';renderDecision();});holdResponses.title='Keep priority stops available during the active opponent’s turn.';
-$('view-deck').before(follow,myBoard,holdResponses);
+const skipToEnd=button('Skip to end',()=>{
+  const turn=frame()?.turn;
+  if(turn==null){notifyAction('There is no active turn to skip.');return;}
+  if(turnPlayer()?.playerId!==viewerSeatId){notifyAction('Skip to end is for your own turn. Use Hold priority during somebody else\u2019s.');return;}
+  yieldTurn=yieldTurn===turn?null:turn;
+  lastDecision='';renderDecision();
+});
+skipToEnd.title='Pass your remaining empty priority this turn. Stops for any choice, and for anything waiting on the stack.';
+$('view-deck').before(follow,myBoard,holdResponses,skipToEnd);
 const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';promptAi.id='prompt-ai-button';
 $('view-deck').before(promptAi);
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
@@ -571,10 +579,20 @@ function renderDecision(){
   if(holdResponsesTurn!==frame().turn)holdResponsesTurn=null;
   holdResponses.textContent=holdResponsesTurn===frame().turn?'Resume auto-pass':'Hold priority';
   holdResponses.title=holdResponsesTurn===frame().turn?'Priority will stop for your instant-speed actions this turn.':'Keep priority stops available during the active opponent’s turn.';
+  const skipping=yieldTurn===frame().turn&&turnPlayer()?.playerId===viewerSeatId;
+  skipToEnd.textContent=skipping?'Stop skipping':'Skip to end';
+  skipToEnd.disabled=turnPlayer()?.playerId!==viewerSeatId;
   const safeToContinue=mayAutoPassPriority(live,viewerSeatId,yieldTurn,holdResponsesTurn);
   if(safeToContinue){
     prompt.textContent='Following '+turnPlayer().name+'’s turn…';options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();lastDecision='';
     if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&mayAutoPassPriority(fresh,viewerSeatId,yieldTurn,holdResponsesTurn));}
+    return;
+  }
+  // Skipping ends by itself at anything that is actually a decision, so the button does not have
+  // to be un-pressed to answer one; it resumes when that decision is done.
+  if(maySkipToEndOfTurn(live,viewerSeatId,yieldTurn)){
+    prompt.textContent='Skipping to the end of your turn…';options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();lastDecision='';
+    if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&maySkipToEndOfTurn(fresh,viewerSeatId,yieldTurn));}
     return;
   }
   // Forge identifies the payment's originating ability. Triggered/other-player costs

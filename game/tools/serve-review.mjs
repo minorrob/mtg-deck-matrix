@@ -66,6 +66,30 @@ function createPilots(pod){
 function stopSoloPilots(){soloPilotRunner?.stop();soloPilotRunner=null;if(soloPilotMonitor)clearInterval(soloPilotMonitor);soloPilotMonitor=null;}
 function startSoloPilots(pod){stopSoloPilots();soloPilotRunner=createPilots(pod);if(!soloPilotRunner)return false;soloPilotMonitor=setInterval(()=>{const state=liveStatus();if(state.matchId!==pod.matchId||['error','closed','finished','incomplete'].includes(state.status))stopSoloPilots();},1000);soloPilotMonitor.unref?.();return true;}
 async function armSoloPilots(pod){if(!apiSeats(pod).length)return false;const deadline=Date.now()+240000;while(Date.now()<deadline){const state=liveStatus();if(state.matchId===pod.matchId&&['ready','playing'].includes(state.status))return startSoloPilots(pod);if(['error','closed','incomplete'].includes(state.status))return false;await new Promise(resolve=>setTimeout(resolve,300));}return false;}
+/* Force one seat's pending decision and write down what the table looked like when it happened.
+ *
+ * A freeze is only diagnosable after the fact if something recorded the position it froze in, and
+ * the earlier record was the action alone -- which says what was pressed and nothing about why
+ * anybody had to press it. The turn, the phase, who held priority, what was on the stack, what the
+ * choice was, and what every pilot was doing at that moment are the things that answer it. */
+async function forceSeat(seatId,source){
+  const view=await browserBridgeForSeat(seatId,'view');
+  const forced=chooseForcedAction(view,seatId);
+  if(!forced)throw Error('That seat has no decision waiting, so there is nothing to advance.');
+  const request={...forced.request,actionId:randomUUID()};
+  await browserBridgeForSeat(seatId,'action',request);
+  const engine=liveStatus(),state=view.state||{},ui=view.ui||{};
+  if(engine.directory)try{appendFileSync(resolve(engine.directory,'force-advance.ndjson'),JSON.stringify({
+    schema:'CrankMagicForceAdvance@2',at:new Date().toISOString(),matchId:engine.matchId,source,seatId,
+    revision:view.revision,choiceId:forced.choiceId,label:forced.label,automatic:forced.automatic,
+    alternatives:forced.alternatives,actionId:request.actionId,
+    context:{turn:state.turn??null,phase:state.phase??null,turnPlayerId:state.turnPlayerId??null,
+      priorityPlayerId:state.priorityPlayerId??null,stackSize:state.stackSize??null,
+      prompt:String(ui.prompt||'').slice(0,200),choiceTitle:ui.choice?.title??null,choiceMode:ui.choice?.mode??null},
+    pilots:tableRuntime?.pilotStatus?.().length?tableRuntime.pilotStatus():(soloPilotRunner?.status()||[])
+  })+'\n');}catch{/* the journal is evidence, never a reason to block the table */}
+  return {seatId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId};
+}
 const runtimeOptions={directory:resolve(root,'game/.local/tables'),bridge:browserBridgeForSeat,launch:launchLocalGame,status:liveStatus,createPilots,report:async(seatId,matchId)=>{const engine=liveStatus();if(engine.matchId!==matchId||!engine.directory)throw Error('The completed engine record does not match this table');try{return loadMatchReport(engine.directory,seatId);}catch(error){const view=await browserBridgeForSeat(seatId,'view');return loadMatchReport(engine.directory,seatId,view.state);}}};
 let tableRuntime=null,hostInvitations=[];
 try{tableRuntime=restoreLocalTableRuntime(runtimeOptions);if(tableRuntime){await tableRuntime.recover();const table=tableRuntime.view(),engine=liveStatus();if(table.phase==='playing'&&(!['starting','ready','playing'].includes(engine.status)||table.matchId!==engine.matchId)){tableRuntime.abandon();tableRuntime=null;console.warn('An interrupted multiplayer table was closed. Its game logs remain available.');}}}
@@ -100,6 +124,10 @@ createServer(async(req,res)=>{
     /* One readiness answer for the host screen, the guest screen and the launcher, so a lobby
        cannot refuse to start while every seat on it looks ready. */
     if(req.method==='GET'&&pathname==='/api/table/readiness'){try{if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.poll();return reply(200,tableRuntime.readiness());}catch(e){return reply(409,{error:e.message});}}
+    /* Whether an AI seat is actually stuck, rather than thinking. requestInFlight means a model
+       call is out; pendingActionId means Forge has not confirmed its last action; paused means
+       it has given up on its own. Pressing a lever blind was the only option before. */
+    if(req.method==='GET'&&pathname==='/api/ai-pilots')return reply(200,{seats:tableRuntime?.pilotStatus?.().length?tableRuntime.pilotStatus():(soloPilotRunner?.status()||[])});
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{await tableRuntime?.poll();return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}
     if(req.method==='GET'&&pathname==='/api/match-report'){try{const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.report():loadMatchReport(engine.directory,0));}catch(e){return reply(409,{error:e.message});}}
@@ -117,15 +145,7 @@ createServer(async(req,res)=>{
       if(pathname==='/api/table/force-advance'){
         const seatId=Number.isInteger(body.seatId)?body.seatId:null;
         if(seatId===null||seatId<0||seatId>3)throw Error('Name the seat to advance');
-        const view=await browserBridgeForSeat(seatId,'view');
-        const forced=chooseForcedAction(view,seatId);
-        if(!forced)throw Error('That seat has no decision waiting, so there is nothing to advance.');
-        const request={...forced.request,actionId:randomUUID()};
-        await browserBridgeForSeat(seatId,'action',request);
-        // Forcing someone else's decision is a thing the match record should always be able to show.
-        const directory=liveStatus().directory;
-        if(directory)try{appendFileSync(resolve(directory,'force-advance.ndjson'),JSON.stringify({schema:'CrankMagicForceAdvance@1',at:new Date().toISOString(),matchId:liveStatus().matchId,seatId,revision:view.revision,choiceId:forced.choiceId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId})+'\n');}catch{/* the journal is evidence, never a reason to block the table */}
-        return reply(200,{ok:true,seatId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId});
+        return reply(200,{ok:true,...await forceSeat(seatId,'host')});
       }
       if(pathname==='/api/ai-pilots/prompt'){
         // A multiplayer table keeps its pilots on the table runtime; a solo game keeps them here.
@@ -136,7 +156,11 @@ createServer(async(req,res)=>{
         if(!result&&soloPilotRunner)result=soloPilotRunner.nudge(seatId);
         if(!result)throw tableError||Error('No API-controlled AI player is running in this game');
         if(!result.prompted)throw Error('That AI seat is not running');
-        return reply(200,{ok:true,...result});
+        // A seat that has ignored being re-asked is not going to answer the third time either.
+        // force locks in a legal decision for it and moves the table on.
+        let forced=null;
+        if(body.force===true&&seatId!==null)forced=await forceSeat(seatId,'ai-prompt-escalation');
+        return reply(200,{ok:true,...result,...(forced?{forced}:{})});
       }
       if(pathname==='/api/match-feedback'){const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.feedback(body):saveMatchFeedback(engine.directory,loadMatchReport(engine.directory,0),body));}
       if(pathname==='/api/ai-session'){

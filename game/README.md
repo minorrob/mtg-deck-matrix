@@ -118,10 +118,25 @@ boot and the countdown run together; a fast engine still waits for the clock.
 
 ## When the table will not move
 
-`POST /api/table/force-advance {"seatId":n}` clears the decision the named seat is sitting on. It
+**Skip to end** passes your remaining empty priority on your own turn. It is the case `Hold
+priority` / auto-pass deliberately refuses, because passing your own priority unasked would play
+your turn for you: this one is opt-in, expires with the turn, and stops for any choice and for
+anything waiting on the stack.
+
+`GET /api/ai-pilots` says whether an AI seat is stuck or thinking -- a model call in flight, an
+action Forge has not confirmed, or a pilot that has paused itself. Worth reading before reaching
+for a lever.
+
+`POST /api/ai-pilots/prompt {"seatId":n}` re-asks that seat. Add `"force":true` when re-asking has
+already failed: it locks in a legal decision and moves the table on.
+
+
+`POST /api/table/force-advance {"seatId":n}` does the same for a human seat. It
 takes a legal action from the same enumerator the AI pilots use, so Forge validates it exactly as
 it validates a click, and every use is written to `force-advance.ndjson` beside the match journal.
-Host-only: it is deliberately absent from the guest gateway's routes.
+Host-only: it is deliberately absent from the guest gateway's routes. Each entry records the
+turn, phase, who held priority, the stack size, the prompt and choice, and what every pilot was
+doing -- a freeze is only diagnosable afterwards if something wrote down the position it froze in.
 
 ## Validation
 
