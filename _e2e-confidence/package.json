@@ -1,0 +1,21 @@
+{
+  "name": "crankmagic-e2e-confidence",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CDP/Node E2E confidence loop for CrankMagic lobby on Personal-HP",
+  "scripts": {
+    "matrix": "node scripts/run-matrix.mjs",
+    "matrix:a": "node scripts/run-matrix.mjs --matrix A",
+    "matrix:b": "node scripts/run-matrix.mjs --matrix B",
+    "matrix:c": "node scripts/run-matrix.mjs --matrix C",
+    "matrix:d": "node scripts/run-matrix.mjs --matrix D",
+    "probe": "node scripts/probe-status.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

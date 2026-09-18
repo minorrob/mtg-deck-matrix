@@ -1,0 +1,27 @@
+{
+  "title": "Host + 1 Human + 1 AI + Unused",
+  "bracket": 3,
+  "cap": "",
+  "openGuestPage": true,
+  "continueWithAiIfNoGuest": true,
+  "host": {
+    "method": "paste"
+  },
+  "opponents": [
+    {
+      "role": "human",
+      "guestName": "Drew Guest",
+      "guestEmail": "drew@example.test",
+      "fallbackMethod": "paste"
+    },
+    {
+      "role": "ai",
+      "method": "generated",
+      "commander": "Atraxa, Praetors' Voice",
+      "defineStyle": true
+    },
+    {
+      "role": "unused"
+    }
+  ]
+}

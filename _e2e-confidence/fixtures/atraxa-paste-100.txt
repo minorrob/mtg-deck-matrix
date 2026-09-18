@@ -1,0 +1,100 @@
+1 Atraxa, Praetors' Voice
+1 Sol Ring
+1 Arcane Signet
+1 Command Tower
+1 Exotic Orchard
+1 Evolving Wilds
+1 Terramorphic Expanse
+1 Path of Ancestry
+1 Reliquary Tower
+1 Swiftfoot Boots
+1 Lightning Greaves
+1 Swords to Plowshares
+1 Path to Exile
+1 Counterspell
+1 Negate
+1 Beast Within
+1 Generous Gift
+1 Cyclonic Rift
+1 Cultivate
+1 Kodama's Reach
+1 Rampant Growth
+1 Farseek
+1 Nature's Lore
+1 Three Visits
+1 Demonic Tutor
+1 Vampiric Tutor
+1 Rhystic Study
+1 Smothering Tithe
+1 Esper Sentinel
+1 Deepglow Skate
+1 Flux Channeler
+1 Inexorable Tide
+1 Contagion Engine
+1 Karn's Bastion
+1 Evolution Sage
+1 Tekuthal, Inquiry Dominus
+1 Ixhel, Scion of Atraxa
+1 Roalesk, Apex Hybrid
+1 Ezuri, Stalker of Spheres
+1 Vorinclex, Monstrous Raider
+1 Skithiryx, the Blight Dragon
+1 Blighted Agent
+1 Viral Drake
+1 Thrummingbird
+1 Contentious Plan
+1 Experimental Augury
+1 Steady Progress
+1 Prologue to Phyresis
+1 Infectious Inquiry
+1 Drown in Ichor
+1 Vraska's Fall
+1 Assassin's Trophy
+1 Anguished Unmaking
+1 Despark
+1 Dovin's Veto
+1 Swan Song
+1 Fierce Guardianship
+1 Teferi's Protection
+1 Flawless Maneuver
+1 Heroic Intervention
+1 Mystical Tutor
+1 Enlightened Tutor
+1 Worldly Tutor
+1 Eladamri's Call
+1 Finale of Devastation
+1 Craterhoof Behemoth
+1 Triumph of the Hordes
+1 Ichor Rats
+1 Phyrexian Arena
+1 Sylvan Library
+1 Mystic Remora
+1 Propaganda
+1 Ghostly Prison
+1 Sphere of Safety
+1 Aura Shards
+1 Oath of Teferi
+1 Teferi, Master of Time
+1 Narset, Parter of Veils
+1 Vraska, Betrayal's Sting
+1 Ajani, Sleeper Agent
+1 Binding the Old Gods
+1 Pernicious Deed
+1 Farewell
+1 Toxic Deluge
+1 Damnation
+1 Wrath of God
+1 Austere Command
+1 Time Wipe
+1 Supreme Verdict
+1 Merciless Eviction
+1 Yavimaya, Cradle of Growth
+1 Boseiju, Who Endures
+1 Otawara, Soaring City
+1 Plaza of Heroes
+1 Reflecting Pool
+1 City of Brass
+1 Mana Confluence
+1 Breeding Pool
+1 Hallowed Fountain
+1 Godless Shrine

@@ -1,0 +1,611 @@
+﻿/* THE LOBBY, ON SCREEN (docs/crankmagic-game-plan.md §5.1, PR G0). Pick your deck, seat one to
+ * three opponents, set the rules of the table, and read the pod before you sit. No AI, no board,
+ * no turn: this ships on its own and is the thing every later piece of the game is entered from.
+ *
+ * THE ARITHMETIC IS NOT HERE. crankmagic-lobby.js decides what a seat is, whether it may sit, how
+ * to trim it to the bracket, who goes first and whether the pod is fair; this file turns those
+ * answers into a page and turns the reader's clicks back into a config. Nothing about a bracket
+ * or a colour identity is spelled twice.
+ *
+ * LOBBY UX LOCK (Trey): four seat boxes always; host deck modal with progressive disclosure;
+ * opponent = Human/AI/Unused then in-seat deck + Ready Up; Confirm locks table rules;
+ * no Reshuffle button; no seating-seed field.
+ */
+(globalThis.CrankFeatures ||= []).push(function (C) {
+  const {M, esc: e, button: b, select: s, field: f, note, form, actions, views, $} = C;
+  const L = globalThis.CrankLobby;
+  const SRC = globalThis.CrankDeckSources;
+
+  const KEY = "cm-lobby";
+  const SLOT_COUNT = 3; /* opponents; host is separate → 4 boxes total */
+  const EMPTY_OPP = () => ({role: "unused", ready: false, seat: null});
+  const EMPTY = () => ({
+    bracket: 3,
+    cap: "",
+    host: null, /* {seat, ready} */
+    opponents: [EMPTY_OPP(), EMPTY_OPP(), EMPTY_OPP()],
+    rulesConfirmed: null, /* {bracket, cap, summary} */
+  });
+
+  let lobby = load();
+  function load() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!raw) return EMPTY();
+      /* migrate legacy {seats:[]} shape */
+      if (Array.isArray(raw.seats)) {
+        const next = EMPTY();
+        next.bracket = Number(raw.bracket) || 3;
+        next.cap = raw.cap === undefined ? "" : raw.cap;
+        const you = raw.seats.find((x) => x.you) || null;
+        const others = raw.seats.filter((x) => !x.you);
+        if (you) next.host = {seat: you, ready: !!you.ready};
+        others.slice(0, SLOT_COUNT).forEach((seat, i) => {
+          next.opponents[i] = {role: seat.kind === "generated" ? "ai" : "human", ready: !!seat.ready, seat};
+        });
+        return next;
+      }
+      const opponents = Array.isArray(raw.opponents)
+        ? raw.opponents.slice(0, SLOT_COUNT).map((o) => ({
+            role: ["unused", "human", "ai"].includes(o.role) ? o.role : "unused",
+            ready: !!o.ready,
+            seat: o.seat || null,
+          }))
+        : [EMPTY_OPP(), EMPTY_OPP(), EMPTY_OPP()];
+      while (opponents.length < SLOT_COUNT) opponents.push(EMPTY_OPP());
+      return {
+        bracket: Number(raw.bracket) || 3,
+        cap: raw.cap === undefined ? "" : raw.cap,
+        host: raw.host && raw.host.seat ? {seat: raw.host.seat, ready: !!raw.host.ready} : null,
+        opponents,
+        rulesConfirmed: raw.rulesConfirmed || null,
+      };
+    } catch (err) { return EMPTY(); }
+  }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(lobby)); } catch (err) { /* private window */ } };
+  const redraw = () => { save(); C.render(); };
+
+  function activeSeats() {
+    const out = [];
+    if (lobby.host && lobby.host.seat) {
+      const seat = Object.assign({}, lobby.host.seat, {you: true, ready: !!lobby.host.ready});
+      out.push(seat);
+    }
+    lobby.opponents.forEach((opp) => {
+      if (opp.role === "unused" || !opp.seat) return;
+      out.push(Object.assign({}, opp.seat, {you: false, ready: !!opp.ready, role: opp.role}));
+    });
+    return out;
+  }
+
+  function table() {
+    /* Start uses a fresh random seating each time (no exposed seed). */
+    return L.table({
+      bracket: lobby.bracket,
+      gameChangers: lobby.cap === "" ? undefined : lobby.cap,
+      seats: activeSeats(),
+      seed: "",
+      fixedSeating: false,
+    });
+  }
+
+  function rulesSummary(bracket, cap) {
+    const gc = cap === "" || cap === undefined || cap === null
+      ? (bracket.gameChangers === Infinity ? "no Game Changer limit" : `${bracket.gameChangers} Game Changer${bracket.gameChangers === 1 ? "" : "s"}`)
+      : (Number(cap) === 0 ? "0 Game Changers" : `${Number(cap)} Game Changer${Number(cap) === 1 ? "" : "s"}`);
+    return `Bracket ${bracket.n} · ${bracket.name}. Cap: ${gc}. Same rules for every seat.`;
+  }
+
+  function scoreFor(deck) {
+    const runs = C.state.reports.filter((r) => r.deckId === deck.id && r.origin === "measured");
+    if (!runs.length) return {score: null, why: ""};
+    const fp = M.fingerprint(deck);
+    const current = runs.filter((r) => r.deckFingerprint === fp);
+    const run = (current.length ? current : runs).slice(-1)[0];
+    const score = run.metrics && Number.isFinite(Number(run.metrics.score)) ? Number(run.metrics.score) : null;
+    if (score === null) return {score: null, why: ""};
+    const se = run.metrics.scoreStandardError;
+    return {score: Math.round(score * 10) / 10,
+      why: `${current.length ? "Measured on this list" : "Measured on an earlier list"}${se ? ` (±${se})` : ""}, ${run.protocol || "the published protocol"}.`};
+  }
+
+  function seatFromDeck(deck, you) {
+    const commanderIds = new Set(deck.commanders);
+    const facts = (id) => { const c = C.card(id) || {}; return {name: c.name || id, cardId: id, gameChanger: !!c.gameChanger,
+      colorIdentity: c.colorIdentity || [], typeLine: c.typeLine || "", edhrecRank: c.edhrecRank, price: c.price}; };
+    const {score, why} = scoreFor(deck);
+    return L.seat({id: "seat:" + deck.id, name: deck.name, kind: "library", deckId: deck.id, you,
+      commanders: deck.commanders.map(facts),
+      cards: deck.slots.filter((r) => r.purpose === "main" && !commanderIds.has(r.cardId)).map((r) => Object.assign(facts(r.cardId), {quantity: r.quantity})),
+      score, scoreWhy: why});
+  }
+
+  function seatFromList(parsed, {name, kind, url, you}) {
+    const known = (n) => (C.catalog && C.catalog.exact ? C.catalog.exact(n) : null);
+    const fill = (row) => {
+      const facts = row.card || known(row.name) || {};
+      return {name: row.name, quantity: row.quantity || 1, cardId: facts.id || "",
+        gameChanger: !!facts.gameChanger, colorIdentity: facts.colorIdentity || [],
+        typeLine: facts.typeLine || "", edhrecRank: facts.edhrecRank, price: facts.price};
+    };
+    const names = new Set((parsed.commander || []).map((x) => String(x).toLowerCase()));
+    const rows = parsed.cards || [];
+    const commanders = (parsed.commanders || rows.filter((r) => r.isCommander || names.has(String(r.name).toLowerCase()))).map(fill);
+    const cards = rows.filter((r) => !(r.isCommander || names.has(String(r.name).toLowerCase()))).map(fill);
+    return L.seat({name: name || parsed.name || "Imported deck", kind, url, you,
+      commanders, cards, score: null,
+      scoreWhy: "No measured score: the simulator has not played this list."});
+  }
+
+  const KIND = {library: "from your library", link: "from a link", paste: "pasted", generated: "generated"};
+  const BUDGET = (globalThis.CrankRules && globalThis.CrankRules.RULES.deckCap) || 225;
+
+  function parsePaste(text) {
+    const lines = text.split(/\r?\n/).map((x) => x.trim());
+    const cards = [], commanders = [];
+    let section = "";
+    for (const line of lines) {
+      if (!line) { section = ""; continue; }
+      const header = /^(commander|deck|maindeck|mainboard|sideboard|companion)s?\b[:\s]*$/i.exec(line);
+      if (header) { section = header[1].toLowerCase(); continue; }
+      const m = /^(?:(\d+)\s*[xX]?\s+)?(.+?)\s*(?:\([^)]*\)\s*[\w-]*)?$/.exec(line);
+      if (!m) continue;
+      const row = {name: m[2].replace(/\s*\*[^*]*\*\s*$/, "").trim(), quantity: Number(m[1] || 1)};
+      if (!row.name || /^\d+$/.test(row.name)) continue;
+      if (section === "commander") commanders.push(row); else cards.push(row);
+    }
+    if (!commanders.length && cards.length > 1 && lines[0] && !lines[1]) commanders.push(cards.shift());
+    return {commanders, cards};
+  }
+
+  async function generatedSeat(name, budget, you) {
+    const B = globalThis.CrankDraft;
+    if (!B) throw Error("The draft builder has not loaded yet.");
+    if (!name) throw Error("Pick a commander to build from.");
+    const found = C.catalog && C.catalog.exact ? C.catalog.exact(name) : null;
+    if (!found) throw Error(`The catalog has no card called ${name}. Check the spelling, or paste the list instead.`);
+    const pool = C.catalog.all();
+    const built = B.build({commanders: [found], cards: pool, definition: {bracketCeiling: lobby.bracket, budget, perCardCap: null, fitBracket: true}});
+    const byId = new Map(pool.map((c) => [c.id, c]));
+    const cards = (built.slots || []).map((r) => { const c = byId.get(r.cardId) || {}; return {
+      name: c.name || r.cardId, quantity: r.quantity || 1, cardId: r.cardId, gameChanger: !!c.gameChanger,
+      colorIdentity: c.colorIdentity || [], typeLine: c.typeLine || "", edhrecRank: c.edhrecRank, price: c.price}; });
+    const bracket = L.bracketOf(lobby.bracket), fit = built.bracketFit;
+    if (fit && fit.short) C.notice(`${found.name} reached ${fit.carried} of ${fit.allowed} Game Changers for bracket ${bracket.n}. Raise the budget for a fuller list.`);
+    return L.seat({name: `${found.name} (generated · bracket ${bracket.n} · ${C.money(budget)})`, kind: "generated", you,
+      commanders: [{name: found.name, cardId: found.id, colorIdentity: found.colorIdentity || []}],
+      cards, score: null, scoreWhy: `Built to bracket ${bracket.n} (${bracket.name}) and ${C.money(budget)}. Never measured.`});
+  }
+
+  async function buildSeatFromValues(v, you) {
+    const kind = v.from || "library";
+    if (kind === "library") {
+      const deck = C.state.decks.find((d) => d.id === v.deckId);
+      if (!deck) throw Error("Choose a deck.");
+      return seatFromDeck(deck, you);
+    }
+    if (kind === "link") {
+      if (!SRC) throw Error("The deck-sources module has not loaded; paste the list instead.");
+      const url = String(v.url || "").trim();
+      if (!url) throw Error("Paste the deck's link.");
+      const site = SRC.identify(url);
+      if (!site) throw Error("That link is not one this app reads. Archidekt works directly; for Moxfield or Deckstats, paste the export.");
+      const loaded = await SRC.load(url);
+      return seatFromList(loaded.deck, {name: loaded.deck.name, kind: "link", url, you});
+    }
+    if (kind === "paste") {
+      const parsed = parsePaste(String(v.paste || ""));
+      if (!parsed.cards.length) throw Error("Nothing in that paste read as a decklist. One card a line, with a quantity in front.");
+      return seatFromList(parsed, {name: v.name || "Pasted deck", kind: "paste", you});
+    }
+    return generatedSeat(String(v.commander || "").trim(), Number(v.budget) || BUDGET, you);
+  }
+
+  function wireProgressive(formEl) {
+    const sync = () => {
+      const from = (formEl.elements.from && formEl.elements.from.value) || "library";
+      formEl.querySelectorAll("[data-from]").forEach((node) => {
+        const show = node.getAttribute("data-from").split(/\s+/).includes(from);
+        node.hidden = !show;
+        node.querySelectorAll("input,select,textarea").forEach((inp) => {
+          if (show) inp.removeAttribute("disabled");
+          else inp.setAttribute("disabled", "disabled");
+        });
+      });
+    };
+    const fromEl = formEl.elements.from;
+    if (fromEl) fromEl.addEventListener("change", sync);
+    sync();
+    wireCommanderSearch(formEl);
+  }
+
+  function wireCommanderSearch(root) {
+    const input = root.querySelector("[name=commanderQuery]");
+    const hidden = root.querySelector("[name=commander]");
+    const list = root.querySelector("[data-commander-results]");
+    if (!input || !list) return;
+    const renderHits = () => {
+      const q = String(input.value || "").trim();
+      if (!q || !C.catalog || !C.catalog.search) { list.innerHTML = ""; list.hidden = true; return; }
+      const hits = C.catalog.search(q, {commander: true, limit: 12});
+      if (!hits.length) { list.innerHTML = `<p class="cm-muted">No commanders match.</p>`; list.hidden = false; return; }
+      list.innerHTML = hits.map((c) => `<button type="button" class="cm-commander-result" data-commander-pick="${e(c.name)}"><strong>${e(c.name)}</strong><span>${e((c.colorIdentity || []).join("") || "C")}</span><span>${c.commanderRank != null ? `#${c.commanderRank}` : ""}</span></button>`).join("");
+      list.hidden = false;
+    };
+    input.addEventListener("input", () => {
+      if (hidden) hidden.value = "";
+      renderHits();
+    });
+    list.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-commander-pick]");
+      if (!btn) return;
+      const name = btn.getAttribute("data-commander-pick");
+      input.value = name;
+      if (hidden) hidden.value = name;
+      list.innerHTML = "";
+      list.hidden = true;
+    });
+  }
+
+  function deckSourceFields({includeName = true, defaultFrom = "library"} = {}) {
+    const decks = C.state.decks.filter((d) => !d.archived);
+    const bracket = L.bracketOf(lobby.bracket);
+    const capLabel = lobby.cap === ""
+      ? (bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))
+      : String(lobby.cap);
+    return s("Where the deck comes from", "from", [
+      ["library", "One of your decks"],
+      ["link", "An Archidekt link"],
+      ["paste", "A pasted decklist"],
+      ["generated", "Built from a Commander"],
+    ], defaultFrom)
+      + `<div class="cm-full" data-from="library">${s("Your deck", "deckId", decks.map((d) => [d.id, d.name]), decks[0] ? decks[0].id : "")}</div>`
+      + `<div class="cm-full" data-from="link" hidden>${f("Archidekt link", "url", "", 'type="url" placeholder="https://archidekt.com/decks/…"')}</div>`
+      + `<div class="cm-full" data-from="paste" hidden>${includeName ? f("Name this seat", "name", "", 'maxlength="160" placeholder="whose deck is this?"') : ""}<label class="cm-full">Decklist<textarea name="paste" rows="8" maxlength="20000" placeholder="1 Sol Ring&#10;30 Mountain…"></textarea></label></div>`
+      + `<div class="cm-full" data-from="generated" hidden>
+          <label>Commander to build from<input name="commanderQuery" maxlength="160" placeholder="Search commanders" autocomplete="off"></label>
+          <input type="hidden" name="commander" value="">
+          <div class="cm-commander-results" data-commander-results hidden></div>
+          ${f("Budget", "budget", String(BUDGET), 'type="number" min="10" max="5000" step="5"')}
+          ${note(`Builds a 100 to bracket ${bracket.n} with Game Changer cap ${capLabel}.`)}
+        </div>`;
+  }
+
+  function openHostDeckModal() {
+    const frm = form("Seat your deck", deckSourceFields({includeName: false}), async (v) => {
+      if ((v.from || "library") === "generated" && !String(v.commander || "").trim()) {
+        throw Error("Pick a commander from the search results.");
+      }
+      const seat = await buildSeatFromValues(v, true);
+      const check = L.validate(seat, {bracket: lobby.bracket, gameChangers: lobby.cap === "" ? undefined : lobby.cap});
+      if (!check.ok) {
+        const why = (check.issues.find((i) => i.severity === "blocking") || check.issues[0] || {}).why || "This deck cannot sit under the table rules.";
+        throw Error(why);
+      }
+      lobby.host = {seat, ready: false};
+      redraw();
+    }, "Seat it");
+    wireProgressive(frm);
+  }
+
+  function openOpponentRoleModal() {
+    const free = lobby.opponents.findIndex((o) => o.role === "unused");
+    if (free < 0 && lobby.opponents.every((o) => o.role !== "unused")) {
+      /* still allow reconfigure: pick a slot */
+    }
+    const slots = lobby.opponents.map((o, i) => [String(i), `Seat ${i + 2} · ${o.role}`]);
+    const defaultSlot = String(free >= 0 ? free : 0);
+    form("Seat an opponent",
+      s("Seat", "slot", slots, defaultSlot)
+      + s("Who sits here", "role", [["human", "Human"], ["ai", "AI"], ["unused", "Unused"]], "human")
+      + note("Deck and Ready Up stay inside the seat box after you choose Human or AI."),
+      (v) => {
+        const i = Math.max(0, Math.min(SLOT_COUNT - 1, Number(v.slot) || 0));
+        const role = ["unused", "human", "ai"].includes(v.role) ? v.role : "unused";
+        if (role === "unused") lobby.opponents[i] = EMPTY_OPP();
+        else lobby.opponents[i] = {role, ready: false, seat: lobby.opponents[i].seat && role === lobby.opponents[i].role ? lobby.opponents[i].seat : null};
+        redraw();
+      }, "Save seat");
+  }
+
+  function inlineDeckEditor(oppIndex, opp) {
+    const decks = C.state.decks.filter((d) => !d.archived);
+    const deckOpts = decks.map((d) => `<option value="${e(d.id)}">${e(d.name)}</option>`).join("");
+    const from = (opp.seat && opp.seat.kind) || (opp.role === "ai" ? "generated" : "library");
+    return `<div class="cm-lobby-inline" data-opp="${oppIndex}">
+      <label class="cm-lobby-inline-label">Deck source
+        <select name="inlineFrom" data-action-change="lobby-inline-from" data-opp="${oppIndex}">
+          <option value="library"${from === "library" ? " selected" : ""}>Library</option>
+          <option value="link"${from === "link" ? " selected" : ""}>Archidekt link</option>
+          <option value="paste"${from === "paste" ? " selected" : ""}>Paste</option>
+          <option value="generated"${from === "generated" ? " selected" : ""}>Built from Commander</option>
+        </select>
+      </label>
+      <div data-inline-from="library"${from === "library" ? "" : " hidden"}>
+        <label>Deck<select name="inlineDeck">${deckOpts}</select></label>
+      </div>
+      <div data-inline-from="link"${from === "link" ? "" : " hidden"}>
+        <label>Link<input name="inlineUrl" type="url" placeholder="https://archidekt.com/decks/…"></label>
+      </div>
+      <div data-inline-from="paste"${from === "paste" ? "" : " hidden"}>
+        <label>Paste<textarea name="inlinePaste" rows="4" maxlength="20000" placeholder="1 Sol Ring…"></textarea></label>
+      </div>
+      <div data-inline-from="generated"${from === "generated" ? "" : " hidden"}>
+        <label>Commander<input name="inlineCommanderQuery" maxlength="160" placeholder="Search commanders" autocomplete="off"></label>
+        <input type="hidden" name="inlineCommander" value="">
+        <div class="cm-commander-results" data-commander-results hidden></div>
+        <label>Budget<input name="inlineBudget" type="number" min="10" max="5000" step="5" value="${BUDGET}"></label>
+      </div>
+      <div class="cm-actions">${b("Apply deck", "lobby-inline-apply", {opp: String(oppIndex)}, true, {cls: "compact"})}</div>
+    </div>`;
+  }
+
+  function seatBoxHost(t) {
+    const seat = lobby.host && lobby.host.seat;
+    const check = seat ? t.checks.find((c) => c.seatId === seat.id) : null;
+    const order = t.seating.order;
+    const at = seat ? order.indexOf(seat.id) : -1;
+    const ready = !!(lobby.host && lobby.host.ready);
+    const body = seat
+      ? seatBody(seat, check, at, ready, {host: true})
+      : `<p class="cm-muted">No deck yet.</p><div class="cm-actions">${b("Seat your deck", "lobby-host-deck", {}, true, {cls: "compact"})}</div>`;
+    return `<article class="cm-lobby-seat is-you${check && !check.ok ? " is-blocked" : ""}${ready ? " is-ready" : ""}">
+      <header><span class="cm-lobby-order">${at >= 0 ? at + 1 : "1"}</span><h3>You (Host)</h3>
+        <span class="cm-muted">${seat ? e(seat.commanders.map((c) => c.name).join(" & ") || seat.name) : ""}</span></header>
+      ${body}
+      ${seat ? readyCorner(ready, "host") : ""}
+    </article>`;
+  }
+
+  function seatBoxOpp(i, opp, t) {
+    const colors = ["is-human", "is-ai", "is-unused"];
+    const roleClass = opp.role === "human" ? "is-human" : opp.role === "ai" ? "is-ai" : "is-unused";
+    const seat = opp.seat;
+    const check = seat ? t.checks.find((c) => c.seatId === seat.id) : null;
+    const at = seat ? t.seating.order.indexOf(seat.id) : -1;
+    const ready = !!opp.ready;
+    const title = opp.role === "unused" ? "Open" : opp.role === "ai" ? "AI" : "Human";
+    let body = "";
+    if (opp.role === "unused") {
+      body = `<p class="cm-muted">Empty seat.</p>`;
+    } else if (!seat) {
+      body = inlineDeckEditor(i, opp);
+    } else {
+      body = seatBody(seat, check, at, ready, {host: false, opp: i}) + inlineDeckEditor(i, opp);
+    }
+    const sub = opp.role === "unused" ? "" : `<span class="cm-muted">${seat ? e(seat.name) : "No deck yet"}</span>`;
+    return `<article class="cm-lobby-seat ${roleClass}${check && !check.ok ? " is-blocked" : ""}${ready ? " is-ready" : ""}" data-opp="${i}">
+      <header><span class="cm-lobby-order">${at >= 0 ? at + 1 : i + 2}</span><h3>${e(title)}</h3>
+        ${sub}</header>
+      ${body}
+      ${opp.role !== "unused" && seat ? readyCorner(ready, "opp", i) : ""}
+    </article>`;
+  }
+
+  function seatBody(seat, check, at, ready, meta) {
+    if (!check) return `<p class="cm-muted">${e(seat.name)}</p>`;
+    const gcCap = check.cap === Infinity ? "any" : check.cap;
+    const problems = check.issues.map((i) => `<li class="cm-lobby-issue is-${e(i.severity)}">${e(i.why)}</li>`).join("");
+    const fixes = check.ok ? "" : `<div class="cm-actions cm-lobby-fixes">${check.issues.some((i) => i.code === "gameChangers")
+      ? b("Trim to the bracket", "lobby-trim", {seat: seat.id}, true, {cls: "compact"}) + b("Change the bracket", "lobby-bracket-up", {}, false, {cls: "compact"}) : ""}${
+      meta.host
+        ? b("Change deck", "lobby-host-deck", {}, false, {cls: "compact"})
+        : b("Clear deck", "lobby-clear-opp-deck", {opp: String(meta.opp)}, false, {cls: "compact"})
+    }</div>`;
+    return `<dl class="cm-lobby-figs">
+        <div><dt>Cards</dt><dd class="${check.size === L.DECK_SIZE ? "" : "cm-amber"}">${check.size} of ${L.DECK_SIZE}</dd></div>
+        <div><dt>Game Changers</dt><dd class="${check.gameChangers > check.cap ? "cm-amber" : ""}">${check.gameChangers} of ${gcCap}</dd></div>
+        <div><dt>Score</dt><dd${seat.scoreWhy ? ` title="${e(seat.scoreWhy)}"` : ""}>${seat.score === null ? "—" : seat.score}</dd></div>
+        <div><dt>Colours</dt><dd>${check.colors.length ? C.colors(check.colors) : "—"}</dd></div>
+      </dl>
+      ${problems ? `<ul class="cm-lobby-issues">${problems}</ul>` : `<p class="cm-lobby-ok">${ready ? "Ready." : "Deck fits the table."}</p>`}
+      ${fixes || ""}`;
+  }
+
+  function readyCorner(ready, who, opp) {
+    const attrs = who === "host" ? {who: "host"} : {who: "opp", opp: String(opp)};
+    return `<div class="cm-lobby-ready">${b(ready ? "Ready ✓" : "Ready Up", "lobby-ready", attrs, !ready, {cls: "compact" + (ready ? " is-on" : "")})}</div>`;
+  }
+
+  function allReadyForStart(t) {
+    if (!t.ready) return false; /* deck legality / min seats */
+    if (!lobby.host || !lobby.host.ready) return false;
+    return lobby.opponents.every((o) => o.role === "unused" || (o.seat && o.ready));
+  }
+
+  views.game = async () => {
+    if (!L) { C.main.innerHTML = C.pageHead("Play a game", "") + note("The lobby module has not loaded yet. Reload the page.", true); return; }
+    const t = table();
+    const bracket = t.bracket;
+    const brackets = L.BRACKETS.map((x) => [String(x.n), `${x.n} · ${x.name}`]);
+    const head = C.pageHead("Play a game",
+      b("Seat an opponent", "lobby-add", {}, false, {cls: "compact"})
+      + b("Clear the table", "lobby-clear", {}, false, {cls: "compact"}), "game");
+
+    const confirmed = lobby.rulesConfirmed
+      && Number(lobby.rulesConfirmed.bracket) === Number(lobby.bracket)
+      && String(lobby.rulesConfirmed.cap) === String(lobby.cap);
+    const summary = confirmed
+      ? (lobby.rulesConfirmed.summary || rulesSummary(bracket, lobby.cap))
+      : "Confirm bracket and Game Changer cap before seating reads as final.";
+
+    const rules = `<section class="v-panel cm-lobby-rules"><h2>The rules of this table</h2>
+      <div class="cm-toolbar">
+        ${s("Bracket", "lobbyBracket", brackets, String(bracket.n))}
+        ${f("Game Changer cap", "lobbyCap", lobby.cap === "" ? "" : String(lobby.cap), `type="number" min="0" max="20" placeholder="${e(bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))}"`)}
+        ${b(confirmed ? "Confirmed" : "Confirm", "lobby-confirm-rules", {}, !confirmed, {cls: "compact" + (confirmed ? " is-on" : "")})}
+      </div>
+      <p class="cm-lobby-says">${e(summary)}</p>
+    </section>`;
+
+    const seats = `<div class="cm-lobby-seats">
+      ${seatBoxHost(t)}
+      ${lobby.opponents.map((opp, i) => seatBoxOpp(i, opp, t)).join("")}
+    </div>`;
+
+    const canStart = allReadyForStart(t);
+    const startWhy = !lobby.host ? "Seat your deck first."
+      : !lobby.host.ready ? "Ready Up on your seat."
+      : !t.ready ? (t.why || "Fix blocked seats.")
+      : !canStart ? "Every occupied seat needs Ready Up."
+      : "";
+
+    const read = activeSeats().length >= L.MIN_SEATS ? `<section class="v-panel cm-lobby-read"><h2>Before you sit</h2>
+      <p class="cm-lobby-verdict">${e(t.pod.read)}</p>
+      <dl class="cm-lobby-figs">
+        <div><dt>Pod average</dt><dd>${t.pod.average === null ? "—" : t.pod.average}</dd></div>
+        <div><dt>The field, without you</dt><dd>${t.pod.field === null ? "—" : t.pod.field}</dd></div>
+        <div><dt>Spread</dt><dd>${t.pod.spread === null ? "—" : t.pod.spread}</dd></div>
+        <div><dt>Seats</dt><dd>${t.pod.seats} of ${L.MAX_SEATS}</dd></div>
+      </dl>
+      ${t.pod.partial ? note(t.pod.partial) : ""}
+      <p class="cm-muted">Turn order is shuffled when the game starts.</p>
+      <div class="cm-actions"><button type="button" class="v-button${canStart ? " primary" : ""}" data-action="lobby-start"${canStart ? "" : " disabled"}>${canStart ? "Start the game" : "Not ready yet"}</button><span class="cm-muted">${e(startWhy || "The board is not built yet — this button will deal the first hands once it is.")}</span></div></section>` : "";
+
+    C.main.innerHTML = head + rules + seats + read;
+
+    const bracketEl = $("[name=lobbyBracket]");
+    const capEl = $("[name=lobbyCap]");
+    if (bracketEl) bracketEl.addEventListener("change", (ev) => {
+      lobby.bracket = Number(ev.target.value) || 3;
+      lobby.rulesConfirmed = null;
+      /* changing rules clears ready flags */
+      if (lobby.host) lobby.host.ready = false;
+      lobby.opponents.forEach((o) => { o.ready = false; });
+      redraw();
+    });
+    if (capEl) capEl.addEventListener("change", (ev) => {
+      lobby.cap = ev.target.value === "" ? "" : Math.max(0, Number(ev.target.value) || 0);
+      lobby.rulesConfirmed = null;
+      if (lobby.host) lobby.host.ready = false;
+      lobby.opponents.forEach((o) => { o.ready = false; });
+      redraw();
+    });
+
+    C.main.querySelectorAll(".cm-lobby-inline").forEach((box) => {
+      wireCommanderSearch(box);
+      const fromSel = box.querySelector("[name=inlineFrom]");
+      const sync = () => {
+        const from = fromSel ? fromSel.value : "library";
+        box.querySelectorAll("[data-inline-from]").forEach((node) => {
+          node.hidden = node.getAttribute("data-inline-from") !== from;
+        });
+      };
+      if (fromSel) fromSel.addEventListener("change", sync);
+      sync();
+    });
+  };
+
+  actions["lobby-host-deck"] = () => openHostDeckModal();
+  actions["lobby-add"] = () => openOpponentRoleModal();
+
+  actions["lobby-confirm-rules"] = () => {
+    const bracket = L.bracketOf(lobby.bracket);
+    lobby.rulesConfirmed = {
+      bracket: lobby.bracket,
+      cap: lobby.cap,
+      summary: rulesSummary(bracket, lobby.cap),
+    };
+    redraw();
+    C.notice("Table rules confirmed.");
+  };
+
+  actions["lobby-ready"] = (el) => {
+    const who = el.dataset.who;
+    if (who === "host") {
+      if (!lobby.host || !lobby.host.seat) { C.notice("Seat your deck first.", true); return; }
+      const check = L.validate(lobby.host.seat, {bracket: lobby.bracket, gameChangers: lobby.cap === "" ? undefined : lobby.cap});
+      if (!check.ok) { C.notice((check.issues[0] || {}).why || "Deck is over the table limits.", true); return; }
+      lobby.host.ready = !lobby.host.ready;
+      redraw();
+      return;
+    }
+    const i = Number(el.dataset.opp);
+    const opp = lobby.opponents[i];
+    if (!opp || opp.role === "unused" || !opp.seat) { C.notice("Apply a deck in this seat first.", true); return; }
+    const check = L.validate(opp.seat, {bracket: lobby.bracket, gameChangers: lobby.cap === "" ? undefined : lobby.cap});
+    if (!check.ok) { C.notice((check.issues[0] || {}).why || "Deck is over the table limits.", true); return; }
+    opp.ready = !opp.ready;
+    redraw();
+  };
+
+  actions["lobby-inline-apply"] = async (el) => {
+    const i = Number(el.dataset.opp);
+    const opp = lobby.opponents[i];
+    if (!opp || opp.role === "unused") throw Error("Set this seat to Human or AI first.");
+    const box = el.closest(".cm-lobby-inline") || C.main.querySelector(`.cm-lobby-inline[data-opp="${i}"]`);
+    if (!box) throw Error("Seat editor missing.");
+    const from = (box.querySelector("[name=inlineFrom]") || {}).value || "library";
+    const v = {
+      from,
+      deckId: (box.querySelector("[name=inlineDeck]") || {}).value || "",
+      url: (box.querySelector("[name=inlineUrl]") || {}).value || "",
+      paste: (box.querySelector("[name=inlinePaste]") || {}).value || "",
+      name: `Seat ${i + 2}`,
+      commander: (box.querySelector("[name=inlineCommander]") || {}).value
+        || (box.querySelector("[name=inlineCommanderQuery]") || {}).value || "",
+      budget: (box.querySelector("[name=inlineBudget]") || {}).value || BUDGET,
+    };
+    if (from === "generated" && !String(v.commander || "").trim()) throw Error("Pick a commander from the search results.");
+    const seat = await buildSeatFromValues(v, false);
+    const check = L.validate(seat, {bracket: lobby.bracket, gameChangers: lobby.cap === "" ? undefined : lobby.cap});
+    if (!check.ok) throw Error((check.issues.find((x) => x.severity === "blocking") || check.issues[0] || {}).why || "Deck is over the table limits.");
+    opp.seat = seat;
+    opp.ready = false;
+    redraw();
+  };
+
+  actions["lobby-clear-opp-deck"] = (el) => {
+    const i = Number(el.dataset.opp);
+    if (!lobby.opponents[i]) return;
+    lobby.opponents[i].seat = null;
+    lobby.opponents[i].ready = false;
+    redraw();
+  };
+
+  actions["lobby-trim"] = (el) => {
+    const id = el.dataset.seat;
+    let target = null, setSeat = null;
+    if (lobby.host && lobby.host.seat && lobby.host.seat.id === id) {
+      target = lobby.host.seat;
+      setSeat = (seat) => { lobby.host.seat = seat; lobby.host.ready = false; };
+    } else {
+      const i = lobby.opponents.findIndex((o) => o.seat && o.seat.id === id);
+      if (i >= 0) {
+        target = lobby.opponents[i].seat;
+        setSeat = (seat) => { lobby.opponents[i].seat = seat; lobby.opponents[i].ready = false; };
+      }
+    }
+    if (!target || !setSeat) return;
+    const result = L.trim(target, {bracket: lobby.bracket, gameChangers: lobby.cap === "" ? undefined : lobby.cap});
+    if (!result.dropped.length) { C.notice("Nothing to trim — this deck is already inside the bracket."); return; }
+    form(`Trim ${target.name} to bracket ${lobby.bracket}`,
+      `<ul class="cm-lobby-trim">${result.dropped.map((d) => `<li><strong>${e(d.name)}</strong> out</li>`).join("")}${result.added.map((a) => `<li>${a.quantity}× <strong>${e(a.name)}</strong> in</li>`).join("")}</ul>`
+      + note(result.says) + note("This changes the seat, not the deck in your library."),
+      () => { setSeat(result.seat); redraw(); }, "Trim it");
+  };
+  actions["lobby-bracket-up"] = () => {
+    const next = L.BRACKETS.find((x) => x.n > lobby.bracket);
+    if (!next) { C.notice("Bracket 5 is the top of the ladder."); return; }
+    lobby.bracket = next.n; lobby.cap = ""; lobby.rulesConfirmed = null;
+    if (lobby.host) lobby.host.ready = false;
+    lobby.opponents.forEach((o) => { o.ready = false; });
+    redraw();
+    C.notice(`This table is bracket ${next.n}, ${next.name}, now.`);
+  };
+  actions["lobby-clear"] = () => { lobby = EMPTY(); redraw(); };
+  actions["lobby-start"] = () => {
+    const t = table();
+    if (!allReadyForStart(t)) { C.notice(t.why || "Ready Up every occupied seat and fix any blocked decks.", true); return; }
+    const first = (t.seats.find((x) => x.id === t.seating.first) || {}).name || "a seat";
+    C.notice(`${t.seats.length} seats, bracket ${t.bracket.n}, ${first} on the play. The board is the next thing to build — this lobby is G0.`);
+  };
+
+  C.HELP = C.HELP || {};
+  C.HELP.game = `<h3>What the lobby does</h3><ul>
+    <li><strong>Four seats.</strong> Host plus three opponent boxes. Opponents are Human, AI, or Unused.</li>
+    <li><strong>Confirm</strong> locks bracket and Game Changer cap for the table summary.</li>
+    <li><strong>Ready Up</strong> sits on each occupied seat. Start stays blocked while any deck is over the cap.</li>
+    <li><strong>Built from a Commander</strong> searches the catalog, then builds a 100 under this table's bracket and cap.</li>
+  </ul>`;
+});

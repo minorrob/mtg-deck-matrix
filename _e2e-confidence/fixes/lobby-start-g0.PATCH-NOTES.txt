@@ -1,0 +1,9 @@
+After a failing matrix A run, if VERDICT.txt contains blocker:G0_STUB:
+
+1) On HP open crankmagic-game.js (served as game.js?v=26+)
+2) Find actions["lobby-start"]
+3) Replace the notice-only body with a host bridge call once prepare/start contract is confirmed on that build
+4) Do not commit/push tip; HP working tree only
+5) Re-run: npm run matrix:a
+
+Until that bridge lands, CONFIDENT cannot pass — G0 stub is the named blocker.

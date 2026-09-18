@@ -1,0 +1,29 @@
+{
+  "title": "Host + 3 AI (mix Build/Paste/Library)",
+  "bracket": 3,
+  "cap": "",
+  "openGuestPage": false,
+  "continueWithAiIfNoGuest": false,
+  "host": {
+    "method": "generated",
+    "commander": "Atraxa, Praetors' Voice",
+    "defineStyle": true
+  },
+  "opponents": [
+    {
+      "role": "ai",
+      "method": "generated",
+      "commander": "Atraxa, Praetors' Voice",
+      "defineStyle": false
+    },
+    {
+      "role": "ai",
+      "method": "paste"
+    },
+    {
+      "role": "ai",
+      "method": "library",
+      "fallbackMethod": "paste"
+    }
+  ]
+}

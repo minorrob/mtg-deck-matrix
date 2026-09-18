@@ -1,0 +1,13 @@
+HP-ONLY FIXES (do NOT tip-merge / do NOT push tip)
+Root: C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c
+MachineId: f0b9b3cf-d8c8-4c34-a30a-e889e57e148d
+
+TRACK A: keep createDeck fallback if ensureLobbyDraft is missing.
+Archidekt stays hidden.
+Do not tip-merge.
+
+When matrix run reports blocker:G0_STUB, apply:
+  fixes/lobby-start-g0-bridge.md  (design note)
+  and/or the optional patch file if present after a failing run.
+
+Copy patch files onto HP, apply surgically, hard-refresh #game, re-run matrix A.

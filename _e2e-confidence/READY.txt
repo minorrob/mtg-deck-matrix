@@ -1,0 +1,110 @@
+TREY MANDATE — E2E CONFIDENCE PACKAGE READY (box)
+================================================
+Prepared: 2026-09-17 (America/New_York)
+Target: Personal-HP machineId f0b9b3cf-d8c8-4c34-a30a-e889e57e148d
+Root:   C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c
+App:    http://127.0.0.1:8768/app/#game
+CDP:    http://127.0.0.1:9222  (Chrome --remote-debugging-port=9222)
+Host:   start-crankmagic.ps1 (historical) / Desktop "CrankMagic Online - Start Game"
+Last lobby ship pins: game.js?v=26  crankmagic.css?v=130
+TRACK A: do NOT tip-merge. Keep createDeck fallback if ensureLobbyDraft missing. Archidekt hidden.
+
+BOX PACKAGE
+-----------
+/workspace/e2e-confidence/
+  READY.txt                          ← this file
+  package.json                       ← puppeteer-core
+  lib/cdp.mjs                        ← CDP attach
+  lib/lobby.mjs                      ← seat/ready/start drivers (cm-lobby)
+  lib/capture.mjs                    ← notices, console, Forge/tabletop detect, lobby dump
+  scripts/run-matrix.mjs             ← matrix runner (exit 0 CONFIDENT / 2 BLOCKED / 1 ERROR)
+  scripts/probe-status.mjs           ← CDP+host JSON probe
+  scripts/probe-hp-status.ps1        ← HP-native port/asset probe (parent runs via machineId Shell)
+  matrices/{A,B,C,D}.json
+  fixtures/atraxa-paste-100.txt
+  fixes/APPLY-NOTES.txt
+  fixes/lobby-start-g0-bridge.md     ← known Start stub blocker notes
+  fixes/lobby-start-g0.PATCH-NOTES.txt
+  out/                               ← run artifacts (screenshots, report.json, VERDICT.txt)
+
+PARENT: COPY TO HP THEN INSTALL
+-------------------------------
+1) CopyFromBox /workspace/e2e-confidence → HP e.g.
+   C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c\_e2e-confidence\
+2) On HP (Node 18+):
+   cd ...\_e2e-confidence
+   npm install
+3) Ensure host up + Chrome debug:
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\probe-hp-status.ps1
+   OR: npm run probe   (requires CDP already up)
+
+FIRST MATRIX (A) — RUN IMMEDIATELY AFTER PACKAGE LANDS
+------------------------------------------------------
+Prereqs:
+  - Host listening :8768 (start-crankmagic.ps1 / launcher)
+  - Chrome with --remote-debugging-port=9222 on app URL (or any tab; harness navigates)
+  - Forge binary + Java available for full CONFIDENT (see risks)
+  - Optional OpenAI key only if AI pilot path requires API (matrix A uses Build/Paste/Library; native AI at Forge time)
+
+Command (HP):
+  cd C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c\_e2e-confidence
+  $env:CM_CDP_URL='http://127.0.0.1:9222'
+  $env:CM_APP_URL='http://127.0.0.1:8768/app/#game'
+  npm run matrix:a
+
+Success / fail signals:
+  exit 0 + out/matrix-A-*/VERDICT.txt contains CONFIDENT
+    → Forge sync evidence: startOutcome.kind in {forge-sync, forge-starting→forge-sync, tabletop-ui}
+    → /api/live status ready|playing OR tabletop DOM markers
+  exit 2 + VERDICT BLOCKED
+    → blocker named in VERDICT.txt / report.json (e.g. blocker:G0_STUB)
+  exit 1 → harness/CDP/prereq error (see report.json)
+
+KNOWN CURRENT BLOCKER (from box game.js audit)
+----------------------------------------------
+actions["lobby-start"] is still G0 stub: notice only
+  "… The board is the next thing to build. This lobby is G0."
+Harness classifies as blocker:G0_STUB. See fixes/lobby-start-g0-bridge.md.
+Matrix A still valuable: proves seat/deck/Ready/Start-click + captures exact blocker.
+
+MATRIX ORDER
+------------
+A) Host + 3 AI — mix Build from Commander / Paste / Library (Library→Paste fallback)
+B) Host + 2 Human + 1 AI — invite fields + URL capture; guest page if CDP allows; else document Ready gate, continueWithAiIfNoGuest
+C) Host + 1 Human + 2 AI — same guest policy
+D) Host + 1 Human + 1 AI + Unused
+
+Host default: Build from Commander (Atraxa, Praetors' Voice) + optional Define play style.
+Paste fixture: fixtures/atraxa-paste-100.txt
+Human seats: host cannot Apply deck; invite URL #play?seat=<inviteId>; Ready blocked until guest seats a deck.
+
+CONFIDENT CRITERIA
+------------------
+- All occupied seats decked (AI/host) with seat present; Ready Up on occupied seats
+- Rules Confirmed
+- Start clicked when enabled
+- Forge sync OR tabletop transition observed (not G0 notice)
+- Screenshots at key steps under out/matrix-*/screenshots/
+- report.json includes lobby dump: hostDeckId / opp deckIds; note gap if null; ensureLobbyDraftPresent flag
+
+DECK ID / ensureLobbyDraft
+--------------------------
+After Apply, dumpLobby records seat.deckId || seat.draftId.
+If null → listed in deckIdGaps. TRACK A: createDeck fallback must remain if ensureLobbyDraft missing.
+
+STATUS PROBE (parent on HP first)
+---------------------------------
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\probe-hp-status.ps1
+Checks: :8768 listen, :9222 CDP, /api/live, game.js?v= / css?v= pins vs expected 26/130.
+
+RISKS
+-----
+- Forge binary / JDK path / forge.lock commit mismatch → start may error after G0 is wired
+- cloudflared only needed for remote human guests (matrices B–D guest path)
+- OpenAI / Anthropic API key only if AI provider ≠ native at Forge launch
+- CrankDraft / catalog thin → Build from Commander fails (harness surfaces notice)
+- Library empty → automatic Paste fallback for that seat
+- Second browser context for guest may be unavailable — B/C/D document invite URL + Ready gate then AI continue
+- Do NOT tip-merge; HP-only patches under fixes/
+
+NO TIP PUSH. HOLD START-TEST productization / Facelift.
