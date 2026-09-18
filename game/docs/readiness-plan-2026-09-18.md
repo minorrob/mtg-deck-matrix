@@ -192,16 +192,22 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 
 Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven against fixtures, not against Forge** — see §12.
 
-### Track C — Readiness and launch (spec 4–7)
+### Track C — Readiness and launch (spec 4–7) — **C.3/C.4/C.5 done; C.1/C.2 UI and C.6 outstanding**
 
-| ID | Work |
-|---|---|
-| C.1 | Unknown-card resolve UI to Trey's spec: type + searchable name + hover art → OK → Ready enabled (D2) |
-| C.2 | Connection panel — per-seat claimed / connected / validated / ready with heartbeat age (D11) |
-| C.3 | `GET /api/table/readiness` as the single source of truth for host UI, guest UI and doctor |
-| C.4 | 10s countdown, Forge boot kicked at *entry* to countdown, abort-and-reap on cancel (D3) |
-| C.5 | Launch progress stages — `engine-spawning` → `card-db-loaded` → `decks-accepted` → `bridge-green`, replacing the silent 240s wait |
-| C.6 | Visible first-player roll from the match seed; app passes the ordering to Forge (D9) |
+| ID | Work | Result |
+|---|---|---|
+| C.1 | Unknown-card resolve UI | **Outstanding.** The data is ready — B.2 returns `{name, quantity, reason, suggestions}` through both APIs. What remains is the page: type, searchable name, hover art, per Trey's §3.3. |
+| C.2 | Connection panel | **Server done** (C.3 carries per-seat quiet time and blocking reason). The panel itself is UI. |
+| C.3 | Single readiness source | `countdownBlockers()` in the contract is now the one definition, consumed by the countdown transition itself, so the rule and the explanation of the rule cannot drift. `GET /api/table/readiness`; the guest table view carries the same object. |
+| C.4 | 10s countdown, parallel boot | Done. The match identity is minted when the countdown *begins*; the engine boots alongside it. One pod for both calls, so exactly one match starts. A fast engine still waits for the clock. |
+| C.5 | Launch progress | Done. `engine-spawning → engine-spawned → waiting-for-engine → bridge-green → seated`, or `failed` with its reason. |
+| C.6 | Visible first-player roll | **Outstanding, and deliberately not half-done.** See below. |
+
+**On C.6.** A roll is only meaningful if it decides turn order. Forge decides that internally from the seeded RNG (`ForgeLocalGame.java:49`), and overriding it means implementing `chooseStartingPlayer` on the browser bridge's controller — `ForgeProbe.java:292` is the working reference. That is Java which cannot be compiled or exercised in this environment, and a roll displayed next to a turn order it does not actually control would be worse than showing nothing. It belongs in a session on the host, where `game/tools/build-forge.ps1` can build it and a real game can prove it.
+
+### Track E.1 — Rematch — **DONE**
+
+`next-selection` proceeds once everyone asked has answered, keeps the seats that said yes with their decks intact so "same deck" is one click, and releases the rest; a `rematch-deadline` counts silence as a decline after two minutes. Releasing a seat exposed an older deadlock of the same family — `countdown` required every seat in the array to be occupied, so *any* departure locked the table out of its next game — now fixed. A released seat loses its capability, as `exit` and `expire` already did.
 
 ### Track D — At the table (spec 8–10)
 
@@ -234,11 +240,12 @@ Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven a
 ## 9. Sequencing
 
 ```
-Track A          →  DONE. Trees converged, pins aligned, invite bug fixed.
-Track B          →  DONE against fixtures. Needs the §12 live pass before the next game.
-Next             →  Track C, then E.1–E.2 (small, high relief)
-Then             →  Track D, Track E
-Continuous       →  Track F  (F.1 is the one that stops the bleeding)
+Track A   →  DONE. Trees converged, pins aligned, invite bug fixed.
+Track B   →  DONE against fixtures. Needs the §12 live pass.
+Track E.1 →  DONE. Rematch no longer deadlocks; so no longer does any departure.
+Track C   →  C.3/C.4/C.5 DONE. C.1 and C.2 are UI; C.6 needs a machine that compiles Java.
+Next      →  Track D, Track E.2–E.5, then C.1/C.2
+Continuous → Track F  (F.1 is the one that stops the bleeding)
 ```
 
 ## 10. Definition of done
@@ -252,12 +259,12 @@ Continuous       →  Track F  (F.1 is the one that stops the bleeding)
 
 ## 11. Game-day fallback
 
-Tracks A and B closed the invitation failure, the unverifiable decks, the dead Force Prompt and the missing unstick. What is still open at the table:
+Tracks A, B, C.3–C.5 and E.1 closed the invitation failure, the unverifiable decks, the dead Force Prompt, the missing unstick, the rematch deadlock and the silent launch. What is still open at the table:
 
-- **Rematch deadlocks** on a single "No" or one person who walks away (D7, Track E.1). Until that lands, end the table and open a new one rather than waiting on the vote.
-- **No visible first-player roll** (D9) — Forge decides silently.
-- **Countdown is 5s and Forge starts after it** (D3), so expect a wait between the countdown ending and the board appearing, with no progress shown.
+- **No visible first-player roll** (C.6) — Forge decides silently. Nothing breaks; you just do not see the roll.
 - Guests cannot pick a host library deck (D10); the paste parser still only accepts Moxfield two-column (Track E.5).
+- An unrecognized card is now *refused with its name and suggestions*, but the swap still means editing the list yourself (C.1).
+- **Prompt AI and force-advance are proven by unit tests, not by a live game.** Step 7 of §12.
 
 ## 12. Verify it live — the run-book for a local session
 
