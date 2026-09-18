@@ -2,7 +2,7 @@
 
 This is the tested Windows startup path. Codex is not required.
 
-The release proof covers a four-seat table with two humans and two GPT-5.6 Luna players: remote HTTPS invitation redemption, independent guest deck selection and validation, the shared countdown, automatic Forge launch, separately scoped seven-card hands, matching public table state, and clean journal-preserving shutdown.
+The release proof covers a four-seat table with two humans and two GPT-5 Mini players: remote HTTPS invitation redemption, independent guest deck selection and validation, the shared countdown, automatic Forge launch, separately scoped seven-card hands, matching public table state, and clean journal-preserving shutdown.
 
 ## First-time checks
 
@@ -20,7 +20,7 @@ For API-powered opponents, Windows Credential Manager must contain a **Generic c
 crankmagic_openai_api
 ```
 
-The password/value is the OpenAI API key. The username is only a label. The key stays in Windows Credential Manager and is never placed in the page, URL, game log, or deck export. GPT-5.6 Luna is the default model; Terra is the optional stronger model.
+The password/value is the OpenAI API key. The username is only a label. The key stays in Windows Credential Manager and is never placed in the page, URL, game log, or deck export. GPT-5 Mini is the default model; GPT-5 is the optional stronger model.
 
 ## One-time setup on the host computer only
 
@@ -59,7 +59,7 @@ Running the startup command again is safe. It retains a healthy host and any act
 1. Open **Play** and then **Game setup**.
 2. Set the bracket, deck-price cap, human-player count, and AI-player count.
 3. Choose your deck. Each AI seat can use a saved CrankMagic deck, a preloaded variation, a Deck Lab build, or a supported public Archidekt deck.
-4. For API-powered seats, select **OpenAI** and keep **GPT-5.6 Luna** unless you specifically want Terra. Native Forge AI remains available without an API key.
+4. For API-powered seats, select **OpenAI** and keep **GPT-5 Mini** unless you specifically want GPT-5. Native Forge AI remains available without an API key.
 5. Select each AI commander's deck or choose random commander selection.
 6. Select **Prepare decks**. Resolve any legality, budget, or unsupported-card warnings shown by setup.
 7. Select **Launch game**. CrankMagic starts Forge automatically, shuffles each 99-card library from a fresh seed, and opens the table.
@@ -87,7 +87,7 @@ Then open [CrankMagic Online](http://127.0.0.1:8768/app/#game) and:
 2. Set **Human players** to **1** and **AI players** to **3**.
 3. Choose your deck, bracket, and maximum deck cost.
 4. For each AI seat, choose its commander/deck or select the random commander option. Set its play style and difficulty independently.
-5. Select **OpenAI** and **GPT-5.6 Luna** for API-powered opponents. The app reads `crankmagic_openai_api` from Windows Credential Manager; the key is not sent to the browser. Use Terra only when you want stronger reasoning at higher cost. You can instead select native Forge AI for seats that should not use the API.
+5. Select **OpenAI** and **GPT-5 Mini** for API-powered opponents. The app reads `crankmagic_openai_api` from Windows Credential Manager; the key is not sent to the browser. Use GPT-5 only when you want stronger reasoning at higher cost. You can instead select native Forge AI for seats that should not use the API.
 6. Select **Prepare decks**. Review any budget, legality, or native-AI compatibility messages and resolve blocking issues.
 7. Select **Launch game**. CrankMagic starts Forge, applies a fresh random seed to every 99-card library, seats all three AI players, and opens your board.
 8. Keep or mulligan your opening hand, then play from the browser. The AI seats take their turns automatically at the selected difficulty; required human choices and response windows appear in the game UI.

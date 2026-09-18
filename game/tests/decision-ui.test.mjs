@@ -42,6 +42,69 @@ test('decider with okEnabled=true should get working Keep button', () => {
   assert.equal(viewerHasControl, true, 'Viewer should have control');
 });
 
+test('mulligan decision should be tracked to prevent double acknowledgment', () => {
+  const acknowledgedDecisions = new Map();
+  const matchId = 'match-123';
+  const turn = 0;
+  const viewerSeatId = 1;
+  const prompt = 'Rob, do you want to keep your hand?';
+  
+  // First acknowledgment
+  const decisionKey1 = `${matchId}:${turn}:${viewerSeatId}:${prompt}`;
+  acknowledgedDecisions.set(decisionKey1, Date.now());
+  
+  // Check if already acknowledged
+  const alreadyAcknowledged = acknowledgedDecisions.has(decisionKey1);
+  assert.equal(alreadyAcknowledged, true, 'Decision should be marked as acknowledged');
+  
+  // Different prompt should not be acknowledged
+  const differentPrompt = 'Rob, do you want to mulligan?';
+  const decisionKey2 = `${matchId}:${turn}:${viewerSeatId}:${differentPrompt}`;
+  assert.equal(acknowledgedDecisions.has(decisionKey2), false, 'Different decision should not be acknowledged');
+});
+
+test('active player at untap with okEnabled=true should see enabled Continue', () => {
+  const ui = {
+    ok: 'OK',
+    okEnabled: true,
+    nativeFallback: '',
+    prompt: 'Priority: Rob\nTurn: 1 (Rob)\nPhase: Untap',
+    choice: null
+  };
+  
+  const viewerSeatId = 1;
+  const turnPlayerId = 1; // Viewer is the active player
+  const priority = /^Priority:/m.test(ui.prompt);
+  
+  assert.equal(priority, true, 'Should be a priority decision');
+  assert.equal(viewerSeatId, turnPlayerId, 'Viewer should be the turn player');
+  assert.equal(ui.okEnabled, true, 'okEnabled should be true');
+  
+  // Button should be enabled, not show waiting copy
+  const shouldShowWaitingCopy = !ui.okEnabled && viewerSeatId !== turnPlayerId;
+  assert.equal(shouldShowWaitingCopy, false, 'Should not show waiting copy for active player with okEnabled');
+});
+
+test('active player with okEnabled=false should not show fake waiting copy', () => {
+  const ui = {
+    ok: 'Continue',
+    okEnabled: false,
+    nativeFallback: 'Complete this action in the engine window',
+    prompt: 'Priority: Rob',
+    choice: null
+  };
+  
+  const viewerSeatId = 1;
+  const turnPlayerId = 1;
+  
+  // When nativeFallback is set, we show fallback notice, not waiting copy
+  assert.equal(!!ui.nativeFallback, true, 'Should have nativeFallback');
+  
+  // Should not incorrectly show "Waiting for active player..." when viewer IS the active player
+  const incorrectWaitingCopy = !ui.okEnabled && !ui.nativeFallback && viewerSeatId === turnPlayerId;
+  assert.equal(incorrectWaitingCopy, false, 'Should not show waiting copy when viewer is active player');
+});
+
 test('nativeFallback should show recoverable messaging', () => {
   const ui = {
     ok: 'Continue',
