@@ -12,6 +12,7 @@
 import {existsSync, readdirSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {loadForgeCardIndex, resetForgeCardIndexCache} from '../contracts/forge-card-index.mjs';
 import {readWindowsGenericCredential} from './windows-credential.mjs';
 
@@ -126,7 +127,8 @@ function detectCloudflared(platform = process.platform) {
   catch { return existsSync('C:\\Program Files (x86)\\cloudflared\\cloudflared.exe'); }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// process.argv[1] is a native path (C:\... on Windows); compare URLs, not a hand-built string.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const report = await runDoctor({cloudflared: detectCloudflared()});
   console.log(process.argv.includes('--json') ? JSON.stringify(report) : formatDoctor(report));
   process.exit(report.ok ? 0 : 1);
