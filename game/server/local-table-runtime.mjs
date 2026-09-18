@@ -38,7 +38,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   }
   async function scheduleIfReady(){
     let current=broker.hostView();
-    if(current.phase==='selecting'&&current.seats.every(s=>s.occupied&&s.connected&&s.ready&&s.deckVersion))current=await runtime.start();
+    if(current.phase==='selecting'&&current.seats.filter(s=>s.occupied).length>=2&&current.seats.filter(s=>s.occupied).every(s=>s.connected&&s.ready&&s.deckVersion))current=await runtime.start();
     return current;
   }
   const guest={
@@ -64,7 +64,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     async start(){
       const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a cancelled countdown or launch failure. */}},delay);return table;
     },
-    async poll(){await broker.disconnectExpired();return launchWhenDue();},
+    async poll(){await broker.disconnectExpired();await broker.settleRematch();return launchWhenDue();},
     async recover(){const current=broker.hostView();if(current.phase==='countdown'){const delay=Math.max(0,current.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{}},delay);}if(current.phase==='starting')await launchWhenDue();return current;},
     pilotStatus(){return pilotRunner?.status()||[];},
     /* Force Prompt reaches the pilots of a multiplayer table. It used to reach only the solo

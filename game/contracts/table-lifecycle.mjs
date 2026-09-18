@@ -2,7 +2,7 @@
 export function createTable({tableId,seats,settings}) {
   if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
   if(seats.some((s,i)=>s.seatId!==i||!['human','ai'].includes(s.kind)))throw Error('Invalid seats');
-  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,launchId:null,matchId:null,...(settings?{settings:structuredClone(settings)}:{}),
+  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,...(settings?{settings:structuredClone(settings)}:{}),
     seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false}))};
 }
 export function transitionTable(previous,event,{now,launchId}={}) {
@@ -26,9 +26,17 @@ export function transitionTable(previous,event,{now,launchId}={}) {
     case 'concede':
       member();if(seat.kind!=='human'||t.phase!=='playing')throw Error('No active human player can concede');
       Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true});break;
-    case 'countdown':
-      if(t.phase!=='selecting'||!t.seats.every(s=>s.occupied&&s.connected&&s.ready&&s.deckVersion))throw Error('Every seat must be ready');
+    case 'countdown': {
+      // An EMPTY chair is not a player who is not ready. Seats empty out -- somebody exits, a
+      // reconnect grace runs out, a rematch drops the people who said no -- and requiring every
+      // seat in the array to be occupied meant one departure locked the table out of its own next
+      // game. What has to be ready is everyone actually sitting at it.
+      const seated=t.seats.filter(s=>s.occupied);
+      if(t.phase!=='selecting')throw Error('Table is not selecting decks');
+      if(seated.length<2||!seated.some(s=>s.kind==='human'))throw Error('A game needs at least two seats and a human');
+      if(!seated.every(s=>s.connected&&s.ready&&s.deckVersion))throw Error('Every seat must be ready');
       t.phase='countdown';t.countdownAt=now+5000;break;
+    }
     case 'tick':
       if(t.phase!=='countdown'||now<t.countdownAt)throw Error('Countdown has not completed');
       if(!launchId)throw Error('Launch identity required');t.phase='starting';t.launchId=launchId;t.generation++;t.countdownAt=null;break;
@@ -40,12 +48,31 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       t.phase='selecting';t.launchId=null;t.seats.forEach(s=>s.ready=false);break;
     case 'completed':
       if(t.phase!=='playing'||event.matchId!==t.matchId)throw Error('Wrong completed match');
-      t.phase='rematch';t.seats.forEach(s=>{s.ready=false;s.rematch=s.kind==='ai'?true:null;});break;
+      // The clock the rematch deadline is measured from, so waiting on an answer is bounded.
+      t.phase='rematch';t.rematchAt=now;t.seats.forEach(s=>{s.ready=false;s.rematch=s.kind==='ai'?true:null;});break;
     case 'rematch-vote':
       member();if(t.phase!=='rematch'||seat.kind!=='human'||!seat.connected)throw Error('No rematch vote available');seat.rematch=!!event.accept;break;
-    case 'next-selection':
-      if(t.phase!=='rematch'||!t.seats.filter(s=>s.kind==='human'&&s.occupied).every(s=>s.connected&&s.rematch===true)||!t.seats.some(s=>s.kind==='human'&&s.occupied))throw Error('Waiting for other players');
-      t.phase='selecting';t.launchId=null;t.matchId=null;t.seats.forEach(s=>{s.ready=false;s.rematch=null;});break;
+    // Nobody has to answer. A player who closed the laptop on a loss, or who is simply slow, used
+    // to hold the whole table in 'rematch' with no way out but closing it, because the next round
+    // required every occupied human to vote yes. Silence is now a decline, once the clock says so.
+    case 'rematch-deadline':
+      if(t.phase!=='rematch')throw Error('No rematch is pending');
+      t.seats.forEach(s=>{if(s.kind==='human'&&s.occupied&&(s.rematch===null||!s.connected))s.rematch=false;});break;
+    case 'next-selection': {
+      if(t.phase!=='rematch')throw Error('No rematch is pending');
+      // Everyone who was asked has answered -- or the deadline answered for them.
+      if(t.seats.some(s=>s.kind==='human'&&s.occupied&&s.rematch===null))throw Error('Waiting for other players');
+      const staying=t.seats.filter(s=>s.rematch===true&&(s.kind==='ai'||(s.occupied&&s.connected)));
+      if(!staying.some(s=>s.kind==='human'))throw Error('Nobody is staying for another game');
+      if(staying.length<2)throw Error('Another game needs at least two seats');
+      // The seats that declined are released here rather than carried into the next table, where
+      // an empty chair nobody can fill would block the countdown exactly as the unanimity rule did.
+      for(const s of t.seats){
+        if(s.rematch===true&&(s.kind==='ai'||(s.occupied&&s.connected))){s.ready=false;s.rematch=null;continue;}
+        Object.assign(s,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false});
+      }
+      t.phase='selecting';t.launchId=null;t.matchId=null;t.rematchAt=null;break;
+    }
     default:throw Error('Unknown table transition');
   }
   t.revision++;return t;

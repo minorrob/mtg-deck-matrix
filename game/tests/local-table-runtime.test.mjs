@@ -77,3 +77,49 @@ test('the host can prompt a stuck AI seat at a multiplayer table',async t=>{
   runtime.nudge(null);
   assert.deepEqual(nudged,[2,null],'no seat named prompts every running pilot');
 });
+
+/* A player who declines the rematch gives up the seat, and the session that seat was holding has
+ * to die with it -- the host is about to invite somebody else into that chair. */
+test('declining a rematch releases the seat and revokes its session',async t=>{
+  let now=0,matchId,engine={status:'idle'};
+  const runtime=createLocalTableRuntime({directory:resolve(mkdtempSync(resolve(tmpdir(),'crankmagic-decline-')),'tables'),
+    lobby:lobby(),clock:()=>now,status:()=>engine,bridge:async seat=>({viewerSeatId:seat}),
+    launch:async pod=>{matchId=pod.matchId;engine={status:'playing',matchId};},
+    resolveGuestDeck:async member=>({id:'guest-deck-v1',validated:true,commander:'Guest Commander',snapshot:prepared(member.seatId,'human','Friend')})});
+  t.after(()=>runtime.close());
+  const invite=runtime.invite(1),session=await runtime.guest.join(invite),member=await runtime.guest.authenticate(session.capability);
+  await runtime.guest.deck(member,{});await runtime.ready(true);await runtime.guest.ready(member,{ready:true});
+  now=5000;await runtime.poll();await runtime.broker.complete(matchId);
+
+  await runtime.guest.rematch(member,{accept:false});
+  assert.equal(runtime.view().phase,'rematch','the host has not answered yet');
+  await runtime.rematch(true);
+
+  const table=runtime.view();
+  assert.equal(table.phase,'selecting','one No no longer holds the table');
+  assert.equal(table.seats[1].occupied,false,'the declining seat is free for the host to re-invite');
+  assert.equal(table.seats[0].occupied,true);
+  await assert.rejects(()=>runtime.guest.authenticate(session.capability),/Invalid seat session/,
+    'the released seat must not still answer to its old capability');
+});
+
+test('a player who never answers is counted out by the deadline, not waited on forever',async t=>{
+  let now=0,matchId,engine={status:'idle'};
+  const runtime=createLocalTableRuntime({directory:resolve(mkdtempSync(resolve(tmpdir(),'crankmagic-silent-')),'tables'),
+    lobby:lobby(),clock:()=>now,status:()=>engine,bridge:async seat=>({viewerSeatId:seat}),
+    launch:async pod=>{matchId=pod.matchId;engine={status:'playing',matchId};},
+    resolveGuestDeck:async member=>({id:'guest-deck-v1',validated:true,commander:'Guest Commander',snapshot:prepared(member.seatId,'human','Friend')})});
+  t.after(()=>runtime.close());
+  const invite=runtime.invite(1),session=await runtime.guest.join(invite),member=await runtime.guest.authenticate(session.capability);
+  await runtime.guest.deck(member,{});await runtime.ready(true);await runtime.guest.ready(member,{ready:true});
+  now=5000;await runtime.poll();await runtime.broker.complete(matchId);
+
+  await runtime.rematch(true);                       // the host wants another game
+  assert.equal(runtime.view().phase,'rematch','and waits, for now, on the seat that has not answered');
+  now+=60000;await runtime.poll();
+  assert.equal(runtime.view().phase,'rematch','a minute is not long enough to count somebody out');
+
+  now+=61000;await runtime.poll();
+  assert.equal(runtime.view().phase,'selecting','past the grace period the game goes on without them');
+  assert.equal(runtime.view().seats[1].occupied,false);
+});

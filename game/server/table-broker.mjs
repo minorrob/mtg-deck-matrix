@@ -71,7 +71,33 @@ export class TableBroker{
     else this.#transition({type:'exit',seatId:member.seatId});
     this.#access.release(this.#state.table.tableId,member.seatId);this.#state.membershipEpochs[member.seatId]++;delete this.#state.presence[member.seatId];this.#save();return {exited:true,conceded:this.#state.table.phase==='playing'};
   }
-  async rematch(member,input){let table=this.#transition({type:'rematch-vote',seatId:member.seatId,accept:input?.accept===true});if(table.seats.filter(s=>s.kind==='human'&&s.occupied).every(s=>s.connected&&s.rematch===true))table=this.#transition({type:'next-selection',seatId:member.seatId});return {table:publicTable(table,member)};}
+  async rematch(member,input){let table=this.#transition({type:'rematch-vote',seatId:member.seatId,accept:input?.accept===true});
+    // Move on as soon as everyone asked has answered. Whoever declined loses their seat there;
+    // whoever stayed keeps their deck and picks again.
+    if(!table.seats.some(s=>s.kind==='human'&&s.occupied&&s.rematch===null)){
+      table=this.#advanceToSelection(member.seatId)||table;
+    }
+    return {table:publicTable(table,member)};}
+  #releaseSeat(seatId){this.#access.release(this.#state.table.tableId,seatId);this.#state.membershipEpochs[seatId]++;delete this.#state.presence[seatId];}
+  /* A seat the rematch released must lose its capability exactly as exit and expire do. Leaving it
+     live would let a departed guest keep answering for a chair the host is about to re-invite
+     somebody else into. */
+  #advanceToSelection(seatId){
+    const before=this.#state.table.seats.filter(s=>s.occupied).map(s=>s.seatId);
+    try{
+      const table=this.#transition({type:'next-selection',seatId});
+      for(const id of before)if(!table.seats[id].occupied)this.#releaseSeat(id);
+      this.#save();return table;
+    }catch{return null;/* nobody staying, or too few seats: the host closes the table */}
+  }
+  /* Nobody is obliged to answer. Past the grace period silence counts as "no", the people who did
+     say yes get their next game, and the table stops being held open by an empty chair. */
+  async settleRematch(graceMs=120000){
+    const t=this.#state.table;
+    if(t.phase!=='rematch'||t.rematchAt===null||this.#clock()-t.rematchAt<graceMs)return t;
+    this.#transition({type:'rematch-deadline',seatId:0});
+    return this.#advanceToSelection(0)||this.#state.table;
+  }
   async view(member){if(!['playing','rematch'].includes(this.#state.table.phase))throw Error('No match is active');const value=await this.#bridge(member.seatId,'view');if(value.viewerSeatId!==member.seatId||value.viewerPlayerId!==member.seatId)throw Object.assign(Error('Engine returned the wrong private view'),{status:502});return value;}
   async action(member,input){validateAction(input);if(this.#state.table.phase!=='playing'||input.matchId!==this.#state.table.matchId)throw Error('Wrong or inactive match');const {matchId,...action}=input;return this.#bridge(member.seatId,'action',action);}
   async report(member){const matchId=this.#state.table.matchId||this.#state.lastMatchId;if(!matchId||typeof this.#report!=='function')throw Error('No completed match report is available');return this.#report(member.seatId,matchId);}

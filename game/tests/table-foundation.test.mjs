@@ -56,3 +56,67 @@ test('an invitation is sealed to its table, so a replacement table rejects every
   access.redeem(invite,{tableId:'table-a',generation:0,now:1,claim:seat=>claimed=seat});
   assert.equal(claimed,1,'the same link still opens its own table');
 });
+
+/* The rematch used to require every occupied human to vote yes before the table could play again.
+ * One "No", or one person who shut the laptop after losing, held everyone else in 'rematch' with
+ * no way out but closing the table -- the opposite of what was asked for, which is that the people
+ * who want another game get one and the rest give up their seats. */
+test('one No does not hold the table: the players who said yes get their next game',()=>{
+  let t=createTable({tableId:'table-a',seats:[
+    {seatId:0,kind:'human',occupied:true},{seatId:1,kind:'human'},{seatId:2,kind:'human'},{seatId:3,kind:'ai'}]});
+  const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
+  for(const seatId of [1,2])go({type:'join',seatId});
+  for(const seatId of [0,1,2,3]){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
+  go({type:'countdown'});go({type:'tick'},5000);go({type:'engine-started',launchId:'launch-1',matchId:'match-1'});
+  go({type:'completed',matchId:'match-1'},9000);
+  assert.equal(t.phase,'rematch');assert.equal(t.rematchAt,9000,'the deadline has something to count from');
+  assert.equal(t.seats[3].rematch,true,'an AI seat always stays');
+
+  go({type:'rematch-vote',seatId:0,accept:true});
+  go({type:'rematch-vote',seatId:2,accept:false});
+  assert.throws(()=>go({type:'next-selection'}),/Waiting for other players/,'seat 1 has not answered yet');
+
+  go({type:'rematch-vote',seatId:1,accept:true});
+  go({type:'next-selection'});
+  assert.equal(t.phase,'selecting');
+  assert.equal(t.seats[2].occupied,false,'the seat that declined is released');
+  assert.equal(t.seats[2].deckVersion,null);
+  assert.deepEqual([t.seats[0].occupied,t.seats[1].occupied],[true,true]);
+  assert.equal(t.seats[1].deckVersion,'deck-1','a returning player keeps their deck, so "same deck" is one click');
+  assert.equal(t.seats[0].ready,false,'and still has to ready up again');
+
+  /* The released chair must not block the next countdown. Requiring every seat in the array to be
+     occupied is what turned a departure into a table nobody could start. */
+  go({type:'ready',seatId:0,ready:true});go({type:'ready',seatId:1,ready:true});go({type:'ready',seatId:3,ready:true});
+  go({type:'countdown'},20000);
+  assert.equal(t.phase,'countdown');
+});
+
+test('silence is a decline once the deadline passes, and an empty table is refused',()=>{
+  const start=()=>{
+    let t=createTable({tableId:'table-b',seats:[{seatId:0,kind:'human',occupied:true},{seatId:1,kind:'human'},{seatId:2,kind:'ai'}]});
+    const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'l'});
+    go({type:'join',seatId:1});
+    for(const seatId of [0,1,2]){go({type:'deck',seatId,deckVersion:'d'+seatId});go({type:'ready',seatId,ready:true});}
+    go({type:'countdown'});go({type:'tick'},5000);go({type:'engine-started',launchId:'l',matchId:'m'});
+    go({type:'completed',matchId:'m'},9000);
+    return {get t(){return t;},go};
+  };
+
+  const quiet=start();
+  quiet.go({type:'rematch-vote',seatId:0,accept:true});
+  assert.throws(()=>quiet.go({type:'next-selection'}),/Waiting for other players/);
+  quiet.go({type:'rematch-deadline'});
+  assert.equal(quiet.t.seats[1].rematch,false,'no answer by the deadline is a no');
+  quiet.go({type:'next-selection'});
+  assert.equal(quiet.t.phase,'selecting');
+  assert.equal(quiet.t.seats[1].occupied,false);
+  assert.equal(quiet.t.rematchAt,null);
+
+  // Nobody staying is not a new game; the host is left to close the table rather than start one.
+  const empty=start();
+  empty.go({type:'rematch-vote',seatId:0,accept:false});
+  empty.go({type:'rematch-vote',seatId:1,accept:false});
+  assert.throws(()=>empty.go({type:'next-selection'}),/Nobody is staying/);
+  assert.equal(empty.t.phase,'rematch','and the table stays where it was rather than half-resetting');
+});
