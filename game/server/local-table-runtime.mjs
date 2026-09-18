@@ -10,7 +10,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function saveRuntime(file,value){mkdirSync(dirname(file),{recursive:true});const temp=file+'.tmp';writeFileSync(temp,JSON.stringify(value,null,2));renameSync(temp,file);}
 export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),bridge,launch,status=()=>({status:'idle'}),clock=()=>Date.now(),resolveGuestDeck=prepareGuestDeck,createPilots,report,activePod:restoredPod=null}){
   if(lobby?.schema!=='CommanderLobbyPack@1')throw Error('Prepared lobby required');
-  const settings={bracket:lobby.settings.bracket,maxCost:lobby.settings.maxCost,humans:lobby.settings.humans,ais:lobby.settings.ais};
+  const settings={bracket:lobby.settings.bracket,maxCost:lobby.settings.maxCost,humans:lobby.settings.humans,ais:lobby.settings.ais,shareLibrary:lobby.settings.shareLibrary===true};
   const initialDeckVersions={},preparedBySeat=new Map(lobby.seats.map(seat=>[seat.seatId,seat]));
   const seats=lobby.settings.seats.map(request=>{
     const kind=request.kind||(request.seatId<settings.humans?'human':'ai'),prepared=preparedBySeat.get(request.seatId),id=prepared?`prepared:${request.seatId}:${prepared.deck.gameplayHash}`:null;

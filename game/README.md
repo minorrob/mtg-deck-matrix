@@ -91,6 +91,18 @@ through `GET /api/doctor` and refuses to report "Ready to play" over a blocking 
 Point it at a Forge checkout elsewhere with `CRANKMAGIC_FORGE_ROOT`, and a JDK with
 `CRANKMAGIC_JDK_ROOT`.
 
+## Pasting a deck
+
+A pasted list is read in whatever shape it arrived in: `1 Sol Ring`, `1x Sol Ring`, a bare name for
+a single copy, two comma-separated columns in either order with quoted names, tab-separated from a
+spreadsheet, `Commander` / `Deck` / `Sideboard` headers, and Archidekt or Moxfield set codes,
+collector numbers and foil markers trailing the name. The commander is whichever side of the blank
+line is small, so first and last both work, or whatever a `Commander` header names.
+
+What it will not do is pick a commander for you. A hundred cards with no blank line and no header
+gives nothing to go on but a guess, and it asks instead. Lines it cannot read come back with their
+line numbers rather than one sentence about the whole paste.
+
 ## Who is the table waiting on
 
 `GET /api/table/readiness` answers it once, for the host screen, the guest screen and the launcher

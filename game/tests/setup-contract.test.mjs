@@ -34,3 +34,22 @@ test('workshop imports reject wrong totals and duplicated commanders before look
   await assert.rejects(importWorkshopDeck({...deck,rows:[{name:'Forest',quantity:98},{name:'Chulane, Teller of Tales',quantity:1}]}),/appears twice/);
   await assert.rejects(importWorkshopDeck({...deck,rows:[{name:'Forest',quantity:99.5}]}),/exactly 100/);
 });
+
+/* The host's saved decks belong to the host. A guest could never reach them, which is right by
+ * default and wrong when the host wants to lend somebody a deck for the evening -- so it is a
+ * setting, refused when it is off and named when it is refused. */
+test('a guest reaches the host library only when the host shares it',async()=>{
+  const {prepareGuestDeck}=await import('../tools/setup-catalog.mjs');
+  const rules={bracket:3,maxCost:225,humans:2,ais:1};
+  await assert.rejects(()=>prepareGuestDeck({seatId:1},{source:'library',deckId:'deck:live:D2'},rules),
+    /has not shared their saved decks/,'off by default, and it says so rather than listing the other options');
+  await assert.rejects(()=>prepareGuestDeck({seatId:1},{source:'nonsense'},rules),
+    /Choose a pasted, saved, preloaded/,'an unknown source still lists what is on offer');
+  // With sharing on the request is accepted as a library request. What happens after that is
+  // ordinary deck preparation, which needs the engine -- so the assertion is that whatever stops
+  // it, it is no longer the permission check.
+  const shared=await prepareGuestDeck({seatId:1},{source:'library',deckId:'deck:live:D2'},{...rules,shareLibrary:true})
+    .then(()=>null,error=>error);
+  assert.ok(!shared||!/has not shared/.test(shared.message),
+    `sharing on must get past the permission check, but failed with: ${shared&&shared.message}`);
+});

@@ -58,6 +58,7 @@ export function setupCatalog(){return {schema:'CommanderSetupCatalog@1',variantC
 export function validateSetup(c){
   if(!c||!Number.isInteger(c.bracket)||c.bracket<1||c.bracket>5)throw Error('Select a bracket from 1–5');
   if(!Number.isFinite(c.maxCost)||c.maxCost<1||c.maxCost>10000)throw Error('Deck cost cap must be $1–$10,000');
+  if(c.shareLibrary!==undefined&&typeof c.shareLibrary!=='boolean')throw Error('Share saved decks must be on or off');
   if(!Number.isInteger(c.humans)||c.humans<1||c.humans>4||!Number.isInteger(c.ais)||c.ais<0||c.ais>3||c.humans+c.ais<2||c.humans+c.ais>4)throw Error('Commander needs 2–4 total players with at least one human');
   if(!Array.isArray(c.seats)||c.seats.length!==c.ais+c.humans)throw Error('Seat count does not match the selected player counts');
   for(const [i,s]of c.seats.entries()){
@@ -143,9 +144,12 @@ export async function prepareGuestDeck(member,input,settings){
   let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat};
   if(input?.source==='upload'){
     const parsed=parseMoxfieldTwoColumn(input.csv,{name:input.name||`Player ${member.seatId+1} deck`}),created=await importWorkshopDeck(parsed);request={...request,source:'library',deckId:created.id,commander:created.commander};
-  }else if(input?.source==='preloaded'||(input?.source==='library'&&member.seatId===0))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
+  /* The host's saved decks are the host's, so a guest reaches them only when the host has opened
+     them to the table. Preloaded variants are published lists and were always shared. */
+  }else if(input?.source==='preloaded'||(input?.source==='library'&&(member.seatId===0||settings.shareLibrary===true)))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
   else if(['lab','archidekt'].includes(input?.source))request={...request,source:input.source,commander:input.commander,archidektUrl:input.archidektUrl};
-  else throw Error('Choose an uploaded, saved, preloaded, Deck Lab or Archidekt deck');
+  else if(input?.source==='library')throw Error('The host has not shared their saved decks with this table. Paste your list, or pick a preloaded deck.');
+  else throw Error('Choose a pasted, saved, preloaded, Deck Lab or Archidekt deck');
   const seed=randomInt(1,2147483647),seat=await prepareSeat(request,{...settings,humans:Math.max(member.seatId+1,settings.humans||1)},seed);
   return {id:`deck-version:${randomUUID()}`,validated:true,commander:seat.deck.commanders.map(c=>c.name).join(' + '),snapshot:seat,deckHash:seat.deck.gameplayHash,createdAt:new Date().toISOString()};
 }
