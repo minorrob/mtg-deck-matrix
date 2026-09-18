@@ -18,7 +18,7 @@ Double-clicking the shortcut starts the local host with remote guests enabled, o
 2. Run:
 
    ```powershell
-   cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+   cd "C:\Users\robmi\CrankMagic\repo"
    ```
 
 3. Choose one startup command:
@@ -110,7 +110,7 @@ Keep the host computer on and connected for the whole match. Each invitation is 
 6. Open Windows PowerShell and run:
 
    ```powershell
-   cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+   cd "C:\Users\robmi\CrankMagic\repo"
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"
    ```
 
