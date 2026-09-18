@@ -1,3 +1,25 @@
+/* WHY A TABLE IS NOT STARTING, as one list.
+ *
+ * The countdown rule and the screen that explains the countdown rule were separate pieces of code
+ * saying the same thing, which is how a lobby ends up refusing to start while every seat on it
+ * looks ready. The transition below consumes this, so what blocks the table and what the players
+ * are told about it cannot drift apart.
+ *
+ * An EMPTY chair is not an unready player: seats empty out when somebody exits, when a reconnect
+ * grace runs out, and when a rematch drops the people who said no. */
+export function countdownBlockers(table) {
+  const seated = table.seats.filter(s => s.occupied);
+  const blockers = [];
+  if (seated.length < 2) blockers.push({seatId: null, reason: 'A game needs at least two seats'});
+  if (!seated.some(s => s.kind === 'human')) blockers.push({seatId: null, reason: 'A game needs a human'});
+  for (const seat of seated) {
+    if (!seat.connected) blockers.push({seatId: seat.seatId, reason: 'not connected'});
+    else if (!seat.deckVersion) blockers.push({seatId: seat.seatId, reason: 'no validated deck'});
+    else if (!seat.ready) blockers.push({seatId: seat.seatId, reason: 'not ready'});
+  }
+  return blockers;
+}
+
 /** Pure authoritative table transitions. Transport authenticates actor; clients never set time/IDs. */
 export function createTable({tableId,seats,settings}) {
   if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
@@ -27,15 +49,10 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       member();if(seat.kind!=='human'||t.phase!=='playing')throw Error('No active human player can concede');
       Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true});break;
     case 'countdown': {
-      // An EMPTY chair is not a player who is not ready. Seats empty out -- somebody exits, a
-      // reconnect grace runs out, a rematch drops the people who said no -- and requiring every
-      // seat in the array to be occupied meant one departure locked the table out of its own next
-      // game. What has to be ready is everyone actually sitting at it.
-      const seated=t.seats.filter(s=>s.occupied);
       if(t.phase!=='selecting')throw Error('Table is not selecting decks');
-      if(seated.length<2||!seated.some(s=>s.kind==='human'))throw Error('A game needs at least two seats and a human');
-      if(!seated.every(s=>s.connected&&s.ready&&s.deckVersion))throw Error('Every seat must be ready');
-      t.phase='countdown';t.countdownAt=now+5000;break;
+      const blockers=countdownBlockers(t);
+      if(blockers.length)throw Error('Every seat must be ready');
+      t.phase='countdown';t.countdownAt=now+10000;break;
     }
     case 'tick':
       if(t.phase!=='countdown'||now<t.countdownAt)throw Error('Countdown has not completed');

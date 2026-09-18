@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import {mkdirSync,readFileSync,renameSync,writeFileSync,existsSync} from 'node:fs';
 import {dirname,resolve} from 'node:path';
 import {SeatAccess} from '../contracts/seat-access.mjs';
-import {transitionTable} from '../contracts/table-lifecycle.mjs';
+import {transitionTable,countdownBlockers} from '../contracts/table-lifecycle.mjs';
 
 const safeClone=value=>structuredClone(value);
 const ACTION_KEYS=new Set(['matchId','actionId','revision','kind','choiceId','targetId','indices','value','amounts','skip','text','cancel']);
@@ -24,10 +24,10 @@ function publicTable(table,member){
 
 /** Durable single-table coordinator. Forge remains the match authority. */
 export class TableBroker{
-  #file;#state;#access;#clock;#bridge;#launch;#resolveDeck;#catalog;#report;
-  constructor({file,table,clock=()=>Date.now(),bridge,launch,resolveDeck,catalog,report,initialDeckVersions={}}){
+  #file;#state;#access;#clock;#bridge;#launch;#prepareEngine;#resolveDeck;#catalog;#report;
+  constructor({file,table,clock=()=>Date.now(),bridge,launch,prepareEngine,resolveDeck,catalog,report,initialDeckVersions={}}){
     if(!file||!table||typeof bridge!=='function')throw Error('Table broker configuration required');
-    this.#file=resolve(file);this.#clock=clock;this.#bridge=bridge;this.#launch=launch;this.#resolveDeck=resolveDeck;this.#catalog=catalog;this.#report=report;
+    this.#file=resolve(file);this.#clock=clock;this.#bridge=bridge;this.#launch=launch;this.#prepareEngine=prepareEngine;this.#resolveDeck=resolveDeck;this.#catalog=catalog;this.#report=report;
     if(existsSync(this.#file)){
       const loaded=JSON.parse(readFileSync(this.#file));if(loaded.schema!=='CrankMagicBroker@1'||loaded.table.tableId!==table.tableId)throw Error('Stored table does not match');loaded.feedback??=[];loaded.lastMatchId??=null;loaded.matchSeats??={};this.#state=loaded;this.#access=new SeatAccess(loaded.access);
     }else{
@@ -112,9 +112,41 @@ export class TableBroker{
     const received=this.#state.feedback.filter(item=>item.matchId===matchId).map(item=>item.seatId);return {accepted:true,seatId:member.seatId,receivedSeatIds:received,complete:expected.every(id=>received.includes(id))};
   }
   async hostReady(ready){const table=this.#transition({type:'ready',seatId:0,ready:ready===true});return this.hostView();}
-  async beginCountdown(){return this.#transition({type:'countdown',seatId:0});}
+  /* The match identity is minted when the countdown STARTS, not when it ends, so the engine can be
+     told to boot while the countdown is still running. Forge takes tens of seconds to come up; a
+     countdown that only starts it at zero is ten seconds of waiting followed by all of the waiting. */
+  /* What every screen asks: who are we waiting on? Derived from the same blocker list the
+     countdown transition uses, with how long each seat has been quiet, so the host can name the
+     person holding things up instead of staring at a button that will not light. */
+  readiness(){
+    const t=this.#state.table,now=this.#clock(),blockers=countdownBlockers(t);
+    const reasons=new Map();for(const b of blockers)if(b.seatId!==null&&!reasons.has(b.seatId))reasons.set(b.seatId,b.reason);
+    return {schema:'CrankMagicTableReadiness@1',phase:t.phase,ok:blockers.length===0&&t.phase==='selecting',
+      table:blockers.filter(b=>b.seatId===null).map(b=>b.reason),
+      seats:t.seats.map(seat=>({seatId:seat.seatId,kind:seat.kind,name:seat.name,claimed:seat.occupied,connected:seat.connected,
+        deckValidated:!!seat.deckVersion,ready:seat.ready,
+        quietForMs:seat.kind==='human'&&seat.occupied?Math.max(0,now-(this.#state.presence[seat.seatId]?.lastSeen??now)):null,
+        blocking:seat.occupied?reasons.get(seat.seatId)??null:null})),
+      waitingOn:t.seats.filter(s=>s.occupied&&reasons.has(s.seatId)).map(s=>`${s.name||'Seat '+(s.seatId+1)} (${reasons.get(s.seatId)})`)};
+  }
+  async beginCountdown(){
+    const table=this.#transition({type:'countdown',seatId:0});
+    this.#state.launchPlan={launchId:randomUUID(),matchId:randomUUID()};this.#save();return table;
+  }
+  /* Spawn the engine during the countdown. Nothing here changes the table: if the countdown is
+     cancelled the position is discarded, and a spawn that fails still fails loudly at tick. */
+  async prelaunch(){
+    const plan=this.#state.launchPlan;
+    if(this.#state.table.phase!=='countdown'||!plan||plan.prepared||typeof this.#prepareEngine!=='function')return null;
+    plan.prepared=true;this.#save();
+    await this.#prepareEngine({table:safeClone(this.#state.table),decks:safeClone(this.#state.deckSnapshots),...plan});
+    return plan.matchId;
+  }
   async tick(){
-    const launchId=randomUUID(),matchId=randomUUID(),table=this.#transition({type:'tick',seatId:0}, {launchId});this.#state.outbox.push({kind:'launch',launchId,matchId,status:'pending'});this.#save();return table;
+    const plan=this.#state.launchPlan||{launchId:randomUUID(),matchId:randomUUID()};
+    const table=this.#transition({type:'tick',seatId:0},{launchId:plan.launchId});
+    this.#state.outbox.push({kind:'launch',launchId:plan.launchId,matchId:plan.matchId,status:'pending'});
+    this.#state.launchPlan=null;this.#save();return table;
   }
   async processOutbox(){
     const item=this.#state.outbox.find(x=>x.status==='pending'||x.status==='running');if(!item)return null;if(typeof this.#launch!=='function')throw Error('No match launcher configured');

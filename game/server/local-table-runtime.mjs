@@ -20,13 +20,44 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   const table=createTable({tableId,seats,settings});for(const seat of table.seats){const source=seats[seat.seatId];if(source.deckVersion)seat.deckVersion=source.deckVersion;if(source.commander)seat.commander=source.commander;if(seat.kind==='ai')seat.ready=true;}
   const catalog={decks:setupCatalog().decks.filter(d=>d.source==='preloaded'&&d.ok).map(({id,name,commander,cost,gameChangers})=>({id,name,commander,cost,gameChangers}))};
   const activeFile=resolve(directory,'active.json');let activePod=restoredPod;saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:false});let timer,runtime,pilotRunner;
+  /* One pod for both the countdown spawn and the launch that waits on it, so the engine is asked
+     to start exactly one match and the second call recognises the first. */
+  function buildPod({table,decks,launchId,matchId}){
+    const finalSeats=table.seats.map(seat=>{const snapshot=decks[seat.deckVersion]?.snapshot;return snapshot?{...snapshot,name:seat.name}:null;});if(finalSeats.some(s=>!s))throw Error('A validated seat deck is missing');
+    const pod={...lobby,schema:'CommanderPodPack@1',matchId,seats:finalSeats,podHash:sha256(canonical({seed:lobby.seed,launchId,matchId,seats:finalSeats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))}))};
+    activePod=pod;saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:false});return pod;
+  }
+  const engineStarting=matchId=>{const engine=status();return engine.matchId===matchId&&['starting','ready','playing'].includes(engine.status);};
+  /* The wait between the countdown ending and the board appearing was silent and could run to four
+     minutes. Silence is indistinguishable from a hang, so the table publishes where it has got to
+     and everyone watching sees the same stage. */
+  let launchProgress={stage:'idle',since:null,matchId:null,error:null};
+  const stage=(name,extra={})=>{launchProgress={stage:name,since:clock(),matchId:launchProgress.matchId,error:null,...extra};};
   const broker=new TableBroker({file:resolve(directory,table.tableId+'.json'),table,clock,catalog,initialDeckVersions,report,
     resolveDeck:(member,input)=>resolveGuestDeck(member,input,settings),bridge,
+    /* Called as the countdown begins. Forge takes tens of seconds to come up, and a countdown that
+       only starts it at zero buys the table nothing: the players watch the numbers, then watch a
+       blank screen. Spawning here runs the boot and the countdown together. */
+    prepareEngine:async args=>{
+      launchProgress={...launchProgress,matchId:args.matchId};stage('engine-spawning');
+      const pod=buildPod(args);
+      try{if(!engineStarting(args.matchId))await launch(pod);stage('engine-spawned');}
+      catch(error){launchProgress={stage:'failed',since:clock(),matchId:args.matchId,error:String(error.message||error)};throw error;}
+    },
     launch:async({table,decks,launchId,matchId})=>{
-      const finalSeats=table.seats.map(seat=>{const snapshot=decks[seat.deckVersion]?.snapshot;return snapshot?{...snapshot,name:seat.name}:null;});if(finalSeats.some(s=>!s))throw Error('A validated seat deck is missing');
-      const pod={...lobby,schema:'CommanderPodPack@1',matchId,seats:finalSeats,podHash:sha256(canonical({seed:lobby.seed,launchId,matchId,seats:finalSeats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))}))};activePod=pod;saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:false});
-      let engine=status();if(engine.matchId!==matchId||!['starting','ready','playing'].includes(engine.status))await launch(pod);
-      const deadline=Date.now()+240000;while(Date.now()<deadline){engine=status();if(engine.matchId===matchId&&['ready','playing'].includes(engine.status)){pilotRunner?.stop();pilotRunner=createPilots?.(pod)||null;return matchId;}if(['error','closed','incomplete'].includes(engine.status))throw Error(engine.error||`Forge stopped during launch (${engine.status})`);await delay(300);}throw Error('Forge did not become ready within four minutes');
+      const pod=activePod?.matchId===matchId?activePod:buildPod({table,decks,launchId,matchId});
+      launchProgress={...launchProgress,matchId};
+      if(!engineStarting(matchId)){stage('engine-spawning');await launch(pod);}
+      stage('waiting-for-engine');
+      const deadline=Date.now()+240000;
+      while(Date.now()<deadline){
+        const engine=status();
+        if(engine.matchId===matchId&&['ready','playing'].includes(engine.status)){stage('bridge-green');pilotRunner?.stop();pilotRunner=createPilots?.(pod)||null;stage('seated');return matchId;}
+        if(['error','closed','incomplete'].includes(engine.status)){const message=engine.error||`Forge stopped during launch (${engine.status})`;launchProgress={stage:'failed',since:clock(),matchId,error:message};throw Error(message);}
+        await delay(300);
+      }
+      launchProgress={stage:'failed',since:clock(),matchId,error:'Forge did not become ready within four minutes'};
+      throw Error('Forge did not become ready within four minutes');
     }});
   async function launchWhenDue(){
     let current=broker.hostView();
@@ -44,7 +75,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   const guest={
     authenticate:capability=>broker.authenticate(capability),
     join:input=>broker.join(input),
-    async table(member){await runtime.poll();return broker.table(member);},
+    async table(member){await runtime.poll();return {...(await broker.table(member)),readiness:runtime.readiness()};},
     deck:(member,input)=>broker.deck(member,input),
     async ready(member,input){await broker.ready(member,input);await scheduleIfReady();return broker.table(member);},
     heartbeat:(member,input)=>broker.heartbeat(member,input),
@@ -62,11 +93,16 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     async rematch(accept){const result=await broker.rematch({seatId:0},{accept});if(result.table.phase==='selecting'){for(const seat of result.table.seats.filter(s=>s.kind==='ai'))await broker.ready({seatId:seat.seatId},{ready:true});}await scheduleIfReady();return broker.hostView();},
     report(){return broker.report({seatId:0});},feedback(input){return broker.feedback({seatId:0},input);},
     async start(){
-      const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a cancelled countdown or launch failure. */}},delay);return table;
+      const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a cancelled countdown or launch failure. */}},delay);
+      // Not awaited: the countdown is the player-facing clock and must not wait on the engine.
+      // A failure here surfaces at tick, where the table can report it.
+      broker.prelaunch().catch(()=>{});
+      return table;
     },
     async poll(){await broker.disconnectExpired();await broker.settleRematch();return launchWhenDue();},
     async recover(){const current=broker.hostView();if(current.phase==='countdown'){const delay=Math.max(0,current.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{}},delay);}if(current.phase==='starting')await launchWhenDue();return current;},
     pilotStatus(){return pilotRunner?.status()||[];},
+    readiness(){return {...broker.readiness(),launch:launchProgress};},
     /* Force Prompt reaches the pilots of a multiplayer table. It used to reach only the solo
        runner, so on the one table shape that has other people at it -- the lobby -- the host's
        control for an AI that had stopped moving answered that no AI was running. */

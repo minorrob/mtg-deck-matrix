@@ -91,6 +91,19 @@ through `GET /api/doctor` and refuses to report "Ready to play" over a blocking 
 Point it at a Forge checkout elsewhere with `CRANKMAGIC_FORGE_ROOT`, and a JDK with
 `CRANKMAGIC_JDK_ROOT`.
 
+## Who is the table waiting on
+
+`GET /api/table/readiness` answers it once, for the host screen, the guest screen and the launcher
+alike, derived from the same blocker list the countdown transition uses so a lobby cannot refuse to
+start while every seat on it looks ready. Each seat reports claimed / connected / deck validated /
+ready, how long it has been quiet, and what specifically is blocking it. `launch` carries the stage
+the engine is at -- `engine-spawning`, `engine-spawned`, `waiting-for-engine`, `bridge-green`,
+`seated`, or `failed` with its reason -- so the wait between the countdown and the board is
+readable instead of blank.
+
+The countdown is ten seconds, and Forge is asked to start when it *begins*, not when it ends. The
+boot and the countdown run together; a fast engine still waits for the clock.
+
 ## When the table will not move
 
 `POST /api/table/force-advance {"seatId":n}` clears the decision the named seat is sitting on. It

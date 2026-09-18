@@ -6,9 +6,9 @@ const initial=()=>createTable({tableId:'table-a',seats:[{seatId:0,kind:'human',o
 test('ready countdown is invalidated by edits; one launch; unanimous rematch retains seats and reselects decks',()=>{
   let t=initial();const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
   go({type:'join',seatId:1});for(let seatId=0;seatId<3;seatId++){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
-  go({type:'countdown'});assert.equal(t.countdownAt,5000);assert.throws(()=>go({type:'tick'},4999));
+  go({type:'countdown'});assert.equal(t.countdownAt,10000);assert.throws(()=>go({type:'tick'},9999));
   go({type:'deck',seatId:1,deckVersion:'new-deck'});assert.equal(t.phase,'selecting');assert.throws(()=>go({type:'countdown'}));
-  go({type:'ready',seatId:1,ready:true});go({type:'countdown'});go({type:'tick'},5000);assert.throws(()=>go({type:'tick'},5001));
+  go({type:'ready',seatId:1,ready:true});go({type:'countdown'});go({type:'tick'},10000);assert.throws(()=>go({type:'tick'},10001));
   assert.throws(()=>go({type:'engine-started',launchId:'other',matchId:'match'}));go({type:'engine-started',launchId:'launch-1',matchId:'match'});
   assert.throws(()=>go({type:'deck',seatId:1,deckVersion:'bad'}));go({type:'completed',matchId:'match'});
   go({type:'rematch-vote',seatId:0,accept:true});assert.throws(()=>go({type:'next-selection'}),/Waiting/);
@@ -24,7 +24,7 @@ test('disconnect cancels readiness; grace precedes release; stale updates reject
 test('an active human can concede without changing another seat',()=>{
   let t=initial();const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
   go({type:'join',seatId:1});for(let seatId=0;seatId<3;seatId++){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
-  go({type:'countdown'});go({type:'tick'},5000);go({type:'engine-started',launchId:'launch-1',matchId:'match'});go({type:'concede',seatId:1},5001);
+  go({type:'countdown'});go({type:'tick'},10000);go({type:'engine-started',launchId:'launch-1',matchId:'match'});go({type:'concede',seatId:1},10001);
   assert.equal(t.seats[1].occupied,false);assert.equal(t.seats[1].conceded,true);assert.equal(t.seats[0].occupied,true);assert.equal(t.phase,'playing');
 });
 test('invitations are single-use, scoped, revocable and never let the caller choose another seat',()=>{
@@ -67,7 +67,7 @@ test('one No does not hold the table: the players who said yes get their next ga
   const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
   for(const seatId of [1,2])go({type:'join',seatId});
   for(const seatId of [0,1,2,3]){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
-  go({type:'countdown'});go({type:'tick'},5000);go({type:'engine-started',launchId:'launch-1',matchId:'match-1'});
+  go({type:'countdown'});go({type:'tick'},10000);go({type:'engine-started',launchId:'launch-1',matchId:'match-1'});
   go({type:'completed',matchId:'match-1'},9000);
   assert.equal(t.phase,'rematch');assert.equal(t.rematchAt,9000,'the deadline has something to count from');
   assert.equal(t.seats[3].rematch,true,'an AI seat always stays');
@@ -98,7 +98,7 @@ test('silence is a decline once the deadline passes, and an empty table is refus
     const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'l'});
     go({type:'join',seatId:1});
     for(const seatId of [0,1,2]){go({type:'deck',seatId,deckVersion:'d'+seatId});go({type:'ready',seatId,ready:true});}
-    go({type:'countdown'});go({type:'tick'},5000);go({type:'engine-started',launchId:'l',matchId:'m'});
+    go({type:'countdown'});go({type:'tick'},10000);go({type:'engine-started',launchId:'l',matchId:'m'});
     go({type:'completed',matchId:'m'},9000);
     return {get t(){return t;},go};
   };

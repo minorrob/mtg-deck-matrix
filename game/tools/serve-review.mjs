@@ -97,6 +97,9 @@ createServer(async(req,res)=>{
        same verdict. Read-only and unauthenticated, exactly like /api/health: it reports which
        local components are present, never their contents. */
     if(req.method==='GET'&&pathname==='/api/doctor')return reply(200,await runDoctor({forgeRoot:FORGE_ROOT,port,cloudflared:!!guestInfo.origin,probe:async()=>({product:'CrankMagic Online',protocol:1})}));
+    /* One readiness answer for the host screen, the guest screen and the launcher, so a lobby
+       cannot refuse to start while every seat on it looks ready. */
+    if(req.method==='GET'&&pathname==='/api/table/readiness'){try{if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.poll();return reply(200,tableRuntime.readiness());}catch(e){return reply(409,{error:e.message});}}
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{await tableRuntime?.poll();return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}
     if(req.method==='GET'&&pathname==='/api/match-report'){try{const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.report():loadMatchReport(engine.directory,0));}catch(e){return reply(409,{error:e.message});}}
