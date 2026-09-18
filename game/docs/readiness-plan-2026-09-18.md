@@ -180,15 +180,17 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 | A.5 | Confirm or close self-test #2 | **Open.** `/api/desktop-deks` and the Desktop `.dek` embedding are absent from the pushed branch. Either the commit missed them or they were never built. Needs Rob's call. |
 | A.6 | **Fix the invitation-voiding Start** (found during A.3) | Done — see §4. |
 
-### Track B — Ship before the next game
+### Track B — Ship before the next game — **DONE, pending live verification**
 
-| ID | Work | Gate |
+| ID | Work | Result |
 |---|---|---|
-| B.1 | **Forge card resolver.** `game/contracts/forge-card-index.mjs`: index `cardsfolder` (directory *or* zip) by parsing each script's `Name:`; resolve by exact name → front face → NFD-stripped, Æ→ae normalized key. | Fixture suite over §5's table resolves; an invented name returns `null` |
-| B.2 | **Make 4.1 blocking.** Unresolved card ⇒ no `deckVersion` ⇒ cannot Ready Up. Return structured `{name, reason, suggestions}`, not a joined string. | A deck with one bad card cannot reach `ready` |
-| B.3 | **Fix Force Prompt on the lobby path.** Expose `nudge(seatId)` from `createLocalTableRuntime`; try `tableRuntime` before `soloPilotRunner`. | Lobby table + 1 API seat → `{prompted:1}` |
-| B.4 | **Host force-advance.** `POST /api/table/force-advance {seatId}` — pass priority or auto-answer the pending decision, host-token only, journalled. | A parked table advances on one press |
-| B.5 | **`npm run doctor`.** Host health, Node, Forge root, JDK, card index builds with a sane count, credential readable, cloudflared, ports, bridge round-trip. Wired into the launcher's status window. | Rename Forge → red on that line only |
+| B.1 | Forge card resolver | `game/contracts/forge-card-index.mjs`. Reads every script Forge ships and indexes its `Name:` lines. Ladder: exact → front face → normalized, so a list pasted without accents resolves while two different cards can never collapse. Both faces and the joined `A // B` form are indexed. |
+| B.2 | Make 4.1 blocking | An unresolved card now throws in `prepareSeat`, carrying `{name, quantity, reason, suggestions}` through both the host API and the guest gateway. No `deckVersion`, so the seat cannot Ready Up. `CRANKMAGIC_FORGE_ROOT` overrides the checkout path. |
+| B.3 | Force Prompt on the lobby path | `createLocalTableRuntime` exposes `nudge(seatId)`; the endpoint asks the table before the solo runner. |
+| B.4 | Host force-advance | `POST /api/table/force-advance {seatId}`. Takes a legal action from the pilots' own enumerator, prefers a required draw or acknowledgement, journals every use to `force-advance.ndjson`. Host-only — a test asserts it is absent from the guest route table. |
+| B.5 | Pre-flight doctor | `node game/tools/doctor.mjs` and `GET /api/doctor`. The launcher will not report "Ready to play" over a blocking problem. Distinguishes fail / warn / **skip**, because a skipped check is not evidence that anything passed. |
+
+Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven against fixtures, not against Forge** — see §12.
 
 ### Track C — Readiness and launch (spec 4–7)
 
@@ -232,8 +234,8 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 ## 9. Sequencing
 
 ```
-Track A          →  DONE. Trees converged, pins aligned, invite bug fixed, 87 suites green.
-Before playing   →  Track B
+Track A          →  DONE. Trees converged, pins aligned, invite bug fixed.
+Track B          →  DONE against fixtures. Needs the §12 live pass before the next game.
 Next             →  Track C, then E.1–E.2 (small, high relief)
 Then             →  Track D, Track E
 Continuous       →  Track F  (F.1 is the one that stops the bleeding)
@@ -248,13 +250,59 @@ Continuous       →  Track F  (F.1 is the one that stops the bleeding)
 5. Unresolvable Forge cards, disconnected seats and unvalidated decks are **blockers**, never warnings.
 6. A capability claim in `game/docs/` ships with the command that proves it, or it does not ship.
 
-## 11. Game-day fallback, until Track B lands
+## 11. Game-day fallback
 
-Track A fixed the invitation failure and the stale pins, so the guest path should now work end to end. Still outstanding until Track B:
+Tracks A and B closed the invitation failure, the unverifiable decks, the dead Force Prompt and the missing unstick. What is still open at the table:
 
-- Prefer preloaded / library decks for every seat; they come from the local catalog with known-good cards.
-- Avoid double-faced cards and accented names in guest decks — those are exactly the D1 misses, and nothing yet blocks a deck that Forge cannot load.
-- **Prompt AI will fail** on a multi-human table (D4). Working levers: `Yield through this turn`, then `Game setup → End current game`.
-- No clean unstick exists (D5). End the game keeping the journal, then restart the table.
-- Before inviting anyone: start the host and run one **solo** table to turn 2 to confirm Forge and the bridge are alive on that boot.
-- Re-test the guest join once on a clean browser before the real game. The fix is covered by a contract test, not by a live round trip.
+- **Rematch deadlocks** on a single "No" or one person who walks away (D7, Track E.1). Until that lands, end the table and open a new one rather than waiting on the vote.
+- **No visible first-player roll** (D9) — Forge decides silently.
+- **Countdown is 5s and Forge starts after it** (D3), so expect a wait between the countdown ending and the board appearing, with no progress shown.
+- Guests cannot pick a host library deck (D10); the paste parser still only accepts Moxfield two-column (Track E.5).
+
+## 12. Verify it live — the run-book for a local session
+
+Everything in Track B is proven against fixtures. Fixtures cannot tell you whether *this* Forge checkout resolves *these* decks, and that gap is exactly where this project has been over-trusting green tests. Run this on the host, in order. It takes about fifteen minutes and needs no game.
+
+**1 — The suites, on the real machine.**
+
+```powershell
+cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+bash runtests.sh -q
+```
+
+Expect `90 suites passed.` and exit 0. On Windows the `browser-geometry` and `page-budget` suites may fail at a Unix-oriented Playwright import before any assertion — that is a known checkout artefact, not a regression. Anything else red, stop and send it.
+
+**2 — The doctor, which is the whole point of B.5.**
+
+```powershell
+node game/tools/doctor.mjs
+```
+
+Expect every line `ok`, except `Local host` as `warn` if the host is not running yet. **The line that matters is `Forge card database`** — it should report tens of thousands of card scripts. If it reports a failure, the Forge checkout is not where the app expects it; set `CRANKMAGIC_FORGE_ROOT` and re-run.
+
+**3 — Prove the resolver against the real card database.** This is the single most valuable check, because it is the one no fixture can stand in for:
+
+```powershell
+node -e "const{buildForgeCardIndex}=await import('./game/contracts/forge-card-index.mjs');const i=buildForgeCardIndex(process.env.CRANKMAGIC_FORGE_ROOT||'../forge');console.log(i.scripts+' scripts, '+i.names+' names');for(const n of ['Sol Ring','Malakir Rebirth // Malakir Mire',\"Lim-D\u00fbl's Vault\",'\u00c6therize','J\u00f6tun Grunt','Fire // Ice','Boseiju, Who Endures'])console.log((i.resolve(n)?'OK  ':'MISS')+'  '+n)" --input-type=module
+```
+
+Every line should read `OK`. A `MISS` means Forge names that card differently than expected and the ladder needs another rung — send the output.
+
+**4 — Prove the gate blocks.** Start the host, open Game setup, and try to prepare a deck containing a card Forge does not have (any invented name in a pasted list will do). Expect a refusal naming the card, **before** Ready Up becomes available. Previously this passed preparation and failed at engine load.
+
+**5 — A solo table to turn 3.** One human, three AI. Confirms Forge launches, the bridge is green, and the decks the doctor blessed actually load.
+
+**6 — The guest path, on a clean browser.** Set up two humans, Email Invite yourself, then **press Start** — the sequence that used to void the link — and open the emailed link in a browser with no history for the site. Expect the seat lobby, not an expiry. This is the Track A fix and it is the one that most needs a live pass, because a contract test proved the invariant, not the round trip.
+
+**7 — The two new host levers, during that game.** With an API-piloted AI seat, press **Prompt AI** (expect a response, not "no AI is running"), and call force-advance on a seat sitting on a decision:
+
+```powershell
+$t=(Invoke-RestMethod http://127.0.0.1:8768/api/setup).token
+Invoke-RestMethod -Method Post http://127.0.0.1:8768/api/table/force-advance -Headers @{'X-Commander-Token'=$t;'Origin'='http://127.0.0.1:8768'} -ContentType 'application/json' -Body '{"seatId":1}'
+```
+
+Expect `ok:true` with the label of the action taken, and a line appended to `force-advance.ndjson` beside the match journal.
+
+**What to send back:** the doctor output, step 3's list, and anything red. Steps 4, 6 and 7 are pass/fail by eye.
+
+Once step 6 passes live, the remaining game-day risk is §11 — and none of it stops a game starting.
