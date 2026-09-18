@@ -289,6 +289,12 @@
     document.addEventListener("click", (event) => {
       const target = event.target.closest("[data-tooltip]");
       if (!target) return hideInfoTooltip();
+      if (target.classList.contains("live-score-metric")) {
+        event.preventDefault();
+        event.stopPropagation();
+        activeTooltipTarget === target ? hideInfoTooltip() : showInfoTooltip(target);
+        return;
+      }
       const tappedHint = Boolean(event.target.closest(".tip-hint"));
       if (target.classList.contains("tip-action") && !tappedHint) return;
       if (!finePointer() || tappedHint) {
@@ -559,7 +565,20 @@
     $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
     decorateRichContent($("#detail-sheet-body"), variant);
     organizeVariantDetail($("#detail-sheet-body"), variant);
+    const hasCommanderInfo = Boolean($("#detail-sheet-context").children.length);
+    configureCommanderInfo(hasCommanderInfo, hasCommanderInfo && !window.matchMedia("(max-width: 620px)").matches);
     dialog.showModal();
+  }
+
+  function configureCommanderInfo(available, expanded = true) {
+    const aside = $(".detail-sheet-aside");
+    const context = $("#detail-sheet-context");
+    const toggle = $("#detail-commander-toggle");
+    toggle.hidden = !available;
+    toggle.setAttribute("aria-expanded", String(Boolean(available && expanded)));
+    context.hidden = !available || !expanded;
+    aside.classList.toggle("has-commander-info", available);
+    aside.classList.toggle("is-commander-expanded", Boolean(available && expanded));
   }
 
   function detailSectionByHeading(root, pattern) {
@@ -834,10 +853,10 @@
     const readyCount = selected.filter((variant) => buyCatalog.plans[variant.id]).length;
     if (!selected.some((variant) => variant.deckId === openBuyDeckId)) openBuyDeckId = selected[0]?.deckId || 1;
     root.innerHTML = `
-      <div class="page-intro">
-        <div>
+      <div class="page-intro buy-page-intro">
+        <div class="buy-intro-copy">
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>Every checked card counts toward the final deck. Enhance options preserve the role and stay at $15 or less; Maxxed options push capability to the legal bounds of Tier 3 / Bracket 3 — Upgraded regardless of price.</p>
+          <p>Checked cards define each final 100. Enhance stays at $15 or less; Maxxed pushes Tier 3 capability regardless of price.</p>
         </div>
         ${buyCheckedSummary(selected)}
       </div>
@@ -1550,6 +1569,7 @@
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "tuned" ? "Tuned" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
     $("#detail-sheet-title").textContent = item.name;
     $("#detail-sheet-context").innerHTML = "";
+    configureCommanderInfo(false);
     $("#detail-sheet-body").innerHTML = kind === "precon" ? `
       <div class="precon-facts">
         <div><span>Buy order</span><strong>#${esc(item.buyRank || plan?.buyRank || "—")} of 6</strong></div>
@@ -2335,7 +2355,12 @@
   }
 
   function liveScoreFamilyMarkup(label, scores) {
-    return `<span class="live-score-family"><b>${esc(label)}</b><span>${scores.map((score) => `<i title="${esc(score.description || score.label)}"><small>${esc(score.label)}</small><strong>${esc(score.score)}/5</strong>${score.extra ? `<em>${esc(score.extra)}</em>` : ""}</i>`).join("")}</span></span>`;
+    const familyCopy = {Playstyle: "How it feels at the table", Engine: "How reliably it runs", Growth: "Where upgrades still add value"}[label] || "Deck profile";
+    return `<span class="live-score-family is-${label.toLowerCase()}"><span class="live-score-family-head"><b>${esc(label)}</b><small>${esc(familyCopy)}</small></span><span class="live-score-metrics">${scores.map((score) => {
+      const value = Math.max(0, Math.min(5, Number(score.score) || 0));
+      const explanation = `${label} · ${score.label}: ${value}/5\n${score.description || "This score is specific to the selected deck and profile."}${score.extra ? `\nCurrent note: ${score.extra}` : ""}`;
+      return `<span class="live-score-metric info-tip" data-tooltip="${esc(explanation)}" tabindex="0" aria-describedby="info-tooltip" aria-label="${esc(`${score.label}: ${value} out of 5. Tap for explanation.`)}"><span><small>${esc(score.label)}</small><strong>${value}<em>/5</em></strong></span><i class="live-score-pips" aria-hidden="true">${[1,2,3,4,5].map((pip) => `<b class="${pip <= value ? "is-on" : ""}"></b>`).join("")}</i>${score.extra ? `<em>${esc(score.extra)}</em>` : ""}</span>`;
+    }).join("")}</span></span>`;
   }
 
   function activeLiveCards(cards) {
@@ -2425,7 +2450,8 @@
       card.bought ? `<em class="live-card-badge is-owned">${card.lineupActive ? "Available" : "Owned"}</em>` : ""
     ].join("");
     const glance = `${card.lineupActive ? "Active 100" : `Bench for ${card.lineupSlotName}`} · ${liveCardGlance(card)}`;
-    row.innerHTML = `<label class="live-lineup-radio" title="${card.lineupActive ? "Active in this deck's 100" : `Activate ${esc(card.name)} in the ${esc(card.lineupSlotName)} slot`}"><input type="radio" name="live-slot-${esc(variant.id)}-${esc(card.lineupSlotId)}" value="${esc(card.id)}" ${card.lineupActive ? "checked" : ""} ${card.isCommander || card.transferRecord ? "disabled" : ""} aria-label="Make ${esc(card.name)} active in this deck's 100"><span aria-hidden="true">✓</span></label><button type="button" class="live-card-main"><img src="${esc(card.image || cardMetadata[itemKey(card)]?.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span class="live-card-copy"><span class="live-card-title-line"><b title="${esc(card.name)}">${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</b>${badges}</span><small class="live-card-meta">${manaCostHtml(card.manaCost)}<span>${esc(card.typeLine || "Unclassified card")}</span></small><small class="live-card-glance" title="${esc(glance)}">${esc(glance)}</small></span></button><div class="live-card-status"><strong>${card.loanedTo ? card.loanBlocksSource ? `Loaned to ${esc(card.loanedTo)}` : card.lineupActive ? `Active copy available · another copy loaned to ${esc(card.loanedTo)}` : `Assigned to ${esc(card.loanedTo)}` : card.inSalvage ? "Salvage · inactive" : card.lineupActive ? card.bought ? "✓ Active · Bought" : `Active · To Buy · ${esc(location)}` : card.bought ? "Bench · Bought" : `Bench · ${esc(location)}`}</strong><small>Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>${card.bought ? "" : `<a href="${esc(card.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`)}" target="_blank" rel="noopener">TCGPlayer ↗</a>`}</div>`;
+    const stableImage = card.image || cardMetadata[itemKey(card)]?.image || "og.png";
+    row.innerHTML = `<label class="live-lineup-radio" title="${card.lineupActive ? "Active in this deck's 100" : `Activate ${esc(card.name)} in the ${esc(card.lineupSlotName)} slot`}"><input type="radio" name="live-slot-${esc(variant.id)}-${esc(card.lineupSlotId)}" value="${esc(card.id)}" ${card.lineupActive ? "checked" : ""} ${card.isCommander || card.transferRecord ? "disabled" : ""} aria-label="Make ${esc(card.name)} active in this deck's 100"><span aria-hidden="true">✓</span></label><button type="button" class="live-card-main"><img src="${esc(stableImage)}" alt="" loading="lazy" decoding="async"><span class="live-card-copy"><span class="live-card-title-line"><b title="${esc(card.name)}">${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</b>${badges}</span><small class="live-card-meta">${manaCostHtml(card.manaCost)}<span>${esc(card.typeLine || "Unclassified card")}</span></small><small class="live-card-glance" title="${esc(glance)}">${esc(glance)}</small></span></button><div class="live-card-status"><strong>${card.loanedTo ? card.loanBlocksSource ? `Loaned to ${esc(card.loanedTo)}` : card.lineupActive ? `Active copy available · another copy loaned to ${esc(card.loanedTo)}` : `Assigned to ${esc(card.loanedTo)}` : card.inSalvage ? "Salvage · inactive" : card.lineupActive ? card.bought ? "✓ Active · Bought" : `Active · To Buy · ${esc(location)}` : card.bought ? "Bench · Bought" : `Bench · ${esc(location)}`}</strong><small>Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>${card.bought ? "" : `<a href="${esc(card.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`)}" target="_blank" rel="noopener">TCGPlayer ↗</a>`}</div>`;
     const radio = $(".live-lineup-radio input", row);
     radio?.addEventListener("change", () => {
       if (!radio.checked || card.lineupActive) return;
@@ -2516,6 +2542,7 @@
     const root = $("#view-live");
     const variants = selectedVariants();
     const entries = buildLiveEntries();
+    ensureShopMetadata(entries.flatMap(({cards}) => cards));
     root.innerHTML = `<div class="page-intro"><div><h2 id="live-title">Live Decks</h2><p>Configure each active 100 with the lineup radios, see whether it is legal and physically ready, and use compatible owned cards or Salvage as temporary cover. Cards still needed are greyed out with floor-to-ceiling buying guidance.</p></div><div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div></div><div class="live-decks"></div>`;
     const host = $(".live-decks", root);
     if (!entries.length) {
@@ -2525,7 +2552,6 @@
       return;
     }
     entries.forEach(({variant, plan, cards}) => {
-      ensureShopMetadata(cards);
       const activeCards = activeLiveCards(cards);
       const compliance = evaluateDeckCompliance(plan, ensureBuyState(variant.id), activeCards);
       const readiness = liveDeckReadiness(plan, cards, compliance);
@@ -2776,7 +2802,8 @@
       shopMetadataPromise = null;
       if ($("#view-shop")?.classList.contains("is-active")) renderShop();
       if ($("#view-buy")?.classList.contains("is-active")) renderBuy();
-      if ($("#view-live")?.classList.contains("is-active")) renderLiveDecks();
+      // Keep Live Decks stable while background card metadata refreshes. The
+      // next deliberate view, lineup, or filter render consumes the new cache.
     })();
     return shopMetadataPromise;
   }
@@ -3034,6 +3061,10 @@
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
       $("#detail-sheet-close").addEventListener("click", () => $("#detail-sheet").close());
+      $("#detail-commander-toggle").addEventListener("click", () => {
+        const expanded = $("#detail-commander-toggle").getAttribute("aria-expanded") !== "true";
+        configureCommanderInfo(true, expanded);
+      });
       $("#detail-sheet").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
