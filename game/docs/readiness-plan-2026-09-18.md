@@ -62,25 +62,27 @@ Verified in the code, not taken from the handoff:
 
 ---
 
-## 4. New finding — the delivery layer, not the fix layer
+## 4. The guest invitation failure — root cause found and fixed
 
-**`tests/asset-versions.mjs` fails on this branch.** The repo's own suite, already wired into `runtests.sh`, run here for the first time:
+Rob was opening the emailed link in a **second browser with no cache history**, simulating a guest. That rules out the stale-asset theory this document carried in its first draft: a cold browser on the Cloudflare tunnel never touches the service worker, and never loads `crankmagic.html`. The real cause is in the lobby.
 
-```
-crankmagic.css      is requested as index.html→v=132 and crankmagic.html→v=115 and crankmagic-sw.js→v=115
-crankmagic-game.js  is requested as index.html→v=37  and crankmagic.html→v=3   and crankmagic-sw.js→v=3
-```
+**An invitation is sealed to the table id it was issued against** (`game/contracts/seat-access.mjs:22` — `v.tableId!==tableId` → `Invitation expired or unavailable`).
 
-`index.html` was bumped to the fixed lobby. `crankmagic.html` and the service worker's `SHELL` list (`crankmagic-sw.js:25-27`) were not. Consequences:
+`Email Invite` opens the private lobby itself when none is open (`ensureLiveInvite`, `crankmagic-game.js:1531`). `Start` then called `/api/prepare` + `/api/start` **unconditionally**, and `/api/start` does `tableRuntime?.close(); tableRuntime=createLocalTableRuntime(...)` — a brand new table with a fresh random `tableId` (`serve-review.mjs:165`). Nothing gated it: `allReadyForStart` returns `true` for human seats regardless (`crankmagic-game.js:1243`), so Start is pressable the moment the host and AI seats are ready.
 
-1. **`crankmagic.html` still boots `crankmagic-game.js?v=3`** — the pre-fix stub lobby, whose only invite builder is the legacy `#seat=` path (`crankmagic-game.js:36-37`, still present on the branch with a comment acknowledging it is dead for live guests).
-2. The service worker precaches `crankmagic-game.js?v=3`, and `SHELL_CACHE = keyFor('shell', SHELL)` derives its key from that unchanged list — so an installed worker never re-populates, and serves v=3 cache-first (line 71) on the public site.
+The sequence:
 
-**This is the strongest available explanation for "Trey still hitting expired/unavailable after the v=37 fix."** The fix was real; the delivery was not. Any entry through `crankmagic.html`, or through the Pages site with a warm service worker, runs the old lobby and mints dead `#seat=` links. The `Ctrl+F5` ritual in the handoff is the classic symptom of exactly this.
+1. Host clicks **Email Invite** → lobby opens as table **T1**, link `#table=T1&invite=…` is emailed.
+2. Host clicks **Start the game** → prepare + start again → T1 is closed, table **T2** is born.
+3. Guest opens the emailed link → T1 ≠ T2 → *"Invitation expired or unavailable."*
 
-Caveat, stated honestly: the local host serves `/app/` → `index.html` on `127.0.0.1:8768`, a different origin from Pages, so the service worker does not apply to the local host path. Confirm the entry point Rob actually used before treating this as settled. But it is cheap to fix, the repo's own test already catches it, and it is the same failure class as main's HOTFIX #258 — which this branch does not contain.
+A link that was valid minutes earlier, rejected on arrival, with nothing on either screen saying why — and the host's own UI copy tells him Start is what opens the private lobby, so pressing it is the expected move.
 
----
+**Fixed.** `Start` now reuses an open accepting lobby instead of preparing a second one, and `/api/start` refuses to replace a table that has invitations outstanding unless the caller asks explicitly. `game/tests/table-foundation.test.mjs` holds the invariant.
+
+### The stale asset pins were a real bug, just not this one
+
+`tests/asset-versions.mjs` did fail on the Personal-HP branch: `index.html` was bumped to `crankmagic-game.js?v=37` and `crankmagic.css?v=132` while `crankmagic.html` and the service worker's `SHELL` list stayed at `v=3` and `v=115`. That would have served the pre-fix lobby to anyone entering through `crankmagic.html` or through Pages with a warm service worker. It was not Rob's failure, and it is now fixed and green — but it is worth recording that the repo's own suite had it pinned the whole time and nobody ran it.
 
 ## 5. What survives untouched — re-verified on the branch
 
@@ -152,14 +154,14 @@ Trey already locked the right rules — UAT before prod, no stubs as ready, veri
 | # | Item | Claimed | **Verified** | ID |
 |---|---|---|---|---|
 | 1 | Bracket + GC cap same font | Fixed | Not re-checked (visual) | — |
-| 2 | Library = real Desktop `.dek` D1–D6 | Fixed | `/api/desktop-deks` **absent from the branch**; embedding not found | — |
+| 2 | Library = real Desktop `.dek` D1–D6 | Fixed | `/api/desktop-deks` **absent from the branch**; embedding not found. Needs Rob's call — see A.5. | — |
 | 3 | Save play style keeps Build path | Fixed | Not re-checked (visual) | — |
 | 4 | Commander typeahead | Fixed | Not re-checked (visual) | — |
 | 5 | Seat header alignment | Fixed | Not re-checked (visual) | — |
 | 6 | Save play style keeps commander | Fixed | Not re-checked (visual) | — |
 | 7 | GC strip + backfill, ≤3s notice, spinner | Claimed v=37 | **Present** — `finalizeBuiltSeat` + `cm-flame-spin`. Untested; basic-land backfill is a quality risk. | D8 |
 | 8 | Invite email hyperlink + instructions | Fixed | Present | — |
-| 9 | Guest link → seat lobby, fresh invite | **Trey still blocked** | `ensureLiveInvite` is correct. **The stale `crankmagic.html` / service-worker pins are the likely cause.** | §4 |
+| 9 | Guest link → seat lobby, fresh invite | **Trey still blocked** | **Root cause found and fixed.** `ensureLiveInvite` was correct; `Start` was minting a second table and voiding the emailed link. | §4 |
 
 Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the mandate was to verify the way he sees it. **Item 2 does not appear in the pushed branch**; either it was left out of the commit or it was never built.
 
@@ -167,15 +169,16 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 
 ## 8. The plan
 
-### Track A — Converge the trees (do first; everything else depends on it)
+### Track A — Converge the trees — **DONE**
 
-| ID | Work | Gate |
+| ID | Work | Result |
 |---|---|---|
-| A.1 | Merge `main` into the Personal-HP branch. 7 conflicting files, mostly docs. Brings HOTFIX #258 and Phase 1. Keep the branch's `gpt-5-mini`/`gpt-5`. | `./runtests.sh` green including `asset-versions` |
-| A.2 | Fix the asset pins: align `crankmagic.html` and `crankmagic-sw.js` SHELL to `game.js?v=37` / `css?v=132`. | `tests/asset-versions.mjs` passes; a warm-cache browser gets v=37 |
-| A.3 | Delete the legacy `#seat=` builder (`crankmagic-game.js:36-37`) so it cannot be reached. | No call path can mint a `#seat=`-only link |
-| A.4 | Add `game/tests/` to `runtests.sh`. | One command covers all 87 suites, non-zero exit on failure |
-| A.5 | Confirm or close self-test #2 (Desktop `.dek` library). | Library lists D1–D6 from disk, or the item is reopened |
+| A.1 | Merge `main` and the Personal-HP branch | Done. 4 conflicts resolved: `crankmagic-online.js` kept main's wrapper shape (which reaches the branch's intent without deleting the legacy view) and dropped its UTF-8 BOM, the source of the mojibake in the nav copy; `crankmagic.css` union; `index.html` took main's Phase 1 nav and the highest pin per asset. |
+| A.2 | Align the asset pins | Done. All entry points and the service worker agree; `crankmagic.css` and `crankmagic-online.js` took fresh numbers because their merged content matches neither side. `tests/asset-versions.mjs` passes — 94 assets, one version each. |
+| A.3 | Remove the legacy `#seat=` builder | Done. It had **zero callers** — already dead, and therefore never the cause of the invite failure. Removed as a trap. |
+| A.4 | `game/tests/` into `runtests.sh` | Done. **87 suites pass, exit 0.** Making it real surfaced two failures already present on `main`, both fixed: `README.md` had stopped naming three suites and its stated count had drifted, and `docs/data-inventory.md` no longer matched its generator. |
+| A.5 | Confirm or close self-test #2 | **Open.** `/api/desktop-deks` and the Desktop `.dek` embedding are absent from the pushed branch. Either the commit missed them or they were never built. Needs Rob's call. |
+| A.6 | **Fix the invitation-voiding Start** (found during A.3) | Done — see §4. |
 
 ### Track B — Ship before the next game
 
@@ -229,7 +232,7 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 ## 9. Sequencing
 
 ```
-Now              →  Track A  (converge; A.2 may be the guest-invite blocker)
+Track A          →  DONE. Trees converged, pins aligned, invite bug fixed, 87 suites green.
 Before playing   →  Track B
 Next             →  Track C, then E.1–E.2 (small, high relief)
 Then             →  Track D, Track E
@@ -247,9 +250,11 @@ Continuous       →  Track F  (F.1 is the one that stops the bleeding)
 
 ## 11. Game-day fallback, until Track B lands
 
-- Enter through `index.html` (`/app/#game`). **Do not use `crankmagic.html`** — it boots the v=3 stub lobby and mints dead invite links.
+Track A fixed the invitation failure and the stale pins, so the guest path should now work end to end. Still outstanding until Track B:
+
 - Prefer preloaded / library decks for every seat; they come from the local catalog with known-good cards.
-- Avoid double-faced cards and accented names in guest decks — those are exactly the D1 misses.
+- Avoid double-faced cards and accented names in guest decks — those are exactly the D1 misses, and nothing yet blocks a deck that Forge cannot load.
 - **Prompt AI will fail** on a multi-human table (D4). Working levers: `Yield through this turn`, then `Game setup → End current game`.
 - No clean unstick exists (D5). End the game keeping the journal, then restart the table.
 - Before inviting anyone: start the host and run one **solo** table to turn 2 to confirm Forge and the bridge are alive on that boot.
+- Re-test the guest join once on a clean browser before the real game. The fix is covered by a contract test, not by a live round trip.
