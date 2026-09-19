@@ -278,6 +278,16 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   eq(sect.commanders, [{name: "Krenko, Mob Boss", quantity: 1}], "a Commander section names the commander");
   eq(sect.cards, [{name: "Sol Ring", quantity: 1}, {name: "Mountain", quantity: 98}], "set codes, collector numbers, 1x and foil marks are stripped");
   eq(L.parsePaste(""), {commanders: [], cards: []});
+  /* A TEXTAREA HANDS OVER LINE FEEDS, NOT CARRIAGE RETURNS. The HTML spec normalizes a
+     textarea's value to LF, so every paste that ever reached this parser from the lobby's own
+     form arrived with "\n" between lines. The splitter read /\r?\r\n/ -- CRLF or CR CR LF, never
+     a bare LF -- so a whole paste read as one card name and "Nothing in that paste read as a
+     decklist" was the only answer the paste path could give. Pinned on the exact shape the
+     invitation email asks for. */
+  const lf = L.parsePaste("1 Chulane, Teller of Tales\n\n1 Sol Ring\n98 Forest");
+  eq(lf.commanders, [{name: "Chulane, Teller of Tales", quantity: 1}], "a paste with plain line feeds names its commander");
+  eq(lf.cards, [{name: "Sol Ring", quantity: 1}, {name: "Forest", quantity: 98}], "and reads every line");
+  eq(L.parsePaste("1 Sol Ring\r98 Forest").cards.length, 2, "and old-Mac carriage returns split too");
 
   /* a seat from a parsed list, with the catalog filling in what a paste cannot know */
   const ls = L.listSeat(parsed, {name: "Pasted", kind: "paste", exact});

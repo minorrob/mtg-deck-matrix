@@ -347,9 +347,13 @@
   /* One card a line, an optional quantity in front ("1", "1x"), an optional set code and
      collector number after, section headers (Commander, Deck, Sideboard...) honoured. With no
      Commander section, a list whose first line stands alone above a blank line names its
-     commander there -- the shape the invitation email asks for. */
+     commander there -- the shape the invitation email asks for.
+     ANY LINE ENDING SPLITS. A textarea hands over LF; a Windows file CRLF; an old export CR.
+     The splitter once read only CRLF, so a paste typed or pasted into the lobby's own form --
+     which the browser normalizes to LF -- came through as a single line, and the paste path
+     had never once produced a seat. */
   function parsePaste(input) {
-    const lines = String(input || "").split(/\r?\r\n/).map((x) => x.trim());
+    const lines = String(input || "").split(/\r\n|\r|\n/).map((x) => x.trim());
     const cards = [], commanders = [];
     let section = "";
     for (const line of lines) {
