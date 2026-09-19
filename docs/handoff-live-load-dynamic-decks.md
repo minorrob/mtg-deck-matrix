@@ -121,6 +121,68 @@ The skill file **must** be updated — it is the instruction sheet for the workb
 
 ---
 
+## 3.6 · The price rule — market is Scryfall's, the workbook's is what Trey paid
+
+**Stated by Trey directly, 2026-09-19. It is a domain rule, not a preference, and it
+is currently only half-implemented.**
+
+> The card price should always come from the Scryfall API. Sometimes the prices in the
+> spreadsheet will be the price I paid for it. Always use the price in the spreadsheet
+> as what I paid for the card, not as its market price, if the card is marked as owned.
+
+Two different numbers have been sharing one field. Keep them apart:
+
+| Number | Source of truth | Means |
+|---|---|---|
+| **Market price** | Scryfall, always | what the card costs to buy today |
+| **Paid** | the workbook's `$ Each`, for rows with `Own > 0` | what Trey actually spent |
+
+### What already obeys this (verified, leave alone)
+
+- `collection-model.js:105` states the rule in so many words: *"a price is the catalog's,
+  `paid` is per copy"*. `readiness()` accumulates `paid` and `marketValue` as **two separate
+  figures**, and lots carry `paidSource` ∈ `catalog | receipt | typed`. The model is already
+  built for this.
+- `tools/build-live-state.mjs` prices from the bundled catalog plus a Scryfall fetch and
+  records `priceSource`/`priceUpdated`. Market price there is Scryfall's.
+
+### What violated it, and is now fixed
+
+`tools/sim/lib.mjs:123` builds every list entry as `entry.item.price || meta.price`, so a
+price frozen in a buy plan beats the card record. `tools/sim/reprice.mjs` therefore
+republished stale quotes instead of re-pricing. Fixed in `6e3faa6` by pricing against the
+audited catalog — **in reprice.mjs, not in lib.mjs**, because that helper also feeds the
+measurement tools and a price a deck was measured at must not move under a published score.
+
+`lib.mjs:123` itself is untouched and still prefers the plan price for every other consumer.
+Check each one against the rule above before changing it; it is not automatically wrong,
+because "what this cost when bought" is a legitimate question.
+
+### What is NOT implemented — this is the gap to close
+
+**The workbook's `$ Each` never reaches the app as `paid` for owned cards.**
+
+- `tools/build-live-load.mjs:124` carries the price **only on the buy list**:
+  `cards.filter(c=>c.buy).map(c=>[c.name,c.buy,c.price])` — cards not yet owned.
+- In `data/live-load.json`, a buy row is `["Adarkar Wastes", 2, 0.4]` (name, qty, price)
+  but an owned row is `["Advanced Reconstruction", 1]` — **name and quantity only**. The
+  price is dropped.
+- So for every card Trey owns, what he paid is thrown away at import, even though
+  `collection-model.js` has `paid` and `paidSource: 'typed'` waiting for it.
+
+Closing it means carrying `$ Each` through for rows with `Own > 0` and landing it on the
+lot as `paid` with `paidSource: 'typed'` — **never** as the card's price. Market price stays
+Scryfall's.
+
+> **You will need Trey's live workbook.** `data/live-load.json` names it as
+> `Treys_MtG_Master_v13.xlsx`; the repo only carries up to `v3` under `data/source/`. The
+> cloud session could not regenerate the Live Load for this reason, which is part of why
+> this is handed off rather than done.
+
+This pairs naturally with the dynamic-deck work because both are changes to the same
+importer, and both need the workbook in hand. Confirm with Trey whether he wants them in
+one PR or two.
+
 ## 4 · The workbook side
 
 Trey maintains the Master workbook by hand, so the format doc has to move with the code.
@@ -187,4 +249,6 @@ Work in flight on `claude/data-refresh-2026-09-19` ([PR #272](https://github.com
 - [ ] `tests/live-load.mjs` no longer pins the literal `6`.
 - [ ] `.claude/skills/crankmagic-live-load-sync/SKILL.md` describes the dynamic format.
 - [ ] `bash runtests.sh -q` green, with no suite skipped or weakened.
+- [ ] The workbook's `$ Each` lands as `paid` (with `paidSource: 'typed'`) for rows with
+      `Own > 0`, and **never** as the card's market price, which stays Scryfall's (§3.6).
 - [ ] Draft PR opened, saying plainly what was proven and what was assumed.
