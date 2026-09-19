@@ -251,6 +251,409 @@
     };
   }
 
-  return {BRACKETS, bracketOf, DECK_SIZE, MIN_SEATS, MAX_SEATS, FAIR_BAND, BASIC, BASIC_FOR, COLOR_NAME,
-    seat, size, identity, capOf, gameChangers, gameChangerCount, validate, trim, trimRank, pod, seating, rng, table};
+  /* ================================================================== THE SCREEN'S ARITHMETIC (F.1)
+   * Everything below used to live in crankmagic-game.js, the file whose own header says it
+   * "spells nothing of its own". It grew to 2,200 lines holding seat mapping, deck resolution,
+   * the Game Changer strip and backfill, invite seat ids and the Start orchestration -- the
+   * exact places that kept regressing, and the one file with no suite. So they are here now,
+   * behind tests/crankmagic-lobby.mjs, and the screen calls them.
+   *
+   * THE RULE OF THIS SECTION: nothing here reads the DOM, localStorage or the network. Anything
+   * a function needs from the app (a card record by id, an exact-name catalog hit, the measured
+   * reports) is handed in as a plain function or array, so a Node suite can hand in stubs and
+   * the browser hands in C.card / C.catalog.exact. Where a function fills a row's cardId or
+   * typeLine in place, it says so -- that mutation is what the screen relied on.
+   */
+  const SLOT_COUNT = MAX_SEATS - 1;   /* opponents; the host is the fourth box */
+  const BASIC_BY_COLOR = {W: "Plains", U: "Island", B: "Swamp", R: "Mountain", G: "Forest"};
+  const BASIC_LOOSE = /^(plains|island|swamp|mountain|forest|wastes)$/i;
+  const noLookups = {card: () => null, exact: () => null};
+  const lookupsOf = (l) => ({card: (l && typeof l.card === "function") ? l.card : noLookups.card,
+    exact: (l && typeof l.exact === "function") ? l.exact : noLookups.exact});
+  const factsRow = (c, id) => ({name: (c && c.name) || id, cardId: id, gameChanger: !!(c && c.gameChanger),
+    colorIdentity: (c && c.colorIdentity) || [], typeLine: (c && c.typeLine) || "", edhrecRank: c && c.edhrecRank, price: c && c.price});
+
+  /* ------------------------------------------------------------------ a seat, from each source */
+  /* A library deck: the commanders and the main slots, each joined to its record through `card`.
+     `score` is {score, why} from measuredScore, or nothing. */
+  function libraryDeckSeat(deck, options) {
+    const o = options || {}, look = lookupsOf(o), commanderIds = new Set(deck.commanders || []);
+    const facts = (id) => factsRow(look.card(id), id);
+    const measured = o.score || {score: null, why: ""};
+    return seat({id: "seat:" + deck.id, name: deck.name, kind: "library", deckId: deck.id, you: !!o.you,
+      commanders: (deck.commanders || []).map(facts),
+      cards: (deck.slots || []).filter((r) => r.purpose === "main" && !commanderIds.has(r.cardId)).map((r) => Object.assign(facts(r.cardId), {quantity: r.quantity})),
+      score: measured.score, scoreWhy: measured.why});
+  }
+
+  /* A parsed list (from parsePaste or a link loader): rows are filled from `exact` by name, or
+     from the record the loader already attached as row.card. Commanders come from
+     parsed.commanders, or from rows flagged isCommander, or from names in parsed.commander. */
+  function listSeat(parsed, options) {
+    const o = options || {}, look = lookupsOf(o);
+    const fill = (row) => {
+      const facts = row.card || look.exact(row.name) || {};
+      return {name: row.name, quantity: row.quantity || 1, cardId: facts.id || "",
+        gameChanger: !!facts.gameChanger, colorIdentity: facts.colorIdentity || [],
+        typeLine: facts.typeLine || "", edhrecRank: facts.edhrecRank, price: facts.price};
+    };
+    const names = new Set((parsed.commander || []).map((x) => String(x).toLowerCase()));
+    const rows = parsed.cards || [];
+    const isCmd = (r) => r.isCommander || names.has(String(r.name).toLowerCase());
+    const commanders = (parsed.commanders || rows.filter(isCmd)).map(fill);
+    const cards = rows.filter((r) => !isCmd(r)).map(fill);
+    return seat({name: o.name || parsed.name || "Imported deck", kind: o.kind, url: o.url, you: !!o.you,
+      commanders, cards, score: null,
+      scoreWhy: "No measured score: the simulator has not played this list."});
+  }
+
+  /* A host catalog entry (what /api/setup lists): the commander by name through `exact`, and
+     either the rows the host sent or, when it sent none, ninety-nine basics split across the
+     commander's colours so the seat is at least a legal placeholder. */
+  function catalogMetaSeat(meta, options) {
+    const o = options || {}, look = lookupsOf(o);
+    const commanderName = String(meta.commander || "").trim();
+    if (!commanderName) throw Error("That host deck has no commander.");
+    const exact = look.exact(commanderName);
+    const colors = (exact && exact.colorIdentity) || [];
+    let commanders = [{name: commanderName, cardId: exact && exact.id, colorIdentity: colors.slice(), gameChanger: !!(exact && exact.gameChanger)}];
+    let cards = [];
+    if (Array.isArray(meta.rows) && meta.rows.length) {
+      const cmdSet = new Set([commanderName.toLowerCase()]);
+      (meta.commanders || []).forEach((c) => { const n = typeof c === "string" ? c : c.name; if (n) cmdSet.add(String(n).toLowerCase()); });
+      if (Array.isArray(meta.commanders) && meta.commanders.length) {
+        commanders = meta.commanders.map((c) => {
+          const n = typeof c === "string" ? c : c.name, hit = look.exact(n);
+          return {name: n, cardId: hit && hit.id, colorIdentity: (hit && hit.colorIdentity) || [], gameChanger: !!(hit && hit.gameChanger)};
+        }).filter((c) => c.name);
+      }
+      cards = meta.rows.map((r) => {
+        const name = typeof r === "string" ? r : r.name;
+        return {name, quantity: Number((r && r.quantity) || 1) || 1, basic: BASIC_LOOSE.test(name)};
+      }).filter((r) => r.name && !cmdSet.has(r.name.toLowerCase()));
+    } else {
+      const basicNames = colors.length ? colors.map((c) => BASIC_BY_COLOR[c]).filter(Boolean) : ["Wastes"];
+      let left = DECK_SIZE - 1;
+      basicNames.forEach((name, i) => {
+        const quantity = i === basicNames.length - 1 ? left : Math.floor((DECK_SIZE - 1) / basicNames.length);
+        left -= quantity;
+        if (quantity > 0) cards.push({name, quantity, basic: true});
+      });
+    }
+    return seat({id: "seat:" + meta.id, name: meta.name || commanderName, kind: "library", deckId: meta.id, you: !!o.you, commanders, cards});
+  }
+
+  /* ------------------------------------------------------------------ a pasted list */
+  /* One card a line, an optional quantity in front ("1", "1x"), an optional set code and
+     collector number after, section headers (Commander, Deck, Sideboard...) honoured. With no
+     Commander section, a list whose first line stands alone above a blank line names its
+     commander there -- the shape the invitation email asks for. */
+  function parsePaste(input) {
+    const lines = String(input || "").split(/\r?\r\n/).map((x) => x.trim());
+    const cards = [], commanders = [];
+    let section = "";
+    for (const line of lines) {
+      if (!line) { section = ""; continue; }
+      const header = /^(commander|deck|maindeck|mainboard|sideboard|companion)s?\b[:\s]*$/i.exec(line);
+      if (header) { section = header[1].toLowerCase(); continue; }
+      const m = /^(?:(\d+)\s*[xX]?\s+)?(.+?)\s*(?:\([^)]*\)\s*[\w-]*)?$/.exec(line);
+      if (!m) continue;
+      const row = {name: m[2].replace(/\s*\*[^*]*\*\s*$/, "").trim(), quantity: Number(m[1] || 1)};
+      if (!row.name || /^\d+$/.test(row.name)) continue;
+      if (section === "commander") commanders.push(row); else cards.push(row);
+    }
+    if (!commanders.length && cards.length > 1 && lines[0] && !lines[1]) commanders.push(cards.shift());
+    return {commanders, cards};
+  }
+
+  /* ------------------------------------------------------------------ make it seatable */
+  /* THE STRIP AND BACKFILL (self-test #7). A built or pasted list that the table refuses is not
+     handed back as a refusal: Game Changers over the cap go (trim first, then by name), cards
+     outside the colour identity go, duplicates of non-basics drop to one, anything over a hundred
+     is cut from the end, and anything under is filled with the commander's first-colour basic.
+     Twelve passes, then a last resort that strips every Game Changer. The seat object is worked
+     on in place, as the screen always did. `says` is the notice the screen shows, `adjusted`
+     whether it changed anything, `lastResort` whether the twelve passes were not enough. */
+  const sizeLoose = (s) => (s.commanders || []).length + (s.cards || []).reduce((n, c) => n + (Number(c.quantity) || 1), 0);
+  function conform(s, options) {
+    const opts = options || {};
+    let adjusted = false;
+    const done = (says, lastResort) => ({seat: s, adjusted, says, lastResort: !!lastResort});
+    for (let guard = 0; guard < 12; guard += 1) {
+      let check = validate(s, opts);
+      if (check.ok) return done(adjusted ? "Seated a legal 100 (trimmed Game Changers / illegal cards)." : "");
+      adjusted = true;
+      const blocking = (check.issues || []).filter((i) => i.severity === "blocking");
+      if (blocking.some((i) => i.code === "gameChangers")) {
+        try { const trimmed = trim(s, opts); if (trimmed && trimmed.seat) s = trimmed.seat; } catch (_) { /* manual strip below */ }
+      }
+      check = validate(s, opts);
+      if (check.ok) return done("Seated a legal 100 (trimmed Game Changers / illegal cards).");
+      const issues = (check.issues || []).filter((i) => i.severity === "blocking");
+      const gcIssue = issues.find((i) => i.code === "gameChangers");
+      if (gcIssue) {
+        const ban = new Set((gcIssue.cards || []).map((n) => String(n).toLowerCase()));
+        if (ban.size) s.cards = (s.cards || []).filter((c) => !ban.has(String(c.name || "").toLowerCase()));
+        else { const hit = (s.cards || []).find((c) => c.gameChanger); if (hit) s.cards = (s.cards || []).filter((c) => c !== hit); else break; }
+      }
+      const identityIssue = issues.find((i) => i.code === "identity");
+      if (identityIssue && Array.isArray(identityIssue.cards) && identityIssue.cards.length) {
+        const ban = new Set(identityIssue.cards.map((n) => String(n).toLowerCase()));
+        s.cards = (s.cards || []).filter((c) => !ban.has(String(c.name || "").toLowerCase()));
+      }
+      const dupIssue = issues.find((i) => i.code === "duplicates");
+      if (dupIssue && Array.isArray(dupIssue.cards) && dupIssue.cards.length) {
+        const ban = new Set(dupIssue.cards.map((n) => String(n).toLowerCase()));
+        s.cards = (s.cards || []).map((c) => (!ban.has(String(c.name || "").toLowerCase()) || c.basic) ? c : Object.assign({}, c, {quantity: 1}));
+      }
+      let total = sizeLoose(s);
+      while (total > DECK_SIZE && s.cards && s.cards.length) {
+        const last = s.cards[s.cards.length - 1];
+        if ((Number(last.quantity) || 1) > 1) { last.quantity -= 1; total -= 1; } else { s.cards.pop(); total -= 1; }
+      }
+      if (total < DECK_SIZE) {
+        const colors = new Set();
+        (s.commanders || []).forEach((c) => (c.colorIdentity || []).forEach((x) => colors.add(x)));
+        const basic = [...colors].map((c) => BASIC_BY_COLOR[c]).filter(Boolean)[0] || "Wastes";
+        const need = DECK_SIZE - total;
+        const existing = (s.cards || []).find((c) => String(c.name).toLowerCase() === basic.toLowerCase());
+        if (existing) existing.quantity = (Number(existing.quantity) || 0) + need;
+        else (s.cards || (s.cards = [])).push({name: basic, quantity: need, basic: true, gameChanger: false});
+      }
+    }
+    s.cards = (s.cards || []).filter((c) => !c.gameChanger);
+    const total = sizeLoose(s);
+    if (total < DECK_SIZE) {
+      const need = DECK_SIZE - total;
+      const existing = (s.cards || []).find((c) => BASIC_LOOSE.test(c.name));
+      if (existing) existing.quantity = (Number(existing.quantity) || 0) + need;
+      else (s.cards || (s.cards = [])).push({name: "Wastes", quantity: need, basic: true});
+    }
+    return done("Seated a legal 100 after removing Game Changers over the table cap.", true);
+  }
+
+  /* ------------------------------------------------------------------ names against the catalog */
+  /* Fills typeLine and cardId in place on every row that lacks them, through `card` then `exact`. */
+  function enrich(s, lookups) {
+    const look = lookupsOf(lookups);
+    for (const row of [].concat(s.commanders || []).concat(s.cards || [])) {
+      if (row.typeLine) continue;
+      let c = row.cardId ? look.card(row.cardId) : null;
+      if (!c && row.name) c = look.exact(row.name);
+      if (!c) continue;
+      if (!row.cardId && c.id) row.cardId = c.id;
+      if (c.typeLine) row.typeLine = c.typeLine;
+    }
+    return s;
+  }
+
+  /* The names nothing can answer, each once. A row whose name resolves gets its cardId filled. */
+  function unresolved(s, lookups) {
+    const look = lookupsOf(lookups), unknown = [], seen = new Set();
+    for (const row of [].concat(s.commanders || []).concat(s.cards || [])) {
+      const name = String(row.name || "").trim();
+      if (!name) continue;
+      const id = row.cardId || "";
+      const known = id && look.card(id);
+      const exact = known || look.exact(name);
+      if (exact) { if (!row.cardId && exact.id) row.cardId = exact.id; continue; }
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unknown.push(name);
+    }
+    return unknown;
+  }
+
+  /* Ready Up's own gate, before the table's: near enough a hundred, and every name known. */
+  function mapped(s, lookups) {
+    const total = sizeLoose(s);
+    if (total < 90) return {ok: false, why: `Deck has ${total} cards; map a full ~100 before Ready.`, unknown: []};
+    const unknown = unresolved(s, lookups);
+    if (unknown.length) return {ok: false, why: `${unknown.length} name${unknown.length === 1 ? "" : "s"} not in catalog (e.g. ${unknown[0]}). Fix before Ready.`, unknown};
+    return {ok: true, why: "", unknown: []};
+  }
+
+  /* The type bar: [label, count, colour] for every bucket with a card in it. Fills typeLine and
+     cardId in place where the catalog can answer, as enrich does. */
+  const TYPE_BUCKETS = [["Creature", "#6dbf6d"], ["Instant", "#6aa8ff"], ["Sorcery", "#ff8a5c"], ["Artifact", "#c0c0c0"],
+    ["Enchantment", "#e0a0ff"], ["Planeswalker", "#ff6ad5"], ["Land", "#c4a35a"], ["Other", "#8899aa"]];
+  function typeCounts(s, lookups) {
+    const look = lookupsOf(lookups), buckets = TYPE_BUCKETS.map(([n, colour]) => [n, 0, colour]);
+    for (const row of [].concat(s.commanders || []).concat(s.cards || [])) {
+      const quantity = Number(row.quantity) || 1;
+      let tl = row.typeLine || "";
+      if (!tl && row.cardId) tl = (look.card(row.cardId) || {}).typeLine || "";
+      if (!tl && row.name) {
+        const hit = look.exact(row.name);
+        if (hit) { tl = hit.typeLine || ""; if (!row.cardId && hit.id) row.cardId = hit.id; if (tl) row.typeLine = tl; }
+      }
+      const t = String(tl).toLowerCase();
+      const hit = /\bland\b/.test(t) ? "Land" : /\bcreature\b/.test(t) ? "Creature" : /\binstant\b/.test(t) ? "Instant"
+        : /\bsorcery\b/.test(t) ? "Sorcery" : /\bartifact\b/.test(t) ? "Artifact" : /\benchantment\b/.test(t) ? "Enchantment"
+        : /\bplaneswalker\b/.test(t) ? "Planeswalker" : "Other";
+      buckets.find((x) => x[0] === hit)[1] += quantity;
+    }
+    return buckets.filter((b) => b[1] > 0);
+  }
+
+  /* ------------------------------------------------------------------ the measured score */
+  /* The latest measured report for this deck, preferring one measured on this exact list.
+     `fingerprint(deck)` is the model's own, handed in. */
+  function measuredScore(deck, reports, fingerprint) {
+    const runs = (reports || []).filter((r) => r.deckId === deck.id && r.origin === "measured");
+    if (!runs.length) return {score: null, why: ""};
+    const fp = typeof fingerprint === "function" ? fingerprint(deck) : null;
+    const current = fp === null ? [] : runs.filter((r) => r.deckFingerprint === fp);
+    const run = (current.length ? current : runs).slice(-1)[0];
+    const score = run.metrics && Number.isFinite(Number(run.metrics.score)) ? Number(run.metrics.score) : null;
+    if (score === null) return {score: null, why: ""};
+    const se = run.metrics.scoreStandardError;
+    return {score: Math.round(score * 10) / 10,
+      why: `${current.length ? "Measured on this list" : "Measured on an earlier list"}${se ? ` (±${se})` : ""}, ${run.protocol || "the published protocol"}.`};
+  }
+
+  function rulesSummary(bracket, cap) {
+    const gc = cap === "" || cap === undefined || cap === null
+      ? (bracket.gameChangers === Infinity ? "no Game Changer limit" : `${bracket.gameChangers} Game Changer${bracket.gameChangers === 1 ? "" : "s"}`)
+      : (Number(cap) === 0 ? "0 Game Changers" : `${Number(cap)} Game Changer${Number(cap) === 1 ? "" : "s"}`);
+    return `Bracket ${bracket.n} · ${bracket.name}. Cap: ${gc}. Same rules for every seat.`;
+  }
+
+  /* ------------------------------------------------------------------ the lobby's saved shape */
+  /* What the screen keeps between visits: the host's seat, three opponent boxes each Human, AI
+     or unused, the bracket and cap, and whether the rules were confirmed. `lobbyState` takes
+     whatever was saved -- including the legacy {seats: []} shape -- and returns this shape. */
+  const emptyOpponent = () => ({role: "unused", ready: false, seat: null, guestName: "", guestEmail: "", inviteId: ""});
+  const emptyLobby = () => ({bracket: 3, cap: "", host: null, hostBuildDef: null,
+    opponents: Array.from({length: SLOT_COUNT}, emptyOpponent), rulesConfirmed: null});
+  function lobbyState(raw) {
+    if (!raw || typeof raw !== "object") return emptyLobby();
+    if (Array.isArray(raw.seats)) {
+      const next = emptyLobby();
+      next.bracket = Number(raw.bracket) || 3;
+      next.cap = raw.cap === undefined ? "" : raw.cap;
+      const you = raw.seats.find((x) => x.you) || null;
+      if (you) next.host = {seat: you, ready: !!you.ready};
+      raw.seats.filter((x) => !x.you).slice(0, SLOT_COUNT).forEach((s, i) => {
+        next.opponents[i] = {role: s.kind === "generated" ? "ai" : "human", ready: !!s.ready, seat: s};
+      });
+      return next;
+    }
+    const opponents = Array.isArray(raw.opponents)
+      ? raw.opponents.slice(0, SLOT_COUNT).map((o) => ({
+          role: ["unused", "human", "ai"].includes(o.role) ? o.role : "unused", ready: !!o.ready, seat: o.seat || null,
+          guestName: String(o.guestName || ""), guestEmail: String(o.guestEmail || ""), inviteId: String(o.inviteId || ""),
+          buildDef: o.buildDef || null}))
+      : Array.from({length: SLOT_COUNT}, emptyOpponent);
+    while (opponents.length < SLOT_COUNT) opponents.push(emptyOpponent());
+    return {bracket: Number(raw.bracket) || 3, cap: raw.cap === undefined ? "" : raw.cap,
+      host: raw.host && raw.host.seat ? {seat: raw.host.seat, ready: !!raw.host.ready} : null,
+      hostBuildDef: raw.hostBuildDef || null, opponents, rulesConfirmed: raw.rulesConfirmed || null};
+  }
+
+  /* The seats that are actually at the table: the host first (marked `you`), then every
+     opponent box that has a role and a deck, each carrying its ready flag and role. */
+  function activeSeats(lobby) {
+    const out = [];
+    if (lobby.host && lobby.host.seat) out.push(Object.assign({}, lobby.host.seat, {you: true, ready: !!lobby.host.ready}));
+    (lobby.opponents || []).forEach((opp) => {
+      if (!opp || opp.role === "unused" || !opp.seat) return;
+      out.push(Object.assign({}, opp.seat, {you: false, ready: !!opp.ready, role: opp.role}));
+    });
+    return out;
+  }
+
+  /* SERVER SEAT IDS. The host is seat 0 and the human guests take 1, 2, 3 in box order, because
+     the host's validateSetup wants humans packed before AIs. This map is what an invitation is
+     minted against, so it is the one place that arithmetic lives. */
+  function seatIds(opponents) {
+    const map = new Map();
+    let next = 1;
+    (opponents || []).forEach((opp, i) => { if (opp && opp.role === "human") map.set(i, next++); });
+    return map;
+  }
+
+  /* Start's gate: the table's own verdict, the host ready, and every AI seat decked and ready.
+     Human guests are never readied by the host -- they bring their deck on the guest gateway. */
+  function startReady(t, lobby) {
+    if (!t || !t.ready) return false;
+    if (!lobby.host || !lobby.host.ready) return false;
+    return (lobby.opponents || []).every((o) => {
+      if (!o || o.role === "unused") return true;
+      if (o.role === "human") return true;
+      return !!(o.seat && o.ready);
+    });
+  }
+
+  /* An open table that is still taking guests: preparing another would mint a new table id and
+     void every invitation already sent (the bug of 18 September). */
+  const tableAccepting = (open) => !!(open && open.table && ["selecting", "rematch"].includes(open.table.phase));
+
+  /* ------------------------------------------------------------------ the prepare request */
+  /* A seat the host can serve from its own library by id: live and archive ids only. A draft
+     UUID (deck:<uuid>) must go through import-deck like a paste. */
+  function libraryKind(s) {
+    const k = String((s && s.kind) || "").toLowerCase();
+    if (k === "generated" || k === "paste") return false;
+    const id = String((s && s.deckId) || "");
+    if (!(id.startsWith("deck:live:") || id.startsWith("archive:"))) return false;
+    return k === "library" || k === "preloaded";
+  }
+
+  /* One seat of the /api/prepare body. Returns {request} when the host can serve the deck
+     itself, or {request, handoff} when the seated list must first be sent to /api/import-deck;
+     the caller fills request.deckId (and commander) from what import returns. Pure: the
+     network call is the caller's. */
+  function prepareSeat(s, seatId, kind, options) {
+    const o = options || {};
+    const commanders = (s.commanders || []).map((c) => (typeof c === "string" ? c : c.name)).filter(Boolean);
+    const commander = commanders[0] || "";
+    const name = String(s.name || commander || ("Seat " + (seatId + 1))).slice(0, 100);
+    const request = {seatId, kind, name, commanderMode: "selected", commander};
+    if (kind === "ai") { request.nativeProfile = "Default"; request.difficulty = 3; }
+    if (kind === "human" && seatId > 0 && (s.guestPlaceholder || (!(s.cards && s.cards.length) && !s.deckId))) {
+      return {request: Object.assign(request, {source: "preloaded", deckId: "", commander: "", commanderMode: "selected"})};
+    }
+    if (s.deckId && libraryKind(s)) return {request: Object.assign(request, {source: "library", deckId: s.deckId})};
+    const cap = Number(o.maxCost) || Number(o.budget) || 225;
+    const liveHit = (o.catalogDecks || []).find((d) => d && String(d.id || "").startsWith("deck:live:")
+      && d.commander === commander && d.ok !== false && (d.cost == null || Number(d.cost) <= cap));
+    if (liveHit) return {request: Object.assign(request, {source: "library", deckId: liveHit.id, commander: liveHit.commander || commander})};
+    const rows = (s.cards || []).map((c) => ({name: typeof c === "string" ? c : c.name, quantity: Number((c && c.quantity) || 1) || 1})).filter((r) => r.name);
+    const total = commanders.length + rows.reduce((n, r) => n + r.quantity, 0);
+    if (total !== DECK_SIZE) throw new Error(name + ": seat list must total 100 with commanders (have " + total + ").");
+    const handoff = {schema: "CrankMagicDeckHandoff@1", name, commanders, rows};
+    if (s.deckId) handoff.sourceDeckId = s.deckId;
+    return {request: Object.assign(request, {source: "library", deckId: ""}), handoff, commander};
+  }
+
+  /* The seats in the order the host wants them -- host, then human guests, then AIs -- with the
+     counts the prepare body carries. A human box with no deck yet is a placeholder the guest
+     fills on the gateway; an AI box with no deck is an error, as is an empty host seat. */
+  function prepareOrder(lobby, options) {
+    const o = options || {}, humanOpps = [], aiOpps = [];
+    (lobby.opponents || []).forEach((opp, idx) => {
+      if (!opp || opp.role === "unused") return;
+      if (opp.role === "human") {
+        humanOpps.push(opp.seat || {name: String(opp.guestName || ("Friend " + (idx + 2))).slice(0, 100), commanders: [], cards: [], kind: "human", guestPlaceholder: true});
+      } else if (opp.role === "ai") {
+        if (!opp.seat) throw new Error("Seat an AI deck before opening the guest lobby.");
+        aiOpps.push(opp.seat);
+      }
+    });
+    if (!lobby.host || !lobby.host.seat) throw new Error("Host seat is empty — seat your deck before inviting guests.");
+    const maxCost = Number(lobby.maxCost) || Number(o.budget) || 225;
+    return {
+      humans: 1 + humanOpps.length, ais: aiOpps.length, maxCost,
+      bracket: Number(lobby.bracket) || Number(o.defaultBracket) || 3,
+      ordered: [{seat: lobby.host.seat, kind: "human"}, ...humanOpps.map((s) => ({seat: s, kind: "human"})), ...aiOpps.map((s) => ({seat: s, kind: "ai"}))],
+    };
+  }
+
+  return {BRACKETS, bracketOf, DECK_SIZE, MIN_SEATS, MAX_SEATS, SLOT_COUNT, FAIR_BAND, BASIC, BASIC_FOR, COLOR_NAME,
+    seat, size, identity, capOf, gameChangers, gameChangerCount, validate, trim, trimRank, pod, seating, rng, table,
+    libraryDeckSeat, listSeat, catalogMetaSeat, parsePaste, conform, enrich, unresolved, mapped, typeCounts,
+    measuredScore, rulesSummary, emptyOpponent, emptyLobby, lobbyState, activeSeats, seatIds, startReady,
+    tableAccepting, libraryKind, prepareSeat, prepareOrder};
 });
