@@ -66,6 +66,27 @@ ok(summary.toBuy===37);
 {const short=doc();short.buy=[['Filler 3',1]];const out=L.build(short,{Model:M,lookup});ok(out.issues.some(x=>/still need/.test(x)));checks++;}
 eq(summary.readiness[0].deck,'Goblins');
 
+/* WHAT WAS PAID IS NOT WHAT THE CARD COSTS. doc.paid carries the workbook's $ Each for the
+   rows Trey owns -- the price he paid per copy -- and a market price is always the catalog's.
+   So it must land on OWNED copies and nowhere else: an ordered copy has not been paid for,
+   and a card with no figure gets none rather than $0, because missing data is not a free
+   card. Before this was wired the builder stamped every lot `paid: null` and the workbook's
+   figure was thrown away at import. */
+{
+  const d=doc();
+  d.paid={'Test Leader':3.5,'Filler 0':0.25,'Filler 1':1.75,'Filler 2':9.99,'Mountain':0.1};
+  const lots=L.build(d,{Model:M,lookup}).state.lots;
+  const ownedFor=id=>lots.filter(l=>l.cardId===id&&l.source==='owned');
+  ok(ownedFor(leader.id).length&&ownedFor(leader.id).every(l=>l.paid===3.5));
+  ok(ownedFor(mountain.id).length&&ownedFor(mountain.id).every(l=>l.paid===0.1));
+  ok(lots.filter(l=>Number.isFinite(l.paid)).every(l=>l.paidSource==='typed'&&l.paidAt));
+  /* Filler 2 is ORDERED, and it is in doc.paid on purpose: being listed is not enough. */
+  ok(lots.filter(l=>l.cardId===filler[2].id).every(l=>l.source!=='owned'&&l.paid===null));
+  ok(lots.every(l=>l.source==='owned'||l.paid===null));
+  /* Shiny Upgrade is owned but absent from doc.paid: no figure, not zero. */
+  ok(ownedFor(upgrade.id).length&&ownedFor(upgrade.id).every(l=>l.paid===null));
+}
+
 // The committed file: every name resolves offline, every deck finalizes, the buy list
 // agrees with the shortfalls the model derives. This is the check that guards a commit.
 const real=await buildFile();
@@ -75,6 +96,10 @@ eq(real.state.decks.length,6);ok(real.state.decks.every(d=>d.status==='final'));
 ok(real.state.decks.every(d=>d.definition.mechanics.length>=2));
 {const d3=real.state.decks.find(d=>/^D3/.test(d.name)),main=d3.slots.filter(r=>r.purpose==='main').map(r=>real.cardOf(r.cardId));ok(C.deckMechanics(main,real.cardOf(d3.commanders[0])).some(m=>/Proliferate|Counters/.test(m)));}
 eq(real.issues.length,0);
+/* The committed file carries what was paid too, on owned copies only. */
+{const realPaid=real.state.lots.filter(l=>Number.isFinite(l.paid));
+ ok(realPaid.length>500);
+ ok(realPaid.every(l=>l.source==='owned'&&l.paidSource==='typed'));}
 /* 71 upgrades: the Upgrade Path sheet's 67, plus the four swaps out of the bench that carry
    across a rebuild (origin:'owned-swap'). Those four cost nothing because Rob already owns the
    card, so the workbook — which is a list of things to buy — has no row for them. */

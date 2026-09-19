@@ -51,7 +51,15 @@ export const NEVER = ["data/live-load.json", "data/live-state.json", "data/deck-
 
 const read = (f) => readFileSync(path.join(ROOT, f), "utf8");
 const envelopeCount = (f) => { try { const d = JSON.parse(read(f)); return Number.isFinite(d.count) ? d.count : null; } catch (e) { return null; } };
-const git = (...a) => execFileSync("git", a, {cwd: ROOT, encoding: "utf8"}).trim();
+const gitOut = (...a) => execFileSync("git", a, {cwd: ROOT, encoding: "utf8"});
+const git = (...a) => gitOut(...a).trim();
+/* THE PATHS IN `git status --porcelain`, AND WHY THIS IS NOT INLINE. Each line is two status
+   columns then a space, so the path starts at 3. Trimming the whole block first eats the
+   leading space of the FIRST line only; slice(3) then cuts a character off that one path and
+   it silently stops looking like data/..., so the alphabetically first changed file gets no
+   ?v= bump and every browser holding it keeps the old copy. Pure, and exported, so a test
+   can hold the shape of real porcelain output against it. */
+export function statusPaths(out) { return out.split("\n").filter(Boolean).map((l) => l.slice(3)); }
 const sh = (cmd, {quiet = false} = {}) => {
   const r = spawnSync(cmd[0], cmd.slice(1), {cwd: ROOT, encoding: "utf8", stdio: quiet ? ["ignore", "pipe", "pipe"] : ["ignore", "inherit", "inherit"], maxBuffer: 64 * 1024 * 1024});
   return {ok: r.status === 0, out: (r.stdout || "") + (r.stderr || ""), status: r.status};
@@ -111,7 +119,7 @@ function main() {
     console.log(`Never touched: ${NEVER.join(", ")}.`);
     return 0;
   }
-  const dirtyBefore = git("status", "--porcelain").split("\n").filter(Boolean);
+  const dirtyBefore = statusPaths(gitOut("status", "--porcelain"));
   if (!flag("--check") && dirtyBefore.length) { console.error(`The working tree is not clean (${dirtyBefore.length} change${dirtyBefore.length === 1 ? "" : "s"}); commit or stash first so the refresh is one reviewable diff.`); process.exit(2); }
   const before = Object.fromEntries(steps.filter((s) => s.count).map((s) => [s.id, envelopeCount(s.count.file)]));
   if (!flag("--check")) {
@@ -121,11 +129,27 @@ function main() {
       for (const a of s.also || []) { console.log(`== ${s.id}: ${a.run.join(" ")}`); const q = sh(a.run); if (!q.ok) { console.error(`\n${s.id} failed on ${a.run.join(" ")} (exit ${q.status}).`); process.exit(1); } }
       if (s.count) { const now = envelopeCount(s.count.file), was = before[s.id]; if (s.count.mustNotShrink && was != null && now != null && now < was) { console.error(`\n${s.id}: ${s.count.file} shrank from ${was} to ${now}. A shrink means the query changed meaning; discard this run (git checkout -- ${s.count.file}) and look at the tool before running again.`); process.exit(1); } console.log(`   ${s.count.file}: ${was ?? "?"} → ${now ?? "?"}`); }
     }
-    const changedData = git("status", "--porcelain").split("\n").filter(Boolean).map((l) => l.slice(3)).filter((f) => f.startsWith("data/") && f.endsWith(".json") && (read("crankmagic-assets.js").includes(f + "?v=") || read("crankmagic-sw.js").includes(f + "?v=")));
+    const changedData = statusPaths(gitOut("status", "--porcelain")).filter((f) => f.startsWith("data/") && f.endsWith(".json") && (read("crankmagic-assets.js").includes(f + "?v=") || read("crankmagic-sw.js").includes(f + "?v=")));
     console.log(`\n== versions: ${changedData.length ? changedData.join(", ") : "no served data file changed, nothing to bump"}`);
     const b = bumpVersions(changedData); for (const line of b.report) console.log("   " + line);
     if (changedData.length) { const u = sh(["node", "tests/asset-versions.mjs", "--update"], {quiet: true}); if (!u.ok) { console.error(u.out); process.exit(1); } console.log("   tests/asset-versions.mjs --update recorded the hashes"); }
-    const touched = git("status", "--porcelain").split("\n").filter(Boolean).map((l) => l.slice(3));
+    /* THE MANIFEST IS RESTATED AFTER THE BUMP, NOT BEFORE. data/manifest.json records the
+       ?v= each served file is fetched under, and the bump above is what moves it, so the
+       manifest written by the manifest step is one version behind the moment anything
+       changes -- every run, deterministically. Re-running its writers here is the whole
+       repair: they are the same tools the step runs, and on a run that bumped nothing they
+       rewrite the same bytes. */
+    if (changedData.length) {
+      const manifest = steps.find((s2) => s2.id === "manifest");
+      if (manifest) {
+        for (const cmd of [manifest.run, ...(manifest.also || []).map((a) => a.run)]) {
+          const r = sh(cmd, {quiet: true});
+          if (!r.ok) { console.error(`\nrestating the manifest after the bump failed: ${cmd.join(" ")}\n${r.out}`); process.exit(1); }
+        }
+        console.log("   manifest restated after the bump: " + [manifest.run, ...(manifest.also || []).map((a) => a.run)].map((c) => c[1]).join(", "));
+      }
+    }
+    const touched = statusPaths(gitOut("status", "--porcelain"));
     const outside = touched.filter((f) => !ALLOWED.has(f)), never = touched.filter((f) => NEVER.some((n) => f === n || f.startsWith(n)));
     if (outside.length || never.length) { console.error(`\nThe run changed files a refresh may not touch: ${[...new Set([...outside, ...never])].join(", ")}. Nothing is committed; inspect them before going on.`); process.exit(1); }
   }
