@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import {existsSync, readFileSync} from "node:fs";
 import path from "node:path";
 import {ROOT, REGISTRY} from "../schema/index.mjs";
-import {STEPS, ALLOWED, NEVER, bumpText} from "../tools/refresh.mjs";
+import {STEPS, ALLOWED, NEVER, bumpText, statusPaths} from "../tools/refresh.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks++; };
@@ -48,6 +48,20 @@ ok(NEVER.includes("data/live-state.json") && NEVER.includes("data/deck-ratings.j
 eq(bumpText("a data/graph.json?v=17 b data/graph.json?v=17 c data/graph-played.json?v=2", "data/graph.json"), {out: "a data/graph.json?v=18 b data/graph.json?v=18 c data/graph-played.json?v=2", n: 2}, "bumps the file named and not its neighbour");
 eq(bumpText("x crankmagic-app.js?v=165 y", "crankmagic-app.js").out, "x crankmagic-app.js?v=166 y");
 eq(bumpText("nothing here", "data/cards.json").n, 0);
+
+/* THE PORCELAIN PATHS. Real `git status --porcelain` output: two status columns then a
+   space, so the FIRST line begins with a space for an unstaged change. The runner used to
+   .trim() the whole block before slicing at 3, which ate that one leading space and cut a
+   character off the first path only -- so the alphabetically first changed file stopped
+   looking like data/... and got no ?v= bump, and every browser holding it kept the old
+   copy. This is the case that catches it: card-facts sorts before cards. */
+const PORCELAIN = " M data/card-facts.json\n M data/cards.json\n M data/graph.json\n";
+eq(statusPaths(PORCELAIN), ["data/card-facts.json", "data/cards.json", "data/graph.json"],
+   "the first path survives, leading space and all");
+eq(statusPaths(" M a.json\n"), ["a.json"], "a lone unstaged path is not shortened");
+eq(statusPaths("M  staged.json\n M unstaged.json"), ["staged.json", "unstaged.json"],
+   "staged and unstaged columns both start the path at 3");
+eq(statusPaths(""), [], "a clean tree is no paths");
 
 /* The specification names the runner and the skill, and the skill names the runner. */
 const spec = readFileSync(path.join(ROOT, "docs/crankmagic-refresh.md"), "utf8"), skill = readFileSync(path.join(ROOT, ".claude/skills/crankmagic-refresh/SKILL.md"), "utf8");

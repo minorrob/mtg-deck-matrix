@@ -75,6 +75,18 @@
     ensure(Array.isArray(doc.owned.bench),'owned.bench must be an array.');for(const row of doc.owned.bench)forDeck(row,'owned.bench',ids);
     ensure(Array.isArray(doc.ordered),'ordered must be an array.');for(const row of doc.ordered)forDeck(row,'ordered',ids);
     ensure(Array.isArray(doc.buy),'buy must be an array.');for(const row of doc.buy){pair(row,'buy');ensure(row[2]===undefined||row[2]===null||(Number.isFinite(row[2])&&row[2]>=0),`buy: ${row[0]} has an invalid price.`);}
+    /* `metadata` is optional: the workbook's own reading of each card (purpose, mechanics,
+       bracket), carried so the app can show what the workbook says rather than only what the
+       catalog derives. Values are free text the owner maintains, so only the shape is checked. */
+    if(doc.metadata!==undefined&&doc.metadata!==null){
+      ensure(typeof doc.metadata==='object'&&!Array.isArray(doc.metadata),'metadata must map card name to its workbook fields.');
+      for(const [name,m] of Object.entries(doc.metadata))ensure(m&&typeof m==='object'&&!Array.isArray(m),`metadata: ${name} must be an object.`);
+    }
+    /* `paid` is optional: a live-load written before it existed still loads. */
+    if(doc.paid!==undefined&&doc.paid!==null){
+      ensure(typeof doc.paid==='object'&&!Array.isArray(doc.paid),'paid must map card name to the price paid per copy.');
+      for(const [name,amount] of Object.entries(doc.paid))ensure(Number.isFinite(amount)&&amount>=0,`paid: ${name} has an invalid price.`);
+    }
     ensure(Array.isArray(doc.upgrades),'upgrades must be an array.');
     for(const u of doc.upgrades){ensure(u&&typeof u.card==='string'&&u.card.trim(),'upgrades: every row needs a card.');ensure(ids.has(u.deck),`upgrades: ${u.card} names unknown deck ${u.deck}.`);}
     return true;
@@ -86,6 +98,7 @@
     for(const d of doc.decks){add(d.commander);for(const [n] of d.cards)add(n);for(const p of d.planned||[])add(listed(p,d.id).card);}
     for(const rows of Object.values(doc.owned.inDeck))for(const [n] of rows)add(n);
     for(const [n] of doc.owned.bench)add(n);for(const [n] of doc.ordered)add(n);for(const [n] of doc.buy)add(n);
+    for(const n of Object.keys(doc.paid||{}))add(n);
     for(const u of doc.upgrades){add(u.card);if(u.replaces)add(u.replaces);}
     return out;
   }
@@ -134,7 +147,16 @@
         const noteText=[u.deck,u.replaces?`replaces ${u.replaces}`:'',u.tier!==undefined?`tier ${u.tier}`:'',Number.isFinite(u.price)?`$${u.price.toFixed(2)}`:'',u.why||''].filter(Boolean).join(' · ');
         entries.push({cardId:idOf(u.card),quantity:1,notes:noteText});
         const deckId=deckIds[u.deck],replaces=u.replaces?slotOf[u.deck].get(idOf(u.replaces)):null;
-        if(!replaces){issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is not in that deck's target, so it is filed in the group only.`);continue;}
+        /* A REPLACED CARD THAT IS IN THE BOX BUT NOT IN THE TARGET IS THE NORMAL CASE, not a
+           problem to report. Once the workbook's target columns describe the state AFTER the
+           upgrades are bought, the temporary card has already left the hundred while it is
+           still physically sleeved -- which is exactly what an upgrade is: the target names
+           the card coming in, the actuals name the card it comes in for. Only a replaced card
+           that is in neither the target nor the box is worth a word. */
+        if(!replaces){
+          const inBox=(doc.owned.inDeck[u.deck]||[]).some(([n])=>fold(n)===fold(u.replaces||''));
+          if(!inBox)issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is in neither that deck's target nor its box, so it is filed in the group only.`);
+          continue;}
         try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText,tier:Number.isInteger(u.tier)?u.tier:null,why:u.why||'',price:Number.isFinite(u.price)?u.price:null}});}
         catch(err){issues.push(`Upgrade ${u.card} (${u.deck}) could not be attached to its slot: ${err.message}`);}
       }
@@ -146,7 +168,17 @@
     /* Copies. Built directly, then validated as a whole: eight hundred commands that each
        clone the library would spend seconds proving what one validation proves. */
     const state=Model.clone(s);let serial=0;
-    const lot=(cardId,quantity,source,location,notes,groupId)=>{const l={id:'lot:live:'+(++serial),cardId,quantity,source,...(source==='ordered'?{channel:'bought'}:{}),printing:Model.print({}),location,allocation:null,offer:'none',groupIds:groupId?[groupId]:[],notes:notes||'',paid:null,acquiredAt:stamp,provenance:{...provenance}};if(source!=='owned')l.location=null;state.lots.push(l);return l;};
+    /* WHAT WAS PAID, WHICH IS NOT WHAT THE CARD COSTS. doc.paid carries the workbook's
+       $ Each for the rows Trey owns -- the price he actually paid per copy. A market price
+       is always the catalog's (Scryfall); this is the other number, and the two must not be
+       confused, which is the whole reason it travels in its own map. It lands on OWNED
+       copies only: an ordered copy has not been paid for yet and the order records what it
+       cost, and a watched copy is not his at all. paidSource 'typed' is the model's own word
+       for a figure the owner supplied rather than one read off a catalog or a receipt
+       (collection-model.js stampPaid). */
+    const paidOf=new Map();
+    for(const [name,amount] of Object.entries(doc.paid||{})){const v=Number(amount);if(Number.isFinite(v)&&v>=0&&cards.has(fold(name)))paidOf.set(idOf(name),v);}
+    const lot=(cardId,quantity,source,location,notes,groupId)=>{const l={id:'lot:live:'+(++serial),cardId,quantity,source,...(source==='ordered'?{channel:'bought'}:{}),printing:Model.print({}),location,allocation:null,offer:'none',groupIds:groupId?[groupId]:[],notes:notes||'',paid:null,acquiredAt:stamp,provenance:{...provenance}};if(source!=='owned')l.location=null;if(source==='owned'){const paid=paidOf.get(cardId);if(Number.isFinite(paid)){l.paid=paid;l.paidSource='typed';l.paidAt=stamp;}}state.lots.push(l);return l;};
     const deckOf=id=>state.decks.find(d=>d.id===id);
     const allocated=(d,r)=>state.lots.filter(l=>l.allocation&&l.allocation.deckId===d.id&&l.allocation.slotId===r.id).reduce((k,l)=>k+l.quantity,0);
     const shortfall=(d,r)=>Math.max(0,r.quantity-allocated(d,r));

@@ -39,7 +39,13 @@ const d6 = run("Krenko");
 const names = (ring) => d6.list.filter((r) => r.ring === ring).map((r) => r.name);
 eq(d6.list[0].name, "Krenko, Mob Boss", "the commander is ring 0, first in the list");
 eq(d6.list[0].ring, 0);
-for (const n of ["Thornbite Staff", "Goblin Bombardment", "Skirk Prospector", "Purphoros, God of the Forge", "Impact Tremors"]) ok(names(1).includes(n), `${n} is lit on ring 1 (${names(1).length} there)`);
+/* Impact Tremors sat here until the workbook swapped it out of D6, so the list is read
+   against the deck rather than fixed: every one of these that is still in the hundred
+   has to be lit on ring 1, and at least three of them always are. */
+{const want = ["Thornbite Staff", "Goblin Bombardment", "Skirk Prospector", "Purphoros, God of the Forge", "Impact Tremors"]
+   .filter((n) => d6.list.some((c) => c.name === n));
+ ok(want.length >= 3, `D6 still holds ${want.length} of the joins this checks`);
+ for (const n of want) ok(names(1).includes(n), `${n} is lit on ring 1 (${names(1).length} there)`);}
 eq(d6.list[1].name, "Thornbite Staff", "the strongest join from the commander is placed first: the untap engine onto his tap ability");
 ok(/loop engine/.test(d6.list[1].via.kind), `and the join says why: ${d6.list[1].via.kind}`);
 ok(d6.list.some((r) => r.name === "Thornbite Staff" && r.strategies.includes("untap-loop") === false || true), "strategies recorded on every row");
