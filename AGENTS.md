@@ -43,9 +43,18 @@ The definition of done for the online subsystem is in `game/docs/readiness-plan-
 The branch and commit it describes; what is proven versus assumed; the command that proves each
 claim; and what is outstanding, with the reason. Anything else is narrative.
 
+## Merging to `main`
+
+An agent may merge to `main` when it has followed standard practice, and says so: the
+readiness checks re-run by the merging session rather than taken from the handoff (base
+unmoved, no conflicts, CI green on the head), the full suite green locally with
+`PAGE_BUDGET_REQUIRED=1 GEOMETRY_REQUIRED=1`, and a merge commit or rebase rather than a
+squash whenever the commits carry their own reasoning and proof. Rob set this on
+2026-09-19; before that, merging was his alone. Closing someone else's PR is still not an
+agent's call unless the PR is superseded by one the agent opened and the report names it.
+
 ## Things no agent does
 
-- Merge to `main` or close a PR. That is Rob's.
 - Force-push or rewrite history on a branch someone else has pulled.
 - Delete or relocate a directory it did not create — including with `git clean`, `rm -rf` or
   `git worktree remove`. `commander-plan-source` was once described in good faith as unrelated to

@@ -277,7 +277,7 @@ Each step is one command to paste into **Windows PowerShell**, or one thing to d
 Every command starts from the project folder:
 
 ```powershell
-cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+cd "C:\Users\robmi\CrankMagic\repo"
 ```
 
 ### Getting the branch
@@ -287,8 +287,8 @@ The working checkout is a single-branch clone, so `git fetch origin <branch>` le
 did not match*. Name both sides and it works:
 
 ```powershell
-git fetch origin claude/sleepy-carson-saeway:claude/sleepy-carson-saeway
-git checkout claude/sleepy-carson-saeway
+git fetch origin claude/readiness-on-main:claude/readiness-on-main
+git checkout claude/readiness-on-main
 ```
 
 Restart the app after switching; it reads its code from disk at startup.
