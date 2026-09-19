@@ -26,3 +26,8 @@ graph/.cache/
 
 # Local Commander engine, decks, private journals and toolchains.
 game/.local/
+
+# The app has no dependencies. Playwright is installed transiently -- by CI, and by anyone
+# reproducing CI locally -- with `npm install --no-save --no-package-lock playwright`, which
+# still leaves node_modules in the working tree. It is never part of a commit.
+node_modules/
