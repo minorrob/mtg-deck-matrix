@@ -168,32 +168,22 @@ third, with `Night's Whisper` quoted at $0.29 against a record-set price of $5.4
 `data/live-load.json` and `data/live-state.json` were rebuilt from the v13 workbook; the
 diff is exactly `savedAt` and the buy prices.
 
-### What is STILL NOT implemented — this is the gap to close
+### Done — what Trey paid, on owned copies (commit `a5e0e9f`)
 
-**The workbook's `$ Each` never reaches the app as `paid` for owned cards.**
+The other half shipped too. `data/live-load.json` now carries a top-level `paid` map
+(exact card name → `$ Each`, 681 entries, rows with `Own > 0` only), and
+`tools/live-load.js` stamps it onto **owned** lots as `paid` + `paidSource: 'typed'` +
+`paidAt`. Ordered and watched copies are never stamped; a card with no figure gets `null`
+rather than `$0`.
 
-- `tools/build-live-load.mjs:124` carries the price **only on the buy list**:
-  `cards.filter(c=>c.buy).map(c=>[c.name,c.buy,c.price])` — cards not yet owned.
-- In `data/live-load.json`, a buy row is `["Adarkar Wastes", 2, 0.4]` (name, qty, price)
-  but an owned row is `["Advanced Reconstruction", 1]` — **name and quantity only**. The
-  price is dropped.
-- So for every card Trey owns, what he paid is thrown away at import, even though
-  `collection-model.js` has `paid` and `paidSource: 'typed'` waiting for it.
+On the committed file: 788 of 789 owned lots carry a figure, 0 of 13 ordered lots do, and
+the total paid across owned copies is **$706.18**. `paid` is optional in the validator, so
+an older live-load still loads. `tests/live-load.mjs` has eight checks covering it, proven
+to fail before they were kept.
 
-Closing it means carrying `$ Each` through for rows with `Own > 0` and landing it on the
-lot as `paid` with `paidSource: 'typed'` — **never** as the card's price. Market price stays
-Scryfall's. The buy-list half above is the worked example of the same rule, so follow its
-shape: resolve through `bundledLookup`, keep the workbook figure only as a fallback, and
-rebuild both library files so `tests/generators.mjs` (which runs
-`build-live-load.mjs --check`) stays green.
-
-> **The workbook is in the repo**: `data/source/Treys_MtG_Master_v13.xlsx`, which is the
-> one `data/live-load.json` names. `node tools/build-live-load.mjs` with no argument picks
-> the newest `data/source/*Master*.xlsx` and finds it, so you can rebuild and verify without
-> anything from Trey.
->
-> *(An earlier revision of this document claimed the repo only carried up to `v3`. That was
-> wrong — a truncated `find` misread as the whole listing — and it is corrected here.)*
+**So the price rule is now fully implemented.** If you touch either side, keep the two
+numbers apart: market is the catalog's, `paid` is the workbook's, and nothing should ever
+read one as the other.
 
 This pairs naturally with the dynamic-deck work because both are changes to the same
 importer, and both need the workbook in hand. Confirm with Trey whether he wants them in
@@ -265,6 +255,6 @@ Work in flight on `claude/data-refresh-2026-09-19` ([PR #272](https://github.com
 - [ ] `tests/live-load.mjs` no longer pins the literal `6`.
 - [ ] `.claude/skills/crankmagic-live-load-sync/SKILL.md` describes the dynamic format.
 - [ ] `bash runtests.sh -q` green, with no suite skipped or weakened.
-- [ ] The workbook's `$ Each` lands as `paid` (with `paidSource: 'typed'`) for rows with
-      `Own > 0`, and **never** as the card's market price, which stays Scryfall's (§3.6).
+- [x] ~~The workbook's `$ Each` lands as `paid` for rows with `Own > 0`~~ — done in `a5e0e9f`;
+      keep it that way (§3.6).
 - [ ] Draft PR opened, saying plainly what was proven and what was assumed.
