@@ -209,7 +209,10 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
           deck=String(up.get(r,'Deck')||'').trim(),status=String(up.get(r,'Temp Status')||'').trim();
     if(!card[upId]||!card[tempId]||!DECK_IDS.includes(deck))continue;
     upgrades.push({deck,card:card[upId].name,replaces:card[tempId].name,
-      tier:status==='LT'?3:2,price:cash(up.get(r,'Price'))??0,origin:'workbook',
+      /* Priced as the buy list is: the catalog's figure, with the workbook's Price column
+         standing in only where the catalog has none. The column is what the list was
+         drafted with, not a market price. */
+      tier:status==='LT'?3:2,price:marketPriceOf(lookup,card[upId].name,cash(up.get(r,'Price')))??0,origin:'workbook',
       why:status==='LT'?'Long-term replacement for a temporary card.':'Short-term replacement for a temporary card.'});
   }
 

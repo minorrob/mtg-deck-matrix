@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 7,
- "savedAt": "2026-09-19T20:49:13Z",
+ "savedAt": "2026-09-19T22:40:37Z",
  "workbook": "Treys_MtG_Master_-_v22_-_For_Live_Load.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
  "decks": [
@@ -16598,7 +16598,7 @@
    "card": "Fabled Passage",
    "replaces": "Evolving Wilds",
    "tier": 3,
-   "price": 0.85,
+   "price": 1.11,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16616,7 +16616,7 @@
    "card": "Eyeblight's Ending",
    "replaces": "Chain Assassination",
    "tier": 3,
-   "price": 0.13,
+   "price": 0.23,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16625,7 +16625,7 @@
    "card": "Halo Forager",
    "replaces": "Crude Bent Blade",
    "tier": 3,
-   "price": 0.5,
+   "price": 0.26,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16643,7 +16643,7 @@
    "card": "Llanowar Visionary",
    "replaces": "Moonglove Extractor",
    "tier": 3,
-   "price": 0.15,
+   "price": 0.29,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16652,7 +16652,7 @@
    "card": "Garruk's Uprising",
    "replaces": "Painful Truths",
    "tier": 3,
-   "price": 0.54,
+   "price": 0.59,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16661,7 +16661,7 @@
    "card": "Lys Alana Huntmaster",
    "replaces": "Pawn of Ulamog",
    "tier": 3,
-   "price": 1.17,
+   "price": 2.18,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16670,7 +16670,7 @@
    "card": "Preordain",
    "replaces": "Swampsnare Trap",
    "tier": 3,
-   "price": 0.75,
+   "price": 0.74,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16679,7 +16679,7 @@
    "card": "Gilt-Leaf Winnower",
    "replaces": "Vampire Hexmage",
    "tier": 3,
-   "price": 0.11,
+   "price": 0.23,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16688,7 +16688,7 @@
    "card": "Woe Strider",
    "replaces": "Viscera Seer",
    "tier": 3,
-   "price": 0.27,
+   "price": 0.33,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16697,7 +16697,7 @@
    "card": "Coalition Relic",
    "replaces": "Aetheric Amplifier",
    "tier": 3,
-   "price": 0.38,
+   "price": 0.39,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16706,7 +16706,7 @@
    "card": "Springbloom Druid",
    "replaces": "Changeling Wayfinder",
    "tier": 3,
-   "price": 0.12,
+   "price": 0.59,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16715,7 +16715,7 @@
    "card": "Sol Ring",
    "replaces": "Giant's Boulder",
    "tier": 3,
-   "price": 1.3,
+   "price": 1.53,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16724,7 +16724,7 @@
    "card": "Solemn Simulacrum",
    "replaces": "Pilgrim's Eye",
    "tier": 3,
-   "price": 0.29,
+   "price": 0.36,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16733,7 +16733,7 @@
    "card": "Arcane Signet",
    "replaces": "Strixhaven Stadium",
    "tier": 3,
-   "price": 0.43,
+   "price": 0.57,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16751,7 +16751,7 @@
    "card": "Mystic Remora",
    "replaces": "Tome of Legends",
    "tier": 3,
-   "price": 12.86,
+   "price": 12.68,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16760,7 +16760,7 @@
    "card": "Brainstorm",
    "replaces": "Boughside Wanderers",
    "tier": 3,
-   "price": 1.38,
+   "price": 1.27,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16769,7 +16769,7 @@
    "card": "Wall of Blossoms",
    "replaces": "Elvish Visionary",
    "tier": 3,
-   "price": 0.21,
+   "price": 0.33,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16778,7 +16778,7 @@
    "card": "Rampant Growth",
    "replaces": "Kyoshi Island Plaza",
    "tier": 3,
-   "price": 0.62,
+   "price": 0.59,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16787,7 +16787,7 @@
    "card": "Ilysian Caryatid",
    "replaces": "Llanowar Elves",
    "tier": 3,
-   "price": 0.23,
+   "price": 0.56,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16796,7 +16796,7 @@
    "card": "Rampant Growth",
    "replaces": "Lys Alana Dignitary",
    "tier": 3,
-   "price": 0.62,
+   "price": 0.59,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16805,7 +16805,7 @@
    "card": "Watcher for Tomorrow",
    "replaces": "Lys Alana Informant",
    "tier": 3,
-   "price": 0.2,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16823,7 +16823,7 @@
    "card": "Elvish Rejuvenator",
    "replaces": "Satyr Wayfinder",
    "tier": 3,
-   "price": 0.1,
+   "price": 0.26,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16832,7 +16832,7 @@
    "card": "Topiary Stomper",
    "replaces": "Sylvan Ranger",
    "tier": 3,
-   "price": 0.67,
+   "price": 0.99,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16841,7 +16841,7 @@
    "card": "Command Tower",
    "replaces": "Ash Barrens",
    "tier": 3,
-   "price": 0.26,
+   "price": 0.27,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16850,7 +16850,7 @@
    "card": "Canopy Vista",
    "replaces": "Bant Panorama",
    "tier": 3,
-   "price": 0.27,
+   "price": 0.29,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16859,7 +16859,7 @@
    "card": "Command Tower",
    "replaces": "Exotic Orchard",
    "tier": 3,
-   "price": 0.26,
+   "price": 0.27,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16877,7 +16877,7 @@
    "card": "Den of the Bugbear",
    "replaces": "Kher Keep",
    "tier": 3,
-   "price": 1.36,
+   "price": 1.68,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16895,7 +16895,7 @@
    "card": "Prairie Stream",
    "replaces": "Terramorphic Expanse",
    "tier": 3,
-   "price": 0.21,
+   "price": 0.31,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16904,7 +16904,7 @@
    "card": "Boros Signet",
    "replaces": "Borrowed Knowledge",
    "tier": 3,
-   "price": 0.52,
+   "price": 0.67,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16913,7 +16913,7 @@
    "card": "Tireless Tracker",
    "replaces": "Tatyova, Benthic Druid",
    "tier": 3,
-   "price": 0.25,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16922,7 +16922,7 @@
    "card": "Mizzix's Mastery",
    "replaces": "Thrilling Discovery",
    "tier": 3,
-   "price": 4.68,
+   "price": 8.1,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16931,7 +16931,7 @@
    "card": "Fathom Mage",
    "replaces": "Voracious Tome-Skimmer",
    "tier": 3,
-   "price": 0.29,
+   "price": 0.61,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16940,7 +16940,7 @@
    "card": "Kor Skyfisher",
    "replaces": "Wavesifter",
    "tier": 3,
-   "price": 0.42,
+   "price": 0.61,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16949,7 +16949,7 @@
    "card": "Goblin Motivator",
    "replaces": "Anger",
    "tier": 3,
-   "price": 0.24,
+   "price": 0.26,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16958,7 +16958,7 @@
    "card": "Mogg Raider",
    "replaces": "Barrage of Expendables",
    "tier": 3,
-   "price": 0.21,
+   "price": 0.38,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16967,7 +16967,7 @@
    "card": "Mizzium Mortars",
    "replaces": "Burn, Burn, Tree and Fern",
    "tier": 3,
-   "price": 0.46,
+   "price": 0.57,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16976,7 +16976,7 @@
    "card": "Reckless Impulse",
    "replaces": "Burning Curiosity",
    "tier": 3,
-   "price": 0.88,
+   "price": 0.87,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16985,7 +16985,7 @@
    "card": "Warstorm Surge",
    "replaces": "Impact Tremors",
    "tier": 3,
-   "price": 0.75,
+   "price": 1.44,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -16994,7 +16994,7 @@
    "card": "Idol of Oblivion",
    "replaces": "Light Up the Stage",
    "tier": 3,
-   "price": 2.16,
+   "price": 3.54,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17021,7 +17021,7 @@
    "card": "Rundvelt Hordemaster",
    "replaces": "Outpost Siege",
    "tier": 3,
-   "price": 2.07,
+   "price": 3.52,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17030,7 +17030,7 @@
    "card": "Demand Answers",
    "replaces": "Ragged Short Spear",
    "tier": 3,
-   "price": 0.5,
+   "price": 0.47,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17039,7 +17039,7 @@
    "card": "Assassin's Trophy",
    "replaces": "Aetherize",
    "tier": 3,
-   "price": 1.2,
+   "price": 1.19,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17048,7 +17048,7 @@
    "card": "Whitemane Lion",
    "replaces": "Bilbo Baggins, Burglar // Take a Glance",
    "tier": 3,
-   "price": 0.09,
+   "price": 0.24,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17066,7 +17066,7 @@
    "card": "Beast Whisperer",
    "replaces": "Gandalf, Wandering Wizard",
    "tier": 3,
-   "price": 1.5,
+   "price": 8.96,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17075,7 +17075,7 @@
    "card": "Blade Splicer",
    "replaces": "Long Lake Nuisance",
    "tier": 3,
-   "price": 0.22,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17084,7 +17084,7 @@
    "card": "Sakura-Tribe Elder",
    "replaces": "Peregrine Drake",
    "tier": 3,
-   "price": 0.33,
+   "price": 0.34,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17111,7 +17111,7 @@
    "card": "Frantic Search",
    "replaces": "Unwelcome Sprite",
    "tier": 3,
-   "price": 2.17,
+   "price": 2.12,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17120,7 +17120,7 @@
    "card": "Suture Priest",
    "replaces": "Anointer Priest",
    "tier": 3,
-   "price": 1.48,
+   "price": 4.4,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17129,7 +17129,7 @@
    "card": "Unbreakable Formation",
    "replaces": "Frontline Medic",
    "tier": 3,
-   "price": 0.71,
+   "price": 1.4,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17138,7 +17138,7 @@
    "card": "Soul Warden",
    "replaces": "Impassioned Orator",
    "tier": 3,
-   "price": 2.84,
+   "price": 3.33,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17147,7 +17147,7 @@
    "card": "Exsanguinate",
    "replaces": "Kithkeeper",
    "tier": 3,
-   "price": 0.4,
+   "price": 0.41,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17165,7 +17165,7 @@
    "card": "Psychosis Crawler",
    "replaces": "Secret Rendezvous",
    "tier": 3,
-   "price": 2.69,
+   "price": 2.5,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17174,7 +17174,7 @@
    "card": "Battle Screech",
    "replaces": "Spectral Procession",
    "tier": 3,
-   "price": 0.16,
+   "price": 0.25,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17183,7 +17183,7 @@
    "card": "Spirited Companion",
    "replaces": "Old Thrush",
    "tier": 3,
-   "price": 0.22,
+   "price": 0.34,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17192,7 +17192,7 @@
    "card": "Underground River",
    "replaces": "Evolving Wilds",
    "tier": 3,
-   "price": 1.66,
+   "price": 1.7,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17201,7 +17201,7 @@
    "card": "Tegwyll, Duke of Splendor",
    "replaces": "Plunder the Trollshaws",
    "tier": 3,
-   "price": 0.77,
+   "price": 4.55,
    "origin": "workbook",
    "why": "Long-term replacement for a temporary card."
   },
@@ -17210,7 +17210,7 @@
    "card": "Austere Command",
    "replaces": "Blight Rot",
    "tier": 2,
-   "price": 0.36,
+   "price": 0.35,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17219,7 +17219,7 @@
    "card": "Vine Trellis",
    "replaces": "Old Thrush",
    "tier": 2,
-   "price": 0.25,
+   "price": 1.16,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17228,7 +17228,7 @@
    "card": "Brainstorm",
    "replaces": "Plunder the Trollshaws",
    "tier": 2,
-   "price": 1.38,
+   "price": 1.27,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17237,7 +17237,7 @@
    "card": "Grave Titan",
    "replaces": "Dreadhorde Invasion",
    "tier": 2,
-   "price": 3.5,
+   "price": 0.39,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17246,7 +17246,7 @@
    "card": "Austere Command",
    "replaces": "Feed the Swarm",
    "tier": 2,
-   "price": 0.36,
+   "price": 0.35,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17255,7 +17255,7 @@
    "card": "Faerie Mastermind",
    "replaces": "Gloom Ripper",
    "tier": 2,
-   "price": 2.5,
+   "price": 12.11,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17264,7 +17264,7 @@
    "card": "Spellstutter Sprite",
    "replaces": "Moonshadow",
    "tier": 2,
-   "price": 0.75,
+   "price": 5.42,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17273,7 +17273,7 @@
    "card": "Faerie Formation",
    "replaces": "Pox Plague",
    "tier": 2,
-   "price": 0.5,
+   "price": 0.45,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17282,7 +17282,7 @@
    "card": "Scion of Oona",
    "replaces": "Ritual of Soot",
    "tier": 2,
-   "price": 1,
+   "price": 12.95,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17291,7 +17291,7 @@
    "card": "Fell the Profane // Fell Mire",
    "replaces": "Terror",
    "tier": 2,
-   "price": 5.01,
+   "price": 5.17,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17300,7 +17300,7 @@
    "card": "Ravenous Chupacabra",
    "replaces": "Argentum Masticore",
    "tier": 2,
-   "price": 0.5,
+   "price": 0.99,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17309,7 +17309,7 @@
    "card": "Vanquisher's Banner",
    "replaces": "Dwarven Mattock",
    "tier": 2,
-   "price": 5.51,
+   "price": 5.12,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17318,7 +17318,7 @@
    "card": "Elvish Mystic",
    "replaces": "Explorer's Scope",
    "tier": 2,
-   "price": 0.5,
+   "price": 5.23,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17327,7 +17327,7 @@
    "card": "Adeline, Resplendent Cathar",
    "replaces": "Genesis Chamber",
    "tier": 2,
-   "price": 3,
+   "price": 2.85,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17336,7 +17336,7 @@
    "card": "Wall of Roots",
    "replaces": "Prophetic Prism",
    "tier": 2,
-   "price": 1,
+   "price": 0.24,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17345,7 +17345,7 @@
    "card": "Idol of Oblivion",
    "replaces": "Ultima, Origin of Oblivion",
    "tier": 2,
-   "price": 1,
+   "price": 3.54,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17354,7 +17354,7 @@
    "card": "Saruli Caretaker",
    "replaces": "Arboreal Grazer",
    "tier": 2,
-   "price": 0.25,
+   "price": 0.29,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17363,7 +17363,7 @@
    "card": "Doran, the Siege Tower",
    "replaces": "Canopy Gargantuan",
    "tier": 2,
-   "price": 3,
+   "price": 8.65,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17372,7 +17372,7 @@
    "card": "Jaspera Sentinel",
    "replaces": "Farseek",
    "tier": 2,
-   "price": 0.14,
+   "price": 0.3,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17381,7 +17381,7 @@
    "card": "Guardian Project",
    "replaces": "Follow the Lumarets",
    "tier": 2,
-   "price": 3.5,
+   "price": 15.05,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17390,7 +17390,7 @@
    "card": "Contentious Plan",
    "replaces": "Guardian of the Halls",
    "tier": 2,
-   "price": 0.3,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17399,7 +17399,7 @@
    "card": "Fyndhorn Elves",
    "replaces": "Noxious Newt",
    "tier": 2,
-   "price": 0.5,
+   "price": 2.28,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17408,7 +17408,7 @@
    "card": "Evolution Sage",
    "replaces": "Ordeal of Nylea",
    "tier": 2,
-   "price": 0.5,
+   "price": 2.94,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17417,7 +17417,7 @@
    "card": "Rampant Growth",
    "replaces": "Woodland Weavemaster",
    "tier": 2,
-   "price": 0.62,
+   "price": 0.59,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17426,7 +17426,7 @@
    "card": "Wall of Omens",
    "replaces": "Yavimaya Elder",
    "tier": 2,
-   "price": 0.5,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17435,7 +17435,7 @@
    "card": "Guardian Project",
    "replaces": "Arcades, the Strategist",
    "tier": 2,
-   "price": 3.5,
+   "price": 15.05,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17444,7 +17444,7 @@
    "card": "Boros Charm",
    "replaces": "Deflecting Palm",
    "tier": 2,
-   "price": 1.5,
+   "price": 4.51,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17453,7 +17453,7 @@
    "card": "Faerie Impostor",
    "replaces": "Pterafractyl",
    "tier": 2,
-   "price": 0.2,
+   "price": 0.32,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17471,7 +17471,7 @@
    "card": "Lightning Bolt",
    "replaces": "Cinder Strike",
    "tier": 2,
-   "price": 1,
+   "price": 0.81,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17480,7 +17480,7 @@
    "card": "Lightning Greaves",
    "replaces": "Naktamun Lorespinner // Wheel of Fortune",
    "tier": 2,
-   "price": 5,
+   "price": 3.58,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17489,7 +17489,7 @@
    "card": "Goblin Cratermaker",
    "replaces": "Siege Smash",
    "tier": 2,
-   "price": 0.5,
+   "price": 0.27,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17498,7 +17498,7 @@
    "card": "Demand Answers",
    "replaces": "Thrill of Possibility",
    "tier": 2,
-   "price": 0.5,
+   "price": 0.47,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17507,7 +17507,7 @@
    "card": "Pollenbright Druid",
    "replaces": "Mulldrifter",
    "tier": 2,
-   "price": 0.25,
+   "price": 0.23,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17516,7 +17516,7 @@
    "card": "Mystic Snake",
    "replaces": "Negate",
    "tier": 2,
-   "price": 1.5,
+   "price": 1.47,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17525,7 +17525,7 @@
    "card": "Fact or Fiction",
    "replaces": "Unexpected Assistance",
    "tier": 2,
-   "price": 0.75,
+   "price": 0.28,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17534,7 +17534,7 @@
    "card": "Beast Within",
    "replaces": "Destroy Evil",
    "tier": 2,
-   "price": 0.75,
+   "price": 0.63,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17543,7 +17543,7 @@
    "card": "Wall of Blossoms",
    "replaces": "Drumbellower",
    "tier": 2,
-   "price": 0.75,
+   "price": 0.33,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   },
@@ -17579,7 +17579,7 @@
    "card": "Night's Whisper",
    "replaces": "Zack Fair",
    "tier": 2,
-   "price": 1,
+   "price": 5.45,
    "origin": "workbook",
    "why": "Short-term replacement for a temporary card."
   }
