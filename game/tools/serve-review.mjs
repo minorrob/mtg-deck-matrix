@@ -175,7 +175,7 @@ createServer(async(req,res)=>{
       }
       if(pathname==='/api/close-game'){stopSoloPilots();const value=await closeLocalGame();if(tableRuntime){tableRuntime.abandon();tableRuntime=null;hostInvitations=[];}return reply(200,value);}
       if(req.method==='GET'&&pathname==='/api/desktop-deks'){
-        const dekDir=resolve(process.env.USERPROFILE||'C:/Users/robmi','OneDrive/Desktop/Magic the Gathering/Deck Files');
+        const dekDir=process.env.CRANKMAGIC_DEK_DIR||resolve(process.env.USERPROFILE||'C:/Users/robmi','CrankMagic/archive/desktop-mtg/Deck Files');
         const {readdirSync,readFileSync,existsSync}=await import('node:fs');
         if(!existsSync(dekDir))return reply(200,{decks:[],dir:dekDir,error:'Deck Files folder missing'});
         const files=readdirSync(dekDir).filter(f=>/^D[1-6] .*\.dek$/i.test(f));

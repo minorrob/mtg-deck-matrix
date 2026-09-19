@@ -91,7 +91,10 @@ export function buildForgeCardIndex(forgeRoot) {
     const names = scriptNames(readFileSync(path, 'utf8'));
     if (!names.length) continue;
     scripts++;
-    const script = path.slice(path.indexOf(FOLDER));
+    // join() writes backslashes on Windows; FOLDER is spelled with forward slashes, so search the
+    // POSIX form or indexOf() returns -1 and slice(-1) hands back the last character of the path.
+    const posix = path.replaceAll("\\", "/");
+    const script = posix.slice(posix.indexOf(FOLDER));
     const faces = [...names, ...(names.length > 1 ? [names.join(' // ')] : [])];
     for (const face of faces) {
       put(exact, face, script);
