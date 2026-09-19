@@ -5,11 +5,13 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {setupCatalog,prepareSetup,prepareLobby,importWorkshopDeck} from './setup-catalog.mjs';
+import {setupCatalog,prepareSetup,prepareLobby,importWorkshopDeck,FORGE_ROOT} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,livePod,browserBridge,browserBridgeForSeat,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
 import {createGuestGateway} from '../server/guest-gateway.mjs';
 import {createLocalTableRuntime,restoreLocalTableRuntime} from '../server/local-table-runtime.mjs';
 import {createApiPilotRunner} from './ai-pilot.mjs';
+import {chooseForcedAction} from './force-advance.mjs';
+import {runDoctor} from './doctor.mjs';
 import {createOpenAIChoiceProvider,createAnthropicChoiceProvider} from './api-choice-provider.mjs';
 import {loadMatchReport,saveMatchFeedback} from './match-report.mjs';
 import {DEFAULT_OPENAI_MODEL,OPENAI_MODELS,loadOpenAiCredential} from './windows-credential.mjs';
@@ -20,7 +22,10 @@ const authority='127.0.0.1:'+port,origin='http://'+authority;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const guestPort=Number(process.env.COMMANDER_GUEST_PORT||8769),guestHost=process.env.COMMANDER_GUEST_BIND||'127.0.0.1';
 if(!Number.isInteger(guestPort)||guestPort<1024||guestPort>65535)throw Error('Invalid guest port');
-const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+const files=new Map([['/review',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+files.set('/guest-play-boot.js',['game/ui/guest-play-boot.js','text/javascript']);
+files.set('/play-entry.mjs',['game/ui/play-entry.mjs','text/javascript']);
+files.set('/guest-live.mjs',['game/ui/guest-live.mjs','text/javascript']);
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
 files.set('/live-poll.mjs',['game/ui/live-poll.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
@@ -44,7 +49,7 @@ const mime={js:'text/javascript',css:'text/css',html:'text/html',json:'applicati
 for(const path of publicPaths)files.set('/app/'+path,[path,mime[path.split('.').at(-1)]]);
 files.set('/app/',['index.html','text/html']);
 const guestAssets=new Map([
-  ...['guest.html','guest.mjs','guest.css','review.html','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
+  ...['guest.html','guest.mjs','guest.css','review.html','guest-play-boot.js','play-entry.mjs','guest-live.mjs','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
   ['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])
@@ -61,6 +66,30 @@ function createPilots(pod){
 function stopSoloPilots(){soloPilotRunner?.stop();soloPilotRunner=null;if(soloPilotMonitor)clearInterval(soloPilotMonitor);soloPilotMonitor=null;}
 function startSoloPilots(pod){stopSoloPilots();soloPilotRunner=createPilots(pod);if(!soloPilotRunner)return false;soloPilotMonitor=setInterval(()=>{const state=liveStatus();if(state.matchId!==pod.matchId||['error','closed','finished','incomplete'].includes(state.status))stopSoloPilots();},1000);soloPilotMonitor.unref?.();return true;}
 async function armSoloPilots(pod){if(!apiSeats(pod).length)return false;const deadline=Date.now()+240000;while(Date.now()<deadline){const state=liveStatus();if(state.matchId===pod.matchId&&['ready','playing'].includes(state.status))return startSoloPilots(pod);if(['error','closed','incomplete'].includes(state.status))return false;await new Promise(resolve=>setTimeout(resolve,300));}return false;}
+/* Force one seat's pending decision and write down what the table looked like when it happened.
+ *
+ * A freeze is only diagnosable after the fact if something recorded the position it froze in, and
+ * the earlier record was the action alone -- which says what was pressed and nothing about why
+ * anybody had to press it. The turn, the phase, who held priority, what was on the stack, what the
+ * choice was, and what every pilot was doing at that moment are the things that answer it. */
+async function forceSeat(seatId,source){
+  const view=await browserBridgeForSeat(seatId,'view');
+  const forced=chooseForcedAction(view,seatId);
+  if(!forced)throw Error('That seat has no decision waiting, so there is nothing to advance.');
+  const request={...forced.request,actionId:randomUUID()};
+  await browserBridgeForSeat(seatId,'action',request);
+  const engine=liveStatus(),state=view.state||{},ui=view.ui||{};
+  if(engine.directory)try{appendFileSync(resolve(engine.directory,'force-advance.ndjson'),JSON.stringify({
+    schema:'CrankMagicForceAdvance@2',at:new Date().toISOString(),matchId:engine.matchId,source,seatId,
+    revision:view.revision,choiceId:forced.choiceId,label:forced.label,automatic:forced.automatic,
+    alternatives:forced.alternatives,actionId:request.actionId,
+    context:{turn:state.turn??null,phase:state.phase??null,turnPlayerId:state.turnPlayerId??null,
+      priorityPlayerId:state.priorityPlayerId??null,stackSize:state.stackSize??null,
+      prompt:String(ui.prompt||'').slice(0,200),choiceTitle:ui.choice?.title??null,choiceMode:ui.choice?.mode??null},
+    pilots:tableRuntime?.pilotStatus?.().length?tableRuntime.pilotStatus():(soloPilotRunner?.status()||[])
+  })+'\n');}catch{/* the journal is evidence, never a reason to block the table */}
+  return {seatId,label:forced.label,automatic:forced.automatic,alternatives:forced.alternatives,actionId:request.actionId};
+}
 const runtimeOptions={directory:resolve(root,'game/.local/tables'),bridge:browserBridgeForSeat,launch:launchLocalGame,status:liveStatus,createPilots,report:async(seatId,matchId)=>{const engine=liveStatus();if(engine.matchId!==matchId||!engine.directory)throw Error('The completed engine record does not match this table');try{return loadMatchReport(engine.directory,seatId);}catch(error){const view=await browserBridgeForSeat(seatId,'view');return loadMatchReport(engine.directory,seatId,view.state);}}};
 let tableRuntime=null,hostInvitations=[];
 try{tableRuntime=restoreLocalTableRuntime(runtimeOptions);if(tableRuntime){await tableRuntime.recover();const table=tableRuntime.view(),engine=liveStatus();if(table.phase==='playing'&&(!['starting','ready','playing'].includes(engine.status)||table.matchId!==engine.matchId)){tableRuntime.abandon();tableRuntime=null;console.warn('An interrupted multiplayer table was closed. Its game logs remain available.');}}}
@@ -68,6 +97,7 @@ catch(error){tableRuntime=null;console.warn('Multiplayer table recovery needs at
 const guestService={};for(const method of ['authenticate','join','table','deck','ready','heartbeat','exit','rematch','view','action','report','feedback'])guestService[method]=(...args)=>{if(!tableRuntime)throw Object.assign(Error('This table is not accepting players'),{status:409});return tableRuntime.guest[method](...args);};
 const guestGateway=createGuestGateway({host:guestHost,port:guestPort,publicOrigin:process.env.COMMANDER_GUEST_PUBLIC_ORIGIN||undefined,service:guestService,readPublicFile:async name=>{const path=guestAssets.get(name);if(!path)throw Error('Unknown public file');return readFile(resolve(root,path));}});
 const guestInfo=await guestGateway.listen();
+const remoteGuestsAvailable=/^https:\/\//.test(guestInfo.origin);
 const token=randomUUID(),prepared=new Map();let preparing=false,launching=false;
 createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://127.0.0.1').pathname;
@@ -87,6 +117,17 @@ createServer(async(req,res)=>{
       return reply(405,{error:'Read-only health check'});
     }
     if(req.method==='GET'&&pathname==='/api/setup')return reply(200,{...setupCatalog(),token,guestOrigin:guestInfo.origin,aiCredential:{openaiAvailable:!!storedOpenAiSession,source:storedOpenAiSession?.source||null,defaultModel:DEFAULT_OPENAI_MODEL}});
+    /* Pre-flight, answered by the host so the launcher, the Play page and the CLI all read the
+       same verdict. Read-only and unauthenticated, exactly like /api/health: it reports which
+       local components are present, never their contents. */
+    if(req.method==='GET'&&pathname==='/api/doctor')return reply(200,await runDoctor({forgeRoot:FORGE_ROOT,port,cloudflared:!!guestInfo.origin,probe:async()=>({product:'CrankMagic Online',protocol:1})}));
+    /* One readiness answer for the host screen, the guest screen and the launcher, so a lobby
+       cannot refuse to start while every seat on it looks ready. */
+    if(req.method==='GET'&&pathname==='/api/table/readiness'){try{if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.poll();return reply(200,tableRuntime.readiness());}catch(e){return reply(409,{error:e.message});}}
+    /* Whether an AI seat is actually stuck, rather than thinking. requestInFlight means a model
+       call is out; pendingActionId means Forge has not confirmed its last action; paused means
+       it has given up on its own. Pressing a lever blind was the only option before. */
+    if(req.method==='GET'&&pathname==='/api/ai-pilots')return reply(200,{seats:tableRuntime?.pilotStatus?.().length?tableRuntime.pilotStatus():(soloPilotRunner?.status()||[])});
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{await tableRuntime?.poll();return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}
     if(req.method==='GET'&&pathname==='/api/match-report'){try{const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.report():loadMatchReport(engine.directory,0));}catch(e){return reply(409,{error:e.message});}}
@@ -98,11 +139,28 @@ createServer(async(req,res)=>{
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);text='';
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
+      /* Host-only failsafe for a table parked on a step nobody can clear. Same-origin and
+         token-gated like every other mutation here, and deliberately absent from the guest
+         gateway's route table: a guest may answer their own decisions, not other people's. */
+      if(pathname==='/api/table/force-advance'){
+        const seatId=Number.isInteger(body.seatId)?body.seatId:null;
+        if(seatId===null||seatId<0||seatId>3)throw Error('Name the seat to advance');
+        return reply(200,{ok:true,...await forceSeat(seatId,'host')});
+      }
       if(pathname==='/api/ai-pilots/prompt'){
-        if(!soloPilotRunner)throw Error('No API-controlled AI player is running in this local game');
-        const result=soloPilotRunner.nudge(Number.isInteger(body.seatId)?body.seatId:null);
+        // A multiplayer table keeps its pilots on the table runtime; a solo game keeps them here.
+        // Ask the table first, because that is the shape with other people waiting on the answer.
+        const seatId=Number.isInteger(body.seatId)?body.seatId:null;
+        let result=null,tableError=null;
+        if(tableRuntime){try{result=tableRuntime.nudge(seatId);}catch(error){tableError=error;}}
+        if(!result&&soloPilotRunner)result=soloPilotRunner.nudge(seatId);
+        if(!result)throw tableError||Error('No API-controlled AI player is running in this game');
         if(!result.prompted)throw Error('That AI seat is not running');
-        return reply(200,{ok:true,...result});
+        // A seat that has ignored being re-asked is not going to answer the third time either.
+        // force locks in a legal decision for it and moves the table on.
+        let forced=null;
+        if(body.force===true&&seatId!==null)forced=await forceSeat(seatId,'ai-prompt-escalation');
+        return reply(200,{ok:true,...result,...(forced?{forced}:{})});
       }
       if(pathname==='/api/match-feedback'){const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.feedback(body):saveMatchFeedback(engine.directory,loadMatchReport(engine.directory,0),body));}
       if(pathname==='/api/ai-session'){
@@ -116,6 +174,37 @@ createServer(async(req,res)=>{
         return reply(200,{configured:true,provider:aiSession.provider,model:aiSession.model,source:aiSession.source,pilotRearmed});
       }
       if(pathname==='/api/close-game'){stopSoloPilots();const value=await closeLocalGame();if(tableRuntime){tableRuntime.abandon();tableRuntime=null;hostInvitations=[];}return reply(200,value);}
+      if(req.method==='GET'&&pathname==='/api/desktop-deks'){
+        const dekDir=resolve(process.env.USERPROFILE||'C:/Users/robmi','OneDrive/Desktop/Magic the Gathering/Deck Files');
+        const {readdirSync,readFileSync,existsSync}=await import('node:fs');
+        if(!existsSync(dekDir))return reply(200,{decks:[],dir:dekDir,error:'Deck Files folder missing'});
+        const files=readdirSync(dekDir).filter(f=>/^D[1-6] .*\.dek$/i.test(f));
+        const decks=[];
+        for(const file of files){
+          const text=readFileSync(resolve(dekDir,file),'utf8');
+          const cardTags=[...text.matchAll(/<Cards\b([^/]*)\/>/g)];
+          const rows=[]; let commander=null;
+          for(const m of cardTags){
+            const attrs=m[1];
+            const name=(attrs.match(/Name="([^"]+)"/)||[])[1];
+            if(!name) continue;
+            const nice=name.replace(/&#x27;/g,"'");
+            const quantity=Number((attrs.match(/Quantity="(\d+)"/)||[])[1]||1)||1;
+            const side=/Sideboard="true"/i.test(attrs);
+            if(side){ commander=nice; continue; }
+            const existing=rows.find(r=>r.name===nice);
+            if(existing)existing.quantity+=quantity; else rows.push({name:nice,quantity});
+          }
+          const idMatch=file.match(/^(D[1-6])/i);
+          const id='deck:live:'+(idMatch?idMatch[1].toUpperCase():file);
+          if(!commander){
+            commander=rows.find(r=>/atraxa|chulane|krenko|shadrix|quintorius|felothar/i.test(r.name))?.name || rows[0]?.name || file;
+          }
+          const main=rows.filter(r=>r.name.toLowerCase()!==String(commander).toLowerCase());
+          decks.push({id,name:file.replace(/\.dek$/i,''),commander,commanders:[commander],rows:main,source:'library',ok:true,_fromDek:true});
+        }
+        return reply(200,{decks,dir:dekDir});
+      }
       if(pathname==='/api/import-deck')return reply(200,await importWorkshopDeck(body));
       if(pathname==='/api/prepare'){
         requireAiSession(body);if(preparing)throw Error('A deck preparation is already running');preparing=true;
@@ -125,7 +214,13 @@ createServer(async(req,res)=>{
         if(launching)throw Error('Launch already in progress');const pod=prepared.get(body.id);if(!pod)throw Error('Prepare and review this pod before starting');requireAiSession(pod);launching=true;
         try{
           if(pod.schema==='CommanderLobbyPack@1'){
+            if(pod.reservedHumanSeats.length&& !remoteGuestsAvailable)throw Error('Remote guests are unavailable. Restart CrankMagic Online with Remote Guests enabled before creating a human lobby.');
             if(tableRuntime&&!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the current multiplayer table before opening another');
+            // Every invitation is sealed to the table id it was issued against, so replacing a table
+            // silently voids each link already emailed. The guest sees "Invitation expired or
+            // unavailable" on a link that was minted minutes ago. Refuse instead, and make a caller
+            // that really means to discard them say so.
+            if(tableRuntime&&hostInvitations.length&&body.replace!==true)throw Error('This table already has invitations out. Opening another would void every link you have sent. Close the table first, or start again with replace set, to discard them on purpose.');
             tableRuntime?.close();tableRuntime=createLocalTableRuntime({...runtimeOptions,lobby:pod});
             await tableRuntime.ready(true);hostInvitations=pod.reservedHumanSeats.map(({seatId})=>{const issued=tableRuntime.invite(seatId,14_400_000);return {seatId,expiresIn:issued.expiresIn,link:`${guestInfo.origin}/#table=${encodeURIComponent(issued.tableId)}&invite=${encodeURIComponent(issued.invite)}`};});
             prepared.delete(body.id);return reply(200,{lobby:true,table:tableRuntime.view(),invitations:hostInvitations,guestOrigin:guestInfo.origin});
@@ -137,12 +232,17 @@ createServer(async(req,res)=>{
       if(pathname==='/api/lobby-deck'){if(!tableRuntime)throw Error('No multiplayer lobby is open');const value=await tableRuntime.deck(body);return reply(200,{table:value.table});}
       if(pathname==='/api/lobby-rematch'){if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.rematch(body.accept===true);return reply(200,{table:tableRuntime.view()});}
       if(pathname==='/api/lobby-invite'){
+        if(!remoteGuestsAvailable)throw Error('Remote guests are unavailable. Restart CrankMagic Online with Remote Guests enabled before creating an invitation.');
         if(!tableRuntime)throw Error('No multiplayer lobby is open');const issued=tableRuntime.invite(body.seatId,14_400_000),value={seatId:issued.seatId,expiresIn:issued.expiresIn,link:`${guestInfo.origin}/#table=${encodeURIComponent(issued.tableId)}&invite=${encodeURIComponent(issued.invite)}`};hostInvitations=hostInvitations.filter(x=>x.seatId!==value.seatId);hostInvitations.push(value);return reply(200,value);
       }
       if(pathname==='/api/lobby-close'){if(!tableRuntime)throw Error('No multiplayer lobby is open');if(!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the active match before closing its table');tableRuntime.abandon();tableRuntime=null;hostInvitations=[];return reply(200,{closed:true});}
       return reply(404,{error:'Unknown operation'});
-    }catch(e){return reply(400,{error:e.message});}
+    // A deck refused for naming cards Forge does not have travels with the list, so the page can
+    // offer a swap instead of printing a sentence and leaving the guest to re-read it.
+    }catch(e){return reply(400,{error:e.message,...(e.unresolved?{unresolved:e.unresolved}:{}),...(e.forgeUnavailable?{forgeUnavailable:true}:{}),...(Number.isSafeInteger(e.seatId)?{seatId:e.seatId}:{})});}
   }
+  // Redirect root to live game setup
+  if(req.method==='GET'&&pathname==='/'){res.writeHead(302,{'Location':'/app/#game','Cache-Control':'no-store'});res.end();return;}
   const entry=files.get(pathname);
   if(req.method!=='GET'||!entry){res.writeHead(404);res.end();return;}
   try {const body=await readFile(resolve(root,entry[0]));res.writeHead(200,{'Content-Type':entry[1]+'; charset=utf-8','Cache-Control':'no-store',

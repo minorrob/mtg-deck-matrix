@@ -30,6 +30,9 @@ const REPORT = process.env.PAGE_BUDGET_REPORT === "1";
 
 /* The live library's first deck is the deck page and the Ready to add page the budget reads. */
 const DECK = "deck:live:D1";
+/* Explore scopes itself before it draws anything (Explore A). A bare #discover is the chooser,
+   and the graph lives behind a scope, so the graph page needs a scoped URL to be reached at all. */
+const EXPLORE_COMMANDER = "Chulane%2C%20Teller%20of%20Tales";
 
 /* [route, name, boundary, {desktop budgets}, {phone budgets}]. The boundary is the first
    table, list or canvas of the page; words and controls are counted before it in document
@@ -51,9 +54,20 @@ const PAGES = [
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
-  /* Discover's facet bar is still 25 chips in four rows; folding it into one Filters
-     control is the next round's work, so its budget is today's reading, not the rule. */
-  ["discover", "Discover", "#cm-graph", [330, 40, 14], [330, 40, 14]],
+  /* Explore is two pages now, and this budget used to name only the second of them.
+     #discover on its own became the scope chooser in Explore A -- three doors and the recent
+     scopes -- and the graph moved behind a scope, so #cm-graph is not on that route by design
+     and the check had nothing to measure up to. Both pages are budgeted rather than one:
+     dropping the graph line would have quietly retired the only reading of the heaviest page
+     in the app, which is the reading this whole file exists for.
+     The graph's facet bar is still 25 chips in four rows; folding it into one Filters control
+     is the next round's work, so its budget is today's reading, not the rule. */
+  /* The chooser IS the content, so what precedes it is only the page head: one word and the
+     "?". Read 1/1/0 at both widths on 18 September. */
+  ["discover", "Explore · chooser", ".cm-explore-chooser", [8, 3, 2], [8, 3, 2]],
+  /* Read 275/15/7 at both widths on 18 September -- lighter than the 330/40/14 this line
+     carried before, because the facet bar now sits behind a scope rather than above everything. */
+  [`discover?commander=${EXPLORE_COMMANDER}`, "Explore · graph", "#cm-graph", [310, 24, 12], [310, 24, 12]],
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
   ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 11, 4], [24, 11, 4]],

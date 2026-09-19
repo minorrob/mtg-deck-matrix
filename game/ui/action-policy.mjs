@@ -21,3 +21,27 @@ export function mayAutoPassPriority(view,viewerPlayerId,yieldTurn=null,holdRespo
   if(holdResponsesTurn===state.turn)return false;
   return true;
 }
+
+/* SKIP TO THE END OF YOUR OWN TURN.
+ *
+ * mayAutoPassPriority above is for somebody else's turn: it deliberately refuses while you are the
+ * turn player, because passing your own priority without being asked would play your turn for you.
+ * That left nothing for the common case in a four-player game -- your main phase is done, you have
+ * nothing to hold up, and there are still several steps of "Priority:" between you and the next
+ * player. Everyone clicks through them every turn.
+ *
+ * So this is opt-in and single-turn: it applies only to the turn the player asked for it on, and
+ * `skipTurn` is cleared when the turn changes. It stops for anything that is a real decision --
+ * a choice, a native fallback, an action still resolving -- and it stops when the stack is not
+ * empty, because something waiting to resolve is the moment you might want to respond. Nothing
+ * here decides anything: it presses the same OK the player would have pressed.
+ */
+export function maySkipToEndOfTurn(view,viewerPlayerId,skipTurn=null){
+  const state=view.state||{},ui=view.ui||{};
+  if(state.gameOver||skipTurn===null||skipTurn!==state.turn)return false;
+  if(state.priorityPlayerId!==viewerPlayerId)return false;
+  if(ui.actionInFlight||ui.choice||ui.nativeFallback)return false;
+  if(ui.ok!=='OK'||!ui.okEnabled||!/^Priority:/m.test(ui.prompt||''))return false;
+  if(Number(state.stackSize)>0)return false;
+  return true;
+}
