@@ -145,7 +145,7 @@
       
       try {
         const seedCard = seedInfo.name ? C.catalog.exact(seedInfo.name) : null;
-        const graphUrl = C.assets && C.assets.graph ? C.assets.graph : 'data/graph.json?v=18';
+        const graphUrl = CrankAssets.graph;
         
         const scoped = await Scoped.loadScoped({
           seedCard,
