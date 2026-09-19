@@ -26,7 +26,8 @@
  *                    received ones included, so a copy counts as in flight when the decks
  *                    still need it after Own, or when nothing is owned and nothing targets it
  *                    (a card ordered for a plan, not a list). Everything else was received.
- *   buy              Buy Count with the price; checked against Own, Ordered and the targets
+ *   buy              Buy Count at the CATALOG's price (Scryfall), not the workbook's $ Each,
+ *                    which is what Trey paid; checked against Own, Ordered and the targets
  *   upgrades         the Upgrade Path sheet, every row that names a tier, a deck and a card
  *   commanders       the Deck Lists sheet (Status = Commander) or a Decks sheet (Deck, Commander, Name)
  *   names, definitions, notes, options, planned   carried from the committed file per deck;
@@ -121,7 +122,17 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
     if(c.buy!==expected)buyIssues.push(`${c.name}: Buy Count says ${c.buy}, but targets ${c.sumT} − owned ${c.own} − ordered ${forDecks} = ${expected}`);
   }
   ordered.sort(byName);
-  const buy=cards.filter(c=>c.buy).map(c=>[c.name,c.buy,c.price]).sort(byName);
+  /* THE MARKET PRICE IS SCRYFALL'S, ALWAYS; THE WORKBOOK'S $ Each IS WHAT TREY PAID.
+     Those are two different numbers and they were sharing one field. A To Buy list priced
+     from the workbook quotes history -- on the committed file it totalled $74.44 against
+     $100.47 at catalog prices, understating the shop by a third, with Night's Whisper at
+     $0.29 for a card the record set has at $5.45. data/cards.json is the Scryfall-derived
+     record set the Shop and the Card view already price from, so pricing here from the same
+     lookup makes the three agree. The workbook figure is kept only where the catalog has no
+     price at all: a missing price is missing data, not a free card. (It covers all 55 rows
+     of the committed file, so the fallback is a safety net rather than a path.) */
+  const marketPrice=(name,paid)=>{const c=lookup(name),p=Number(c&&c.price);return Number.isFinite(p)&&p>0?p:paid;};
+  const buy=cards.filter(c=>c.buy).map(c=>[c.name,c.buy,marketPrice(c.name,c.price)]).sort(byName);
   /* PRESERVE TO BUY GROUP ENTRIES (WANTED) FROM PRIOR STATE. The workbook's Buy Count is
      what the owner typed for deck shortfalls; entries manually added via the UI (Wanted
      entries in the To Buy group) are not in the workbook, so they must be carried forward
@@ -134,7 +145,7 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
     for(const [name,qty,price] of prior.buy){
       const key=Live.fold(name);
       if(!buyMap.has(key)){
-        preserved.push([canon(name),qty,price]);
+        preserved.push([canon(name),qty,marketPrice(name,price)]);
       }
     }
     if(preserved.length){

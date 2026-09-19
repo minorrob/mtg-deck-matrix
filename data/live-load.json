@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 6,
- "savedAt": "2026-09-16T06:04:07Z",
+ "savedAt": "2026-09-19T16:11:40Z",
  "workbook": "Treys_MtG_Master_v13.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
  "decks": [
@@ -5317,62 +5317,62 @@
   [
    "Adarkar Wastes",
    2,
-   0.4
+   0.35
   ],
   [
    "Ancient Lumberknot",
    1,
-   0.23
+   0.28
   ],
   [
    "Anguished Unmaking",
    1,
-   1.46
+   1.54
   ],
   [
    "Approach of the Second Sun",
    1,
-   6.66
+   6.68
   ],
   [
    "Arbor Adherent",
    1,
-   1.87
+   2.63
   ],
   [
    "Arcane Signet",
    1,
-   0.41
+   0.57
   ],
   [
    "Battle Hymn",
    1,
-   1.55
+   2.34
   ],
   [
    "Beast Within",
    1,
-   0.6
+   0.63
   ],
   [
    "Blood Artist",
    1,
-   2.79
+   3.68
   ],
   [
    "Boros Signet",
    1,
-   0.52
+   0.67
   ],
   [
    "Brushland",
    2,
-   1.71
+   1.69
   ],
   [
    "Caves of Koilos",
    1,
-   0.71
+   0.82
   ],
   [
    "Chancellor of the Forge",
@@ -5382,122 +5382,122 @@
   [
    "Command Tower",
    4,
-   0.22
+   0.27
   ],
   [
    "Contentious Plan",
    1,
-   0.39
+   0.32
   ],
   [
    "Den of the Bugbear",
    1,
-   1.33
+   1.68
   ],
   [
    "Dream Stalker",
    1,
-   0.17
+   0.29
   ],
   [
    "Expel the Interlopers",
    1,
-   0.25
+   0.3
   ],
   [
    "Ezuri, Stalker of Spheres",
    1,
-   0.79
+   0.95
   ],
   [
    "Fellwar Stone",
    1,
-   0.85
+   0.95
   ],
   [
    "Goblin Burrows",
    1,
-   0.3
+   0.73
   ],
   [
    "Goblin Piledriver",
    1,
-   2.58
+   2.62
   ],
   [
    "Hobgoblin Bandit Lord",
    1,
-   4.77
+   4.91
   ],
   [
    "Idol of Oblivion",
    1,
-   1.85
+   3.54
   ],
   [
    "Infectious Inquiry",
    1,
-   0.52
+   0.4
   ],
   [
    "Kiora's Follower",
    1,
-   0.34
+   0.36
   ],
   [
    "Lightning Greaves",
    1,
-   4.59
+   3.58
   ],
   [
    "Llanowar Wastes",
    2,
-   0.58
+   0.6
   ],
   [
    "Lorehold Command",
    1,
-   0.41
+   0.39
   ],
   [
    "Magistrate's Scepter",
    1,
-   3.09
+   3.24
   ],
   [
    "Marauding Blight-Priest",
    1,
-   0.19
+   0.36
   ],
   [
    "Mirkwood Bats",
    1,
-   1.43
+   1.65
   ],
   [
    "Night's Whisper",
    2,
-   0.29
+   5.45
   ],
   [
    "Ophiomancer",
    1,
-   0.96
+   1.14
   ],
   [
    "Pashalik Mons",
    1,
-   3.9
+   4.42
   ],
   [
    "Phyrexian Arena",
    1,
-   3.74
+   4.19
   ],
   [
    "Priest of Forgotten Gods",
    1,
-   0.59
+   0.57
   ],
   [
    "Prologue to Phyresis",
@@ -5507,7 +5507,7 @@
   [
    "Reckless Bushwhacker",
    1,
-   0.19
+   0.3
   ],
   [
    "Release to Memory",
@@ -5517,77 +5517,77 @@
   [
    "Restoration Angel",
    1,
-   0.33
+   0.38
   ],
   [
    "Saruli Caretaker",
    1,
-   0.27
+   0.29
   ],
   [
    "Shineshadow Snarl",
    1,
-   0.27
+   0.3
   ],
   [
    "Skirk Fire Marshal",
    1,
-   0.93
+   2.88
   ],
   [
    "Sol Ring",
    2,
-   1.45
+   1.53
   ],
   [
    "Unbreakable Formation",
    3,
-   0.74
+   1.4
   ],
   [
    "Underground River",
    1,
-   2.39
+   2.27
   ],
   [
    "Vraska, Betrayal's Sting",
    1,
-   0.94
+   0.99
   ],
   [
    "Wall of Blossoms",
    1,
-   0.29
+   0.33
   ],
   [
    "Warleader's Call",
    1,
-   2.98
+   7.12
   ],
   [
    "Whitemane Lion",
    1,
-   0.09
+   0.24
   ],
   [
    "Windborn Muse",
    1,
-   0.54
+   0.83
   ],
   [
    "Woe Strider",
    1,
-   0.21
+   0.33
   ],
   [
    "Yahenni, Undying Partisan",
    1,
-   0.3
+   0.31
   ],
   [
    "Yavimaya Coast",
    2,
-   0.36
+   0.38
   ]
  ],
  "upgrades": [

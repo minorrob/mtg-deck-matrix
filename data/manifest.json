@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-19T14:55:03.897Z",
+ "generatedAt": "2026-09-19T16:12:11.423Z",
  "generator": "tools/data-manifest.mjs",
  "count": 18,
  "files": [
@@ -139,10 +139,10 @@
   {
    "file": "data/live-load.json",
    "schema": "live-load@1",
-   "stamp": "2026-09-16T06:04:07Z",
+   "stamp": "2026-09-19T16:11:40Z",
    "generator": "tools/build-live-load.mjs",
-   "bytes": 84928,
-   "sha256": "debc49930283b28d40adb1a001f0b98377656f9d0f4be1d15a4b990d2dc86d46",
+   "bytes": 84927,
+   "sha256": "f814c350f72ad3e451a22d00549bcc6d5270b7a61f29bc89e81ac3cf35f2df33",
    "version": null,
    "served": false,
    "cache": "not served"
@@ -150,10 +150,10 @@
   {
    "file": "data/live-state.json",
    "schema": "live-state@1",
-   "stamp": "2026-09-16T06:04:20.412Z",
+   "stamp": "2026-09-19T16:12:09.214Z",
    "generator": "tools/build-live-state.mjs",
-   "bytes": 1014506,
-   "sha256": "c48d4c8dd3a2e7ac51f87693f900d72ae862f3fd7143f39be6878917b3913627",
+   "bytes": 1014505,
+   "sha256": "d27cb93d8ded9e3ff19a4ea2a803e08a710bbdcf18f9efeeb68f7b17321d4c2e",
    "version": null,
    "served": false,
    "cache": "fetched by Load Live"
