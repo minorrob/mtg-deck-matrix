@@ -158,7 +158,17 @@ measurement tools and a price a deck was measured at must not move under a publi
 Check each one against the rule above before changing it; it is not automatically wrong,
 because "what this cost when bought" is a legitimate question.
 
-### What is NOT implemented — this is the gap to close
+### Done — the buy list (commit `73e5459`)
+
+`build-live-load.mjs` now prices the To Buy list from `bundledLookup`, which resolves
+against `data/cards.json`, rather than from the workbook's `$ Each`. The preserved
+"Wanted" entries go through the same path. On the committed file this moved the To Buy
+total from **$74.44 to $100.47** — the shopping list had been understating the spend by a
+third, with `Night's Whisper` quoted at $0.29 against a record-set price of $5.45.
+`data/live-load.json` and `data/live-state.json` were rebuilt from the v13 workbook; the
+diff is exactly `savedAt` and the buy prices.
+
+### What is STILL NOT implemented — this is the gap to close
 
 **The workbook's `$ Each` never reaches the app as `paid` for owned cards.**
 
@@ -172,12 +182,18 @@ because "what this cost when bought" is a legitimate question.
 
 Closing it means carrying `$ Each` through for rows with `Own > 0` and landing it on the
 lot as `paid` with `paidSource: 'typed'` — **never** as the card's price. Market price stays
-Scryfall's.
+Scryfall's. The buy-list half above is the worked example of the same rule, so follow its
+shape: resolve through `bundledLookup`, keep the workbook figure only as a fallback, and
+rebuild both library files so `tests/generators.mjs` (which runs
+`build-live-load.mjs --check`) stays green.
 
-> **You will need Trey's live workbook.** `data/live-load.json` names it as
-> `Treys_MtG_Master_v13.xlsx`; the repo only carries up to `v3` under `data/source/`. The
-> cloud session could not regenerate the Live Load for this reason, which is part of why
-> this is handed off rather than done.
+> **The workbook is in the repo**: `data/source/Treys_MtG_Master_v13.xlsx`, which is the
+> one `data/live-load.json` names. `node tools/build-live-load.mjs` with no argument picks
+> the newest `data/source/*Master*.xlsx` and finds it, so you can rebuild and verify without
+> anything from Trey.
+>
+> *(An earlier revision of this document claimed the repo only carried up to `v3`. That was
+> wrong — a truncated `find` misread as the whole listing — and it is corrected here.)*
 
 This pairs naturally with the dynamic-deck work because both are changes to the same
 importer, and both need the workbook in hand. Confirm with Trey whether he wants them in
