@@ -75,6 +75,13 @@
     ensure(Array.isArray(doc.owned.bench),'owned.bench must be an array.');for(const row of doc.owned.bench)forDeck(row,'owned.bench',ids);
     ensure(Array.isArray(doc.ordered),'ordered must be an array.');for(const row of doc.ordered)forDeck(row,'ordered',ids);
     ensure(Array.isArray(doc.buy),'buy must be an array.');for(const row of doc.buy){pair(row,'buy');ensure(row[2]===undefined||row[2]===null||(Number.isFinite(row[2])&&row[2]>=0),`buy: ${row[0]} has an invalid price.`);}
+    /* `metadata` is optional: the workbook's own reading of each card (purpose, mechanics,
+       bracket), carried so the app can show what the workbook says rather than only what the
+       catalog derives. Values are free text the owner maintains, so only the shape is checked. */
+    if(doc.metadata!==undefined&&doc.metadata!==null){
+      ensure(typeof doc.metadata==='object'&&!Array.isArray(doc.metadata),'metadata must map card name to its workbook fields.');
+      for(const [name,m] of Object.entries(doc.metadata))ensure(m&&typeof m==='object'&&!Array.isArray(m),`metadata: ${name} must be an object.`);
+    }
     /* `paid` is optional: a live-load written before it existed still loads. */
     if(doc.paid!==undefined&&doc.paid!==null){
       ensure(typeof doc.paid==='object'&&!Array.isArray(doc.paid),'paid must map card name to the price paid per copy.');
@@ -140,7 +147,16 @@
         const noteText=[u.deck,u.replaces?`replaces ${u.replaces}`:'',u.tier!==undefined?`tier ${u.tier}`:'',Number.isFinite(u.price)?`$${u.price.toFixed(2)}`:'',u.why||''].filter(Boolean).join(' · ');
         entries.push({cardId:idOf(u.card),quantity:1,notes:noteText});
         const deckId=deckIds[u.deck],replaces=u.replaces?slotOf[u.deck].get(idOf(u.replaces)):null;
-        if(!replaces){issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is not in that deck's target, so it is filed in the group only.`);continue;}
+        /* A REPLACED CARD THAT IS IN THE BOX BUT NOT IN THE TARGET IS THE NORMAL CASE, not a
+           problem to report. Once the workbook's target columns describe the state AFTER the
+           upgrades are bought, the temporary card has already left the hundred while it is
+           still physically sleeved -- which is exactly what an upgrade is: the target names
+           the card coming in, the actuals name the card it comes in for. Only a replaced card
+           that is in neither the target nor the box is worth a word. */
+        if(!replaces){
+          const inBox=(doc.owned.inDeck[u.deck]||[]).some(([n])=>fold(n)===fold(u.replaces||''));
+          if(!inBox)issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is in neither that deck's target nor its box, so it is filed in the group only.`);
+          continue;}
         try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText,tier:Number.isInteger(u.tier)?u.tier:null,why:u.why||'',price:Number.isFinite(u.price)?u.price:null}});}
         catch(err){issues.push(`Upgrade ${u.card} (${u.deck}) could not be attached to its slot: ${err.message}`);}
       }

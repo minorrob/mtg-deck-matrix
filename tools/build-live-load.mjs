@@ -43,7 +43,7 @@ import {basename} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {bundledLookup, describe, SOURCE} from './build-live-state.mjs';
 const require=createRequire(import.meta.url);
-const Model=require('../collection-model.js'),Live=require('./live-load.js');
+const Model=require('../collection-model.js'),Live=require('./live-load.js'),Catalog=require('../card-catalog.js');
 
 const READ=fileURLToPath(new URL('./read-sheet-rows.py',import.meta.url));
 const DECKS=['D1','D2','D3','D4','D5','D6'];
@@ -60,12 +60,180 @@ function sheet(workbook,name){
 }
 const int=(v,where)=>{if(v===null||v===undefined||v==='')return 0;const n=Number(v);ensure(Number.isInteger(n)&&n>=0,`${where}: "${v}" is not a whole number.`);return n;};
 const cash=v=>{const n=Number(v);return Number.isFinite(n)&&n>0?Math.round(n*100)/100:null;};
+/* An options/planned entry is either a bare card name or {card, why}. Module level so both
+   the wide reader and the star reader use the same one. */
+const listed=x=>typeof x==='string'?{card:x,why:''}:{card:String(x.card||'').trim(),why:String(x.why||'').trim(),...(x.quantity?{quantity:x.quantity}:{})};
+/* The market price is the catalog's (Scryfall), always; the workbook's figure is what was
+   paid and only stands in when the catalog has no price at all. */
+const marketPriceOf=(lookup,name,fallback)=>{const c=lookup(name),p=Number(c&&c.price);return Number.isFinite(p)&&p>0?p:(fallback??null);};
+
+/* THE STAR SCHEMA (Treys MtG Master v16 and later). The workbook Trey maintains now carries
+   the same facts as normalized tables beside the wide Master sheet: master_main is the
+   dimension (one row per card id, with the metadata the app should mirror), and
+   master_target / master_actuals / master_buy_upgrade / master_collector hang off it.
+   Two things make this the path worth reading:
+
+     - THE DECK COUNT IS DISCOVERED, NOT LISTED. Every D<n>-T column in master_target is a
+       deck, so a seventh (or a twelfth) is a workbook edit rather than a code edit. The
+       old wide reader hard-codes D1..D6 and the column letters they sit at.
+     - THE STAR TABLES HOLD NO FORMULAS. The wide sheet computes In Deck, In Bench, Buy
+       Count and Target Qty, so a workbook written by anything but Excel has those cells
+       empty until it is opened and saved. The normalized tables carry plain numbers and
+       import correctly either way.
+
+   Ordered and $ Each have no home in the star tables yet, so they are read from the wide
+   Master sheet, where both are plain values. */
+function starTable(workbook,name,{required=true}={}){
+  const rows=sheet(workbook,name);
+  if(!rows){ensure(!required,`The workbook has no ${name} sheet.`);return null;}
+  const h=rows.findIndex(r=>String(r[0]||'').trim()==='Card ID'||String(r[0]||'').trim()==='Deck'||String(r[0]||'').trim()==='Deck ID');
+  ensure(h>=0,`${name}: no header row.`);
+  const H=rows[h].map(x=>String(x??'').trim());
+  return {head:H,rows:rows.slice(h+1).filter(r=>String(r[0]||'').trim()),
+          get:(r,n)=>{const i=H.indexOf(n);return i<0?null:r[i];}};
+}
+
+export async function importStarWorkbook(workbook,{prior=null,now=new Date(),lookup,canon,notes}){
+  const main=starTable(workbook,'master_main'),tgt=starTable(workbook,'master_target'),
+        act=starTable(workbook,'master_actuals'),dk=starTable(workbook,'master_decks'),
+        up=starTable(workbook,'master_buy_upgrade',{required:false}),
+        strat=starTable(workbook,'deck_strategies',{required:false});
+
+  /* The decks are whatever the workbook defines: every D<n>-T column is one. */
+  const DECK_IDS=tgt.head.filter(h=>/^D\d+-T$/.test(h)).map(h=>h.slice(0,-2))
+    .sort((a,b)=>Number(a.slice(1))-Number(b.slice(1)));
+  ensure(DECK_IDS.length,'master_target defines no D<n>-T column, so there are no decks to build.');
+  for(const id of DECK_IDS)ensure(act.head.includes(id+'-A'),`${id} has a target column but master_actuals has no ${id}-A.`);
+  notes.push(`${DECK_IDS.length} decks discovered from master_target: ${DECK_IDS.join(', ')}.`);
+
+  const int=v=>{const n=Number(v);return Number.isFinite(n)?Math.trunc(n):0;};
+  const card={},order=[];
+  for(const r of main.rows){
+    const id=String(main.get(r,'Card ID')).trim(),name=canon(String(main.get(r,'Card')||'').trim());
+    if(!name)continue;
+    card[id]={id,name,own:int(main.get(r,'Own')),inDeck:int(main.get(r,'In Deck')),
+      bench:int(main.get(r,'In Bench')),buy:int(main.get(r,'Buy Count')),
+      meta:{color:main.get(r,'Color'),type:main.get(r,'Type'),bracket:main.get(r,'Bracket'),
+            mv:main.get(r,'MV'),description:main.get(r,'Description'),
+            purpose:main.get(r,'Primary Purpose'),primary:main.get(r,'Primary Mechanic'),
+            secondary:main.get(r,'Secondary Mechanic'),tertiary:main.get(r,'Tertiary Mechanic')}};
+    order.push(id);
+  }
+  /* Ordered and what was paid live in master_main from v22 on. Older star workbooks kept
+     them only on the wide sheet, so that is the fallback -- both are plain values there. */
+  const hasOrdered=main.head.includes('Ordered'),hasPaid=main.head.includes('$ Each');
+  if(hasOrdered||hasPaid){
+    for(const r of main.rows){const id=String(main.get(r,'Card ID')).trim();if(!card[id])continue;
+      if(hasOrdered)card[id].ordered=int(main.get(r,'Ordered'));
+      if(hasPaid)card[id].paid=cash(main.get(r,'$ Each'));}
+  }
+  if(!hasOrdered||!hasPaid){
+    const wide=sheet(workbook,'Master');
+    if(wide){
+      const h=wide.findIndex(r=>String(r[0]||'').trim()==='Card ID');
+      if(h>=0){const H=wide[h].map(x=>String(x??'').trim()),oi=H.indexOf('Ordered'),pi=H.indexOf('$ Each');
+        for(const r of wide.slice(h+1)){const id=String(r[0]||'').trim();if(!card[id])continue;
+          if(!hasOrdered&&oi>=0)card[id].ordered=int(r[oi]);
+          if(!hasPaid&&pi>=0)card[id].paid=cash(r[pi]);}}
+      notes.push('Ordered/$ Each read from the wide Master sheet; master_main does not carry them.');
+    }
+  }
+
+  const per=(table,suffix)=>{const out={};for(const id of DECK_IDS)out[id]=[];
+    for(const r of table.rows){const id=String(table.get(r,'Card ID')).trim();if(!card[id])continue;
+      for(const d of DECK_IDS){const q=int(table.get(r,d+suffix));if(q>0)out[d].push([card[id].name,q]);}}
+    for(const d of DECK_IDS)out[d].sort(byName);return out;};
+  const targets=per(tgt,'-T'),actuals=per(act,'-A');
+
+  const strategyOf={};
+  if(strat)for(const r of strat.rows){const id=String(strat.get(r,'Deck ID')||'').trim();if(!id)continue;
+    strategyOf[id]={strategy:strat.get(r,'Strategy')||'',engine:strat.get(r,'Engine')||'',
+      attack:strat.get(r,'Attack Mechanics')||'',defense:strat.get(r,'Defense Mechanics')||'',
+      ramp:strat.get(r,'Ramp Mechanic')||''};}
+
+  const priorDeck=id=>(prior?.decks||[]).find(d=>d.id===id)||null;
+  const decks=[];
+  for(const r of dk.rows){
+    const id=String(dk.get(r,'Deck')||'').trim();if(!DECK_IDS.includes(id))continue;
+    const p=priorDeck(id),total=targets[id].reduce((n,c)=>n+c[1],0);
+    ensure(total===100,`${id}: the target column sums to ${total}, not 100. Fix the workbook before building.`);
+    const commander=canon(String(dk.get(r,'Commander')||'').trim());
+    /* A DECK THE COMMITTED FILE HAS NEVER SEEN STILL NEEDS A DEFINITION. Mechanics are read
+       off the hundred the same way the app reads them, so a deck added in the workbook
+       arrives described rather than blank; the brackets follow the rest of the table until
+       Trey says otherwise, and any definition already committed wins over this. */
+    let definition=p?.definition;
+    if(!definition||!Array.isArray(definition.mechanics)||definition.mechanics.length<2){
+      const recs=targets[id].map(([n])=>lookup(n)).filter(Boolean),lead=lookup(commander);
+      const mech=Catalog.deckMechanics(recs,lead,4)||[];
+      definition={baseBracket:3,bracketCeiling:3,playStyle:'Balanced',...(definition||{}),mechanics:mech};
+      if(mech.length<2)notes.push(`${id}: only ${mech.length} mechanic(s) could be read from the hundred; add them by hand in live-load.json.`);
+      else notes.push(`${id}: definition derived from the hundred (${mech.join(', ')}).`);
+    }
+    const d={id,name:String(dk.get(r,'Name')||'').trim()||p?.name||id,commander,
+      definition,notes:p?.notes||'',cards:targets[id]};
+    /* THE DECK OVERVIEW COMES FROM THE WORKBOOK when deck_strategies describes it. Trey
+       maintains that sheet, so it wins over whatever the committed file carried. */
+    if(strategyOf[id]){d.strategy=strategyOf[id];if(strategyOf[id].strategy)d.notes=strategyOf[id].strategy;}
+    /* OPTIONS AND PLANS ARE CARRIED, BUT ONLY WHERE THEY STILL FIT. An Option flags a card
+       that IS in the hundred as the first to swap out, and a Plan names one that is NOT. The
+       target rewrite moves cards in and out, so a list carried from the committed file can
+       describe a hundred that no longer exists; those entries are dropped with a note rather
+       than failing the build. */
+    const inHundred=new Set(targets[id].map(c=>Live.fold(c[0])));
+    const keep=(list,want,label)=>{const out=[];for(const raw of list||[]){const o=listed(raw);o.card=canon(o.card);
+      if(inHundred.has(Live.fold(o.card))!==want){notes.push(`${id}: ${o.card} dropped from ${label}; it is ${want?'no longer':'now'} in the ${id} hundred.`);continue;}
+      if(out.some(x=>Live.fold(x.card)===Live.fold(o.card)))continue;out.push(o);}return out;};
+    const options=keep(p?.options,true,'options'),planned=keep(p?.planned,false,'planned');
+    if(options.length)d.options=options;if(planned.length)d.planned=planned;
+    decks.push(d);
+  }
+  ensure(decks.length===DECK_IDS.length,`master_decks names ${decks.length} of the ${DECK_IDS.length} decks the target columns define.`);
+
+  const inDeck={};for(const d of DECK_IDS)inDeck[d]=actuals[d];
+  const bench=[],ordered=[],buy=[],paid={},metadata={};
+  for(const id of order){
+    const c=card[id];
+    const off=c.own-c.inDeck;if(off>0)bench.push([c.name,off]);
+    if(c.ordered>0)ordered.push([c.name,c.ordered]);
+    if(c.buy>0)buy.push([c.name,c.buy,marketPriceOf(lookup,c.name,c.paid)]);
+    if(c.own>0&&c.paid)paid[c.name]=c.paid;
+    const m=Object.fromEntries(Object.entries(c.meta).filter(([,v])=>v!==null&&v!==undefined&&v!==''&&v!=='None'));
+    if(Object.keys(m).length)metadata[c.name]=m;
+  }
+  bench.sort(byName);ordered.sort(byName);buy.sort(byName);
+
+  const upgrades=[];
+  if(up)for(const r of up.rows){
+    const tempId=String(up.get(r,'Card ID')||'').trim(),upId=String(up.get(r,'Upgrade Card ID')||'').trim(),
+          deck=String(up.get(r,'Deck')||'').trim(),status=String(up.get(r,'Temp Status')||'').trim();
+    if(!card[upId]||!card[tempId]||!DECK_IDS.includes(deck))continue;
+    upgrades.push({deck,card:card[upId].name,replaces:card[tempId].name,
+      tier:status==='LT'?3:2,price:cash(up.get(r,'Price'))??0,origin:'workbook',
+      why:status==='LT'?'Long-term replacement for a temporary card.':'Short-term replacement for a temporary card.'});
+  }
+
+  const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
+    count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
+    note:"Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
+    decks,owned:{inDeck,bench},ordered,buy,paid,metadata,upgrades};
+  Live.check(doc);
+  const built=Live.build(doc,{Model,lookup});
+  return {doc,notes,built};
+}
 
 export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,now=new Date()}={}){
   const notes=[];
   const lookup=await bundledLookup({scryfall});
   const unresolved=new Set();
   const canon=name=>{const c=lookup(name);if(!c){unresolved.add(name);return name;}return c.name;};
+  /* A workbook that carries master_main is read through its star schema: dynamic decks,
+     no formula cells, and the metadata the app mirrors. */
+  if(sheet(workbook,'master_main')){
+    const out=await importStarWorkbook(workbook,{prior,now,lookup,canon,notes});
+    ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}.`);
+    return out;
+  }
 
   /* MASTER. Header row is the one whose first cell is "Card"; every column is found by name. */
   const master=sheet(workbook,'Master');ensure(master,'The workbook has no Master sheet.');
@@ -200,7 +368,6 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   /* THE TWO WORKING LISTS PER DECK. A "CrankMagic Plans" sheet in the workbook (Deck, Kind,
      Card, Why; Kind is Option or Planned) is the owner's own place for them; an --adjust file
      overrides it for the decks it names; the committed file is what carries them otherwise. */
-  const listed=x=>typeof x==='string'?{card:x,why:''}:{card:String(x.card||'').trim(),why:String(x.why||'').trim(),...(x.quantity?{quantity:x.quantity}:{})};
   const plansSheet=sheet(workbook,'CrankMagic Plans'),fromSheet={};
   if(plansSheet){const ph=plansSheet.findIndex(r=>String(r[0]||'').trim()==='Deck');
     if(ph>=0){const PH=plansSheet[ph].map(x=>String(x||'').trim()),dC=PH.indexOf('Deck'),kC=PH.indexOf('Kind'),cC=PH.indexOf('Card'),wC=PH.indexOf('Why');
@@ -233,7 +400,13 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
 /* The newest Master under data/source/, by the version in its name (v13 after v3). */
 export async function newestWorkbook(){
   const dir=new URL('../data/source/',import.meta.url);
-  const books=(await readdir(dir)).filter(f=>/Master.*\.xlsx$/i.test(f)&&!f.startsWith('~$')).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  /* BY THE VERSION IN THE NAME, NOT BY THE NAME. Sorting the filenames put
+     "Treys_MtG_Master_-_v22_-_For_Live_Load.xlsx" BEFORE "Treys_MtG_Master_v13.xlsx",
+     because '-' sorts ahead of 'v', so the newest workbook was silently skipped and the
+     build read a stale one. The version number is the thing being compared, so compare it. */
+  const ver=f=>{const m=/[_-]v(\d+)/i.exec(f);return m?Number(m[1]):-1;};
+  const books=(await readdir(dir)).filter(f=>/Master.*\.xlsx$/i.test(f)&&!f.startsWith('~$'))
+    .sort((a,b)=>ver(a)-ver(b)||a.localeCompare(b,undefined,{numeric:true}));
   ensure(books.length,'No *Master*.xlsx under data/source/ and no workbook named.');
   return fileURLToPath(new URL(books[books.length-1],dir));
 }

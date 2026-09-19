@@ -1,28 +1,28 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-19T19:09:44.469Z",
+ "generatedAt": "2026-09-19T21:13:14.957Z",
  "generator": "tools/data-manifest.mjs",
  "count": 18,
  "files": [
   {
    "file": "data/cards.json",
    "schema": "cards@2",
-   "stamp": "2026-09-19T14:32:35.342Z",
+   "stamp": "2026-09-19T21:12:43.932Z",
    "generator": "tools/build-card-records.mjs",
-   "bytes": 4437006,
-   "sha256": "2cb3b1a7996e44a540b93774bca0799e6b2587bfa7c41393b4d4551ea1a96620",
-   "version": 9,
+   "bytes": 4844486,
+   "sha256": "8c9bb6a778792e254c375ac14c2c4da4391790f84f2633706dd632dd6c4ee058",
+   "version": 11,
    "served": true,
    "cache": "precached"
   },
   {
    "file": "data/card-facts.json",
    "schema": "card-facts@1",
-   "stamp": "2026-09-19T14:32:35.342Z",
+   "stamp": "2026-09-19T21:12:43.933Z",
    "generator": "tools/build-card-records.mjs",
    "bytes": 491128,
-   "sha256": "53232114a70dae9242d4efeb2f14cffb64a206684c29c45877bf5b87b9d415cc",
-   "version": 6,
+   "sha256": "fc5dd4a4b8ac4f25b7fd51c93c6ee398632537fea43d85234d713e91b330e519",
+   "version": 8,
    "served": true,
    "cache": "precached"
   },
@@ -51,11 +51,11 @@
   {
    "file": "data/commander-strategies.json",
    "schema": "commander-strategies@1",
-   "stamp": "2026-09-19T14:32:36.945Z",
+   "stamp": "2026-09-19T20:54:19.450Z",
    "generator": "tools/commander-strategies.mjs",
-   "bytes": 628748,
-   "sha256": "68a2e9ee54412aea1214bc2e14a9035651af1af0146d51187bd6ca72d15fa71a",
-   "version": 2,
+   "bytes": 628875,
+   "sha256": "0d8b82f743e811ace1fea8d68ad3c63d60363d69c558de0185ef8b1b890e53b1",
+   "version": 4,
    "served": true,
    "cache": "on demand"
   },
@@ -119,9 +119,9 @@
    "schema": "graph@2",
    "stamp": "2026-09-11T17:28:45.280Z",
    "generator": "tools/graph-amplifiers.mjs",
-   "bytes": 16611187,
-   "sha256": "3a27c197fca8fbf3202cbf1d9e03fb1ba968c42feb5a532c2fa07fda78d518c0",
-   "version": 19,
+   "bytes": 16611199,
+   "sha256": "74d772160071c3c8b6f6c66c9740e3c264dd54d10066a1b5352d4bd74848020a",
+   "version": 21,
    "served": true,
    "cache": "on demand"
   },
@@ -139,10 +139,10 @@
   {
    "file": "data/live-load.json",
    "schema": "live-load@1",
-   "stamp": "2026-09-19T19:09:06Z",
+   "stamp": "2026-09-19T20:49:13Z",
    "generator": "tools/build-live-load.mjs",
-   "bytes": 104622,
-   "sha256": "625ad779e11263c402d04b9050bf38600dd6285ab4b2350eff141bbbcc6521c7",
+   "bytes": 559873,
+   "sha256": "826c98311738a4d78dec66511870e6d6d3361057e766670c5a615222ba34f048",
    "version": null,
    "served": false,
    "cache": "not served"
@@ -150,10 +150,10 @@
   {
    "file": "data/live-state.json",
    "schema": "live-state@1",
-   "stamp": "2026-09-19T19:09:17.236Z",
+   "stamp": "2026-09-19T21:13:13.785Z",
    "generator": "tools/build-live-state.mjs",
-   "bytes": 1056148,
-   "sha256": "16ad45cdf3e9277235d38509aadf59a31d7f53ff045afda11c707de2d2883286",
+   "bytes": 1040536,
+   "sha256": "aacf10756e93716fccfaad674ad7dc98492d97fae0930742ccd36bae21c43193",
    "version": null,
    "served": false,
    "cache": "fetched by Load Live"

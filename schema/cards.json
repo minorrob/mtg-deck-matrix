@@ -39,6 +39,10 @@
           "manaCost": {
             "type": "string"
           },
+          "manaValue": {
+            "type": ["number", "null"],
+            "description": "Converted mana cost. Null for a card with no mana cost at all, which is what a land is."
+          },
           "typeLine": {
             "type": "string"
           },
