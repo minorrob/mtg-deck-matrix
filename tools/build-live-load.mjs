@@ -133,6 +133,16 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
      of the committed file, so the fallback is a safety net rather than a path.) */
   const marketPrice=(name,paid)=>{const c=lookup(name),p=Number(c&&c.price);return Number.isFinite(p)&&p>0?p:paid;};
   const buy=cards.filter(c=>c.buy).map(c=>[c.name,c.buy,marketPrice(c.name,c.price)]).sort(byName);
+  /* WHAT TREY PAID, AS DISTINCT FROM WHAT THE CARD COSTS. Same rule, other side: the
+     workbook's $ Each on a row he OWNS is the price he paid per copy, and it was being
+     thrown away at import -- an owned row reached the app as [name, quantity] and nothing
+     more, while collection-model.js had `paid` and paidSource 'typed' waiting for it. It
+     cannot ride along as a third element the way the buy price does, because bench and
+     ordered rows already use that slot for a deck id (see the row shapes in
+     tools/live-load.js), so it is its own map from exact card name to price. Only rows with
+     Own > 0 are in it: a card not yet owned has not been paid for, and what it will cost is
+     the catalog's answer, not the workbook's. */
+  const paid=Object.fromEntries(cards.filter(c=>c.own>0&&Number.isFinite(c.price)&&c.price>0).map(c=>[c.name,c.price]).sort(byName));
   /* PRESERVE TO BUY GROUP ENTRIES (WANTED) FROM PRIOR STATE. The workbook's Buy Count is
      what the owner typed for deck shortfalls; entries manually added via the UI (Wanted
      entries in the To Buy group) are not in the workbook, so they must be carried forward
@@ -213,8 +223,8 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}. Fix the spelling in the workbook (exact Scryfall names) or pass --scryfall with a dump that has them.`);
 
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
-    note:"Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
-    decks,owned:{inDeck,bench},ordered,buy,upgrades};
+    note:"Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid for it per copy, which is never a market price; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
+    decks,owned:{inDeck,bench},ordered,buy,paid,upgrades};
   Live.check(doc);
   const built=Live.build(doc,{Model,lookup});
   return {doc,notes,built};
