@@ -133,6 +133,22 @@ function main() {
     console.log(`\n== versions: ${changedData.length ? changedData.join(", ") : "no served data file changed, nothing to bump"}`);
     const b = bumpVersions(changedData); for (const line of b.report) console.log("   " + line);
     if (changedData.length) { const u = sh(["node", "tests/asset-versions.mjs", "--update"], {quiet: true}); if (!u.ok) { console.error(u.out); process.exit(1); } console.log("   tests/asset-versions.mjs --update recorded the hashes"); }
+    /* THE MANIFEST IS RESTATED AFTER THE BUMP, NOT BEFORE. data/manifest.json records the
+       ?v= each served file is fetched under, and the bump above is what moves it, so the
+       manifest written by the manifest step is one version behind the moment anything
+       changes -- every run, deterministically. Re-running its writers here is the whole
+       repair: they are the same tools the step runs, and on a run that bumped nothing they
+       rewrite the same bytes. */
+    if (changedData.length) {
+      const manifest = steps.find((s2) => s2.id === "manifest");
+      if (manifest) {
+        for (const cmd of [manifest.run, ...(manifest.also || []).map((a) => a.run)]) {
+          const r = sh(cmd, {quiet: true});
+          if (!r.ok) { console.error(`\nrestating the manifest after the bump failed: ${cmd.join(" ")}\n${r.out}`); process.exit(1); }
+        }
+        console.log("   manifest restated after the bump: " + [manifest.run, ...(manifest.also || []).map((a) => a.run)].map((c) => c[1]).join(", "));
+      }
+    }
     const touched = statusPaths(gitOut("status", "--porcelain"));
     const outside = touched.filter((f) => !ALLOWED.has(f)), never = touched.filter((f) => NEVER.some((n) => f === n || f.startsWith(n)));
     if (outside.length || never.length) { console.error(`\nThe run changed files a refresh may not touch: ${[...new Set([...outside, ...never])].join(", ")}. Nothing is committed; inspect them before going on.`); process.exit(1); }
