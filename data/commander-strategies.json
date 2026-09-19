@@ -1,6 +1,6 @@
 {
  "schema": "commander-strategies@1",
- "generatedAt": "2026-09-14T05:32:16.071Z",
+ "generatedAt": "2026-09-19T20:54:19.450Z",
  "generator": "tools/commander-strategies.mjs",
  "count": 2746,
  "source": "data/graph.json (classified terms), data/live-load.json (definition.mechanics), data/deck-guides.json (archetype)",
@@ -17979,7 +17979,16 @@
     "blink-loop",
     "etb-payoff",
     "tribal-payoff"
-   ]
+   ],
+   "named": {
+    "strategies": [
+     "blink-loop",
+     "etb-payoff"
+    ],
+    "from": [
+     "deck definition"
+    ]
+   }
   },
   {
    "id": "fae87115-8749-4d25-a594-7139dd01a034",

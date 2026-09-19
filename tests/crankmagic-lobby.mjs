@@ -194,7 +194,11 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   ok(capped.gameChangers <= 3, `a ceiling is never crossed (${capped.gameChangers} of 3)`);
   ok(fitted.gameChangers <= 3, `and fitting never crosses it either (${fitted.gameChangers} of 3)`);
   ok(fitted.gameChangers >= capped.gameChangers, `fitting never carries fewer (${capped.gameChangers} → ${fitted.gameChangers})`);
-  ok(fitted.gameChangers > capped.gameChangers, `and on this catalog it carries more: obeying the bracket gave ${capped.gameChangers}, fitting it gave ${fitted.gameChangers}`);
+  /* This used to assert that fitting carried MORE than a plain build. That was a statement
+     about the catalog of the day: once the record set grew, the plain build reached the
+     ceiling on its own and "more" became impossible. What fitting owes is the budget --
+     it spends the bracket's allowance rather than stopping short of it. */
+  ok(fitted.gameChangers === 3, `fitting spends the bracket's allowance (${fitted.gameChangers} of 3)`);
   eq(capped.bracketFit, null, "a plain build reports no fit, because it was not asked for one");
   eq(fitted.bracketFit.allowed, 3, "a fitted build says what the bracket allowed");
   eq(fitted.bracketFit.carried, fitted.gameChangers, "and what it ended up carrying");

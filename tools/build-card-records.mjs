@@ -78,12 +78,31 @@ function fetchRecords(names) {
   }
   return out;
 }
+/* MANA VALUE BELONGS IN THE RECORD. The set carried manaCost and nothing else, so every
+   reader that groups or sorts by mana value -- the Cards page's "Mana value" piles among
+   them -- saw null and put the card under "No cost". It only looked right while a card was
+   unshipped and kept a local copy of the number. Scryfall gives cmc; where a record predates
+   this, the cost is the number. */
+const mvFromCost = (cost) => {
+  const text = String(cost || "").trim(); if (!text) return null;
+  let total = 0, seen = false;
+  for (const sym of text.matchAll(/\{([^}]+)\}/g)) {
+    seen = true; const body = sym[1];
+    if (/^\d+$/.test(body)) { total += Number(body); continue; }
+    if (/^[XYZ]$/i.test(body)) continue;
+    const half = /^(\d+)\//.exec(body); if (half) { total += Number(half[1]); continue; }
+    total += 1;
+  }
+  return seen ? total : null;
+};
+
 function fromScryfall(card) {
   const faces = card.card_faces || [];
   const img = card.image_uris || (faces[0] && faces[0].image_uris) || {};
   return {
     name: card.name, oracleId: card.oracle_id || "",
     manaCost: card.mana_cost || faces.map((f) => f.mana_cost).filter(Boolean).join(" // ") || "",
+    manaValue: card.cmc ?? mvFromCost(card.mana_cost || (faces[0] && faces[0].mana_cost) || ""),
     typeLine: card.type_line || "", power: card.power ?? (faces[0] && faces[0].power) ?? null, toughness: card.toughness ?? (faces[0] && faces[0].toughness) ?? null,
     oracleText: card.oracle_text || faces.map((f) => f.oracle_text).filter(Boolean).join("\n//\n") || "",
     keywords: card.keywords || [], colorIdentity: card.color_identity || [], legalities: card.legalities || {}, rarity: card.rarity || "",
@@ -119,7 +138,7 @@ const records = [...byName.values()].sort((a, b) => a.name.localeCompare(b.name)
   const g = graphByName.get(c.name);
   const r = {
     name: c.name, oracleId: c.oracleId || (g ? g.id : ""),
-    manaCost: c.manaCost || "", typeLine: c.typeLine || "",
+    manaCost: c.manaCost || "", manaValue: c.manaValue ?? mvFromCost(c.manaCost || ""), typeLine: c.typeLine || "",
     power: /Creature|Vehicle/.test(c.typeLine || "") ? (c.power ?? (g && g.pow) ?? null) : null, toughness: /Creature|Vehicle/.test(c.typeLine || "") ? (c.toughness ?? (g && g.tou) ?? null) : null,
     oracleText: c.oracleText || "", keywords: c.keywords || [], colorIdentity: c.colorIdentity || (g ? String(g.ci || "").split("").filter(Boolean) : []),
     legalities: c.legalities || {commander: "legal"}, rarity: c.rarity || (g && g.rarity) || "",

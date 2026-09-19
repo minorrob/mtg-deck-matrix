@@ -17,7 +17,19 @@ const args = parseArgs(process.argv.slice(2));
 const {variants, buyPlans, audited} = await loadCatalog();
 
 const BUDGET_CEILING = 110;
-const cost = (cards) => cards.reduce((sum, card) => sum + Number(card.price || 0) * Math.max(1, Number(card.quantity || 1)), 0);
+/* THE CATALOG IS THE PRICE, NOT THE PLAN. lib.mjs builds each list with
+   `entry.item.price || meta.price` (tools/sim/lib.mjs:123), so a price recorded in
+   the plan beats the catalog. That is right for what a card cost when it was bought
+   and wrong for what the build costs today, which is the only question this tool
+   asks: a plan price is frozen at the moment the plan was written. Ichormoon Gauntlet
+   sat at $5.99 in the plans while the catalog had moved to $23.83, so "re-pricing"
+   republished the old number and 2c's Maxed cost came out $16 under what its own
+   pinned hundred prices at. Priced here against `audited` -- the same record set the
+   shop list quotes and tests/data-integrity.mjs checks against -- so all three agree
+   by construction. A catalog price of 0 is missing data wearing a zero rather than a
+   free card, so the plan's own figure still covers that case. */
+const catalogPrice = (card) => Number(audited.get(Lineup.normalizeName(card.name))?.price) || Number(card.price || 0);
+const cost = (cards) => cards.reduce((sum, card) => sum + catalogPrice(card) * Math.max(1, Number(card.quantity || 1)), 0);
 const owned = new Set((buyPlans.ownedExtras || []).map((name) => Lineup.normalizeName(name)));
 const money = (value) => `$${Math.round(value)}`;
 
