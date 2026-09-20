@@ -106,7 +106,7 @@
   const MANA_COLORS = [["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]];
 
   function colorPillsHtml(inputName = "commanderColor") {
-    return `<div class="cm-color-pills cm-lobby-color-pills" role="group" aria-label="Colour identity filter">${MANA_COLORS.map(([k, name]) =>
+    return `<div class="cm-color-pills cm-lobby-color-pills" role="group" aria-label="Color identity filter">${MANA_COLORS.map(([k, name]) =>
       `<label class="cm-color-pill" title="${e(name)}" aria-label="${e(name)}"><input type="checkbox" name="${inputName}" value="${k}"><img src="assets/mana/${k}.svg?v=1" alt="${e(name)}"></label>`
     ).join("")}</div>`;
   }

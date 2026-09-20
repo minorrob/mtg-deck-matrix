@@ -111,6 +111,40 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
 }
 
+/* AMERICAN ENGLISH ON SCREEN. The ceiling below sweeps every tracked file, prose and all;
+   this holds the subset a reader actually sees -- labels, help bodies, warnings, the count
+   under the commander picker, an aria-label. Each surface is named by the exact text that
+   reaches the DOM and by the British spelling it replaced, so a spelling put back into one
+   of them fails here by surface rather than by count. Found by reading every string literal
+   in the shipped scripts; comments are the ceiling's business, not this one's. */
+{
+  const onScreen = [
+    ["crankmagic-lab.js", "Colour identity within", "Color identity within", "Build: the commander picker's identity filter"],
+    ["crankmagic-lab.js", "play style or colour'", "play style or color'", "Build: the count under Matching commanders"],
+    ["crankmagic-lab.js", "play style, colour identity", "play style, color identity", "Build: the help body"],
+    ["crankmagic-game.js", 'aria-label="Colour identity filter"', 'aria-label="Color identity filter"', "Play: the lobby identity filter, to a screen reader"],
+    ["crankmagic-app.js", "It counts towards a deck", "It counts toward a deck", "the glossary entry for Ordered"],
+    ["crankmagic-app.js", "its type, its colour, what it is for", "its type, its color, what it is for", "the glossary entry for Group piles by"],
+    ["crankmagic-collection.js", "in the same colour wherever it appears", "in the same color wherever it appears", "Library: the help lede"],
+    ["crankmagic-collection.js", "'Any colour'", "'Any color'", "Library: the table's Color filter"],
+    ["crankmagic-discover.js", "is labelled one", "is labeled one", "Explore: the help body on the trace score"],
+    ["crankmagic-discover.js", "inside the deck\\'s colours", "inside the deck\\'s colors", "Explore: the empty state under Could join it"],
+    ["crankmagic-discover.js", "'outside the colour identity'", "'outside the color identity'", "Explore: why a candidate was refused"],
+    ["crankmagic-change.js", "commander's colour identity.", "commander's color identity.", "the change warning for an off-identity card"],
+    ["crankmagic-lobby.js", "'s colour identity (", "'s color identity (", "Play: the seat's identity issue"],
+    ["crankmagic-sim.js", '"Measurement cancelled."', '"Measurement canceled."', "Build: the sim status line when a measurement is stopped"],
+    ["collection-model.js", "' cancelled'", "' canceled'", "the note when ordered copies fall"],
+    ["collection-model.js", "'Cancelled a pending acquisition", "'Canceled a pending acquisition", "the summary for removing a pending acquisition"],
+    ["draft-builder.js", "no more in these colours", "no more in these colors", "Build: why a draft came in under its bracket"],
+    ["scryfall-client.js", '"Request cancelled"', '"Request canceled"', "the abort message shown with a failed fetch"]
+  ];
+  for (const [file, uk, us, where] of onScreen) {
+    const src = read(file);
+    ok(src.includes(us), `${where} (${file}) must read "${us}"`);
+    ok(!src.includes(uk), `${where} (${file}) still carries "${uk}"`);
+  }
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is
@@ -122,7 +156,7 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
   let total = 0; const byFile = [];
   for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
-  const CEILING = 586;
+  const CEILING = 566;   /* 586 on the day the rule landed; 566 once the on-screen strings above were converted */
   ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
   /* and nothing written today carries one */
   for (const f of ["docs/design-intake-2026-09-20.md", "docs/handoff-fable-2026-09-20.md", "docs/design/2026-09-20-deck-page/INTAKE.md", "tests/design-tokens.mjs", "crankmagic-design.css"]) {

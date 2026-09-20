@@ -116,7 +116,7 @@
     if (s.commanders.length && known.length) {
       const outside = s.cards.filter((c) => c.colorIdentity.some((x) => x !== "C" && !colors.has(x)));
       if (outside.length) add("identity", "blocking",
-        `${outside.length} card${outside.length === 1 ? " is" : "s are"} outside ${s.commanders.map((c) => c.name).join(" and ")}'s colour identity (${[...colors].map((x) => COLOR_NAME[x] || x).join(", ") || "colorless"}): ${list(outside.map((c) => c.name))}.`,
+        `${outside.length} card${outside.length === 1 ? " is" : "s are"} outside ${s.commanders.map((c) => c.name).join(" and ")}'s color identity (${[...colors].map((x) => COLOR_NAME[x] || x).join(", ") || "colorless"}): ${list(outside.map((c) => c.name))}.`,
         outside.map((c) => c.name));
     }
 

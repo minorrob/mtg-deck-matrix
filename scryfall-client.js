@@ -253,7 +253,7 @@
            from "the network stalled" -- the first propagates, the second is swallowed by
            the callers that already expect a lookup to be able to fail. */
         const cancelled = init.signal && new Promise((_, reject) => {
-          const stop = () => reject(Object.assign(new Error("Request cancelled"), {name: "AbortError"}));
+          const stop = () => reject(Object.assign(new Error("Request canceled"), {name: "AbortError"}));
           if (init.signal.aborted) stop();
           else init.signal.addEventListener("abort", stop, {once: true});
         });
