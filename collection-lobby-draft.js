@@ -288,13 +288,11 @@
       };
     }
 
-    // Compute current deck fingerprint (same logic as Collection model)
-    const currentFingerprint = JSON.stringify({
-      commanders: [...deck.commanders].sort(),
-      slots: deck.slots.filter(r => r.purpose === 'main')
-        .map(r => [r.cardId, r.quantity])
-        .sort((a, b) => a[0].localeCompare(b[0]))
-    });
+    // The model's fingerprint, the engine's lineup hash over names (UAT B-13): one function,
+    // not a third copy of the old JSON shape.
+    const Model = (typeof CrankCollection !== 'undefined' && CrankCollection) || (typeof require === 'function' ? require('./collection-model.js') : null);
+    if (!Model || typeof Model.fingerprint !== 'function') throw new Error('The collection model is required');
+    const currentFingerprint = Model.fingerprint(deck, state);
 
     // Check fingerprint match
     if (report.deckFingerprint !== currentFingerprint) {

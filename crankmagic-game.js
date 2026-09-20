@@ -316,7 +316,7 @@
     const kind = v.from || "library";
     if (kind === "library") {
       const deck = C.state.decks.find((d) => d.id === v.deckId);
-      if (deck) return L.libraryDeckSeat(deck, {card: lookups.card, score: L.measuredScore(deck, C.state.reports, (d) => M.fingerprint(d)), you});
+      if (deck) return L.libraryDeckSeat(deck, {card: lookups.card, score: L.measuredScore(deck, C.state.reports, (d) => M.fingerprint(d, C.state)), you});
       const host = (hostCatalogDecks || []).find((d) => d.id === v.deckId);
       if (host) return L.catalogMetaSeat(host, {you, exact: catalogExact});
       throw Error("Choose a deck.");

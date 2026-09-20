@@ -619,14 +619,7 @@ describe('collection-lobby-draft', () => {
       Object.assign(state, result.state);
 
       // Compute fingerprint
-      const fingerprint = JSON.stringify({
-        commanders: ['card:krenko-mob-boss'],
-        slots: [
-          ['card:krenko-mob-boss', 1],
-          ['card:mountain', 98],
-          ['card:sol-ring', 1]
-        ]
-      });
+      const fingerprint = CrankCollection.fingerprint(state.decks.find(d => d.id === 'deck:test'), state);
 
       let committedCommand = null;
       const mockCommit = async (command, options) => {
@@ -774,13 +767,7 @@ describe('collection-lobby-draft', () => {
       });
       Object.assign(state, result.state);
 
-      const fingerprint = JSON.stringify({
-        commanders: ['card:krenko-mob-boss'],
-        slots: [
-          ['card:krenko-mob-boss', 1],
-          ['card:sol-ring', 1]
-        ]
-      });
+      const fingerprint = CrankCollection.fingerprint(state.decks.find(d => d.id === 'deck:test'), state);
 
       const mockCommit = async (command, options) => {
         const result = CrankCollection.apply(state, { id: 'test-attach', ...command });
@@ -833,10 +820,7 @@ describe('collection-lobby-draft', () => {
       Object.assign(state, result.state);
 
       // Attach reports to both decks
-      const fp1 = JSON.stringify({
-        commanders: ['card:krenko-mob-boss'],
-        slots: [['card:krenko-mob-boss', 1]]
-      });
+      const fp1 = CrankCollection.fingerprint(state.decks.find(d => d.id === 'deck:test1'), state);
 
       let commitCounter = 0;
       const mockCommit = async (command) => {
@@ -928,13 +912,7 @@ describe('collection-lobby-draft', () => {
       });
       Object.assign(state, result.state);
 
-      const fingerprint = JSON.stringify({
-        commanders: ['card:krenko-mob-boss'],
-        slots: [
-          ['card:krenko-mob-boss', 1],
-          ['card:sol-ring', 1]
-        ]
-      });
+      const fingerprint = CrankCollection.fingerprint(state.decks.find(d => d.id === 'deck:test'), state);
 
       // Full CrankSim.packFor() report with ALL fields
       const fullReport = {
