@@ -199,6 +199,7 @@
         await commit({
           type: 'createDeck',
           deckId,
+          kind: 'lobby',   // hidden from Decks and the library until promoted (UAT M-15)
           name: seatLabel,
           commanders: resolvedCommanders.map(c => c.cardId),
           cards: catalogCards,

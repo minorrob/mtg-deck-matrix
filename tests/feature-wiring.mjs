@@ -88,4 +88,18 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   for (const f of ["index.html", "crankmagic.html"]) ok(/<div class="v-nav-track"><nav class="v-nav-links"/.test(read(f)) && /<\/nav><\/div><div class="cm-nav-note"/.test(read(f)), `${f}: the sticky nav lives in its own track above the note (M-12)`);
 }
 
+/* M-15 and M-02, Rob's decisions of 2026-09-20, held by reading the source. */
+{
+  ok(/kind: 'lobby'/.test(read("collection-lobby-draft.js")), "the lobby mints a lobby deck (M-15)");
+  const decks = read("crankmagic-decks.js");
+  ok(/C\.showLobbyDecks\|\|!M\.isLobbyDeck\(d\)/.test(decks), "the tiles hide lobby decks unless Show lobby decks is on");
+  ok(/promote-lobby-deck/.test(decks) && /type:'editDeck',deckId:d\.id,kind:'deck'/.test(decks), "Save to Decks promotes one");
+  ok(/C\.showLobbyDecks\|\|!M\.isLobbyDeck\(d\)/.test(read("crankmagic-collection.js")), "the library rows and counts leave hidden lobby decks out");
+  ok(/C\.showLobbyDecks\|\|!M\.isLobbyDeck\(x\)/.test(read("crankmagic-lab.js")), "the Lab's Existing deck select leaves them out");
+  ok(/paidSource==='catalog'\?`<span class="cm-muted cm-paid-list"/.test(read("crankmagic-collection.js")), "a catalog-sourced paid figure shows as approximate, labeled catalog (M-02)");
+  ok(!/recorded as paid/.test(read("crankmagic-collection.js")), "and no toast calls a catalog stamp 'paid'");
+  ok(/l\.paidSource==='catalog'\?'≈ ':''/.test(read("crankmagic-orders.js")), "the order lines say so too");
+  ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
+}
+
 console.log(`feature-wiring: ${checks} checks passed — ${features.length} feature files read; dialogs bound, help entries titled, dates local, compare picks in memory.`);

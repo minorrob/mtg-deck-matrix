@@ -613,4 +613,16 @@ assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);
   const report=Sim.packFor({hash:Measure.lineupHash(lineup),score:50,scoreStandardError:0.2,winRate:0.25,perSeedScores:[50],scoreParts:[],perCard:[],elapsedMs:1,gamesPerSecond:1,measuredAt:'2026-09-20T00:00:00.000Z'},{protocol:'preview',table:'default',seatCount:3,coverage:{total:100,known:100,ratio:1,unreadable:[]}});
   assert.equal(report.deckFingerprint,M.fingerprint(d,s),'a report filed by the sim matches the deck it measured');checks++;
 }
+/* A LOBBY DECK (UAT M-15, Rob's call): created with kind 'lobby', hidden by the pages until Save
+   to Decks promotes it; the predicate also recognises the id the lobby has always minted. */
+{
+  run('createDeck',{deckId:'deck:lobby:t1',name:'Lobby Krenko',commanders:['leader'],slots:[{id:'lc',cardId:'leader',quantity:1}],kind:'lobby'});
+  const lobby=s.decks.find(d=>d.id==='deck:lobby:t1');assert.equal(lobby.kind,'lobby');assert.equal(M.isLobbyDeck(lobby),true);checks++;
+  assert.equal(M.isLobbyDeck({id:'deck:lobby:old',slots:[],commanders:[]}),true,'an id from before the flag is a lobby deck too');checks++;
+  assert.equal(M.isLobbyDeck(s.decks.find(d=>d.id==='d1')),false);checks++;
+  run('editDeck',{deckId:'deck:lobby:t1',kind:'deck'});assert.equal(s.decks.find(d=>d.id==='deck:lobby:t1').kind,undefined);checks++;
+  assert.equal(M.isLobbyDeck(s.decks.find(d=>d.id==='deck:lobby:t1')),true,'the id still says lobby; the flag is what the pages hide on');checks++;
+  expectFailure('createDeck',{deckId:'deck:x',name:'X',commanders:['leader'],slots:[],kind:'other'},/deck or a lobby deck/);
+  expectFailure('editDeck',{deckId:'d1',kind:'lobby-ish'},/deck or a lobby deck/);
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);
