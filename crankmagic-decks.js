@@ -213,17 +213,27 @@ const counts={hundred:cards.reduce((n,x)=>n+x.q,0),upgrades:d.slots.filter(r=>r.
 const tabs=`<div class="cm-tabs cm-deck-tabs" role="tablist" aria-label="Deck page">${DECK_TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="deck-tab" data-deck="${e(d.id)}" data-tab="${id}">${label}${counts[id]?` <small>${counts[id].toLocaleString()}</small>`:''}</button>`).join('')}</div>`;
 /* Build guide HTML for overview tab */
 const guideSection=()=>`<div class="cm-grid-2"><section class="v-panel" id="cm-sec-commander">${leaders.map(c=>`<div class="cm-commander">${c.image?`<img src="${e(c.image)}" alt="${e(c.name)}">`:'<div></div>'}<div><h2>About the Commander</h2><h3>${e(c.name)}</h3><ul><li>${C.mana(c.manaCost)} · ${c.power!==null?e(c.power+'/'+c.toughness)+' · ':''}${C.glossary.html(c.typeLine)}</li><li>${C.glossary.html(c.keywords.join(', ')||'No keyword abilities recorded')}</li>${c.oracleText.split('\n').filter(line=>/^(When|Whenever|At the beginning)|:/.test(line)).map(t=>`<li>${C.glossary.html(t)}</li>`).join('')}</ul><p>${e(commanderUse(c))}</p>${b('Full card & rules','card',{card:c.id})}</div></div>`).join('<hr>')}</section><section class="v-panel" id="cm-sec-guide"><h2>Strategy & how to play</h2>${guideHTML(guide,d,leaders,cards)}<h3>Your notes</h3><p>${e(d.notes||'No deck notes yet.')}</p></section></div><section class="v-panel" id="cm-sec-swot"><h2>SWOT & recommendations</h2><div class="cm-swot">${Object.entries(swot).map(([k,v])=>`<div><h3>${e(k)}</h3><p>${e(v)}</p></div>`).join('')}</div><h3>Review next</h3><ul>${issues.slice(0,5).map(x=>`<li>${e(x)}</li>`).join('')||'<li>The basic Commander list checks pass. Review price, bracket expectations and your playgroup’s preferences.</li>'}</ul>${b('Explore recommendations','deck-suggestions',{deck:d.id})}${b('Review linked upgrades','deck-upgrades',{deck:d.id})}</section>`;
+/* THE HERO (Track V.4b, the guide's step 4). The commander's own card stands beside the copy,
+   tilted, with a glow in the deck's tint behind it -- the deck is a picture before it is a list.
+   --tint is the same token the tile uses, so a deck looks like itself on both pages. */
+const heroCard=leaders[0]&&leaders[0].image?`<div class="cm-deck-hero-card"><img src="${e(leaders[0].image)}" alt="${e(leaders[0].name)}" loading="lazy"></div>`:'';
+const heroTint=/^[WUBRG]$/.test((C.card(d.commanders[0])?.colorIdentity||[])[0]||'')?`--tint:var(--mana-${(C.card(d.commanders[0]).colorIdentity)[0]});`:'';
 const body={
   overview:()=>{
     if(!cards.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">This deck has no cards yet. Start building your hundred or import a list.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}${b('Import a list','wizard-import')}${b('Auto-build in Lab','wizard-lab')}</div><p class="cm-muted">Or finalize this deck and add cards from The hundred tab.</p></section>`;
-    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Finalize offers to raise the cap or trim the list.`,true):'')+stats(d)+`<p class="cm-deck-next" id="cm-deck-next"><strong>Next:</strong> ${e(nextLine(d,ready))}</p>`+glance(d,cards,curve,max,types)+recordHTML(d)+historyHTML(d)+reportsHTML(d)+guideSection();
+    /* THE BENTO (Track V.4b). The Progress and Cost panel and The hundred at a glance were two
+       full-width stacks; they are one six-column grid of cards now, in the guide's spans. Every
+       figure is the same figure -- readiness, the rules module, the classifier -- so the cards
+       agree with the Shop strip and the Orders tab by construction, as the panels did. */
+    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Finalize offers to raise the cap or trim the list.`,true):'')
+      +bento(d,cards,curve,max,types,ready,heroTint)+historyHTML(d)+reportsHTML(d)+guideSection();
   },
   hundred:()=>cardsTab(d,cards,curve,max,types),
   upgrades:()=>workingHTML(d)+upgradesHTML(d),
   explore:()=>`<section class="v-panel cm-explore-deck" id="cm-sec-explore"><h2>Explore</h2><p class="cm-muted">Explore this deck's card relationships and strategies in the interactive graph. Trace lights the deck from its commander outward; Lens filters by role.</p>${cards.length?`<div class="cm-actions"><a class="v-button primary" href="#discover?deck=${encodeURIComponent(d.id)}">Open Discover with this deck</a></div><p class="cm-muted">Opens Discover scoped to this deck. Progressive-disclosure tools (Trace, Lens, filters) are available once inside.</p>`:`<p class="cm-muted">Add cards to this deck first. Once your hundred has cards, return here to explore connections and strategies.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}</div>`}</section>`,
   acquire:()=>`<section class="v-panel cm-acquire-deck" id="cm-sec-acquire"><h2>Acquire</h2>${ready.toBuy||ready.ordered?`<p>Track what this deck needs and where to get it.</p><div class="cm-budget-figures"><div><strong>${ready.toBuy}</strong><span>To buy</span></div><div><strong>${ready.ordered}</strong><span>Ordered</span></div><div><strong>${C.money(ready.costToFinish)}</strong><span>$ to finish</span></div></div><div class="cm-actions">${b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},true)}${b('View orders','shop-orders')}</div><p class="cm-muted">The buy list shows cards this deck needs with current prices. Orders track what's on the way from shops.</p>`:`<p class="cm-muted">This deck has no outstanding cards to acquire. Every reserved card is either in the physical deck or ready to add.</p>${d.status==='draft'?`<p class="cm-muted">Finalize this deck to create reservations and a buy list.</p>`:''}`}</section>`
 }[tab]();
-C.main.innerHTML=`<section class="cm-deck-hero"${heroArt?` style="--hero:url('${e(heroArt)}')"`:''}><div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${e(commander(d))} ${C.colors(C.card(d.commanders[0])?.colorIdentity)} <span class="cm-badge ${ready.ready?'good':''}">${d.archived?'Archived':d.status==='draft'?'Defining':ready.complete?'Complete':ready.playable?'Playable':'Building'}</span> <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="Recorded prices of the main list against the definition’s total cap">Over the ${e(C.money(cap))} cap · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p>${mech.list.length?`<p class="cm-deck-mechanics${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${e(mech.list.join(' · '))}</p>`:''}</div><div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${measure}${traceBtn}${changeBtn}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}${C.helpButton('deck')}</div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}</nav>`);}
+C.main.innerHTML=`<section class="cm-deck-hero" style="${heroTint}${heroArt?`--hero:url('${e(heroArt)}')`:''}">${heroCard}<div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${e(commander(d))} ${C.colors(C.card(d.commanders[0])?.colorIdentity)} <span class="cm-badge ${ready.ready?'good':''}">${d.archived?'Archived':d.status==='draft'?'Defining':ready.complete?'Complete':ready.playable?'Playable':'Building'}</span> <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="Recorded prices of the main list against the definition’s total cap">Over the ${e(C.money(cap))} cap · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p>${mech.list.length?`<div class="cm-deck-chips${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${mech.list.map(m=>`<span class="cm-chip">${e(m)}</span>`).join('')}</div>`:''}${d.notes?`<p class="cm-deck-strategy">${e(d.notes)}</p>`:''}</div><div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${measure}${traceBtn}${changeBtn}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}</div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}</nav>`);}
 /* THE NEXT LINE. One sentence, in the order the work happens: add what you already own, buy
    what you do not, wait for what is ordered, swap the substitutes out when the real copies
    arrive. Every number is readiness's, so the line agrees with the figures above it. */
@@ -243,6 +253,84 @@ function nextLine(d,r){
 /* Each card counts once, under its first type in the rules' order (a creature that is also an artifact is a creature), so the counts sum to the hundred and agree with the glance's type bar. */
 const typeOf=c=>R.TYPE_ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other';
 function compositionHTML(cards,curve,max,types){return cards.length?`<div class="cm-deck-composition"><div class="cm-curve" aria-label="Mana curve">${curve.map((n,i)=>`<div><span>${n||''}</span><i style="height:${n/max*88}px"></i><span>${i===7?'7+':i}</span></div>`).join('')}</div><div class="cm-count-list">${types.map(t=>`<span>${C.glossary.html(t)} <strong>${cards.filter(x=>typeOf(x.c)===t).reduce((n,x)=>n+x.q,0)}</strong></span>`).join('')}<span>Ramp <strong>${cards.filter(x=>rolesOf(x.c).includes('ramp')).reduce((n,x)=>n+x.q,0)}</strong></span></div></div>`:'';}
+/* THE COST FIGURES, read once. stats() used to compute these inline and draw a panel with them;
+   the bento needs the numbers in two different cards, so they are a function and the drawing is
+   not. Every one is the rules module's or readiness's, so the cards agree with the Shop strip and
+   the Orders tab by construction. */
+function costOf(d){
+  const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??(R?R.RULES.deckCap:null),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
+  const pct=cap>0?r.marketValue/cap*100:null;
+  const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id);
+  const overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
+  const dear=perCard!==null?d.slots.filter(x=>x.purpose==='main'&&C.card(x.cardId).price>perCard).length:0;
+  const owned=lots.filter(l=>l.source==='owned'),estimated=owned.filter(l=>!Number.isFinite(l.paid)||l.paidSource==='catalog');
+  const paidOrList=owned.reduce((n,l)=>n+(Number.isFinite(l.paid)?l.paid:(C.card(l.cardId)?.price||0))*l.quantity,0);
+  return {r,cap,perCard,pct,overCap,dear,estimated,paidOrList,gc:gcCount(d),tone:pct===null?'':pct>100?' cm-over':pct>90?' cm-near':''};
+}
+/* THE BENTO (Track V.4b, the guide's step 4, against screens/Gallery Deck Page.dc.html). Nine
+   cards on a six-column grid, in the guide's spans: one tinted Next across the top, Progress and
+   Cost beside each other, then the three readings of the hundred, how it plays, the cheapest
+   upgrades, and the record. Nothing here is new information -- it is the Progress and Cost panel
+   and The hundred at a glance, laid out as cards of known size instead of two full-width stacks. */
+function bento(d,cards,curve,max,types,ready,tint=''){
+  const {r,cap,pct,overCap,dear,estimated,paidOrList,gc,tone}=costOf(d);
+  const CL=globalThis.MtgCardClassify,total=cards.reduce((n,x)=>n+x.q,0);
+  const card=(cls,label,inner,extra='')=>`<section class="cm-bento-card cm-bento-${cls}"${extra}><h3 class="cm-bento-label">${e(label)}</h3>${inner}</section>`;
+  const key=(k,label,v)=>`<div><strong>${v}</strong><span><i class="cm-key ${k}" aria-hidden="true"></i>${e(label)}</span></div>`;
+
+  /* NEXT. The state's one sentence, and the button that answers it. */
+  const next=`<section class="cm-bento-card cm-bento-next" id="cm-deck-next"><h3 class="cm-bento-label">Next</h3><p class="cm-bento-next-line">${e(nextLine(d,r))}</p></section>`;
+
+  /* PROGRESS. A ring of the hundred -- what is in the physical deck, and how much of that is a
+     substitute standing in -- with the four figures beside it, each under its segment's color. */
+  const pctIn=total?Math.min(100,Math.round((r.sleeved/Math.max(1,r.reserved||total))*100)):0;
+  const pctSub=total?Math.min(100,Math.round((r.standIns/Math.max(1,r.reserved||total))*100)):0;
+  const circ=2*Math.PI*44;
+  const ring=`<div class="cm-ring"><svg viewBox="0 0 112 112" width="112" height="112" role="img" aria-label="${pctIn}% of the hundred is in the physical deck, ${pctSub}% of it standing in">
+    <circle cx="56" cy="56" r="44" fill="none" stroke="var(--v-raised)" stroke-width="12"></circle>
+    <circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-inbox)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctIn/100).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 56 56)"></circle>
+    ${pctSub?`<circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-standin)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctSub/100).toFixed(1)} ${circ.toFixed(1)}" stroke-dashoffset="${(-circ*(pctIn-pctSub)/100).toFixed(1)}" transform="rotate(-90 56 56)" opacity=".85"></circle>`:''}
+  </svg><span class="cm-ring-center"><b>${r.sleeved}</b><small>in the box</small></span></div>`;
+  const progress=card('progress','Progress',ring+`<div class="cm-bento-figures">${key('inbox','Real copies',r.sleeved-r.standIns)}${key('standin','Substitutes',r.standIns)}${key('ordered','Ordered',r.ordered)}${key('buy',d.status==='draft'?'Not reserved':'To buy',r.toBuy)}</div>`);
+
+  /* COST. What finishing costs, against the cap, with the three facts that qualify it. */
+  const paidWord=(estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100);
+  const cost=card('cost','Cost',`<p class="cm-bento-figure">${e(C.money(r.costToFinish))}<small>to finish</small></p>`
+    +(cap>0?`<div class="cm-budget-bar" role="img" aria-label="Market value ${Math.round(pct)}% of the cap"><i style="width:${Math.min(100,pct)}%"></i></div>`:'')
+    +`<p class="cm-bento-facts">${e(paidWord)} paid so far · ${e(C.money(r.marketValue))} market${pct!==null?` · ${Math.round(pct)}% of cap`:''}${overCap?` · ${overCap} line${overCap===1?'':'s'} over the 110% cap`:''}${dear?` · ${dear} card${dear===1?'':'s'} over the per-card cap`:''}</p>`
+    +`<p class="cm-bento-facts cm-muted">Cap ${cap===null?'—':e(C.money(cap))} · ${gc} of ${GC_LIMIT} Game Changers</p>`,` data-tone="${tone.trim()}"`);
+
+  /* THE THREE READINGS OF THE HUNDRED, the same tallies the glance drew. */
+  const tally=(list,f,cap2=9)=>{const m=new Map();for(const {c,q} of list){const k=f(c)||'Other';m.set(k,(m.get(k)||0)+q);}const all=[...m].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));if(all.length<=cap2)return all;const rest=all.slice(cap2-1);return [...all.slice(0,cap2-1),[`Other (${rest.length} kinds)`,rest.reduce((n,x)=>n+x[1],0)]];};
+  const byType=tally(cards,typeOf),byPurpose=tally(cards.filter(({c})=>!/\bLand\b/.test(c.typeLine)),c=>{const p=CL&&CL.purposeOf?CL.purposeOf(c):null;return p&&p.label?p.label:'No purpose read';});
+  const curveCard=card('curve','Mana curve',`<div class="cm-curve" aria-label="Mana curve">${curve.map((n,i)=>`<div><span>${n||''}</span><i style="height:${n/max*88}px"></i><span>${i===7?'7+':i}</span></div>`).join('')}</div>`);
+  const typesCard=card('types','By card type',`<div class="cm-breakdown" role="img" aria-label="${e(byType.map(([k,n])=>`${k} ${n}`).join(', '))}">${byType.map(([k,n],i)=>`<i class="b${i%8}" style="flex:${n} 1 0" title="${e(k)} · ${n}"></i>`).join('')}</div><ul class="cm-breakdown-key">${byType.map(([k,n],i)=>`<li><i class="b${i%8}" aria-hidden="true"></i>${e(k)} <b>${n}</b></li>`).join('')}</ul>`);
+  const purposeMax=Math.max(1,...byPurpose.map(x=>x[1]));
+  const purpose=card('purpose','What the spells do',`<ul class="cm-purpose-rows">${byPurpose.map(([k,n],i)=>`<li><span>${e(k)}</span><i style="width:${Math.round(n/purposeMax*100)}%;opacity:${(1-i*0.07).toFixed(2)}"></i><b>${n}</b></li>`).join('')}</ul>`);
+
+  /* HOW IT PLAYS. The strategy vocabulary's own reading of the commander and the named mechanics;
+     everything counted or looked up, nothing generated, so the same deck always reads the same. */
+  const S=globalThis.CrankStrategies,lead=C.card(d.commanders[0]);
+  const terms=lead&&CL&&CL.classify?{...lead,...CL.classify(lead)}:lead;
+  const desc=S&&lead?S.describe(terms,d.definition.mechanics||[]):null;
+  const plays=card('plays','How it plays',desc&&desc.lines.length
+    ?`<div class="cm-plays-grid">${desc.lines.slice(0,4).map(l=>`<div><strong>${e(l.label)}</strong><span>${e(l.why)}${l.source==='mechanics'?' (named by the deck)':''}</span></div>`).join('')}</div><p class="cm-bento-facts"><a class="cm-text-button" href="#how">Full guide and SWOT</a></p>`
+    :`<p class="cm-muted">${lead?`Nothing in ${e(lead.name)}'s rules text names a strategy the vocabulary knows. Name the deck's mechanics in its definition and they will read here.`:'The deck has no commander yet.'}</p>`);
+
+  /* UPGRADE PATH. The four cheapest linked swaps, and a link to the rest. */
+  const ups=d.slots.filter(x=>x.purpose==='upgrade').map(x=>({c:C.card(x.cardId),from:x.replaces?C.card(x.replaces):null})).filter(x=>x.c)
+    .sort((a,b)=>(a.c.price??1e9)-(b.c.price??1e9));
+  const upgrade=card('upgrade','Upgrade path',ups.length
+    ?`<ul class="cm-upgrade-rows">${ups.slice(0,4).map(x=>`<li><span>${e(x.c.name)}${x.from?`<small>replaces ${e(x.from.name)}</small>`:''}</span><b>${e(C.money(x.c.price))}</b></li>`).join('')}</ul>${ups.length>4?`<p class="cm-bento-facts"><button type="button" class="cm-text-button" data-action="deck-tab" data-deck="${e(d.id)}" data-tab="upgrades">All ${ups.length}</button></p>`:''}`
+    :`<p class="cm-muted">No linked upgrades yet. Open a card's Replace with to link one.</p>`);
+
+  /* RECORD keeps its own section, which draws the games and the empty state; the bento gives it
+     the full width and the dashed border the guide's empty state asks for. */
+  const record=`<div class="cm-bento-card cm-bento-record${C.state.games.some(g=>g.deckId===d.id)?'':' is-empty'}">${recordHTML(d)}</div>`;
+
+  return `<div class="cm-bento" style="${tint}">${next}${progress}${cost}${curveCard}${typesCard}${purpose}${plays}${upgrade}${record}</div>`;
+}
+
 /* THE HUNDRED AT A GLANCE (Rob, 14 September). On the Overview, under the progress card: the
    composition the Cards tab reads at its head, the hundred by card type and by Primary
    Purpose as two bars with their keys, and the deck's key strategy in the strategy
@@ -528,7 +616,7 @@ function popMenu(el,html,width=250){
   return menu;
 }
 actions['deck-more-menu']=el=>{const d=M.deck(C.state,el.dataset.deck),g=attached(d),ladder=C.statusLadder||[],upgrades=d.slots.filter(r=>r.purpose!=='main').length;
-  popMenu(el,`<p>${e(d.name)}</p>${g?b('View the collection group','deck-group',{group:g.id}):''}${b(g?'Change the collection group':'Attach a collection group','attach-group',{deck:d.id})}${b('Reserve available copies','fulfill',{deck:d.id})}${d.status==='final'?b(d.locked?'Unlock deck':'Lock deck','lock',{deck:d.id}):''}<hr>${b(`Upgrades (${upgrades})`,'deck-upgrades',{deck:d.id})}${b('Role lens (Discover)','deck-lens',{deck:d.id})}${d.status==='draft'?b(`Buy list (${M.readiness(C.state,d).toBuy})`,'deck-buy-list',{deck:d.id}):''}${b('Edit definition','edit-deck',{deck:d.id})}${b('Export deck list','deck-export',{deck:d.id})}${b('Archive deck','archive',{deck:d.id})}${d.archived?'':`<hr><p>${d.status==='draft'?'Every card in the draft list becomes':'Every card still owed becomes'}</p>${ladder.map(([id,label,why])=>`<button type="button" class="cm-rung" aria-label="${e(label)}" data-action="deck-status" data-deck="${e(d.id)}" data-source="${id}"><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`).join('')}`}<hr><p>Insight</p>${b('Recommendations','deck-suggestions',{deck:d.id})}${b('Reports & advice','deck-evidence',{deck:d.id})}${b(C.termsOn()?'Hide term definitions':'Show term definitions','toggle-terms')}`,290);};
+  popMenu(el,`<p>${e(d.name)}</p><button type="button" data-action="page-help" data-help="deck">About this page</button><hr>${g?b('View the collection group','deck-group',{group:g.id}):''}${b(g?'Change the collection group':'Attach a collection group','attach-group',{deck:d.id})}${b('Reserve available copies','fulfill',{deck:d.id})}${d.status==='final'?b(d.locked?'Unlock deck':'Lock deck','lock',{deck:d.id}):''}<hr>${b(`Upgrades (${upgrades})`,'deck-upgrades',{deck:d.id})}${b('Role lens (Discover)','deck-lens',{deck:d.id})}${d.status==='draft'?b(`Buy list (${M.readiness(C.state,d).toBuy})`,'deck-buy-list',{deck:d.id}):''}${b('Edit definition','edit-deck',{deck:d.id})}${b('Export deck list','deck-export',{deck:d.id})}${b('Archive deck','archive',{deck:d.id})}${d.archived?'':`<hr><p>${d.status==='draft'?'Every card in the draft list becomes':'Every card still owed becomes'}</p>${ladder.map(([id,label,why])=>`<button type="button" class="cm-rung" aria-label="${e(label)}" data-action="deck-status" data-deck="${e(d.id)}" data-source="${id}"><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`).join('')}`}<hr><p>Insight</p>${b('Recommendations','deck-suggestions',{deck:d.id})}${b('Reports & advice','deck-evidence',{deck:d.id})}${b(C.termsOn()?'Hide term definitions':'Show term definitions','toggle-terms')}`,290);};
 actions['deck-pull']=el=>go('pull',{deck:el.dataset.deck});
 actions['deck-buy-list']=el=>go('cards',{tab:'buy',deck:el.dataset.deck});
 actions['deck-upgrades']=el=>go('decks',{deck:el.dataset.deck,tab:'upgrades'});

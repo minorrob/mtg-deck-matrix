@@ -41,7 +41,13 @@ const PAGES = [
   ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
   /* Deck page (14 September): Make the change (n) joins the hero for a final deck — the change
      list Rob asked for needs a way in from the deck itself; 44 → 48 words, 14 → 15 controls. */
-  [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [48, 15, 4], [48, 15, 4]],
+  /* Track V.4b: the Gallery hero carries the deck's strategy sentence from deck.notes, which the
+     designer's Gallery Deck Page screen asks for by name -- so this is copy that was added on
+     purpose, not chrome that crept in, and the budget rises with it: 48 → 80 words. The control
+     and explainer budgets do not move; the bento reorganizes the figures rather than adding to
+     them. The boundary is .cm-bento because the Progress and Cost panel this measured up to
+     became the first two cards of it. */
+  [`decks?deck=${DECK}`, "Deck page", ".cm-bento", [80, 15, 4], [80, 15, 4]],
   /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
      filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
   /* 27, not 26: "Back to Play Space" is the one control Rob asked for by name after losing his
