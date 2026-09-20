@@ -598,7 +598,7 @@
          child and closes; a return edge appears in gold once both its ends are lit. Reduced
          motion opens on the finished still. Play, pause, step, restart and speed are on the
          API; the pane draws the controls. */
-      const BEAM = '#ee735f', BEAM_DIM = '#ee735f99', GOLD = '#e0b660', GHOST_RING = 1.28;
+      const GHOST_RING = 1.28;
       let traceRun = null;   // {result, at, step, playing, speed, last, total, order: [nodes]}
       const reducedMotion = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
       function buildTrace(result) {
@@ -717,7 +717,72 @@
 
       /* --------------------------------------------------------------- drawing */
 
+      /* THE CANVAS PALETTE, read from the page's own tokens (Track V.4g).
+         This canvas drew itself from thirty-seven literals of the pre-Gallery navy, in
+         JavaScript, where the stylesheet's hex ceiling could never see them -- which is why
+         Explore stayed the one wholly blue page after the sweep. A canvas cannot use
+         var(--token): it needs resolved colors. So the tokens are read once through
+         getComputedStyle on a probe inside #matrix-v2 and cached against the theme, exactly as
+         the deck tiles read their mana pips; the switch to Felt and Cream re-reads them by
+         itself. mix() composes through color-mix, which the browser resolves because the probe
+         is a real element in the document, so a tint stays a tint in both themes.
+         The roles below are roles, not nearest colours: a ground stays a ground and a label
+         stays a label, so the picture keeps its depth when the theme flips. */
+      let PAL = null, PAL_THEME = null;
+      function palette() {
+        const root = typeof document !== 'undefined' && document.getElementById('matrix-v2');
+        if (!root) return PAL || {};
+        const theme = root.dataset.theme || 'dark';
+        if (PAL && PAL_THEME === theme) return PAL;
+        const probe = document.createElement('span');
+        probe.style.display = 'none';
+        root.append(probe);
+        const read = (expr) => { probe.style.color = ''; probe.style.color = expr; return getComputedStyle(probe).color || 'rgb(128,128,128)'; };
+        const mix = (a, pct, b) => read('color-mix(in oklab, ' + a + ' ' + pct + '%, ' + b + ')');
+        const V = (n) => 'var(--' + n + ')';
+        const P = {
+          scrim: mix(V('v-bg'), 88, 'transparent'),
+          panel: read(V('v-panel')),
+          raised: read(V('v-raised')),
+          line: read(V('v-line')),
+          lineStrong: read(V('v-line-strong')),
+          ghostLine: mix(V('v-muted'), 55, 'transparent'),
+          clear: mix(V('v-bg'), 0, 'transparent'),
+          ink: read(V('v-ink')),
+          muted: read(V('v-muted')),
+          on: read(V('v-on')),
+          /* the focus and its two rings: the focus carries the accent, the rings step back */
+          focus: mix(V('v-accent'), 42, V('v-panel')),
+          ring1: mix(V('v-accent'), 22, V('v-panel')),
+          ring2: mix(V('v-accent'), 12, V('v-panel')),
+          /* structural edges: shared mechanics and roles */
+          edge: mix(V('v-line-strong'), 55, 'transparent'),
+          edgeFaint: mix(V('v-line-strong'), 22, 'transparent'),
+          edgeLit: mix(V('v-line-strong'), 85, 'transparent'),
+          edgeOwn: mix(V('st-inbox'), 62, 'transparent'),
+          /* EDHREC co-play edges, which have always read warmer than the structural ones */
+          playEdge: mix(V('v-money'), 40, 'transparent'),
+          playEdgeFaint: mix(V('v-money'), 18, 'transparent'),
+          playEdgeLit: mix(V('v-money'), 70, 'transparent'),
+          playEdgeOwn: mix(V('v-money'), 62, 'transparent'),
+          playInk: mix(V('v-money'), 75, V('v-ink')),
+          /* a loop is gold and says so in both themes */
+          loop: read(V('v-accent')),
+          loopDim: mix(V('v-accent'), 80, V('v-bg')),
+          loopSoft: mix(V('v-accent'), 68, 'transparent'),
+          loopInk: mix(V('v-accent'), 70, V('v-ink')),
+          /* the trace beam, and the aether -- the graph focus is one of the four places blue means something */
+          beam: read(V('st-remove')),
+          beamDim: mix(V('st-remove'), 60, 'transparent'),
+          aether: read(V('v-aether')),
+          aetherInk: mix(V('v-aether'), 55, V('v-ink')),
+        };
+        probe.remove();
+        PAL = P; PAL_THEME = theme;
+        return P;
+      }
       function draw() {
+        const P = palette(), BEAM = P.beam, BEAM_DIM = P.beamDim, GOLD = P.loopDim;
         if (disposed) return;
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(() => {
@@ -756,12 +821,12 @@
             const own = focusId && (e.a.card.id === focusId || e.b.card.id === focusId);
             if (crossCount > WEB_LIMIT && !own) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
-            ctx.strokeStyle = own ? (played ? '#e6cf9d99' : '#8fc3f2aa') : (played ? '#c6a86d2e' : '#5384b62e'); ctx.lineWidth = own ? 1.4 : 1; ctx.stroke();
+            ctx.strokeStyle = own ? (played ? P.playEdgeOwn : P.edgeOwn) : (played ? P.playEdgeFaint : P.edgeFaint); ctx.lineWidth = own ? 1.4 : 1; ctx.stroke();
           }
           for (const e of edges) {
             if (!e.tree || traceRun) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
-            ctx.strokeStyle = played ? (e.b.depth === 1 ? '#c6a86d99' : '#c6a86d55') : (e.b.depth === 1 ? '#5384b699' : '#5384b655');
+            ctx.strokeStyle = played ? (e.b.depth === 1 ? P.playEdgeLit : P.playEdge) : (e.b.depth === 1 ? P.edgeLit : P.edge);
             ctx.lineWidth = e.b.depth === 1 ? 1.2 : 1; ctx.stroke();
           }
           /* The trail, and the edge a pop-up is about, over everything else: the step the
@@ -770,7 +835,7 @@
             const lit = highlight && ((e.a.card.id === highlight[0] && e.b.card.id === highlight[1]) || (e.a.card.id === highlight[1] && e.b.card.id === highlight[0]));
             if ((!e.b.pinned && !lit) || (traceRun && !lit)) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
-            ctx.strokeStyle = lit ? '#ffd166' : '#e0b660bb'; ctx.lineWidth = lit ? 2.6 : 2.2; ctx.stroke();
+            ctx.strokeStyle = lit ? P.loop : P.loopSoft; ctx.lineWidth = lit ? 2.6 : 2.2; ctx.stroke();
           }
 
           /* ROOM TO LETTER. A name is drawn only where the ring has room for it: the arc
@@ -796,9 +861,9 @@
               const mx = p.x + (n.x - p.x) * .58, my = p.y + (n.y - p.y) * .58;
               ctx.font = '10px Satoshi, sans-serif'; ctx.textAlign = 'center';
               const w = ctx.measureText(text).width + 10;
-              ctx.fillStyle = '#0f1826d9'; ctx.beginPath(); ctx.roundRect(mx - w / 2, my - 8, w, 16, 8); ctx.fill();
-              ctx.strokeStyle = played ? '#c6a86d55' : '#5384b655'; ctx.lineWidth = 1; ctx.stroke();
-              ctx.fillStyle = played ? '#e6cf9d' : '#a8cdf0'; ctx.fillText(text, mx, my + 3.5);
+              ctx.fillStyle = P.scrim; ctx.beginPath(); ctx.roundRect(mx - w / 2, my - 8, w, 16, 8); ctx.fill();
+              ctx.strokeStyle = played ? P.playEdge : P.edge; ctx.lineWidth = 1; ctx.stroke();
+              ctx.fillStyle = played ? P.playInk : P.muted; ctx.fillText(text, mx, my + 3.5);
             }
           }
 
@@ -808,17 +873,17 @@
             const focus = n.depth === 0;
             /* A GHOST: a card the trace never touched, a dashed outline on the outer band. */
             if (n.ghost) {
-              ctx.save(); ctx.globalAlpha = .34; ctx.fillStyle = '#16233a'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
-              ctx.strokeStyle = '#6f93bd'; ctx.lineWidth = .9; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.restore();
+              ctx.save(); ctx.globalAlpha = .34; ctx.fillStyle = P.panel; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+              ctx.strokeStyle = P.ghostLine; ctx.lineWidth = .9; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.restore();
               continue;
             }
             const tp = pOf(n);
             if (traceRun && tp <= 0) ctx.globalAlpha = .18;
             const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r + (focus ? 12 : 6));
-            glow.addColorStop(0, focus ? '#638abd' : n.depth === 1 ? '#385b83' : '#2b4666');
-            glow.addColorStop(1, '#263c5700');
+            glow.addColorStop(0, focus ? P.lineStrong : n.depth === 1 ? P.line : P.raised);
+            glow.addColorStop(1, P.clear);
             ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (focus ? 12 : 6), 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = focus ? '#386794' : n.depth === 1 ? '#203a58' : '#1b3049';
+            ctx.fillStyle = focus ? P.focus : n.depth === 1 ? P.ring1 : P.ring2;
             ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
             const img = art(n.card);
             if (img) {
@@ -829,7 +894,7 @@
               ctx.drawImage(img, sx, sy, sw, sw, n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
               ctx.restore();
             } else if (n.depth <= 1) {
-              ctx.fillStyle = '#bddbff'; ctx.font = (focus ? '12' : '9') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillStyle = P.ink; ctx.font = (focus ? '12' : '9') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText((n.card.ci || 'C').split('').join(' '), n.x, n.y + (focus ? 4 : 3));
             }
             /* A CARD YOU OWN WEARS A GOLD BAND, just outside its disc. Outside rather than
@@ -839,17 +904,17 @@
                a band on ring 1 and still as a band out on ring 3. */
             if (owned && owned.has(n.card) && !(traceRun && tp <= 0)) {
               const band = Math.max(1.5, n.r * .11);
-              ctx.strokeStyle = '#f2c96b'; ctx.lineWidth = band;
+              ctx.strokeStyle = P.loopInk; ctx.lineWidth = band;
               ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();
             }
             const isSel = selected.has(n.card.id);
-            ctx.strokeStyle = isSel ? '#ffd166' : n.pinned ? '#e0b660' : focus ? '#c0e8ff' : n.depth === 1 ? '#71b6e3' : '#4f89b8';
+            ctx.strokeStyle = isSel ? P.loop : n.pinned ? P.loopDim : focus ? P.aetherInk : n.depth === 1 ? P.aether : P.line;
             ctx.lineWidth = isSel ? 3 : n.pinned ? 2 : focus ? 1.5 : 1;
             ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
             if (isSel) {
               // a small check badge, so a selected card reads as selected at any zoom
-              ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
-              ctx.fillStyle = '#1b1b1b'; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillStyle = P.loop; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = P.on; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText('✓', n.x + n.r * .7, n.y - n.r * .7 + Math.max(3, n.r * .14));
             }
             /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
@@ -864,14 +929,14 @@
                 const label = '×' + n.loopBacks; ctx.font = 'bold 9px Satoshi, sans-serif'; ctx.textAlign = 'center';
                 const w = ctx.measureText(label).width + 8, bx = n.x + n.r * .75, by = n.y - n.r * .75;
                 ctx.fillStyle = GOLD; ctx.beginPath(); ctx.roundRect(bx - w / 2, by - 7, w, 14, 7); ctx.fill();
-                ctx.fillStyle = '#1b1408'; ctx.fillText(label, bx, by + 3.2);
+                ctx.fillStyle = P.on; ctx.fillText(label, bx, by + 3.2);
               }
             }
             const showName = (n.depth === 0 || n.pinned || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)))) && !(traceRun && tp <= 0);
             if (showName) {
               const name = (n.pinned ? '◀ ' : '') + n.card.name;
               const max = n.depth === 0 ? 28 : n.depth === 1 ? 24 : 18;
-              ctx.fillStyle = n.depth <= 1 ? '#edf7ff' : '#c9dcf2';
+              ctx.fillStyle = n.depth <= 1 ? P.ink : P.muted;
               ctx.font = (focus ? 'bold 13' : n.depth === 1 ? '11' : '10') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText(name.length > max ? name.slice(0, max - 2) + '…' : name, n.x, n.y + n.r + (n.depth <= 1 ? 15 : 12));
             }
@@ -884,10 +949,10 @@
             ctx.font = 'bold 12px Satoshi, sans-serif'; ctx.textAlign = 'center';
             const w = ctx.measureText(label).width + 14, h = 20;
             const y = named.y - named.r - 14;
-            ctx.fillStyle = '#0b1420f2';
+            ctx.fillStyle = P.scrim;
             ctx.beginPath(); ctx.roundRect(named.x - w / 2, y - h / 2, w, h, 9); ctx.fill();
-            ctx.strokeStyle = '#7fb2dd88'; ctx.lineWidth = 1; ctx.stroke();
-            ctx.fillStyle = '#eaf4ff'; ctx.fillText(label, named.x, y + 4);
+            ctx.strokeStyle = P.edgeOwn; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = P.ink; ctx.fillText(label, named.x, y + 4);
           }
           ctx.restore();
         });

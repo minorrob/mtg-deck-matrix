@@ -734,7 +734,27 @@ button.cm-badge-link:hover{background:var(--v-raised);color:var(--v-ink)}
    the maximise control, in its top-right corner under Back to Prior Card, and the
    connection pop-up, which is now positioned against the canvas instead of the whole
    column -- which is what stops it drifting up over the controls when the pane resizes. */
-#matrix-v2 .cm-graph-box{position:relative;min-width:0}
+#matrix-v2 .cm-card-view :is(h1,h2,h3){overflow-wrap:break-word}
+.cm-graph-box{position:relative;min-width:0;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:radial-gradient(ellipse at 50% 40%,color-mix(in oklab,var(--v-accent) 9%,var(--v-panel)),var(--v-panel) 70%)}
+/* THE CANVAS OVERLAYS. Blurred pills on the stage rather than a toolbar above it, so the
+   graph gets the whole box. Each is a floating group with the same treatment: the ground at
+   80% under a blur, a hairline, and the control radius. */
+#matrix-v2 .cm-graph-box .cm-graph-modes,#matrix-v2 .cm-graph-box .cm-graph-reach,#matrix-v2 .cm-graph-legend{position:absolute;z-index:3;display:flex;align-items:center;gap:6px;margin:0;padding:6px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:color-mix(in srgb,var(--v-bg) 80%,transparent);backdrop-filter:blur(8px)}
+#matrix-v2 .cm-graph-box .cm-graph-modes{top:14px;left:14px}
+#matrix-v2 .cm-graph-box .cm-graph-modes .v-button{min-height:32px;padding:0 12px;font-size:13px;border:0;background:none;color:var(--v-muted)}
+#matrix-v2 .cm-graph-box .cm-graph-modes .v-button.is-on{background:var(--v-accent);color:var(--v-on);font-weight:700}
+#matrix-v2 .cm-graph-box .cm-graph-reach{bottom:14px;left:14px;flex-wrap:wrap;gap:14px;max-width:calc(100% - 28px)}
+#matrix-v2 .cm-graph-box .cm-graph-reach label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--v-muted);margin:0}
+#matrix-v2 .cm-graph-box .cm-graph-reach input[type=range]{width:70px;accent-color:var(--v-accent)}
+/* The legend says what a ring and a line mean, which is the one thing a graph cannot say
+   about itself. It is the last thing to go when the box is narrow. */
+#matrix-v2 .cm-graph-legend{top:14px;right:56px;gap:14px;font-size:12px;color:var(--v-muted)}
+#matrix-v2 .cm-graph-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#matrix-v2 .cm-graph-legend i{width:10px;height:10px;border-radius:var(--radius-pill);flex:0 0 10px}
+#matrix-v2 .cm-graph-legend .is-own{border:2px solid var(--st-inbox)}
+#matrix-v2 .cm-graph-legend .is-not{border:2px dashed var(--v-line-strong)}
+#matrix-v2 .cm-graph-legend .is-loop{height:2px;border-radius:0;background:var(--v-accent)}
+@media(max-width:1050px){#matrix-v2 .cm-graph-legend{display:none}}
 #matrix-v2 .cm-graph-box>.cm-graph{display:block;width:100%}
 #matrix-v2 .cm-stage-btn{position:absolute;top:10px;right:10px;z-index:5;
   display:inline-grid;place-items:center;width:32px;height:32px;padding:0;
