@@ -111,6 +111,22 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
 }
 
+/* Track V.1c: the mana pips are read from the tokens, not hard-coded in JavaScript (revision 2
+   INTAKE, item 4). crankmagic-decks.js carried `const PIP={W:'#fff0b4',U:'#53acff',...}` -- five
+   literals of the pre-Gallery palette that no theme switch could reach, so a deck tint and a pip
+   disagreed in light mode and neither followed the designer's values. They come from
+   getComputedStyle on #matrix-v2 now, which is also what makes --tint per tile possible. */
+{
+  const decks = read("crankmagic-decks.js");
+  const literals = (decks.match(/#fff0b4|#53acff|#696076|#ee735f|#66b889/g) || []);
+  eq(literals, [], `crankmagic-decks.js still hard-codes the old pip colors: ${literals.join(", ")}`);
+  ok(/getComputedStyle/.test(decks), "crankmagic-decks.js reads its colors from the computed tokens");
+  ok(/--mana-/.test(decks), "and names the --mana-* tokens when it does");
+  /* Read once and cached, not per pip: a getComputedStyle inside a render loop over a hundred
+     rows is a forced reflow per card, which is how a list gets slow without anything looking wrong. */
+  ok(/function pips?\b|const pip|let PIP|function manaColors?\b/.test(decks), "the lookup is a named function, so it has somewhere to cache");
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is
@@ -122,7 +138,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
   let total = 0; const byFile = [];
   for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
-  const CEILING = 586;
+  /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
+     prose to take twenty-three with it. Lower it whenever a change takes it lower, the way the hex
+     ceiling works. What is left is mostly legacy prose and a handful of UK spellings that are
+     still on screen -- "Colour identity within" on Build is the loudest -- and those want their
+     own pass rather than riding on a restyle. */
+  const CEILING = 563;
   ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
   /* and nothing written today carries one */
   for (const f of ["docs/design-intake-2026-09-20.md", "docs/handoff-fable-2026-09-20.md", "docs/design/2026-09-20-deck-page/INTAKE.md", "tests/design-tokens.mjs", "crankmagic-design.css"]) {

@@ -2,6 +2,14 @@
 @font-face{font-family:Satoshi;font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-400.woff2?v=1") format("woff2")}
 @font-face{font-family:Satoshi;font-weight:500;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-500.woff2?v=1") format("woff2")}
 @font-face{font-family:Satoshi;font-weight:700;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-700.woff2?v=1") format("woff2")}
+/* Young Serif is the Gallery display face. The implementation guide asked for a Google Fonts <link>
+   and a widened CSP; Rob chose self-hosting on 2026-09-20 instead, so the two subsets Google serves
+   are committed under assets/crankmagic/ and the CSP does not move. The face is SIL OFL 1.1 --
+   Google's font metadata reports "license": "ofl" and the upstream OFL.txt is beside the woff2 as
+   youngserif-OFL.txt, as oxanium-OFL.txt accompanies the wordmark subset. The unicode-ranges are
+   Google's own: latin-ext carries the accented letters that Magic card names actually use. */
+@font-face{font-family:'Young Serif';font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/youngserif-400.woff2?v=1") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Young Serif';font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/youngserif-400-ext.woff2?v=1") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 
 /* THE GALLERY TOKENS (Track V, docs/design-intake-2026-09-20.md). The values are the designer's, from
    docs/design/2026-09-20-deck-page/.../design-system/tokens/*.css, and tests/design-tokens.mjs holds this
@@ -39,8 +47,8 @@
   --v-soft:color-mix(in oklab,var(--color-accent) 18%,var(--color-panel));
   --v-bg:var(--color-bg);--v-panel:var(--color-panel);
   --v-raised:var(--color-raised);
-  --v-field:var(--color-raised);--v-field-line:light-dark(#b9c3d2,#5a677c);
-  --v-line:var(--color-line);--v-line-strong:light-dark(#b6c2d4,#4b5975);
+  --v-field:var(--color-raised);--v-field-line:light-dark(#c9c0b0,#4a433a);
+  --v-line:var(--color-line);--v-line-strong:light-dark(#bfb4a0,#514a40);
   --v-muted:var(--color-muted);
   --v-decision:var(--color-money);--v-decision-bg:light-dark(#fdf4e4,#2a2519);
   --v-decision-line:light-dark(#d8b57e,#6d5c3d);--v-decision-ink:light-dark(#4a3208,#f6e3c6);
@@ -51,13 +59,24 @@
      a pull sheet. Green is in the box; teal is owned but has to be pulled from somewhere;
      blue is on its way; amber costs money; the two greys are intentions, not copies; red
      is a card sitting in a box it no longer belongs in. */
-  --st-inbox:#5cc98a;--st-pull:#4fc2c0;--st-ordered:#3b7dd8;--st-buy:#f0b35a;
-  --st-watch:#8f9bb3;--st-draft:#7f8ba0;--st-remove:#ef6b60}
-#matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(#0869cd28,#00000020)}
+  /* The designer's six rungs are already above, from colors.css, in both themes. These four are
+     the guide's additions (revision 2 INTAKE, item 1). Dark is the guide's value; the guide gives
+     no light value for watch, draft or physical, so those are this repository's reading of them in
+     the Felt and Cream register -- muted slate for the two intentions, a deeper green than
+     --st-inbox for a card that is physically in a deck -- and they are on the gap list for the
+     designer. --st-reserved's light value is the guide's own. */
+  --st-watch:light-dark(#5f6b80,#8f9bb3);--st-draft:light-dark(#69738a,#7f8ba0);
+  --st-reserved:light-dark(#3f6fd0,#8fb3ff);--st-physical:light-dark(#237a4a,#3fae7a);
+  /* The guide's names for the designer's shapes and faces, so the page layer reads one vocabulary.
+     Three radii and no others: controls 12, cards 18, tiles 22. */
+  --v-aether:var(--color-aether);--v-money:var(--color-money);
+  --v-radius:var(--radius-control);--v-radius-card:var(--radius-card);--v-radius-tile:var(--radius-tile);
+  --v-display:var(--font-display);--v-body:var(--font-body);}
+#matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(color-mix(in srgb,var(--v-accent) 16%,transparent),#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
-#matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:#73bcff}
+#matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:var(--v-accent)}
 #matrix-v2 .v-graph{background-image:radial-gradient(ellipse at 50% 50%,light-dark(#deedff88,#234c7030),transparent 68%),radial-gradient(var(--v-line) .8px,transparent .8px)}
-#matrix-v2 .v-gnode[data-focus=true]{box-shadow:0 0 0 5px light-dark(#0869cd17,#68b5ff17),0 6px 20px #00000022}
+#matrix-v2 .v-gnode[data-focus=true]{box-shadow:0 0 0 5px light-dark(color-mix(in srgb,var(--v-accent) 9%,transparent),#68b5ff17),0 6px 20px #00000022}
 #matrix-v2 .v-table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:16px 0 12px}
 #matrix-v2 .v-table-search{flex:1;min-width:150px;display:grid;gap:5px;font-size:11px;color:var(--v-muted)}
 #matrix-v2 .v-table-group{display:grid;gap:5px;font-size:11px;color:var(--v-muted);width:132px}
@@ -125,7 +144,7 @@
 #matrix-v2 .v-menu-options{width:200px}
 #matrix-v2 .v-menu-divider{border:0;border-top:1px solid var(--v-line);margin:5px 0}
 #matrix-v2 dialog.v-dialog{margin:auto;box-sizing:border-box;width:min(600px,calc(100% - 28px));max-height:90vh;overflow:hidden auto;border:1px solid var(--v-line);border-radius:16px;background:var(--v-panel);color:var(--v-ink);padding:24px;font-family:Satoshi,sans-serif;box-shadow:0 24px 90px #0005}
-#matrix-v2 dialog::backdrop{background:#050b1480}
+#matrix-v2 dialog::backdrop{background:color-mix(in srgb,var(--v-bg) 50%,transparent)}
 #matrix-v2 .v-dialog .v-field{margin:12px 0}
 #matrix-v2 .v-dialog textarea{min-height:140px;resize:vertical;width:100%;box-sizing:border-box;background:var(--v-field);color:var(--v-ink);border:1px solid var(--v-field-line);border-radius:8px;padding:12px;font:inherit}
 #matrix-v2 .v-dialog input{min-width:0;max-width:100%}
@@ -242,14 +261,14 @@
 #matrix-v2 .v-step-link:disabled{color:var(--v-muted);cursor:default;text-decoration:none;opacity:1}
 #matrix-v2 .v-run-state{display:block;color:var(--v-muted);font-size:12px;line-height:1.5;margin-top:3px}
 #matrix-v2 [data-phase=pending] strong{color:var(--v-muted)}
-#matrix-v2 .v-run-orb{position:relative;display:block;width:38px;height:38px;flex:0 0 38px;overflow:hidden;border-radius:50%;border:1px solid #7692a330;background:radial-gradient(circle at 30% 20%,#c1e2ff20,transparent 60%),#14223060;box-sizing:border-box}
-#matrix-v2 [data-phase=active] .v-run-orb{border-color:#62bfff88;background:radial-gradient(circle at 32% 20%,#dcf8ff50,transparent 56%),#0065c338;box-shadow:inset 0 -3px 8px #279ef93a,0 0 17px #008eff20}
-#matrix-v2 .v-run-orb i{display:none;position:absolute;bottom:3px;left:12px;width:14px;height:27px;border-radius:65% 15% 65% 45%;background:linear-gradient(20deg,#b8f5ff,#2fb8ff 46%,#0762ff20);filter:blur(1.3px);transform-origin:50% 100%;animation:v-orb-fire 1.65s ease-in-out infinite alternate}
+#matrix-v2 .v-run-orb{position:relative;display:block;width:38px;height:38px;flex:0 0 38px;overflow:hidden;border-radius:50%;border:1px solid color-mix(in srgb,var(--v-line) 19%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-aether) 60%,var(--v-ink)) 13%,transparent),transparent 60%),color-mix(in srgb,var(--v-bg) 38%,transparent);box-sizing:border-box}
+#matrix-v2 [data-phase=active] .v-run-orb{border-color:color-mix(in srgb,var(--v-aether) 53%,transparent);background:radial-gradient(circle at 32% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-aether) 36%,var(--v-ink)) 31%,transparent),transparent 56%),color-mix(in srgb,color-mix(in oklab,var(--v-aether) 32%,var(--v-bg)) 22%,transparent);box-shadow:inset 0 -3px 8px color-mix(in srgb,color-mix(in oklab,var(--v-aether) 64%,var(--v-bg)) 23%,transparent),0 0 17px color-mix(in srgb,color-mix(in oklab,var(--v-aether) 48%,var(--v-bg)) 13%,transparent)}
+#matrix-v2 .v-run-orb i{display:none;position:absolute;bottom:3px;left:12px;width:14px;height:27px;border-radius:65% 15% 65% 45%;background:linear-gradient(20deg,color-mix(in oklab,var(--v-aether) 48%,var(--v-ink)),color-mix(in oklab,var(--v-aether) 72%,var(--v-bg)) 46%,color-mix(in srgb,color-mix(in oklab,var(--v-aether) 40%,var(--v-bg)) 13%,transparent));filter:blur(1.3px);transform-origin:50% 100%;animation:v-orb-fire 1.65s ease-in-out infinite alternate}
 #matrix-v2 [data-phase=active] .v-run-orb i{display:block}
 #matrix-v2 .v-run-orb i:nth-child(2){left:5px;height:21px;animation-delay:-.7s;opacity:.7}
 #matrix-v2 .v-run-orb i:nth-child(3){left:21px;width:10px;height:20px;animation-delay:-1.2s;opacity:.8}
-#matrix-v2 .v-run-orb img{display:none;position:absolute;inset:7px;width:22px;height:22px;filter:brightness(1.55) drop-shadow(0 0 4px #78f7ba66);animation:v-orb-grow 2.7s ease-in-out infinite alternate}
-#matrix-v2 [data-phase=complete] .v-run-orb{border-color:#6de9a36b;background:radial-gradient(circle at 30% 20%,#d2ffe83d,transparent 62%),#1cbb5930;box-shadow:inset 0 -4px 9px #17af6230,0 0 13px #3aeba71a}
+#matrix-v2 .v-run-orb img{display:none;position:absolute;inset:7px;width:22px;height:22px;filter:brightness(1.55) drop-shadow(0 0 4px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 36%,var(--v-ink)) 40%,transparent));animation:v-orb-grow 2.7s ease-in-out infinite alternate}
+#matrix-v2 [data-phase=complete] .v-run-orb{border-color:color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 60%,var(--v-ink)) 42%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 8%,var(--v-ink)) 24%,transparent),transparent 62%),color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 52%,var(--v-bg)) 19%,transparent);box-shadow:inset 0 -4px 9px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 48%,var(--v-bg)) 19%,transparent),0 0 13px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 68%,var(--v-ink)) 10%,transparent)}
 #matrix-v2 [data-phase=complete] .v-run-orb img{display:block}
 #matrix-v2 [data-phase=canceled] .v-run-orb{border-color:#d29b4c88}
 #matrix-v2 .v-preview-label{color:var(--v-muted);margin:10px 0;font-size:11px}
@@ -277,7 +296,12 @@
 @media(max-width:400px){#matrix-v2 #v-roster .v-filter-panel{grid-template-columns:1fr}}
 
 @font-face{font-family:CrankOxanium;src:url(data:font/ttf;base64,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) format('truetype');font-style:normal;font-weight:700;font-display:swap}
-#matrix-v2{--v-brand-blue:light-dark(#1456b8,#86cdff);--v-brand-shine:light-dark(#268fc0,#c3eeff);--v-aether-thread:light-dark(#187fd0,#68bcff);--v-aether-core:light-dark(#237cd5,#8dddff)}
+/* The logo and its mist are the one place blue still means something (README: blue appears only in
+   the logo, the aether mist, the focus ring and the Explore graph focus). They are tints of the
+   aether token now rather than four literals of their own, so the mist follows the theme with
+   everything else. crankmagic-brand.js reads --v-aether-thread and --v-aether-core through
+   getComputedStyle, which resolves a color-mix, so the canvas gets a real color either way. */
+#matrix-v2{--v-brand-blue:light-dark(color-mix(in oklab,var(--v-aether) 70%,var(--v-ink)),var(--v-aether));--v-brand-shine:light-dark(var(--v-aether),color-mix(in oklab,var(--v-aether) 55%,white));--v-aether-thread:var(--v-aether);--v-aether-core:color-mix(in oklab,var(--v-aether) 55%,white)}
 #matrix-v2 .v-brand-block{position:relative}
 #matrix-v2 .v-brand-copy{position:static;padding-bottom:0}
 #matrix-v2 .v-brand,#matrix-v2 .v-brand-subline,#matrix-v2 .v-brand-logo{position:relative;z-index:1}
