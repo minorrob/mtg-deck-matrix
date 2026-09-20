@@ -23,6 +23,7 @@ const publicFiles=new Map([
   ['/',['text/html; charset=utf-8','guest.html']],
   ['/guest.mjs',['text/javascript; charset=utf-8','guest.mjs']],
   ['/guest.css',['text/css; charset=utf-8','guest.css']],
+  ['/connection.mjs',['text/javascript; charset=utf-8','connection.mjs']],
   ['/play',['text/html; charset=utf-8','review.html']],
   ['/guest-play-boot.js',['text/javascript; charset=utf-8','guest-play-boot.js']],
   ['/play-entry.mjs',['text/javascript; charset=utf-8','play-entry.mjs']],

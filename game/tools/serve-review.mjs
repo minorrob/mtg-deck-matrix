@@ -36,6 +36,7 @@ for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-fores
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
 files.set('/setup.mjs',['game/ui/setup.mjs','text/javascript']);
+files.set('/connection.mjs',['game/ui/connection.mjs','text/javascript']);
 files.set('/setup.css',['game/ui/setup.css','text/css']);
 files.set('/online.css',['game/ui/online.css','text/css']);
 files.set('/handoff.mjs',['game/ui/handoff.mjs','text/javascript']);
@@ -49,7 +50,7 @@ const mime={js:'text/javascript',css:'text/css',html:'text/html',json:'applicati
 for(const path of publicPaths)files.set('/app/'+path,[path,mime[path.split('.').at(-1)]]);
 files.set('/app/',['index.html','text/html']);
 const guestAssets=new Map([
-  ...['guest.html','guest.mjs','guest.css','review.html','guest-play-boot.js','play-entry.mjs','guest-live.mjs','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
+  ...['guest.html','guest.mjs','guest.css','connection.mjs','review.html','guest-play-boot.js','play-entry.mjs','guest-live.mjs','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
   ['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])

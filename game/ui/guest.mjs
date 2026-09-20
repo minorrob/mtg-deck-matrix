@@ -1,4 +1,8 @@
+import {renderConnectionPanel} from '/connection.mjs';
 const status=document.querySelector('#status'),host=document.querySelector('#table'),sessionKey='crankmagic-seat-session';let session,tableState,pollTimer,lastRendered='';
+/* The render key ignores sub-five-second movement in quiet time, so a guest typing a deck name is
+   not interrupted by a redraw every heartbeat; the panel still updates within five seconds. */
+const renderKeyOf=value=>JSON.stringify({...value,readiness:value.readiness&&{...value.readiness,seats:(value.readiness.seats||[]).map(s=>({...s,quietForMs:s.quietForMs===null?null:Math.floor(s.quietForMs/5000)}))}});
 const deckDraft={source:'upload',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
@@ -31,11 +35,14 @@ function deckPanel(table,seat){
   panel.append(el('div','deck-fields'),source,name,upload,catalog,build,archidekt,save);return panel;
 }
 function render(value){
-  const renderKey=JSON.stringify(value);
-  if(renderKey===lastRendered){const countdown=host.querySelector('.countdown');if(countdown)countdown.textContent='Starting in '+Math.max(0,Math.ceil((value.table.countdownAt-Date.now())/1000));return;}
+  const renderKey=renderKeyOf(value);
+  if(renderKey===lastRendered){const countdown=host.querySelector('.countdown');if(countdown)countdown.textContent='Starting in '+Math.max(0,Math.ceil((value.table.countdownAt-Date.now())/1000));const headline=host.querySelector('.connection-headline');if(headline&&value.table.phase==='countdown')headline.textContent='Starting in '+Math.max(0,Math.ceil((value.table.countdownAt-Date.now())/1000));return;}
   lastRendered=renderKey;
   tableState=value.table;status.hidden=true;host.hidden=false;host.replaceChildren();const rules=el('div','panel');rules.append(el('h1','',`Table · bracket ${tableState.settings?.bracket??'—'}`),el('p','',`Maximum deck cost: $${tableState.settings?.maxCost??'—'} · ${tableState.seats.length} seats`));host.append(rules);
   const seats=el('div','seats');for(const seat of tableState.seats){const card=el('div','seat'+(seat.seatId===session.seatId?' you':''));card.append(el('strong','',seat.seatId===session.seatId?'You':seat.name||`Seat ${seat.seatId+1}`),el('span','',seat.kind==='ai'?'AI player':'Human player'),el('small','',!seat.occupied?'Waiting for player':seat.ready?'Ready':seat.connected?'Choosing a deck':'Disconnected'),...(seat.commander?[el('small','',seat.commander)]:[]));seats.append(card);}host.append(seats);
+  /* Who the table is waiting on, by name and reason (C.2). The readiness object rides along with
+     every /table answer, so this costs no extra request. */
+  if(value.readiness)host.append(renderConnectionPanel(value.readiness,{el,youSeatId:session.seatId,countdownAt:tableState.countdownAt}));
   const own=tableState.seats.find(s=>s.seatId===session.seatId),actions=el('div','actions');
   if(tableState.phase==='selecting'||tableState.phase==='countdown'){
     host.append(deckPanel(value,own));const ready=button(own.ready?'Not ready':'Ready to play',async()=>{try{await api('/table/ready',{method:'POST',body:{ready:!own.ready}});await refresh();}catch(error){message(error.message,true);}},own.ready?'':'primary');ready.disabled=!own.deckVersion;actions.append(ready);

@@ -957,7 +957,11 @@
       <p class="cm-muted">Turn order is shuffled when the game starts.</p>
       <div class="cm-actions"><button type="button" class="v-button${canStart ? " primary" : ""}" data-action="lobby-start"${canStart ? "" : " disabled"}>${canStart ? "Start the game" : "Not ready yet"}</button><span class="cm-muted">${e(startWhy || "The board is not built yet. This button will deal the first hands once it is.")}</span></div></section>` : "";
 
-    C.main.innerHTML = head + rules + seats + read;
+    /* Who the private table is waiting on (C.2), drawn while one is open on the local host and
+       otherwise empty. The module that draws it is the same one the guest and host pages use. */
+    const live = `<div class="cm-lobby-live" aria-live="polite"></div>`;
+    C.main.innerHTML = head + rules + seats + live + read;
+    pollLiveReadiness();
 
     const bracketEl = $("[name=lobbyBracket]");
     const capEl = $("[name=lobbyCap]");
@@ -1571,6 +1575,37 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
       seats.push(await seatRequest(order.ordered[i].seat, i, order.ordered[i].kind, token, catalogDecks, order.maxCost));
     }
     return {bracket: order.bracket, maxCost: order.maxCost, humans: order.humans, ais: order.ais, seats};
+  }
+
+  /* THE CONNECTION PANEL IN THE WORKSHOP LOBBY (C.2). While the Play view is open, ask the local
+     host who the private table is waiting on and draw it under the seats. The host answers
+     /api/table/readiness without a token; on GitHub Pages or with no host running the request
+     fails once and the poll stops, so the workshop never depends on the host being there. The
+     panel itself is game/ui/connection.mjs, the one module all three pages draw it with, loaded
+     from the host's root the first time it is needed. */
+  let liveReadinessTimer = null, connectionModule = null, liveToken = null;
+  async function pollLiveReadiness() {
+    clearTimeout(liveReadinessTimer);
+    const mount = C.main.querySelector(".cm-lobby-live");
+    if (!mount || location.hash.replace(/^#/, "") !== "game") return;
+    let readiness = null;
+    try {
+      const res = await fetch("/api/table/readiness", {cache: "no-store"});
+      if (res.status === 409) readiness = null;   /* the host is up, no table is open */
+      else if (!res.ok) return;                   /* no host here: stop until the view is drawn again */
+      else readiness = await res.json();
+    } catch (_) { return; }
+    if (readiness) {
+      try {
+        connectionModule = connectionModule || await import("/connection.mjs");
+        /* The table's own clock for the countdown headline. /api/table wants the host token,
+           which /api/setup hands out once per page. */
+        if (!liveToken) { const setup = await lobbyApi("/api/setup").catch(() => null); liveToken = setup && setup.token || null; }
+        const open = liveToken ? await lobbyApi("/api/table", {token: liveToken}).catch(() => null) : null;
+        mount.replaceChildren(connectionModule.renderConnectionPanel(readiness, {youSeatId: 0, countdownAt: open && open.table ? open.table.countdownAt : undefined}));
+      } catch (_) { mount.replaceChildren(); }
+    } else mount.replaceChildren();
+    liveReadinessTimer = setTimeout(pollLiveReadiness, readiness && readiness.phase === "countdown" ? 1000 : 2000);
   }
 
   async function lobbyPollLive(timeoutMs) {
