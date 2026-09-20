@@ -243,6 +243,187 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   ok(check.ok, `and a fitted bracket 3 deck can sit at a bracket 3 table${check.ok ? "" : ": " + check.issues.map((i) => i.why).join(" ")}`);
 }
 
+/* ---- F.1: the screen's arithmetic lives here now ----
+   Seat shaping from each source, the paste parser, the strip and backfill, the catalog checks
+   behind Ready Up, the saved lobby shape, server seat ids, Start's gate and the prepare body.
+   All of it used to be in crankmagic-game.js, out of reach of any suite; each is held here
+   with the app's own lookups stubbed from the committed catalog and library. */
+{
+  const exact = (n) => { const r = records.get(Catalog.folded(n)); return r ? {...r, id: r.oracleId || r.name} : null; };
+  const look = {card: (id) => (live.cards[id] ? factsOf(id) : null), exact};
+
+  /* a library deck: the module's seat is the seat this suite used to build by hand */
+  const d = decks[0];
+  const mine = L.libraryDeckSeat(d, {card: look.card, you: true});
+  eq(L.size(mine), 100, "a library deck seats as a hundred");
+  eq([mine.kind, mine.deckId, mine.you], ["library", d.id, true]);
+  eq(JSON.stringify({...mine, you: false}), JSON.stringify(seatOf(d, false)), "the seat the module builds is the seat the suite built by hand");
+
+  /* the measured score, preferring a report on this exact list */
+  const reports = [
+    {deckId: d.id, origin: "measured", deckFingerprint: "old", metrics: {score: 71.26, scoreStandardError: 0.2}, protocol: "6 seeds of 20,000"},
+    {deckId: d.id, origin: "measured", deckFingerprint: "now", metrics: {score: 74.44}},
+    {deckId: "other", origin: "measured", deckFingerprint: "now", metrics: {score: 99}},
+  ];
+  eq(L.measuredScore(d, reports, () => "now"), {score: 74.4, why: "Measured on this list, the published protocol."});
+  eq(L.measuredScore(d, reports, () => "other"), {score: 74.4, why: "Measured on an earlier list, the published protocol."}, "with no report on this exact list, the latest one stands and says it is older");
+  ok(/earlier list \(±0\.2\), 6 seeds of 20,000\./.test(L.measuredScore(d, reports.slice(0, 1), () => "other").why), "with its error and protocol when the report carries them");
+  eq(L.measuredScore(d, [], () => "now"), {score: null, why: ""}, "no report, no score");
+
+  /* the paste parser */
+  const parsed = L.parsePaste("1 Chulane, Teller of Tales\r\n\r\n1 Sol Ring\r\n98 Forest");
+  eq(parsed.commanders, [{name: "Chulane, Teller of Tales", quantity: 1}], "a lone first line above a blank line is the commander");
+  eq(parsed.cards, [{name: "Sol Ring", quantity: 1}, {name: "Forest", quantity: 98}]);
+  const sect = L.parsePaste("Commander\r\n1 Krenko, Mob Boss\r\nDeck\r\n1x Sol Ring (C21) 123\r\n98 Mountain *F*");
+  eq(sect.commanders, [{name: "Krenko, Mob Boss", quantity: 1}], "a Commander section names the commander");
+  eq(sect.cards, [{name: "Sol Ring", quantity: 1}, {name: "Mountain", quantity: 98}], "set codes, collector numbers, 1x and foil marks are stripped");
+  eq(L.parsePaste(""), {commanders: [], cards: []});
+  /* A TEXTAREA HANDS OVER LINE FEEDS, NOT CARRIAGE RETURNS. The HTML spec normalizes a
+     textarea's value to LF, so every paste that ever reached this parser from the lobby's own
+     form arrived with "\n" between lines. The splitter read /\r?\r\n/ -- CRLF or CR CR LF, never
+     a bare LF -- so a whole paste read as one card name and "Nothing in that paste read as a
+     decklist" was the only answer the paste path could give. Pinned on the exact shape the
+     invitation email asks for. */
+  const lf = L.parsePaste("1 Chulane, Teller of Tales\n\n1 Sol Ring\n98 Forest");
+  eq(lf.commanders, [{name: "Chulane, Teller of Tales", quantity: 1}], "a paste with plain line feeds names its commander");
+  eq(lf.cards, [{name: "Sol Ring", quantity: 1}, {name: "Forest", quantity: 98}], "and reads every line");
+  eq(L.parsePaste("1 Sol Ring\r98 Forest").cards.length, 2, "and old-Mac carriage returns split too");
+
+  /* a seat from a parsed list, with the catalog filling in what a paste cannot know */
+  const ls = L.listSeat(parsed, {name: "Pasted", kind: "paste", exact});
+  eq([ls.kind, ls.name, L.size(ls)], ["paste", "Pasted", 100]);
+  eq(ls.commanders[0].name, "Chulane, Teller of Tales");
+  ok(ls.commanders[0].colorIdentity.length >= 1 && ls.commanders[0].cardId, "the commander's colours and id came from the catalog");
+  ok(/No measured score/.test(ls.scoreWhy), "and it says the simulator has not played it");
+
+  /* a seat from a host catalog entry, with rows and without */
+  const meta = L.catalogMetaSeat({id: "deck:live:D6", name: "D6", commander: "Krenko, Mob Boss", rows: [{name: "Mountain", quantity: 99}]}, {exact});
+  eq([L.size(meta), meta.deckId, meta.commanders[0].name], [100, "deck:live:D6", "Krenko, Mob Boss"]);
+  const bare = L.catalogMetaSeat({id: "x", commander: "Krenko, Mob Boss"}, {exact});
+  eq(L.size(bare), 100, "with no rows the seat is still a hundred");
+  ok(bare.cards.every((c) => c.basic), "and it is basics in the commander's colours");
+  assert.throws(() => L.catalogMetaSeat({id: "y"}), /no commander/); checks++;
+
+  /* the strip and backfill */
+  const base = seatOf(decks.find((x) => L.identity(seatOf(x)).size) || decks[0]);
+  const colors = [...L.identity(base)];
+  const gc = (n) => Array.from({length: n}, (v, i) => ({name: "Changer " + i, quantity: 1, gameChanger: true, colorIdentity: colors.slice(0, 1), edhrecRank: 500 + i * 100}));
+  const over = L.seat({...base, cards: base.cards.slice(5).concat(gc(5))});
+  const fixed = L.conform(over, {bracket: 3});
+  ok(fixed.adjusted && !fixed.lastResort, "five Game Changers at bracket 3 are trimmed, not refused");
+  eq(L.size(fixed.seat), 100, "and the hundred stands");
+  ok(L.validate(fixed.seat, {bracket: 3}).ok, "and the seat can sit");
+  eq(fixed.says, "Seated a legal 100 (trimmed Game Changers / illegal cards).");
+  const short = L.seat({...base, cards: base.cards.slice(10)});
+  const filled = L.conform(short, {bracket: 3});
+  ok(filled.adjusted, "a short list is filled");
+  eq(L.size(filled.seat), 100, "to a hundred");
+  ok(L.validate(filled.seat, {bracket: 3}).ok, "with a basic the commander can use");
+  const clean = L.conform(L.seat(base), {bracket: 3});
+  eq([clean.adjusted, clean.says], [false, ""], "a legal deck is left alone and nothing is said");
+  const off = "WUBRG".split("").find((x) => !colors.includes(x));
+  if (off) {
+    const intruder = L.seat({...base, cards: base.cards.slice(2).concat([{name: "Off A", quantity: 1, colorIdentity: [off]}, {name: "Off B", quantity: 1, colorIdentity: [off]}])});
+    const r = L.conform(intruder, {bracket: 3});
+    ok(L.validate(r.seat, {bracket: 3}).ok && !r.seat.cards.some((c) => /^Off /.test(c.name)), "off-colour cards are stripped and the seat backfilled");
+  } else ok(true, "this deck is five colours, so nothing is off-colour");
+
+  /* names against the catalog: what Ready Up checks */
+  const rough = {commanders: [{name: "Krenko, Mob Boss"}], cards: [{name: "Sol Ring", quantity: 1}, {name: "Not A Card", quantity: 1}, {name: "not a card", quantity: 1}, {name: "Mountain", quantity: 97}]};
+  eq(L.unresolved(rough, look), ["Not A Card"], "unknown names, once each regardless of case");
+  ok(rough.cards[0].cardId, "a resolved row got its cardId filled in place");
+  const m1 = L.mapped(rough, look);
+  eq(m1.ok, false); ok(/1 name not in catalog \(e\.g\. Not A Card\)\. Fix before Ready\./.test(m1.why), m1.why);
+  eq(L.mapped({commanders: [{name: "Krenko, Mob Boss"}], cards: [{name: "Mountain", quantity: 10}]}, look).why, "Deck has 11 cards; map a full ~100 before Ready.");
+  eq(L.mapped(mine, look), {ok: true, why: "", unknown: []}, "a library deck is fully mapped");
+  L.enrich(rough, look);
+  ok(/Legendary Creature/.test(rough.commanders[0].typeLine), "enrich fills the type line in place");
+
+  /* the type bar sums to the hundred */
+  const tc = L.typeCounts(mine, look);
+  eq(tc.reduce((n, b) => n + b[1], 0), 100);
+  ok(tc.find((b) => b[0] === "Land")[1] > 20, "a real deck has lands");
+  ok(tc.every((b) => /^#[0-9a-f]{6}$/.test(b[2])), "each bucket carries its bar colour");
+
+  /* the rules line */
+  eq(L.rulesSummary(L.bracketOf(3), ""), "Bracket 3 · Upgraded. Cap: 3 Game Changers. Same rules for every seat.");
+  eq(L.rulesSummary(L.bracketOf(4), ""), "Bracket 4 · Optimized. Cap: no Game Changer limit. Same rules for every seat.");
+  eq(L.rulesSummary(L.bracketOf(2), 1), "Bracket 2 · Core. Cap: 1 Game Changer. Same rules for every seat.");
+  eq(L.rulesSummary(L.bracketOf(5), 0), "Bracket 5 · cEDH. Cap: 0 Game Changers. Same rules for every seat.");
+
+  /* the saved lobby, old shape and new */
+  eq(L.lobbyState(null), L.emptyLobby(), "nothing saved is an empty lobby");
+  eq(L.emptyLobby().opponents.length, L.SLOT_COUNT, "three opponent boxes");
+  const legacy = L.lobbyState({bracket: 4, seats: [{...mine, you: true, ready: true}, {...seatOf(decks[1]), kind: "generated", ready: true}, {...seatOf(decks[2])}]});
+  eq(legacy.bracket, 4);
+  ok(legacy.host && legacy.host.ready, "the legacy {seats} shape puts `you` in the host box");
+  eq(legacy.opponents.map((o) => o.role), ["ai", "human", "unused"], "a generated seat was an AI, anything else a human");
+  const modern = L.lobbyState({bracket: "2", cap: 0, host: {seat: mine, ready: 1}, opponents: [{role: "ai", seat: mine, ready: true, guestName: 5}, {role: "bogus"}]});
+  eq([modern.bracket, modern.cap, modern.host.ready, modern.opponents.length], [2, 0, true, 3]);
+  eq([modern.opponents[0].guestName, modern.opponents[1].role, modern.opponents[2].role], ["5", "unused", "unused"], "strings are strings, unknown roles are unused, missing boxes are added");
+
+  /* who is at the table, which server seat each human takes, and Start's gate */
+  const lobby = {bracket: 3, cap: "", host: {seat: mine, ready: true}, opponents: [
+    {role: "human", seat: null, ready: false, guestName: "Pat"},
+    {role: "ai", seat: seatOf(decks[1]), ready: true},
+    {role: "human", seat: seatOf(decks[2]), ready: false},
+  ]};
+  eq(L.activeSeats(lobby).map((s) => [s.you, s.role || "host", s.ready]), [[true, "host", true], [false, "ai", true], [false, "human", false]], "the host first, then every decked box");
+  eq([...L.seatIds(lobby.opponents)], [[0, 1], [2, 2]], "human boxes take server seats 1, 2 in box order; the AI box takes none");
+  const t = L.table({bracket: 3, seats: L.activeSeats(lobby)});
+  ok(L.startReady(t, lobby), "a human guest never blocks Start on the host's side");
+  ok(!L.startReady(t, {...lobby, host: {seat: mine, ready: false}}), "the host must be ready");
+  ok(!L.startReady(t, {...lobby, opponents: [lobby.opponents[0], {role: "ai", seat: seatOf(decks[1]), ready: false}]}), "an AI seat must be ready");
+  ok(!L.startReady({...t, ready: false}, lobby), "and the table's own verdict gates it");
+  eq([L.tableAccepting({table: {phase: "selecting"}}), L.tableAccepting({table: {phase: "rematch"}}), L.tableAccepting({table: {phase: "playing"}}), L.tableAccepting(null)], [true, true, false, false],
+    "a table still selecting or in rematch is accepting, and must be reused rather than replaced");
+
+  /* the prepare body */
+  ok(L.libraryKind({kind: "library", deckId: "deck:live:D1"}) && L.libraryKind({kind: "preloaded", deckId: "archive:3"}), "live and archive ids are the host's own");
+  ok(!L.libraryKind({kind: "library", deckId: "deck:1234"}) && !L.libraryKind({kind: "paste", deckId: "deck:live:D1"}), "a draft id or a paste must be imported");
+  const guest = L.prepareSeat({name: "Pat", commanders: [], cards: [], guestPlaceholder: true}, 1, "human");
+  eq(guest.request, {seatId: 1, kind: "human", name: "Pat", commanderMode: "selected", commander: "", source: "preloaded", deckId: ""}, "a guest picks on the gateway, so the seat is preloaded and empty");
+  ok(!guest.handoff);
+  const lib = L.prepareSeat({...mine, deckId: "deck:live:D1"}, 0, "human");
+  eq([lib.request.source, lib.request.deckId, lib.handoff], ["library", "deck:live:D1", undefined]);
+  const ai = L.prepareSeat({...seatOf(decks[1]), kind: "generated"}, 3, "ai", {catalogDecks: []});
+  eq([ai.request.nativeProfile, ai.request.difficulty, ai.request.source], ["Default", 3, "library"]);
+  eq(ai.handoff.schema, "CrankMagicDeckHandoff@1");
+  eq(ai.handoff.commanders.length + ai.handoff.rows.reduce((n, r) => n + r.quantity, 0), 100, "the handoff is the whole hundred");
+  const hit = L.prepareSeat({...seatOf(decks[1]), kind: "generated"}, 3, "ai", {catalogDecks: [{id: "deck:live:X", commander: seatOf(decks[1]).commanders[0].name, cost: 100}], maxCost: 225});
+  eq([hit.request.deckId, hit.handoff], ["deck:live:X", undefined], "a host live deck with the same commander inside the budget is used instead of an import");
+  const dear = L.prepareSeat({...seatOf(decks[1]), kind: "generated"}, 3, "ai", {catalogDecks: [{id: "deck:live:X", commander: seatOf(decks[1]).commanders[0].name, cost: 900}], maxCost: 225});
+  ok(dear.handoff, "but not one over the table's budget");
+  assert.throws(() => L.prepareSeat({name: "Short", kind: "paste", commanders: [{name: "A"}], cards: [{name: "B", quantity: 5}]}, 2, "ai"), /Short: seat list must total 100 with commanders \(have 6\)/); checks++;
+  const order = L.prepareOrder(lobby, {budget: 225});
+  eq(order.ordered.map((x) => x.kind), ["human", "human", "human", "ai"], "host, then humans, then AIs, the packing the host's validateSetup wants");
+  eq([order.humans, order.ais, order.maxCost, order.bracket], [3, 1, 225, 3]);
+  eq(order.ordered[1].seat.name, "Pat");
+  ok(order.ordered[1].seat.guestPlaceholder, "an undecked human box is a placeholder the guest fills");
+  assert.throws(() => L.prepareOrder({...lobby, host: null}), /Host seat is empty/); checks++;
+  assert.throws(() => L.prepareOrder({...lobby, opponents: [{role: "ai", seat: null}]}), /Seat an AI deck/); checks++;
+
+  /* THE GUARD THAT STOPS THE BLEEDING. The screen's own header says it "spells nothing of its
+     own"; this pins it. Any of these names defined in crankmagic-game.js again is logic that
+     escaped the suite, and this fails. */
+  const screen = readFileSync(path.join(ROOT, "crankmagic-game.js"), "utf8");
+  const escaped = ["parsePaste", "seatFromDeck", "seatFromList", "seatFromHostCatalogMeta", "finalizeBuiltSeat", "enrichSeatTypes",
+    "unresolvedNames", "seatMappedOk", "humanOppSeatIdMap", "activeSeats", "allReadyForStart", "lobbyLibraryKind",
+    "lobbySeatPrepareRequest", "lobbyBuildPrepareConfig", "rulesSummary", "scoreFor", "typeCounts", "load"]
+    .filter((name) => new RegExp("(^|\\s)(async\\s+)?function\\s+" + name + "\\s*\\(").test(screen));
+  eq(escaped, [], "crankmagic-game.js defines none of the lobby's arithmetic itself");
+  /* Nor calls one by its old bare name: a call to a function that no longer exists is a
+     ReferenceError the moment that path runs, which is how the Build-from-Commander path was
+     nearly shipped broken by the move itself. `L.parsePaste(` is fine; `parsePaste(` is not. */
+  const dangling = ["parsePaste", "seatFromDeck", "seatFromList", "seatFromHostCatalogMeta", "finalizeBuiltSeat", "enrichSeatTypes",
+    "unresolvedNames", "seatMappedOk", "humanOppSeatIdMap", "activeSeats", "allReadyForStart", "lobbyLibraryKind",
+    "lobbySeatPrepareRequest", "lobbyBuildPrepareConfig", "rulesSummary", "scoreFor", "typeCounts"]
+    .filter((name) => new RegExp("(?<![.\\w])" + name + "\\s*\\(").test(screen));
+  eq(dangling, [], "and calls none of them by a name that no longer exists there");
+  ok(["L.conform(", "L.prepareOrder(", "L.prepareSeat(", "L.lobbyState(", "L.mapped(", "L.startReady(", "L.seatIds(", "L.tableAccepting(", "L.parsePaste("].every((call) => screen.includes(call)),
+    "and it calls the module for each of them");
+}
+
 /* ---- pure ---- */
 {
   const before = JSON.stringify(live);
@@ -253,4 +434,4 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   eq(twice, JSON.stringify(L.validate(s, {bracket: 3})), "and the same question twice is the same answer");
 }
 
-console.log(`crankmagic-lobby: ${checks} checks passed — five brackets, ${decks.length} real decks seated, the cap and its two ways forward, the pod read and a seeded table.`);
+console.log(`crankmagic-lobby: ${checks} checks passed — five brackets, ${decks.length} real decks seated, the cap and its two ways forward, the pod read, a seeded table, and the screen's arithmetic held here.`);
