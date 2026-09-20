@@ -208,6 +208,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const row = (css.match(/#cm-roster-table tbody tr\{[^}]*\}/) || [""])[0];
   ok(/min-height:56px/.test(row) || /height:56px/.test(row), `table rows are 56px (found ${row || "no rule"})`);
   ok(/white-space:nowrap/.test((css.match(/#cm-roster-table tbody td\{[^}]*\}/) || [""])[0]), "and their cells ellipsize rather than wrapping");
+  /* V.4f, the second pass: the card cell leads with the card's own mana, and its Primary Purpose
+     is a chip under the name rather than a run of small grey text. */
+  ok(/cm-row-mana/.test(col), "every row leads with the card's mana");
+  ok(/cm-row-land/.test(col), "and a land, which has no mana cost, gets its own mark");
+  ok(/cm-purpose-chip/.test(col), "the Primary Purpose reads as a chip");
+  ok(/--band:/.test(col), "and a group band is tinted by the scope it bands");
 }
 
 /* Track V.4d: the Explore entry (the guide's step 4, against screens/Gallery Explore Entry.dc.html).
