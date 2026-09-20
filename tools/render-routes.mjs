@@ -35,7 +35,9 @@ const ROUTES = [
   ["cards?view=sheet", "library-sheet", "#cm-sheet-table table"],
   ["cards?view=tabletop", "library-table", "#cm-tt-status, .cm-tt"],
   ["lab", "lab", "#cm-main"],
-  ["discover", "explore", "#cm-main"],
+  /* Explore fetches ~20MB of co-play links before it can draw anything, so waiting on
+     #cm-main photographs the loading line. Wait for the entry or the canvas itself. */
+  ["discover", "explore", ".cm-explore-chooser, .cm-graph"],
   ["game", "play-lobby", ".cm-lobby-seats"],
   ["how", "how", "#cm-main"],
 ];
