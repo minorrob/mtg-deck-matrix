@@ -1,7 +1,7 @@
 /* Load Live rebuilds a library from a hand-written file, through the model. */
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {buildFile} from '../tools/build-live-state.mjs';
+import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
@@ -111,6 +111,16 @@ eq(real.issues.length,0);
    worth asserting is that every upgrade the file lists survived the build. */
 ok(real.summary.owned>700&&real.summary.toBuy>0);
 eq(real.summary.upgrades,liveDoc.upgrades.length);ok(real.summary.upgrades>0);
+/* AN UPGRADE COSTS WHAT THE CATALOG SAYS, LIKE THE BUY LIST. master_buy_upgrade carries a
+   Price column, and on the short-term rows it is a round figure typed when the list was
+   drafted -- Guardian Project at $3.50 against a catalog price of $15.05. The rule is one
+   number per kind: Scryfall for what a card costs, the workbook's $ Each for what was paid.
+   So every upgrade the file lists is priced as the catalog prices it wherever the catalog
+   has a figure, and the workbook's number stands in only where it has none. */
+{const lookup=await bundledLookup();let priced=0;
+ for(const u of liveDoc.upgrades){const c=lookup(u.card),p=Number(c&&c.price);if(!(Number.isFinite(p)&&p>0))continue;priced++;
+   ok(Math.abs(u.price-p)<0.005,`${u.deck} upgrade ${u.card} is priced ${u.price} by the file and ${p} by the catalog`);}
+ ok(priced>=liveDoc.upgrades.length*0.8,`only ${priced} of ${liveDoc.upgrades.length} upgrades have a catalog price`);checks++;}
 ok(real.summary.options>=1&&real.summary.planned>=1);ok(real.state.decks.every(d=>d.groupId&&real.state.groups.some(g=>g.id===d.groupId)));
 M.validate(real.state);checks++;
 // and the committed saved state is that build, in the app's own backup format: it restores
