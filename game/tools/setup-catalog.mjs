@@ -26,6 +26,23 @@ for(const d of Object.values(state.decks).filter(d=>!d.archived)){
 }
 for(const v of variants)for(const [rung,rows]of Object.entries(rungs[v.id]||{}))decks.push({id:`archive:${v.id}:${rung}`,name:`${v.name} · ${rung}`,source:'preloaded',commander:v.commander,commanders:[v.commander],rows,variantId:v.id,rung});
 const number=v=>v!==null&&v!==''&&v!==undefined&&Number.isFinite(Number(v))?Number(v):null;
+/* THE SWAP THE REFUSAL ASKS FOR (readiness plan C.1). When Forge has no script for a card, the
+   seat is refused with the list; the page offers a replacement per card and re-submits the same
+   deck with `replacements: [{from, to}]`. They are applied here to the assembled rows, matched by
+   folded name, before the Forge check runs, and never to the source list itself: a preloaded
+   deck's rows are shared with every seat that picks it. */
+const foldName=s=>String(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 /]+/g,' ').replace(/\s+/g,' ').trim();
+export function applyReplacements(rows,replacements){
+  if(replacements===undefined||replacements===null)return rows;
+  if(!Array.isArray(replacements)||replacements.length>100)throw Error('Replacements must be a list of at most 100 {from, to} pairs');
+  const map=new Map();
+  for(const pair of replacements){
+    if(!pair||typeof pair.from!=='string'||typeof pair.to!=='string'||!pair.from.trim()||!pair.to.trim())throw Error('Each replacement needs a `from` card name and a `to` card name');
+    map.set(foldName(pair.from),pair.to.trim());
+  }
+  if(!map.size)return rows;
+  return rows.map(row=>{const to=map.get(foldName(row.name));return to?{...row,name:to}:row;});
+}
 export function assess(deck,config){
   const problems=[],rows=deck.rows.map(c=>({...byName.get(c.name),...c,price:number(byName.get(c.name)?.price)}));
   const count=rows.reduce((n,c)=>n+c.quantity,0);if(count!==100)problems.push(`Expected 100 cards; found ${count}`);
@@ -122,6 +139,7 @@ async function prepareSeat(request,config,seed){
       if(s.source==='archidekt')d=await archidekt(s,config);
       else{const commander=byName.get(s.commander);if(!commander)throw Error('Commander is not in the local card catalog');const pool=[...byName.values()],built=Builder.build({commanders:[commander],cards:pool,seed,definition:{budget:config.maxCost,bracketCeiling:config.bracket,perCardCap:null,fitBracket:true}}),idx=new Map(pool.map(c=>[c.id,c]));d={id:`lab:${randomUUID()}`,source:'lab',name:`${s.commander} · Lab starting list`,commanders:[s.commander],commander:s.commander,rows:built.slots.map(r=>({name:idx.get(r.cardId)?.name,quantity:r.quantity})),notes:built.issues};}
     }
+    if(s.replacements!==undefined)d={...d,rows:applyReplacements(d.rows,s.replacements)};
     await hydrate(d.rows);const check=assess(d,config);if(!check.ok)throw Error(`${s.name}: ${check.problems.join('; ')}`);
     const frozen=snapshot(d),mechanics=mechanicsSnapshot(frozen);
     /* THE GATE THE TABLE WAS MISSING. A deck used to reach Ready Up, the countdown and the
@@ -141,7 +159,7 @@ async function prepareSeat(request,config,seed){
 export async function prepareGuestDeck(member,input,settings){
   if(!member||!Number.isSafeInteger(member.seatId)||member.seatId<0||member.seatId>3)throw Error('Human seat required');
   if(!settings||!Number.isInteger(settings.bracket)||!Number.isFinite(settings.maxCost))throw Error('Table rules required');
-  let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat};
+  let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat,replacements:input?.replacements};
   if(input?.source==='upload'){
     const parsed=parseMoxfieldTwoColumn(input.csv,{name:input.name||`Player ${member.seatId+1} deck`}),created=await importWorkshopDeck(parsed);request={...request,source:'library',deckId:created.id,commander:created.commander};
   /* The host's saved decks are the host's, so a guest reaches them only when the host has opened
