@@ -23,3 +23,6 @@
 .swap-hit-type{color:#a1b6c4;font-size:12px}.swap-chosen{color:#8ee3b4;font-size:12px}.swap-art{width:146px;border-radius:8px;justify-self:end}
 .swap-submit{margin-top:12px}
 @media(max-width:700px){.swap-row{grid-template-columns:1fr}.swap-art{justify-self:start}}
+
+/* the hidden attribute must win over the grid display above, or an empty hits box draws as a bar */
+.swap-hits[hidden],.swap-art[hidden]{display:none}
