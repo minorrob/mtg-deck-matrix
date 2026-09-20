@@ -160,6 +160,33 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/cm-deck-new/.test(decks), "the last grid cell is the dashed New deck tile");
 }
 
+/* Track V.4b: the deck page (the guide's step 4, against screens/Gallery Deck Page.dc.html).
+   The hero puts the commander's card beside the copy; the tabs become a segmented control; and
+   the Progress and Cost panel plus The hundred at a glance become one six-column bento, so the
+   page is a set of cards of known spans rather than a stack of full-width panels. The figures are
+   the same figures -- readiness and the rules module -- laid out differently. */
+{
+  const css = read("crankmagic.css"), decks = read("crankmagic-decks.js");
+  ok(/cm-deck-hero-card/.test(decks), "the hero carries the commander's card beside the copy");
+  ok(/rotate\(-3deg\)/.test(css), "tilted, as the screen has it");
+  ok(/cm-deck-chips/.test(decks), "the mechanics read as chips rather than a run-on line");
+  ok(/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/.test((css.match(/\.cm-bento\{[^}]*\}/) || [""])[0]), "the bento is six columns");
+  /* Every card the guide names, by the span it names. A card that loses its span has become a
+     full-width panel again, which is the layout this step replaced. */
+  for (const [cls, span] of [["next", 6], ["progress", 3], ["cost", 3], ["curve", 2], ["types", 2], ["purpose", 2], ["plays", 4], ["upgrade", 2], ["record", 6]]) {
+    const rule = (css.match(new RegExp("\\.cm-bento-" + cls + "\\{[^}]*\\}")) || [""])[0];
+    ok(new RegExp("grid-column:span " + span).test(rule), `the ${cls} card spans ${span} (found ${rule || "no rule"})`);
+  }
+  /* The nine cards are drawn by one helper that builds its class from the key, so the class
+     names are not in the source to grep for -- the keys are, as the helper's first argument. */
+  const built = [...decks.matchAll(/\bcard\('([a-z]+)'/g)].map((m) => m[1]);
+  const drawn = new Set([...built, ...[...decks.matchAll(/cm-bento-([a-z]+)/g)].map((m) => m[1])]);
+  const missing = ["next", "progress", "cost", "curve", "types", "purpose", "plays", "upgrade", "record"].filter((k) => !drawn.has(k));
+  eq(missing, [], `crankmagic-decks.js does not draw these bento cards: ${missing.join(", ")}`);
+  ok(/cm-ring/.test(decks) && /<svg/.test(decks), "Progress is a ring, not a bar");
+  ok(/cm-tabs-segment/.test(css), "the tabs are a segmented control");
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is

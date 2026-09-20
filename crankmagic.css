@@ -9,6 +9,87 @@
 #matrix-v2{display:block;min-height:100vh;border:0;border-radius:0;overflow:visible;
   background:var(--v-bg);color:var(--v-ink)}
 
+
+/* THE DECK PAGE (Track V.4b, the guide's step 4, against screens/Gallery Deck Page.dc.html).
+   The hero puts the commander's own card beside the copy over a radial glow in the deck's tint;
+   the tabs are a segmented control; and the Progress and Cost panel plus The hundred at a glance
+   are one six-column bento of cards. --tint is the same token the deck tile uses, so a deck
+   looks like itself on both pages. */
+#matrix-v2 .cm-deck-hero{position:relative;display:grid;grid-template-columns:280px minmax(0,1fr);gap:36px;align-items:center;margin-bottom:22px;padding:8px 0 4px;background:none;border:0}
+#matrix-v2 .cm-deck-hero:before{content:'';position:absolute;left:-40px;top:-60px;width:900px;height:520px;max-width:120%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 20% 30%,color-mix(in oklab,var(--tint,var(--v-accent)) 28%,transparent),transparent 62%)}
+#matrix-v2 .cm-deck-hero-card{perspective:900px}
+#matrix-v2 .cm-deck-hero-card img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:14px;transform:rotate(-3deg);transition:transform .3s ease;box-shadow:0 30px 60px -20px color-mix(in oklab,var(--tint,var(--v-line)) 60%,var(--poster-ground))}
+#matrix-v2 .cm-deck-hero-card img:hover{transform:rotate(0deg) scale(1.03)}
+#matrix-v2 .cm-deck-hero-copy h1{font-size:clamp(34px,4.4vw,56px);line-height:1.02;letter-spacing:-.015em;margin:6px 0 12px}
+#matrix-v2 .cm-deck-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+#matrix-v2 .cm-chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;color:var(--v-ink);background:color-mix(in oklab,var(--tint,var(--v-accent)) 18%,var(--v-panel))}
+#matrix-v2 .cm-deck-strategy{margin:14px 0 0;font-size:16px;line-height:1.5;color:var(--v-muted);max-width:62ch}
+/* The tabs, as a segmented control: one panel-colored track, the selected tab raised and bold. */
+#matrix-v2 .cm-tabs.cm-deck-tabs{display:inline-flex;gap:4px;padding:4px;margin:0 0 20px;border:1px solid var(--v-line);border-radius:14px;background:var(--v-panel);overflow-x:auto;max-width:100%}
+#matrix-v2 .cm-tabs-segment,#matrix-v2 .cm-tabs.cm-deck-tabs button{appearance:none;border:0;background:none;color:var(--v-muted);font-weight:600;padding:0 14px;min-height:38px;border-radius:10px;white-space:nowrap;cursor:pointer}
+#matrix-v2 .cm-tabs.cm-deck-tabs button[aria-selected=true]{background:var(--v-raised);color:var(--v-ink);font-weight:700}
+#matrix-v2 .cm-tabs.cm-deck-tabs button small{font-weight:600;color:var(--v-muted);margin-left:6px}
+/* The bento: six columns, cards at the card radius, each with its uppercase label. */
+.cm-bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;align-items:start;margin-bottom:24px}
+.cm-bento-card{background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);padding:22px;min-width:0;box-shadow:var(--shadow-card)}
+.cm-bento-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--v-muted);margin:0 0 12px}
+.cm-bento-next{grid-column:span 6;background:linear-gradient(120deg,color-mix(in oklab,var(--tint,var(--v-accent)) 22%,var(--v-panel)),var(--v-panel) 70%)}
+.cm-bento-next .cm-bento-label{color:color-mix(in oklab,var(--tint,var(--v-accent)) 70%,var(--v-ink))}
+.cm-bento-next-line{margin:0;font-size:20px;font-weight:600;line-height:1.35}
+.cm-bento-progress{grid-column:span 3;display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:center}
+.cm-bento-progress .cm-bento-label{grid-column:1/-1;margin-bottom:0}
+.cm-bento-cost{grid-column:span 3}
+.cm-bento-curve{grid-column:span 2}
+.cm-bento-types{grid-column:span 2}
+.cm-bento-purpose{grid-column:span 2}
+.cm-bento-plays{grid-column:span 4}
+.cm-bento-upgrade{grid-column:span 2}
+.cm-bento-record{grid-column:span 6;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);min-width:0}
+.cm-bento-record.is-empty{border-style:dashed}
+/* A bento card holds one section, so the section inside it drops its own frame. */
+.cm-bento-record .v-panel{background:none;border:0;border-radius:0;box-shadow:none}
+/* The ring, and the four figures beside it, each under its segment's color. */
+.cm-ring{position:relative;display:grid;place-items:center;width:112px;height:112px}
+.cm-ring svg{display:block}
+.cm-ring-center{position:absolute;inset:0;display:grid;place-items:center;align-content:center;text-align:center;line-height:1.1}
+.cm-ring-center b{font-family:var(--v-display);font-weight:400;font-size:26px}
+.cm-ring-center small{font-size:11px;color:var(--v-muted)}
+.cm-bento-figures{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;min-width:0}
+.cm-bento-figures strong{display:block;font-family:var(--v-display);font-weight:400;font-size:22px;line-height:1.1}
+.cm-bento-figures span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--v-muted)}
+.cm-bento-figure{margin:0 0 12px;font-family:var(--v-display);font-weight:400;font-size:40px;line-height:1}
+.cm-bento-figure small{display:block;font-family:var(--v-body);font-size:12px;color:var(--v-muted);margin-top:4px}
+.cm-bento-facts{margin:10px 0 0;font-size:12px;color:var(--v-muted);line-height:1.5}
+.cm-bento-card[data-tone="cm-over"] .cm-budget-bar i{background:var(--st-remove)}
+/* What the spells do: a label, a bar in the tint at decreasing opacity, a count. */
+.cm-purpose-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cm-purpose-rows li{display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,1.2fr) 28px;align-items:center;gap:10px;font-size:13px}
+.cm-purpose-rows li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--v-muted)}
+.cm-purpose-rows li i{height:8px;border-radius:var(--radius-pill);background:var(--tint,var(--v-accent));display:block}
+.cm-purpose-rows li b{text-align:right;font-weight:600}
+/* How it plays: two by two. */
+.cm-plays-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cm-plays-grid strong{display:block;font-size:13px;margin-bottom:3px}
+.cm-plays-grid span{font-size:12px;color:var(--v-muted);line-height:1.45}
+/* Upgrade path: the card, what it replaces, the price. */
+.cm-upgrade-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cm-upgrade-rows li{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;min-width:0}
+.cm-upgrade-rows li span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cm-upgrade-rows li small{display:block;font-size:11px;color:var(--v-muted)}
+.cm-upgrade-rows li b{color:var(--v-money);font-weight:600;white-space:nowrap}
+@media(max-width:1050px){
+  .cm-bento-plays{grid-column:span 6}
+  .cm-bento-progress,.cm-bento-cost{grid-column:span 3}
+}
+@media(max-width:760px){
+  /* Phone: every card spans the width, the hero stacks and the card leads. */
+  #matrix-v2 .cm-deck-hero{grid-template-columns:minmax(0,1fr);gap:18px}
+  #matrix-v2 .cm-deck-hero-card{max-width:220px}
+  .cm-bento{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+  .cm-bento>*{grid-column:span 6!important}
+  .cm-bento-progress{grid-template-columns:96px minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-deck-hero-card img{transition:none}#matrix-v2 .cm-deck-hero-card img:hover{transform:rotate(-3deg)}}
 /* THE DECK TILE (Track V.4a, the guide's step 3, against screens/Gallery Decks.dc.html).
    A 3:4 poster with the commander's art behind everything and the reading laid over its foot.
    --tint is the commander's first color, set per tile in crankmagic-decks.js; it carries the

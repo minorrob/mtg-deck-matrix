@@ -27,8 +27,8 @@ const widths = opt("--widths", "390,1136,1400").split(",").map(Number);
    is filled in from the library's first deck. */
 const ROUTES = [
   ["decks", "decks-home", ".cm-deck-tile"],
-  ["decks?deck=FIRST", "deck-overview", ".cm-deck-summary"],
-  ["decks?deck=FIRST&tab=hundred", "deck-hundred", ".cm-deck-summary, #cm-main table"],
+  ["decks?deck=FIRST", "deck-overview", ".cm-bento"],
+  ["decks?deck=FIRST&tab=hundred", "deck-hundred", ".cm-bento, #cm-main table"],
   ["decks?deck=FIRST&tab=upgrades", "deck-upgrades", "#cm-main"],
   ["cards", "library-list", "#cm-roster-table table"],
   ["cards?tab=buy", "library-to-buy", "#cm-roster-table table, .cm-shop-strip"],
