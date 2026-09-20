@@ -239,6 +239,11 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/cm-door-fan/.test(disc), "the commander door fans the commanders it would open on");
   ok(/cm-door-graph/.test(disc), "the card door shows a graph rather than describing one");
   ok(/cm-explore-roles/.test(disc), "and the entry offers the role lenses with their counts");
+  /* The graph pane's head is the screen's 118px of art beside the text, not 150px. At 150 the
+     text column came out 122px wide in a 338px pane and the card's name broke inside a word --
+     "Quintorius, Loremaster" rendered as four line boxes ending "Loremaste" over "r". Rob saw it
+     in a render. The wrap property was already right; the column was the cause. */
+  ok(/--cm-art-w:clamp\(118px/.test(css), "the card pane's art column starts at the screen's 118px, so the name has room to break at a space");
   ok(/CrankFacets\.values/.test(disc), "the role counts are the facet module's, not counted again here");
 }
 

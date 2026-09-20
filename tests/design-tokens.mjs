@@ -162,6 +162,15 @@ function tokensIn(css, selectorRe) {
      rarity scale, the tabletop felt and shelf, and the colorless mana disc, for which the token
      set has no --mana-C. Those are named in the sweep's KEEP list and on the designer's gap list. */
   const CEILING = {"crankmagic.css": 137, "game/ui": 475};
+  /* THE CANVAS IS A STYLESHEET TOO (Track V.4g). crankmagic-graph.js painted the Explore graph
+     from 38 literals of the pre-Gallery navy, and no ceiling in this file could see them, because
+     every ceiling here reads a .css file. That is how one page stayed entirely blue through a
+     sweep that took the stylesheet from 730 raw hex to 137. It reads the tokens now, through a
+     probe inside #matrix-v2, and carries none of its own. Zero is the ceiling: a color on that
+     canvas belongs to the token set or it is not a color the app has agreed to. */
+  const canvas = hex(read("crankmagic-graph.js"));
+  ok(canvas === 0, `crankmagic-graph.js carries ${canvas} raw hex colors; the canvas reads the tokens and the ceiling is 0`);
+
   const page = hex(read("crankmagic.css"));
   ok(page <= CEILING["crankmagic.css"], `crankmagic.css carries ${page} raw hex colors; the ceiling is ${CEILING["crankmagic.css"]} and only goes down`);
   const ui = readdirSync(path.join(ROOT, "game/ui")).filter((f) => f.endsWith(".css")).reduce((n, f) => n + hex(read("game/ui/" + f)), 0);
