@@ -71,7 +71,13 @@
      Three radii and no others: controls 12, cards 18, tiles 22. */
   --v-aether:var(--color-aether);--v-money:var(--color-money);
   --v-radius:var(--radius-control);--v-radius-card:var(--radius-card);--v-radius-tile:var(--radius-tile);
-  --v-display:var(--font-display);--v-body:var(--font-body);}
+  --v-display:var(--font-display);--v-body:var(--font-body);
+  /* THE POSTER PAIR. A deck tile reads its text over commander art under a gradient that ends
+     near black, in both themes -- the designer's Gallery Decks screen hard-codes #100e0c and
+     #f5f0e8 there for exactly that reason, and they do not flip with Felt and Cream, because the
+     art does not. Naming them once here keeps that decision in the token block where it can be
+     seen and changed, instead of as eleven literals spread through the tile's rules. */
+  --poster-ground:#100e0c;--poster-ink:#f5f0e8;}
 #matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(color-mix(in srgb,var(--v-accent) 16%,transparent),#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
 #matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:var(--v-accent)}

@@ -134,6 +134,32 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/function pips?\b|const pip|let PIP|function manaColors?\b/.test(decks), "the lookup is a named function, so it has somewhere to cache");
 }
 
+/* Track V.4a: the deck tiles, replaced wholesale (the guide's step 3, against
+   screens/Gallery Decks.dc.html). The old tile was a bordered panel with the art at the top, a
+   text block under it and a footer row; the Gallery tile is a 3:4 poster with the art behind
+   everything, the stage as a pill rather than a colored border, and one tint per deck taken from
+   the commander's first color. These read the source for the properties the guide names by
+   number, so a later edit that quietly restores a border or a footer fails here. */
+{
+  const css = read("crankmagic.css"), decks = read("crankmagic-decks.js");
+  const tile = (css.match(/\.cm-deck-tile\{[^}]*\}/) || [""])[0];
+  ok(/aspect-ratio:3\/4/.test(tile), "the tile is a 3:4 poster");
+  ok(/border-radius:var\(--v-radius-tile\)/.test(tile), "at the tile radius");
+  ok(/border:0/.test(tile), "with no border of its own -- the stage is the pill, not the frame");
+  ok(/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/.test((css.match(/\.cm-deck-grid\{[^}]*\}/) || [""])[0]), "the grid is three across");
+  /* The stage-colored borders are dropped. A .cm-stage-* rule that sets a border or its color
+     is the old frame coming back. */
+  const stageBorders = [...css.matchAll(/\.cm-stage-(?:defining|building|playable|complete|archived)\b[^{}]*\{([^}]*)\}/g)].map((m) => m[1]).filter((body) => /border(-[a-z]+)?-?color:|border:/.test(body));
+  eq(stageBorders, [], `a .cm-stage-* rule still paints a border: ${stageBorders.join(" | ")}`);
+  /* Every tile names its tint, and names it as a token rather than a literal. */
+  ok(/--tint:var\(--mana-/.test(decks), "each tile carries --tint from the commander's first color, as a --mana-* token");
+  ok(!/<footer>/.test(decks.slice(decks.indexOf("cm-deck-tile"), decks.indexOf("cm-deck-tile") + 2600)), "the tile's footer row is gone; the bracket and the menu ride the poster");
+  /* The toolbar becomes a summary line in the page head and two links under the grid. */
+  ok(/cm-decks-summary/.test(decks), "the page head carries the computed summary line");
+  ok(/cm-deck-footlinks/.test(decks), "and How a deck comes together and Show archived sit under the grid");
+  ok(/cm-deck-new/.test(decks), "the last grid cell is the dashed New deck tile");
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is
