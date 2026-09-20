@@ -64,4 +64,28 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(!/preferences\.comparisonPicks/.test(read("crankmagic-decks.js")), "the Decks page reads the picks from memory, not from saved preferences");
 }
 
+/* M-11. No tracked text file carries U+FFFD. The replacement character is what a decoder writes
+   when bytes were read in the wrong encoding; committed, it is a corrupted word shipped to every
+   reader (the tab title read "CrankMagic", the replacement character, "Commander workshop" for
+   three days). This file spells the character by its code so it does not flag itself. */
+{
+  const {execFileSync} = await import("node:child_process");
+  const tracked = execFileSync("git", ["ls-files", "--", "*.html", "*.js", "*.mjs", "*.css", "*.md", "*.json"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter(Boolean);
+  const corrupted = tracked.filter((f) => readFileSync(path.join(ROOT, f), "utf8").includes(String.fromCharCode(0xFFFD)));
+  eq(corrupted, [], `these tracked files carry U+FFFD, a decoding error committed as text: ${corrupted.join(", ")}`);
+  ok(tracked.length > 100, `the tracked-file list is real (${tracked.length} files)`);
+}
+
+/* B-20, M-14, M-16, P-05: the small UAT fixes, held by reading the source. */
+{
+  const decks = read("crankmagic-decks.js"), app = read("crankmagic-app.js");
+  ok(/primary=readyN>0\?'pull':ready\.toBuy>0\?'buy':'log'/.test(decks), "the deck header's primary follows the deck's state (B-20)");
+  ok(/M\.localDate\(g\.at\)/.test(decks) && /\blocalDate\b/.test(read("collection-model.js")), "a game's date is read as a local calendar date (P-05)");
+  ok(/paidOrList\/wins/.test(decks), "paid per win divides the figure the Cost panel shows (P-05)");
+  ok(/closeBtn\.focus\(\{preventScroll:true\}\);dialog\.scrollTop=0/.test(app), "a dialog opens at the top with focus on its close button (M-14)");
+  ok(/hashchange[\s\S]{0,400}stale\.hidden=true/.test(app), "a notice is hidden when the route changes (M-16)");
+  for (const [f, rule] of [["crankmagic.css", /#cm-dialog\{[^}]*overflow:hidden auto/], ["crankmagic-design.css", /dialog\.v-dialog\{[^}]*overflow:hidden auto/]]) ok(rule.test(read(f)), `${f}: the dialog never scrolls sideways (M-13)`);
+  for (const f of ["index.html", "crankmagic.html"]) ok(/<div class="v-nav-track"><nav class="v-nav-links"/.test(read(f)) && /<\/nav><\/div><div class="cm-nav-note"/.test(read(f)), `${f}: the sticky nav lives in its own track above the note (M-12)`);
+}
+
 console.log(`feature-wiring: ${checks} checks passed — ${features.length} feature files read; dialogs bound, help entries titled, dates local, compare picks in memory.`);

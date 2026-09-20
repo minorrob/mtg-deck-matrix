@@ -129,6 +129,32 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
         }
         log(`  ${where}: overflow ${m.overflow}px, ${m.small.length} small control(s), wordmark ${h.brand ? h.brand.right : "?"} vs buttons ${h.menu ? h.menu.x : "?"}`);
       }
+      /* 4. A dialog opens at the top and never scrolls sideways (UAT M-13, M-14). The tour is the
+            one dialog every fresh library has; its head is sticky and pulled to the edges with
+            negative margins, which is exactly the shape that once drew a horizontal scrollbar on
+            every dialog in the app. */
+      await page.goto(`${base}/index.html#decks`);
+      await page.locator("#cm-main").waitFor({timeout: 30000});
+      await page.locator('[data-action="tour"]').first().click();
+      await page.locator("#cm-dialog[open]").waitFor({timeout: 10000});
+      const dialog = await page.evaluate(() => { const d = document.querySelector("#cm-dialog"); return {sideways: d.scrollWidth - d.clientWidth, top: d.scrollTop}; });
+      checks += 2;
+      if (dialog.sideways > 1) fail(`at ${width}px: the dialog scrolls sideways by ${dialog.sideways}px with nothing to scroll`);
+      if (dialog.top > 0) fail(`at ${width}px: the dialog opened scrolled down by ${dialog.top}px, so its top is under the sticky title`);
+      await page.keyboard.press("Escape");
+
+      /* 5. On a desktop the sidebar's sticky nav never rides over the note beneath it, however
+            far the page is scrolled (UAT M-12): the note starts at or below the nav's bottom. */
+      if (!phone && width >= 1024) {
+        await page.goto(`${base}/index.html#lab`);
+        await page.locator("#cm-main").waitFor({timeout: 30000});
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        await page.waitForTimeout(150);
+        const side = await page.evaluate(() => { const nav = document.querySelector(".cm-sidebar .v-nav-links"), note = document.querySelector(".cm-sidebar .cm-nav-note"); if (!nav || !note) return null; const a = nav.getBoundingClientRect(), b = note.getBoundingClientRect(); return {navBottom: a.bottom, noteTop: b.top, noteShown: b.height > 0}; });
+        checks += 1;
+        if (side && side.noteShown && side.navBottom > side.noteTop + 1) fail(`at ${width}px: the sidebar nav (bottom ${Math.round(side.navBottom)}) paints over the library note (top ${Math.round(side.noteTop)}) when scrolled`);
+      }
+
       if (errors.length) fail(`at ${width}px the page raised ${errors.length} error(s): ${errors.slice(0, 2).join(" | ")}`);
       checks += 1;
     } finally {
