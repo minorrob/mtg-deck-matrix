@@ -48,9 +48,25 @@ function reportsHTML(d){
 }
 /* NO ART, NO EMPTY PANEL. A deck whose commander has no cached picture used to be a dark
    rectangle with text at the bottom; the commander's initials, faint, in the deck's own two
-   colours, say what the tile is from across the room. */
-const PIP={W:'#fff0b4',U:'#53acff',B:'#696076',R:'#ee735f',G:'#66b889'};
-function initials(d){const c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[],a=PIP[ci[0]]||'#b9b3a8',b2=PIP[ci[1]]||a;const text=(c?c.name:d.name).split(/[\s,]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');return `<div class="cm-deck-initials" aria-hidden="true" style="--ci-a:${a};--ci-b:${b2}">${e(text||'?')}</div>`;}
+   colors, say what the tile is from across the room. */
+/* The five pip colors are the --mana-* tokens, read from the stylesheet rather than repeated
+   here (design handoff revision 2, INTAKE item 4). They used to be five literals of the
+   pre-Gallery palette, which no theme switch could reach: on a light theme the tile tint came
+   from the tokens and the initials behind it came from these, and the two disagreed. Read once
+   and cached -- a getComputedStyle per pip inside a render over a hundred rows is a forced
+   reflow per card. The cache is keyed on the theme, so the switch to Felt and Cream re-reads the
+   five values by itself and no other module has to remember to tell it. */
+let PIP_CACHE=null,PIP_THEME=null;
+function manaColors(){
+  const root=typeof document!=='undefined'&&document.getElementById('matrix-v2');
+  if(!root)return {};                       /* before the shell exists, fall through to the neutral */
+  const theme=root.dataset.theme||'dark';
+  if(PIP_CACHE&&PIP_THEME===theme)return PIP_CACHE;
+  const cs=getComputedStyle(root),out={};
+  for(const k of ['W','U','B','R','G']){const v=cs.getPropertyValue('--mana-'+k).trim();if(v)out[k]=v;}
+  PIP_CACHE=out;PIP_THEME=theme;return out;
+}
+function initials(d){const PIP=manaColors(),c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[],a=PIP[ci[0]]||'#b9b3a8',b2=PIP[ci[1]]||a;const text=(c?c.name:d.name).split(/[\s,]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');return `<div class="cm-deck-initials" aria-hidden="true" style="--ci-a:${a};--ci-b:${b2}">${e(text||'?')}</div>`;}
 const art=d=>R.deckArt(commander(d))||C.card(d.commanders[0])?.image||'';
 /* THE RIBBON READS LEFT TO RIGHT IN THE ORDER THE WORK HAPPENS: what the list asks for,
    what you have for it, what is on its way, what is still owed -- and last, separately,
@@ -60,7 +76,7 @@ const art=d=>R.deckArt(commander(d))||C.card(d.commanders[0])?.image||'';
 /* TWO CLUSTERS, NOT FIVE FIGURES SPREAD ACROSS THE PAGE. The build-night questions on the left
    -- in the box, ready to add, on the way, to buy -- and the money on the right: what finishing
    costs at sheet prices against the deck's cap. The bar under them is the same hundred as one
-   line, and the legend names its colours. */
+   line, and the legend names its colors. */
 const pullCount=r=>r.pullFromBench+r.pullFromOtherBox;
 /* THE WORKING LIST: what is marked to come out, and what is meant to come in. Option flags
    are the owner's own ranking of what goes first when a swap is needed; the cards coming in
@@ -86,7 +102,7 @@ function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.d
   const pct=cap>0?r.marketValue/cap*100:null,tone=pct===null?'':pct>100?' cm-over':pct>90?' cm-near':'';
   const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id),overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
   const dear=perCard!==null?d.slots.filter(x=>x.purpose==='main'&&C.card(x.cardId).price>perCard).length:0,gc=gcCount(d);
-  /* Each Progress figure wears the colour of its segment in the bar below (`key`), so the
+  /* Each Progress figure wears the color of its segment in the bar below (`key`), so the
      bar needs no legend: the figures are the key. Paid so far counts a copy with no recorded
      price at the catalog's list price, marked ≈, so the figure is never a misleading $0. */
   const fig=(v,label,cls='',key='',title='')=>`<div${title?` title="${e(title)}"`:''}><strong${cls?` class="${cls}"`:''}>${v}</strong><span>${key?`<i class="cm-key ${key}" aria-hidden="true"></i>`:''}${label}</span></div>`;
