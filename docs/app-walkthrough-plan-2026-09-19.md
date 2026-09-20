@@ -225,6 +225,7 @@ The UAT's open S2s move ahead of the walkthrough's S3 work. Online items keep th
 | **W.2** | The verified small S2s: M-11 (+ byte guard), P-05, B-20, M-16 (toasts), M-13, M-14, M-12 — one PR, each with a red-first test or a geometry check, rendered. |
 | **W.3** | B-13 fingerprint unification (M). |
 | **W.3b** | M-02 (catalog-sourced figures shown as "≈ (catalog)") and M-15 (lobby decks hidden behind a toggle, "Save to Decks" to promote), as Rob decided on 2026-09-20. |
+| **Track V** | The visual redesign from the Claude Design handoff, as `docs/design-intake-2026-09-20.md` §6 lays it out (V.0 intake → V.5 Online pages). It runs ahead of W.4–W.7 for anything visual and absorbs the visual findings from both reviews (B-05, B-10, B-22, M-05, the Discover panel, the tile menu, the User Functions split, the help style). |
 | **W.4** | One number per concept: M-01, A-01, B-04, A-06 and the Excel Summary. |
 | **W.5** | B-09, B-15, B-21, then the UAT's S3s in its order. |
 | **E.4** | Server-side 99-engine repair loop (Online). |
