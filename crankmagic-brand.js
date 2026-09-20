@@ -4,7 +4,10 @@
  const root=document.getElementById('matrix-v2'),block=root.querySelector('.v-brand-block');
  const canvas=block.querySelector('.v-aether'),control=block.querySelector('.v-aether-toggle');
  const front=block.querySelector('.v-aether-front');
- const sub=block.querySelector('.v-brand-subline');
+ /* The subline is gone from the shell (Track V.3): the Gallery rail carries the logo and the
+    wordmark and nothing else, so there is no sentence for the coil to ride. The mist is driven
+    by the rail block's own box now instead of by a measured line of text -- the designer's port
+    does the same, at startAether(canvas,{width:190,height:56,axisY:28,start:34,join:150}). */
  const ctx=canvas.getContext('2d'),frontCtx=front.getContext('2d');if(!ctx||!frontCtx)return;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  let width=440,height=70,frame=0,last=0,time=0,visible=true,paused=false;
@@ -90,31 +93,28 @@
  function fit(){word.style.fontSize='';let size=parseFloat(getComputedStyle(word).fontSize);for(let i=0;i<40&&word.scrollWidth>word.clientWidth&&size>14;i++){size-=.5;word.style.fontSize=size+'px';}}
  function resize(){
   fit();
-  const b=block.getBoundingClientRect(),s=sub.getBoundingClientRect();
-  // Standalone frame sizing can briefly measure an incomplete inline layout.
-  // Keep the last valid drawing until there is space for both text and trail.
-  if(s.width<=0||b.width-(s.left-b.left)<30)return;
-  const range=document.createRange();range.selectNodeContents(sub);const lines=[...range.getClientRects()].filter(r=>r.width>0);const lastLine=lines.at(-1)||s;
-  width=Math.max(1,b.width);height=Math.min(b.height+24,root.querySelector('.v-top').getBoundingClientRect().bottom-b.top-1);
+  const b=block.getBoundingClientRect();
+  // Standalone frame sizing can briefly measure an incomplete layout. Keep the last valid
+  // drawing until the rail has a real width to draw across.
+  if(b.width<60)return;
+  const nameRange=document.createRange();nameRange.selectNodeContents(word);
+  const n=nameRange.getBoundingClientRect();
+  if(n.width<=0)return;
+  width=Math.max(1,b.width);height=Math.max(44,b.height);
   canvas.parentElement.style.height=height+'px';
-  start=s.left-b.left;join=Math.min(width-18,lastLine.right-b.left+4);end=Math.min(width-4,join+230);
-  // The coil rides the SEAM between the wordmark and the subline rather than the middle
-  // of the subline. Centred on the subline it drew the main strand straight through the
-  // words; on the seam it passes between 'CrankMagic' and the sentence under it, which is
-  // where a wisp belongs. Anchored to the FIRST line so a wrapped subline does not drag it
-  // down a row -- the tail still ends at the last line, which is what `join` measures.
-  const firstLine=lines[0]||s;
-  axis=firstLine.top-b.top;base=axis;radius=lastLine.height/2+1.3;pitch=Math.max(235,(join-start)/1.35);
-  rise=lines.length>1?Math.min(13,lastLine.height-3):24;
+  // The coil starts where the wordmark starts and opens into tendrils where it ends, so the
+  // mist wraps the name along the rail rather than riding a sentence that is no longer there.
+  start=Math.max(0,n.left-b.left);join=Math.min(width-14,n.right-b.left+6);end=Math.max(join+24,width-2);
+  axis=n.top-b.top+n.height/2;base=axis;radius=Math.max(6,n.height/2+1.3);
+  pitch=Math.max(120,(join-start)/1.35);rise=18;
   // Pause lives beside the wordmark, so it never covers the dissolving tail.
-  const name=block.querySelector('.v-brand'),nameRange=document.createRange();nameRange.selectNodeContents(name);
-  block.style.setProperty('--v-aether-control-x',Math.min(width-26,nameRange.getBoundingClientRect().right-b.left+8)+'px');
+  block.style.setProperty('--v-aether-control-x',Math.min(width-26,n.right-b.left+8)+'px');
   const dpr=2;for(const layer of [canvas,front]){layer.width=Math.round(width*dpr);layer.height=Math.round(height*dpr);layer.getContext('2d').setTransform(dpr,0,0,dpr,0,0);}
   canvas.dataset.threadStart=String(start);canvas.dataset.textEnd=String(join);canvas.dataset.tailEnd=String(end);canvas.dataset.baseline=String(base);canvas.dataset.revision='mist-graduated';
   colors();sync();
  }
  control.addEventListener('click',()=>{paused=!paused;sync();});reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);
- const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(block);sizeObserver.observe(sub);
+ const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(block);sizeObserver.observe(word);
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync();}).observe(canvas);
  new MutationObserver(()=>{colors();draw(time);}).observe(root,{attributes:true,attributeFilter:['style','data-theme']});
  // The product is always dark; OS appearance changes do not recolor its mist.

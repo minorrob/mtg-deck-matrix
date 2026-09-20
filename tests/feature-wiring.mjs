@@ -85,7 +85,14 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/closeBtn\.focus\(\{preventScroll:true\}\);dialog\.scrollTop=0/.test(app), "a dialog opens at the top with focus on its close button (M-14)");
   ok(/hashchange[\s\S]{0,400}stale\.hidden=true/.test(app), "a notice is hidden when the route changes (M-16)");
   for (const [f, rule] of [["crankmagic.css", /#cm-dialog\{[^}]*overflow:hidden auto/], ["crankmagic-design.css", /dialog\.v-dialog\{[^}]*overflow:hidden auto/]]) ok(rule.test(read(f)), `${f}: the dialog never scrolls sideways (M-13)`);
-  for (const f of ["index.html", "crankmagic.html"]) ok(/<div class="v-nav-track"><nav class="v-nav-links"/.test(read(f)) && /<\/nav><\/div><div class="cm-nav-note"/.test(read(f)), `${f}: the sticky nav lives in its own track above the note (M-12)`);
+  /* M-12 held the sticky nav in its own track so it could not ride over the library note. The
+     rail (Track V.3) keeps that arrangement and adds Menu after the note, so the check follows
+     the order rather than one exact string: track, then nav, then the note, then the rail foot. */
+  for (const f of ["index.html", "crankmagic.html"]) {
+    const src = read(f);
+    ok(/<div class="v-nav-track"><nav class="v-nav-links"/.test(src), `${f}: the sticky nav lives in its own track (M-12)`);
+    ok(/<\/nav><\/div>\s*<div class="cm-nav-note"[\s\S]*?<div class="cm-rail-foot">/.test(src), `${f}: the note sits under the nav track and Menu at the rail's foot (M-12, Track V.3)`);
+  }
 }
 
 /* M-15 and M-02, Rob's decisions of 2026-09-20, held by reading the source. */

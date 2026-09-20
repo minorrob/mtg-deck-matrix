@@ -110,16 +110,16 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 228,
-      "sha": "4fbcf59e55870a39"
+      "version": 230,
+      "sha": "f449c02c43307308"
     },
     "crankmagic-assets.js": {
       "version": 30,
       "sha": "b77ffc78f8c9d4c7"
     },
     "crankmagic-brand.js": {
-      "version": 3,
-      "sha": "5033b067ec6a2b03"
+      "version": 4,
+      "sha": "3d83643a63f3b69d"
     },
     "crankmagic-card-client.js": {
       "version": 1,
@@ -138,8 +138,8 @@
       "sha": "73852ceb770efa4c"
     },
     "crankmagic-decks.js": {
-      "version": 60,
-      "sha": "7819520b08be9533"
+      "version": 61,
+      "sha": "4773e2194691972b"
     },
     "crankmagic-design.css": {
       "version": 11,
@@ -246,8 +246,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 228,
-      "sha": "2b1b603d931aadd8"
+      "version": 230,
+      "sha": "37fa53e33758fd64"
     },
     "crankmagic-tabletop.js": {
       "version": 17,
@@ -266,8 +266,8 @@
       "sha": "1eb8517f3293129f"
     },
     "crankmagic.css": {
-      "version": 138,
-      "sha": "b2dd536473489b25"
+      "version": 140,
+      "sha": "1d151465361d1d65"
     },
     "custom-model.js": {
       "version": 3,

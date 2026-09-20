@@ -28,7 +28,7 @@ try {
   });
   assert.deepEqual(failures, [],
     `the layout is wrong at ${failures.length} place(s):\n  ` + failures.join("\n  "));
-  console.log(`browser-geometry: ${checks} checks passed — no sideways scroll, no tap target under 32px and no header overlap at 320, 375, 390, 430, 768 or 1400.`);
+  console.log(`browser-geometry: ${checks} checks passed — no sideways scroll, no tap target under 32px, no control stranded off the edge and nothing painting over the rail at 320, 375, 390, 430, 768 or 1400.`);
 } finally {
   await close();
 }
