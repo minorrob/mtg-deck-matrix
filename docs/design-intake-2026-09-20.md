@@ -112,6 +112,13 @@ Discover panel width, the tile menu, the User Functions split, the help style).
 through W.7 for anything visual; W.4 (one number per concept) and the Online tracks (E.4, C.6)
 continue beside it because they do not touch the look.
 
+## 6b. Revision 2
+
+The handoff's second revision (`docs/design/2026-09-20-deck-page-r2/`, its `INTAKE.md`) adds the
+designer's implementation guide and the Play delta, answers the font question by Rob's decision
+(self-host, OFL), and restates the order as: tokens and the sweep (V.1c), shell (V.3), deck
+tiles (V.4a), pages (V.4b to V.4d), Play (V.5). Where it disagrees with the first revision, it wins.
+
 ## 7. Questions for the designer, to send with the intake
 
 1. Light and dark, or dark only? (Today's tokens carry both; most pages only ever ran dark.)

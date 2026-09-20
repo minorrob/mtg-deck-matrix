@@ -9,3 +9,6 @@ the code, and the track (V) that applies it.
 Renders of the real pages are not committed. `node tools/render-routes.mjs <folder>` produces
 them from the committed live library at 390, 1136 and 1400 px; a design PR runs it before and
 after and puts the two folders side by side for review.
+
+Revisions of one handoff sit side by side (`2026-09-20-deck-page/`, `2026-09-20-deck-page-r2/`),
+each with its own `INTAKE.md`; the newest revision wins where they disagree.

@@ -1,0 +1,67 @@
+/* CrankMagic — dark is the default; [data-theme="light"] flips it. */
+:root{
+  color-scheme:dark;
+  --color-bg:#1a1815;
+  --color-panel:#231f1b;
+  --color-raised:#2d2823;
+  --color-line:#3a342c;
+  --color-ink:#f5f0e8;
+  --color-muted:#a99e90;
+  --color-accent:#d9a441;
+  --color-on-accent:#1a1815;
+  --color-aether:#7cc4ff;
+  --color-money:#f0b35a;
+  --mana-W:#e9d79a;
+  --mana-U:#74b5f7;
+  --mana-B:#a897bf;
+  --mana-R:#f0805f;
+  --mana-G:#77c58f;
+  --st-inbox:#5cc98a;
+  --st-pull:#4fc2c0;
+  --st-ordered:#3b7dd8;
+  --st-buy:#f0b35a;
+  --st-standin:#c39bff;
+  --st-remove:#ef6b60;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --color-bg:#f5f0e6;
+  --color-panel:#fffdf8;
+  --color-raised:#ece5d7;
+  --color-line:#d9d0bf;
+  --color-ink:#1f1c18;
+  --color-muted:#6e665a;
+  --color-accent:#2f8f5b;
+  --color-on-accent:#f7fbf6;
+  --color-aether:#4aa6d8;
+  --color-money:#d0603c;
+  --mana-W:#c9a52e;
+  --mana-U:#2b7fd8;
+  --mana-B:#6f5c8e;
+  --mana-R:#d0603c;
+  --mana-G:#2f8f5b;
+  --st-inbox:#2f8f5b;
+  --st-pull:#1f9e9c;
+  --st-ordered:#2f6fcc;
+  --st-buy:#d0893a;
+  --st-standin:#8a5be0;
+  --st-remove:#c0392f;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}

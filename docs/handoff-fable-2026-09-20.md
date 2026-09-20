@@ -112,11 +112,24 @@ two days go well and the mistakes that cost time.
 - **Usage pivot:** when a session reaches 95% of its usage, stop building and update the
   handoff documents, commit, merge what is green, and leave the next model a clean start.
 
+## 5c. Revision 2 of the handoff (2026-09-20, 11:23)
+
+The designer sent a second revision with `IMPLEMENTATION-GUIDE.md` (a review of the V.1b pass
+and the exact order: tokens and a literal-to-token sweep, shell, deck tiles, pages, theme) and
+`DELTA-play-and-implementation.md` (Play in detail: lobby quadrants, table view, focus view,
+playmats, a Coach stub). It is under `docs/design/2026-09-20-deck-page-r2/` with its own
+`INTAKE.md`, which says where the guide and the repository must be reconciled before the sweep
+(token names, the font, the Deep Field block, the pip map, the acceptance). **Where revision 2
+and the first README disagree, revision 2 wins.** Rob approved self-hosting the display font:
+Young Serif is OFL; if a license check says otherwise, choose an open-source display serif of
+the same character and say so.
+
 ## 6. What I would do first tomorrow
 
-1. Self-host Young Serif (OFL; the download needs Rob's go-ahead) and point `--font-display`
-   at it; the theme toggle is done.
-2. Convert the deck tiles and deck page surfaces (`cm-deck`, `cm-tile`, `cm-stat`, `cm-pill`,
-   `cm-summary` in `crankmagic.css`) from their remaining navy and violet hexes to tokens, lower
-   the 730 ceiling, render before and after. The tiles are the first thing Rob sees.
+1. Reconcile the guide's token names with the repository (revision 2 `INTAKE.md`, item 1), then
+   self-host Young Serif (Rob approved it; OFL) and point `--v-display` and `--font-display` at it.
+2. The sweep: the guide's literal-to-token table, mechanically, over both stylesheets, then
+   review what is left; lower the 730 ceiling to the measured count; the display face on
+   headings and big figures; render before and after. Then the shell (guide step 2), then the
+   deck tiles (step 3), each rendered beside the matching `screens/*.dc.html` at 1280 px.
 3. Send the designer the gap list (`INTAKE.md`, "Gaps and conflicts") with those renders.
