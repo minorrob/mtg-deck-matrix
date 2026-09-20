@@ -592,4 +592,25 @@ assert.match(M.today(),/^\d{4}-\d{2}-\d{2}$/);checks++;
 {const d=M.localDate('2026-09-20');assert.deepEqual([d.getFullYear(),d.getMonth(),d.getDate(),d.getHours()],[2026,8,20,0]);checks++;}
 assert.equal(M.localDate('2026-09-20T03:59:18.703Z').getTime(),Date.parse('2026-09-20T03:59:18.703Z'));checks++;
 assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);assert.equal(M.localDate(undefined),null);checks++;
+/* THE FINGERPRINT IS THE ENGINE'S HASH (UAT B-13). crankmagic-sim.js files a report under the
+   engine's lineup hash; the model's fingerprint is the same hash over the same fields, so a fresh
+   measurement reads as current, and re-keying a card's identity (verification does this) does not
+   move it because it is over names. Held equal to deck-measure.js's own function here. */
+{
+  const Measure=require('../deck-measure.js'),Sim=require('../crankmagic-sim.js');
+  const d=s.decks.find(x=>x.id==='d1');
+  const lineup=Sim.lineupFor(s,d,id=>s.cards[id]);
+  assert.equal(M.fingerprint(d,s),Measure.lineupHash(lineup),'the model and the engine hash the same hundred to the same value');checks++;
+  assert.match(M.fingerprint(d,s),/^[0-9a-f]{16}$/);checks++;
+  /* the same list under re-keyed identities is the same deck */
+  const rekeyed=M.clone(s);const slot=rekeyed.decks.find(x=>x.id==='d1').slots.find(r=>r.purpose==='main'&&!rekeyed.decks[0].commanders.includes(r.cardId));
+  const old=slot.cardId,fresh='rekeyed:'+old;rekeyed.cards[fresh]={...rekeyed.cards[old],id:fresh};slot.cardId=fresh;
+  assert.equal(M.fingerprint(rekeyed.decks.find(x=>x.id==='d1'),rekeyed),M.fingerprint(d,s),'an identity re-key does not change the fingerprint');checks++;
+  /* a different list is a different fingerprint */
+  const changed=M.clone(s);changed.decks.find(x=>x.id==='d1').slots.find(r=>r.purpose==='main'&&!changed.decks[0].commanders.includes(r.cardId)).quantity+=1;
+  assert.notEqual(M.fingerprint(changed.decks.find(x=>x.id==='d1'),changed),M.fingerprint(d,s));checks++;
+  /* and the report the sim files for this deck reads as current */
+  const report=Sim.packFor({hash:Measure.lineupHash(lineup),score:50,scoreStandardError:0.2,winRate:0.25,perSeedScores:[50],scoreParts:[],perCard:[],elapsedMs:1,gamesPerSecond:1,measuredAt:'2026-09-20T00:00:00.000Z'},{protocol:'preview',table:'default',seatCount:3,coverage:{total:100,known:100,ratio:1,unreadable:[]}});
+  assert.equal(report.deckFingerprint,M.fingerprint(d,s),'a report filed by the sim matches the deck it measured');checks++;
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);

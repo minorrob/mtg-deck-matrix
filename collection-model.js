@@ -628,8 +628,17 @@
     for(const lid of new Set([...before.keys(),...after.keys()])){const a=receipt(before.get(lid)),b=receipt(after.get(lid));if(JSON.stringify(a)!==JSON.stringify(b))effects.push({id:lid,before:a,after:b});}
     return {state:s,summary,event:{id:c.id,type:c.type,at:now,revision:s.revision,summary,operation:c,effects}};
   }
-  function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
+  /* THE FINGERPRINT IS THE ENGINE'S LINEUP HASH. A report files deckFingerprint as the engine's hash
+     of the hundred -- name, quantity, commander flag, sorted, FNV-1a doubled (deck-measure.js
+     lineupHash) -- and every reader compared it with a JSON of commander and slot card ids. Two
+     functions, so a measurement never read as current, and an identity re-key changed the JSON
+     without changing a card (UAT B-13). This is the same hash over the same fields, computed from
+     the deck's names: `s.cards` first, the record source second, the id last. tests/collection-model.mjs
+     holds this copy equal to the engine's, so the two cannot drift apart again. */
+  const lineupHash=cards=>{const parts=(cards||[]).map(c=>`${String(c.name).toLowerCase()}|${Number(c.quantity||1)}|${c.isCommander?'C':''}`).sort();let h1=0x811c9dc5,h2=0x01000193;const text=parts.join('\n');for(let i=0;i<text.length;i+=1){const code=text.charCodeAt(i);h1=Math.imul(h1^code,16777619)>>>0;h2=Math.imul(h2+code,2246822519)>>>0;}return h1.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0');};
+  function fingerprint(d,s){const commanders=new Set(d.commanders||[]);const nameOf=id=>{const c=s&&s.cards&&s.cards[id];if(c&&c.name)return c.name;const r=recordSource?recordSource(id):null;return (r&&r.name)||id;};
+    return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });
