@@ -145,3 +145,90 @@ tour dialog. These are the model; changes above should look like them, not the o
 
 The Play lobby has D1 seated and Seat 2 set to AI ("Clear the table" restores); D1 and D2 have their
 compare boxes ticked (a saved preference until D9 lands). Nothing in the library changed.
+
+---
+
+## 9. The UAT of 2026-09-19/20, worked in
+
+**Source:** `CrankMagic-UAT-2026-09-20.xlsx` (Rob's Downloads), a separate session's run of 59 cases
+over Build, Acquire, Manage and Play against the live app and Rob's real library, at 1568 px. W.1
+(#278) landed mid-run and was re-tested: B-01, B-02, B-03, B-23 and P-04 went from Fail to Pass.
+Results: 19 pass, 5 pass after fix, 21 partial, 11 fail, 3 not run. Twelve S2 findings are open,
+no S1. The run changed the library (a Yuriko draft, a Zoraline group and deck, a purchase, an order,
+a logged game, a lobby AI deck); Rob chose to keep them.
+
+The remediations below were re-verified against `main` at `f9a6e4f`, the commit the run cites.
+Where this document disagrees with the UAT's recommendation it says so.
+
+### 9.1 Two corrections to what this document said earlier
+
+- **D3 / M-11.** The walkthrough said the network copy of `index.html` was correct and the U+FFFD
+  bytes lived only in old worker caches. **Wrong.** `index.html` on `main` carries three U+FFFD
+  bytes (the meta description's dash, the title's middle dot, and six ellipses in the User
+  Functions menu on line 107), introduced by `26049b7` on 2026-09-17 and never repaired.
+  `crankmagic.html` is clean. So the corrupted labels are not a stale cache; they are what is
+  deployed. Fix: restore the characters, and a check in `tests/feature-wiring.mjs` that fails on
+  the byte sequence EF BF BD in any tracked text file.
+- **D5 / M-12 and D7 / M-13.** The CSS root causes are in `crankmagic-design.css`, not
+  `crankmagic.css`: `dialog.v-dialog` (line 120) is `overflow: auto` with padding, and
+  `.v-nav-links` (line 176) is the sticky element while `.v-navnote` follows in flow. The
+  resolutions in §2 stand; the file does not.
+
+### 9.2 The open S2 findings, verified
+
+| Case | Finding | Verified root cause | Resolution | Size |
+|---|---|---|---|---|
+| **M-11** | Title and menu labels print U+FFFD | **Confirmed** (§9.1). | Restore `—`, `·`, `…`; byte guard in the suite. | S |
+| **P-05** | A game logged after midnight prints the day before; "Paid per win $0.00" | **Confirmed.** `dateOf` (`crankmagic-decks.js:529`) is `Date.parse(g.at)`, and a date-only string parses as UTC midnight, which is the previous evening in New York. The paid-per-win figure divides a value the record does not carry. | Parse a date-only string as a local date; store the game date as the local calendar string (W.1's `today()`). Compute paid per win from the deck's paid total, or drop the figure. | S |
+| **B-13** | A fresh measurement is labeled "Historical" at once | **Confirmed, and the UAT's cause is not the whole of it.** The report stores `deckFingerprint: result.hash`, the engine's lineup hash of the card list (`crankmagic-sim.js:188`); the deck page compares it with `M.fingerprint(d)`, a JSON of commander and slot card ids (`collection-model.js:626`, read at `crankmagic-decks.js:39,536,543`, `crankmagic-evidence.js:7`, and the lobby's `measuredScore`). They are two different functions, so a report from the in-app measure never matches its own deck, before or after identity verification. `collection-lobby-draft.js:292` builds a third. | One `M.fingerprint` computed from names and quantities, used by the sim when it files a report and by every reader; keep the engine's lineup hash on the report under its own name for rung cross-checks. Pin with a test that measures a fixture deck and asserts the report reads as current. | M |
+| **B-20** | The deck header's primary is "Ready to add" with nothing ready | **Confirmed.** `crankmagic-decks.js:158` always puts Ready to add first for a final deck. | Primary by state: ready > 0 → Ready to add (n); else to buy > 0 → Buy list (n); else Log a game. The counts exist. | S |
+| **A-01 / B-04 / A-06** | Staples show "—" for price on the buy list and in Lab while the card dialog has a price; two totals for one draft | **Plausible, not yet located.** Buy rows and the dialog both read `C.card(id)` (`crankmagic-collection.js:31,48`), so the difference is in which identity the row carries: a library identity without a price against the catalog record that has one. The Lab's two totals are two functions (panel estimate vs review sum). | Join every row's price through one lookup that falls back from the identity to the catalog record by name; one Lab total, labeled, with "N without a price". Part of W.4 (one number per concept). | M |
+| **B-09** | Importing a known list makes a group, not a deck; the Lab cannot continue from it | **Plausible.** The Decks wizard's group path (`groupDeck`, `crankmagic-decks.js:369`) is the intended road; the Lab's import hook does not take it. | Wire the Lab's import after-hook to `groupDeck(gid)`; let the Lab's Existing deck select list groups; a result toast with the next step. | S |
+| **B-15** | A card found in the graph cannot be swapped into a finalized deck from the graph | **Plausible.** `buyMenu` (`crankmagic-discover.js:694`) offers Add to deck for drafts only; the replacement flow exists in Collection. | "Swap into <deck>…" in the menu when the graph is scoped to a deck, opening the existing replacement flow prefilled. | S |
+| **M-01** | Five totals for one library, and the Excel Summary's "watching 0" | **Confirmed** (W.4 in §3). `counters()` (`collection-model.js:98`) returns owned, ordered, watching, toBuy, inDeck, sellTrade; each surface counts its own thing in its own words. | W.4, plus the Summary sheet reading `counters()`. | M |
+| **M-02** | Watched → Bought on a copy owned before records the catalog price as paid | **Confirmed as designed, and it is Rob's call.** One-tap Bought stamps `paid: sheetPrice(p), paidSource: 'catalog'` (`crankmagic-collection.js:1118`), and the model stamps only when the lot has no finite paid (`collection-model.js:496`). The lot had an estimate, not a paid figure, so the stamp landed. The rule is that market is Scryfall's and paid is what you typed; a catalog stamp shown as "paid" blurs it. | Either show a catalog-sourced paid as "≈ $0.47 (catalog)" everywhere, or stop stamping on one-tap and ask. **Decide.** | S |
+| **M-15** | An AI deck built in the lobby becomes a ninth deck tile and 100 library rows | **Confirmed as designed.** Track E.3 mints a real draft on purpose (`collection-lobby-draft.js:198`, `deck:lobby:…`), so a lobby deck can carry a measurement into Decks. The UAT sees the side effect the plan called the loop's return edge. **Rob's call.** | Keep the deck, mark it `kind: 'lobby'`, and hide lobby decks from the tiles, the sidebar, the compare list, the Lab select and the library counts unless a "Show lobby decks" toggle is on; "Save to Decks" promotes one. | M |
+| **P-02** | The lobby page jumps to the bottom after Apply | Not verified. | Keep the scroll position after apply. | S |
+
+### 9.3 The S3 and S4 findings
+
+Taken as filed; each is small and each ships with its proof. In the order the UAT ranked them:
+A-03 bulk bar reserves its height; A-04 Lines dialog reads paid from the lot; B-05 matching
+commanders in flow; B-07 draft banner from the report; B-08 Lab keeps its steps after save; B-14
+in-deck/owned chips and a progress bar; B-16 re-render the focused card after add; B-17 Options
+dialog sized to its list, future tense before Confirm; B-18 promote note from the allocation
+preview; B-19 Working list flags in place; B-21 fold the two stub tabs (W.5); B-23 sticky header
+row in Compare; M-04 stage cards as drag sources (`crankmagic-tabletop.js:940` binds `fan` only);
+M-06 Clear filters keeps the Table view; M-07 History sorted, preference saves dropped, lean
+export; M-08 History dialog refreshes after undo, same-tab wording, local timestamps; M-10 tour
+scrolls its first target into view; M-12 sidebar note outside the sticky track; M-14 card dialog
+opens at the top; M-18 see §9.4; P-03 "Before you sit" reads Simulation history; P-06 Log a game
+progressive disclosure, no basic lands in "won it"; then the S4s: A-06, B-10, B-12, B-22, B-24,
+M-05, M-13, M-16 (toasts hide on navigation), M-19, and B-06's `incompleteGames` copy.
+
+### 9.4 Where this document disagrees with the UAT
+
+- **M-18, the service worker.** The UAT asks for `skipWaiting` on activate. This document keeps
+  §2 D3: a worker that takes over mid-session leaves an already-open page fetching old `?v=` URLs
+  that the new lists do not carry, and GitHub Pages serves the new bytes under the old query. The
+  fix is a "new version ready, reload" line, with `skipWaiting` on the click. Cache pruning on
+  activate is already there and works once the worker activates.
+- **B-13's cause.** Identity verification does change ids, but the label would be wrong even
+  without it: the two sides hash different things (§9.2).
+
+### 9.5 The queue, re-ranked
+
+The UAT's open S2s move ahead of the walkthrough's S3 work. Online items keep their place.
+
+| Step | Work |
+|---|---|
+| **W.2** | The verified small S2s: M-11 (+ byte guard), P-05, B-20, M-16 (toasts), M-13, M-14, M-12 — one PR, each with a red-first test or a geometry check, rendered. |
+| **W.3** | B-13 fingerprint unification (M). |
+| **Rob decides** | M-02 (catalog stamp shown as paid) and M-15 (lobby decks in Decks and the library). Both are one-line answers; the fixes follow. |
+| **W.4** | One number per concept: M-01, A-01, B-04, A-06 and the Excel Summary. |
+| **W.5** | B-09, B-15, B-21, then the UAT's S3s in its order. |
+| **E.4** | Server-side 99-engine repair loop (Online). |
+| **W.6** | D3 / M-18 reload prompt, and the S4s. |
+| **C.6** | Visible first-player roll (Online, needs a Forge build here). |
+
+Everything in §7 (definition of done) applies to each step.
