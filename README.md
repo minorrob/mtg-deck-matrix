@@ -393,6 +393,9 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 
 ## Verify before pushing
 
+`runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
+suites in `game/tests/`. It exits non-zero when any of them fails.
+
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
@@ -427,7 +430,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 65 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 66 Node suites here, plus 26 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -437,6 +440,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
 - `collection-exchange` — `tests/collection-exchange.mjs`
+- `collection-lobby-draft` — `tests/collection-lobby-draft.mjs`
 - `collection-model` — `tests/collection-model.mjs`
 - `combat` — `tests/combat.mjs`
 - `commander-pilots` — `tests/commander-pilots.mjs`

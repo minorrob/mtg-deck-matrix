@@ -10,6 +10,7 @@ import {compatibility} from './ai-compatibility.mjs';
 import {OPENAI_MODELS} from './windows-credential.mjs';
 const require=createRequire(import.meta.url),Builder=require('../../draft-builder.js'),Sources=require('../../deck-sources.js');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),read=p=>JSON.parse(readFileSync(resolve(root,p)));
+export const FORGE_ROOT=process.env.CRANKMAGIC_FORGE_ROOT?resolve(process.env.CRANKMAGIC_FORGE_ROOT):resolve(root,'../forge');
 const state=read('data/live-state.json').payload.state,cardFile=read('data/cards.json'),identities=read('game/fixtures/live-identities.json').cards;
 const byName=new Map(cardFile.cards.map(c=>[c.name,{...c,id:c.oracleId}]));
 for(const c of Object.values(state.cards))byName.set(c.name,{...c,...byName.get(c.name),oracleId:byName.get(c.name)?.oracleId||c.oracleId||identities[c.name]?.oracleId});
@@ -57,6 +58,7 @@ export function setupCatalog(){return {schema:'CommanderSetupCatalog@1',variantC
 export function validateSetup(c){
   if(!c||!Number.isInteger(c.bracket)||c.bracket<1||c.bracket>5)throw Error('Select a bracket from 1–5');
   if(!Number.isFinite(c.maxCost)||c.maxCost<1||c.maxCost>10000)throw Error('Deck cost cap must be $1–$10,000');
+  if(c.shareLibrary!==undefined&&typeof c.shareLibrary!=='boolean')throw Error('Share saved decks must be on or off');
   if(!Number.isInteger(c.humans)||c.humans<1||c.humans>4||!Number.isInteger(c.ais)||c.ais<0||c.ais>3||c.humans+c.ais<2||c.humans+c.ais>4)throw Error('Commander needs 2–4 total players with at least one human');
   if(!Array.isArray(c.seats)||c.seats.length!==c.ais+c.humans)throw Error('Seat count does not match the selected player counts');
   for(const [i,s]of c.seats.entries()){
@@ -122,7 +124,16 @@ async function prepareSeat(request,config,seed){
     }
     await hydrate(d.rows);const check=assess(d,config);if(!check.ok)throw Error(`${s.name}: ${check.problems.join('; ')}`);
     const frozen=snapshot(d),mechanics=mechanicsSnapshot(frozen);
-    s.aiCompatibility=compatibility(frozen,resolve(root,'../forge'));
+    /* THE GATE THE TABLE WAS MISSING. A deck used to reach Ready Up, the countdown and the
+       engine before anyone discovered Forge had no script for one of its cards, because the
+       resolution result was computed and then dropped. A seat that Forge cannot load is not a
+       warning; it is a deck that cannot be played, and it stops here. */
+    s.aiCompatibility=compatibility(frozen,FORGE_ROOT);
+    if(!s.aiCompatibility.checked)throw Object.assign(Error(`${s.name}: the Forge card database could not be read, so no deck can be verified. ${s.aiCompatibility.reason} Set CRANKMAGIC_FORGE_ROOT if Forge lives somewhere else.`),{forgeUnavailable:true,seatId:s.seatId});
+    if(s.aiCompatibility.unresolved.length){
+      const list=s.aiCompatibility.unresolved;
+      throw Object.assign(Error(`${s.name}: Forge does not recognize ${list.length} card${list.length===1?'':'s'} in this deck — ${list.map(c=>c.name).join(', ')}. Swap ${list.length===1?'it':'them'} before this seat can be ready.`),{unresolved:list,seatId:s.seatId});
+    }
     const pilot=kind==='ai'?{kind:s.aiProvider?'api':'forge-native',profile:s.nativeProfile,difficultyRequested:s.difficulty,difficultyApplied:s.difficulty,provider:s.aiProvider||null,model:s.aiModel||null}:{kind:'human'};
     const sourceDeck={kind:d.source==='library'?'crankmagic-library':d.source,deckId:d.sourceDeckId||frozen.deckId||null,deckVersion:d.sourceDeckVersion??frozen.deckVersion??null,sourceRevision:d.sourceRevision??frozen.source?.revision??null};
     return {...s,engineController:kind==='human'||s.aiProvider?'browser':'native-ai',deck:frozen,sourceDeck,mechanics,check,sourceUrl:d.url||null,sourceNotes:d.notes||[],pilot};
@@ -133,9 +144,12 @@ export async function prepareGuestDeck(member,input,settings){
   let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat};
   if(input?.source==='upload'){
     const parsed=parseMoxfieldTwoColumn(input.csv,{name:input.name||`Player ${member.seatId+1} deck`}),created=await importWorkshopDeck(parsed);request={...request,source:'library',deckId:created.id,commander:created.commander};
-  }else if(input?.source==='preloaded'||(input?.source==='library'&&member.seatId===0))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
+  /* The host's saved decks are the host's, so a guest reaches them only when the host has opened
+     them to the table. Preloaded variants are published lists and were always shared. */
+  }else if(input?.source==='preloaded'||(input?.source==='library'&&(member.seatId===0||settings.shareLibrary===true)))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
   else if(['lab','archidekt'].includes(input?.source))request={...request,source:input.source,commander:input.commander,archidektUrl:input.archidektUrl};
-  else throw Error('Choose an uploaded, saved, preloaded, Deck Lab or Archidekt deck');
+  else if(input?.source==='library')throw Error('The host has not shared their saved decks with this table. Paste your list, or pick a preloaded deck.');
+  else throw Error('Choose a pasted, saved, preloaded, Deck Lab or Archidekt deck');
   const seed=randomInt(1,2147483647),seat=await prepareSeat(request,{...settings,humans:Math.max(member.seatId+1,settings.humans||1)},seed);
   return {id:`deck-version:${randomUUID()}`,validated:true,commander:seat.deck.commanders.map(c=>c.name).join(' + '),snapshot:seat,deckHash:seat.deck.gameplayHash,createdAt:new Date().toISOString()};
 }

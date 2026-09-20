@@ -24,6 +24,9 @@ const publicFiles=new Map([
   ['/guest.mjs',['text/javascript; charset=utf-8','guest.mjs']],
   ['/guest.css',['text/css; charset=utf-8','guest.css']],
   ['/play',['text/html; charset=utf-8','review.html']],
+  ['/guest-play-boot.js',['text/javascript; charset=utf-8','guest-play-boot.js']],
+  ['/play-entry.mjs',['text/javascript; charset=utf-8','play-entry.mjs']],
+  ['/guest-live.mjs',['text/javascript; charset=utf-8','guest-live.mjs']],
   ['/live-poll.mjs',['text/javascript; charset=utf-8','live-poll.mjs']],
   ['/review.mjs',['text/javascript; charset=utf-8','review.mjs']],
   ['/review.css',['text/css; charset=utf-8','review.css']],
@@ -76,7 +79,8 @@ export function createGuestGateway({host='127.0.0.1',port=0,publicOrigin,service
       const payload=req.method==='POST'?await body(req,limit):{};
       const value=await service[method](secured?member:payload,secured?payload:{request:req});
       return reply(method==='join'?201:200,value);
-    }catch(error){return reply(Number.isSafeInteger(error.status)?error.status:400,{error:error.publicMessage||error.message||'Request failed'});}
+    // An unresolved-card refusal carries its list to the guest, who is the one who has to swap.
+    }catch(error){return reply(Number.isSafeInteger(error.status)?error.status:400,{error:error.publicMessage||error.message||'Request failed',...(Array.isArray(error.unresolved)?{unresolved:error.unresolved}:{})});}
   });
   return {
     async listen(){await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,host,resolve);});const address=server.address();publicOrigin??=`http://${host}:${address.port}`;const parsed=new URL(publicOrigin);if(!['http:','https:'].includes(parsed.protocol)||parsed.username||parsed.password||parsed.pathname!=='/'||parsed.search||parsed.hash)throw Error('Guest public origin must contain only scheme and host');authority=parsed.host;return {host,port:address.port,origin:publicOrigin};},

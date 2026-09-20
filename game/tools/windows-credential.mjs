@@ -2,8 +2,8 @@ import {execFileSync} from 'node:child_process';
 import {dirname,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-export const DEFAULT_OPENAI_MODEL='gpt-5.6-luna';
-export const OPENAI_FALLBACK_MODEL='gpt-5.6-terra';
+export const DEFAULT_OPENAI_MODEL='gpt-5-mini';
+export const OPENAI_FALLBACK_MODEL='gpt-5';
 export const OPENAI_MODELS=Object.freeze([DEFAULT_OPENAI_MODEL,OPENAI_FALLBACK_MODEL]);
 
 const helper=resolve(dirname(fileURLToPath(import.meta.url)),'read-windows-credential.ps1');

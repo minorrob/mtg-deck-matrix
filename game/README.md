@@ -12,12 +12,12 @@ From this repository:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
 ```
 
-The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. It looks for the generic Windows Credential Manager entry `crankmagic_openai_api`; when present, setup offers the OpenAI pilot without putting the key in the page, URL, files, or logs. GPT-5.6 Luna is the default and GPT-5.6 Terra is the stronger manual fallback. Pass `-OpenAiCredential ''` to disable stored-key loading for that host. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.
+The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. It looks for the generic Windows Credential Manager entry `crankmagic_openai_api`; when present, setup offers the OpenAI pilot without putting the key in the page, URL, files, or logs. GPT-5 Mini is the default and GPT-5 is the stronger manual fallback. Pass `-OpenAiCredential ''` to disable stored-key loading for that host. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.
 
 ## Start and play
 
 1. Choose your saved deck, a preloaded variation, a Lab starting list, or a public Archidekt deck.
-2. Set bracket and budget, then choose one to three AI opponents and their commanders/decks. Select Forge native AI or the OpenAI pilot; the stored-key path starts with GPT-5.6 Luna.
+2. Set bracket and budget, then choose one to three AI opponents and their commanders/decks. Select Forge native AI or the OpenAI pilot; the stored-key path starts with GPT-5 Mini.
 3. **Prepare decks**, review the resolved hundred and compatibility notes, then **Launch game**.
 4. Keep or mulligan the opening hand. Double-click the library for your pending draw-step draw. Drag a land/spell from hand or your commander onto your mat.
 5. Forge pays a legal mana cost automatically when its planner can pay it. Targets, optional effects and non-mana decisions remain yours. Unpayable costs produce a notification; cancel returns the card through the engine.
@@ -74,6 +74,75 @@ Do not change the engine, adapter, or pod between pause and resume. Recovery che
 - `contracts/pilot-policy.mjs` defines per-seat difficulty and stale-plan rejection after draws. It is a contract/state helper, not a completed search or provider implementation.
 - `.local/` is ignored. Raw engine journals and RNG tapes contain private match information and **must never be sent to an AI pilot or displayed as a live public log**. The preview exporter is restricted to this diagnostic fixture's visible zones and seat 0 hand; general information-flow certification is pending.
 - No API key, API spend, live collection edit, report import, website deployment, or hosted bridge is implemented in this checkpoint.
+
+## Before you host
+
+```powershell
+node game/tools/doctor.mjs        # can this computer host a game tonight?
+node game/tools/check-my-decks.mjs # does Forge know every card in the library?
+```
+
+
+```powershell
+node game/tools/doctor.mjs
+```
+
+One answer to "can this computer host a game tonight?": the Node runtime, the Forge card database
+and its script count, the Java runtime, whether anything already holds the host port, the Windows
+credential for API pilots, and cloudflared for remote guests. It exits non-zero when something
+blocks a game, and distinguishes that from a warning (API pilots or remote guests will not work,
+the rest will) and from a check that does not apply to this machine. The desktop launcher runs it
+through `GET /api/doctor` and refuses to report "Ready to play" over a blocking problem.
+
+Point it at a Forge checkout elsewhere with `CRANKMAGIC_FORGE_ROOT`, and a JDK with
+`CRANKMAGIC_JDK_ROOT`.
+
+## Pasting a deck
+
+A pasted list is read in whatever shape it arrived in: `1 Sol Ring`, `1x Sol Ring`, a bare name for
+a single copy, two comma-separated columns in either order with quoted names, tab-separated from a
+spreadsheet, `Commander` / `Deck` / `Sideboard` headers, and Archidekt or Moxfield set codes,
+collector numbers and foil markers trailing the name. The commander is whichever side of the blank
+line is small, so first and last both work, or whatever a `Commander` header names.
+
+What it will not do is pick a commander for you. A hundred cards with no blank line and no header
+gives nothing to go on but a guess, and it asks instead. Lines it cannot read come back with their
+line numbers rather than one sentence about the whole paste.
+
+## Who is the table waiting on
+
+`GET /api/table/readiness` answers it once, for the host screen, the guest screen and the launcher
+alike, derived from the same blocker list the countdown transition uses so a lobby cannot refuse to
+start while every seat on it looks ready. Each seat reports claimed / connected / deck validated /
+ready, how long it has been quiet, and what specifically is blocking it. `launch` carries the stage
+the engine is at -- `engine-spawning`, `engine-spawned`, `waiting-for-engine`, `bridge-green`,
+`seated`, or `failed` with its reason -- so the wait between the countdown and the board is
+readable instead of blank.
+
+The countdown is ten seconds, and Forge is asked to start when it *begins*, not when it ends. The
+boot and the countdown run together; a fast engine still waits for the clock.
+
+## When the table will not move
+
+**Skip to end** passes your remaining empty priority on your own turn. It is the case `Hold
+priority` / auto-pass deliberately refuses, because passing your own priority unasked would play
+your turn for you: this one is opt-in, expires with the turn, and stops for any choice and for
+anything waiting on the stack.
+
+`GET /api/ai-pilots` says whether an AI seat is stuck or thinking -- a model call in flight, an
+action Forge has not confirmed, or a pilot that has paused itself. Worth reading before reaching
+for a lever.
+
+`POST /api/ai-pilots/prompt {"seatId":n}` re-asks that seat. Add `"force":true` when re-asking has
+already failed: it locks in a legal decision and moves the table on.
+
+
+`POST /api/table/force-advance {"seatId":n}` does the same for a human seat. It
+takes a legal action from the same enumerator the AI pilots use, so Forge validates it exactly as
+it validates a click, and every use is written to `force-advance.ndjson` beside the match journal.
+Host-only: it is deliberately absent from the guest gateway's routes. Each entry records the
+turn, phase, who held priority, the stack size, the prompt and choice, and what every pilot was
+doing -- a freeze is only diagnosable afterwards if something wrote down the position it froze in.
 
 ## Validation
 

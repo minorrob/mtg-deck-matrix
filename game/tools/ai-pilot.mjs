@@ -160,11 +160,21 @@ export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{
     const candidates=buildPilotCandidates(view,seat.seatId,policy.level).filter(c=>!entry.rejected.has(actionKey(c.action)));if(!candidates.length)return;
     entry.lastRevision=view.revision;let selected=0,source='automatic';
     if(!(candidates.length===1&&candidates[0].automatic)){
-      source='provider';const requestController=new AbortController();entry.requestController=requestController;const stopRequest=()=>requestController.abort();abort.signal.addEventListener('abort',stopRequest,{once:true});try{if(entry.calls>=policy.modelCallBudget)throw Error('AI model call budget reached');entry.provider??=providerForSeat(seat,policy);onEvent({kind:'ai-provider-requested',seatId:seat.seatId,revision:view.revision,candidateCount:candidates.length,difficulty:policy.level});entry.calls++;selected=await entry.provider({seatId:seat.seatId,revision:view.revision,choice:{mode:'one',min:1,max:1,options:candidates.map((c,index)=>({index,label:c.label}))},observation:compactPilotObservation(view,seat.seatId,policy.level),signal:requestController.signal});if(!Number.isInteger(selected)||!candidates[selected])throw Error('AI provider selected an unavailable action');entry.errors=0;}
-      catch(error){entry.errors++;source='bounded-local-fallback';selected=Math.max(0,localFallback(candidates));onEvent({kind:'ai-provider-failure',seatId:seat.seatId,revision:view.revision,message:String(error.message||error),fallback:candidates[selected].label});}
+      source='provider';const requestController=new AbortController();entry.requestController=requestController;const stopRequest=()=>requestController.abort();abort.signal.addEventListener('abort',stopRequest,{once:true});try{
+        if(entry.calls>=policy.modelCallBudget){
+          // Budget exhausted: pause the AI seat and notify instead of looping fallbacks
+          entry.paused=true;
+          onEvent({kind:'ai-pilot-paused',seatId:seat.seatId,reason:'AI model call budget exhausted. Reduce difficulty, use native AI, or manually prompt to resume.',actionId:null});
+          throw Error('AI model call budget reached');
+        }
+        entry.provider??=providerForSeat(seat,policy);onEvent({kind:'ai-provider-requested',seatId:seat.seatId,revision:view.revision,candidateCount:candidates.length,difficulty:policy.level});entry.calls++;selected=await entry.provider({seatId:seat.seatId,revision:view.revision,choice:{mode:'one',min:1,max:1,options:candidates.map((c,index)=>({index,label:c.label}))},observation:compactPilotObservation(view,seat.seatId,policy.level),signal:requestController.signal});if(!Number.isInteger(selected)||!candidates[selected])throw Error('AI provider selected an unavailable action');entry.errors=0;}
+      catch(error){
+        // If paused due to budget, don't submit fallback action
+        if(entry.paused)return;
+        entry.errors++;source='bounded-local-fallback';selected=Math.max(0,localFallback(candidates));onEvent({kind:'ai-provider-failure',seatId:seat.seatId,revision:view.revision,message:String(error.message||error),fallback:candidates[selected].label});}
       finally{abort.signal.removeEventListener('abort',stopRequest);if(entry.requestController===requestController)entry.requestController=null;}
     }
-    if(stopped)return;
+    if(stopped||entry.paused)return;
     const chosen=candidates[selected];
     await submit(entry,{...chosen,request:{...chosen.action,revision:view.revision,actionId:randomUUID()},context,source,startedAt:Date.now(),attempts:0});
   }

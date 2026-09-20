@@ -8,6 +8,8 @@
     await C.commit({type:'game',gameId:`game:online:${report.matchId}:${report.seatId}`,deckId,outcome:report.outcome,playedAt:report.completedAt,finish:report.finish,pod:report.podSize,bracket:report.bracket,turns:report.turns,seat:report.seatId+1,opponents,notes:report.playerFeedback?.notes||'CrankMagic Online match. Open the report from game history for event telemetry and deck signals.',online:report});
     C.notice('Online game report attached to '+deck.name+'.');return 'attached';
   }
+  // 2026-09-17: do not overwrite C.views.game. The classic lobby lives in crankmagic-game.js;
+  // this module wraps it with the host check and keeps its own legacy view under #online.
   const lobbyView=C.views.game;
   let hostStatus={checked:false,available:false};
   async function checkLocalHost(){

@@ -8,10 +8,16 @@ async function api(path,{method='GET',body}={}){
 }
 async function redeem(){
   try{session=JSON.parse(sessionStorage.getItem(sessionKey)||'null');}catch{session=null;}
-  const params=new URLSearchParams(location.hash.slice(1)),invite=params.get('invite'),tableId=params.get('table');
+  const params=new URLSearchParams(location.hash.slice(1).replace(/^#/, '')),invite=params.get('invite'),tableId=params.get('table'),seatCode=params.get('seat');
   if(invite&&tableId){session=await api('/table/join',{method:'POST',body:{invite,tableId}});sessionStorage.setItem(sessionKey,JSON.stringify(session));history.replaceState(null,'',location.pathname);}
+  if(!session && seatCode){
+    message('This link is a workshop seat code, not a live table invite. Ask the host to tap Email Invite / Copy Link again (after seating their deck) so you get a #table=…&invite=… link that can accept players.', true);
+    return {seatOnly: true, seatCode};
+  }
   if(!session)throw Error('This invitation is missing, expired, or has already been used. Ask the host for a new QR code.');
+  return {ok: true};
 }
+
 function deckPanel(table,seat){
   const panel=el('div','deck panel'),title=el('h2','',seat.deckVersion?'Choose this deck again or replace it':'Choose your deck');panel.append(title);
   const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['upload','Upload Moxfield two-column CSV'],['preloaded','Use a preloaded CrankMagic deck'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
@@ -41,4 +47,10 @@ function render(value){
 }
 async function refresh(){try{render(await api('/table'));}catch(error){message(error.message,true);}}
 async function heartbeat(){if(!session)return;try{await api('/table/heartbeat',{method:'POST',body:{}});await refresh();}catch(error){message(error.message,true);}pollTimer=setTimeout(heartbeat,tableState?.phase==='countdown'?1000:2000);}
-try{await redeem();await refresh();heartbeat();}catch(error){message(error.message,true);}
+try{
+  const redeemed=await redeem();
+  if(!(redeemed && redeemed.seatOnly)){
+    await refresh();
+    heartbeat();
+  }
+}catch(error){message(error.message,true);}

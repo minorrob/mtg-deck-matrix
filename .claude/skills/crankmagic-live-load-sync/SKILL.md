@@ -23,7 +23,7 @@ numbers agree; fix the workbook and rebuild.
 ## Inputs
 - The latest `Treys MtG Master vN.xlsx` (highest N; ask if two candidates share a date).
   In a web session it arrives as an upload; on the desktop it lives in
-  `C:\Users\robmi\OneDrive\Desktop\Magic the Gathering\`. Read only.
+  `C:\Users\robmi\CrankMagic\archive\desktop-mtg\`. Read only.
 - Sheets the importer reads, all by header name, so column letters may move:
   - **Master** (header row is the one whose first cell is `Card`): `Card`, `Own` (P),
     `Buy Count` (Q), `Ordered` (S), `$ Each` (T), `D1-T…D6-T` (W–AB, each sums to 100),

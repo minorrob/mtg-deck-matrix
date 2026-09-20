@@ -1,5 +1,5 @@
 /** Select only an engine-offered option. Provider text is untrusted; Forge remains authoritative. */
-export function createOpenAIChoiceProvider({apiKey,model='gpt-5.6-luna',fetchImpl=fetch,maxCalls=3,timeoutMs=4500,maxOutputTokens=64}) {
+export function createOpenAIChoiceProvider({apiKey,model='gpt-5-mini',fetchImpl=fetch,maxCalls=3,timeoutMs=4500,maxOutputTokens=64}) {
   if(typeof apiKey!=='string'||!apiKey.trim())throw Error('API key required');
   let calls=0;
   return async ({seatId,revision,choice,observation,signal})=>{
@@ -13,7 +13,10 @@ export function createOpenAIChoiceProvider({apiKey,model='gpt-5.6-luna',fetchImp
         input:JSON.stringify({seatId,revision,choice,observation}),
         text:{format:{type:'json_schema',name:'engine_choice',strict:true,schema:{type:'object',properties:{index:{type:'integer',enum:indices}},required:['index'],additionalProperties:false}}}})
     });
-    if(!response.ok)throw Error('AI provider request failed (HTTP '+response.status+')');
+    if(!response.ok){
+      let errorBody='';try{const errorData=await response.json();errorBody=' — '+JSON.stringify(errorData).slice(0,500);}catch{try{errorBody=' — '+(await response.text()).slice(0,500);}catch{}}
+      throw Error('AI provider request failed (HTTP '+response.status+')'+errorBody);
+    }
     const value=await response.json();if(value.status!=='completed')throw Error('AI provider did not complete its decision');
     const content=(value.output||[]).filter(x=>x.type==='message').flatMap(x=>x.content||[]);
     if(content.some(x=>x.type==='refusal'))throw Error('AI provider declined the decision');
@@ -38,7 +41,10 @@ export function createAnthropicChoiceProvider({apiKey,model='claude-haiku-4-5-20
         messages:[{role:'user',content:JSON.stringify({seatId,revision,choice,observation})}],
         output_config:{format:{type:'json_schema',schema:{type:'object',properties:{index:{type:'integer',enum:indices}},required:['index'],additionalProperties:false}}}})
     });
-    if(!response.ok)throw Error('AI provider request failed (HTTP '+response.status+')');
+    if(!response.ok){
+      let errorBody='';try{const errorData=await response.json();errorBody=' — '+JSON.stringify(errorData).slice(0,500);}catch{try{errorBody=' — '+(await response.text()).slice(0,500);}catch{}}
+      throw Error('AI provider request failed (HTTP '+response.status+')'+errorBody);
+    }
     const value=await response.json();if(value.stop_reason!=='end_turn')throw Error('AI provider did not complete its decision');
     let answer;try{answer=JSON.parse((value.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''));}catch{throw Error('AI provider returned invalid choice JSON');}
     if(!answer||Object.keys(answer).length!==1||!Number.isInteger(answer.index)||!indices.includes(answer.index))throw Error('AI provider selected an unavailable option');

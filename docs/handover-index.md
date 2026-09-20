@@ -1,5 +1,9 @@
 # Handover index
 
+**CrankMagic Online, 18 September:** the current work and the task in front of it are in
+[session-handoff-2026-09-18.md](session-handoff-2026-09-18.md). Its plan of record is
+[`game/docs/readiness-plan-2026-09-18.md`](../game/docs/readiness-plan-2026-09-18.md).
+
 *What a new reader — human or model — needs in order to evaluate this app, explain it, and
 keep building it without breaking it.*
 
