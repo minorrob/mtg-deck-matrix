@@ -117,7 +117,7 @@
 #matrix-v2 .v-submenu:hover>.v-deck-submenu,#matrix-v2 .v-submenu.v-sub-open>.v-deck-submenu{display:block}
 #matrix-v2 .v-menu-options{width:200px}
 #matrix-v2 .v-menu-divider{border:0;border-top:1px solid var(--v-line);margin:5px 0}
-#matrix-v2 dialog.v-dialog{margin:auto;box-sizing:border-box;width:min(600px,calc(100% - 28px));max-height:90vh;overflow:auto;border:1px solid var(--v-line);border-radius:16px;background:var(--v-panel);color:var(--v-ink);padding:24px;font-family:Satoshi,sans-serif;box-shadow:0 24px 90px #0005}
+#matrix-v2 dialog.v-dialog{margin:auto;box-sizing:border-box;width:min(600px,calc(100% - 28px));max-height:90vh;overflow:hidden auto;border:1px solid var(--v-line);border-radius:16px;background:var(--v-panel);color:var(--v-ink);padding:24px;font-family:Satoshi,sans-serif;box-shadow:0 24px 90px #0005}
 #matrix-v2 dialog::backdrop{background:#050b1480}
 #matrix-v2 .v-dialog .v-field{margin:12px 0}
 #matrix-v2 .v-dialog textarea{min-height:140px;resize:vertical;width:100%;box-sizing:border-box;background:var(--v-field);color:var(--v-ink);border:1px solid var(--v-field-line);border-radius:8px;padding:12px;font:inherit}

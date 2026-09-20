@@ -586,4 +586,10 @@ M.validate(s);checks++;
 assert.equal(M.today(new Date(2026,8,19,23,30)),'2026-09-19');checks++;
 assert.equal(M.today(new Date(2026,0,1,0,5)),'2026-01-01');checks++;
 assert.match(M.today(),/^\d{4}-\d{2}-\d{2}$/);checks++;
+/* localDate() reads a date-only string as a local calendar date (UAT P-05): the day a game was
+   logged, not the UTC midnight that is the evening before in New York. A full timestamp is still
+   the instant it names. */
+{const d=M.localDate('2026-09-20');assert.deepEqual([d.getFullYear(),d.getMonth(),d.getDate(),d.getHours()],[2026,8,20,0]);checks++;}
+assert.equal(M.localDate('2026-09-20T03:59:18.703Z').getTime(),Date.parse('2026-09-20T03:59:18.703Z'));checks++;
+assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);assert.equal(M.localDate(undefined),null);checks++;
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);
