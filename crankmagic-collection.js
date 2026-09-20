@@ -103,7 +103,7 @@ function statsHTML(shown,scoped){
     if(r.placement==='Physical deck'||r.placement==='Substitute')t.physical+=r.quantity;
   }
   /* The figures as one row of chips that filter the page: a click keeps the rows in that status, a second click lets them all back. */
-  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString()}</strong><span>${l}</span></button>`;}).join('')}<span class="cm-kpi-note">${scoped?`Counting the rows this view shows${bench?`; the ${bench.toLocaleString()} on the Bench are owned by no deck and are not in the figures above`:''}.`:[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</span></div>`;
+  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString()}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${scoped?`Counting the rows this view shows${bench?`; the ${bench.toLocaleString()} on the Bench are owned by no deck and are not in the figures above`:''}.`:[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</p></div>`;
 }
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
@@ -171,7 +171,14 @@ function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts()
   const third=tab==='buy'?b('Print buy list','print-buy-list',{},false,{cls:'compact'}):tab==='orders'?b('Paste receipt','paste-receipt',{},false,{cls:'compact'}):view==='sheet'?b('Add a card row','sheet-add',{},false,{cls:'compact'}):b('New group','new-group',{},false,{cls:'compact'});
   const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
   /* Add cards is the one thing done often, so it is the primary; Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
-  return (tight?'':C.pageHead('Library',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards'))+tabs+sittingBar();}
+    /* THE SUMMARY SENTENCE (Track V.4c, the guide's "One head, one primary"): what the library
+     holds, in the two figures that matter -- the copies owned, and the ones on the bench that no
+     deck has reserved. Both are counted from the lots the tiles count, so the sentence and the
+     tiles cannot disagree. */
+  const ownedN=C.state.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0);
+  const benchN=C.state.lots.filter(l=>l.source==='owned'&&!l.allocation).reduce((n,l)=>n+l.quantity,0);
+  const summary='<p class="cm-cards-summary"><b>'+ownedN.toLocaleString()+' copies</b> you own'+(benchN?', <b>'+benchN.toLocaleString()+'</b> of them on the bench with no deck waiting on them':'')+'.</p>';
+  return (tight?'':C.pageHead('Library',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards',summary))+tabs+sittingBar();}
 /* THE SITTING, IN ONE BAR IN ONE PLACE (plan §2.6). It is rendered from cardsHead, so List, To
    buy, Orders, the Sheet and the Table all carry the same bar saying the same number: there is
    no lens you can be on where a sitting is open and invisible. */
