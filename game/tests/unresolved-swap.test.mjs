@@ -49,7 +49,7 @@ test('the catalog search finds by word prefix, then substring, Commander-legal o
   const hit = searchCatalog(catalog, 'sol ring')[0];
   assert.equal(hit.typeLine, 'Artifact');
   assert.equal(hit.image, 'https://img/sol-ring-small.jpg');
-  assert.deepEqual(searchCatalog(catalog, 'vault', {colorIdentity: ['R']}), [], 'a card outside the commander\'s colours is not offered');
+  assert.deepEqual(searchCatalog(catalog, 'vault', {colorIdentity: ['R']}), [], 'a card outside the commander\'s colors is not offered');
   assert.deepEqual(searchCatalog(catalog, 'vault', {colorIdentity: ['U', 'B', 'G']}).map((h) => h.name), ["Lim-Dûl's Vault"]);
   assert.deepEqual(searchCatalog(catalog, ''), []);
   assert.equal(searchCatalog(catalog, 'sol', {limit: 2}).length, 2);

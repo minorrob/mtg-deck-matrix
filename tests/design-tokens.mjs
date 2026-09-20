@@ -1,14 +1,14 @@
 /* THE DESIGN TOKENS, HELD TO THE HANDOFF, AND RAW HEX HELD DOWN.
  *
  * Track V (docs/design-intake-2026-09-20.md) rests on one discipline: the page layer draws its
- * colours from the token block, and the token block is the designer's, not a copy that drifts.
+ * colors from the token block, and the token block is the designer's, not a copy that drifts.
  * Two checks make that a suite rather than a wish:
  *
  *   1. Every token the handoff's design-system/tokens/colors.css defines -- --color-*, --mana-*,
  *      --st-* -- is defined in crankmagic-design.css with the same value, in the dark block and in
  *      the light one. A designer's change to the handoff that is not brought across fails here,
  *      by name and value.
- *   2. Raw hex colours in the page stylesheets never go up. The counts written below are the
+ *   2. Raw hex colors in the page stylesheets never go up. The counts written below are the
  *      measurement on the day the tokens landed (crankmagic.css 1050, game/ui 475). Each V.1
  *      page conversion lowers the number and lowers the ceiling here, in the diff, so the layer
  *      cannot drift back. Raising a ceiling is a decision made in this file, not by accident.
@@ -37,13 +37,13 @@ function tokensIn(css, selectorRe) {
   return out;
 }
 
-/* 1. The colour tokens, dark and light, value for value. */
+/* 1. The color tokens, dark and light, value for value. */
 {
   const handoff = read(HANDOFF + "colors.css");
   const hDark = tokensIn(handoff, /^:root$/), hLight = tokensIn(handoff, /^\[data-theme="light"\]$/);
   const aDark = tokensIn(design, /^#matrix-v2$/), aLight = tokensIn(design, /^#matrix-v2\[data-theme="light"\]$/);
   const named = [...hDark.keys()].filter((k) => /^--(color|mana|st)-/.test(k));
-  ok(named.length >= 21, `the handoff defines the colour tokens (${named.length})`);
+  ok(named.length >= 21, `the handoff defines the color tokens (${named.length})`);
   const missingDark = named.filter((k) => aDark.get(k) !== hDark.get(k)).map((k) => `${k}: app ${aDark.get(k) || "(absent)"}, handoff ${hDark.get(k)}`);
   eq(missingDark, [], "every dark token in the app is the handoff's, value for value:\n  " + missingDark.join("\n  "));
   const missingLight = named.filter((k) => aLight.get(k) !== hLight.get(k)).map((k) => `${k}: app ${aLight.get(k) || "(absent)"}, handoff ${hLight.get(k)}`);
@@ -58,7 +58,7 @@ function tokensIn(css, selectorRe) {
 {
   const shape = tokensIn(read(HANDOFF + "shape.css"), /^:root$/), type = tokensIn(read(HANDOFF + "typography.css"), /^:root$/);
   const app = tokensIn(design, /^#matrix-v2$/);
-  /* The handoff names both the body colour alias and the body size --text-body; the app keeps
+  /* The handoff names both the body color alias and the body size --text-body; the app keeps
      the size as --text-body-size (INTAKE.md, gap 10). */
   const rename = {"--text-body": "--text-body-size"};
   for (const [k, v] of [...shape, ...type]) { const name = rename[k] || k; ok(app.get(name) === v, `${name} is ${v} in the app (found ${app.get(name) || "nothing"})`); }
@@ -67,15 +67,15 @@ function tokensIn(css, selectorRe) {
 /* 2. Raw hex never goes up. Lower a ceiling when a page is converted; never raise one here without saying why in the diff. */
 {
   const hex = (css) => (css.match(/#[0-9a-fA-F]{3,8}\b/g) || []).length;
-  const CEILING = {"crankmagic.css": 1050, "game/ui": 475};
+  const CEILING = {"crankmagic.css": 730, "game/ui": 475};
   const page = hex(read("crankmagic.css"));
-  ok(page <= CEILING["crankmagic.css"], `crankmagic.css carries ${page} raw hex colours; the ceiling is ${CEILING["crankmagic.css"]} and only goes down`);
+  ok(page <= CEILING["crankmagic.css"], `crankmagic.css carries ${page} raw hex colors; the ceiling is ${CEILING["crankmagic.css"]} and only goes down`);
   const ui = readdirSync(path.join(ROOT, "game/ui")).filter((f) => f.endsWith(".css")).reduce((n, f) => n + hex(read("game/ui/" + f)), 0);
-  ok(ui <= CEILING["game/ui"], `game/ui stylesheets carry ${ui} raw hex colours; the ceiling is ${CEILING["game/ui"]} and only goes down`);
+  ok(ui <= CEILING["game/ui"], `game/ui stylesheets carry ${ui} raw hex colors; the ceiling is ${CEILING["game/ui"]} and only goes down`);
   /* the design stylesheet's hex live in the two token blocks and the legacy --v- block, nowhere else */
   const outside = design.replace(/#matrix-v2(\[data-theme="light"\])?\{[^}]*\}/g, "");
   const stray = hex(outside);
-  ok(stray <= 101, `crankmagic-design.css has ${stray} raw hex colours outside its token blocks (ceiling 101, only goes down)`);
+  ok(stray <= 52, `crankmagic-design.css has ${stray} raw hex colors outside its token blocks (ceiling 52, only goes down)`);
 }
 
 console.log(`design-tokens: ${checks} checks passed — the Gallery tokens match the handoff in both themes, and raw hex only goes down.`);

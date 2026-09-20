@@ -97,10 +97,26 @@ two days go well and the mistakes that cost time.
   limit is not a question he wants asked.
 - No blind `skipWaiting` in the service worker; a reload prompt instead (W.6).
 
+## 5b. Rules added on 2026-09-20, late
+
+- **American English, always, everywhere.** In `AGENTS.md` and in the wiring suite as a ratchet
+  (586 legacy occurrences in older code and documents; only goes down; the designer's verbatim
+  handoff folder is exempt). This applies to Rob's every tool, not only this repository: never
+  write the British forms, and convert them when a source arrives in them.
+- **The Game Host** (design intake V.5b): a loud, video-game announcer voice for the live game's
+  "Up next" and phase announcements that pulls back once play is under way. Backlog; define it
+  as a copy set with tone rules and review it in chat before any ships.
+- **V.1b is done**: the legacy tokens read the Gallery tokens and the most-used page hexes are
+  converted, so the ground, sidebar, buttons and accents already wear brass and slate; the deck
+  tiles and most page-specific surfaces do not yet. That is the next conversion.
+- **Usage pivot:** when a session reaches 95% of its usage, stop building and update the
+  handoff documents, commit, merge what is green, and leave the next model a clean start.
+
 ## 6. What I would do first tomorrow
 
-1. Self-host Young Serif and add the theme toggle (V.1, small, closes the CSP gap in
-   `INTAKE.md` §1).
-2. Convert `cm-deck`/`cm-tile`/`cm-stat`/`cm-pill` in `crankmagic.css` to tokens, lower the
-   ceiling, render before and after. That is the first picture of the new look on a real page.
+1. Self-host Young Serif (OFL; the download needs Rob's go-ahead) and point `--font-display`
+   at it; the theme toggle is done.
+2. Convert the deck tiles and deck page surfaces (`cm-deck`, `cm-tile`, `cm-stat`, `cm-pill`,
+   `cm-summary` in `crankmagic.css`) from their remaining navy and violet hexes to tokens, lower
+   the 730 ceiling, render before and after. The tiles are the first thing Rob sees.
 3. Send the designer the gap list (`INTAKE.md`, "Gaps and conflicts") with those renders.

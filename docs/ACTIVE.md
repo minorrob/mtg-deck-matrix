@@ -3,9 +3,9 @@
 | | |
 | --- | --- |
 | **Holder** | Claude Code (Fable 5.1), local session on Personal-HP |
-| **Branch** | `claude/v0-deck-page-intake`, off `main` at `3cd7d8d` |
+| **Branch** | `claude/v1b-tokens-read`, off `main` at `fc6d5af` |
 | **Since** | 2026-09-19 |
-| **Doing** | The Claude Design handoff arrived (`Deck page redesign project.zip`, the Gallery direction) and is under `docs/design/2026-09-20-deck-page/` with `INTAKE.md` (answers, ten gaps, the mapping onto the code, the order). **V.0 done. V.1a done:** the Gallery tokens are in `crankmagic-design.css` with `data-theme="light"`, held to the handoff by `tests/design-tokens.mjs`, which also ceilings raw hex (1050 / 475 / 101, only down). Nothing reads the new tokens yet. `docs/handoff-fable-2026-09-20.md` is Fable's guidance for the next model. 97 suites green. |
-| **Next for whoever picks this up** | Read `docs/handoff-fable-2026-09-20.md` §6: self-host Young Serif and add the theme toggle (V.1), convert the deck surfaces' CSS to tokens and lower the ceiling, render before and after, send the designer the gap list. Then V.2/V.3, V.4 in reading order, V.5. W.4, E.4 and C.6 run beside. Readiness plan §12 steps 4–9 still need a person and a second browser. |
+| **Doing** | **V.1b done:** the legacy `--v-*` tokens read the Gallery tokens, 320 hex occurrences in `crankmagic.css` read tokens (ceiling 1050 → 730), a theme switch in User Functions saved in preferences. **American English is a standing rule** (`AGENTS.md`; the wiring suite ratchets UK spellings down from 586). The Game Host announcer is V.5b in the design intake, to be defined. The Decks page, deck page and Library were rendered before and after for Rob. 97 suites green. |
+| **Next for whoever picks this up** | `docs/handoff-fable-2026-09-20.md` §6, updated: self-host Young Serif (a download Rob must authorize), then convert the deck surfaces' remaining page-specific colors (`cm-deck`, `cm-tile`, `cm-stat`, `cm-pill` in `crankmagic.css`, the tiles are still navy and violet) and lower the ceiling; render before and after; send the designer the gap list (INTAKE.md, ten gaps). Every commit is American English; the ratchet in `tests/feature-wiring.mjs` fails a commit that adds a UK spelling. |
 
 Update this file as your last act. Rules: `AGENTS.md`.
