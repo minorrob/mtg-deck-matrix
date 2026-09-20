@@ -53,6 +53,23 @@
 .cm-explore-door strong{font-family:var(--v-display);font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.015em}
 /* The rule that used to sit above the heading now sits above the eyebrow. */
 .cm-door-list{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:6px;width:100%}
+/* The commander fan: four crops leaning out from the left, straightening together on hover, so
+   the door shows whose decks it would open on rather than saying that it would. */
+.cm-door-fan{display:flex;margin:auto 0 0;padding-left:8px}
+.cm-door-fan i{display:block;width:58px;height:81px;flex:0 0 58px;margin-left:-14px;border-radius:6px;overflow:hidden;background:var(--v-raised);border:1px solid var(--v-line);transform:rotate(calc((var(--i) - 1.5) * 6deg));transform-origin:50% 100%;transition:transform .25s ease;display:grid;place-items:center}
+.cm-door-fan i:first-child{margin-left:0}
+.cm-door-fan img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.cm-door-fan b{font-family:var(--v-display);font-weight:400;font-size:26px;color:var(--v-muted)}
+.cm-explore-door:hover .cm-door-fan i{transform:rotate(0deg)}
+/* The card door's graph is an illustration, not data: it says what two rings out looks like. */
+.cm-door-graph{display:block;width:100%;height:auto;margin:auto 0 0;color:var(--v-muted)}
+/* Or read by role. */
+.cm-explore-roles{margin-top:26px}
+.cm-explore-role-pills{display:flex;flex-wrap:wrap;gap:8px}
+.cm-role-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:var(--radius-pill);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font-size:13px;font-weight:600;cursor:pointer}
+.cm-role-chip b{font-weight:600;color:var(--v-muted);font-variant-numeric:tabular-nums}
+.cm-role-chip:hover{background:var(--v-raised);border-color:var(--v-accent)}
+@media(prefers-reduced-motion:reduce){.cm-door-fan i{transition:none}.cm-explore-door:hover .cm-door-fan i{transform:rotate(calc((var(--i) - 1.5) * 6deg))}}
 .cm-door-list li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:12px;min-width:0}
 .cm-door-list b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm-door-list i{font-style:normal;color:var(--door,var(--v-muted));white-space:nowrap}

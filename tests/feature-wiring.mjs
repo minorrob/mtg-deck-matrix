@@ -228,6 +228,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
      are told apart by more than their words. */
   ok(/--door:/.test(disc), "each door names its own color");
   ok(/Pick up where you left off/.test(disc), "and the recent scopes are an invitation, not a label");
+  /* V.4e, the second pass: the other two doors carry something to look at, the sub-line says how
+     big the graph is, and the roles are pills with their counts. */
+  ok(/cm-door-fan/.test(disc), "the commander door fans the commanders it would open on");
+  ok(/cm-door-graph/.test(disc), "the card door shows a graph rather than describing one");
+  ok(/cm-explore-roles/.test(disc), "and the entry offers the role lenses with their counts");
+  ok(/CrankFacets\.values/.test(disc), "the role counts are the facet module's, not counted again here");
 }
 
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it

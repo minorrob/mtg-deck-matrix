@@ -244,15 +244,41 @@
       deck: params.get('deck'),
       commander: params.get('commander'),
       card: params.get('card'),
-      gap: params.get('gap')
+      gap: params.get('gap'),
+      lens: params.get('lens')
     };
-    const hasScope = !!(scopeParams.deck || scopeParams.commander || scopeParams.card);
+    /* A lens on its own is a scope: "Or read by role" on the entry opens the graph on that role
+       with no deck or card chosen, and the view already reads params.get('lens'). */
+    const hasScope = !!(scopeParams.deck || scopeParams.commander || scopeParams.card || scopeParams.lens);
 
     /* If no scope params, show the chooser instead of entering the graph. */
     if (!hasScope) {
       const recents = getRecentScopes();
       /* What each deck is shortest of, for the deck-gap door: the readiness figure that is
          largest is the one worth opening the graph on. Three at most; the door is a door. */
+      /* The commanders the second door would open on: up to four of the reader's own, with
+         their art where the catalog has it. A deck with no cached picture contributes its
+         initials rather than an empty frame. */
+      const fanCards = C.state.decks.filter((d) => !d.archived).slice(0, 4)
+        .map((d) => C.card(d.commanders[0])).filter(Boolean)
+        .map((c) => ({name: c.name, image: c.image || ''}));
+      /* How big the graph is, said in the figure this page can actually count. The screen also
+         states a join total; the payload here does not carry one, so it is not invented. */
+      const graphSize = (data && data.cards ? data.cards.length : 0);
+      /* The role lenses with their counts, from the facet module that the graph view already
+         asks for the same numbers -- counted once, in one place, so a pill and a filter agree. */
+      const roleCounts = (() => {
+        try {
+          /* values() returns, per facet, an array of {value, count} sorted by count -- not a map.
+             Reading it as one gave every lens a count of zero and hid the row entirely. */
+          const vals = CrankFacets.values(data.cards, C.state);
+          const byRole = new Map((vals.roles || []).map((r) => [String(r.value).toLowerCase(), r.count]));
+          return (globalThis.CrankLens ? CrankLens.LENSES : []).map((l) => ({
+            id: l.id,
+            n: l.roles.reduce((sum, r) => sum + (byRole.get(String(r).toLowerCase()) || 0), 0),
+          })).filter((r) => r.n > 0);
+        } catch { return []; }
+      })();
       const gapDecks = C.state.decks.filter((d) => !d.archived).slice(0, 3).map((d) => {
         const r = C.M.readiness(C.state, d);
         const worst = [[r.toBuy, 'to buy'], [r.standIns, 'standing in'], [r.ordered, 'ordered']].sort((a, b) => b[0] - a[0])[0];
@@ -263,7 +289,7 @@
             <div>
               <p class="cm-explore-eyebrow">Explore</p>
               <h1 class="cm-explore-title">Every card is joined to the cards it works with. Start anywhere.</h1>
-              <p class="cm-explore-sub">Follow a card into the cards it is joined to, read why each link is there, and take what you find into a deck.</p>
+              <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString()} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
             </div>
             <label class="cm-explore-search">Find any card<input id="cm-entry-query" placeholder="Find any card…" data-action="explore-from-card-input"><kbd>/</kbd></label>
           </header>
@@ -278,19 +304,33 @@
               <small>From a commander</small>
               <strong>See what a commander wants around it</strong>
               <span>Yours, or any legal commander by name or EDHREC rank. Trace lights the deck from the commander outward.</span>
+              ${fanCards.length ? `<span class="cm-door-fan" aria-hidden="true">${fanCards.map((c, i) => c.image ? `<i style="--i:${i}"><img src="${e(c.image)}" alt="" loading="lazy"></i>` : `<i style="--i:${i}"><b>${e(c.name.slice(0, 1))}</b></i>`).join('')}</span>` : ''}
             </button>
             <button type="button" class="cm-explore-door" style="--door:var(--v-aether)" data-action="explore-from-card">
               <small>From a card</small>
               <strong>Follow any card into its connections</strong>
               <span>Type a name or paste a Scryfall link. Two rings out, every join named, loops in gold.</span>
+              <svg class="cm-door-graph" viewBox="0 0 220 96" aria-hidden="true" focusable="false">
+                <path d="M40 60 L96 34 L152 56 M96 34 L104 82 M152 56 L196 30 M40 60 L26 26" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45"></path>
+                <path d="M96 34 C130 10 170 18 196 30" fill="none" stroke="var(--v-accent)" stroke-width="2" opacity=".9"></path>
+                <circle cx="96" cy="34" r="11" fill="var(--door)"></circle>
+                <circle cx="40" cy="60" r="6" fill="currentColor" opacity=".7"></circle>
+                <circle cx="152" cy="56" r="6" fill="currentColor" opacity=".7"></circle>
+                <circle cx="104" cy="82" r="4" fill="currentColor" opacity=".5"></circle>
+                <circle cx="26" cy="26" r="4" fill="currentColor" opacity=".5"></circle>
+                <circle cx="196" cy="30" r="5" fill="none" stroke="var(--v-accent)" stroke-width="2"></circle>
+              </svg>
             </button>
           </div>
+          ${roleCounts.length ? `<div class="cm-explore-roles"><p class="cm-explore-recents-label">Or read by role</p><div class="cm-explore-role-pills">${roleCounts.map((r) => `<button type="button" class="cm-chip cm-role-chip" data-action="explore-role" data-role="${e(r.id)}">${e(r.id)} <b>${r.n.toLocaleString()}</b></button>`).join('')}</div></div>` : ''}
           ${recents.length ? `<div class="cm-explore-recents">
             <p class="cm-explore-recents-label">Pick up where you left off</p>
             <div class="cm-explore-recent-chips">${recents.map((r) => `<button type="button" class="cm-chip" data-action="explore-recent" data-recent="${e(JSON.stringify(r))}">${e(r.label)}</button>`).join('')}
             <button type="button" class="cm-text-button compact" data-action="explore-clear-recents">Clear</button></div>
           </div>` : ''}
         </div>`;
+
+      actions['explore-role'] = (el) => { C.go('discover', {lens: el.dataset.role}); };
 
       actions['explore-from-deck'] = () => {
         const decks = C.state.decks.filter((d) => !d.archived);
