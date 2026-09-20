@@ -1,4 +1,5 @@
 import {renderConnectionPanel} from '/connection.mjs';
+import {renderSwapPanel,loadCatalog} from '/unresolved.mjs';
 const status=document.querySelector('#status'),host=document.querySelector('#table'),sessionKey='crankmagic-seat-session';let session,tableState,pollTimer,lastRendered='';
 /* The render key ignores sub-five-second movement in quiet time, so a guest typing a deck name is
    not interrupted by a redraw every heartbeat; the panel still updates within five seconds. */
@@ -8,7 +9,7 @@ const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.cla
 const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
 function message(text,error=false){status.textContent=text;status.className=error?'error':'notice';status.hidden=false;}
 async function api(path,{method='GET',body}={}){
-  const response=await fetch(path,{method,headers:{...(session?{Authorization:'Bearer '+session.capability}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}),value=await response.json();if(!response.ok)throw Error(value.error||'Table request failed');return value;
+  const response=await fetch(path,{method,headers:{...(session?{Authorization:'Bearer '+session.capability}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}),value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Table request failed'),{status:response.status,...(Array.isArray(value.unresolved)?{unresolved:value.unresolved}:{})});return value;
 }
 async function redeem(){
   try{session=JSON.parse(sessionStorage.getItem(sessionKey)||'null');}catch{session=null;}
@@ -31,7 +32,11 @@ function deckPanel(table,seat){
   const build=el('div','choice'),commander=el('input');commander.placeholder='Commander name';commander.setAttribute('aria-label','Commander name');commander.value=deckDraft.commander;commander.addEventListener('input',()=>deckDraft.commander=commander.value);build.append(commander);
   const archidekt=el('div','choice'),archidektCommander=el('input'),url=el('input');archidektCommander.placeholder='Commander name';archidektCommander.setAttribute('aria-label','Archidekt commander name');archidektCommander.value=deckDraft.archidektCommander;archidektCommander.addEventListener('input',()=>deckDraft.archidektCommander=archidektCommander.value);url.type='url';url.placeholder='https://archidekt.com/decks/…';url.setAttribute('aria-label','Archidekt deck URL');url.value=deckDraft.url;url.addEventListener('input',()=>deckDraft.url=url.value);archidekt.append(archidektCommander,url);
   const choices={upload,catalog,build,archidekt},showSource=()=>{for(const n of Object.values(choices))n.classList.remove('active');choices[source.value==='preloaded'?'catalog':source.value==='lab'?'build':source.value].classList.add('active');};source.addEventListener('change',()=>{deckDraft.source=source.value;showSource();});showSource();
-  const save=button('Validate and use this deck',async()=>{try{save.disabled=true;message('Resolving all 100 cards, mechanics, bracket and table budget…');let input={source:deckDraft.source,name:deckDraft.name};if(deckDraft.source==='upload')input.csv=deckDraft.csv;else if(deckDraft.source==='preloaded'){input.deckId=saved.value;input.commander=saved.selectedOptions[0]?.dataset.commander;deckDraft.deckId=saved.value;}else if(deckDraft.source==='lab')input.commander=deckDraft.commander;else{input.commander=deckDraft.archidektCommander;input.archidektUrl=deckDraft.url;}await api('/table/deck',{method:'POST',body:input});await refresh();message('Deck validated. Press Ready when you are finished choosing.');}catch(error){message(error.message,true);}finally{save.disabled=false;}},'primary');
+  const save=button('Validate and use this deck',async()=>{try{save.disabled=true;message('Resolving all 100 cards, mechanics, bracket and table budget…');let input={source:deckDraft.source,name:deckDraft.name};if(deckDraft.source==='upload')input.csv=deckDraft.csv;else if(deckDraft.source==='preloaded'){input.deckId=saved.value;input.commander=saved.selectedOptions[0]?.dataset.commander;deckDraft.deckId=saved.value;}else if(deckDraft.source==='lab')input.commander=deckDraft.commander;else{input.commander=deckDraft.archidektCommander;input.archidektUrl=deckDraft.url;}if(deckDraft.replacements?.length)input.replacements=deckDraft.replacements;await api('/table/deck',{method:'POST',body:input});deckDraft.replacements=[];await refresh();message('Deck validated. Press Ready when you are finished choosing.');}catch(error){message(error.message,true);
+    /* A REFUSAL THAT NAMES CARDS IS A SWAP, NOT A SENTENCE (C.1). Forge's list comes back with the
+       error; offer a replacement per card, then validate the same deck again with the swaps. */
+    if(Array.isArray(error.unresolved)&&error.unresolved.length){const slot=panel.querySelector('.swap-slot')||el('div','swap-slot');if(!slot.parentNode)panel.append(slot);slot.replaceChildren(renderSwapPanel(error.unresolved,{el,cards:loadCatalog(),seatName:deckDraft.name||'Your deck',onSubmit:pairs=>{deckDraft.replacements=[...(deckDraft.replacements||[]),...pairs];slot.replaceChildren();save.click();}}));}
+  }finally{save.disabled=false;}},'primary');
   panel.append(el('div','deck-fields'),source,name,upload,catalog,build,archidekt,save);return panel;
 }
 function render(value){

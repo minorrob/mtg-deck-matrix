@@ -11,3 +11,15 @@
 .connection-seat.is-blocking:not(.is-ready){border-color:#c9a94a}.connection-seat.is-offline{border-color:#b04a4a}.connection-seat.is-offline .connection-state{color:#ff9f9f}
 .connection-seat.is-quiet{border-color:#c9a94a}.connection-seat.is-quiet .connection-detail{color:#ffe37b}.connection-seat.is-empty{opacity:.7;border-style:dashed}
 .connection-launch{margin:12px 0 0;color:#ffe37b}.connection-launch.is-failed{color:#ff9f9f}.connection-launch.is-bridge-green,.connection-launch.is-seated{color:#8ee3b4}
+
+/* THE UNKNOWN-CARD SWAP (C.1): a replacement per card Forge does not have, searched by name with type and art. */
+.swap-panel{margin-top:18px;padding:16px 18px;border:1px solid #c9a94a;border-radius:12px;background:#142434}.swap-title{margin:0 0 4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#a1b6c4}.swap-headline{margin:0 0 12px;font-size:16px;color:#ffe37b}
+.swap-rows{list-style:none;margin:0;padding:0;display:grid;gap:12px}.swap-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(220px,2fr) auto;gap:12px;align-items:start;padding:12px;border:1px solid #38546a;border-radius:10px;background:#0f1c2a}
+.swap-from{display:grid;gap:4px}.swap-name{color:#ff9f9f}.swap-reason{color:#a1b6c4;font-size:12px}.swap-to{display:grid;gap:6px}
+.swap-suggestions{display:flex;flex-wrap:wrap;gap:6px}.swap-suggestion{padding:6px 10px;font-size:13px;border:1px solid #3d8f6a;border-radius:8px;background:#18283d;color:#eef8ff;cursor:pointer}
+.swap-input{font:inherit;border:1px solid #3b5875;border-radius:10px;background:#18283d;color:#eef8ff;padding:10px}
+.swap-hits{list-style:none;margin:0;padding:6px;display:grid;gap:2px;border:1px solid #3b5875;border-radius:10px;background:#18283d;max-height:260px;overflow:auto}
+.swap-hit-pick{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:8px 10px;border:0;background:transparent;color:#eef8ff;cursor:pointer}.swap-hit-pick:hover,.swap-hit-pick:focus{background:#24364d}
+.swap-hit-type{color:#a1b6c4;font-size:12px}.swap-chosen{color:#8ee3b4;font-size:12px}.swap-art{width:146px;border-radius:8px;justify-self:end}
+.swap-submit{margin-top:12px}
+@media(max-width:700px){.swap-row{grid-template-columns:1fr}.swap-art{justify-self:start}}
