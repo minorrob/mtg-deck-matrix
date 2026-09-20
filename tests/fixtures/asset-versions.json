@@ -86,8 +86,8 @@
       "sha": "93f348c107ea28c7"
     },
     "collection-model.js": {
-      "version": 35,
-      "sha": "bb7e92a47e1a6ee0"
+      "version": 36,
+      "sha": "5806897fe8831fc6"
     },
     "collection-repository.js": {
       "version": 4,
@@ -98,12 +98,12 @@
       "sha": "218a98465449d00c"
     },
     "crankmagic-advisor.js": {
-      "version": 9,
-      "sha": "46db16db726209b1"
+      "version": 10,
+      "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 219,
-      "sha": "b98565b984a772b4"
+      "version": 220,
+      "sha": "4c0859c937d696fa"
     },
     "crankmagic-assets.js": {
       "version": 30,
@@ -126,12 +126,12 @@
       "sha": "860a367f343bf895"
     },
     "crankmagic-collection.js": {
-      "version": 65,
-      "sha": "a9d5683056347d72"
+      "version": 66,
+      "sha": "01a56886a5f6bd37"
     },
     "crankmagic-decks.js": {
-      "version": 55,
-      "sha": "75ec91865788614e"
+      "version": 56,
+      "sha": "6fbab063e39b79dd"
     },
     "crankmagic-design.css": {
       "version": 5,
@@ -154,8 +154,8 @@
       "sha": "4435ee146e381a16"
     },
     "crankmagic-game.js": {
-      "version": 41,
-      "sha": "f4c4de1d8f312d58"
+      "version": 42,
+      "sha": "5adb2c91cd687c90"
     },
     "crankmagic-glossary.js": {
       "version": 2,
@@ -238,8 +238,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 219,
-      "sha": "76fde66c2c5575d8"
+      "version": 220,
+      "sha": "63c57a9cbffb2f0b"
     },
     "crankmagic-tabletop.js": {
       "version": 17,

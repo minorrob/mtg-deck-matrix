@@ -33,6 +33,12 @@
   const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
   const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
   const clone=value=>JSON.parse(JSON.stringify(value));
+  /* THE DATE A PERSON SEES IS THE LOCAL CALENDAR DATE. toISOString() is UTC, which at ten in the
+     evening in New York is already tomorrow: a game logged tonight was dated the day after it was
+     played, and a backup was named for a day that had not started. Data stamps compared across
+     machines (priceUpdated, importedAt) stay UTC; anything shown to or named for the reader comes
+     from here. */
+  const today=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const text=(value,max=500)=>String(value??'').trim().slice(0,max);
   const quantity=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<1||n>1000000)throw Error('Quantity must be a whole number between 1 and 1,000,000.');return n;};
   const ensure=(condition,message)=>{if(!condition)throw Error(message);};
@@ -620,5 +626,5 @@
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

@@ -1703,12 +1703,13 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
 
 
   C.HELP = C.HELP || {};
-  C.HELP.game = `<h3>What the lobby does</h3><ul>
+  /* The "?" reads {title, body}; a bare string here printed "undefined" over the dialog (D2). */
+  C.HELP.game = {title: "Play a game", body: `<h3>What the lobby does</h3><ul>
     <li><strong>Four seats.</strong> Host plus three opponent boxes. Opponents are Human, AI, or Open.</li>
     <li><strong>Human seats</strong> use Name, Email, Email Invite, and Copy Link. Guests bring their own decks.</li>
     <li><strong>Confirm</strong> locks bracket and Game Changer cap for the table summary.</li>
     <li><strong>Ready Up</strong> sits top-right on each decked seat. Ready stays blocked until names resolve in the catalog (~100) and the list fits the cap.</li>
     <li><strong>View cards</strong> opens the seated list. Decked seats show commander art and a type bar chart.</li>
     <li><strong>Build from Commander</strong> searches the catalog, then builds a 100 under this table's bracket and cap.</li>
-  </ul>`;
+  </ul>`};
 });
