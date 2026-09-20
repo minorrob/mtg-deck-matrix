@@ -120,7 +120,9 @@ export function renderConnectionPanel(readiness, options = {}) {
     : (tag, cls, text) => { const node = document.createElement(tag); if (cls) node.className = cls; if (text !== undefined) node.textContent = text; return node; };
   const d = describeReadiness(readiness, options);
   const panel = el("section", `connection-panel is-${d.tone}`);
-  panel.append(el("h2", "connection-title", d.ok || d.tone === "ok" ? "Everyone is here" : "Who we are waiting on"));
+  const title = d.tone === "ok" ? "Everyone is here" : d.tone === "starting" ? "Starting the game"
+    : d.tone === "failed" ? "The game did not start" : "Who we are waiting on";
+  panel.append(el("h2", "connection-title", title));
   panel.append(el("p", "connection-headline", d.headline));
   const list = el("ul", "connection-seats");
   for (const row of d.rows) {

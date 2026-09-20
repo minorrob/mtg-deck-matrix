@@ -147,7 +147,11 @@ test('the panel draws one row per seat with its state, detail and who-you-are, t
   const launching = renderConnectionPanel({...readinessOf(t), phase: 'starting', launch: {stage: 'bridge-green'}}, {el: fakeEl});
   assert.equal(launching.children.at(-1).className, 'connection-launch is-bridge-green');
   assert.equal(launching.children.at(-1).textContent, 'Rules engine connected');
-  assert.equal(launching.children[0].textContent, 'Who we are waiting on');
+  assert.equal(launching.children[0].textContent, 'Starting the game', 'the title follows the tone, not the seat list');
+  const failed = renderConnectionPanel({...readinessOf(t), phase: 'starting', launch: {stage: 'failed', reason: 'Forge exited'}}, {el: fakeEl});
+  assert.equal(failed.className, 'connection-panel is-failed');
+  assert.equal(failed.children[0].textContent, 'The game did not start');
+  assert.equal(failed.children.at(-1).textContent, 'The engine failed to start: Forge exited');
   const ok = renderConnectionPanel({phase: 'selecting', ok: true, table: [], seats: []}, {el: fakeEl});
   assert.equal(ok.className, 'connection-panel is-ok');
   assert.equal(ok.children[0].textContent, 'Everyone is here');
