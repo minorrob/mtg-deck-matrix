@@ -210,6 +210,26 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/white-space:nowrap/.test((css.match(/#cm-roster-table tbody td\{[^}]*\}/) || [""])[0]), "and their cells ellipsize rather than wrapping");
 }
 
+/* Track V.4d: the Explore entry (the guide's step 4, against screens/Gallery Explore Entry.dc.html).
+   The three doors existed as three buttons in a row under a one-line intro; they are three cards
+   now, each carrying its own color, under the sentence that says what the page is for. The
+   actions behind them are unchanged -- this is the entry read as an invitation rather than as a
+   toolbar. */
+{
+  const css = read("crankmagic.css"), disc = read("crankmagic-discover.js");
+  ok(/cm-explore-eyebrow/.test(disc), "the entry opens with the EXPLORE eyebrow");
+  ok(/cm-explore-head/.test(disc) && /cm-explore-search/.test(disc), "a heading beside its own search field");
+  const doors = (css.match(/\.cm-explore-doors\{[^}]*\}/) || [""])[0];
+  ok(/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/.test(doors), `the doors are three cards (found ${doors || "no rule"})`);
+  const door = (css.match(/\.cm-explore-door\{[^}]*\}/) || [""])[0];
+  ok(/min-height:300px/.test(door), "at the screen's height");
+  ok(/border-radius:20px|border-radius:var\(--v-radius-tile\)/.test(door), "and its radius");
+  /* Each door carries its own hue -- the buy color, the inbox color, the aether -- so the three
+     are told apart by more than their words. */
+  ok(/--door:/.test(disc), "each door names its own color");
+  ok(/Pick up where you left off/.test(disc), "and the recent scopes are an invitation, not a label");
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is

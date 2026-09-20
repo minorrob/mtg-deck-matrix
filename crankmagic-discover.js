@@ -251,25 +251,42 @@
     /* If no scope params, show the chooser instead of entering the graph. */
     if (!hasScope) {
       const recents = getRecentScopes();
-      C.main.innerHTML = C.pageHead('Discover', '', 'discover')
-        + `<div class="cm-explore-chooser">
-          <p class="cm-explore-intro">Explore cards from one of three doors:</p>
+      /* What each deck is shortest of, for the deck-gap door: the readiness figure that is
+         largest is the one worth opening the graph on. Three at most; the door is a door. */
+      const gapDecks = C.state.decks.filter((d) => !d.archived).slice(0, 3).map((d) => {
+        const r = C.M.readiness(C.state, d);
+        const worst = [[r.toBuy, 'to buy'], [r.standIns, 'standing in'], [r.ordered, 'ordered']].sort((a, b) => b[0] - a[0])[0];
+        return {name: d.name, note: worst && worst[0] ? worst[0] + ' ' + worst[1] : 'complete'};
+      });
+      C.main.innerHTML = `<div class="cm-explore-chooser">
+          <header class="cm-explore-head">
+            <div>
+              <p class="cm-explore-eyebrow">Explore</p>
+              <h1 class="cm-explore-title">Every card is joined to the cards it works with. Start anywhere.</h1>
+              <p class="cm-explore-sub">Follow a card into the cards it is joined to, read why each link is there, and take what you find into a deck.</p>
+            </div>
+            <label class="cm-explore-search">Find any card<input id="cm-entry-query" placeholder="Find any card…" data-action="explore-from-card-input"><kbd>/</kbd></label>
+          </header>
           <div class="cm-explore-doors">
-            <button type="button" class="v-button cm-explore-door" data-action="explore-from-deck">
-              <strong>From a deck gap</strong>
-              <span>Find cards to fill a need in one of your decks</span>
+            <button type="button" class="cm-explore-door" style="--door:var(--st-buy)" data-action="explore-from-deck">
+              <small>From a deck gap</small>
+              <strong>Fill a seat a deck is still missing</strong>
+              <span>Pick a deck and a role it runs light on. The graph shows what your commander is joined to that you do not hold yet.</span>
+              ${gapDecks.length ? `<ul class="cm-door-list">${gapDecks.map((g) => `<li><b>${e(g.name)}</b><i>${e(g.note)}</i></li>`).join('')}</ul>` : ''}
             </button>
-            <button type="button" class="v-button cm-explore-door" data-action="explore-from-commander">
-              <strong>From a commander</strong>
-              <span>Discover cards that fit a specific commander</span>
+            <button type="button" class="cm-explore-door" style="--door:var(--st-inbox)" data-action="explore-from-commander">
+              <small>From a commander</small>
+              <strong>See what a commander wants around it</strong>
+              <span>Yours, or any legal commander by name or EDHREC rank. Trace lights the deck from the commander outward.</span>
             </button>
-            <button type="button" class="v-button cm-explore-door" data-action="explore-from-card">
-              <strong>From a card</strong>
-              <span>Explore connections from any card in the catalog</span>
+            <button type="button" class="cm-explore-door" style="--door:var(--v-aether)" data-action="explore-from-card">
+              <small>From a card</small>
+              <strong>Follow any card into its connections</strong>
+              <span>Type a name or paste a Scryfall link. Two rings out, every join named, loops in gold.</span>
             </button>
           </div>
           ${recents.length ? `<div class="cm-explore-recents">
-            <p class="cm-muted">Recent scopes</p>
+            <p class="cm-explore-recents-label">Pick up where you left off</p>
             <div class="cm-explore-recent-chips">${recents.map((r) => `<button type="button" class="cm-chip" data-action="explore-recent" data-recent="${e(JSON.stringify(r))}">${e(r.label)}</button>`).join('')}
             <button type="button" class="cm-text-button compact" data-action="explore-clear-recents">Clear</button></div>
           </div>` : ''}

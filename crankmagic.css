@@ -31,6 +31,38 @@
 #cm-roster-table tbody td:first-child,#cm-roster-table tbody td:last-child{max-width:none;overflow:visible}
 @media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:640px){.cm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* THE EXPLORE ENTRY (Track V.4d, the guide's step 4, against screens/Gallery Explore Entry.dc.html).
+   The page says what it is for in one sentence, offers its own search, and then three doors as
+   cards rather than three buttons in a row. Each door carries its own hue in --door, so they are
+   told apart by more than their words, and the aether one is one of the four places blue still
+   means something. */
+.cm-explore-chooser{position:relative;max-width:1180px}
+.cm-explore-chooser:before{content:'';position:absolute;right:-60px;top:-80px;width:620px;height:420px;max-width:80%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 70% 30%,color-mix(in oklab,var(--v-aether) 18%,transparent),transparent 62%)}
+.cm-explore-head{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start;margin:0 0 28px}
+.cm-explore-eyebrow{margin:0 0 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--v-muted)}
+.cm-explore-title{font-size:clamp(30px,3.6vw,52px);line-height:1.04;letter-spacing:-.015em;margin:0;max-width:20ch}
+.cm-explore-sub{margin:14px 0 0;font-size:16px;line-height:1.5;color:var(--v-muted);max-width:56ch}
+.cm-explore-search{display:flex;align-items:center;gap:10px;position:relative;font-size:0;color:transparent}
+.cm-explore-search input{width:100%;min-height:52px;font-size:15px;padding:0 44px 0 16px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink)}
+.cm-explore-search kbd{position:absolute;right:14px;top:50%;transform:translateY(-50%);font:600 12px/1 var(--v-body);color:var(--v-muted);background:var(--v-raised);border:1px solid var(--v-line);border-radius:6px;padding:4px 7px}
+.cm-explore-doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.cm-explore-door{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:10px;text-align:left;min-height:300px;padding:24px;border-radius:20px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);cursor:pointer;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.cm-explore-door:hover{transform:translateY(-4px);border-color:var(--door,var(--v-accent));box-shadow:0 22px 44px -24px var(--door,var(--v-line))}
+.cm-explore-door small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--door,var(--v-muted))}
+.cm-explore-door strong{font-family:var(--v-display);font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.015em}
+/* The rule that used to sit above the heading now sits above the eyebrow. */
+.cm-door-list{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:6px;width:100%}
+.cm-door-list li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:12px;min-width:0}
+.cm-door-list b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-door-list i{font-style:normal;color:var(--door,var(--v-muted));white-space:nowrap}
+.cm-explore-door small:before{content:'';display:block;width:34px;height:4px;border-radius:var(--radius-pill);background:var(--door,var(--v-accent));margin-bottom:14px}
+.cm-explore-door span{font-size:14px;color:var(--v-muted);line-height:1.5}
+.cm-explore-recents{margin-top:26px}
+.cm-explore-recents-label{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--v-muted)}
+@media(max-width:1050px){.cm-explore-head{grid-template-columns:minmax(0,1fr);gap:18px}.cm-explore-doors{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.cm-explore-doors{grid-template-columns:minmax(0,1fr)}.cm-explore-door{min-height:0}}
+@media(prefers-reduced-motion:reduce){.cm-explore-door{transition:none}.cm-explore-door:hover{transform:none}}
 /* THE DECK PAGE (Track V.4b, the guide's step 4, against screens/Gallery Deck Page.dc.html).
    The hero puts the commander's own card beside the copy over a radial glow in the deck's tint;
    the tabs are a segmented control; and the Progress and Cost panel plus The hundred at a glance
@@ -2087,20 +2119,17 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* ------------------------------------------------------------------ EXPLORE CHOOSER (slice A)
    Entry point for scoped Discover: three doors (deck gap, commander, card) plus recent scopes
    as chips. Shown only when #discover has no scope params (deck/commander/card). */
-.cm-explore-chooser{max-width:64ch;margin:0 auto;padding:32px 20px}
-.cm-explore-intro{margin:0 0 20px;font-size:15px;color:var(--v-ink)}
-.cm-explore-doors{display:flex;flex-direction:column;gap:12px;margin:0 0 32px}
-.cm-explore-door{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px 18px;
-  text-align:left;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);
-  min-height:72px;cursor:pointer}
-.cm-explore-door:hover{background:var(--v-panel);border-color:var(--v-line)}
-.cm-explore-door strong{display:block;font-size:15px;font-weight:600;color:var(--v-text)}
-.cm-explore-door span{display:block;font-size:13px;color:var(--v-muted);line-height:1.4}
-.cm-explore-recents{margin:24px 0 0}
+
+
+
+
+
+
+
 .cm-explore-recents > p{margin:0 0 10px;font-size:13px;color:var(--v-muted)}
 .cm-explore-recent-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .cm-gap-intent{margin:4px 0 0;font-size:14px;color:var(--v-muted)}
-@media(max-width:640px){.cm-explore-chooser{padding:20px 16px}.cm-explore-doors{gap:10px}}
+@media(max-width:640px){}
 
 /* ------------------------------------------------------------------ NEW DECK WIZARD (Phase 1 PR3)
    Unified entry with three peer paths: Create, Import, Lab. */
