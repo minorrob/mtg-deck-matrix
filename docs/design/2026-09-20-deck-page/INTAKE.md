@@ -56,6 +56,12 @@ first colour; one status hue per rung; one primary per view. Information archite
    as an overlay) is a larger change to `crankmagic-game.js` and `game/ui/review.*` than a
    restyle. It is V.5, after the workshop, and sits beside the Online tracks (C.6, E.4).
 
+10. **One name, two tokens.** The handoff's `tokens/colors.css` defines `--text-body` as the ink
+    colour alias and `tokens/typography.css` defines `--text-body` as the 14 px body size; loaded
+    together, the size wins and the colour alias disappears. The app keeps them apart: the size is
+    `--text-body-size`, the alias stays `--text-body`. Ask the designer to rename one of them in
+    the source; `tests/design-tokens.mjs` pins the app's names.
+
 ## Mapping onto the code (what each V step touches)
 
 | Step | Handoff source | Repo files |
