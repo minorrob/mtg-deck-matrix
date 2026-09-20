@@ -187,6 +187,29 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/cm-tabs-segment/.test(css), "the tabs are a segmented control");
 }
 
+/* Track V.4c: the Library (the guide's step 4, against screens/Gallery Library.dc.html). The
+   seven counts were a wrapping ribbon of chips; they are a row of equal tiles now, each with its
+   figure in its status color over a dot and a label, and one caption line under them stating the
+   equation the seven figures make -- which is the guide's "Counts as tiles, not a ribbon", and
+   the reason the row could be read as a sentence rather than counted. The table keeps its
+   behaviour and gains the card, the uppercase header and rows that do not wrap. */
+{
+  const css = read("crankmagic.css"), col = read("crankmagic-collection.js");
+  /* By content, not by the first .cm-kpis in the file: the narrow breakpoints override the
+     column count, and matching the first rule found the four-column phone one. */
+  const tiles = (css.match(/\.cm-kpis\{[^}]*grid-template-columns:repeat\(7,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
+  ok(tiles, "the counts are seven equal tiles");
+  ok(/gap:8px/.test(tiles), `at the guide's gap (found ${tiles || "no rule"})`);
+  ok(/cm-kpi-caption/.test(col), "and one caption line states the equation the seven make");
+  ok(/font-family:var\(--v-display\)/.test((css.match(/\.cm-kpi strong\{[^}]*\}/) || [""])[0]), "the figure is in the display face");
+  /* The head's summary sentence, through the same pageHead the deck pages use. */
+  ok(/cm-cards-summary/.test(col), "the Library head carries its summary sentence");
+  /* Rows that never wrap (README, "Rows are one line tall"), and the table as a panel card. */
+  const row = (css.match(/#cm-roster-table tbody tr\{[^}]*\}/) || [""])[0];
+  ok(/min-height:56px/.test(row) || /height:56px/.test(row), `table rows are 56px (found ${row || "no rule"})`);
+  ok(/white-space:nowrap/.test((css.match(/#cm-roster-table tbody td\{[^}]*\}/) || [""])[0]), "and their cells ellipsize rather than wrapping");
+}
+
 /* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
    leaked into this repository's own writing. Every tracked document, test, stylesheet and script
    is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is

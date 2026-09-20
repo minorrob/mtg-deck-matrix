@@ -10,6 +10,27 @@
   background:var(--v-bg);color:var(--v-ink)}
 
 
+
+/* The tile itself, and the caption line that states the equation the seven figures make. */
+.cm-kpi{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px;padding:14px 12px;min-width:0;text-align:left;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);cursor:pointer}
+.cm-kpi:hover{background:var(--v-raised)}
+.cm-kpi>span{display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;color:var(--v-muted);line-height:1.25}
+.cm-kpi-dot{width:7px;height:7px;flex:0 0 7px;border-radius:var(--radius-pill);background:var(--st,var(--v-line))}
+.cm-kpi-caption{margin:0 0 16px;font-size:12px;color:var(--v-muted);line-height:1.5}
+.cm-cards-summary{margin:8px 0 0;color:var(--v-muted);font-size:15px;max-width:70ch}
+.cm-cards-summary b{color:var(--v-ink);font-weight:600}
+/* THE LIBRARY TABLE. A panel card at the card radius, an 11px uppercase header, and rows that
+   are one line tall and never wrap -- cells ellipsize instead, which is the README's "Rows are
+   one line tall". A wrapping row is what made a hundred records unreadable as a list. */
+#cm-roster-table>table,#cm-roster-table .cm-table-card{background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);overflow:hidden}
+#cm-roster-table thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--v-muted);white-space:nowrap}
+#cm-roster-table tbody tr{min-height:56px}
+#cm-roster-table tbody tr:hover{background:var(--v-raised)}
+#cm-roster-table tbody td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;vertical-align:middle;padding-top:10px;padding-bottom:10px}
+/* The ticks, the pips and the row's one verb are the cells that must not be squeezed to nothing. */
+#cm-roster-table tbody td:first-child,#cm-roster-table tbody td:last-child{max-width:none;overflow:visible}
+@media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:640px){.cm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* THE DECK PAGE (Track V.4b, the guide's step 4, against screens/Gallery Deck Page.dc.html).
    The hero puts the commander's own card beside the copy over a radial glow in the deck's tint;
    the tabs are a segmented control; and the Progress and Cost panel plus The hundred at a glance
@@ -1763,10 +1784,10 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* THE CARDS HEADER (Rob, 14 September): the counts as chips that filter, the views on the tab row. */
 .cm-tabs-views{margin-left:auto;padding:0 0 6px 12px;flex:0 0 auto}
 .cm-view-switch button[disabled]{opacity:.4;cursor:default}
-.cm-kpis{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:4px 0 14px}
+.cm-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:stretch;margin:4px 0 8px}
 .cm-kpi{display:inline-flex;align-items:baseline;gap:6px;padding:4px 10px 4px 8px;border-radius:var(--radius-pill);background:var(--v-bg);border:1px solid var(--color-raised);border-left:4px solid var(--st,var(--color-line));color:var(--color-ink);font:inherit;font-size:12px;cursor:pointer;min-height:28px}
-.cm-kpi strong{font-size:15px;font-variant-numeric:tabular-nums;color:var(--v-ink)}.cm-kpi span{color:var(--color-muted)}
-.cm-kpi:hover{border-color:var(--color-line)}.cm-kpi.is-on{background:var(--v-raised);border-color:var(--color-accent);color:#fff}.cm-kpi.is-on span{color:var(--color-ink)}
+.cm-kpi strong{font-family:var(--v-display);font-weight:400;font-size:26px;line-height:1;font-variant-numeric:tabular-nums;color:var(--st,var(--v-ink))}.cm-kpi span{color:var(--color-muted)}
+.cm-kpi:hover{border-color:var(--color-line)}.cm-kpi.is-on{background:color-mix(in oklab,var(--st,var(--v-accent)) 14%,var(--v-panel));border-color:var(--st,var(--v-accent))}.cm-kpi.is-on span{color:var(--color-ink)}
 .cm-kpi:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
 .cm-kpi-note{font-size:12px;color:var(--color-muted);margin-left:4px}
 @media(max-width:760px){.cm-tabs-views{width:100%;margin-left:0;padding:6px 0 8px}.cm-cards-tabs{flex-wrap:wrap}}

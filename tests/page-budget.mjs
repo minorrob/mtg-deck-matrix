@@ -56,9 +56,16 @@ const PAGES = [
      is looking. Raised deliberately; the next control on this page has to argue for itself.
      It read "Return to the Table" until he chose between the two names this button and the mat's
      own way out were using; his words won, in both places. */
-  ["cards", "Cards · Library", "#cm-roster-table table", [76, 27, 16], [76, 27, 16]],
-  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
-  ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
+  /* Track V.4c: cardsHead draws the Library's summary sentence -- "<n> copies you own, <n> of
+     them on the bench with no deck waiting on them" -- on every Cards view, because the guide's
+     "One head, one primary" gives every page one muted summary line. So the word budgets below
+     rise by that sentence and nothing else: Library 76 -> 84, To buy 40 -> 51 (16 -> 51 on a
+     phone, where the strip's own words are counted too), Sheet 46 -> 60, Orders 24 -> 35, Table
+     44 -> 61. Controls and explainer words do not move -- the seven count chips became seven
+     count tiles one for one, and no explainer was added. */
+  ["cards", "Cards · Library", "#cm-roster-table table", [84, 27, 16], [84, 27, 16]],
+  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [51, 18, 8], [51, 10, 4]],
+  ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [60, 16, 20], [60, 16, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
   /* Explore is two pages now, and this budget used to name only the second of them.
      #discover on its own became the scope chooser in Explore A -- three doors and the recent
@@ -76,7 +83,7 @@ const PAGES = [
   [`discover?commander=${EXPLORE_COMMANDER}`, "Explore · graph", "#cm-graph", [310, 24, 12], [310, 24, 12]],
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
-  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 11, 4], [24, 11, 4]],
+  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [35, 11, 4], [35, 11, 4]],
   /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,
      the three tabs, the view switch and the five filters — the mat itself carries no prose, which
      is the point of it: the words are on the cards. 40 words, 17 controls, and the same at both
@@ -84,7 +91,7 @@ const PAGES = [
   /* 44 / 18, not 40 / 17: "Back to Play Space" is the control Rob asked for by name after the
      corner arrow ended up wherever the open pile had pushed it (15 September). Raised
      deliberately; the next control on this page has to argue for itself. */
-  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [44, 18, 16], [44, 18, 16]],
+  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [61, 18, 16], [61, 18, 16]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 
