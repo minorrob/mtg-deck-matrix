@@ -93,7 +93,7 @@ function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.d
   const owned=lots.filter(l=>l.source==='owned'),estimated=owned.filter(l=>!Number.isFinite(l.paid)),paidOrList=owned.reduce((n,l)=>n+(Number.isFinite(l.paid)?l.paid:(C.card(l.cardId)?.price||0))*l.quantity,0);
   return `<section class="cm-deck-summary${tone}" aria-label="Deck progress and cost"><div class="cm-summary-col"><h3>Progress</h3><div class="cm-summary-figures">${fig(r.sleeved,'Physical deck','','inbox')}${r.standIns||r.remove?fig(r.standIns,`of them substitute${r.standIns===1?'':'s'}${r.remove?` · ${r.remove} to take out`:''}`,'','standin'):''}${fig(pullCount(r),'Ready to add','','pull')}${fig(r.ordered,'Ordered','','ordered')}${fig(r.toBuy,d.status==='draft'?'Not yet reserved':'To buy','','buy')}${fig(`${gc} / ${GC_LIMIT}`,'Game Changers')}</div>${C.readinessBar(r)}</div><div class="cm-summary-col cm-summary-cost"><h3>Cost</h3><div class="cm-summary-figures">${fig(C.money(r.costToFinish),'$ to finish')}${fig((estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100),'Paid so far','','',estimated.length?`${estimated.reduce((n,l)=>n+l.quantity,0)} owned cop${estimated.reduce((n,l)=>n+l.quantity,0)===1?'y has':'ies have'} no recorded price and count at list price. Set Paid on a row in Cards to replace the estimate.`:'')}${fig(C.money(r.marketValue),`Market value${pct!==null?` · ${Math.round(pct)}% of cap`:''}`)}${fig(cap===null?'—':C.money(cap),'Cap')}${fig(overCap,`line${overCap===1?'':'s'} over the 110% cap`,overCap?'cm-amber':'')}${dear?fig(dear,`card${dear===1?'':'s'} over ${C.money(perCard)}`,'cm-amber'):''}</div>${cap>0?`<div class="cm-budget-bar" role="img" aria-label="Market value ${Math.round(pct)}% of the cap"><i style="width:${Math.min(100,pct)}%"></i></div>`:''}</div></section>`;}
 actions.jump=el=>{const t=document.getElementById(el.dataset.target);if(!t)return;const bar=document.querySelector('.cm-jump'),top=t.getBoundingClientRect().top+scrollY-((bar?bar.getBoundingClientRect().height:0)+(matchMedia('(max-width:760px)').matches?54:0)+10);scrollTo({top,behavior:'smooth'});};
-views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}await overview(found);return;}const decks=C.state.decks.filter(d=>showArchived||!d.archived),picks=(C.state.preferences.comparisonPicks||[]).filter(id=>C.state.decks.some(d=>d.id===id));
+views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}await overview(found);return;}const decks=C.state.decks.filter(d=>showArchived||!d.archived),picks=[...(C.comparePicks||[])].filter(id=>C.state.decks.some(d=>d.id===id));
 /* THE SHOWCASE. The page opens on cards, not on a sentence: a fan of the reader's own
    commanders when they have decks, and three well-known ones while they do not. The fan
    is decoration -- it never claims a holding. */
@@ -349,7 +349,7 @@ actions['new-deck']=()=>{
 };
 /* CREATE PATH: commander picker and manual building */
 actions['wizard-create']=()=>{
-  dialog.close();
+  actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   const sources=filledGroups();
   if(!sources.length)return commanderDeck();
   const road=(how,groupId)=>{
@@ -379,7 +379,7 @@ actions['wizard-create']=()=>{
 };
 /* IMPORT PATH: file/paste import */
 actions['wizard-import']=()=>{
-  dialog.close();
+  actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   if(!C.importList)throw Error('The import module is not loaded. Reload the page.');
   C.importList({name:'New deck list',after:gid=>{
     const g=C.state.groups.find(x=>x.id===gid);
@@ -392,7 +392,7 @@ actions['wizard-import']=()=>{
 };
 /* LAB PATH: navigate to Lab for auto-build */
 actions['wizard-lab']=()=>{
-  dialog.close();
+  actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   go('lab');
 };
 actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.deckCap:225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
@@ -513,7 +513,7 @@ actions.archive=el=>C.skipping('archive')
    how many, the bracket it was played at, the card that won it and the card that sat dead in
    hand -- both pickers limited to the deck's own list. */
 actions['log-game']=el=>{const d=M.deck(C.state,el.dataset.deck),did=d.id,cards=d.slots.filter(r=>r.purpose==='main').map(r=>C.card(r.cardId)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name)).map(c=>[c.id,c.name]);
-  form('Log a real game',f('Date','playedAt',new Date().toISOString().slice(0,10),'type="date" required')+s('Outcome','outcome',[['win','Win'],['loss','Loss'],['draw','Draw'],['unfinished','Unfinished']],'win')+s('Finish','finish',[['','Not recorded'],1,2,3,4,5,6],'')+s('Pod size','pod',[['','Not recorded'],2,3,4,5,6],4)+s('Bracket','bracket',[['','Not recorded'],1,2,3,4,5],d.definition.baseBracket)+f('Turns (optional)','turns','','type="number" min="1" max="1000"')+s('Card that won it','mvpCardId',[['','—'],...cards],'')+s('Dead card in hand','deadCardId',[['','—'],...cards],'')+f('Opposing commanders / styles','opponents')+s('Your seat','seat',[['','Not recorded'],1,2,3,4],'')+`<label class="cm-full">What happened?<textarea name="notes" placeholder="Key plays, threat assessment, mulligans, mistakes or table agreements"></textarea></label>`,
+  form('Log a real game',f('Date','playedAt',M.today(),'type="date" required')+s('Outcome','outcome',[['win','Win'],['loss','Loss'],['draw','Draw'],['unfinished','Unfinished']],'win')+s('Finish','finish',[['','Not recorded'],1,2,3,4,5,6],'')+s('Pod size','pod',[['','Not recorded'],2,3,4,5,6],4)+s('Bracket','bracket',[['','Not recorded'],1,2,3,4,5],d.definition.baseBracket)+f('Turns (optional)','turns','','type="number" min="1" max="1000"')+s('Card that won it','mvpCardId',[['','—'],...cards],'')+s('Dead card in hand','deadCardId',[['','—'],...cards],'')+f('Opposing commanders / styles','opponents')+s('Your seat','seat',[['','Not recorded'],1,2,3,4],'')+`<label class="cm-full">What happened?<textarea name="notes" placeholder="Key plays, threat assessment, mulligans, mistakes or table agreements"></textarea></label>`,
     data=>Promise.resolve(commit({type:'game',deckId:did,outcome:data.outcome,playedAt:data.playedAt||undefined,finish:data.finish?Number(data.finish):null,pod:data.pod?Number(data.pod):null,bracket:data.bracket?Number(data.bracket):null,mvpCardId:data.mvpCardId||null,deadCardId:data.deadCardId||null,turns:data.turns?Number(data.turns):null,seat:data.seat?Number(data.seat):null,opponents:data.opponents,notes:data.notes})).then(()=>{if(C.route().view==='decks'&&C.route().params.get('deck')===did)go('decks',{deck:did,tab:'overview'});}),'Save game record');};
 /* THE RECORD, READ BACK. Games were write-only: logged and then only visible as JSON in a
    dialog. The card says the last-n W-L, the win rate with its n, dollars paid per win, and --

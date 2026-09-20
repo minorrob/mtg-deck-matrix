@@ -581,4 +581,9 @@ M.validate(s);checks++;
     `the live library has ${shortlisted.length} owned copies shortlisted for a deck; it had 0 when Watched was expanded`); checks++;
 }
 
+/* today() is the local calendar date, not UTC's (walkthrough D4). A date built in local time at
+   half past eleven at night is still that day; the UTC slice can say tomorrow. */
+assert.equal(M.today(new Date(2026,8,19,23,30)),'2026-09-19');checks++;
+assert.equal(M.today(new Date(2026,0,1,0,5)),'2026-01-01');checks++;
+assert.match(M.today(),/^\d{4}-\d{2}-\d{2}$/);checks++;
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);

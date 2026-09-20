@@ -821,7 +821,7 @@ actions['sheet-add']=()=>C.cardPicker('Add a card row to the spreadsheet',c=>{$(
 /* The Master's column order, so the file drops straight back into the workbook. */
 actions['sheet-csv']=()=>{const m=M.matrix(lens()),rows=sheetRows(m),decks=m.decks,cell=v=>/[",\r\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
   const lines=[['Card','Own','Buy Count','Ordered','Bench',...decks.map(d=>d.name+' T'),...decks.map(d=>d.name+' A')],...rows.map(r=>[r.card.name,r.own,r.toBuy,r.ordered,r.bench,...decks.map(d=>r.perDeck[d.id].t),...decks.map(d=>r.perDeck[d.id].boxed+r.perDeck[d.id].sub)])].map(l=>l.map(cell).join(','));
-  C.download(`CrankMagic-spreadsheet-${new Date().toISOString().slice(0,10)}.csv`,lines.join('\r\n'),'text/csv;charset=utf-8');C.notice(`Exported ${rows.length} row${rows.length===1?'':'s'}: Card, Own, Buy Count, Ordered, Bench, then T and A per deck. A is what is physically in the deck, substitutes included, like the Master's Actual.`);};
+  C.download(`CrankMagic-spreadsheet-${M.today()}.csv`,lines.join('\r\n'),'text/csv;charset=utf-8');C.notice(`Exported ${rows.length} row${rows.length===1?'':'s'}: Card, Own, Buy Count, Ordered, Bench, then T and A per deck. A is what is physically in the deck, substitutes included, like the Master's Actual.`);};
 /* THE TWO NUMBERS YOU CORRECT MOST. What a card cost you and how many arrived are the
  * facts a receipt changes, and routing a two-character edit through a dialog was the whole
  * friction. On a real copy they are cells you click and type in. Everything else in the
@@ -1017,7 +1017,7 @@ function orderCommands({lots,plans},order,shipping,arrive){
   return {commands,copies};
 }
 const orderForm=(title,submitLabel,onSubmit,{store=false}={})=>form(title,
-  s('Vendor','vendor',VENDORS.map(v=>[v,v]),store?VENDORS[0]:'TCGplayer')+f(store?'Receipt or note (optional)':'Order reference','ref','','maxlength="100"')+f('Shipping, spread across the lines ($)','shipping',store?'0':'','type="number" min="0" step="0.01"')+f(store?'Bought on':'Expected by','expectedBy',new Date().toISOString().slice(0,10),'type="date"'),
+  s('Vendor','vendor',VENDORS.map(v=>[v,v]),store?VENDORS[0]:'TCGplayer')+f(store?'Receipt or note (optional)':'Order reference','ref','','maxlength="100"')+f('Shipping, spread across the lines ($)','shipping',store?'0':'','type="number" min="0" step="0.01"')+f(store?'Bought on':'Expected by','expectedBy',M.today(),'type="date"'),
   onSubmit,submitLabel);
 actions['batch-order']=()=>{const split=pickedSplit();if(!split.lots.length&&!split.plans.length)throw Error('Tick at least one row first.');
   orderForm('Order the ticked cards','Review order',v=>{const order={id:'order:'+C.uid(),vendor:v.vendor,ref:v.ref,expectedBy:v.expectedBy};const {commands,copies}=orderCommands(split,order,Number(v.shipping)||0,false);
@@ -1137,7 +1137,7 @@ function stripHTML(matched){const need=matched.filter(r=>r.kind==='need'),price=
    visible To buy rows by card and says which decks want each one and how many. */
 actions['print-buy-list']=()=>{if(!globalThis.MtgShopExport)throw Error('The print module is not loaded.');
   const by=new Map();for(const r of visibleRows.filter(r=>r.kind==='need')){const deck=r.deckId?M.deck(C.state,r.deckId).name:'Unassigned';const row=by.get(r.cardId)||{name:r.card.name,color:groupLabel(r,'color'),type:r.card.typeLine.split('—')[0].trim(),price:r.card.price,need:0,ordered:0,inHand:0,deckNames:[],needByDeck:{}};row.need+=r.quantity;row.needByDeck[deck]=(row.needByDeck[deck]||0)+r.quantity;if(!row.deckNames.includes(deck))row.deckNames.push(deck);by.set(r.cardId,row);}
-  const [file]=MtgShopExport.build([...by.values()],{toBuy:true},{date:new Date().toISOString().slice(0,10),byDeck:true});
+  const [file]=MtgShopExport.build([...by.values()],{toBuy:true},{date:M.today(),byDeck:true});
   const url=URL.createObjectURL(new Blob([file.content],{type:file.mime}));const tab=window.open(url,'_blank');if(!tab)C.download(file.filename,file.content,file.mime);setTimeout(()=>URL.revokeObjectURL(url),60000);};
 function findRow(id){return visibleRows.find(r=>r.recordId===id)||lastRows.find(r=>r.recordId===id)||M.projection(lens()).find(r=>r.recordId===id);}
 
