@@ -2108,3 +2108,6 @@ button.cm-building { pointer-events: none; }
 .connection-seat.is-blocking:not(.is-ready){border-color:#c9a94a}.connection-seat.is-offline{border-color:#b04a4a}.connection-seat.is-offline .connection-state{color:#b04a4a}
 .connection-seat.is-quiet{border-color:#c9a94a}.connection-seat.is-quiet .connection-detail{color:#b0862e}.connection-seat.is-empty{opacity:.7;border-style:dashed}
 .connection-launch{margin:12px 0 0;color:#b0862e}.connection-launch.is-failed{color:#b04a4a}.connection-launch.is-bridge-green,.connection-launch.is-seated{color:#3d8f6a}
+
+/* A lobby deck's tile (UAT M-15): the pill that says so and the one button that promotes it. */
+.cm-tile-lobby{display:flex;align-items:center;gap:8px;padding:8px 12px 12px}
