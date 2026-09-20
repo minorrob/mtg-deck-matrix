@@ -2094,3 +2094,17 @@ body.cm-build-busy .cm-lobby-seat.cm-seat-building {
   outline-offset: 2px;
 }
 button.cm-building { pointer-events: none; }
+
+/* THE CONNECTION PANEL (readiness plan C.2), drawn in the Play lobby while a private table is
+   open on the local host: who the table is waiting on, by name and reason. The module that draws
+   it is game/ui/connection.mjs; these are the workshop's colors for it. */
+.cm-lobby-live:empty{display:none}.cm-lobby-live{margin-top:16px}
+.connection-panel{padding:16px 18px;border:1px solid var(--cm-line,#38546a);border-radius:12px;background:var(--cm-panel,#142434)}.connection-panel.is-ok{border-color:#3d8f6a}.connection-panel.is-failed{border-color:#b04a4a}.connection-panel.is-starting{border-color:#c9a94a}
+.connection-title{margin:0 0 4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;opacity:.8}.connection-headline{margin:0 0 12px;font-size:18px}.is-ok .connection-headline{color:#3d8f6a}.is-failed .connection-headline{color:#b04a4a}.is-starting .connection-headline{color:#b0862e}
+.connection-seats{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.connection-seat{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--cm-line,#38546a);border-radius:10px;font-size:14px}.connection-seat.is-you{outline:2px solid #38c9ff}
+.connection-seat .connection-kind{font-size:12px;opacity:.75}.connection-seat .connection-detail{font-size:12px;opacity:.85}
+.connection-seat.is-ready{border-color:#3d8f6a}.connection-seat.is-ready .connection-state{color:#3d8f6a}
+.connection-seat.is-blocking:not(.is-ready){border-color:#c9a94a}.connection-seat.is-offline{border-color:#b04a4a}.connection-seat.is-offline .connection-state{color:#b04a4a}
+.connection-seat.is-quiet{border-color:#c9a94a}.connection-seat.is-quiet .connection-detail{color:#b0862e}.connection-seat.is-empty{opacity:.7;border-style:dashed}
+.connection-launch{margin:12px 0 0;color:#b0862e}.connection-launch.is-failed{color:#b04a4a}.connection-launch.is-bridge-green,.connection-launch.is-seated{color:#3d8f6a}
