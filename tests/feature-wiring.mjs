@@ -102,4 +102,33 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
 }
 
+/* Track V.1b: the theme is a saved preference the shell applies, and User Functions can switch it. */
+{
+  const app = read("crankmagic-app.js");
+  ok(/dataset\.theme=state\.preferences&&state\.preferences\.theme==='light'\?'light':'dark'/.test(app), "render applies the saved theme to #matrix-v2");
+  ok(/actions\['toggle-theme'\]/.test(app), "and User Functions can switch it");
+  for (const f of ["index.html", "crankmagic.html"]) ok(/data-action="toggle-theme"/.test(read(f)), `${f}: the menu carries the theme switch`);
+  ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
+}
+
+/* AMERICAN ENGLISH, ALWAYS (Rob, 2026-09-20; AGENTS.md). The design handoff arrived in UK spelling and it
+   leaked into this repository's own writing. Every tracked document, test, stylesheet and script
+   is American English; the designer's verbatim handoff folder (docs/design/.../design_handoff_*) is
+   source material and exempt. The count below is the legacy total on the day the rule landed; it
+   only goes down, and a commit that adds a UK spelling anywhere fails here by file and word. */
+{
+  const {execFileSync} = await import("node:child_process");
+  const UK = /\b(colour|colours|coloured|centre|centred|recognise|recognised|recognises|normalise|normalised|honour|honours|favour|favourite|grey|licence|organise|organised|analyse|cancelled|behaviour|catalogue|towards|defence|programme|artefact|artefacts|initialise|serialise|customise|minimise|optimise|summarise|visualise|prioritise|realise|utilise|authorise|neighbour|flavour|labour|humour|theatre|metre|litre|manoeuvre|jewellery|travelling|modelling|labelled|signalling|fulfil|enrol|instalment|skilful|ageing|judgement|acknowledgement|amongst|whilst)\b/gi;
+  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
+  let total = 0; const byFile = [];
+  for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
+  const CEILING = 586;
+  ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
+  /* and nothing written today carries one */
+  for (const f of ["docs/design-intake-2026-09-20.md", "docs/handoff-fable-2026-09-20.md", "docs/design/2026-09-20-deck-page/INTAKE.md", "tests/design-tokens.mjs", "crankmagic-design.css"]) {
+    const hits = (read(f).match(UK) || []);
+    eq(hits, [], `${f} carries UK spellings: ${hits.join(", ")}`);
+  }
+}
+
 console.log(`feature-wiring: ${checks} checks passed — ${features.length} feature files read; dialogs bound, help entries titled, dates local, compare picks in memory.`);

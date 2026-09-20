@@ -10,7 +10,7 @@ pages and three Play lobby layouts, and the aether port.
 **Direction:** "Gallery". Dark by default ("Brass & Slate"), light as `[data-theme="light"]`
 ("Felt & Cream"). Young Serif display over Satoshi body. Header bar gone; a 216 px left rail with
 the wordmark and its aether mist. Commander art as the hero; each deck tinted by its commander's
-first colour; one status hue per rung; one primary per view. Information architecture unchanged.
+first color; one status hue per rung; one primary per view. Information architecture unchanged.
 
 ## What the handoff answers of the intake's six questions
 
@@ -18,10 +18,10 @@ first colour; one status hue per rung; one primary per view. Information archite
 |---|---|
 | Light and dark? | Both, dark default, one token set with two values |
 | The wordmark's aether | Kept, ported (`screens/aether.js`), moved behind the rail wordmark, blue reserved for it |
-| One palette for workshop and Online? | One. Play has its own chosen direction (2b, table-first, colour-identity fans) on the same tokens |
+| One palette for workshop and Online? | One. Play has its own chosen direction (2b, table-first, color-identity fans) on the same tokens |
 | Phone | Rail becomes a top row under 760 px; deck page gets a sticky bottom action bar; bento cards span full width |
 | Card art | Specified per surface: 3:4 poster tiles with a cropped hero, tilted physical card on the deck page, square thumbnail on Explore, fanned crops on the entry doors |
-| Status colours | Six rungs: inbox, pull, ordered, buy, standin, remove; the eleven status words stay, the colours collapse to these |
+| Status colors | Six rungs: inbox, pull, ordered, buy, standin, remove; the eleven status words stay, the colors collapse to these |
 
 ## Gaps and conflicts, for the designer and for Rob
 
@@ -57,8 +57,8 @@ first colour; one status hue per rung; one primary per view. Information archite
    restyle. It is V.5, after the workshop, and sits beside the Online tracks (C.6, E.4).
 
 10. **One name, two tokens.** The handoff's `tokens/colors.css` defines `--text-body` as the ink
-    colour alias and `tokens/typography.css` defines `--text-body` as the 14 px body size; loaded
-    together, the size wins and the colour alias disappears. The app keeps them apart: the size is
+    color alias and `tokens/typography.css` defines `--text-body` as the 14 px body size; loaded
+    together, the size wins and the color alias disappears. The app keeps them apart: the size is
     `--text-body-size`, the alias stays `--text-body`. Ask the designer to rename one of them in
     the source; `tests/design-tokens.mjs` pins the app's names.
 
@@ -70,7 +70,7 @@ first colour; one status hue per rung; one primary per view. Information archite
 | V.2 components | `guidelines/*.html`, README "Shape", "Motion", extrapolation rules 2–5, 9, 10 | `crankmagic-app.js` helpers (`pageHead`, `button`, `pill`, `note`, `field`, `select`, `form`, `modal`, `readinessBar`), the `v-` layer, count tiles, segmented tabs, chips, empty states |
 | V.3 shell | README "Shell", `screens/aether.js` | `index.html`, `crankmagic.html`, `crankmagic-brand.js`, the rail CSS, the phone top row, `Menu ▾` for Share / Feedback / User Functions; geometry checks rewritten |
 | V.4 surfaces | `screens/Gallery Decks`, `Gallery Deck Page`, `Gallery Library`, `Gallery Explore Entry`, `Gallery Explore`; wireframes 1a–1i, 3a–3d, 4a–4f | `crankmagic-decks.js`, `crankmagic-collection.js`, `crankmagic-discover.js`, `crankmagic-pull.js`, `crankmagic-change-ui.js`, `crankmagic-orders.js`, `crankmagic-lab.js`, dialogs |
-| V.4x behaviour | README "Interactions & state" | sortable headers, spreadsheet Sheet, quick-look links: each with a Node test |
+| V.4x behavior | README "Interactions & state" | sortable headers, spreadsheet Sheet, quick-look links: each with a Node test |
 | V.5 Play | wireframes 2a–2e, `table-sea.js` | `crankmagic-game.js`, `crankmagic-lobby.js` (any new arithmetic), `game/ui/*` |
 
 ## Order of work

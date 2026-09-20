@@ -106,6 +106,7 @@ Discover panel width, the tile menu, the User Functions split, the help style).
 | **V.3** | The shell: header, wordmark, sidebar, footer, phone layout | geometry at six widths; renders |
 | **V.4** | Surfaces, one PR each in the order Rob reads them: Decks home → deck page → Library → Lab → Explore → Play lobby → pull sheet and Make the change → dialogs | renders per surface, before and after, at 390 and 1136 |
 | **V.5** | Online pages (`game/ui`) brought onto the same tokens and components | renders of the guest lobby, host setup and table |
+| **V.5b (backlog)** | **The Game Host.** A host personality for the live game's announcements, in the spirit of the round announcer in the Dungeon Crawler Carl books: loud, in your face, video-game-like at the moments that call for it ("Now Player X is on their draw phase!", "Up next is Player Y!"), and pulling back once play is under way. It shapes the Up Next and Current Actions copy and the narration around play; a small punch on the announcements, not a running commentary. To be defined separately (Rob, 2026-09-20). | the copy set and its tone rules, reviewed in chat before any of it ships |
 
 **Where it sits:** Track V starts at V.0 the moment the handoff lands and runs ahead of W.4
 through W.7 for anything visual; W.4 (one number per concept) and the Online tracks (E.4, C.6)

@@ -53,6 +53,16 @@ squash whenever the commits carry their own reasoning and proof. Rob set this on
 2026-09-19; before that, merging was his alone. Closing someone else's PR is still not an
 agent's call unless the PR is superseded by one the agent opened and the report names it.
 
+## American English, always
+
+Everything written here is American English: prose, comments, commit messages, labels, tests,
+documents. Never the British spellings: write color, center, gray, license, organize,
+recognize, catalog, canceled, toward, and their kin, with the American endings. Sources arrive in UK style -- the Claude Design
+handoff did -- and are converted when quoted or applied; the designer's verbatim handoff folder
+under `docs/design/` is the one exemption, as source material. `tests/feature-wiring.mjs` counts
+UK spellings across tracked files and the count only goes down; a commit that adds one fails.
+Rob set this on 2026-09-20 and it applies to every tool he works with, not only this repository.
+
 ## Things no agent does
 
 - Force-push or rewrite history on a branch someone else has pulled.
