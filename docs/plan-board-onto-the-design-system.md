@@ -315,3 +315,41 @@ fires.
 
 This narrows Stage A.5 but does not close it: **Forge's own behavior in a four-player pod still has
 not been watched by anyone.** That remains the thing to check first and trust least.
+
+---
+
+## Stage A.5, the rules half: answered 2026-09-21, from Rob's own pod
+
+**The starting player DOES draw on turn one in a four-player pod. The predicted bug did not
+happen.**
+
+Read out of the match journal of the pod Rob was playing
+(`game/.local/games/2026-09-21T22-06-46-581Z/events.ndjson`), not asserted:
+
+```
+T1 DRAW  D5 Shadrix Aristocrats      · Library -> Hand  (Make a Stand)
+T2 DRAW  2nd D5 Shadrix Aristocrats  · Library -> Hand  (Thought Vessel)
+```
+
+Corroborated by the projection snapshots: the turn player's library fell 92 → 91 on turn 1, and
+again for the next player on turn 2. Forge applies CR 103.8a by table size, as it should.
+
+So the whole of the first-draw question is now settled: **skipped at two players, taken at four,
+and our two call sites both ask the table size before saying anything.**
+
+### The tool, and the false alarm it nearly raised
+
+`tools/first-draw-check.mjs` watches a live game and answers this question by itself. Its first
+version had the defect it was built to catch: pointed at the pod while it was still on its
+mulligans, it watched for eight seconds, saw no library fall, and announced **"THE BUG THIS WAS
+PREDICTED TO FIND"**. Nothing was wrong — the game had not dealt opening hands.
+
+**"No draw seen" and "no draw happened" are different facts.** The tool now returns `unknown`
+unless the watch actually covered turn 1's draw step, and refuses up front if started after it.
+`tests/first-draw-check.mjs` pins that apart, because a measuring tool that cries wolf is worse
+than no tool.
+
+### What is still Stage A.5
+
+The rules question is closed. **Playing a pod end to end is not** — that is Rob at the table,
+judging whether it is a game he wants to play, which is the checkpoint the stage exists for.
