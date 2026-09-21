@@ -32,6 +32,7 @@ const publicFiles=new Map([
   ['/live-poll.mjs',['text/javascript; charset=utf-8','live-poll.mjs']],
   ['/review.mjs',['text/javascript; charset=utf-8','review.mjs']],
   ['/review.css',['text/css; charset=utf-8','review.css']],
+  ['/crankmagic-design.css',['text/css; charset=utf-8','crankmagic-design.css']],
   ['/setup.mjs',['text/javascript; charset=utf-8','setup.mjs']],
   ['/setup.css',['text/css; charset=utf-8','setup.css']],
   ['/online.css',['text/css; charset=utf-8','online.css']],

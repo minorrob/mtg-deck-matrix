@@ -46,7 +46,7 @@ function tokensIn(css, selectorRe) {
 {
   const handoff = read(HANDOFF + "colors.css");
   const hDark = tokensIn(handoff, /^:root$/), hLight = tokensIn(handoff, /^\[data-theme="light"\]$/);
-  const aDark = tokensIn(design, /^#matrix-v2$/), aLight = tokensIn(design, /^#matrix-v2\[data-theme="light"\]$/);
+  const aDark = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/), aLight = tokensIn(design, /(?:^|,)\s*#matrix-v2\[data-theme="light"\]\s*$/);
   const named = [...hDark.keys()].filter((k) => /^--(color|mana|st)-/.test(k));
   ok(named.length >= 21, `the handoff defines the color tokens (${named.length})`);
   const missingDark = named.filter((k) => aDark.get(k) !== hDark.get(k)).map((k) => `${k}: app ${aDark.get(k) || "(absent)"}, handoff ${hDark.get(k)}`);
@@ -62,7 +62,7 @@ function tokensIn(css, selectorRe) {
 /* The shape and type tokens, by name. */
 {
   const shape = tokensIn(read(HANDOFF + "shape.css"), /^:root$/), type = tokensIn(read(HANDOFF + "typography.css"), /^:root$/);
-  const app = tokensIn(design, /^#matrix-v2$/);
+  const app = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/);
   /* The handoff names both the body color alias and the body size --text-body; the app keeps
      the size as --text-body-size (INTAKE.md, gap 10). */
   const rename = {"--text-body": "--text-body-size"};
@@ -77,7 +77,7 @@ function tokensIn(css, selectorRe) {
  * resolves to a --color-* or a color-mix of one rather than carrying a literal of its own.
  */
 {
-  const app = tokensIn(design, /^#matrix-v2$/);
+  const app = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/);
   const extended = [
     "--v-bg", "--v-panel", "--v-raised", "--v-field", "--v-field-line", "--v-line", "--v-line-strong",
     "--v-ink", "--v-muted", "--v-accent", "--v-on", "--v-soft", "--v-aether", "--v-money",
@@ -119,7 +119,7 @@ function tokensIn(css, selectorRe) {
   for (const f of ["assets/crankmagic/youngserif-400.woff2", "assets/crankmagic/youngserif-400-ext.woff2", "assets/crankmagic/youngserif-OFL.txt"]) {
     ok(readFileSync(path.join(ROOT, f)).length > 0, `${f} is in the repository`);
   }
-  const app = tokensIn(design, /^#matrix-v2$/);
+  const app = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/);
   ok(/Young Serif/.test(app.get("--font-display") || ""), `--font-display names Young Serif (found ${app.get("--font-display")})`);
   ok(app.get("--v-display") === "var(--font-display)", "--v-display is the same face, by reference, not a second declaration");
   for (const f of ["index.html", "crankmagic.html", "crankmagic-design.css", "crankmagic.css"]) {
@@ -161,7 +161,7 @@ function tokensIn(css, selectorRe) {
      sweep deliberately did not touch -- the flame icon's three gradient stops, the five-step
      rarity scale, the tabletop felt and shelf, and the colorless mana disc, for which the token
      set has no --mana-C. Those are named in the sweep's KEEP list and on the designer's gap list. */
-  const CEILING = {"crankmagic.css": 137, "game/ui": 475};
+  const CEILING = {"crankmagic.css": 137, "game/ui": 463};
   /* THE CANVAS IS A STYLESHEET TOO (Track V.4g). crankmagic-graph.js painted the Explore graph
      from 38 literals of the pre-Gallery navy, and no ceiling in this file could see them, because
      every ceiling here reads a .css file. That is how one page stayed entirely blue through a
@@ -179,6 +179,27 @@ function tokensIn(css, selectorRe) {
   const outside = design.replace(/#matrix-v2(\[data-theme="light"\])?\{[^}]*\}/g, "");
   const stray = hex(outside);
   ok(stray <= 31, `crankmagic-design.css has ${stray} raw hex colors outside its token blocks (ceiling 31, only goes down)`);
+}
+
+/* 3. THE PLAY BOARD CAN READ THE PALETTE (Stage B.0).
+ *
+ * Rob, 2026-09-21: "The game screen is still not the new design." It was not drift. Every one of
+ * this sheet's rules is scoped to #matrix-v2 -- and so were the tokens -- while the board's root
+ * carries no such id, so the board could not read a single value. It had 463 raw hex and zero
+ * tokens because it had no other option.
+ *
+ * Naming :root as well publishes the VALUES without publishing the RULES: the board inherits the
+ * palette and inherits no element styling. These two checks are what stop that being undone.
+ */
+{
+  const design2 = read("crankmagic-design.css");
+  ok(/:root\s*,\s*#matrix-v2\s*\{/.test(design2),
+    "crankmagic-design.css must publish its tokens at :root as well as #matrix-v2, or the play board cannot read one of them");
+  ok(/:root\[data-theme="light"\]\s*,/.test(design2),
+    "the light theme's tokens are published at :root too, or the board's light mode has no palette");
+  const board = read("game/ui/review.html");
+  ok(board.includes("crankmagic-design.css"),
+    "game/ui/review.html must load crankmagic-design.css, or :root carries the tokens and the board still never sees them");
 }
 
 console.log(`design-tokens: ${checks} checks passed — the Gallery tokens match the handoff in both themes, and raw hex only goes down.`);

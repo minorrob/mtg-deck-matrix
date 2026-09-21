@@ -31,6 +31,7 @@ files.set('/live-poll.mjs',['game/ui/live-poll.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
 files.set('/play-guidance.mjs',['game/ui/play-guidance.mjs','text/javascript']);
 files.set('/action-policy.mjs',['game/ui/action-policy.mjs','text/javascript']);
+files.set('/crankmagic-design.css',['crankmagic-design.css','text/css']);
 files.set('/card-layout.mjs',['game/ui/card-layout.mjs','text/javascript']);
 for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
 files.set('/mats.css',['game/ui/mats.css','text/css']);
@@ -52,7 +53,7 @@ for(const path of publicPaths)files.set('/app/'+path,[path,mime[path.split('.').
 files.set('/app/',['index.html','text/html']);
 const guestAssets=new Map([
   ...['guest.html','guest.mjs','guest.css','connection.mjs','unresolved.mjs','review.html','guest-play-boot.js','play-entry.mjs','guest-live.mjs','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
-  ['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
+  ['crankmagic-design.css','crankmagic-design.css'],['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])
 ]);
