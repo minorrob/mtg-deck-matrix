@@ -39,6 +39,28 @@ const PAIRS = {
       {name: "commander name", app: ".cm-deck-tile h3", screen: "article h3", what: ["fontSize", "lineHeight"]},
     ],
   },
+  "Gallery Deck Page": {
+    route: "decks?deck=FIRST",
+    wait: ".cm-bento",
+    items: [
+      {name: "hero grid", app: ".cm-deck-hero", screen: "grid:2", what: ["x", "width", "columnGap"]},
+      {name: "commander card", app: ".cm-deck-hero-card img", screen: "img[alt='Krenko, Mob Boss']", what: ["width", "borderRadius"]},
+      {name: "deck name", app: ".cm-deck-hero-copy h1", screen: "h1", what: ["fontSize", "lineHeight"]},
+      {name: "the bento", app: ".cm-bento", screen: "grid:6", what: ["x", "width", "columnGap", "rowGap"]},
+      {name: "a bento card", app: ".cm-bento-progress", screen: "grid:6 > *:nth-child(2)", what: ["width", "borderRadius", "paddingTop"]},
+      {name: "Next card", app: ".cm-bento-next", screen: "grid:6 > *:first-child", what: ["width", "height"]},
+    ],
+  },
+  "Gallery Explore Entry": {
+    route: "discover",
+    wait: ".cm-explore-doors",
+    items: [
+      {name: "entry heading", app: ".cm-explore-title", screen: "h1", what: ["fontSize", "lineHeight"]},
+      {name: "head grid", app: ".cm-explore-head", screen: "[style*='380px']", what: ["x", "width", "columnGap"]},
+      {name: "the doors", app: ".cm-explore-doors", screen: "[style*='repeat(3']", what: ["x", "width", "columnGap"]},
+      {name: "a door", app: ".cm-explore-door", screen: "[style*='repeat(3'] > *:first-child", what: ["width", "height", "borderRadius"]},
+    ],
+  },
   "Gallery Library": {
     route: "cards",
     wait: "#cm-roster-table table",
@@ -52,8 +74,30 @@ const PAIRS = {
 
 const px = (v) => Math.round(parseFloat(v) || 0);
 /* One argument, because page.evaluate passes exactly one: the pair arrives as an array. */
+/* A selector, or "grid:N" — the element whose computed grid-template-columns has N tracks.
+   The screens are rendered from templates and their style attributes are re-serialised, so a
+   [style*=] match tests the source rather than the DOM. What a bento is, is six tracks. */
 const readBox = ([sel, what]) => {
-  const el = document.querySelector(sel);
+  const find = (q) => {
+    const child = /^grid:(\d+) > (.+)$/.exec(q);
+    if (child) { const host = find("grid:" + child[1]); return host ? host.querySelector(":scope > " + child[2]) : null; }
+    const m = /^grid:(\d+)$/.exec(q);
+    if (!m) return document.querySelector(q);
+    const want = Number(m[1]);
+    for (const node of document.querySelectorAll("*")) {
+      const cols = getComputedStyle(node).gridTemplateColumns;
+      /* The shell is a two-track grid too — the 216px rail and the main beside it — and it comes
+         first in the document, so an unqualified "grid:2" found the page rather than the hero
+         inside it. The rail is what identifies the shell, so skip any grid whose first track is
+         it. This is the difference between measuring a thing and measuring its container. */
+      if (!cols || cols === "none") continue;
+      const tracks = cols.trim().split(/\s+/);
+      if (/^2[01][0-9](\.\d+)?px$/.test(tracks[0])) continue;
+      if (tracks.length === want && node.getBoundingClientRect().width > 200) return node;
+    }
+    return null;
+  };
+  const el = find(sel);
   if (!el) return null;
   const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
   const out = {};
@@ -102,7 +146,11 @@ try {
     if (!spec) { console.log(`  ${name}: no pairs defined`); continue; }
     console.log(`\n${name} — the app against screens/${name}.dc.html at ${WIDTH}px`);
 
-    await page.goto(`${appBase}/index.html#${spec.route}`);
+    /* FIRST is the library's first deck, the same substitution tools/render-routes.mjs makes:
+       a deck page cannot be opened without naming a deck, and naming one in this file would
+       tie the comparison to one library. */
+    const firstDeck = await page.evaluate(() => { const a = document.querySelector('[data-action="deck"][data-deck]'); return a ? a.dataset.deck : ''; }).catch(() => '');
+    await page.goto(`${appBase}/index.html#${spec.route.replace('FIRST', encodeURIComponent(firstDeck))}`);
     await page.locator("#cm-main").waitFor({timeout: 30000});
     await page.locator(".cm-starting").waitFor({state: "detached", timeout: 30000}).catch(() => {});
     await page.locator(spec.wait).first().waitFor({timeout: 30000}).catch(() => {});
