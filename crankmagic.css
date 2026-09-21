@@ -48,20 +48,48 @@
 .cm-seat-q{position:relative;isolation:isolate;min-width:0;overflow:hidden;background:var(--v-panel)}
 /* The sea fills the quadrant and stays behind everything; the fan is over it and under the seat. */
 .cm-seat-sea{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
-.cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.6;pointer-events:none}
+.cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.62;pointer-events:none;mix-blend-mode:screen}
 .cm-seat-body{position:relative;z-index:2;height:100%;display:flex;min-width:0}
 /* The seat's own card keeps every class and handler it had; what changes is that it sits on the
    table rather than in a row, and its ground is the sea rather than a panel. */
-.cm-seat-body .cm-lobby-seat{flex:1 1 auto;min-width:0;align-self:start;background:color-mix(in srgb,var(--v-bg) 70%,transparent);backdrop-filter:blur(4px);border:1px solid var(--v-line);border-radius:var(--v-radius-card);margin:0;padding:14px 16px;overflow:auto;max-height:100%}
+/* No panel: the element and the fan are the seat's ground, and text sits over them with its
+   own shadow rather than behind a sheet of frosted glass. */
+.cm-seat-body .cm-lobby-seat{flex:1 1 auto;min-width:0;align-self:stretch;background:none;backdrop-filter:none;border:0;border-radius:0;margin:0;padding:0;display:flex;flex-direction:column;min-height:0}
+.cm-seat-q .cm-lobby-seat>header{order:-1;display:inline-flex;align-self:flex-start;align-items:center;gap:10px;padding:7px 11px;background:color-mix(in srgb,var(--poster-ground) 52%,transparent);backdrop-filter:blur(5px);border-radius:var(--radius-pill);margin:0 0 auto;max-width:100%}
+.cm-q-bl .cm-lobby-seat>header,.cm-q-tl .cm-lobby-seat>header{align-self:flex-end}
+.cm-seat-q .cm-lobby-seat h3{font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0}
+.cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
+.cm-seat-q .cm-lobby-ready{margin-left:auto}
+/* The deck audit is a disclosure, not the seat. The wireframe shows a commander, one line
+   about it, and the actions that belong to that player. */
+.cm-seat-q .cm-lobby-figs{display:none}
+.cm-seat-q .cm-lobby-sim{display:none}
+.cm-seat-q .cm-lobby-under{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent);text-shadow:0 1px 3px var(--poster-ground)}
+.cm-seat-q .cm-lobby-under-full{margin-top:8px}
+.cm-seat-q .cm-lobby-under-row{gap:6px}
+.cm-seat-q .cm-lobby-under-row .v-button{min-height:30px;padding:0 10px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 55%,transparent);border-color:color-mix(in srgb,var(--poster-ink) 26%,transparent);color:var(--poster-ink);backdrop-filter:blur(4px)}
+/* A seat that is not yours is state, not controls (DELTA B.4). */
+.cm-seat-q:not(.is-you) .cm-lobby-under-row{display:none}
 .cm-seat-q.is-absent .cm-seat-body{align-items:center;justify-content:center}
 /* Which way a quadrant faces. The inner corner is the one named; the seat is pushed away from it
    so the center panel overlaps only the sea. */
-.cm-q-br .cm-seat-body{padding:12px 30% 30% 12px}
-.cm-q-bl .cm-seat-body{padding:12px 12px 30% 30%}
-.cm-q-tr .cm-seat-body{padding:30% 30% 12px 12px}
-.cm-q-tl .cm-seat-body{padding:30% 12px 12px 30%}
+.cm-q-br .cm-seat-body{padding:10px}
+.cm-q-bl .cm-seat-body{padding:10px}
+.cm-q-tr .cm-seat-body{padding:10px}
+.cm-q-tl .cm-seat-body{padding:10px}
 /* The center panel: the rules every player reads and the one line that replaced Launch. */
-.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:min(30%,330px);min-width:210px;padding:18px 20px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line);box-shadow:0 18px 44px -20px var(--poster-ground)}
+/* Wireframe 2b draws the center panel as a WHITE card over the table, not a dark one: it is the
+   one thing on the table that belongs to nobody's seat, and white is how it says so. It keeps
+   its own ink regardless of theme for the same reason the deck tile's foot does -- it sits over
+   four colored status elements, and a panel that flipped with the theme would be legible over
+   two of them and not the other two. */
+.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:min(28%,320px);min-width:210px;padding:16px 18px 14px;border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
+.cm-table-center h2{font-size:15px;margin:0 0 10px;color:var(--table-ink)}
+.cm-table-setby-top{position:absolute;top:16px;right:18px;margin:0;font-size:11px;color:color-mix(in srgb,var(--table-ink) 50%,transparent)}
+.cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent)}
+.cm-table-rules dd{color:var(--table-ink)}
+/* The launch line is a box, not a sentence: it is the table speaking, not the host. */
+.cm-table-launch{margin:12px 0 0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center}
 .cm-table-center h2{font-size:16px;margin:0 0 12px}
 .cm-table-rules{display:grid;gap:6px;margin:0 0 12px}
 .cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px}

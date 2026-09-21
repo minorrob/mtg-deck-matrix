@@ -811,14 +811,15 @@
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
       : 'Every seat is ready. The table starts itself.';
     return `<section class="cm-table-center" aria-label="Table rules">
-      <h2>The rules of this table</h2>
+      <p class="cm-table-setby-top">set by the host</p>
+      <h2>Table rules</h2>
       <dl class="cm-table-rules">
         <div><dt>Bracket</dt><dd>${e(String(lobby.bracket || 3))}</dd></div>
         <div><dt>Game Changer cap</dt><dd>${e(lobby.cap === '' || lobby.cap === undefined ? 'the bracket default' : String(lobby.cap))}</dd></div>
         <div><dt>Seats</dt><dd>${w.seated} of ${L.MAX_SEATS}</dd></div>
+        <div><dt>Remote guests</dt><dd>${lobby.opponents.some((o) => o && o.role === 'human') ? 'on' : 'off'}</dd></div>
       </dl>
       <p class="cm-table-launch" role="status">${e(line)}</p>
-      <p class="cm-muted cm-table-setby">Set by the host, under Host tools.</p>
     </section>`;
   }
 
