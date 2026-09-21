@@ -217,4 +217,44 @@ check("no lobby selector is declared twice in crankmagic.css", () => {
   assert.deepEqual(dupes, [], "a later copy of a selector silently beats the earlier one");
 });
 
+/* ------------------------------------------------------------- the table fills the width it has */
+
+// From Rob's testing, 2026-09-21: "Each seat should be wider, and the whole lobby dynamically
+// adjust size to always fill the width of the screen ... When adjusting seat width, it should
+// maintain aspect ratio."
+//
+// A height cap on an element with a fixed aspect-ratio silently caps its WIDTH too: the box
+// shrinks in both directions to honor the ratio. `max-height:72vh` was doing exactly that, so on
+// a tall window the table stopped well short of the content column while the panel below it ran
+// the full width. The ratio is the thing to keep; the cap is the thing to drop.
+check("the table is not height-capped, which would cap its width", () => {
+  const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "no base rule for the lobby table");
+  assert.match(rule[1], /aspect-ratio:/, "the table keeps a ratio, so seats keep theirs");
+  assert.ok(!/max-height:\s*[\d.]+(vh|vw|px)/.test(rule[1]),
+    "a height cap on a fixed-ratio box caps its width as well, so the table stops short of the page");
+});
+
+// A 2x2 grid divides both dimensions, so a quadrant carries the same ratio as the table. Rob:
+// "the middle Table Rules box should be the same aspect ratio as the seats."
+check("the table's card carries a seat's aspect ratio", () => {
+  const table = /\.cm-lobby-table\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
+  const card = /\.cm-table-center\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
+  assert.ok(card, "the table's card needs an aspect-ratio of its own");
+  const ratio = (m) => Number(m[1]) / Number(m[2]);
+  assert.ok(Math.abs(ratio(table) - ratio(card)) < 0.02,
+    `a quadrant is ${ratio(table).toFixed(3)} and the card is ${ratio(card).toFixed(3)}`);
+});
+
+// A px ceiling on the card's width stops it growing with the table, so on a wide screen the card
+// shrinks against its own seats.
+check("the table's card scales with the table", () => {
+  const rule = /\.cm-table-center\{([^}]*)\}/.exec(css);
+  const width = /width:\s*([^;]+)/.exec(rule[1]);
+  assert.ok(width, "the card needs a width");
+  assert.ok(!/min\(\s*[\d.]+%\s*,\s*[\d.]+px\s*\)/.test(width[1]),
+    `width ${width[1]} caps the card in px, so it stops growing while its seats keep going`);
+  assert.match(width[1], /%/, "the card's width is a share of the table");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
