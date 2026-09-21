@@ -103,24 +103,56 @@ try {
       `${seen.label} · ${seen.pill} · ${seen.controls.length} controls: ${seen.controls.join(" | ").slice(0, 120)}`);
   }
 
-  /* ---- 3. every deck source on an AI seat ---- */
+  /* ---- 3. every deck source on an AI seat ----
+     The configurator opens OVER the table now (wireframe 2d), because six fields in a ~390px
+     quadrant clipped. So the probe opens it the way a person does, rather than reaching into a
+     quadrant for a control that is no longer there. */
   await setRole(0, "ai");
-  for (const from of ["library", "paste", "generated"]) {
-    const shown = await page.evaluate((f) => {
-      const sel = document.querySelector('.cm-seat-q select[name=inlineFrom]');
-      if (!sel) return {err: "no source select on the AI quadrant"};
-      sel.value = f; sel.dispatchEvent(new Event("change", {bubbles: true}));
-      return null;
-    }, from);
-    if (shown && shown.err) { say("source", from, false, shown.err); continue; }
-    await page.waitForTimeout(900);
-    const state = await page.evaluate(() => {
-      const q = document.querySelector(".cm-seat-q");
-      const vis = [...q.querySelectorAll("button,select,input,textarea")].filter((x) => x.offsetParent !== null);
-      return {n: vis.length, names: vis.map((x) => x.name || (x.textContent || "").trim()).filter(Boolean).slice(0, 8)};
-    });
-    say("source", `AI seat, source "${from}"`, state.n > 1, `${state.n} visible: ${state.names.join(" | ")}`);
+  const opener = page.locator('[data-action="lobby-setup-seat"]').first();
+  say("setup", "an AI seat offers its own form", await opener.count() > 0,
+    (await page.locator(".cm-seat-controls .v-button").allTextContents()).slice(0, 4).join(" | "));
+  if (await opener.count()) {
+    await opener.click();
+    await page.waitForTimeout(1200);
+    for (const from of ["library", "paste", "generated"]) {
+      const shown = await page.evaluate((f) => {
+        const sel = document.querySelector('#cm-dialog select[name=inlineFrom]');
+        if (!sel) return {err: "no source select in the seat dialog"};
+        sel.value = f; sel.dispatchEvent(new Event("change", {bubbles: true}));
+        return null;
+      }, from);
+      if (shown && shown.err) { say("source", from, false, shown.err); continue; }
+      await page.waitForTimeout(900);
+      const state = await page.evaluate(() => {
+        const d = document.querySelector("#cm-dialog");
+        const vis = [...d.querySelectorAll("button,select,input,textarea")].filter((x) => x.offsetParent !== null);
+        /* nothing in a dialog should be clipped by its own box */
+        const box = d.getBoundingClientRect();
+        const clipped = vis.filter((x) => { const r = x.getBoundingClientRect(); return r.bottom > box.bottom + 1 || r.right > box.right + 1; }).length;
+        return {n: vis.length, clipped, names: vis.map((x) => x.name || (x.textContent || "").trim()).filter(Boolean).slice(0, 8)};
+      });
+      say("source", `AI seat, source "${from}"`, state.n > 1 && state.clipped === 0,
+        `${state.n} visible, ${state.clipped} clipped: ${state.names.join(" | ")}`);
+    }
+    await page.evaluate(() => { const d = document.querySelector("dialog[open]"); if (d) d.close(); });
+    await page.waitForTimeout(400);
   }
+
+  /* ---- 3b. the way back from a chosen role ---- */
+  const back = page.locator('[data-action="lobby-seat-back"]').first();
+  if (await back.count()) {
+    await back.click();
+    await page.waitForTimeout(900);
+    /* Scoped to the seat that went back. Seat 1 is YOU and is drawn first now, so an unscoped
+       query over .cm-seat-q returns the host's own controls and says nothing about seat 2. */
+    const offered = await page.evaluate(() => {
+      const seat = document.querySelector('[data-opp="0"]');
+      const quad = seat ? seat.closest(".cm-seat-q") : null;
+      return quad ? [...quad.querySelectorAll(".v-button")].map((b) => b.textContent.trim()).filter(Boolean).slice(0, 3) : ["(seat 2 not found)"];
+    });
+    say("back", "a chosen seat type can be changed back", offered.some((t) => /Invite someone|Seat an AI/.test(t)),
+      offered.join(" | "));
+  } else say("back", "a chosen seat type can be changed back", false, "no way back from the role choice");
 
   /* ---- 4. Choose mat ---- */
   await page.evaluate(() => { const d = document.querySelector("dialog[open]"); if (d) d.close(); });

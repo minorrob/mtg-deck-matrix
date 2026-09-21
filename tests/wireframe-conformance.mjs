@@ -534,4 +534,48 @@ check("a host that does not answer says so in words, not a status code", () => {
   assert.match(api[0], /game host/i, "and say what is missing there");
 });
 
+/* ------------------------------------------------------ where the seats sit, and batch 8 */
+
+// From Rob's testing, 2026-09-21: "the order of seats should be 1 in top left, 2 top right, 3
+// bottom left and 4 bottom right."
+//
+// This supersedes the README, which reads "in the order they sit (2 · 3 / 4 · 1, you
+// bottom-right)". Reading order beats table order for him, and it is his product.
+//
+// `.cm-q-XX` names a quadrant's INNER corner -- the one touching the table's card -- not its
+// position, so the mapping is the mirror of the position: top-left sits against br, top-right
+// against bl, bottom-left against tr, bottom-right against tl. Every CSS rule keyed on those
+// classes therefore keeps working unchanged, which is the point of naming them that way.
+check("the seats read 1, 2, 3, 4 across the table", () => {
+  const table = /const seats = `<div class="cm-lobby-table">([\s\S]*?)<\/div>`;/.exec(game);
+  assert.ok(table, "the table template not found");
+  const order = [...table[1].matchAll(/(oppQuad\((\d)|quadrant\()\s*,?\s*'(\w\w)'/g)].map((m) => m[3]);
+  assert.deepEqual(order, ["br", "bl", "tr", "tl"],
+    "top-left, top-right, bottom-left, bottom-right — named by the inner corner each one touches");
+  const first = table[1].indexOf("is-you");
+  assert.ok(first > -1 && first < table[1].indexOf("oppQuad"),
+    "you are seat 1, so you are drawn first, in the top left");
+});
+
+// "Top left getting cut off. I had pressed Clear the Table, then I selected AI in the top left,
+// and see this screen" — the AI configurator is a six-field form and a quadrant is about 390px
+// tall, so it was clipped. Keeping it inline was my call and it was wrong twice: once for width,
+// now for height. Wireframe 2b shows one line of detail on a quadrant, and 2d puts Change deck in
+// a dialog over the table.
+check("the seat configurator opens in a dialog, not inside the quadrant", () => {
+  assert.match(game, /actions\["lobby-setup-seat"\]/,
+    "a six-field form does not fit in a quadrant; 2d opens it over the table");
+  const opp = /function seatBoxOpp\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(opp, "seatBoxOpp not found");
+  assert.ok(!/tools = inlineDeckEditor\(/.test(opp[0]),
+    "the quadrant carries a control that opens the form, not the form itself");
+});
+
+// "I don't have a way to go back on the top left seat to select whether human or AI (need back
+// arrow)". Once a role was chosen the only way out was Clear the table, which empties all four.
+check("a seat whose role is set can go back to the choice", () => {
+  assert.match(game, /actions\["lobby-seat-back"\]/,
+    "choosing Human or AI was a one-way door; only Clear the table undid it, and that empties the table");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);

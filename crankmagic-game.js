@@ -951,6 +951,13 @@
     </article>`;
   }
 
+  /* THE WAY BACK. Choosing Human or AI was a one-way door: the only undo was Clear the table,
+     which empties all four seats to change one. An arrow with a label, because an arrow alone in
+     a corner is a guess. */
+  function backControl(i) {
+    return b('\u2190 Change seat type', 'lobby-seat-back', {opp: String(i)}, false, {cls: 'compact'});
+  }
+
   function seatBoxOpp(i, opp, t) {
     const roleClass = opp.role === "human" ? "is-human" : opp.role === "ai" ? "is-ai" : "is-unused";
     const seat = opp.seat;
@@ -968,17 +975,18 @@
     if (opp.role === "unused") {
       tools = `<div class="cm-actions cm-seat-controls">${b("Invite someone", "lobby-invite-seat", {opp: String(i)}, true, {cls: "compact"})}${b("Seat an AI", "lobby-ai-seat", {opp: String(i)}, false, {cls: "compact"})}</div>`;
     } else if (opp.role === "human") {
-      tools = humanInviteEditor(i, opp);
+      tools = humanInviteEditor(i, opp) + `<div class="cm-actions cm-seat-controls">${backControl(i)}</div>`;
       if (seat) {
         body = seatBody(seat, check, at, ready, {host: false, opp: i, human: true});
         readyBtn = readyCorner(ready, "opp", i);
       }
     } else if (!seat) {
-      tools = inlineDeckEditor(i, opp);
+      /* The form opens over the table. A quadrant carries one line of detail in 2b, and 2d draws
+         Change deck as a dialog; six fields in a 390px box clipped, which is what Rob saw. */
+      tools = `<div class="cm-actions cm-seat-controls">${b("Set up this seat", "lobby-setup-seat", {opp: String(i)}, true, {cls: "compact"})}${backControl(i)}</div>`;
     } else {
       body = seatBody(seat, check, at, ready, {host: false, opp: i});
-      tools = opp.editing ? inlineDeckEditor(i, opp)
-        : `<div class="cm-actions cm-seat-controls">${b("Change deck", "lobby-change-opp-deck", {opp: String(i)}, false, {cls: "compact"})}${b("Leave seat", "lobby-drop", {opp: String(i)}, false, {cls: "compact"})}</div>`;
+      tools = `<div class="cm-actions cm-seat-controls">${b("Change deck", "lobby-setup-seat", {opp: String(i)}, false, {cls: "compact"})}${b("Leave seat", "lobby-drop", {opp: String(i)}, false, {cls: "compact"})}</div>`;
       readyBtn = readyCorner(ready, "opp", i);
     }
     let primary = roleLabel;
@@ -1304,11 +1312,15 @@
     };
     const hostSeat = lobby.host && lobby.host.seat;
     const hostCheck = hostSeat ? t.checks.find((c) => c.seatId === hostSeat.id) : null;
+    /* Reading order, which Rob asked for and which supersedes the README's "2 · 3 / 4 · 1, you
+       bottom-right": seat 1 top-left, then 2, 3, 4. The argument is the quadrant's INNER corner --
+       the one touching the table's card -- so it is the mirror of the position, and every rule
+       keyed on .cm-q-* keeps working without being touched. */
     const seats = `<div class="cm-lobby-table">
-      ${oppQuad(0, 'br')}
-      ${oppQuad(1, 'bl')}
-      ${oppQuad(2, 'tr')}
-      ${quadrant('tl', 'is-you', seatColors(hostSeat), seatState(hostSeat, hostCheck, !!(lobby.host && lobby.host.ready), null), seatBoxHost(t))}
+      ${quadrant('br', 'is-you', seatColors(hostSeat), seatState(hostSeat, hostCheck, !!(lobby.host && lobby.host.ready), null), seatBoxHost(t))}
+      ${oppQuad(0, 'bl')}
+      ${oppQuad(1, 'tr')}
+      ${oppQuad(2, 'tl')}
       ${centerPanel(t, canStartSoon(t))}
     </div>`;
 
@@ -1528,6 +1540,18 @@
      that seat rather than on "the next free one". */
   actions["lobby-invite-seat"] = (el) => setOppRole(Number(el.dataset.opp), "human");
   actions["lobby-ai-seat"] = (el) => setOppRole(Number(el.dataset.opp), "ai");
+  actions["lobby-seat-back"] = (el) => setOppRole(Number(el.dataset.opp), "unused");
+
+  /* THE SEAT'S OWN FORM, over the table. wireCommanderSearch already scopes to #cm-dialog
+     (see its `input.closest` list), so the commander search works here unchanged. */
+  actions["lobby-setup-seat"] = (el) => {
+    const i = Number(el.dataset.opp);
+    const opp = lobby.opponents[i];
+    if (!opp) return;
+    C.modal(`Seat ${i + 2}`, inlineDeckEditor(i, opp));
+    const box = document.querySelector('#cm-dialog .cm-lobby-inline');
+    if (box) wireCommanderSearch(box);
+  };
   function setOppRole(i, role) {
     if (!Number.isInteger(i) || !lobby.opponents[i]) return;
     lobby.opponents[i] = Object.assign({}, lobby.opponents[i], {role, seat: null, ready: false});
@@ -1732,6 +1756,9 @@ actions["lobby-email-invite"] = async (el) => {
       opp.ready = false;
       opp.editing = false;
       save();
+      /* Applied from the dialog, so the dialog's work is done; leaving it open over a table that
+         has already changed underneath it is how a form ends up lying about the seat. */
+      if (C.actions && C.actions.close) C.actions.close();
       redraw();
       if (from === "generated") softNotice("Deck Labs seated a legal 100.", false);
       else if (from === "paste") softNotice("Pasted list seated.", false);
