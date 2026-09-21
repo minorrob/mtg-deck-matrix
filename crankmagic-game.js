@@ -750,6 +750,30 @@
      seat rather than from a new field: a seat with a blocked check is in error, a seat that is
      ready is leaves, a seat with a deck but no ready flag is still resolving, an invited human
      is wheat, and an empty chair is mist. */
+  /* 2b's status pill: a dot in the state's color and one word for it, at the end of the label
+     bar. The words are the wireframe's -- Ready, Pending deck, Invite sent -- so the table
+     says the same thing the design says. */
+  const STATE_WORD = {empty: 'Open', invited: 'Invite sent', pending: 'Pending', deck: 'Pending deck', ready: 'Ready', error: 'Blocked'};
+  function statusPill(state, ready, check) {
+    const word = (check && !check.ok) ? 'Blocked' : (STATE_WORD[state] || 'Open');
+    return `<span class="cm-seat-pill" data-state="${e(state)}"><i aria-hidden="true"></i>${e(word)}</span>`;
+  }
+
+  /* The invite line 2b writes for a guest who has not arrived: where it went, when it dies,
+     and who the table is waiting on. */
+  function inviteLine(opp) {
+    const to = (opp && (opp.guestEmail || opp.guestName)) || '';
+    const bits = [];
+    if (to) bits.push(to);
+    if (opp && opp.inviteExpires) {
+      const left = Math.max(0, new Date(opp.inviteExpires).getTime() - Date.now());
+      const h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000);
+      bits.push(left ? `link expires in ${h}h ${m}m` : 'link has expired');
+    }
+    bits.push('waiting on them');
+    return bits.join(' · ');
+  }
+
   function seatState(seat, check, ready, opp) {
     if (check && !check.ok) return 'error';
     if (ready) return 'ready';
@@ -768,7 +792,12 @@
     const ci = WUBRG.filter((c) => (colors || []).includes(c));
     if (!ci.length) return '';
     /* the inner corner in unit coordinates, and the quarter-turn the fan sweeps from it */
-    const at = {tl: [0, 0, 0], tr: [1, 0, 90], bl: [0, 1, 270], br: [1, 1, 180]}[corner] || [1, 1, 180];
+    /* The quarter-turn each corner sweeps INTO its own quadrant. pt() measures from (deg-90),
+       so `from` is the angle whose cosine and sine both point at the box interior from that
+       corner. Every entry here was 90 degrees short, which drew all four fans outside their
+       quadrants where they were clipped away -- a fan that is present in the DOM, correct in
+       its colors, and invisible. tests/wireframe-conformance.mjs holds the four angles now. */
+    const at = {tl: [0, 0, 90], tr: [1, 0, 180], bl: [0, 1, 0], br: [1, 1, 270]}[corner] || [1, 1, 270];
     const [cx, cy, from] = at;
     const R = 1.45, step = 90 / ci.length;
     const pt = (deg) => {
@@ -811,14 +840,15 @@
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
       : 'Every seat is ready. The table starts itself.';
     return `<section class="cm-table-center" aria-label="Table rules">
-      <h2>The rules of this table</h2>
+      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" aria-hidden="true">
+      <div class="cm-table-head"><h2>Table rules</h2><p class="cm-table-setby-top">set by the host</p></div>
       <dl class="cm-table-rules">
         <div><dt>Bracket</dt><dd>${e(String(lobby.bracket || 3))}</dd></div>
-        <div><dt>Game Changer cap</dt><dd>${e(lobby.cap === '' || lobby.cap === undefined ? 'the bracket default' : String(lobby.cap))}</dd></div>
-        <div><dt>Seats</dt><dd>${w.seated} of ${L.MAX_SEATS}</dd></div>
+        <div><dt>Deck cost cap</dt><dd>${e(C.money(BUDGET))}</dd></div>
+        <div><dt>AI pilot</dt><dd>${e(aiPilotLabel())}</dd></div>
+        <div><dt>Remote guests</dt><dd>${lobby.opponents.some((o) => o && o.role === 'human') ? 'on' : 'off'}</dd></div>
       </dl>
       <p class="cm-table-launch" role="status">${e(line)}</p>
-      <p class="cm-muted cm-table-setby">Set by the host, under Host tools.</p>
     </section>`;
   }
 
@@ -851,10 +881,15 @@
     const sub = seat
       ? seatHeaderSub("You (Host)", seat)
       : `<span class="cm-muted">No deck yet</span>`;
+    const standing = seat ? seatStanding(seat, check) : "";
+    /* The label bar above already says "Seat 1 · You". */
+    const detail = seat
+      ? `<p class="cm-seat-name">${e(primary)}</p><p class="cm-seat-line">${e(standing)}</p>`
+      : `<p class="cm-seat-line">Sit down with one of your decks.</p>`;
     return `<article class="cm-lobby-seat is-you${check && !check.ok ? " is-blocked" : ""}${ready ? " is-ready" : ""}">
-      <header><div class="cm-lobby-seat-titles"><h3>${e(primary)}</h3><div class="cm-lobby-seat-sub">${sub}</div></div>
-        ${seat ? readyCorner(ready, "host") : ""}</header>
-      ${body}
+      <header><h3>Seat 1 · You</h3>${statusPill(seatState(seat, check, ready, null), ready, check)}</header>
+      ${seatFigure(seat, detail, seat ? seatControls(seat, ready, {host: true}) : `<div class="cm-actions cm-seat-controls">${b("Seat your deck", "lobby-host-deck", {}, true, {cls: "compact"})}</div>`)}
+      <div class="cm-seat-audit">${body}</div>
     </article>`;
   }
 
@@ -897,10 +932,23 @@
       primary = "AI";
       sub = `<span class="cm-muted">No deck yet</span>`;
     }
+    /* 2b labels a seat by where it sits and who is in it -- "Seat 2 · AI", "Seat 4 · Friend" --
+       and puts the commander's own name in the detail column beside the card, where there is
+       room for it. The build had the commander in the header, so a long name pushed the status
+       pill off the quadrant. */
+    const who = `Seat ${i + 2} · ${opp.role === "unused" ? "Open" : opp.role === "ai" ? "AI" : (opp.guestName || "Friend")}`;
+    const line = seat ? seatStanding(seat, check)
+      : opp.role === "human" ? inviteLine(opp)
+      : opp.role === "ai" ? "No deck yet"
+      : "";
+    /* The label bar already says "Seat 4 · Open"; an empty chair does not need to say it twice. */
+    const detail = seat || opp.role !== "unused"
+      ? `<p class="cm-seat-name">${e(primary)}</p>${line ? `<p class="cm-seat-line">${e(line)}</p>` : ""}`
+      : `<p class="cm-seat-line">Invite someone, or seat an AI.</p>`;
     return `<article class="cm-lobby-seat ${roleClass}${check && !check.ok ? " is-blocked" : ""}${ready ? " is-ready" : ""}" data-opp="${i}">
-      <header><div class="cm-lobby-seat-titles"><h3>${e(primary)}</h3><div class="cm-lobby-seat-sub">${sub}</div></div>
-        ${readyBtn}</header>
-      ${body}
+      <header><h3>${e(who)}</h3>${statusPill(seatState(seat, check, ready, opp), ready, check)}</header>
+      ${seatFigure(seat, detail, "")}
+      <div class="cm-seat-audit">${body}${readyBtn}</div>
     </article>`;
   }
 
@@ -917,6 +965,49 @@
     }
     if (cmd.name) return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cmd.name)}&format=image&version=normal`;
     return "";
+  }
+
+  /* THE SEAT'S FIGURE (wireframe 2b). The card and the reading beside it, as one row that
+     sits in the quadrant's outer bottom corner. 2b gives the card `height:144` in a 190px
+     quadrant and the aspect 488:680 -- about three quarters of the quadrant's height -- so
+     the height is a proportion here rather than a pixel count, and the card stays a card at
+     every table size. An empty seat gets the same frame, dashed, carrying a question mark:
+     the chair is drawn whether or not anyone is in it. */
+  function seatFigure(seat, detail, controls) {
+    const art = seat ? commanderArtUrl(seat) : '';
+    const name = seat ? (((seat.commanders && seat.commanders[0]) || {}).name || seat.name || 'Commander') : '';
+    const card = seat
+      ? (art
+        ? `<button type="button" class="cm-seat-card" data-action="lobby-art-zoom" data-art="${e(art)}" data-name="${e(name)}" aria-label="Enlarge ${e(name)}"><img src="${e(art)}" alt="" loading="lazy" referrerpolicy="no-referrer"></button>`
+        : `<div class="cm-seat-card is-blank" aria-hidden="true"><span>${e(name.slice(0, 2))}</span></div>`)
+      : `<div class="cm-seat-card is-empty" aria-hidden="true"><span>?</span></div>`;
+    return `<div class="cm-seat-figure">${card}<div class="cm-seat-detail">${detail}${controls || ''}</div></div>`;
+  }
+
+  /* What the detail column says, in 2b's order: the commander, then one line of standing.
+     For your own seat that line is the bracket and what the deck cost against the house cap,
+     which is the same arithmetic the deck page's Cost card does; for a guest who has not
+     arrived it is the invite, its expiry and who the table is waiting on. */
+  function seatSpend(seat) {
+    /* A lobby seat carries `cards` and `commanders`, not `slots` -- slots are a deck's, and a
+       seat is built from a deck rather than being one. */
+    if (!seat || !C.card) return null;
+    const rows = [...(seat.commanders || []), ...(seat.cards || [])];
+    if (!rows.length) return null;
+    let spend = 0, known = 0;
+    for (const row of rows) {
+      const card = C.card(row.cardId);
+      if (card && Number.isFinite(card.price)) { spend += card.price * (row.quantity || 1); known += 1; }
+    }
+    return known ? spend : null;
+  }
+  function seatStanding(seat, check) {
+    const bits = [];
+    if (check && check.bracket) bits.push(`Bracket ${check.bracket}`);
+    const spend = seatSpend(seat);
+    if (spend !== null) bits.push(`${C.money(spend)} of ${C.money(BUDGET)}`);
+    else if (check) bits.push(`${check.size} of ${L.DECK_SIZE} cards`);
+    return bits.join(' · ');
   }
 
   function deckedVisual(seat, under) {
@@ -971,6 +1062,24 @@
       <div class="cm-lobby-under-full">${row}${sim}</div>`;
   }
 
+  /* THE PLAYER'S OWN CONTROLS (wireframe 2b, README "All player actions live on the player's
+     own quadrant"). Change deck, Choose mat, Ready / Not ready, Leave seat -- in that order,
+     and only on the seat that belongs to the person reading. */
+  function seatControls(seat, ready, meta) {
+    if (!seat) return '';
+    const opp = meta.host ? {} : {opp: String(meta.opp)};
+    const change = meta.host
+      ? b('Change deck', 'lobby-host-deck', {}, true, {cls: 'compact'})
+      : b('Change deck', 'lobby-change-opp-deck', {opp: String(meta.opp)}, true, {cls: 'compact'});
+    const mat = b('Choose mat', 'lobby-choose-mat', Object.assign({seat: seat.id}, opp), false, {cls: 'compact'});
+    const readyBtn = b(ready ? 'Not ready' : 'Ready', 'lobby-ready',
+      meta.host ? {who: 'host'} : {who: 'opp', opp: String(meta.opp)}, false, {cls: 'compact' + (ready ? ' is-on' : '')});
+    const leave = meta.host
+      ? b('Leave seat', 'lobby-host-leave', {}, false, {cls: 'compact'})
+      : b('Leave seat', 'lobby-drop', {opp: String(meta.opp)}, false, {cls: 'compact'});
+    return `<div class="cm-actions cm-seat-controls">${change}${mat}${readyBtn}${leave}</div>`;
+  }
+
   function readyCorner(ready, who, opp) {
     const attrs = who === "host" ? {who: "host"} : {who: "opp", opp: String(opp)};
     return `<div class="cm-lobby-ready">${b(ready ? "Ready" : "Ready Up", "lobby-ready", attrs, !ready, {cls: "compact" + (ready ? " is-on" : "")})}</div>`;
@@ -1001,13 +1110,17 @@
 
   views.game = async () => {
     try { await loadHostCatalogDecks(); } catch (_) {}
-    if (!L) { C.main.innerHTML = C.pageHead("Play a game", "") + note("The lobby module has not loaded yet. Reload the page.", true); return; }
+    if (!L) { C.main.innerHTML = C.pageHead("Play", "") + note("The lobby module has not loaded yet. Reload the page.", true); return; }
     const t = table();
     const bracket = t.bracket;
     const brackets = L.BRACKETS.map((x) => [String(x.n), `${x.n} · ${x.name}`]);
-    const head = C.pageHead("Play a game",
-      b("Seat an opponent", "lobby-add", {}, false, {cls: "compact"})
-      + b("Clear the table", "lobby-clear", {}, false, {cls: "compact"}), "game");
+    /* 2b's head: "Play", one line saying what the table is, and Game history beside Host tools.
+       Seat an opponent and Clear the table move under Host tools -- they are the host's levers,
+       and the README puts every host lever in that menu. */
+    const head = C.pageHead("Play",
+      b("Game history", "lobby-history", {}, true, {cls: "compact"})
+      + b("Host tools", "lobby-host-tools", {}, false, {cls: "compact", caret: true}), "game")
+      + `<p class="cm-lobby-lede">The four seats laid out as they will sit; the table is the form and the status board.</p>`;
 
     const confirmed = lobby.rulesConfirmed
       && Number(lobby.rulesConfirmed.bracket) === Number(lobby.bracket)
@@ -1016,14 +1129,19 @@
       ? (lobby.rulesConfirmed.summary || L.rulesSummary(bracket, lobby.cap))
       : "Confirm bracket and Game Changer cap before seating reads as final.";
 
-    const rules = `<section class="v-panel cm-lobby-rules"><h2>Host tools</h2><p class="cm-muted">The table above states these; this is where the host changes them.</p>
-      <div class="cm-toolbar">
+    /* The host's levers are a menu in the action row, not a panel below the table (README:
+       "never on the table"). The controls themselves are unchanged -- same ids, same actions --
+       so every handler that reached them still does; only where they live has moved. */
+    hostToolsHTML = `<p>Table rules</p>
+      <div class="cm-toolbar cm-menu-toolbar">
         ${s("Bracket", "lobbyBracket", brackets, String(bracket.n))}
         ${f("Game Changer cap", "lobbyCap", lobby.cap === "" ? "" : String(lobby.cap), `type="number" min="0" max="20" placeholder="${e(bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))}"`)}
         ${b(confirmed ? "Confirmed" : "Confirm", "lobby-confirm-rules", {}, !confirmed, {cls: "compact" + (confirmed ? " is-on" : "")})}
       </div>
-      <p class="cm-lobby-says">${e(summary)}</p>
-    </section>`;
+      <p class="cm-lobby-says">${e(summary)}</p><hr>
+      ${b("Seat an opponent", "lobby-add", {}, false)}
+      ${b("Clear the table", "lobby-clear", {}, false)}`;
+    const rules = "";
 
     /* THE TABLE (DELTA B.1). Four quadrants in the order the players sit -- 2 and 3 across the
        top, 4 and you across the bottom, so you are bottom-right and the seat opposite you is
@@ -1652,6 +1770,81 @@ actions["lobby-email-invite"] = async (el) => {
     C.notice(`This table is bracket ${next.n}, ${next.name}, now.`);
   };
   actions["lobby-clear"] = () => { lobby = EMPTY(); redraw(); };
+
+  /* HOST TOOLS, THE MENU. Built where the view is drawn so it carries that draw's bracket and
+     summary, and popped from the action row. The same markup the panel held, in a popover. */
+  let hostToolsHTML = "";
+  function popLobbyMenu(el, html, width) {
+    document.querySelectorAll(".cm-lobby-menu").forEach((m) => m.remove());
+    const menu = document.createElement("div");
+    menu.className = "cm-menu cm-lobby-menu";
+    menu.setAttribute("popover", "auto");
+    menu.innerHTML = html;
+    document.body.appendChild(menu);
+    const place = () => {
+      if (!el.isConnected) { if (menu.matches(":popover-open")) menu.hidePopover(); return; }
+      const r = el.getBoundingClientRect();
+      menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - (width || 300))) + "px";
+      menu.style.top = Math.min(r.bottom + 6, window.innerHeight - menu.offsetHeight - 8) + "px";
+    };
+    menu.showPopover(); place();
+    if (C.followAnchor) C.followAnchor(menu, place);
+    menu.addEventListener("toggle", (ev) => { if (ev.newState === "closed") menu.remove(); });
+    return menu;
+  }
+  actions["lobby-host-tools"] = (el) => popLobbyMenu(el, hostToolsHTML, 320);
+  actions["lobby-history"] = () => { location.hash = "reports"; };
+
+  /* LEAVE SEAT (wireframe 2b). Standing up is not clearing the table: it empties one seat and
+     leaves the rest of the table as it was. */
+  actions["lobby-host-leave"] = () => {
+    if (!lobby.host) return;
+    lobby.host = Object.assign({}, lobby.host, {seat: null, ready: false});
+    redraw();
+  };
+  actions["lobby-drop"] = (el) => {
+    const i = Number(el.dataset.opp);
+    if (!Number.isInteger(i) || !lobby.opponents[i]) return;
+    lobby.opponents = lobby.opponents.filter((_, k) => k !== i);
+    redraw();
+  };
+
+  /* CHOOSE MAT (wireframe 2b, README "the playmat art your board wears in game"). The strip is
+     the six elements of turn 3 -- the same animations the quadrants already run -- because those
+     are the mats the app actually owns. Uploading your own is named in the handoff as the next
+     increment; a picker that offered it today would offer nothing. */
+  const MAT_LABEL = {mist: "Mist", ocean: "Ocean", leaves: "Leaves", fire: "Fire", wheat: "Wheat", bog: "Bog"};
+  actions["lobby-choose-mat"] = (el) => {
+    const who = el.dataset.opp === undefined || el.dataset.opp === "" ? "host" : Number(el.dataset.opp);
+    const names = typeof CrankSea === "undefined" ? Object.keys(MAT_LABEL) : Object.keys(CrankSea.ELEMENTS);
+    const current = (who === "host" ? (lobby.host && lobby.host.mat) : (lobby.opponents[who] || {}).mat) || "";
+    C.modal("Choose your mat", `<p class="cm-muted">The art your board wears once the game starts. Every seat sees its own.</p>
+      <div class="cm-mat-strip">${names.map((n) => `<button type="button" class="cm-mat${n === current ? " is-on" : ""}" data-action="lobby-set-mat" data-mat="${e(n)}" data-who="${e(String(who))}">
+        <canvas class="cm-mat-art" data-sea="${e(n)}" aria-hidden="true"></canvas><span>${e(MAT_LABEL[n] || n)}</span></button>`).join("")}</div>`);
+    /* The strip is painted by the same module the table uses, so a mat looks in the picker
+       exactly as it will look under the board. */
+    if (typeof CrankSea !== "undefined") {
+      for (const canvas of document.querySelectorAll(".cm-mat-art")) {
+        CrankSea.startSea(canvas, {width: 120, height: 80, element: canvas.dataset.sea, opacity: 1});
+      }
+    }
+  };
+  actions["lobby-set-mat"] = (el) => {
+    const who = el.dataset.who === "host" ? "host" : Number(el.dataset.who);
+    const mat = el.dataset.mat;
+    if (who === "host") { if (lobby.host) lobby.host.mat = mat; }
+    else if (lobby.opponents[who]) lobby.opponents[who].mat = mat;
+    if (C.actions && C.actions.close) C.actions.close();
+    redraw();
+  };
+
+  /* Which pilot the AI seats fly by default -- 2b's fourth table rule. */
+  function aiPilotLabel() {
+    const ai = lobby.opponents.filter((o) => o && o.role === "ai");
+    if (!ai.length) return "no AI seats";
+    const names = [...new Set(ai.map((o) => o.pilot || "Forge"))];
+    return names.length === 1 ? names[0] : "mixed";
+  }
 
 
 

@@ -38,7 +38,7 @@ const ROUTES = [
   /* Explore fetches ~20MB of co-play links before it can draw anything, so waiting on
      #cm-main photographs the loading line. Wait for the entry or the canvas itself. */
   ["discover", "explore", ".cm-explore-chooser, .cm-graph"],
-  ["game", "play-lobby", ".cm-lobby-seats"],
+  ["game", "play-lobby", ".cm-lobby-table"],
   ["how", "how", "#cm-main"],
 ];
 const only = opt("--routes", "").split(",").filter(Boolean);
