@@ -60,20 +60,40 @@ async function body(req,limit){
 }
 
 /** Public game gateway. Its service receives server-resolved membership, never client seat IDs. */
-export function createGuestGateway({host='127.0.0.1',port=0,publicOrigin,service,readPublicFile}){
+export function createGuestGateway({host='127.0.0.1',port=0,publicOrigin,webOrigin,service,readPublicFile}){
   if(!service||typeof readPublicFile!=='function')throw Error('Guest gateway service and public reader required');
+  /* The one web lobby this gateway will answer, if any. Validated the same way publicOrigin is:
+     scheme and host only, so a path or a query cannot smuggle anything past the comparison. */
+  if(webOrigin){
+    const parsed=new URL(webOrigin);
+    if(!['http:','https:'].includes(parsed.protocol)||parsed.username||parsed.password||parsed.pathname!=='/'||parsed.search||parsed.hash)throw Error('Web lobby origin must contain only scheme and host');
+    webOrigin=parsed.origin;
+  }
   let authority;
   const limits=new Map();
   function allow(key,max,windowMs=60000){const now=Date.now(),old=limits.get(key);if(!old||now-old.started>=windowMs){limits.set(key,{started:now,count:1});return true;}if(old.count>=max)return false;old.count++;return true;}
   const server=createServer(async(req,res)=>{
-    const reply=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{...securityHeaders,'Content-Type':type});res.end(type.startsWith('application/json')?JSON.stringify(value):value);};
+    /* A named web lobby is told, per response, that it may read what it asked for. Any other
+       origin gets no such header and the browser keeps the body from it. */
+    const from=req.headers.origin;
+    const shared=!!webOrigin&&from===webOrigin;
+    const cors=shared?{'Access-Control-Allow-Origin':webOrigin,'Vary':'Origin'}:{};
+    const reply=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{...securityHeaders,...cors,'Content-Type':type});res.end(type.startsWith('application/json')?JSON.stringify(value):value);};
+    if(req.method==='OPTIONS'){
+      if(!shared)return reply(404,{error:'Not found'});
+      res.writeHead(204,{...securityHeaders,...cors,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'600'});
+      return res.end();
+    }
     if(req.headers.host!==authority)return reply(403,{error:'Wrong guest gateway host'});
     const url=new URL(req.url,'http://gateway.invalid'),key=`${req.method} ${url.pathname}`,route=routes.get(key);
+    /* A trycloudflare address is new every session, so a web lobby holding one has to be able
+       to ask whether it still answers. Public on purpose, and it discloses nothing. */
+    if(req.method==='GET'&&url.pathname==='/health')return reply(200,{product:'CrankMagic Online',protocol:1,gateway:true});
     if(!route){
       const file=publicFiles.get(url.pathname);if(req.method!=='GET'||!file)return reply(404,{error:'Not found'});
       try{return reply(200,await readPublicFile(file[1]),file[0]);}catch{return reply(404,{error:'Not found'});}
     }
-    if(req.method==='POST'&&req.headers.origin!==publicOrigin)return reply(403,{error:'Wrong request origin'});
+    if(req.method==='POST'&&from!==publicOrigin&&!shared)return reply(403,{error:'Wrong request origin'});
     try{
       const [method,limit,secured]=route,member=secured?await service.authenticate(bearer(req)):null;
       const rateKey=secured?`${member.tableId}:${member.seatId}:${member.generation}:${method}`:`join:${req.socket.remoteAddress}`;
