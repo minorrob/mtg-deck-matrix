@@ -2,11 +2,19 @@
 
 | | |
 | --- | --- |
-| **Holder** | Claude Code (Opus 5), local session on Personal-HP |
-| **Branch** | `claude/v5b-game-board` — open, with PR #300 (`claude/v5a-lobby-table`) also open |
-| **Since** | 2026-09-20 |
-| **Doing** | **Track V, the Gallery redesign, and the start of Play.** Merged: V.1c #289, V.3 #291, V.4a #292, V.4b #293, V.4c #294, V.4d #295, V.4e #296, V.4f #297, V.4g #299 — the tokens, the rail, the deck tiles, the deck page bento, the Library, the Explore entry and the Explore graph. Open: **#300** the Play lobby as a table (four quadrants, the rules at its center, the launch line replacing the Launch button), and **`claude/v5b-game-board`** the playmat's zone frames plus the architecture finding below. |
-| **Next for whoever picks this up** | **Read `docs/handoff-live-game-test-2026-09-20.md` first.** Merge #300 and the board branch once their CI is green, reading the result on the head you are merging. Then the live-game run-book, `game/docs/readiness-plan-2026-09-18.md` §12, from step 4 — `node game/tools/preflight.mjs` passes steps 1 to 3 on this machine today. Rob's boundary for the previous session was: pause before playing a game through, and hand that test off. That is what this is. |
+| **Holder** | Free — everything of the 2026-09-21 session is merged |
+| **Branch** | `main`; nothing open |
+| **Since** | 2026-09-21 |
+| **Doing** | **Track V is merged through the Play lobby, and the live-game gate is cleared.** #306 took the lobby to wireframe 2b and measured the Explore graph for the first time. The color-identity fan now draws — it never had, because every quadrant's wedge swept 90° outside its own quadrant and was clipped away. `tests/wireframe-conformance.mjs` is new: the handoff README grades `screens/*.dc.html` as hi-fi ("Recreate pixel-close") and the wireframes as lo-fi ("follow their structure and content order"), so screens are measured in pixels by `tools/compare-to-screen.mjs` and wireframes are held to structure and content there. |
+| **Next for whoever picks this up** | **Read `docs/live-game-readiness-2026-09-21.md`.** Rob is running run-book steps 5–9 himself. The work after that, in order: the mat surface (`game/ui/review.mjs`, `game/ui/mats.css`) against wireframes 2e and 2f — also the last raw-hex blind spot, ceiling 475 and nothing watching it; then the nine wireframe pages and four dialog groups, extending `tests/wireframe-conformance.mjs`; then Gallery Explore's two recorded pixel differences. |
+
+## The live-game gate is cleared
+
+This file used to name #259, #260, #262 and #263 as PRs that had to be triaged before any
+live-game test. **All four were already merged** — every commit of that chain is an ancestor of
+`main` — and all four are now closed with their evidence. #263's one remaining commit would have
+*regressed* things: it deletes `C.views.game` from `crankmagic-online.js`, which `main` already
+fixed better by wrapping that view rather than overwriting it. **Nothing blocks the test.**
 
 ## The architecture fact that reorders the remaining work
 
@@ -16,13 +24,13 @@ reached at `/play` and routed by `game/ui/play-entry.mjs` — `guest-live.mjs` f
 `review.mjs` for the host or a recorded match. So the DELTA's table view and focus view are a
 redesign of **that** surface, and "get a live game up and running" is the run-book, not board work.
 
-## Proven on this machine today
+## Proven on this machine today, 2026-09-21
 
-`node game/tools/preflight.mjs` — Forge card database 33,819 card scripts / 35,649 names; Node,
-Java, the OpenAI credential and cloudflared all ok; **every card in all 7 decks resolves**,
-including the seven awkward names. *Steps 1 to 3 all pass. This computer is ready to host.*
-Steps 4 to 9 need a running game and a browser.
-
+Run-book steps **1, 2, 3 and 4** all pass here — see
+`docs/live-game-readiness-2026-09-21.md` for each command and its output. The suite is 98
+green with browser suites driving Chrome; the doctor says *Ready to host a game*; every card
+in all 7 decks resolves to a Forge card script; and the import gate refuses an invented card
+by name before preparation. **Steps 5 to 9 need a game and are Rob's.**
 ## Open, for the designer's gap list
 
 - No **light** value for `--st-watch`, `--st-draft` or `--st-physical`; ours are in the Felt and Cream register and marked as ours in `tests/design-tokens.mjs`.
