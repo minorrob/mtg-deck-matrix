@@ -80,9 +80,9 @@ Recorded here rather than patched one at a time, because most of them are the co
 |---|---|---|
 | 11.1 | "Build your table" appeared after the lobby, though the table was already built | Step 3 — the board should not offer setup for a table that exists |
 | 11.2 | "a LOT of old code. Still old design." | The conversion itself |
-| 11.3 | **End game** is a permanent fixture in the action box; risks a misclick | Step 3. It is also **already duplicated** — `setup.mjs:139` has "End current game" — so removing it from the action row loses nothing |
-| 11.4 | Stuck on **Untap** with no lands and nothing tapped | Rules behavior, not design — see below |
-| 11.5 | "End my turn" *and* "Auto-pass turn" both present; one should be **Skip step** | Step 3 |
+| 11.3 | **End game** is a permanent fixture in the action box; risks a misclick | **Done, Stage A.3.** Removed from the action row; `setup.mjs:139` keeps "End current game" behind a two-click confirm |
+| 11.4 | Stuck on **Untap** with no lands and nothing tapped | **Done, Stage A.2.** Not a rules problem at all — the board read a spent prompt as a live decision. See below |
+| 11.5 | "End my turn" *and* "Auto-pass turn" both present; one should be **Skip step** | **Done, Stage A.3.** "Auto-pass turn" removed; "Skip to end" in the header does that job through `maySkipToEndOfTurn` |
 | 11.6 | "Continue from Untap" jumped to Main 1, skipping the card draw | **Probably correct rules** — see below |
 
 ### 11.6 is not a bug — in a two-player game
@@ -232,3 +232,65 @@ works** — this stage buys convenience, not capability, and the stages above bu
   notice.
 - **Not build on the first-draw reading until a four-player game has run.** It is correct for two
   players and would be wrong for four, and no one has watched four.
+
+---
+
+## Stage A.2–A.4, done 2026-09-21 — what the untap stall actually was
+
+**It was not a rules problem, and it was not slowness.** Read from the running host rather than
+reasoned about:
+
+`ForgeBrowserBridge.view()` builds `okEnabled` as `okEnabled && activeInput`, where `activeInput`
+is whether Forge has an input queued for this seat. It builds `prompt` from Forge's
+`showPromptMessage`, and **never clears it** — a prompt stays on screen after it has been answered,
+until the next one replaces it.
+
+So in the gap between two decisions the board held:
+
+| | |
+|---|---|
+| `ui.prompt` | the **previous** `Priority: <Rob>…` string, already spent |
+| `ui.okEnabled` | `false` — nothing queued |
+| `ui.inputType` | `""` — Forge naming no input |
+| `state.phase` | `UNTAP` — the projection updates on engine events, which run ahead of prompts |
+
+`review.mjs` tested `/^Priority:/` against that spent prompt, concluded the decision was live, and
+`hasPriority()` confirmed it by matching the name in the same spent string. The board therefore
+said **"Your action · play a card or use a board ability"** and drew a **"Continue from untap"**
+button that was disabled, because `okEnabled` was false. Rob sat looking at his own action he
+could not take. When the engine reached a step where somebody really did have priority, the button
+enabled — *"Eventually it showed me the button"* — and pressing it passed priority at **that**
+step, not at untap, which is why it landed in main phase 1.
+
+**Two findings, one cause.** 11.4 and the confusing half of 11.6 are the same defect: the board
+described a step the decision was not about.
+
+### The fact to stand on
+
+`ui.inputType` is the class name of the input Forge has queued for this seat, and the empty string
+when there is none. That is Forge's own answer to "is anybody being asked anything", and it needs
+no inference. `engineIsWorking()` in `action-policy.mjs` uses it, and **fails closed** for an older
+adapter that does not send the field — the same rule `paymentMayAutoResolve` already followed.
+
+Rob's proposed rule was *"If there is 0 mana on the board OR if no cards are tapped, then Untap
+step should be checked off automatically."* The engine already moves on by itself; there was never
+anything to check off. What needed fixing was the board claiming he had to act. **CR 502: "No
+player receives priority during the untap step."**
+
+### What changed
+
+1. `hasPriority()` returns false while the engine is working, so a spent prompt cannot be read as
+   a live decision.
+2. The board says what is true — *"Untap · no player acts in this step"*, or the name of whoever
+   is being waited on — and shows **no button** rather than a dead one. A disabled control reads
+   as broken; an absent one reads as "not yet", which is what it is.
+3. `Auto-pass turn` and `End game` left the action row (11.3, 11.5). Neither is lost.
+4. Clicking your library on a skipped first draw now explains **CR 103.8a** instead of saying the
+   draw "had to wait" for a draw that was never coming — and `firstDrawSkipped()` asks how many
+   players are at the table, so it stays silent in a pod.
+
+### Still open, and deliberately
+
+**Nobody has watched a four-player pod.** The first-draw rule is two-player only; if a starting
+player fails to draw in a pod, that is a real bug and this is where it was predicted. That is
+Stage A.5, and it is Rob's to run.
