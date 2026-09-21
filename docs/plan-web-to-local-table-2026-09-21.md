@@ -130,3 +130,77 @@ A `trycloudflare.com` address is **ephemeral** — a new one every time the host
 has to carry the current address, and the web lobby has to say plainly when the address it holds
 no longer answers, rather than failing quietly. That is why piece 1 stores it per table and lets
 it expire with the table.
+
+---
+
+## What starting a game will feel like, once this is built
+
+Written in Rob's own numbering so it can be walked as a UAT script. **Each step says whether it
+works today, is delivered by this plan, or is engine behavior nobody here has verified yet** —
+because a script that does not distinguish those is a script that fails and nobody knows why.
+
+### Once per session, on the machine that will host
+
+**0.** You start the host with remote guests. It prints two addresses: the local one for you, and
+a public one for everybody else.
+
+```
+Ready: http://127.0.0.1:8768/app/#game
+Remote guest invitations: https://<something>.trycloudflare.com
+```
+
+*Works today.* The second address is new each time — see "One consequence for piece 1".
+
+### What you do
+
+**1.** You go to `https://minorrob.github.io/mtg-deck-matrix/#decks` and build a deck.
+*Works today.* It lives in that copy's library; it is not on your machine yet.
+
+**2.** You go to `#game`. The lobby already knows the tunnel, because you opened it from the share
+link the local lobby gave you. You seat two AIs and put your new deck in seat 1.
+*Piece 1.* Without the share link the lobby has no idea your machine exists and says so.
+
+**3.** You press **Send Local** — the same button, reading differently because this copy cannot
+start a game itself. Your seats, your deck and the table's rules go to the tunnel.
+*Piece 2.*
+
+**4.** The web lobby confirms the table arrived and shows you the address to open on your own
+machine. **Nothing has been closed or launched yet** — Forge starts when the table starts, and the
+table starts from the machine it will run on.
+*Piece 2.*
+
+**5.** You open `http://127.0.0.1:8768/app/#game`. It is the same lobby, already holding your
+seats, your deck and the AI seats you configured.
+*Piece 2, on the host's side.*
+
+**6.** You press **Start**. Any engine still running is closed — including one orphaned by an
+earlier host — a fresh Forge spins up, and a new tab opens on the live board at `/review`, which
+carries a link back to the full site.
+*Works today* (closing and restarting shipped in batch 9; the board tab in #318).
+
+### What your friends do
+
+**7.** Each invited player gets a link into the **web** lobby, carrying the tunnel and their own
+invite token.
+*Piece 3.*
+
+**8.** They pick a deck or build one, then press **Ready**. That packages their resolved hundred
+and sends it to your machine, where it is checked against Forge's card database — so a card Forge
+does not have is refused there, in front of them, and not at engine load with everyone waiting.
+*Piece 4.*
+
+**9.** When every seat is in, each player is shown the address to join. **Not the same address for
+everybody:** you join at `127.0.0.1`, they join at the tunnel. `127.0.0.1` on a friend's computer
+is their own computer, so handing everyone the local address would send them nowhere.
+*Piece 5. This is a correction to the flow as originally described.*
+
+### What happens in the game
+
+**10 onwards** — who won the roll, seven cards each, mulligans, a player's steps advancing in
+order, the force-advance lever when a seat hangs, and skipping to end on your own turn.
+
+**Not verified by anyone here.** Forge is the rules engine and those behaviors are its. The
+force-advance lever exists (`/api/table/force-advance`) and was exercised by the run-book; the
+mulligan and untap paths are what the old #259/#260 work was about, and that work is merged but
+has never been watched end to end. **This is the part of the flow to test first and trust least**,
+and nothing in this plan changes it.
