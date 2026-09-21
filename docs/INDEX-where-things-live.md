@@ -100,3 +100,10 @@ GitHub Pages they are not there. See `pollLiveReadiness` for the pattern.
 7. **Classic scripts, no build step.** An ES module port must be wrapped in an IIFE exposing a
    global.
 8. **Run the suite on what you push**, and check `git branch --show-current` before committing.
+
+10. **The local game host keeps the code it started with.** `game/tools/serve-review.mjs` imports
+    `local-game-launcher.mjs` and the rest of `game/` once, at startup. Static files under `/app/`
+    are read per request, so page changes appear on reload — anything the host *imports* does not.
+    **Restart it after every merge that touches `game/`** (Rob's rule, 2026-09-21), or a merged fix
+    will look like it failed. `/api/table/readiness` returning 409 means no table is open, so a
+    restart costs nothing.
