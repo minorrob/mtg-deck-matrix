@@ -52,6 +52,17 @@ mechanic triggered by other players" cannot be derived from the event stream. Th
 consumer of the **card extraction skill** — the knowledge would be read by the board, not only
 written by the pilot.
 
+**Both limits are the Forge adapter's, and PR #305 answers them.** `docs/engine/PLAN.md` §3.4
+specifies `CrankCardScript@1`, where keywords are `abilities[]` per card (no hand-list to fall
+behind), a conditional exile is an `effects[]` primitive with an `until` duration, and an ability
+that watches other players is a `triggered` ability with a `condition`. **Rob's "card extraction
+skill" and §3.4's model compiler are the same mechanism** — it already calls the Claude API with
+the schema as a tool definition. So the skill should emit `CrankCardScript@1` rather than a format
+of its own; two card-semantics vocabularies across a 30,000-card pool is exactly the debt that plan
+exists to avoid. Written that way the same artifact serves the pilot today, the board's two alerts
+today, and the engine later with no migration. The full comparison is at the end of
+`docs/plan-board-information-layer.md`.
+
 ## Standing facts for the next session
 
 - The host serves `game/ui/*` **per request**, so UI changes land on reload. Anything the host
