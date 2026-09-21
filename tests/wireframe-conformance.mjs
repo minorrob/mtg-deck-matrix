@@ -217,4 +217,103 @@ check("no lobby selector is declared twice in crankmagic.css", () => {
   assert.deepEqual(dupes, [], "a later copy of a selector silently beats the earlier one");
 });
 
+/* ------------------------------------------------------------- the table fills the width it has */
+
+// From Rob's testing, 2026-09-21: "Each seat should be wider, and the whole lobby dynamically
+// adjust size to always fill the width of the screen ... When adjusting seat width, it should
+// maintain aspect ratio."
+//
+// A height cap on an element with a fixed aspect-ratio silently caps its WIDTH too: the box
+// shrinks in both directions to honor the ratio. `max-height:72vh` was doing exactly that, so on
+// a tall window the table stopped well short of the content column while the panel below it ran
+// the full width. The ratio is the thing to keep; the cap is the thing to drop.
+check("the table is not height-capped, which would cap its width", () => {
+  const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "no base rule for the lobby table");
+  assert.match(rule[1], /aspect-ratio:/, "the table keeps a ratio, so seats keep theirs");
+  assert.ok(!/max-height:\s*[\d.]+(vh|vw|px)/.test(rule[1]),
+    "a height cap on a fixed-ratio box caps its width as well, so the table stops short of the page");
+});
+
+// A 2x2 grid divides both dimensions, so a quadrant carries the same ratio as the table. Rob:
+// "the middle Table Rules box should be the same aspect ratio as the seats."
+check("the table's card carries a seat's aspect ratio", () => {
+  const table = /\.cm-lobby-table\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
+  const card = /\.cm-table-center\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
+  assert.ok(card, "the table's card needs an aspect-ratio of its own");
+  const ratio = (m) => Number(m[1]) / Number(m[2]);
+  assert.ok(Math.abs(ratio(table) - ratio(card)) < 0.02,
+    `a quadrant is ${ratio(table).toFixed(3)} and the card is ${ratio(card).toFixed(3)}`);
+});
+
+// A px ceiling on the card's width stops it growing with the table, so on a wide screen the card
+// shrinks against its own seats.
+check("the table's card scales with the table", () => {
+  const rule = /\.cm-table-center\{([^}]*)\}/.exec(css);
+  const width = /width:\s*([^;]+)/.exec(rule[1]);
+  assert.ok(width, "the card needs a width");
+  assert.ok(!/min\(\s*[\d.]+%\s*,\s*[\d.]+px\s*\)/.test(width[1]),
+    `width ${width[1]} caps the card in px, so it stops growing while its seats keep going`);
+  assert.match(width[1], /%/, "the card's width is a share of the table");
+});
+
+/* ------------------------------------------------------- nothing sits underneath the table's card */
+
+// From Rob's testing, 2026-09-21: "I can't get past the lobby because you put boxes on top of
+// boxes. I also had selected AI in seat 2, then it cut out the options."
+//
+// The card is centered over all four quadrants, so its footprint is arithmetic rather than a
+// judgment. It is W% of the table wide and, at the same ratio as the table, W% of the table tall;
+// centered, that is W/2% of the table reaching into each quadrant from the inner corner. A
+// quadrant is half the table, so the card covers W% OF A QUADRANT on both axes.
+//
+// Insetting each seat's figure on its inner side by at least that much means the two can never
+// intersect horizontally, whatever the content does vertically. `.cm-q-XX` names where a
+// quadrant's INNER corner is, so br/tr are inset from the right and bl/tl from the left.
+check("no seat's content reaches under the table's card", () => {
+  const cardWidth = /\.cm-table-center\{[^}]*width:\s*([\d.]+)%/.exec(css);
+  assert.ok(cardWidth, "the card's width is a percentage of the table");
+  const need = Number(cardWidth[1]);
+  const inset = (selector, side) => {
+    const rule = new RegExp("\\" + selector + "[^{]*\\.cm-seat-figure\\{([^}]*)\\}").exec(css)
+      || new RegExp("\\" + selector + " \\.cm-seat-figure,[^{]*\\{([^}]*)\\}").exec(css);
+    if (!rule) return null;
+    const m = new RegExp(side + ":\\s*([\\d.]+)%").exec(rule[1]);
+    return m ? Number(m[1]) : null;
+  };
+  const short = [];
+  for (const [sel, side] of [[".cm-q-br", "right"], [".cm-q-tr", "right"], [".cm-q-bl", "left"], [".cm-q-tl", "left"]]) {
+    const got = inset(sel, side);
+    if (got === null || got < need) short.push(`${sel} is inset ${got === null ? "not at all" : got + "%"} from its ${side}, needs ${need}%`);
+  }
+  assert.deepEqual(short, [], "a seat whose content runs under the card loses whatever is beneath it");
+});
+
+/* ------------------------------------------------------------------------------------ the mats */
+
+// From Rob: "in screenshot 3, note these are supposed to be the animated fill visuals for the fan
+// slices on the lobby seats. The mats are the 7 or so images I had uploaded before; they were in
+// the github repo."
+//
+// He is right and this was mine. The six elements of `crankmagic-sea.js` are the animated fills
+// behind the seats. The mats are a real catalog that already exists -- `game/ui/playmats.mjs`,
+// nine entries, images in `game/ui/assets/playmats/`, served by the host at `/playmats.mjs` and
+// `/playmats/<name>.png` (game/tools/serve-review.mjs lines 29 and 35) -- with its own
+// persistence in `saveMatPreference` / localStorage `crankmagic-playmats-v1`, which is the store
+// the table itself reads. Building a second catalog meant a choice that changed nothing in game.
+check("Choose mat reads the playmat catalog the game actually uses", () => {
+  assert.match(game, /import\("\/playmats\.mjs"\)/,
+    "the mats come from game/ui/playmats.mjs, not from the sea elements behind the seats");
+  assert.match(game, /PLAYMATS/, "the picker lists that module's own catalog");
+  assert.ok(!/CrankSea\.ELEMENTS/.test(game),
+    "CrankSea's elements are the animated fills behind the seats, not the playmats");
+});
+
+check("choosing a mat writes where the table reads it", () => {
+  assert.match(game, /saveMatPreference/,
+    "playmats.mjs owns the store (localStorage crankmagic-playmats-v1); writing anywhere else means the choice never reaches the game");
+  assert.match(game, /readMatPreferences/,
+    "and the picker marks the mat that seat already has");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);

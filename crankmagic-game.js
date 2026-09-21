@@ -1080,7 +1080,7 @@
     const change = meta.host
       ? b('Change deck', 'lobby-host-deck', {}, true, {cls: 'compact'})
       : b('Change deck', 'lobby-change-opp-deck', {opp: String(meta.opp)}, true, {cls: 'compact'});
-    const mat = b('Choose mat', 'lobby-choose-mat', Object.assign({seat: seat.id}, opp), false, {cls: 'compact'});
+    const mat = b('Choose mat', 'lobby-choose-mat', opp, false, {cls: 'compact'});
     const readyBtn = b(ready ? 'Not ready' : 'Ready', 'lobby-ready',
       meta.host ? {who: 'host'} : {who: 'opp', opp: String(meta.opp)}, false, {cls: 'compact' + (ready ? ' is-on' : '')});
     const leave = meta.host
@@ -1832,31 +1832,45 @@ actions["lobby-email-invite"] = async (el) => {
      the six elements of turn 3 -- the same animations the quadrants already run -- because those
      are the mats the app actually owns. Uploading your own is named in the handoff as the next
      increment; a picker that offered it today would offer nothing. */
-  const MAT_LABEL = {mist: "Mist", ocean: "Ocean", leaves: "Leaves", fire: "Fire", wheat: "Wheat", bog: "Bog"};
-  actions["lobby-choose-mat"] = (el) => {
-    const who = el.dataset.opp === undefined || el.dataset.opp === "" ? "host" : Number(el.dataset.opp);
-    const names = typeof CrankSea === "undefined" ? Object.keys(MAT_LABEL) : Object.keys(CrankSea.ELEMENTS);
-    const current = (who === "host" ? (lobby.host && lobby.host.mat) : (lobby.opponents[who] || {}).mat) || "";
-    C.modal("Choose your mat", `<p class="cm-muted">The art your board wears once the game starts. Every seat sees its own.</p>
-      <div class="cm-mat-strip">${names.map((n) => `<button type="button" class="cm-mat${n === current ? " is-on" : ""}" data-action="lobby-set-mat" data-mat="${e(n)}" data-who="${e(String(who))}">
-        <canvas class="cm-mat-art" data-sea="${e(n)}" aria-hidden="true"></canvas><span>${e(MAT_LABEL[n] || n)}</span></button>`).join("")}</div>`);
-    /* The strip is painted by the same module the table uses, so a mat looks in the picker
-       exactly as it will look under the board. */
-    if (typeof CrankSea !== "undefined") {
-      for (const canvas of document.querySelectorAll(".cm-mat-art")) {
-        CrankSea.startSea(canvas, {width: 120, height: 80, element: canvas.dataset.sea, opacity: 1});
-      }
+  /* THE PLAYMAT PICKER. The catalog is game/ui/playmats.mjs -- Rob's own uploads, the same
+     nine the table draws -- and the store is that module's saveMatPreference, which is where
+     the table reads from. Anything else would be a choice that never reached the game. */
+  let matsModule = null;
+  async function loadMats() {
+    if (matsModule) return matsModule;
+    /* served by the local host at /playmats.mjs (game/tools/serve-review.mjs:29), the same way
+       the connection panel is loaded above */
+    matsModule = await import("/playmats.mjs");
+    return matsModule;
+  }
+  function matSeatId(el) {
+    /* playmats.mjs numbers the host 0 and the opponents 1..3 (defaultPlaymat(seatId)). */
+    const opp = el.dataset.opp;
+    return opp === undefined || opp === "" ? 0 : Number(opp) + 1;
+  }
+  actions["lobby-choose-mat"] = async (el) => {
+    const seatId = matSeatId(el);
+    let M2;
+    try { M2 = await loadMats(); } catch (err) {
+      C.modal("Choose your mat", `<p>The playmats live on the local host, and it is not answering.</p>
+        <p class="cm-muted">Start CrankMagic Online and open this again. A mat only matters once a game is running, and a game needs the host too.</p>`);
+      return;
     }
+    const current = M2.readMatPreferences()[seatId] || M2.defaultPlaymat(seatId);
+    const tile = (id, name, image, note) => `<button type="button" class="cm-mat${id === current ? " is-on" : ""}" data-action="lobby-set-mat" data-mat="${e(id)}" data-seat="${seatId}" aria-pressed="${id === current}">
+      <span class="cm-mat-art"${image ? ` style="background-image:url(&quot;${e(image)}&quot;)"` : ' data-plain="1"'}></span>
+      <span class="cm-mat-name">${e(name)}${note ? `<small>${e(note)}</small>` : ""}</span></button>`;
+    const tiles = [tile("random", "Surprise me", null, "a different one each game")]
+      .concat(M2.PLAYMATS.map((m) => tile(m.id, m.name, m.image, m.image ? "" : "no art")));
+    C.modal("Choose your mat", `<p class="cm-muted">The art your board wears once the game starts. Every seat sees its own.</p>
+      <div class="cm-mat-strip">${tiles.join("")}</div>`);
   };
-  actions["lobby-set-mat"] = (el) => {
-    const who = el.dataset.who === "host" ? "host" : Number(el.dataset.who);
-    const mat = el.dataset.mat;
-    if (who === "host") { if (lobby.host) lobby.host.mat = mat; }
-    else if (lobby.opponents[who]) lobby.opponents[who].mat = mat;
+  actions["lobby-set-mat"] = async (el) => {
+    const M2 = await loadMats();
+    M2.saveMatPreference(Number(el.dataset.seat), el.dataset.mat);
     if (C.actions && C.actions.close) C.actions.close();
-    redraw();
+    C.notice("Mat chosen. Your board wears it when the game starts.");
   };
-
   /* Which pilot the AI seats fly by default -- 2b's fourth table rule. */
   function aiPilotLabel() {
     const ai = lobby.opponents.filter((o) => o && o.role === "ai");
