@@ -95,3 +95,38 @@ served locally, already holding everyone's selections.
   of this works, and the web lobby should say so plainly when the tunnel is unreachable.
 - **It does not open the local host to the web.** Everything arrives through the gateway, which is
   the component designed to face outward.
+
+---
+
+## Confirmed on Personal-HP, 2026-09-21
+
+Rob ran the launcher with remote guests and the tunnel came up:
+
+```
+Ready: http://127.0.0.1:8768/app/#game
+Remote guest invitations: https://medium-linking-replies-take.trycloudflare.com
+```
+
+Measured from here:
+
+| Check | Result |
+|---|---|
+| `GET /api/setup` → `guestOrigin` | `https://medium-linking-replies-take.trycloudflare.com` |
+| That origin reachable from the public internet | **200** |
+| `OPTIONS /` with `Origin: https://minorrob.github.io` | **404** |
+
+So the **transport is proven** and the remaining work is exactly what this plan said it was: the
+gateway has no endpoint for a table and no CORS for the web lobby's origin. That is piece 2, and
+it is now a measured starting point rather than an assumption.
+
+**Allowing that origin on the GATEWAY is not the same decision as allowing it on the host.** The
+gateway is already public, already token-guarded, and already the component outsiders talk to; the
+host keeps refusing every cross-origin request, which is the posture worth keeping.
+
+### One consequence for piece 1
+
+A `trycloudflare.com` address is **ephemeral** — a new one every time the host starts with
+`-RemoteGuests`. So the web lobby cannot be taught the tunnel once and remember it. The share link
+has to carry the current address, and the web lobby has to say plainly when the address it holds
+no longer answers, rather than failing quietly. That is why piece 1 stores it per table and lets
+it expire with the table.
