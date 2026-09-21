@@ -27,7 +27,11 @@ export function engineCommandLine(commandLine,{forge,classes}){
   if(!commandLine||!forge||!classes)return false;
   const flat=String(commandLine).replaceAll('\\','/').toLowerCase();
   const has=(p)=>flat.includes(String(p).replaceAll('\\','/').toLowerCase());
-  return has(resolve(forge,'forge-gui-desktop'))&&has(classes);
+  /* Joined as text, not with resolve(): this matches a COMMAND LINE, and resolve() treats a
+     Windows path as relative on Linux and prefixes the working directory, so the needle stops
+     matching on CI. A string comparison has no opinion about which platform wrote the path. */
+  const under=(dir,leaf)=>has(String(dir).replace(/[\\/]+$/,'')+'/'+leaf);
+  return under(forge,'forge-gui-desktop')&&has(classes);
 }
 
 /* Engines this host does not own -- orphaned by a previous serve-review.mjs -- found and

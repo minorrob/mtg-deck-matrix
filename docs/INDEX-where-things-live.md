@@ -107,3 +107,11 @@ GitHub Pages they are not there. See `pollLiveReadiness` for the pattern.
     **Restart it after every merge that touches `game/`** (Rob's rule, 2026-09-21), or a merged fix
     will look like it failed. `/api/table/readiness` returning 409 means no table is open, so a
     restart costs nothing.
+
+11. **`path.resolve()` treats a foreign-platform path as relative.** On Linux,
+    `resolve('C:/x/forge', 'leaf')` returns `<cwd>/C:/x/forge/leaf`, not the path you wrote. This
+    bit twice in one session: a suite that resolved its own root with a hand-rolled
+    `pathname.replace(/^\//, "")` scanned `<repo>/home/runner/...` on CI, and a command-line
+    matcher built its needle with `resolve()` and stopped matching. **Use `fileURLToPath` for
+    locations, and plain string joins when you are matching text rather than touching the disk.**
+    The suites run on Windows here and Ubuntu in CI, so either alone proves nothing.
