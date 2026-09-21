@@ -1,5 +1,6 @@
 // Lightweight guest live play — no workshop dependencies
 // Used only for /play guest path
+import {engineIsWorking} from '/action-policy.mjs';
 const $=id=>document.getElementById(id);
 
 let seatSession=null;
@@ -63,6 +64,11 @@ const poller=createSimplePoller({
     let statusText='';
     if(value.state.gameOver){
       statusText='Game complete';
+    }else if(engineIsWorking(value)){
+      /* The same spent prompt that stalled the host board reaches a guest here. Forge's prompt is
+         only replaced when the next one arrives, so showing it while no input is queued tells a
+         guest they are being asked something they are not. */
+      statusText=turnPlayer?'Waiting for '+(turnPlayer.playerId===viewerSeatId?'the engine':turnPlayer.name):'Waiting for the engine';
     }else if(value.ui.prompt){
       statusText=value.ui.prompt.slice(0,200);
     }else if(turnPlayer){

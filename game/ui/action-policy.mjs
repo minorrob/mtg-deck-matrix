@@ -45,3 +45,46 @@ export function maySkipToEndOfTurn(view,viewerPlayerId,skipTurn=null){
   if(Number(state.stackSize)>0)return false;
   return true;
 }
+
+/* IS ANYBODY BEING ASKED ANYTHING RIGHT NOW?
+ *
+ * Rob, 2026-09-21: "Very dumb that we are stuck on 'Untap' the first round for each player. No one
+ * will have lands out yet because they hadn't played yet, but I am still stuck on waiting to untap
+ * things."
+ *
+ * He was not stuck. CR 502: "No player receives priority during the untap step." The engine was
+ * moving on by itself and the board was telling him it was his action, because a prompt STAYS ON
+ * SCREEN after it has been answered -- ForgeBrowserBridge replaces `prompt` only when Forge sends
+ * the next showPromptMessage. So `/^Priority:/` matched a string that had already been spent, the
+ * board said "Your action", and the button under it was dead because `okEnabled` is ANDed with
+ * whether an input is actually queued.
+ *
+ * The fact to stand on is the one Forge supplies: `inputType` is the class name of the input
+ * queued for this seat, and the empty string when the queue is empty. An older adapter that never
+ * sends the field gets no stall invented on its behalf -- the same fail-closed rule
+ * paymentMayAutoResolve uses above.
+ */
+export function engineIsWorking(view){
+  const state=view.state||{},ui=view.ui||{};
+  if(state.gameOver)return false;
+  if(ui.choice||ui.nativeFallback||ui.actionInFlight)return false;
+  if(!Object.hasOwn(ui,'inputType'))return false;
+  if(ui.inputType!=='')return false;
+  return ui.okEnabled!==true;
+}
+
+/* DID THE RULES JUST TAKE A DRAW AWAY, AND WAS THAT CORRECT?
+ *
+ * CR 103.8a: "In a two-player game, the player who plays first skips the draw step of their first
+ * turn." There is no equivalent clause for ordinary multiplayer, so the table's size decides this
+ * and nothing else may. ForgeBrowserBridge.event() gates its draw-step card on exactly the same
+ * condition; this is the UI's side of that gate, so the player is told why instead of watching a
+ * card fail to arrive.
+ *
+ * In a four-player pod this is always false. If a starting player ever fails to draw there, the
+ * bug is in the engine or the adapter -- not here, and not correct.
+ */
+export function firstDrawSkipped(view,viewerPlayerId){
+  const state=view.state||{};
+  return state.turn===1&&(state.players||[]).length===2&&state.turnPlayerId===viewerPlayerId;
+}

@@ -91,7 +91,15 @@ try {
   console.log(`  reads of the game view      ${views.length} in ${SECONDS}s`);
   console.log(`  gap between reads           median ${pct(0.5)}ms · 90th ${pct(0.9)}ms · worst ${gaps[gaps.length - 1] || 0}ms`);
   console.log(`  slowest single request      ${slowest ? Math.round(slowest.ended - slowest.started) + "ms  " + slowest.url.replace(HOST, "") : "none"}`);
-  console.log(`  failed or errored reads     ${failed.length}${failed.length ? "  <-- the backoff climbs to 5000ms after four in a row" : ""}`);
+  /* ONLY A FAILED GAME-VIEW READ FEEDS THE BACKOFF. The board also asks for /match.json on the way
+     in -- the recorded-match file, which is absent during a live game -- and that expected 404 was
+     counted here as a failure for two runs before it was named. Keep them apart, so the number
+     that can reach five seconds is the only one presented as one. */
+  const failedViews = failed.filter((r) => /\/api\/game-view|\/match\/view/.test(r.url));
+  console.log(`  failed game-view reads      ${failedViews.length}${failedViews.length ? "  <-- the backoff climbs to 5000ms after four in a row" : ""}`);
+  for (const f of failedViews.slice(0, 5)) console.log(`      ${f.status || "network error"}  ${f.url.replace(HOST, "")}`);
+  const other = failed.filter((r) => !failedViews.includes(r));
+  if (other.length) console.log(`  other failed requests       ${other.map((r) => (r.status || "network error") + " " + r.url.replace(HOST, "")).join(", ")}`);
 
   /* ---- how long each control spent unusable ---- */
   const labels = new Set();

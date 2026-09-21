@@ -1,6 +1,6 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
-import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn} from '/action-policy.mjs';
+import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn,engineIsWorking,firstDrawSkipped} from '/action-policy.mjs';
 import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart.
@@ -71,7 +71,10 @@ function turnPlayer(){
   if(match&&Number(match[1])===f.turn){lastTurnName=match[2];rememberedTurn=f.turn;}
   return rememberedTurn===f.turn?f.players.find(p=>p.name===lastTurnName):null;
 }
-function hasPriority(){if(Number.isInteger(frame()?.priorityPlayerId))return frame().priorityPlayerId===viewerSeatId;return live?.ui.prompt?.match(/^Priority:\s*([^\n]+)/)?.[1]===humanPlayer()?.name;}
+/* A PROMPT IS NOT EVIDENCE ONCE IT HAS BEEN ANSWERED. The name-matching fallback below exists for
+   adapters that never report priorityPlayerId, and it was reading a spent prompt as a live
+   decision -- which is how an untap step with nothing in it presented as "Your action". */
+function hasPriority(){if(live&&engineIsWorking(live))return false;if(Number.isInteger(frame()?.priorityPlayerId))return frame().priorityPlayerId===viewerSeatId;return live?.ui.prompt?.match(/^Priority:\s*([^\n]+)/)?.[1]===humanPlayer()?.name;}
 function attackSelection(){return live?.ui.inputType==='InputAttack'||/Select creatures to attack/i.test(live?.ui.prompt||'');}
 function blockSelection(){return live?.ui.inputType==='InputBlock'||/Select.*blocker|select.*block target/i.test(live?.ui.prompt||'');}
 function canSelectCard(c){return live?.ui.selectables.includes(c.cardId)||((attackSelection()||blockSelection())&&!!live?.ui.cardActions?.[c.cardId]);}
@@ -514,7 +517,13 @@ let completionReport=null,completionLoading=false,completionFeedbackSaved=false,
 function mountControls(){const host=$('focus').open&&Number($('focus').dataset.seat)===viewerSeatId?$('focus-hand'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
 let decisionPointer=false,lastCombatInput='';for(const area of [controls,combatPane])area.addEventListener('pointerdown',()=>{decisionPointer=true;});window.addEventListener('pointerup',()=>{setTimeout(()=>decisionPointer=false,0);});window.addEventListener('pointercancel',()=>decisionPointer=false);
 window.addEventListener('resize',mountControls);
-function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')gameAction({kind:'answer',choiceId:q.id,indices:[]});else notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
+/* SAY WHAT THE RULES DID, WHERE THE PLAYER WAS REFUSED. Rob clicked his library on turn one, was
+   told the draw "had to wait", and then watched the draw step not happen -- which reads as the
+   game losing his card. It was CR 103.8a doing its job, and only because that game had two
+   players. In a pod this branch never fires and the draw must arrive. */
+function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')return void gameAction({kind:'answer',choiceId:q.id,indices:[]});
+  if(live&&firstDrawSkipped(live,viewerSeatId))return void notifyAction('You are on the play, so the rules skip your draw this first turn — in a two-player game only. Nothing was lost; your next turn draws as normal.');
+  notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
 async function gameAction(action,guard){
   if(!live)return false;if(actionBusy){notifyAction("Your previous selection is still being applied. Please try again in a moment.");return false;}actionBusy=true;
   const observedRevision=live.revision;
@@ -612,6 +621,19 @@ function renderDecision(){
     prompt.textContent='Paying mana…';decisionArt.replaceChildren();options.replaceChildren();buttons.replaceChildren();lastDecision='';return;
   }
   const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision){controls.hidden=!!(cardMenu&&ui.choice?.title==='Choose an ability'&&ui.choice.options.length>1);return;}lastDecision=decisionKey;
+  /* NOBODY IS BEING ASKED ANYTHING. Say so and show no control, rather than the previous
+     decision's copy over a button that cannot be pressed. A disabled button reads as broken; an
+     absent one reads as "not yet", which is what this is. */
+  if(engineIsWorking(live)){
+    const step=phaseName(frame().phase),named=step.charAt(0).toUpperCase()+step.slice(1);
+    const acting=frame().players?.find(p=>p.playerId===frame().priorityPlayerId&&p.playerId!==viewerSeatId);
+    prompt.textContent=String(frame().phase).toUpperCase()==='UNTAP'
+      ?`${named} · no player acts in this step. Permanents untap and the game moves on by itself.`
+      :acting?`${named} · waiting for ${names[acting.playerId]}. Your controls come back when it is your turn to act.`
+      :`${named} · the engine is working. Your controls come back the moment you can act.`;
+    options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();
+    return;
+  }
   const priority=/^Priority:/m.test(ui.prompt);
   // Determine if the viewer is the decider for this prompt. For priority decisions, check hasPriority().
   // For other decisions (phase advance, mulligan, etc.), check if okEnabled is true.
@@ -741,48 +763,16 @@ function renderDecision(){
       buttons.append(cancel);
     }
     
-    // Auto-pass button: always visible, forces passing through remaining steps and ending turn
-    if(turnPlayer()?.playerId===viewerSeatId&&!frame().gameOver){
-      const autoPass=button('Auto-pass turn',async()=>{
-        // Check if there's active priority/stack that makes this dangerous
-        const dangerous=priority&&hasPriority()&&frame().stackSize>0;
-        if(dangerous&&!confirm('The stack has responses. Auto-pass will pass priority and continue through all remaining steps. Continue?'))return;
-        
-        const startTurn=frame().turn;let attempts=0;const maxAttempts=50;
-        while(frame().turn===startTurn&&attempts<maxAttempts&&!frame().gameOver){
-          attempts++;
-          if(!ui.okEnabled||ui.nativeFallback||ui.choice)break;
-          const success=await gameAction({kind:'ok'},fresh=>fresh.state?.turn===startTurn&&fresh.ui?.okEnabled);
-          if(!success)break;
-          await new Promise(resolve=>setTimeout(resolve,100));
-        }
-        if(frame().turn!==startTurn)notifyAction('Turn passed.');
-        else notifyAction('Auto-pass stopped. Complete the current decision or use the main Continue button.');
-      },'auto-pass-button');
-      autoPass.title='Pass priority and advance through all remaining phases to end your turn.';
-      buttons.append(autoPass);
-    }
-    
-    // End Game button: always visible during live play
-    if(live&&!frame().gameOver){
-      const endGame=button('End game',async()=>{
-        if(!confirm('End this game and return to setup?\n\nThe local journal will be kept, but the live position cannot be resumed.'))return;
-        try{
-          if(guestMode){
-            notifyAction('Guest seats cannot end the match. Ask the host to end the game.');return;
-          }
-          if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
-          const response=await fetch('/api/close-game',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken}});
-          const result=await response.json();
-          if(!response.ok)throw Error(result.error||'Unable to end game');
-          window.dispatchEvent(new Event('crankmagic-game-closed'));
-          notifyAction('Game ended. Returning to setup...');
-          setTimeout(()=>guestMode?location.assign('/'):openGameSetup(),500);
-        }catch(error){notifyAction(error.message);}
-      },'end-game-button');
-      endGame.title='End this game and return to setup. The journal will be kept.';
-      buttons.append(endGame);
-    }
+    /* TWO CONTROLS LEFT THIS ROW, 2026-09-21. Rob: "End game shouldn't be a permanent fixture in
+       the top right action box. (Don't want accidental clicks of it)... You also have 'End my
+       turn' and 'Auto-pass turn' in the action box. Don't need both."
+
+       Neither is lost. "End current game" is in Game setup (setup.mjs), behind a two-click
+       confirm, which is the safer of the two and was always the one to keep. "Auto-pass turn" was
+       a hand-rolled loop that pressed OK up to fifty times and broke on anything it did not
+       recognize; "Skip to end" in the header does the same job through maySkipToEndOfTurn, which
+       stops for a choice, a payment, a native prompt and a non-empty stack. Forge's own "End my
+       turn" stays, because that one is the engine's control and not ours. */
     if(ui.selectables.length&&!hiddenCandidates.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
     const startingPlayer=/who would you like to start|starting player|start this game/i.test(ui.prompt);
