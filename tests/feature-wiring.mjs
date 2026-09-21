@@ -146,7 +146,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/aspect-ratio:3\/4/.test(tile), "the tile is a 3:4 poster");
   ok(/border-radius:var\(--v-radius-tile\)/.test(tile), "at the tile radius");
   ok(/border:0/.test(tile), "with no border of its own -- the stage is the pill, not the frame");
-  ok(/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/.test((css.match(/\.cm-deck-grid\{[^}]*\}/) || [""])[0]), "the grid is three across");
+  /* The screen draws three across, and three is what a 260px minimum lays in the ~1010px a
+     1280 window leaves after the rail and the padding. It is written as auto-fill rather than
+     as the number 3 so a wider window gets a fourth and a fifth tile instead of three enormous
+     ones, and so zooming out reflows rather than only shrinking the text (Rob, 2026-09-20).
+     Holding the literal 3 here would hold the defect. */
+  ok(/grid-template-columns:repeat\(auto-fill,minmax\(260px,1fr\)\)/.test((css.match(/\.cm-deck-grid\{[^}]*\}/) || [""])[0]), "the grid fits as many tiles as the width allows, from a 260px tile");
   /* The stage-colored borders are dropped. A .cm-stage-* rule that sets a border or its color
      is the old frame coming back. */
   const stageBorders = [...css.matchAll(/\.cm-stage-(?:defining|building|playable|complete|archived)\b[^{}]*\{([^}]*)\}/g)].map((m) => m[1]).filter((body) => /border(-[a-z]+)?-?color:|border:/.test(body));

@@ -6,10 +6,10 @@
 .player-mat{position:relative;container-type:inline-size;aspect-ratio:1020/603;border:2px solid #566570;border-radius:12px;overflow:hidden;isolation:isolate;background:#060909;box-shadow:inset 0 0 0 3px #141d23,0 8px 14px #0005}
 .personal-mat{background-image:linear-gradient(#06131a33,#06131a33),url('/rob-playmat.png');background-size:100% 100%;border-color:#77a99f}
 .plain-mat{background:radial-gradient(ellipse at top,#182026,#050708 75%)}
-.mat-zone{position:absolute;left:3.6%;width:64%;border:1px dashed #b9c6c388;border-radius:4px;background:#06101940}
+.mat-zone{position:absolute;left:3.6%;width:64%;border:1px solid rgba(255,255,255,.55);border-radius:4px;background:#06101940}
 .mat-battlefield{top:5.5%;height:54%}.mat-lands{top:69%;height:24%}
 .personal-mat .mat-zone{border:0;background:#05101926}
-.mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
+.mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-style:italic;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
 .mat-cards{position:absolute;inset:3% 2% 16%;display:flex;flex-wrap:wrap;gap:5px;overflow:auto;align-content:start;padding:3px;scrollbar-width:thin}
 .player-mat .mat-cards .card{width:clamp(36px,11cqw,145px);height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
 .player-mat .mat-cards{padding:3px}
@@ -22,7 +22,10 @@
 .mat-turn-guide{position:absolute;left:72%;top:6%;width:13%;height:26%;display:flex;flex-direction:column;justify-content:space-around;background:#081119ee;padding:2px 3px;border-radius:4px;font-family:Georgia,serif;font-size:clamp(6px,1.35cqw,14px);line-height:1.15;color:#d2dddd}
 .mat-life{position:absolute;left:86%;top:6%;width:11%;height:17%;padding:2px;background:#08131cef;border:1px dashed #b9c6c388;color:#e5fff8;display:flex;align-items:center;justify-content:center;flex-direction:column}
 .mat-life small{font:clamp(7px,1.4cqw,16px) Georgia,serif}.mat-life strong{font-size:clamp(16px,4cqw,36px);line-height:1.1}
-.mat-pile{position:absolute;width:11.5%;height:24%;padding:0;border:1px dashed #b9c6c388;border-radius:4px;background:#06101985;overflow:visible;display:flex;align-items:center;justify-content:center}
+/* DELTA D: Command, Exile, Library and Graveyard are CARD-SHAPED -- 488:680, one card wide --
+   because the thing inside them is a card and a frame that is not card-shaped reads as a box
+   with a card in it rather than as a place a card belongs. The height follows the width. */
+.mat-pile{position:absolute;width:11.5%;aspect-ratio:488/680;height:auto;padding:0;border:1px solid rgba(255,255,255,.55);border-radius:4px;background:#06101985;overflow:visible;display:flex;align-items:center;justify-content:center}
 .mat-command{left:73%;top:38%}.mat-exile{left:86%;top:38%}.mat-library{left:73%;top:70%}.mat-graveyard{left:86%;top:70%}
 .mat-pile>img{height:88%;width:auto;max-width:92%;object-fit:contain;border-radius:3px;align-self:start;margin-top:2px}
 .mat-pile .mat-zone-label{font-size:clamp(7px,1.35cqw,15px);left:-2px;bottom:-3px;white-space:nowrap}
