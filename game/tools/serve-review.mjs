@@ -97,7 +97,7 @@ let tableRuntime=null,hostInvitations=[];
 try{tableRuntime=restoreLocalTableRuntime(runtimeOptions);if(tableRuntime){await tableRuntime.recover();const table=tableRuntime.view(),engine=liveStatus();if(table.phase==='playing'&&(!['starting','ready','playing'].includes(engine.status)||table.matchId!==engine.matchId)){tableRuntime.abandon();tableRuntime=null;console.warn('An interrupted multiplayer table was closed. Its game logs remain available.');}}}
 catch(error){tableRuntime=null;console.warn('Multiplayer table recovery needs attention: '+error.message);}
 const guestService={};for(const method of ['authenticate','join','table','deck','ready','heartbeat','exit','rematch','view','action','report','feedback'])guestService[method]=(...args)=>{if(!tableRuntime)throw Object.assign(Error('This table is not accepting players'),{status:409});return tableRuntime.guest[method](...args);};
-const guestGateway=createGuestGateway({host:guestHost,port:guestPort,publicOrigin:process.env.COMMANDER_GUEST_PUBLIC_ORIGIN||undefined,service:guestService,readPublicFile:async name=>{const path=guestAssets.get(name);if(!path)throw Error('Unknown public file');return readFile(resolve(root,path));}});
+const guestGateway=createGuestGateway({host:guestHost,port:guestPort,publicOrigin:process.env.COMMANDER_GUEST_PUBLIC_ORIGIN||undefined,webOrigin:process.env.COMMANDER_WEB_ORIGIN||undefined,service:guestService,readPublicFile:async name=>{const path=guestAssets.get(name);if(!path)throw Error('Unknown public file');return readFile(resolve(root,path));}});
 const guestInfo=await guestGateway.listen();
 const remoteGuestsAvailable=/^https:\/\//.test(guestInfo.origin);
 const token=randomUUID(),prepared=new Map();let preparing=false,launching=false;
