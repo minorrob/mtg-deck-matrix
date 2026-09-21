@@ -1,6 +1,6 @@
 import {spawn,execFileSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
-import {readFileSync,writeFileSync,mkdirSync,createWriteStream,existsSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,createWriteStream,existsSync,readdirSync} from 'node:fs';
 import {resolve,dirname,delimiter,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {sha256} from '../contracts/deck-snapshot.mjs';
@@ -36,16 +36,40 @@ export async function closeLocalGame(){
   running.status='closed';delete running.error;
   return liveStatus();
 }
+/* WHERE THE ENGINE AND ITS JDK ARE. The environment first, because that is what
+   game/tools/doctor.mjs reads and what the launcher scripts set -- a doctor that passes while
+   the launcher fails is worse than either failing. Then the two layouts that have existed
+   beside the repository. A JDK without javac is not a JDK here: the launcher compiles the
+   adapter before it runs anything, so a runtime-only Java would fail later and less clearly. */
+export function resolveEngineRoots({root: from = root, env = process.env} = {}){
+  const forge = env.CRANKMAGIC_FORGE_ROOT ? resolve(env.CRANKMAGIC_FORGE_ROOT) : resolve(from, '../forge');
+  const hasJavac = (dir) => existsSync(resolve(dir, 'bin/javac.exe')) || existsSync(resolve(dir, 'bin/javac'));
+  const tried = [];
+  const candidates = [];
+  if (env.CRANKMAGIC_JDK_ROOT) candidates.push(resolve(env.CRANKMAGIC_JDK_ROOT));
+  for (const parent of ['../runtime', '../commander-runtime']) {
+    const dir = resolve(from, parent);
+    if (!existsSync(dir)) { tried.push(dir); continue; }
+    for (const name of readdirSync(dir)) if (/^jdk[-.\d+]*$/i.test(name) || /^jdk/i.test(name)) candidates.push(resolve(dir, name));
+  }
+  for (const dir of candidates) {
+    if (hasJavac(dir)) return {forge, jdk: dir};
+    tried.push(dir);
+  }
+  throw Error(`No JDK with javac was found. Set CRANKMAGIC_JDK_ROOT to a JDK 17, or keep one beside the repository in runtime/. Looked in: ${tried.join(', ') || '(nowhere)'}`);
+}
+
 export async function launchLocalGame(pod){
   if(childIsRunning(running?.child)&&liveStatus().status==='finished')await closeLocalGame();
   if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
   if(childIsRunning(running?.child))throw Error('A standalone match is already running. Finish or close its Forge window first.');
-  const forge=resolve(root,'../forge'),jdk=resolve(root,'../commander-runtime/jdk-17.0.20.1+1'),lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
+  const {forge,jdk}=resolveEngineRoots(),lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
   const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim();
   if(commit!==lock.commit)throw Error('Pinned Forge revision mismatch');
   const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`),classes=resolve(root,'game/.local/classes');mkdirSync(classes,{recursive:true});
   const sources=['ForgeProbe.java','ForgeLocalGame.java','ForgeBrowserBridge.java'].map(f=>resolve(root,'game/engine-adapter/src/crankmagic',f));
-  execFileSync(resolve(jdk,'bin/javac.exe'),['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
+  const javac=existsSync(resolve(jdk,'bin/javac.exe'))?resolve(jdk,'bin/javac.exe'):resolve(jdk,'bin/javac');
+  execFileSync(javac,['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
   pod={...pod,matchId:pod.matchId||randomUUID()};
   const directory=resolve(root,'game/.local/games',new Date().toISOString().replace(/[^\w-]/g,'-')),profile=resolve(directory,'forge-profile');mkdirSync(profile,{recursive:true});
   writeFileSync(resolve(directory,'pod.json'),JSON.stringify(pod,null,2));
@@ -58,7 +82,8 @@ export async function launchLocalGame(pod){
   if(!opens)throw Error('Pinned Forge desktop module flags are missing');
   const moduleArgs=opens.trim().split(/\s+/);
   if(moduleArgs.length%2||moduleArgs.some((v,i)=>i%2?!/^[\w.]+\/[\w.]+=ALL-UNNAMED$/.test(v):v!=='--add-opens'))throw Error('Unexpected Forge desktop module flags');
-  const child=spawn(resolve(jdk,'bin/java.exe'),[...moduleArgs,...args],{cwd:forge,windowsHide:true,env:{...process.env,APPDATA:profile,LOCALAPPDATA:profile},stdio:['ignore','pipe','pipe']});
+  const javaBin=existsSync(resolve(jdk,'bin/java.exe'))?resolve(jdk,'bin/java.exe'):resolve(jdk,'bin/java');
+  const child=spawn(javaBin,[...moduleArgs,...args],{cwd:forge,windowsHide:true,env:{...process.env,APPDATA:profile,LOCALAPPDATA:profile},stdio:['ignore','pipe','pipe']});
   const log=createWriteStream(resolve(directory,'console.log'));child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});
   running={status:'starting',directory,pid:child.pid,child,startedAt:new Date().toISOString()};
   child.on('error',e=>{running.status='error';running.error=e.message;log.end();});
