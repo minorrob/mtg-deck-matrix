@@ -373,7 +373,18 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   const t = L.table({bracket: 3, seats: L.activeSeats(lobby)});
   ok(L.startReady(t, lobby), "a human guest never blocks Start on the host's side");
   ok(!L.startReady(t, {...lobby, host: {seat: mine, ready: false}}), "the host must be ready");
-  ok(!L.startReady(t, {...lobby, opponents: [lobby.opponents[0], {role: "ai", seat: seatOf(decks[1]), ready: false}]}), "an AI seat must be ready");
+  /* AN AI DOES NOT PRESS A BUTTON. From Rob's testing, 2026-09-21: "I had readied up and all 3 AI
+     seats had a deck, but still showed Pending Deck status and wouldn't auto-start."
+     He was right and it could never have started. The lobby seats an AI with `ready: false` and
+     nothing ever sets it true -- Ready Up is a control on your own seat, and an AI has no one to
+     press it. So the table waited on a flag no one could ever supply. A seated AI whose deck
+     passes the table's own checks IS ready; readiness for an AI is a fact about its deck, not a
+     record of a click. The flag still governs the host and any human guest, who really do press
+     it. */
+  ok(L.startReady(t, {...lobby, opponents: [lobby.opponents[0], {role: "ai", seat: seatOf(decks[1]), ready: false}]}),
+    "a seated AI with a legal deck is ready without anyone pressing Ready for it");
+  ok(!L.startReady(t, {...lobby, opponents: [lobby.opponents[0], {role: "ai", seat: null, ready: true}]}),
+    "but an AI with no deck is not ready, whatever its flag says");
   ok(!L.startReady({...t, ready: false}, lobby), "and the table's own verdict gates it");
   eq([L.tableAccepting({table: {phase: "selecting"}}), L.tableAccepting({table: {phase: "rematch"}}), L.tableAccepting({table: {phase: "playing"}}), L.tableAccepting(null)], [true, true, false, false],
     "a table still selecting or in rematch is accepting, and must be reused rather than replaced");

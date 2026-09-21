@@ -51,14 +51,25 @@
    width and every quadrant -- a quarter of a 4:3 grid divided in both directions -- is 4:3
    too, at any size. There is no max-height: a height cap on a fixed-ratio box caps the width
    with it, which is what used to leave the table short of the page on a tall window. */
-.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));width:100%;aspect-ratio:4/3;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
+/* THE TABLE TAKES THE ROOM IT HAS. Full width, and the height left below it in the window --
+   --cm-table-h is measured per render in sizeTable(). A fixed aspect-ratio made the height
+   follow the width and nothing else, so on a wide window the table ran past the bottom of the
+   screen and the seats never answered zoom. Sized this way a quadrant's shape follows the
+   window's, all four stay identical, and the whole table is in view without scrolling. */
+.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));width:100%;height:var(--cm-table-h,68vh);min-height:320px;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
 .cm-seat-q{position:relative;isolation:isolate;min-width:0;overflow:hidden;background:var(--v-panel)}
 /* The sea fills the quadrant and stays behind everything; the fan is over it and under the seat. */
 .cm-seat-sea{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
 /* 2b draws the wedges at .62 over the element, with no blend mode. Screening them against the
    ocean turned a red-and-white identity into more blue. */
 .cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.62;pointer-events:none}
-.cm-seat-body{position:relative;z-index:2;height:100%;display:flex;min-width:0}
+/* THE SHADE. README: the element runs at "~80% opacity under a dark top/bottom gradient".
+   Without it the only way to keep words readable was to dim the whole element, which is why
+   the sea looked still: it was moving, at half strength, everywhere. With it the element is
+   strong through the middle of the quadrant and dark only where the label and the reading
+   sit. The stops are 2b's own. */
+.cm-seat-shade{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--poster-ground) 28%,transparent),color-mix(in srgb,var(--poster-ground) 5%,transparent) 40%,color-mix(in srgb,var(--poster-ground) 35%,transparent))}
+.cm-seat-body{position:relative;z-index:3;height:100%;display:flex;min-width:0}
 /* The seat's own card keeps every class and handler it had; what changes is that it sits on the
    table rather than in a row, and its ground is the sea rather than a panel. */
 /* No panel: the element and the fan are the seat's ground, and text sits over them with its
@@ -73,8 +84,8 @@
 /* The bottom row's header sits exactly where the card reaches in, so it stops short of it on
    its inner side. The top row's header is at the far end of the quadrant from the card and
    needs no inset. Measured, not assumed: the permutation pass reports the overlap in px2. */
-.cm-q-tr .cm-lobby-seat>header{right:32%}
-.cm-q-tl .cm-lobby-seat>header{left:32%}
+.cm-q-tr .cm-lobby-seat>header{right:28%}
+.cm-q-tl .cm-lobby-seat>header{left:28%}
 .cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
 .cm-seat-q .cm-lobby-ready{margin-left:auto}
@@ -93,8 +104,8 @@
 /* THE CARD'S FOOTPRINT, KEPT CLEAR. The card is 30% of the table wide and 30% of it tall, so
    centered it reaches 30% of a QUADRANT in from the inner corner. 32% leaves a margin. Nothing
    a seat draws can end up underneath it, which is what was eating the AI seat's dropdowns. */
-.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:32%}
-.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:32%}
+.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:28%}
+.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:28%}
 .cm-q-tl .cm-seat-figure,.cm-q-bl .cm-seat-figure{flex-direction:row-reverse}
 /* The top row's reading hangs from the top of the figure, the bottom row's from the bottom,
    so the text is always on the side of the quadrant nearest that player. */
@@ -120,13 +131,16 @@
 /* The host's own tools on another seat -- the invite editor, the AI configurator. DELTA B.4
    hides a seat's PLAYER controls from everyone but its player; the README keeps the host's
    here, and hiding them left an AI seat that could be created and never given a deck. */
-.cm-seat-host-tools{margin-top:6px;font-size:12px;display:grid;gap:6px;max-height:100%;overflow:auto;
+/* A select whose longest option is wider than the panel pushed the panel sideways and it grew
+   a horizontal scrollbar. Nothing here scrolls sideways: the fields take the width they are
+   given and truncate, and only vertical overflow scrolls. */
+.cm-seat-host-tools{margin-top:6px;font-size:12px;display:grid;gap:6px;width:100%;max-height:100%;overflow-x:hidden;overflow-y:auto;
   padding:9px 11px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 66%,transparent);
   backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 16%,transparent);
   scrollbar-width:thin;text-align:left}
 .cm-q-tl .cm-seat-host-tools,.cm-q-bl .cm-seat-host-tools{text-align:right}
 .cm-seat-host-tools label{display:grid;gap:3px;font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent)}
-.cm-seat-host-tools select,.cm-seat-host-tools input{min-height:30px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);border:1px solid color-mix(in srgb,var(--poster-ink) 26%,transparent);color:var(--poster-ink);border-radius:var(--v-radius);padding:4px 8px}
+.cm-seat-host-tools select,.cm-seat-host-tools input{width:100%;max-width:100%;min-width:0;min-height:30px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);border:1px solid color-mix(in srgb,var(--poster-ink) 26%,transparent);color:var(--poster-ink);border-radius:var(--v-radius);padding:4px 8px}
 .cm-seat-host-tools .v-button{min-height:28px;padding:0 10px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 60%,transparent);border-color:color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink);backdrop-filter:blur(4px)}
 .cm-seat-host-tools .v-button.primary{background:var(--v-brass);border-color:var(--v-brass);color:var(--poster-ground)}
 .cm-q-tl .cm-seat-host-tools,.cm-q-bl .cm-seat-host-tools{justify-items:end}
@@ -156,7 +170,12 @@
    wide screen the card shrank against the seats it sits between. It scrolls if a long rule
    is clipped by the card's own corner, which is how 2b draws it -- with overflow:auto that
    bleed became a scroll region and the card grew two scrollbars. */
-.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:30%;min-width:210px;aspect-ratio:4/3;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(14px,1.4vw,26px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
+/* A box of rules is as tall as its rules. It was a share of both axes to carry a seat's shape;
+   Rob overrode that -- height off the ratio, width kept for the text. The width is still a
+   share of the table so it scales, with a floor under it so the launch line never wraps to a
+   third row. Everything that keeps seats clear of it derives from this width, so narrowing
+   the card widens the seats by itself. */
+.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:26%;min-width:250px;max-height:56%;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(12px,1.2vw,22px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
 .cm-table-center h2{font-size:15px;margin:0;color:var(--table-ink)}
 /* 2b stamps the wand-and-gear into the panel's bottom-right at 7%, greyscale, bleeding off
    the edge. Decorative, so it is aria-hidden and sits under everything that carries words. */

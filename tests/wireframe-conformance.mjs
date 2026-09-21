@@ -227,23 +227,11 @@ check("no lobby selector is declared twice in crankmagic.css", () => {
 // shrinks in both directions to honor the ratio. `max-height:72vh` was doing exactly that, so on
 // a tall window the table stopped well short of the content column while the panel below it ran
 // the full width. The ratio is the thing to keep; the cap is the thing to drop.
-check("the table is not height-capped, which would cap its width", () => {
+check("the table fills the width it is given", () => {
   const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
   assert.ok(rule, "no base rule for the lobby table");
-  assert.match(rule[1], /aspect-ratio:/, "the table keeps a ratio, so seats keep theirs");
-  assert.ok(!/max-height:\s*[\d.]+(vh|vw|px)/.test(rule[1]),
-    "a height cap on a fixed-ratio box caps its width as well, so the table stops short of the page");
-});
-
-// A 2x2 grid divides both dimensions, so a quadrant carries the same ratio as the table. Rob:
-// "the middle Table Rules box should be the same aspect ratio as the seats."
-check("the table's card carries a seat's aspect ratio", () => {
-  const table = /\.cm-lobby-table\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
-  const card = /\.cm-table-center\{[^}]*aspect-ratio:\s*([\d.]+)\s*\/\s*([\d.]+)/.exec(css);
-  assert.ok(card, "the table's card needs an aspect-ratio of its own");
-  const ratio = (m) => Number(m[1]) / Number(m[2]);
-  assert.ok(Math.abs(ratio(table) - ratio(card)) < 0.02,
-    `a quadrant is ${ratio(table).toFixed(3)} and the card is ${ratio(card).toFixed(3)}`);
+  assert.match(rule[1], /width:\s*100%/, "the table fills its column");
+  assert.ok(!/max-width:/.test(rule[1]), "nothing may cap it short of the column");
 });
 
 // A px ceiling on the card's width stops it growing with the table, so on a wide screen the card
@@ -314,6 +302,73 @@ check("choosing a mat writes where the table reads it", () => {
     "playmats.mjs owns the store (localStorage crankmagic-playmats-v1); writing anywhere else means the choice never reaches the game");
   assert.match(game, /readMatPreferences/,
     "and the picker marks the mat that seat already has");
+});
+
+/* ------------------------------------------------------------------------- the animated sea */
+
+// From Rob's testing, 2026-09-21: "the background should be animated with that slowly flowing
+// visual animation."
+//
+// It is animated -- measured at 60 rAF ticks a second in the Playwright Chrome, with the field
+// moving. It was not VISIBLE, and the README says why. Anchor, README section "Play lobby
+// (table-first, wireframe 2b)": each quadrant is filled with the animated element for that
+// seat's status, "`screens/table-sea.js`, one fixed element per canvas, ~80% opacity under a
+// dark top/bottom gradient".
+//
+// The build ran it at 50% and had no gradient at all, so the element was faint everywhere
+// instead of strong in the middle and dimmed only where words sit. Wireframe 2b draws the
+// gradient as its own layer: linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.05) 40%,
+// rgba(0,0,0,.35)).
+check("the sea runs at the opacity the README gives it", () => {
+  const call = /startSea\(canvas,[\s\S]{0,200}?opacity:\s*(\.?[\d.]+)/.exec(game);
+  assert.ok(call, "the lobby's startSea call not found");
+  const opacity = Number(call[1].startsWith(".") ? "0" + call[1] : call[1]);
+  assert.ok(opacity >= 0.75, `the README says ~80%; this runs at ${opacity}`);
+});
+
+check("a dark top-and-bottom gradient sits over the sea", () => {
+  assert.match(game, /cm-seat-shade/,
+    "2b draws the gradient as its own layer over the element, which is what lets the sea run at 80% and the words stay readable");
+  const rule = /\.cm-seat-shade\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "the shade needs a rule");
+  assert.match(rule[1], /linear-gradient\(180deg/, "top to bottom, as 2b draws it");
+});
+
+/* --------------------------------------------------- the table fits the window it is looking at */
+
+// From Rob's testing, 2026-09-21: "same zoom issue on the lobby. When I zoom in/out, the seats
+// aren't becoming smaller/larger. Only their contents ... I want the entire lobby table to
+// auto-resize to fit the aspect ratio of the screen resolution, so that ... the entire table is
+// viewable without scrolling."
+//
+// A fixed `aspect-ratio:4/3` on a full-width table makes its height follow its width and nothing
+// else, so on a wide window the table was taller than the window and the seats never responded to
+// zoom. Sizing it from the space it actually has -- full width, and the height left below it --
+// makes a quadrant's shape follow the window's, which is what he asked for.
+//
+// The card then keeps a seat's shape for free: a quadrant is 50% x 50% of the table and the card
+// is 30% x 30%, so they share a ratio at every window shape, with no rule to keep in step.
+check("the table is sized from the space it has, not from a fixed ratio", () => {
+  const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "no base rule for the lobby table");
+  assert.ok(!/aspect-ratio:\s*\d/.test(rule[1]),
+    "a fixed ratio makes the table taller than the window on a wide screen, and deaf to zoom");
+  assert.match(rule[1], /height:/, "it takes the height left below it");
+});
+
+// Rob, later the same day: "You can make the middle box height smaller (breaking the ratio) while
+// maintaining width (up to the width required for the text used in this box)." That supersedes
+// his earlier "same aspect ratio as the seats" for this box: a box of rules is as tall as its
+// rules. What has to hold instead is that its WIDTH stays a share of the table -- because the
+// inset keeping every seat clear of it is derived from that width, and a px-fixed card would
+// drift out of step with the seats as the window grows.
+check("the table's card is a share of the table's width, and no taller than its rules", () => {
+  const rule = /\.cm-table-center\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "no rule for the table's card");
+  assert.match(rule[1], /width:\s*[\d.]+%/, "width is a share of the table, which the seat insets derive from");
+  assert.ok(!/(^|;)height:\s*[\d.]+%/.test(rule[1]),
+    "height follows the content now; a fixed share would put empty card under the seats again");
+  assert.match(rule[1], /min-width:/, "with a floor, so the launch line does not wrap to a third row");
 });
 
 console.log(`wireframe-conformance: ${checks} checks passed`);
