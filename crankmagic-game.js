@@ -843,9 +843,14 @@
     return {seated: seated.length, notReady};
   }
   function centerPanel(t, w) {
-    const line = !w.seated ? 'No one is seated yet.'
+    /* What the box says, in the order a person needs it: counting, then ready, then what is
+       still missing. The countdown's own seconds are written straight into this element by
+       tickCountdown rather than through a redraw -- a redraw a second would rebuild the table,
+       restart four canvas animations and drop focus out of whatever the host was using. */
+    const line = countdownEndsAt ? countdownLine()
+      : !w.seated ? 'No one is seated yet.'
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
-      : 'Every seat is ready. The table starts itself.';
+      : 'Every seat is ready. Starting…';
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" aria-hidden="true">
       <div class="cm-table-head"><h2>Table rules</h2><p class="cm-table-setby-top">set by the host</p></div>
@@ -855,7 +860,10 @@
         <div><dt>AI pilot</dt><dd>${e(aiPilotLabel())}</dd></div>
         <div><dt>Remote guests</dt><dd>${lobby.opponents.some((o) => o && o.role === 'human') ? 'on' : 'off'}</dd></div>
       </dl>
-      <p class="cm-table-launch" role="status">${e(line)}</p>
+      <div class="cm-table-launch-row">
+        <p class="cm-table-launch" role="status" aria-live="polite">${e(line)}</p>
+        ${b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
+      </div>
     </section>`;
   }
 
@@ -1141,6 +1149,56 @@
     return `<div class="cm-lobby-ready">${b(ready ? "Ready" : "Ready Up", "lobby-ready", attrs, !ready, {cls: "compact" + (ready ? " is-on" : "")})}</div>`;
   }
 
+  /* THE COUNTDOWN. Ten seconds, as Rob asked and as the README says. It begins by itself the
+     moment the table is ready, and Start begins it at any time the host wants. Losing
+     readiness -- a seat stands up, a deck stops validating -- stops it, because a table that
+     keeps counting toward a game it can no longer start is lying to the room. */
+  const COUNTDOWN_SECONDS = 10;
+  let countdownEndsAt = 0, countdownTimer = null;
+  /* Stop has to mean stop. cancelCountdown redraws, the redraw asks syncCountdown again, and a
+     table that is still ready would have started counting straight back up -- so an explicit
+     stop is remembered until the table stops being ready or the host presses Start. */
+  let countdownStopped = false;
+
+  function countdownLine() {
+    const left = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
+    return left ? `Starting in ${left}…` : 'Starting…';
+  }
+  function paintCountdown() {
+    const el = C.main && C.main.querySelector('.cm-table-launch');
+    if (el) el.textContent = countdownLine();
+  }
+  function cancelCountdown(why) {
+    if (!countdownEndsAt) return;
+    countdownEndsAt = 0;
+    clearInterval(countdownTimer); countdownTimer = null;
+    if (why) C.notice(why);
+    redraw();
+  }
+  function beginCountdown() {
+    if (countdownEndsAt || startInFlight) return;
+    countdownEndsAt = Date.now() + COUNTDOWN_SECONDS * 1000;
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+      if (Date.now() >= countdownEndsAt) {
+        clearInterval(countdownTimer); countdownTimer = null; countdownEndsAt = 0;
+        if (actions['lobby-start']) actions['lobby-start']();
+        return;
+      }
+      paintCountdown();
+    }, 250);
+    redraw();
+  }
+  /* Called from the view every time it draws, so the clock follows the table's own state. */
+  function syncCountdown(ready) {
+    if (!ready) {
+      countdownStopped = false;   /* the table will count again when it is ready again */
+      if (countdownEndsAt) cancelCountdown('A seat is no longer ready. The countdown stopped.');
+      return;
+    }
+    if (!countdownEndsAt && !startInFlight && !countdownStopped) beginCountdown();
+  }
+
   let startInFlight = false;
 
   views.play = async (params) => {
@@ -1190,11 +1248,11 @@
        so every handler that reached them still does; only where they live has moved. */
     hostToolsHTML = `<p>Table rules</p>
       <div class="cm-toolbar cm-menu-toolbar">
-        ${s("Bracket", "lobbyBracket", brackets, String(bracket.n))}
-        ${f("Game Changer cap", "lobbyCap", lobby.cap === "" ? "" : String(lobby.cap), `type="number" min="0" max="20" placeholder="${e(bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))}"`)}
+        ${s("Bracket", "lobbyBracket", brackets, String(bracket.n)).replace("<select", '<select data-action-change="lobby-set-bracket"')}
+        ${f("Game Changer cap", "lobbyCap", lobby.cap === "" ? "" : String(lobby.cap), `type="number" min="0" max="20" data-action-change="lobby-set-cap" placeholder="${e(bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))}"`)}
         ${b(confirmed ? "Confirmed" : "Confirm", "lobby-confirm-rules", {}, !confirmed, {cls: "compact" + (confirmed ? " is-on" : "")})}
       </div>
-      <p class="cm-lobby-says">${e(summary)}</p><hr>
+      <hr>
       ${b("Seat an opponent", "lobby-add", {}, false)}
       ${b("Clear the table", "lobby-clear", {}, false)}`;
     const rules = "";
@@ -1228,6 +1286,8 @@
     </div>`;
 
     const canStart = L.startReady(t, lobby);
+    /* the clock follows the table, not the other way round */
+    setTimeout(() => syncCountdown(L.startReady(table(), lobby)), 0);
     const startWhy = !lobby.host ? "Seat your deck first."
       : !lobby.host.ready ? "Ready Up on your seat."
       : !t.ready ? (t.why || "Fix blocked seats.")
@@ -1253,23 +1313,8 @@
     startSeas();
     pollLiveReadiness();
 
-    const bracketEl = $("[name=lobbyBracket]");
-    const capEl = $("[name=lobbyCap]");
-    if (bracketEl) bracketEl.addEventListener("change", (ev) => {
-      lobby.bracket = Number(ev.target.value) || 3;
-      lobby.rulesConfirmed = null;
-      /* changing rules clears ready flags */
-      if (lobby.host) lobby.host.ready = false;
-      lobby.opponents.forEach((o) => { o.ready = false; });
-      redraw();
-    });
-    if (capEl) capEl.addEventListener("change", (ev) => {
-      lobby.cap = ev.target.value === "" ? "" : Math.max(0, Number(ev.target.value) || 0);
-      lobby.rulesConfirmed = null;
-      if (lobby.host) lobby.host.ready = false;
-      lobby.opponents.forEach((o) => { o.ready = false; });
-      redraw();
-    });
+    /* Bracket and the cap are bound by delegation below, because they live in a menu that is
+       not in the DOM when this runs. */
 
     C.main.querySelectorAll(".cm-lobby-inline").forEach((box) => {
       wireCommanderSearch(box);
@@ -1846,7 +1891,12 @@ actions["lobby-email-invite"] = async (el) => {
     menu.className = "cm-menu cm-lobby-menu";
     menu.setAttribute("popover", "auto");
     menu.innerHTML = html;
-    document.body.appendChild(menu);
+    /* INSIDE #matrix-v2, not on document.body. Every design token is declared on that element
+       (crankmagic-design.css 19, 21, 45), and custom properties inherit down the DOM -- a
+       popover paints in the top layer but still inherits from its DOM parent. Appended to the
+       body, every var(--v-*) in .cm-menu resolved to nothing and the menu had no background
+       at all. */
+    (document.getElementById('matrix-v2') || document.body).appendChild(menu);
     const place = () => {
       if (!el.isConnected) { if (menu.matches(":popover-open")) menu.hidePopover(); return; }
       const r = el.getBoundingClientRect();
@@ -1858,8 +1908,29 @@ actions["lobby-email-invite"] = async (el) => {
     menu.addEventListener("toggle", (ev) => { if (ev.newState === "closed") menu.remove(); });
     return menu;
   }
-  actions["lobby-host-tools"] = (el) => popLobbyMenu(el, hostToolsHTML, 320);
-  actions["lobby-history"] = () => { location.hash = "reports"; };
+  actions["lobby-host-tools"] = (el) => {
+    /* A second press closes what the first opened, rather than stacking another behind it. */
+    const open = document.querySelector('.cm-lobby-menu');
+    if (open) { try { open.hidePopover(); } catch (err) { open.remove(); } return; }
+    popLobbyMenu(el, hostToolsHTML, 320);
+  };
+  /* GAME HISTORY. It used to set location.hash = 'reports', and there is no `reports` view --
+     route() falls back to `decks` for any hash it does not know, so the control looked like it
+     worked and landed on the wrong page. The games are already in the library; this shows
+     them. */
+  actions["lobby-history"] = () => {
+    const games = (C.state.games || []).slice().sort((a, x) => String(x.playedAt || '').localeCompare(String(a.playedAt || '')));
+    if (!games.length) {
+      C.modal('Game history', `<p>No games are recorded yet.</p><p class="cm-muted">A game logs itself when it finishes, and you can add one by hand from a deck's page.</p>`);
+      return;
+    }
+    const deckName = (id) => { const d = (C.state.decks || []).find((x) => x.id === id); return d ? d.name : 'Unknown deck'; };
+    const rows = games.slice(0, 50).map((g) => `<tr><td>${e(C.readableLocation ? String(g.playedAt || '').slice(0, 10) : String(g.playedAt || '').slice(0, 10))}</td>
+      <td>${e(deckName(g.deckId))}</td><td>${e(String(g.outcome || '-'))}</td><td>${e(g.finish ? String(g.finish) : '-')}</td>
+      <td>${e(g.pod ? String(g.pod) : '-')}</td></tr>`).join('');
+    C.modal('Game history', `<p class="cm-muted">${games.length} game${games.length === 1 ? '' : 's'} recorded. The most recent fifty are shown.</p>
+      <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Played</th><th>Deck</th><th>Outcome</th><th>Finish</th><th>Pod</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+  };
 
   /* LEAVE SEAT (wireframe 2b). Standing up is not clearing the table: it empties one seat and
      leaves the rest of the table as it was. */
@@ -2034,6 +2105,35 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
     } catch (_) {}
   }
 
+
+  /* THE TABLE'S RULES, wherever their controls happen to be. Changing either clears every
+     ready flag, because a seat that agreed to one bracket has not agreed to another. */
+  actions["lobby-set-bracket"] = (el) => {
+    lobby.bracket = Number(el.value) || 3;
+    lobby.rulesConfirmed = null;
+    if (lobby.host) lobby.host.ready = false;
+    lobby.opponents.forEach((o) => { o.ready = false; });
+    cancelCountdown();
+    save();
+    redraw();
+  };
+  actions["lobby-set-cap"] = (el) => {
+    lobby.cap = el.value === "" ? "" : Math.max(0, Number(el.value) || 0);
+    lobby.rulesConfirmed = null;
+    if (lobby.host) lobby.host.ready = false;
+    lobby.opponents.forEach((o) => { o.ready = false; });
+    cancelCountdown();
+    save();
+    redraw();
+  };
+
+  actions["lobby-start-now"] = () => {
+    const t = table();
+    if (!L.startReady(t, lobby)) { C.notice(t.why || 'Ready Up every occupied seat and fix any blocked decks.', true); return; }
+    countdownStopped = false;
+    beginCountdown();
+  };
+  actions["lobby-stop-now"] = () => { countdownStopped = true; cancelCountdown("Countdown stopped. Press Start when you are ready."); };
 
   actions["lobby-start"] = async () => {
     const t = table();
