@@ -849,7 +849,8 @@
        still missing. The countdown's own seconds are written straight into this element by
        tickCountdown rather than through a redraw -- a redraw a second would rebuild the table,
        restart four canvas animations and drop focus out of whatever the host was using. */
-    const line = launchError ? 'Error starting the table. Send the report?'
+    const line = gameLaunched ? 'The game is running.'
+      : launchError ? 'Error starting the table. Send the report?'
       : countdownEndsAt ? countdownLine()
       : !w.seated ? 'No one is seated yet.'
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
@@ -865,7 +866,7 @@
       </dl>
       <div class="cm-table-launch-row">
         <p class="cm-table-launch${launchError ? " is-error" : ""}" role="status" aria-live="polite" ${launchError ? `title="${e(launchError)}"` : ""}>${e(line)}</p>
-        ${launchError ? b("Send Log", "lobby-send-log", {}, true, {cls: "compact"}) : b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
+        ${gameLaunched ? b("Open table", "lobby-open-table", {}, true, {cls: "compact"}) : launchError ? b("Send Log", "lobby-send-log", {}, true, {cls: "compact"}) : b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
       </div>
     </section>`;
   }
@@ -1192,6 +1193,9 @@
   /* One go and one more, then stop and say so. Rob: "It should try up to 1 additional time." */
   const START_ATTEMPTS = 2;
   let startAttempts = 0, launchError = '';
+  /* A table that has started does not count down again. Cleared when the table stops being
+     ready -- a seat standing up, Clear the table -- which is when a NEW game becomes possible. */
+  let gameLaunched = false;
 
   function countdownLine() {
     const left = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
@@ -1226,10 +1230,11 @@
   function syncCountdown(ready) {
     if (!ready) {
       countdownStopped = false;   /* the table will count again when it is ready again */
-      startAttempts = 0; launchError = '';
+      startAttempts = 0; launchError = ''; gameLaunched = false;
       if (countdownEndsAt) cancelCountdown('A seat is no longer ready. The countdown stopped.');
       return;
     }
+    if (gameLaunched) return;              /* one is already running */
     if (hostReachable !== true) return;   /* nothing here can launch a game */
     if (!countdownEndsAt && !startInFlight && !countdownStopped && !launchError) beginCountdown();
   }
@@ -2249,10 +2254,12 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
         applyServerInvitations(started.invitations || []);
         startInFlight = false;
         redraw();
+        gameLaunched = true;
         C.notice('Private lobby open — Email Invite / Copy Link now use live guest links. Guests can pick decks.');
         return;
       }
       const live = await lobbyPollLive(240000);
+      gameLaunched = true;
       startInFlight = false;
       redraw();
       C.notice(live.status === 'playing' ? 'Live table is playing.' : 'Live table is ready.');
@@ -2279,6 +2286,9 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
   /* SEND LOG. The third state of the launch button, shown only while an error is. It opens the
      default mail client with the failure already written out -- a person who has just watched a
      table fail to start should not have to retype what happened. */
+  /* The table is running; this goes to it rather than starting another. */
+  actions["lobby-open-table"] = () => lobbyResumeTabletop();
+
   actions["lobby-send-log"] = () => {
     if (!launchError) return;
     const subject = encodeURIComponent('CrankMagic: the table failed to start');

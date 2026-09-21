@@ -7,7 +7,55 @@ import {sha256} from '../contracts/deck-snapshot.mjs';
 import {matchTelemetry} from './match-telemetry.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 let running=null;
-export function childIsRunning(child){return !!child&&child.exitCode===null&&child.signalCode===null;}
+export function childIsRunning(child){
+  if(!child||child.exitCode!==null||child.signalCode!==null)return false;
+  /* Node keeps a child object whose OS process may already be gone -- a JVM closed from the
+     task bar or killed from outside leaves exitCode null until Node reaps it. Signal 0 asks
+     the OS without touching the process; ESRCH means there is nothing there. Handles without
+     a pid (the ones the suites construct) skip this and keep their old meaning. */
+  if(typeof child.pid==='number'&&child.pid>0){
+    try{process.kill(child.pid,0);}catch(error){if(error&&error.code==='ESRCH')return false;}
+  }
+  return true;
+}
+
+/* Is this command line one of OUR engines? It must name both the pinned Forge jar and the
+   adapter classes we compile, because either alone is somebody running Forge on their own or
+   a probe of ours -- and being called java.exe means nothing at all. Kept pure so it can be
+   held to examples in a suite rather than to whatever happens to be running. */
+export function engineCommandLine(commandLine,{forge,classes}){
+  if(!commandLine||!forge||!classes)return false;
+  const flat=String(commandLine).replaceAll('\\','/').toLowerCase();
+  const has=(p)=>flat.includes(String(p).replaceAll('\\','/').toLowerCase());
+  /* Joined as text, not with resolve(): this matches a COMMAND LINE, and resolve() treats a
+     Windows path as relative on Linux and prefixes the working directory, so the needle stops
+     matching on CI. A string comparison has no opinion about which platform wrote the path. */
+  const under=(dir,leaf)=>has(String(dir).replace(/[\\/]+$/,'')+'/'+leaf);
+  return under(forge,'forge-gui-desktop')&&has(classes);
+}
+
+/* Engines this host does not own -- orphaned by a previous serve-review.mjs -- found and
+   closed. Windows only, and silent when the query is unavailable: a failure to tidy must
+   never stop a game from starting. */
+export function reapOrphanEngines({forge,classes,keepPid}={}){
+  if(process.platform!=='win32')return [];
+  let rows=[];
+  try{
+    const out=execFileSync('powershell',['-NoProfile','-Command',
+      "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"],
+      {encoding:'utf8',windowsHide:true,timeout:8000});
+    const parsed=JSON.parse(out||'[]');
+    rows=Array.isArray(parsed)?parsed:[parsed];
+  }catch(error){return [];}
+  const closed=[];
+  for(const row of rows){
+    if(!row||row.ProcessId===keepPid)continue;
+    if(!engineCommandLine(row.CommandLine,{forge,classes}))continue;
+    try{execFileSync('taskkill',['/F','/T','/PID',String(row.ProcessId)],{encoding:'utf8',windowsHide:true,timeout:8000});closed.push(row.ProcessId);}
+    catch(error){/* already gone, or not ours to close */}
+  }
+  return closed;
+}
 export function bridgeConnectionPath(directory,seatId=0){
   if(!Number.isSafeInteger(seatId)||seatId<0||seatId>3)throw Error('Invalid seat');
   return resolve(directory,seatId===0?'browser-bridge.json':`seats/${seatId}/browser-bridge.json`);
@@ -59,11 +107,28 @@ export function resolveEngineRoots({root: from = root, env = process.env} = {}){
   throw Error(`No JDK with javac was found. Set CRANKMAGIC_JDK_ROOT to a JDK 17, or keep one beside the repository in runtime/. Looked in: ${tried.join(', ') || '(nowhere)'}`);
 }
 
-export async function launchLocalGame(pod){
-  if(childIsRunning(running?.child)&&liveStatus().status==='finished')await closeLocalGame();
-  if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
-  if(childIsRunning(running?.child))throw Error('A standalone match is already running. Finish or close its Forge window first.');
-  const {forge,jdk}=resolveEngineRoots(),lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
+export async function launchLocalGame(pod,options={}){
+  /* STARTING A GAME MAKES THE MACHINE READY. It used to close a previous engine only when the
+     match had already finished and refuse otherwise, which left the person to go and find a
+     window. Rob asked for the opposite and he is right: the one moment everybody agrees the old
+     game is over is the moment a new one is asked for. Pass {keepRunning:true} to get the old
+     refusal back, which is what a caller resuming a match wants. */
+  const {forge,jdk}=resolveEngineRoots();
+  if(options.keepRunning){
+    if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
+    if(childIsRunning(running?.child))throw Error('A standalone match is already running. Finish or close its Forge window first.');
+  }else{
+    if(childIsRunning(running?.child)){
+      try{await closeLocalGame();}
+      catch(error){try{running.child.kill('SIGKILL');}catch(ignored){/* it is going away either way */}}
+    }
+    /* An engine from a PREVIOUS host is invisible to this one, because `running` is in memory.
+       Restarting serve-review.mjs orphans the JVM it launched, and that JVM still holds the
+       bridge file and the card database. */
+    reapOrphanEngines({forge,classes:resolve(root,'game/.local/classes'),keepPid:running?.child?.pid});
+    running=null;
+  }
+  const lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
   const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim();
   if(commit!==lock.commit)throw Error('Pinned Forge revision mismatch');
   const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`),classes=resolve(root,'game/.local/classes');mkdirSync(classes,{recursive:true});
