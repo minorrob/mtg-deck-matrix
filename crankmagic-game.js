@@ -900,21 +900,27 @@
     const at = seat ? t.seating.order.indexOf(seat.id) : -1;
     const ready = !!opp.ready;
     const roleLabel = opp.role === "unused" ? "Open" : opp.role === "ai" ? "AI" : (opp.guestName || "Human");
+    /* Two different things, kept apart. `body` is the deck AUDIT -- cards, Game Changers,
+       score, type bars -- which the wireframe folds away because a quadrant shows a commander,
+       not an audit. `tools` is what the HOST acts with on someone else's seat, which the README
+       keeps: the invite editor on an empty or human seat, the AI configurator on an AI seat. */
     let body = "";
+    let tools = "";
     let readyBtn = "";
     if (opp.role === "unused") {
-      body = `<p class="cm-muted">Empty seat.</p>`;
+      tools = `<div class="cm-actions cm-seat-controls">${b("Invite someone", "lobby-invite-seat", {opp: String(i)}, true, {cls: "compact"})}${b("Seat an AI", "lobby-ai-seat", {opp: String(i)}, false, {cls: "compact"})}</div>`;
     } else if (opp.role === "human") {
-      body = humanInviteEditor(i, opp);
+      tools = humanInviteEditor(i, opp);
       if (seat) {
-        body = seatBody(seat, check, at, ready, {host: false, opp: i, human: true}) + body;
+        body = seatBody(seat, check, at, ready, {host: false, opp: i, human: true});
         readyBtn = readyCorner(ready, "opp", i);
       }
     } else if (!seat) {
-      body = inlineDeckEditor(i, opp);
+      tools = inlineDeckEditor(i, opp);
     } else {
       body = seatBody(seat, check, at, ready, {host: false, opp: i});
-      if (opp.editing) body += inlineDeckEditor(i, opp);
+      tools = opp.editing ? inlineDeckEditor(i, opp)
+        : `<div class="cm-actions cm-seat-controls">${b("Change deck", "lobby-change-opp-deck", {opp: String(i)}, false, {cls: "compact"})}${b("Leave seat", "lobby-drop", {opp: String(i)}, false, {cls: "compact"})}</div>`;
       readyBtn = readyCorner(ready, "opp", i);
     }
     let primary = roleLabel;
@@ -942,12 +948,15 @@
       : opp.role === "ai" ? "No deck yet"
       : "";
     /* The label bar already says "Seat 4 · Open"; an empty chair does not need to say it twice. */
-    const detail = seat || opp.role !== "unused"
-      ? `<p class="cm-seat-name">${e(primary)}</p>${line ? `<p class="cm-seat-line">${e(line)}</p>` : ""}`
-      : `<p class="cm-seat-line">Invite someone, or seat an AI.</p>`;
+    /* The label bar already says "Seat 2 · AI"; the detail column does not repeat it, and an
+       unseated AI whose only name IS "AI" gets no name line at all. */
+    const nameLine = seat ? primary : (primary === "AI" || primary === "Open" ? "" : primary);
+    const detail = !seat && opp.role === "unused"
+      ? `<p class="cm-seat-line">Invite someone, or seat an AI.</p>`
+      : `${nameLine ? `<p class="cm-seat-name">${e(nameLine)}</p>` : ""}${line ? `<p class="cm-seat-line">${e(line)}</p>` : ""}`;
     return `<article class="cm-lobby-seat ${roleClass}${check && !check.ok ? " is-blocked" : ""}${ready ? " is-ready" : ""}" data-opp="${i}">
       <header><h3>${e(who)}</h3>${statusPill(seatState(seat, check, ready, opp), ready, check)}</header>
-      ${seatFigure(seat, detail, "")}
+      ${seatFigure(seat, detail, tools ? `<div class="cm-seat-host-tools">${tools}</div>` : "")}
       <div class="cm-seat-audit">${body}${readyBtn}</div>
     </article>`;
   }
@@ -1395,6 +1404,16 @@
   });
   actions["lobby-host-deck"] = async () => { await loadHostCatalogDecks(); openHostDeckModal(); };
   actions["lobby-add"] = () => openOpponentRoleModal();
+  /* An empty quadrant offers the two things the README says the host gets there, each landing on
+     that seat rather than on "the next free one". */
+  actions["lobby-invite-seat"] = (el) => setOppRole(Number(el.dataset.opp), "human");
+  actions["lobby-ai-seat"] = (el) => setOppRole(Number(el.dataset.opp), "ai");
+  function setOppRole(i, role) {
+    if (!Number.isInteger(i) || !lobby.opponents[i]) return;
+    lobby.opponents[i] = Object.assign({}, lobby.opponents[i], {role, seat: null, ready: false});
+    save();
+    redraw();
+  }
 
   actions["lobby-invite-field"] = (el) => {
     const i = Number(el.dataset.opp);
