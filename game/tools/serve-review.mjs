@@ -137,6 +137,43 @@ createServer(async(req,res)=>{
       if(req.headers['x-commander-token']!==token)return reply(403,{error:'Invalid local session'});
       try{if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.poll();return reply(200,{table:tableRuntime.view(),invitations:hostInvitations,guestOrigin:guestInfo.origin});}catch(e){return reply(409,{error:e.message});}
     }
+    /* UNREACHABLE UNTIL NOW. This is a GET, and it sat BELOW the catch-all guard on the next
+       line, which rejects every non-POST request -- so /api/desktop-deks answered 403 to the
+       only method it accepts and the host's real .dek decks never reached the lobby. The
+       lobby's call is wrapped in a try/catch with an embedded fallback, so it failed silently.
+       It keeps the token check that the other privileged GETs use (see /api/table above). */
+    if(req.method==='GET'&&pathname==='/api/desktop-deks'){
+    if(req.headers['x-commander-token']!==token)return reply(403,{error:'Invalid local session'});
+      const dekDir=process.env.CRANKMAGIC_DEK_DIR||resolve(process.env.USERPROFILE||'C:/Users/robmi','CrankMagic/archive/desktop-mtg/Deck Files');
+      const {readdirSync,readFileSync,existsSync}=await import('node:fs');
+      if(!existsSync(dekDir))return reply(200,{decks:[],dir:dekDir,error:'Deck Files folder missing'});
+      const files=readdirSync(dekDir).filter(f=>/^D[1-6] .*\.dek$/i.test(f));
+      const decks=[];
+      for(const file of files){
+        const text=readFileSync(resolve(dekDir,file),'utf8');
+        const cardTags=[...text.matchAll(/<Cards\b([^/]*)\/>/g)];
+        const rows=[]; let commander=null;
+        for(const m of cardTags){
+          const attrs=m[1];
+          const name=(attrs.match(/Name="([^"]+)"/)||[])[1];
+          if(!name) continue;
+          const nice=name.replace(/&#x27;/g,"'");
+          const quantity=Number((attrs.match(/Quantity="(\d+)"/)||[])[1]||1)||1;
+          const side=/Sideboard="true"/i.test(attrs);
+          if(side){ commander=nice; continue; }
+          const existing=rows.find(r=>r.name===nice);
+          if(existing)existing.quantity+=quantity; else rows.push({name:nice,quantity});
+        }
+        const idMatch=file.match(/^(D[1-6])/i);
+        const id='deck:live:'+(idMatch?idMatch[1].toUpperCase():file);
+        if(!commander){
+          commander=rows.find(r=>/atraxa|chulane|krenko|shadrix|quintorius|felothar/i.test(r.name))?.name || rows[0]?.name || file;
+        }
+        const main=rows.filter(r=>r.name.toLowerCase()!==String(commander).toLowerCase());
+        decks.push({id,name:file.replace(/\.dek$/i,''),commander,commanders:[commander],rows:main,source:'library',ok:true,_fromDek:true});
+      }
+      return reply(200,{decks,dir:dekDir});
+    }
     if(req.method!=='POST'||req.headers.origin!==origin||req.headers['x-commander-token']!==token)return reply(403,{error:'Invalid local session'});
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);text='';
@@ -176,37 +213,6 @@ createServer(async(req,res)=>{
         return reply(200,{configured:true,provider:aiSession.provider,model:aiSession.model,source:aiSession.source,pilotRearmed});
       }
       if(pathname==='/api/close-game'){stopSoloPilots();const value=await closeLocalGame();if(tableRuntime){tableRuntime.abandon();tableRuntime=null;hostInvitations=[];}return reply(200,value);}
-      if(req.method==='GET'&&pathname==='/api/desktop-deks'){
-        const dekDir=process.env.CRANKMAGIC_DEK_DIR||resolve(process.env.USERPROFILE||'C:/Users/robmi','CrankMagic/archive/desktop-mtg/Deck Files');
-        const {readdirSync,readFileSync,existsSync}=await import('node:fs');
-        if(!existsSync(dekDir))return reply(200,{decks:[],dir:dekDir,error:'Deck Files folder missing'});
-        const files=readdirSync(dekDir).filter(f=>/^D[1-6] .*\.dek$/i.test(f));
-        const decks=[];
-        for(const file of files){
-          const text=readFileSync(resolve(dekDir,file),'utf8');
-          const cardTags=[...text.matchAll(/<Cards\b([^/]*)\/>/g)];
-          const rows=[]; let commander=null;
-          for(const m of cardTags){
-            const attrs=m[1];
-            const name=(attrs.match(/Name="([^"]+)"/)||[])[1];
-            if(!name) continue;
-            const nice=name.replace(/&#x27;/g,"'");
-            const quantity=Number((attrs.match(/Quantity="(\d+)"/)||[])[1]||1)||1;
-            const side=/Sideboard="true"/i.test(attrs);
-            if(side){ commander=nice; continue; }
-            const existing=rows.find(r=>r.name===nice);
-            if(existing)existing.quantity+=quantity; else rows.push({name:nice,quantity});
-          }
-          const idMatch=file.match(/^(D[1-6])/i);
-          const id='deck:live:'+(idMatch?idMatch[1].toUpperCase():file);
-          if(!commander){
-            commander=rows.find(r=>/atraxa|chulane|krenko|shadrix|quintorius|felothar/i.test(r.name))?.name || rows[0]?.name || file;
-          }
-          const main=rows.filter(r=>r.name.toLowerCase()!==String(commander).toLowerCase());
-          decks.push({id,name:file.replace(/\.dek$/i,''),commander,commanders:[commander],rows:main,source:'library',ok:true,_fromDek:true});
-        }
-        return reply(200,{decks,dir:dekDir});
-      }
       if(pathname==='/api/import-deck')return reply(200,await importWorkshopDeck(body));
       if(pathname==='/api/prepare'){
         requireAiSession(body);if(preparing)throw Error('A deck preparation is already running');preparing=true;
