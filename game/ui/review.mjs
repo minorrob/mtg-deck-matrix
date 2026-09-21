@@ -8,7 +8,7 @@ import {createLivePoller} from '/live-poll.mjs';
 const {noticesFor,lifeDelta,eventKindLabel}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null,eventKindLabel:k=>k||'table event'}));
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
-const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
+const {recommendedActions,combatTotals,incomingAt}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[],incomingAt:()=>({total:null,attackers:[],keywords:[],potential:0,unblockedPotential:0,deathtouch:false,firstStrike:false})}));
 import '/handoff.mjs';
 // Lazy-load workshop classification modules — not needed for guest live connect
 let cardClassifyLoaded=false,facetsLoaded=false;
@@ -870,7 +870,35 @@ function renderDecision(){
       const targets=frame().combat?.defenders||frame().players.filter(p=>p.playerId!==viewerSeatId&&p.health.status!=='out').map(p=>({kind:'player',id:p.playerId,name:p.name}));
       for(const target of targets){const selected=target.kind==='player'?(ui.highlightedPlayers?.includes(target.id)||ui.prompt.includes('attack '+target.name+' ')):ui.highlightedCards?.includes(target.id);const b=button((selected?'✓ Attacking ':'Attack ')+target.name,()=>gameAction({kind:target.kind,targetId:target.id}),'defender-choice');b.setAttribute('aria-pressed',String(!!selected));buttons.append(b);}
       buttons.append(button('Review attackers & blockers',()=>selectPane('combat')));
-    }else if(blockSelection()){confirm.textContent='Confirm blockers';buttons.append(el('p','fine','Select an attacker in Combat, then one of your creatures to assign or remove its block.'),button('Review attackers & blockers',()=>selectPane('combat')));}
+    }else if(blockSelection()){
+      confirm.textContent='Confirm blockers';
+      /* WHAT IS COMING AT YOU, WHERE YOU ARE LOOKING (Stage A.6.4).
+         Rob: "I'd like to see the card attacking me and know the total damage and type of damage
+         coming." Every number here was already computed by combatTotals and drawn only in the
+         Combat pane -- which is not where a player is looking while choosing blocks. */
+      const incoming=incomingAt(frame().combat?.attacks,viewerSeatId);
+      if(incoming.attackers.length){
+        const head=el('div','incoming-head');
+        head.append(el('strong','',`${incoming.unblockedPotential} damage incoming`),
+                    el('small','',incoming.potential!==incoming.unblockedPotential?`${incoming.potential} total attacking · ${incoming.potential-incoming.unblockedPotential} currently blocked`:`from ${incoming.attackers.length} attacker${incoming.attackers.length===1?'':'s'}`));
+        if(incoming.keywords.length)head.append(el('small','incoming-keywords',incoming.keywords.join(' · ')));
+        if(incoming.deathtouch)head.append(el('small','incoming-warn','Deathtouch · any damage from it destroys the blocker.'));
+        if(incoming.firstStrike)head.append(el('small','incoming-warn','First strike · it deals damage before a blocker without it can answer.'));
+        options.append(head);
+        const tray=el('div','incoming-cards');
+        for(const row of incoming.attackers){
+          const a=row.attacker,card=cardById(a.cardId),shot=el('button','incoming-card');
+          if(card?.art){const img=el('img');img.src=card.art;img.alt=a.name||'Attacker';shot.append(img);}
+          shot.append(el('span','',`${a.name} ${a.power}/${a.toughness}`),
+                      el('small','',row.blockers?.length?`blocked by ${row.blockers.length}`:'unblocked'));
+          shot.title='Open a larger view of '+(a.name||'this attacker');
+          if(card)shot.addEventListener('click',()=>inspect(card,1,true));else shot.disabled=true;
+          tray.append(shot);
+        }
+        options.append(tray);
+      }
+      buttons.append(el('p','fine','Select an attacker in Combat, then one of your creatures to assign or remove its block.'),button('Review attackers & blockers',()=>selectPane('combat')));
+    }
     else if(!priority&&(startingPlayer||(/select|choose|target/i.test(ui.prompt)&&/player|opponent/i.test(ui.prompt))))for(const p of frame().players.filter(p=>p.health.status!=='out'))buttons.append(button((startingPlayer?'Start with ':'Target ')+names[p.playerId],()=>gameAction({kind:'player',targetId:p.playerId})));
   }
 }
