@@ -649,4 +649,36 @@ check("the launch box says the game is running, and offers the table", () => {
   assert.match(panel[0], /lobby-open-table/, "and the button goes to it rather than starting another");
 });
 
+/* ------------------------------------------------------- the board opens in its own tab, step 6 */
+
+// Rob's twelve-step flow, step 6: "I see a new tab auto-created that loads the game board (not
+// the lobby, not a copy of CrankMagic, just the live play board with a link to go to the full
+// website available on the board also)."
+//
+// The board is `/review` on the local host — `game/ui/review.html`, served at line 25 of
+// serve-review.mjs, and it already carries `href="/app/#decks"` back to the full site. `/play` is
+// the GUEST path and 404s on the host, so it is the wrong target.
+//
+// What the lobby did instead was `location.assign('/')`, and the host's root 302s to
+// `/app/#game` — so a successful launch navigated the tab straight back to the lobby it came
+// from. That is why a board was never seen.
+check("a launched game opens the board in a new tab", () => {
+  const fn = /function lobbyResumeTabletop\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(fn, "lobbyResumeTabletop not found");
+  assert.match(fn[0], /window\.open\(/, "step 6 asks for a new tab, not a navigation");
+  assert.match(fn[0], /['"]\/review['"]/, "the host's board is /review; /play is the guest path and 404s here");
+  assert.ok(!/location\.assign\(['"]\/['"]\)/.test(fn[0]),
+    "the host root 302s to /app/#game, so this sent a launched game back to its own lobby");
+});
+
+// A pop-up opened without a click is blocked, and the countdown launches without one. So the
+// failure has to be visible rather than silent.
+check("a blocked pop-up leaves a link instead of nothing", () => {
+  const fn = /function lobbyResumeTabletop\([\s\S]*?\n  \}/.exec(game);
+  assert.match(fn[0], /boardWindow|blocked|openedBoard/,
+    "the countdown starts a game with no click behind it, so the browser may refuse the tab");
+  assert.match(game, /cm-table-board-link|lobby-open-board/,
+    "and then the launch box has to offer the way in");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);

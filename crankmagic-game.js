@@ -869,6 +869,7 @@
         ${gameLaunched ? b("Open table", "lobby-open-table", {}, true, {cls: "compact"}) : launchError ? b("Send Log", "lobby-send-log", {}, true, {cls: "compact"}) : b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
       </div>
       ${hostReachable === false ? '<p class="cm-table-elsewhere">A game runs on the helper on your own computer. Open <a href="http://127.0.0.1:8768/" target="_blank" rel="noopener">http://127.0.0.1:8768/</a> there to play.</p>' : ''}
+      ${gameLaunched && boardBlocked ? '<p class="cm-table-board-link">The board did not open by itself. <a href="/review" target="_blank" rel="noopener">Open the game board</a></p>' : ''}
     </section>`;
   }
 
@@ -2165,15 +2166,22 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
     throw new Error('Timed out waiting for Forge / live table (4 minutes).');
   }
 
+  /* Did the board tab open? A pop-up with no click behind it is refused, and the countdown has
+     no click behind it, so this is read by the launch box rather than assumed. */
+  let boardBlocked = false;
   function lobbyResumeTabletop() {
     try { window.dispatchEvent(new Event('crankmagic-game-ready')); } catch (_) {}
-    /* Classic shell lives under /app; live review table is at /. Prefer that when same-origin. */
+    /* THE BOARD IS /review. It used to assign('/'), and the host's root 302s to /app/#game -- so
+       a launched game navigated straight back to its own lobby and no board was ever seen. A new
+       tab, as Rob asked, leaving the lobby where it is. */
     try {
-      if (/\/app\/?$/i.test(location.pathname) || /\/app\//i.test(location.pathname)) {
-        location.assign('/');
-        return;
-      }
-    } catch (_) {}
+      const board = window.open('/review', 'crankmagic-board', 'noopener');
+      boardBlocked = !board;
+      if (board) { redraw(); return; }
+      C.notice('The browser blocked the game board tab. Open it from the table card.', true);
+      redraw();
+      return;
+    } catch (_) { boardBlocked = true; }
     try {
       if (C.views && typeof C.views.online === 'function') {
         location.hash = 'online';
