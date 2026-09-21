@@ -83,10 +83,10 @@ check("your own seat's detail states the bracket and the deck cost against the c
 /* ------------------------------------------------------------------------------------ the fan */
 
 // 2b: `const fan=(i,colors)=>{...ax=i%2?0:1000, ay=i<2?1000:0...}` -- a 90° wedge sweeping from
-// the corner that touches the centre panel INTO the quadrant. The build's table of start angles
-// was one quarter-turn short at every corner, so all four fans swept into the neighbouring
-// quadrant and were clipped to nothing: present in the DOM, right in their colours, invisible on
-// screen. That is why "the fan draws nothing" survived a fix to the colour data.
+// the corner that touches the center panel INTO the quadrant. The build's table of start angles
+// was one quarter-turn short at every corner, so all four fans swept into the neighboring
+// quadrant and were clipped to nothing: present in the DOM, right in their colors, invisible on
+// screen. That is why "the fan draws nothing" survived a fix to the color data.
 //
 // This reads the angles out of the source and walks a point a little way along the middle of
 // each sweep. If it does not land inside the quadrant, the fan is being drawn somewhere else.
@@ -149,7 +149,7 @@ check("the head carries Game history and Host tools at its right", () => {
   assert.match(head, /Host tools/, "and carries Host tools beside it");
 });
 
-/* ------------------------------------------------------------------------- the centre of the table */
+/* ------------------------------------------------------------------------- the center of the table */
 
 // 2b's white panel lists Bracket, Deck cost cap, AI pilot, Remote guests -- four rules, in that
 // order. The build wrote "Game Changer cap" and "Seats", which are the lobby's old figures

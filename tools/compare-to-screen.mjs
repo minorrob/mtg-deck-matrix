@@ -61,6 +61,24 @@ const PAIRS = {
       {name: "a door", app: ".cm-explore-door", screen: "[style*='repeat(3'] > *:first-child", what: ["width", "height", "borderRadius"]},
     ],
   },
+  /* The fifth hi-fi screen, and the only one that had no pairs at all. README §5 names the
+     numbers: "Stage grid `minmax(0,1fr) 340px`, gap 18px, height 720px", "Graph box radius 22px",
+     pane "head `118px 1fr`", "name 19px". Until this existed, "pixel perfect" for Explore was an
+     assertion. The route carries a scope because the graph does not draw without one. */
+  "Gallery Explore": {
+    route: "discover?deck=FIRST&lens=Removal",
+    wait: ".cm-graph",
+    items: [
+      {name: "page heading", app: "#cm-main h1", screen: "h1", what: ["fontSize", "x"]},
+      {name: "search", app: "#cm-main input[type='search'], .cm-toolbar .cm-search input", screen: "input", what: ["height"]},
+      {name: "the stage", app: ".cm-graph-grid", screen: "grid:2", what: ["x", "width", "columnGap"]},
+      {name: "graph box", app: ".cm-graph", screen: "grid:2 > *:first-child", what: ["width", "height", "borderRadius"]},
+      {name: "the pane", app: ".cm-card-view", screen: "grid:2 > *:nth-child(2)", what: ["width"]},
+      {name: "pane head", app: ".cm-card-view-head", screen: "grid1:118", what: ["columnGap"]},
+      {name: "card art", app: ".cm-card-view-art", screen: "grid1:118 > *:first-child", what: ["width"]},
+      {name: "card name", app: ".cm-card-view-title h2", screen: "h2", what: ["fontSize"]},
+    ],
+  },
   "Gallery Library": {
     route: "cards",
     wait: "#cm-roster-table table",
@@ -79,8 +97,21 @@ const px = (v) => Math.round(parseFloat(v) || 0);
    [style*=] match tests the source rather than the DOM. What a bento is, is six tracks. */
 const readBox = ([sel, what]) => {
   const find = (q) => {
-    const child = /^grid:(\d+) > (.+)$/.exec(q);
-    if (child) { const host = find("grid:" + child[1]); return host ? host.querySelector(":scope > " + child[2]) : null; }
+    const child = /^(grid1?:\d+) > (.+)$/.exec(q);
+    if (child) { const host = find(child[1]); return host ? host.querySelector(":scope > " + child[2]) : null; }
+    /* "grid1:N" — the grid whose FIRST computed track is N px. Where two grids on a screen have
+       the same number of tracks (Explore's stage and its pane head are both two), the count
+       cannot tell them apart, but the fixed track can: a pane head is what has a 118px column. */
+    const one = /^grid1:(\d+)$/.exec(q);
+    if (one) {
+      const want = Number(one[1]);
+      for (const node of document.querySelectorAll("*")) {
+        const cols = getComputedStyle(node).gridTemplateColumns;
+        if (!cols || cols === "none") continue;
+        if (Math.abs(parseFloat(cols.trim().split(/\s+/)[0]) - want) <= 1) return node;
+      }
+      return null;
+    }
     const m = /^grid:(\d+)$/.exec(q);
     if (!m) return document.querySelector(q);
     const want = Number(m[1]);
