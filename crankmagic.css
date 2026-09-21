@@ -44,26 +44,66 @@
    order the players sit, 2 and 3 across the top and 4 and you across the bottom, with the rules
    at the center. The center panel overlaps the quadrants on purpose: each seat keeps its label
    and its card in its OUTER corners, so the panel can never cover a name or a control. */
-.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));aspect-ratio:16/10;max-height:72vh;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
+/* 2b draws the table 504 wide by 382 tall -- two 190px rows in the content column. At 16:10
+   every quadrant was a third shorter than drawn, and the commander card, sized from the
+   quadrant's height, shrank with it. */
+.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));aspect-ratio:4/3;max-height:72vh;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
 .cm-seat-q{position:relative;isolation:isolate;min-width:0;overflow:hidden;background:var(--v-panel)}
 /* The sea fills the quadrant and stays behind everything; the fan is over it and under the seat. */
 .cm-seat-sea{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
-.cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.62;pointer-events:none;mix-blend-mode:screen}
+/* 2b draws the wedges at .62 over the element, with no blend mode. Screening them against the
+   ocean turned a red-and-white identity into more blue. */
+.cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.62;pointer-events:none}
 .cm-seat-body{position:relative;z-index:2;height:100%;display:flex;min-width:0}
 /* The seat's own card keeps every class and handler it had; what changes is that it sits on the
    table rather than in a row, and its ground is the sea rather than a panel. */
 /* No panel: the element and the fan are the seat's ground, and text sits over them with its
    own shadow rather than behind a sheet of frosted glass. */
 .cm-seat-body .cm-lobby-seat{flex:1 1 auto;min-width:0;align-self:stretch;background:none;backdrop-filter:none;border:0;border-radius:0;margin:0;padding:0;display:flex;flex-direction:column;min-height:0}
-.cm-seat-q .cm-lobby-seat>header{order:-1;display:inline-flex;align-self:flex-start;align-items:center;gap:10px;padding:7px 11px;background:color-mix(in srgb,var(--poster-ground) 52%,transparent);backdrop-filter:blur(5px);border-radius:var(--radius-pill);margin:0 0 auto;max-width:100%}
-.cm-q-bl .cm-lobby-seat>header,.cm-q-tl .cm-lobby-seat>header{align-self:flex-end}
-.cm-seat-q .cm-lobby-seat h3{font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0}
+/* THE LABEL BAR (2b). Across the quadrant's top edge, name then status pill, and mirrored on
+   the right-hand column so the name is always on the outer side. It is a bar rather than a
+   badge because 2b gives it the quadrant's full width: it is the seat's header, and a header
+   that floats in a corner reads as a sticker. */
+.cm-seat-q .cm-lobby-seat>header{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:8px 12px;margin:0;background:linear-gradient(180deg,color-mix(in srgb,var(--poster-ground) 55%,transparent),transparent);color:var(--poster-ink);pointer-events:none}
+.cm-q-tl .cm-lobby-seat>header,.cm-q-bl .cm-lobby-seat>header{flex-direction:row-reverse}
+.cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
 .cm-seat-q .cm-lobby-ready{margin-left:auto}
-/* The deck audit is a disclosure, not the seat. The wireframe shows a commander, one line
-   about it, and the actions that belong to that player. */
-.cm-seat-q .cm-lobby-figs{display:none}
-.cm-seat-q .cm-lobby-sim{display:none}
+/* The status pill: a dot in the state's colour and one word, as 2b draws it. */
+.cm-seat-pill{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;padding:3px 10px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(4px);font-size:11px;font-weight:600;color:var(--poster-ink)}
+.cm-seat-pill i{width:7px;height:7px;border-radius:50%;background:var(--st-pull)}
+.cm-seat-pill[data-state="ready"] i{background:var(--st-inbox)}
+.cm-seat-pill[data-state="deck"] i,.cm-seat-pill[data-state="pending"] i{background:var(--st-ordered)}
+.cm-seat-pill[data-state="invited"] i{background:var(--st-buy)}
+.cm-seat-pill[data-state="error"] i{background:var(--st-remove)}
+.cm-seat-pill[data-state="empty"] i{background:color-mix(in srgb,var(--poster-ink) 40%,transparent)}
+
+/* THE FIGURE (2b). The card and its reading, standing in the quadrant's outer BOTTOM corner,
+   clear of the label bar above and of the table's card at the inner corner. */
+.cm-seat-figure{position:absolute;left:12px;right:12px;top:38px;bottom:10px;z-index:2;display:flex;flex-direction:row;align-items:flex-end;gap:12px;min-width:0;color:var(--poster-ink)}
+.cm-q-tl .cm-seat-figure,.cm-q-bl .cm-seat-figure{flex-direction:row-reverse}
+/* The top row's reading hangs from the top of the figure, the bottom row's from the bottom,
+   so the text is always on the side of the quadrant nearest that player. */
+.cm-q-bl .cm-seat-detail,.cm-q-br .cm-seat-detail{align-self:flex-start}
+/* 2b: `height:144` in a 190px quadrant -- a proportion, not a pixel count, so the card stays a
+   card at every table size. */
+.cm-seat-card{height:76%;max-height:100%;aspect-ratio:488/680;flex:0 0 auto;padding:0;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--poster-ink) 50%,transparent);box-shadow:0 6px 16px -6px var(--poster-ground);background:color-mix(in srgb,var(--poster-ground) 40%,transparent);cursor:zoom-in;display:grid;place-items:center}
+.cm-seat-card img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
+.cm-seat-card.is-empty,.cm-seat-card.is-blank{border-style:dashed;border-color:color-mix(in srgb,var(--poster-ink) 55%,transparent);cursor:default;background:color-mix(in srgb,var(--poster-ground) 28%,transparent)}
+.cm-seat-card.is-empty span,.cm-seat-card.is-blank span{font-size:22px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 70%,transparent)}
+.cm-seat-detail{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.4;text-shadow:0 1px 3px var(--poster-ground)}
+.cm-q-tl .cm-seat-detail,.cm-q-bl .cm-seat-detail{text-align:right}
+.cm-seat-name{margin:0;font-weight:600;font-size:13px;line-height:1.25}
+.cm-seat-line{margin:0;color:color-mix(in srgb,var(--poster-ink) 80%,transparent)}
+/* The player's own four controls, wrapping under their reading. */
+.cm-seat-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cm-q-tl .cm-seat-controls,.cm-q-bl .cm-seat-controls{justify-content:flex-end}
+.cm-seat-controls .v-button{min-height:28px;padding:0 10px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 60%,transparent);border-color:color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink);backdrop-filter:blur(4px)}
+.cm-seat-controls .v-button.primary{background:var(--v-brass);border-color:var(--v-brass);color:var(--poster-ground)}
+/* The deck audit is not the seat. It keeps its markup -- every handler still reaches it -- and
+   is reached from Deck Summary rather than printed over the table. */
+.cm-seat-audit{display:none}
+
 .cm-seat-q .cm-lobby-under{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent);text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-under-full{margin-top:8px}
 .cm-seat-q .cm-lobby-under-row{gap:6px}
@@ -84,19 +124,20 @@
    four colored status elements, and a panel that flipped with the theme would be legible over
    two of them and not the other two. */
 .cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:min(28%,320px);min-width:210px;padding:16px 18px 14px;border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
-.cm-table-center h2{font-size:15px;margin:0 0 10px;color:var(--table-ink)}
-.cm-table-setby-top{position:absolute;top:16px;right:18px;margin:0;font-size:11px;color:color-mix(in srgb,var(--table-ink) 50%,transparent)}
+.cm-table-center h2{font-size:15px;margin:0;color:var(--table-ink)}
+/* 2b stamps the wand-and-gear into the panel's bottom-right at 7%, greyscale, bleeding off
+   the edge. Decorative, so it is aria-hidden and sits under everything that carries words. */
+.cm-table-stamp{position:absolute;right:-18px;bottom:-14px;width:62%;opacity:.07;filter:grayscale(1);pointer-events:none;z-index:0}
+.cm-table-center>:not(.cm-table-stamp){position:relative;z-index:1}
+.cm-table-head>*{position:relative;z-index:1}
+.cm-table-head{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.cm-table-setby-top{margin:0 0 0 auto;font-size:11px;color:color-mix(in srgb,var(--table-ink) 50%,transparent)}
 .cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent)}
-.cm-table-rules dd{color:var(--table-ink)}
+.cm-table-rules dd{margin:0;font-weight:600;color:var(--table-ink)}
 /* The launch line is a box, not a sentence: it is the table speaking, not the host. */
 .cm-table-launch{margin:12px 0 0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center}
-.cm-table-center h2{font-size:16px;margin:0 0 12px}
 .cm-table-rules{display:grid;gap:6px;margin:0 0 12px}
 .cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
-.cm-table-rules dt{color:var(--v-muted)}
-.cm-table-rules dd{margin:0;font-weight:600}
-.cm-table-launch{margin:0;font-size:13px;font-weight:600;color:var(--v-ink)}
-.cm-table-setby{margin:6px 0 0;font-size:12px}
 @media(max-width:900px){
   /* A phone reads the table as a column of seats: four quadrants stacked, the rules above them,
      because a 2x2 table at 390px gives each seat 180px and nothing fits in it. */
@@ -2463,3 +2504,15 @@ button.cm-building { pointer-events: none; }
 
 /* A lobby deck's tile (UAT M-15): the pill that says so and the one button that promotes it. */
 .cm-tile-lobby{display:flex;align-items:center;gap:8px;padding:8px 12px 12px}
+
+/* THE MAT STRIP (wireframe 2b's "Choose mat"). The six elements of turn 3, each painted by
+   the same module that paints them under the table, so what is picked is what is worn. */
+.cm-mat-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
+.cm-mat{padding:0;border:1px solid var(--v-line);border-radius:var(--v-radius);overflow:hidden;background:var(--v-panel);cursor:pointer;display:flex;flex-direction:column;color:var(--v-ink)}
+.cm-mat.is-on{border-color:var(--v-brass);box-shadow:0 0 0 2px var(--v-brass)}
+.cm-mat-art{display:block;width:100%;height:80px}
+.cm-mat span{padding:7px 10px;font-size:13px;font-weight:600}
+/* The host's menu carries the table rules it used to print in a panel; a menu is narrower, so
+   its toolbar stacks rather than running out of the popover. */
+.cm-lobby-menu .cm-menu-toolbar{display:grid;gap:8px}
+.cm-lobby-lede{margin:-6px 0 18px;color:var(--v-muted);font-size:14px}
