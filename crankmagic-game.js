@@ -776,6 +776,9 @@
 
   function seatState(seat, check, ready, opp) {
     if (check && !check.ok) return 'error';
+    /* An AI is ready when its deck is, because nothing will ever press Ready for it. The pill has
+       to agree with L.startReady or the table reads as waiting while the gate is satisfied. */
+    if (opp && opp.role === 'ai' && seat) return check ? (check.ok ? 'ready' : 'error') : 'deck';
     if (ready) return 'ready';
     if (seat) return 'deck';
     if (opp && opp.role === 'human') return 'invited';
@@ -823,6 +826,7 @@
     return `<article class="cm-seat-q cm-q-${corner}${cls ? ' ' + cls : ''}" data-state="${e(state)}">
       <canvas class="cm-seat-sea" data-sea="${e(state)}" aria-hidden="true"></canvas>
       ${identityFan(colors, corner)}
+      <div class="cm-seat-shade" aria-hidden="true"></div>
       <div class="cm-seat-body">${inner}</div>
     </article>`;
   }
@@ -830,9 +834,12 @@
   /* THE CENTER PANEL (DELTA B.5). The table's rules, read-only to everyone but the host, and
      one line saying what the table is waiting for. There is no Launch button: the table starts
      itself once every occupied seat reports ready, which is what `waiting` counts. */
-  function canStartSoon() {
+  function canStartSoon(t) {
     const seated = [lobby.host, ...lobby.opponents].filter((p) => p && p.seat);
-    const notReady = seated.filter((p) => !p.ready).length;
+    /* The same verdict the gate uses, so the line under the rules counts what Start counts. The
+       host has no role, and is a person, so its own flag answers for it. */
+    const checks = (t && t.checks) || [];
+    const notReady = seated.filter((p) => (p === lobby.host ? !p.ready : !L.seatReady(p, checks))).length;
     return {seated: seated.length, notReady};
   }
   function centerPanel(t, w) {
@@ -856,15 +863,55 @@
      handles are kept so a redraw stops the old animations rather than leaving four more
      requestAnimationFrame loops running behind the new ones -- which is how a lobby that is
      redrawn on every ready toggle ends up with twenty. */
+  /* HOW TALL THE TABLE CAN BE. Whatever is left between its own top and the bottom of the
+     window, so the whole table is in view without scrolling. Measured rather than guessed at
+     in CSS, because what sits above it changes -- the host-offline banner alone is ~190px. */
+  function sizeTable() {
+    const table = C.main.querySelector('.cm-lobby-table');
+    if (!table) return;
+    const top = table.getBoundingClientRect().top;
+    const room = Math.round(window.innerHeight - top - 24);
+    table.style.setProperty('--cm-table-h', Math.max(320, room) + 'px');
+  }
+  /* A resize changes the room and the canvases with it, so both are redone together. */
+  let sizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(sizeTimer);
+    sizeTimer = setTimeout(() => { sizeTable(); startSeas(); }, 150);
+  });
+
+  /* MEASURING ONCE IS NOT ENOUGH. crankmagic-online.js inserts the host-offline banner ABOVE
+     the table after this view has already drawn, which pushed the table ~190px down the page
+     while it kept the height measured from where it used to be -- so it ran off the bottom of
+     the window by exactly the banner's height. Web fonts landing late do a smaller version of
+     the same thing. So the table's room is observed rather than measured once. */
+  let roomObserver = null;
+  function watchTableRoom() {
+    if (roomObserver) roomObserver.disconnect();
+    if (typeof ResizeObserver === 'undefined') return;
+    const table = C.main.querySelector('.cm-lobby-table');
+    if (!table) return;
+    let last = -1;
+    roomObserver = new ResizeObserver(() => {
+      const top = Math.round(table.getBoundingClientRect().top);
+      if (top === last) return;   /* only when the table actually moved */
+      last = top;
+      sizeTable();
+    });
+    roomObserver.observe(C.main);
+  }
+
   let seaStops = [];
   function startSeas() {
+    sizeTable();
+    watchTableRoom();
     seaStops.forEach((stop) => { try { stop(); } catch (err) { /* already gone */ } });
     seaStops = [];
     if (typeof CrankSea === 'undefined') return;
     for (const canvas of C.main.querySelectorAll('.cm-seat-sea')) {
       const box = canvas.getBoundingClientRect();
       const w = Math.max(80, Math.round(box.width || 320)), h = Math.max(60, Math.round(box.height || 200));
-      seaStops.push(CrankSea.startSea(canvas, {width: w, height: h, element: CrankSea.elementFor(canvas.dataset.sea), opacity: .5}));
+      seaStops.push(CrankSea.startSea(canvas, {width: w, height: h, element: CrankSea.elementFor(canvas.dataset.sea), opacity: .8}));
     }
   }
 
@@ -1177,7 +1224,7 @@
       ${oppQuad(1, 'bl')}
       ${oppQuad(2, 'tr')}
       ${quadrant('tl', 'is-you', seatColors(hostSeat), seatState(hostSeat, hostCheck, !!(lobby.host && lobby.host.ready), null), seatBoxHost(t))}
-      ${centerPanel(t, canStartSoon())}
+      ${centerPanel(t, canStartSoon(t))}
     </div>`;
 
     const canStart = L.startReady(t, lobby);
@@ -1862,14 +1909,14 @@ actions["lobby-email-invite"] = async (el) => {
       <span class="cm-mat-name">${e(name)}${note ? `<small>${e(note)}</small>` : ""}</span></button>`;
     const tiles = [tile("random", "Surprise me", null, "a different one each game")]
       .concat(M2.PLAYMATS.map((m) => tile(m.id, m.name, m.image, m.image ? "" : "no art")));
-    C.modal("Choose your mat", `<p class="cm-muted">The art your board wears once the game starts. Every seat sees its own.</p>
+    C.modal("Choose your mat", `<p class="cm-muted">Pick it here and it comes with you into the game. Every seat wears its own.</p>
       <div class="cm-mat-strip">${tiles.join("")}</div>`);
   };
   actions["lobby-set-mat"] = async (el) => {
     const M2 = await loadMats();
     M2.saveMatPreference(Number(el.dataset.seat), el.dataset.mat);
     if (C.actions && C.actions.close) C.actions.close();
-    C.notice("Mat chosen. Your board wears it when the game starts.");
+    C.notice("Mat saved for this seat. It comes with you into the game.");
   };
   /* Which pilot the AI seats fly by default -- 2b's fourth table rule. */
   function aiPilotLabel() {

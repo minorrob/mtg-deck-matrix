@@ -580,13 +580,28 @@
 
   /* Start's gate: the table's own verdict, the host ready, and every AI seat decked and ready.
      Human guests are never readied by the host -- they bring their deck on the guest gateway. */
+  /* IS THIS SEAT READY? An AI has no one to press Ready for it, so its readiness is a fact
+     about its deck: seated, and passing the table's own checks. A human -- the host or a guest --
+     presses the control on their own seat, so for them the flag is the answer. An empty seat does
+     not hold the table up.
+
+     `checks` is the table's own list (t.checks); without one, a seated AI counts as ready, which
+     is the state the screen shows before the first validation returns. */
+  function seatReady(participant, checks) {
+    if (!participant || participant.role === "unused") return true;
+    if (participant.role === "human") return !!participant.ready;
+    if (!participant.seat) return false;
+    const check = (checks || []).find((c) => c.seatId === participant.seat.id);
+    return check ? !!check.ok : true;
+  }
+
   function startReady(t, lobby) {
     if (!t || !t.ready) return false;
     if (!lobby.host || !lobby.host.ready) return false;
     return (lobby.opponents || []).every((o) => {
       if (!o || o.role === "unused") return true;
       if (o.role === "human") return true;
-      return !!(o.seat && o.ready);
+      return seatReady(o, t.checks);
     });
   }
 
@@ -658,6 +673,6 @@
   return {BRACKETS, bracketOf, DECK_SIZE, MIN_SEATS, MAX_SEATS, SLOT_COUNT, FAIR_BAND, BASIC, BASIC_FOR, COLOR_NAME,
     seat, size, identity, capOf, gameChangers, gameChangerCount, validate, trim, trimRank, pod, seating, rng, table,
     libraryDeckSeat, listSeat, catalogMetaSeat, parsePaste, conform, enrich, unresolved, mapped, typeCounts,
-    measuredScore, rulesSummary, emptyOpponent, emptyLobby, lobbyState, activeSeats, seatIds, startReady,
+    measuredScore, rulesSummary, emptyOpponent, emptyLobby, lobbyState, activeSeats, seatIds, startReady, seatReady,
     tableAccepting, libraryKind, prepareSeat, prepareOrder};
 });
