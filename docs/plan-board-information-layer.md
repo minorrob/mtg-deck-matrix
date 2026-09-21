@@ -128,10 +128,17 @@ block play. Recorded here so it is not lost, with the three things to settle bef
 1. **Where the knowledge lives.** `data/graph.json` is the card graph, but `data/deck-ratings.json`,
    `data/simulation-summary.json`, `sim/` and `data/deck-guides.json` are off limits by standing
    rule. A new file, keyed by oracle id, is the likely answer.
-2. **What Forge does with it.** Forge's own "AI can't play these cards well" list comes from the
-   card's script. Our harvested note only helps if something consumes it — the API pilot can, since
-   it reasons in text; the native Forge AI cannot without a script. **That distinction decides the
-   whole feature's value and should be settled first.**
+2. **Settled by Rob, 2026-09-21.** I had this down as the question that decides the feature's
+   value — whether anything can consume a harvested note, given Forge's own "can't play these
+   cards well" list comes from card *scripts*. His answer:
+
+   > "we need to write a card extraction skill that the AI API executes as part of the API pilot.
+   > I don't want to rely on Forge except where absolutely necessary."
+
+   So the consumer is the **API pilot**, which reasons in text and needs no Forge card script. The
+   harvested knowledge is produced and read by a skill the pilot runs when it first meets a card,
+   and the native Forge AI is not in the path at all. That removes the dependency the question was
+   about, and it points the same way as the engine plan.
 3. **Cost control.** "Only when a card is used the first time" is the right trigger. It needs a
    cache that is checked before any token is spent, and a record of what was spent.
 
