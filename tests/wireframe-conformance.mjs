@@ -133,6 +133,32 @@ check("host tools is a menu in the action row, not a panel below the table", () 
   assert.match(game, /Host tools/, "the action row still needs its Host tools menu");
 });
 
+// DELTA B.4 says a seat that is not yours shows no controls, and that is about PLAYER controls.
+// The README is explicit that the host keeps its own on other seats: "the host additionally gets
+// Invite (email / QR) on an empty quadrant and the AI seat configurator (commander, style,
+// difficulty, pilot) on AI quadrants."
+//
+// Folding the deck audit away took these with it. Driving the live host found an AI quadrant with
+// eleven controls and none of them visible -- so the host could seat an AI and then had no way to
+// give it a deck, which stops run-book step 5 (one human, three AI) before it starts. Hiding a
+// control is worse than never drawing one: the seat looks finished and does nothing.
+check("the host keeps its own tools on an AI or empty quadrant", () => {
+  assert.match(game, /cm-seat-host-tools/,
+    "the AI seat configurator and the invite editor need a home that is not the hidden audit");
+  const hidden = css.split("\n").filter((line) =>
+    /(^|,)\s*\.cm-seat-host-tools\b/.test(line.split("{")[0] || "") && /display:none/.test(line));
+  assert.deepEqual(hidden, [], "the host's tools must not be display:none on a quadrant");
+});
+
+check("only the deck audit is folded away, not everything beside it", () => {
+  const rule = /\.cm-seat-audit\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "the deck audit still needs its own wrapper");
+  assert.match(rule[1], /display:none/, "the audit itself is what folds away");
+  assert.ok(!/\$\{body\}\$\{readyBtn\}<\/div>/.test(game.replace(/\s+/g, "")) ||
+    /cm-seat-host-tools/.test(game),
+    "the opponent quadrant must separate the audit from the host's tools");
+});
+
 /* ------------------------------------------------------------------------------- the page head */
 
 // 2b: `h1:'Play'`, `sub:'The four seats laid out as they will sit; the table is the form and the

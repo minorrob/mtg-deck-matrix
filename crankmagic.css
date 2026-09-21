@@ -103,6 +103,22 @@
 /* The deck audit is not the seat. It keeps its markup -- every handler still reaches it -- and
    is reached from Deck Summary rather than printed over the table. */
 .cm-seat-audit{display:none}
+/* The host's own tools on another seat -- the invite editor, the AI configurator. DELTA B.4
+   hides a seat's PLAYER controls from everyone but its player; the README keeps the host's
+   here, and hiding them left an AI seat that could be created and never given a deck. */
+.cm-seat-host-tools{margin-top:6px;font-size:12px;display:grid;gap:6px;max-height:100%;overflow:auto;
+  padding:9px 11px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 66%,transparent);
+  backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 16%,transparent);
+  scrollbar-width:thin;text-align:left}
+/* The table's card sits over the inner seam, so the detail column keeps its distance from it
+   when it is carrying a form rather than two lines. */
+.cm-seat-q:has(.cm-seat-host-tools) .cm-seat-detail{max-width:62%}
+.cm-q-tl .cm-seat-host-tools,.cm-q-bl .cm-seat-host-tools{text-align:right}
+.cm-seat-host-tools label{display:grid;gap:3px;font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent)}
+.cm-seat-host-tools select,.cm-seat-host-tools input{min-height:30px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);border:1px solid color-mix(in srgb,var(--poster-ink) 26%,transparent);color:var(--poster-ink);border-radius:var(--v-radius);padding:4px 8px}
+.cm-seat-host-tools .v-button{min-height:28px;padding:0 10px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 60%,transparent);border-color:color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink);backdrop-filter:blur(4px)}
+.cm-seat-host-tools .v-button.primary{background:var(--v-brass);border-color:var(--v-brass);color:var(--poster-ground)}
+.cm-q-tl .cm-seat-host-tools,.cm-q-bl .cm-seat-host-tools{justify-items:end}
 
 .cm-seat-q .cm-lobby-under{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent);text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-under-full{margin-top:8px}
