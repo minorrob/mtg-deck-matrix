@@ -7,7 +7,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import {noticesFor, isWorthANotice, lifeDelta} from "../ui/table-notices.mjs";
+import {noticesFor, isWorthANotice, lifeDelta, eventKindLabel} from "../ui/table-notices.mjs";
 
 const row = (over) => ({id: "e" + Math.random(), turn: 3, playerId: 1, kind: "GameEventSpellAbilityCast", name: "Odric", label: "Spell cast", ...over});
 const ME = 0;
@@ -58,4 +58,13 @@ test("a life change reports how far it moved, not the two numbers", () => {
   assert.equal(lifeDelta({label: "Life 40 → 37"}), -3);
   assert.equal(lifeDelta({label: "Life 37 → 40"}), 3);
   assert.equal(lifeDelta({label: "Spell cast"}), null);
+});
+
+test("an engine event name is turned into English, including ones nobody listed", () => {
+  assert.equal(eventKindLabel("GameEventCardChangeZone"), "moved between zones");
+  assert.equal(eventKindLabel("GameEventPlayerDamaged"), "damage dealt to a player");
+  /* An unlisted kind must still read as words rather than as a Java class name -- Forge adds
+     events and the history pane should degrade into English, not into "GameEventFlipCoin". */
+  assert.equal(eventKindLabel("GameEventFlipCoin"), "flip coin");
+  assert.equal(eventKindLabel(undefined), "table event");
 });

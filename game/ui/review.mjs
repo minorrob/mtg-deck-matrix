@@ -5,7 +5,7 @@ import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
-const {noticesFor,lifeDelta}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null}));
+const {noticesFor,lifeDelta,eventKindLabel}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null,eventKindLabel:k=>k||'table event'}));
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
@@ -452,9 +452,44 @@ $('inspector').setAttribute('role','tabpanel');$('inspector').setAttribute('aria
 function selectPane(value){if(value==='combat'&&hideInformation){hideInformation=false;document.body.classList.remove('hide-information');hideInfo.textContent='Hide information pane';mountControls();refreshBoards();}trackerTab=value;combatPane.hidden=value!=='combat';combatTab.setAttribute('aria-selected',String(value==='combat'));if(value==='combat')renderCombat(true);for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']])b.setAttribute('aria-selected',String(value===id));for(const n of sidebar.querySelectorAll('.aside-title,#inspector'))n.hidden=value!=='info';for(const n of sidebar.querySelectorAll('.log-header,#events'))n.hidden=value!=='history';tracker.hidden=value!=='tracker';if(value==='tracker')renderTracker(true);if(value==='history')renderHistory();}
 function historyRows(){if(!frame())return [];return live?(live.telemetry?.recent||[]):data.log.filter(e=>e.sequence<=frame().sequence).slice(-80).reverse().map(e=>({id:e.eventId,turn:e.turn,label:logText(e),name:''}));}
 let historyQuery='',historyLimit=80,historyPhases=false;
-function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recorded public activity · newest first. Private draws and choices are hidden.'));
+/* ONE HISTORY ENTRY, WITH THE CARD AND THE REASON.
+ *
+ * Rob: "the cards they play by having the card image included in the History log... I can then
+ * click the card to see the much larger pop-up of it", and "entries should be clickable to see
+ * more detail... I just had a creature eliminated from my board. I don't know why."
+ *
+ * The reason was always here. match-telemetry.mjs appends it to the label of a permanent leaving
+ * the battlefield -- "earlier this turn: 3 damage from Odric" -- and the row also carries the
+ * phase and the engine's event kind, neither of which was ever drawn. The detail line is those,
+ * in English. The thumbnail opens the same large view the rest of the board uses.
+ */
+function historyRowNode(e){
+  const row=el('div','history-row'),card=cardById(e.cardId);
+  if(card?.art){
+    const thumb=el('button','history-thumb'),img=el('img');img.src=card.art;img.alt=card.name||'Card';img.loading='lazy';thumb.append(img);
+    thumb.title='Open a larger view of '+(card.name||'this card');
+    thumb.addEventListener('click',event=>{event.stopPropagation();inspect(card,1,true);});
+    row.append(thumb);
+  }
+  const main=el('div','history-main');
+  main.append(el('small','',`TURN ${e.turn??'?'}${e.playerId!=null?' · '+names[e.playerId]:''}`),
+              el('strong','',/^(main1|main2)$/i.test(e.label)?phaseName(e.label):e.label),
+              el('span','',e.name||''));
+  const detail=el('p','history-detail');detail.hidden=true;
+  const where=e.phase&&e.phase!=='null'?phaseName(e.phase):null;
+  detail.textContent=[where?'During '+where:null,eventKindLabel(e.kind),e.playerId!=null?'Seat: '+names[e.playerId]:null].filter(Boolean).join(' · ');
+  main.append(detail);
+  row.append(main);
+  row.classList.add('history-openable');
+  row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-expanded','false');
+  const toggle=()=>{detail.hidden=!detail.hidden;row.setAttribute('aria-expanded',String(!detail.hidden));};
+  row.addEventListener('click',toggle);
+  row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
+  return row;
+}
+function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recorded public activity · newest first. Select an entry for detail; select a card for a larger view. Private draws and choices are hidden.'));
   const search=el('input');search.type='search';search.placeholder='Find a card or event…';search.setAttribute('aria-label','Search game history');search.value=historyQuery;const phaseLabel=el('label','fine'),phaseToggle=el('input');phaseToggle.type='checkbox';phaseToggle.checked=historyPhases;phaseLabel.append(phaseToggle,document.createTextNode(' Include phase changes'));const list=el('div'),more=button('Show more events',()=>{historyLimit+=80;draw();});
-  function draw(){list.replaceChildren();const visible=rows.filter(e=>(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit)){const row=el('div','history-row');row.append(el('small','',`TURN ${e.turn??'?'}${e.playerId!=null?' · '+names[e.playerId]:''}`),el('strong','',/^(main1|main2)$/i.test(e.label)?phaseName(e.label):e.label),el('span','',e.name||''));list.append(row);}if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
+  function draw(){list.replaceChildren();const visible=rows.filter(e=>(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit))list.append(historyRowNode(e));if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
   search.addEventListener('input',()=>{historyQuery=search.value;draw();});phaseToggle.addEventListener('change',()=>{historyPhases=phaseToggle.checked;draw();});body.append(search,phaseLabel,list,more);draw();return body;}
 let historyKey='';
 function renderHistory(){if(document.activeElement?.matches('input[aria-label="Search game history"]'))return;const rows=historyRows(),key=JSON.stringify(rows);if(key===historyKey)return;historyKey=key;$('event-count').textContent=rows.length+' events';$('events').replaceChildren(historyContent());if($('detail').open&&$('detail').dataset.history==='true')$('detail-body').replaceChildren(historyContent());}

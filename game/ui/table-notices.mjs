@@ -50,6 +50,24 @@ export function isWorthANotice(row, viewerSeatId) {
   return true;
 }
 
+/* THE ENGINE'S EVENT NAMES ARE NOT ENGLISH. "GameEventCardChangeZone" is what Forge calls it and
+ * it is what the history pane would otherwise have to show. A player reading their own game back
+ * should be told what happened, not which Java class fired.
+ */
+const KINDS = {
+  GameEventSpellAbilityCast: "put on the stack",
+  GameEventCardChangeZone: "moved between zones",
+  GameEventPlayerDamaged: "damage dealt to a player",
+  GameEventCardDamaged: "damage dealt to a permanent",
+  GameEventLandPlayed: "land played",
+  GameEventCardCounters: "counters changed",
+  GameEventCardTapped: "tapped or untapped",
+  GameEventSpellResolved: "resolved from the stack",
+};
+export function eventKindLabel(kind) {
+  return KINDS[kind] || (kind ? String(kind).replace(/^GameEvent/, "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase() : "table event");
+}
+
 /* How much a life change moved, so a notice can say "lost 3" rather than "Life 40 → 37". */
 export function lifeDelta(row) {
   const m = LIFE.exec(row?.label || "");
