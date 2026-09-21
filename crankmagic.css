@@ -70,6 +70,11 @@
    that floats in a corner reads as a sticker. */
 .cm-seat-q .cm-lobby-seat>header{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:8px 12px;margin:0;background:linear-gradient(180deg,color-mix(in srgb,var(--poster-ground) 55%,transparent),transparent);color:var(--poster-ink);pointer-events:none}
 .cm-q-tl .cm-lobby-seat>header,.cm-q-bl .cm-lobby-seat>header{flex-direction:row-reverse}
+/* The bottom row's header sits exactly where the card reaches in, so it stops short of it on
+   its inner side. The top row's header is at the far end of the quadrant from the card and
+   needs no inset. Measured, not assumed: the permutation pass reports the overlap in px2. */
+.cm-q-tr .cm-lobby-seat>header{right:32%}
+.cm-q-tl .cm-lobby-seat>header{left:32%}
 .cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
 .cm-seat-q .cm-lobby-ready{margin-left:auto}
@@ -85,6 +90,11 @@
 /* THE FIGURE (2b). The card and its reading, standing in the quadrant's outer BOTTOM corner,
    clear of the label bar above and of the table's card at the inner corner. */
 .cm-seat-figure{position:absolute;left:12px;right:12px;top:38px;bottom:10px;z-index:2;display:flex;flex-direction:row;align-items:flex-end;gap:12px;min-width:0;color:var(--poster-ink)}
+/* THE CARD'S FOOTPRINT, KEPT CLEAR. The card is 30% of the table wide and 30% of it tall, so
+   centered it reaches 30% of a QUADRANT in from the inner corner. 32% leaves a margin. Nothing
+   a seat draws can end up underneath it, which is what was eating the AI seat's dropdowns. */
+.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:32%}
+.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:32%}
 .cm-q-tl .cm-seat-figure,.cm-q-bl .cm-seat-figure{flex-direction:row-reverse}
 /* The top row's reading hangs from the top of the figure, the bottom row's from the bottom,
    so the text is always on the side of the quadrant nearest that player. */
@@ -114,9 +124,6 @@
   padding:9px 11px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 66%,transparent);
   backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 16%,transparent);
   scrollbar-width:thin;text-align:left}
-/* The table's card sits over the inner seam, so the detail column keeps its distance from it
-   when it is carrying a form rather than two lines. */
-.cm-seat-q:has(.cm-seat-host-tools) .cm-seat-detail{max-width:62%}
 .cm-q-tl .cm-seat-host-tools,.cm-q-bl .cm-seat-host-tools{text-align:right}
 .cm-seat-host-tools label{display:grid;gap:3px;font-size:11px;color:color-mix(in srgb,var(--poster-ink) 78%,transparent)}
 .cm-seat-host-tools select,.cm-seat-host-tools input{min-height:30px;font-size:12px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);border:1px solid color-mix(in srgb,var(--poster-ink) 26%,transparent);color:var(--poster-ink);border-radius:var(--v-radius);padding:4px 8px}
@@ -2533,13 +2540,19 @@ button.cm-building { pointer-events: none; }
 /* A lobby deck's tile (UAT M-15): the pill that says so and the one button that promotes it. */
 .cm-tile-lobby{display:flex;align-items:center;gap:8px;padding:8px 12px 12px}
 
-/* THE MAT STRIP (wireframe 2b's "Choose mat"). The six elements of turn 3, each painted by
-   the same module that paints them under the table, so what is picked is what is worn. */
-.cm-mat-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
-.cm-mat{padding:0;border:1px solid var(--v-line);border-radius:var(--v-radius);overflow:hidden;background:var(--v-panel);cursor:pointer;display:flex;flex-direction:column;color:var(--v-ink)}
+/* THE MAT STRIP (wireframe 2b's "Choose mat"). The pictures are Rob's own uploads, listed by
+   game/ui/playmats.mjs and served by the host from game/ui/assets/playmats/. Their native
+   ratios run 1.65 to 1.86, so 16:9 shows each one close to how it sits under a board. */
+.cm-mat-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:14px}
+.cm-mat{padding:0;border:1px solid var(--v-line);border-radius:var(--v-radius);overflow:hidden;background:var(--v-panel);cursor:pointer;display:flex;flex-direction:column;color:var(--v-ink);text-align:left}
+.cm-mat:hover{border-color:color-mix(in srgb,var(--v-brass) 60%,var(--v-line))}
 .cm-mat.is-on{border-color:var(--v-brass);box-shadow:0 0 0 2px var(--v-brass)}
-.cm-mat-art{display:block;width:100%;height:80px}
-.cm-mat span{padding:7px 10px;font-size:13px;font-weight:600}
+.cm-mat-art{display:block;width:100%;aspect-ratio:16/9;background-size:cover;background-position:center;background-color:var(--v-raised)}
+/* Classic black has no art, and 'Surprise me' has no one picture to show; both get the felt
+   rather than a broken frame. */
+.cm-mat-art[data-plain]{background-image:radial-gradient(ellipse at 50% 35%,var(--v-panel),var(--v-bg) 78%)}
+.cm-mat-name{padding:8px 11px;font-size:13px;font-weight:600;display:grid;gap:2px}
+.cm-mat-name small{font-size:11px;font-weight:400;color:var(--v-muted)}
 /* The host's menu carries the table rules it used to print in a panel; a menu is narrower, so
    its toolbar stacks rather than running out of the popover. */
 .cm-lobby-menu .cm-menu-toolbar{display:grid;gap:8px}

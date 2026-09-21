@@ -257,4 +257,63 @@ check("the table's card scales with the table", () => {
   assert.match(width[1], /%/, "the card's width is a share of the table");
 });
 
+/* ------------------------------------------------------- nothing sits underneath the table's card */
+
+// From Rob's testing, 2026-09-21: "I can't get past the lobby because you put boxes on top of
+// boxes. I also had selected AI in seat 2, then it cut out the options."
+//
+// The card is centered over all four quadrants, so its footprint is arithmetic rather than a
+// judgment. It is W% of the table wide and, at the same ratio as the table, W% of the table tall;
+// centered, that is W/2% of the table reaching into each quadrant from the inner corner. A
+// quadrant is half the table, so the card covers W% OF A QUADRANT on both axes.
+//
+// Insetting each seat's figure on its inner side by at least that much means the two can never
+// intersect horizontally, whatever the content does vertically. `.cm-q-XX` names where a
+// quadrant's INNER corner is, so br/tr are inset from the right and bl/tl from the left.
+check("no seat's content reaches under the table's card", () => {
+  const cardWidth = /\.cm-table-center\{[^}]*width:\s*([\d.]+)%/.exec(css);
+  assert.ok(cardWidth, "the card's width is a percentage of the table");
+  const need = Number(cardWidth[1]);
+  const inset = (selector, side) => {
+    const rule = new RegExp("\\" + selector + "[^{]*\\.cm-seat-figure\\{([^}]*)\\}").exec(css)
+      || new RegExp("\\" + selector + " \\.cm-seat-figure,[^{]*\\{([^}]*)\\}").exec(css);
+    if (!rule) return null;
+    const m = new RegExp(side + ":\\s*([\\d.]+)%").exec(rule[1]);
+    return m ? Number(m[1]) : null;
+  };
+  const short = [];
+  for (const [sel, side] of [[".cm-q-br", "right"], [".cm-q-tr", "right"], [".cm-q-bl", "left"], [".cm-q-tl", "left"]]) {
+    const got = inset(sel, side);
+    if (got === null || got < need) short.push(`${sel} is inset ${got === null ? "not at all" : got + "%"} from its ${side}, needs ${need}%`);
+  }
+  assert.deepEqual(short, [], "a seat whose content runs under the card loses whatever is beneath it");
+});
+
+/* ------------------------------------------------------------------------------------ the mats */
+
+// From Rob: "in screenshot 3, note these are supposed to be the animated fill visuals for the fan
+// slices on the lobby seats. The mats are the 7 or so images I had uploaded before; they were in
+// the github repo."
+//
+// He is right and this was mine. The six elements of `crankmagic-sea.js` are the animated fills
+// behind the seats. The mats are a real catalog that already exists -- `game/ui/playmats.mjs`,
+// nine entries, images in `game/ui/assets/playmats/`, served by the host at `/playmats.mjs` and
+// `/playmats/<name>.png` (game/tools/serve-review.mjs lines 29 and 35) -- with its own
+// persistence in `saveMatPreference` / localStorage `crankmagic-playmats-v1`, which is the store
+// the table itself reads. Building a second catalog meant a choice that changed nothing in game.
+check("Choose mat reads the playmat catalog the game actually uses", () => {
+  assert.match(game, /import\("\/playmats\.mjs"\)/,
+    "the mats come from game/ui/playmats.mjs, not from the sea elements behind the seats");
+  assert.match(game, /PLAYMATS/, "the picker lists that module's own catalog");
+  assert.ok(!/CrankSea\.ELEMENTS/.test(game),
+    "CrankSea's elements are the animated fills behind the seats, not the playmats");
+});
+
+check("choosing a mat writes where the table reads it", () => {
+  assert.match(game, /saveMatPreference/,
+    "playmats.mjs owns the store (localStorage crankmagic-playmats-v1); writing anywhere else means the choice never reaches the game");
+  assert.match(game, /readMatPreferences/,
+    "and the picker marks the mat that seat already has");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
