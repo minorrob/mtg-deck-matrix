@@ -868,6 +868,7 @@
         <p class="cm-table-launch${launchError ? " is-error" : ""}" role="status" aria-live="polite" ${launchError ? `title="${e(launchError)}"` : ""}>${e(line)}</p>
         ${gameLaunched ? b("Open table", "lobby-open-table", {}, true, {cls: "compact"}) : launchError ? b("Send Log", "lobby-send-log", {}, true, {cls: "compact"}) : b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
       </div>
+      ${hostReachable === false ? '<p class="cm-table-elsewhere">A game runs on the helper on your own computer. Open <a href="http://127.0.0.1:8768/" target="_blank" rel="noopener">http://127.0.0.1:8768/</a> there to play.</p>' : ''}
     </section>`;
   }
 
@@ -2250,23 +2251,38 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
       if (!prepared || !prepared.id) throw new Error('Prepare did not return an id.');
       C.notice(config.humans > 1 ? 'Opening the private lobby…' : 'Launching Forge / tabletop…');
       const started = await lobbyApi('/api/start', {method: 'POST', token, body: {id: prepared.id}});
+      /* A 200 FROM /api/start MEANS THE ENGINE WAS SPAWNED. Everything after this point is
+         reporting, and a failure to report is not a failure to launch. This is the loop Rob hit:
+         lobbyPollLive threw, the catch counted it as a failed start, the retry ran lobby-start
+         again -- and since batch 9 that CLOSES the running engine and opens a new one. So a
+         working game was killed and relaunched, over and over. Marked launched here, before
+         anything that can throw. */
+      gameLaunched = true;
+      cancelCountdown();
       if (started && started.lobby) {
         applyServerInvitations(started.invitations || []);
         startInFlight = false;
         redraw();
-        gameLaunched = true;
         C.notice('Private lobby open — Email Invite / Copy Link now use live guest links. Guests can pick decks.');
         return;
       }
-      const live = await lobbyPollLive(240000);
-      gameLaunched = true;
       startInFlight = false;
       redraw();
-      C.notice(live.status === 'playing' ? 'Live table is playing.' : 'Live table is ready.');
+      /* Reporting only. If the engine is slow to answer, or answers oddly, the game is still
+         running and the lobby must not try to start it again. */
+      try {
+        const live = await lobbyPollLive(240000);
+        C.notice(live.status === 'playing' ? 'Live table is playing.' : 'Live table is ready.');
+      } catch (reportErr) {
+        C.notice('Forge was launched. The table is not reporting its status yet — open it to check.');
+      }
       lobbyResumeTabletop();
     } catch (err) {
       startInFlight = false;
       const why = (err && err.message) ? err.message : String(err);
+      /* If the engine is already up, this was not a failure to launch and retrying would close a
+         running game. */
+      if (gameLaunched) { redraw(); C.notice(why, true); return; }
       startAttempts += 1;
       if (startAttempts < START_ATTEMPTS) {
         /* One more go, and say that is what is happening rather than flashing the same error. */
@@ -2300,7 +2316,20 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
 
   C.HELP = C.HELP || {};
   /* The "?" reads {title, body}; a bare string here printed "undefined" over the dialog (D2). */
-  C.HELP.game = {title: "Play a game", body: `<h3>What the lobby does</h3><ul>
+  C.HELP.game = {title: "Play a game", body: `<h3>Games run on your own computer</h3>
+    <p>A game of Commander is played by CrankMagic Online, the helper that runs on your own
+    machine, with Forge as its rules engine. The web copy of this page can show you the table and
+    let you set it up, but Chrome will not let a page served from the web reach an address on your
+    computer without being asked first, so it cannot start a game.</p>
+    <p><strong>To play:</strong> start CrankMagic Online on that computer and open
+    <code>http://127.0.0.1:8768/</code> there. Each copy keeps its own library, so seats set up
+    here stay here.</p>
+    <h3>What CrankMagic Online is</h3>
+    <p>It hosts the table, checks every deck against Forge's card database before anyone sits
+    down, seats the players, launches the engine, and writes the finished match back onto the deck
+    it was played with. AI seats can be flown by Forge's own pilot or by an API model; a key for
+    that is held by the local service and never by this browser.</p>
+    <h3>What the lobby does</h3><ul>
     <li><strong>Four seats.</strong> Host plus three opponent boxes. Opponents are Human, AI, or Open.</li>
     <li><strong>Human seats</strong> use Name, Email, Email Invite, and Copy Link. Guests bring their own decks.</li>
     <li><strong>Confirm</strong> locks bracket and Game Changer cap for the table summary.</li>

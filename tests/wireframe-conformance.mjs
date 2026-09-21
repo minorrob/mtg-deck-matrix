@@ -24,6 +24,7 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 const game = readFileSync("crankmagic-game.js", "utf8");
 const css = readFileSync("crankmagic.css", "utf8");
+const online = readFileSync("crankmagic-online.js", "utf8");
 
 /* ------------------------------------------------------------------ the quadrant's furniture */
 
@@ -227,11 +228,25 @@ check("no lobby selector is declared twice in crankmagic.css", () => {
 // shrinks in both directions to honor the ratio. `max-height:72vh` was doing exactly that, so on
 // a tall window the table stopped well short of the content column while the panel below it ran
 // the full width. The ratio is the thing to keep; the cap is the thing to drop.
-check("the table fills the width it is given", () => {
+// Two of Rob's asks pulled against each other, and I resolved it the lazy way once and he caught
+// it: batch 1 was "when adjusting seat width, it should maintain aspect ratio"; batch 4 was "the
+// entire table is viewable without scrolling". Dropping the ratio satisfied the second by
+// sacrificing the first, and the seats went letterboxed — "The 4 seats are too thin now."
+//
+// Both hold if the table keeps its ratio and is limited by WHICHEVER of width or height binds
+// first: `width: min(100%, height × ratio)`. On a tall window it fills the column; on a short one
+// it is height-limited and centres, with margin either side. That is a contain fit, and it is
+// what should have been written the first time.
+check("the table keeps its shape and fits whichever way is tighter", () => {
   const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
   assert.ok(rule, "no base rule for the lobby table");
-  assert.match(rule[1], /width:\s*100%/, "the table fills its column");
-  assert.ok(!/max-width:/.test(rule[1]), "nothing may cap it short of the column");
+  assert.match(rule[1], /aspect-ratio:\s*\d/,
+    "the seats are quarters of this box, so this is what keeps their shape");
+  assert.match(rule[1], /width:\s*min\(/,
+    "limited by the column OR by the height left below it, whichever is tighter");
+  assert.match(rule[1], /--cm-table-h/, "the height still comes from the room measured per render");
+  assert.ok(!/max-height:\s*[\d.]+(vh|vw)/.test(rule[1]),
+    "a separate height cap would fight the ratio, which is the bug from batch 1");
 });
 
 // A px ceiling on the card's width stops it growing with the table, so on a wide screen the card
@@ -348,12 +363,18 @@ check("a dark top-and-bottom gradient sits over the sea", () => {
 //
 // The card then keeps a seat's shape for free: a quadrant is 50% x 50% of the table and the card
 // is 30% x 30%, so they share a ratio at every window shape, with no rule to keep in step.
-check("the table is sized from the space it has, not from a fixed ratio", () => {
-  const rule = /\.cm-lobby-table\{([^}]*)\}/.exec(css);
-  assert.ok(rule, "no base rule for the lobby table");
-  assert.ok(!/aspect-ratio:\s*\d/.test(rule[1]),
-    "a fixed ratio makes the table taller than the window on a wide screen, and deaf to zoom");
-  assert.match(rule[1], /height:/, "it takes the height left below it");
+// Rob, batch 10: "the note on the top of 'Game Runs on your Own Computer' and the content in
+// 'What CrankMagic Online is' should all be in the question mark button next to Play."
+//
+// The lobby still refuses to count down on a web copy and Start still explains itself, so nothing
+// is lost by taking the banner off the page — the explanation moves to where explanations live.
+// The LOCAL "host offline" banner stays: it carries a Check again button, which is an action, not
+// an explanation.
+check("the web copy explains itself in the help, not in a banner", () => {
+  assert.ok(!/Games run on your own computer/.test(online),
+    "the remote explanation belongs in the help button beside Play");
+  assert.match(game, /C\.HELP\.game[\s\S]{0,2000}own computer/,
+    "and it has to actually be there");
 });
 
 // Rob, later the same day: "You can make the middle box height smaller (breaking the ratio) while
@@ -389,7 +410,11 @@ check("the launch row is a text box and a Start button", () => {
   assert.match(panel[0], /lobby-start-now/, "a Start control the host can press at any time");
   const rule = /\.cm-table-launch-row\{([^}]*)\}/.exec(css);
   assert.ok(rule, "the row needs a rule");
-  assert.match(rule[1], /grid-template-columns:[^;]*(1fr|auto)/, "two columns: the reading, then the button");
+  /* A flex row, not a grid one. As a grid the reading kept its content height while the button
+     stretched to a row taller than either, so the two never matched — and Rob asked for them to
+     be the same height. */
+  assert.match(rule[1], /display:flex/, "the reading and the button sit in one row");
+  assert.match(rule[1], /align-items:stretch/, "and take the same height");
 });
 
 check("a countdown exists and launches when it reaches zero", () => {
@@ -509,7 +534,6 @@ check("the card pop-up is sized from the card that opened it", () => {
 // banner in crankmagic-online.js was gated on `location.hostname === '127.0.0.1'`, so on any
 // other origin it never appeared, the table rendered as normal, the countdown ran, and the first
 // thing that told anyone was an HTTP status code.
-const online = readFileSync("crankmagic-online.js", "utf8");
 
 check("the host banner is shown wherever the host is missing, not only on 127.0.0.1", () => {
   assert.ok(!/location\.hostname===['"]127\.0\.0\.1['"]&&!hostStatus\.available/.test(online),
@@ -594,6 +618,28 @@ check("a table that has launched does not count down again", () => {
   assert.ok(sync, "syncCountdown not found");
   assert.match(sync[0], /gameLaunched/,
     "without this the countdown relaunches into the engine it just started");
+});
+
+// Rob, after batch 9 shipped: "After the forge instance opens after being trigger by Start ...
+// it is closing forge and reopening it, but it's staying in this loop."
+//
+// The flag existed but was set too late. `/api/start` returning 200 means the engine was spawned;
+// everything after that is reporting. `lobbyPollLive` threw, the catch counted it as a FAILED
+// START, and the retry ran `lobby-start` again — which since batch 9 closes the running engine
+// and opens a new one. So a working game was killed and relaunched, over and over, and the
+// auto-restart I added one batch earlier is what turned a harmless retry into a destructive one.
+check("a launched game is never relaunched by a reporting error", () => {
+  const start = /actions\["lobby-start"\] = async[\s\S]*?\n  \};/.exec(game);
+  assert.ok(start, "lobby-start not found");
+  /* Comments here name the calls they describe, so they are stripped before ordering anything --
+     otherwise the note explaining the fix is read as the code it replaced. */
+  const code = start[0].replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/[^\n]*/g, "$1");
+  const at = (s) => code.indexOf(s);
+  assert.ok(at("gameLaunched = true") > -1, "the launch has to be recorded");
+  assert.ok(at("gameLaunched = true") < at("lobbyPollLive"),
+    "recorded BEFORE anything that can throw, or a slow report reads as a failed launch");
+  assert.match(start[0], /if \(gameLaunched\) \{[^}]*return;/,
+    "and the failure path must not retry a game that is already running");
 });
 
 check("the launch box says the game is running, and offers the table", () => {
