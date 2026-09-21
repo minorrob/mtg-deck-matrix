@@ -109,8 +109,8 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* THE CARD'S FOOTPRINT, KEPT CLEAR. The card is 30% of the table wide and 30% of it tall, so
    centered it reaches 30% of a QUADRANT in from the inner corner. 32% leaves a margin. Nothing
    a seat draws can end up underneath it, which is what was eating the AI seat's dropdowns. */
-.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:22%}
-.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:22%}
+.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:24%}
+.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:24%}
 .cm-q-tl .cm-seat-figure,.cm-q-bl .cm-seat-figure{flex-direction:row-reverse}
 /* The top row's reading hangs from the top of the figure, the bottom row's from the bottom,
    so the text is always on the side of the quadrant nearest that player. */
@@ -180,17 +180,17 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
    share of the table so it scales, with a floor under it so the launch line never wraps to a
    third row. Everything that keeps seats clear of it derives from this width, so narrowing
    the card widens the seats by itself. */
-.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:20%;min-width:205px;max-height:70%;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(12px,1.2vw,22px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
-.cm-table-center h2{font-size:15px;margin:0;color:var(--table-ink)}
+.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:24%;min-width:246px;max-height:56%;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(8px,0.62vw,14px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
+#matrix-v2 .cm-table-center h2{margin:0;color:var(--table-ink)}
 /* 2b stamps the wand-and-gear into the panel's bottom-right at 7%, greyscale, bleeding off
    the edge. Decorative, so it is aria-hidden and sits under everything that carries words. */
 .cm-table-stamp{position:absolute;right:-18px;bottom:-14px;width:62%;opacity:.07;filter:grayscale(1);pointer-events:none;z-index:0}
 .cm-table-center>:not(.cm-table-stamp){position:relative;z-index:1}
 .cm-table-head>*{position:relative;z-index:1}
-.cm-table-head{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.cm-table-head{display:flex;align-items:baseline;gap:10px;margin:0 0 4px;line-height:1.2}
 .cm-table-setby-top{margin:0 0 0 auto;font-size:11px;color:color-mix(in srgb,var(--table-ink) 50%,transparent)}
-.cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent)}
-.cm-table-rules dd{margin:0;font-weight:600;color:var(--table-ink)}
+.cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent);line-height:1.3}
+.cm-table-rules dd{margin:0;font-weight:600;color:var(--table-ink);line-height:1.3}
 /* The launch line is a box, not a sentence: it is the table speaking, not the host. */
 /* Rob: two columns, the reading and a Start button taking 15-25% on the right. The button is
    sized from its own words with a floor and a ceiling rather than a bare percentage, so
@@ -198,7 +198,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* Flex, not grid. As a grid the reading kept its content height while the button stretched to a
    row that was taller than either of them, so the two never matched. In a flex row
    align-items:stretch means exactly what it says: both children take the height of the taller. */
-.cm-table-launch-row{display:flex;gap:8px;align-items:stretch;margin:10px 0 0}
+.cm-table-launch-row{display:flex;gap:8px;align-items:stretch;margin:6px 0 0}
 .cm-table-launch.is-error{background:color-mix(in srgb,var(--st-remove) 22%,var(--table-panel));color:color-mix(in srgb,var(--st-remove) 60%,var(--table-ink));cursor:help}
 .cm-table-launch{flex:1 1 auto;margin:0;min-height:44px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
 /* height:100% on a stretched grid item asks for a percentage of a row whose height it is also
@@ -209,7 +209,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-table-launch-row .v-button{flex:0 0 auto;min-height:44px;height:auto;padding:0 14px;font-size:12px;white-space:nowrap}
 /* Rob: lose the spacing between the rows. They are a list of four short facts; a gap between
    them made the card taller for nothing. */
-.cm-table-rules{display:grid;gap:0;margin:0}
+.cm-table-rules{display:grid;gap:0;margin:0;line-height:1.35}
 .cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px;line-height:1.55}
 @media(max-width:900px){
   /* A phone reads the table as a column of seats: four quadrants stacked, the rules above them,
