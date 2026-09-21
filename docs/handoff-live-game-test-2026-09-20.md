@@ -83,7 +83,7 @@ running game. Restart the app after switching branches — it reads its code fro
 you bottom-right. Each quadrant is filled by the element that says what that seat is doing —
 mist empty, wheat invited, ocean resolving a deck, leaves ready, fire when a check failed — and
 a color-identity fan radiates from its inner corner once a commander is chosen. The rules sit at
-the centre with one line, *"Launches when every seat is ready · n to go"*, **in place of a Launch
+the center with one line, *"Launches when every seat is ready · n to go"*, **in place of a Launch
 button**; the host's controls moved below the table under **Host tools**.
 
 **Every seat body, action and id is unchanged.** The handlers find them by `data-action`; nothing
@@ -133,9 +133,11 @@ be a sign-off, and this would have been waiting in it.
 - Pins moved for every changed asset and `node tests/asset-versions.mjs --update`. The chain
   bites: changing the worker's shell list changes the worker, which moves its own pin inside
   `crankmagic-app.js`, which moves the app's pin.
-- American English everywhere. The ratchet in `tests/feature-wiring.mjs` caught me **three** times
-  this session — `centre` in a comment, a class named `cm-ring-centre`, and a `centrePanel`
-  function. Name things in American English the first time.
+- American English everywhere. The ratchet in `tests/feature-wiring.mjs` caught me **four** times
+  this session: twice in prose, once in a CSS class name and once in a function name, each time
+  the British spelling of "center". It caught this document too, which is why it reads as it
+  does. Name things in American English the first time — a rename after the fact touches the
+  markup, the stylesheet and the test together.
 - Never touch `data/deck-ratings.json`, `data/simulation-summary.json`, `sim/`,
   `data/deck-guides.json`.
 - Branch `claude/<topic>`, push before you stop, update `docs/ACTIVE.md` as your last act. **Check
