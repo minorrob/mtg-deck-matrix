@@ -2606,3 +2606,7 @@ button.cm-building { pointer-events: none; }
    a link he can click rather than an address he has to retype. */
 .cm-table-elsewhere{margin:8px 0 0;font-size:11px;text-align:center;color:color-mix(in srgb,var(--table-ink) 66%,transparent);line-height:1.45}
 .cm-table-elsewhere a{color:var(--table-ink);font-weight:600}
+
+/* Shown only when the browser refused the board tab -- a launch with no click behind it. */
+.cm-table-board-link{margin:8px 0 0;font-size:11px;text-align:center;color:color-mix(in srgb,var(--table-ink) 70%,transparent);line-height:1.45}
+.cm-table-board-link a{color:var(--table-ink);font-weight:600}
