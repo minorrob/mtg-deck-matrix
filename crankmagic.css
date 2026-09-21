@@ -56,7 +56,12 @@
    follow the width and nothing else, so on a wide window the table ran past the bottom of the
    screen and the seats never answered zoom. Sized this way a quadrant's shape follows the
    window's, all four stay identical, and the whole table is in view without scrolling. */
-.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));width:100%;height:var(--cm-table-h,68vh);min-height:320px;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
+.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));/* A CONTAIN FIT. The seats are quarters of this box, so its ratio IS their ratio -- which is
+   what Rob asked for in batch 1 and what I broke in batch 4 by dropping it to make the table
+   fit the window. Both hold this way: the width is the column OR the height left below it
+   times the ratio, whichever is tighter, so the table never outgrows the screen and never
+   changes shape. On a short window it is height-limited and centres. */
+width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10;margin-inline:auto;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
 .cm-seat-q{position:relative;isolation:isolate;min-width:0;overflow:hidden;background:var(--v-panel)}
 /* The sea fills the quadrant and stays behind everything; the fan is over it and under the seat. */
 .cm-seat-sea{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
@@ -84,8 +89,8 @@
 /* The bottom row's header sits exactly where the card reaches in, so it stops short of it on
    its inner side. The top row's header is at the far end of the quadrant from the card and
    needs no inset. Measured, not assumed: the permutation pass reports the overlap in px2. */
-.cm-q-tr .cm-lobby-seat>header{right:28%}
-.cm-q-tl .cm-lobby-seat>header{left:28%}
+.cm-q-tr .cm-lobby-seat>header{right:22%}
+.cm-q-tl .cm-lobby-seat>header{left:22%}
 .cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
 .cm-seat-q .cm-lobby-ready{margin-left:auto}
@@ -104,8 +109,8 @@
 /* THE CARD'S FOOTPRINT, KEPT CLEAR. The card is 30% of the table wide and 30% of it tall, so
    centered it reaches 30% of a QUADRANT in from the inner corner. 32% leaves a margin. Nothing
    a seat draws can end up underneath it, which is what was eating the AI seat's dropdowns. */
-.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:28%}
-.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:28%}
+.cm-q-br .cm-seat-figure,.cm-q-tr .cm-seat-figure{right:22%}
+.cm-q-bl .cm-seat-figure,.cm-q-tl .cm-seat-figure{left:22%}
 .cm-q-tl .cm-seat-figure,.cm-q-bl .cm-seat-figure{flex-direction:row-reverse}
 /* The top row's reading hangs from the top of the figure, the bottom row's from the bottom,
    so the text is always on the side of the quadrant nearest that player. */
@@ -175,7 +180,7 @@
    share of the table so it scales, with a floor under it so the launch line never wraps to a
    third row. Everything that keeps seats clear of it derives from this width, so narrowing
    the card widens the seats by itself. */
-.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:26%;min-width:250px;max-height:56%;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(12px,1.2vw,22px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
+.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:20%;min-width:205px;max-height:70%;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:clamp(12px,1.2vw,22px);border-radius:var(--v-radius-card);background:var(--table-panel);color:var(--table-ink);border:1px solid color-mix(in srgb,var(--table-ink) 14%,transparent);box-shadow:0 18px 44px -18px color-mix(in srgb,var(--poster-ground) 55%,transparent)}
 .cm-table-center h2{font-size:15px;margin:0;color:var(--table-ink)}
 /* 2b stamps the wand-and-gear into the panel's bottom-right at 7%, greyscale, bleeding off
    the edge. Decorative, so it is aria-hidden and sits under everything that carries words. */
@@ -190,16 +195,26 @@
 /* Rob: two columns, the reading and a Start button taking 15-25% on the right. The button is
    sized from its own words with a floor and a ceiling rather than a bare percentage, so
    "Start" and "Stop" both sit comfortably at every table width. */
-.cm-table-launch-row{display:grid;grid-template-columns:1fr minmax(64px,22%);gap:8px;align-items:stretch;margin:12px 0 0}
+/* Flex, not grid. As a grid the reading kept its content height while the button stretched to a
+   row that was taller than either of them, so the two never matched. In a flex row
+   align-items:stretch means exactly what it says: both children take the height of the taller. */
+.cm-table-launch-row{display:flex;gap:8px;align-items:stretch;margin:10px 0 0}
 .cm-table-launch.is-error{background:color-mix(in srgb,var(--st-remove) 22%,var(--table-panel));color:color-mix(in srgb,var(--st-remove) 60%,var(--table-ink));cursor:help}
-.cm-table-launch{margin:0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
-#matrix-v2 .cm-table-launch-row .v-button{min-height:0;padding:0 8px;font-size:12px;white-space:nowrap}
-.cm-table-rules{display:grid;gap:6px;margin:0}
-.cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cm-table-launch{flex:1 1 auto;margin:0;min-height:44px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
+/* height:100% on a stretched grid item asks for a percentage of a row whose height it is also
+   helping to decide, and the browser resolves that by growing. Stretch alone is the answer:
+   both cells then take the row's height, and the row takes the taller natural content, which
+   is the reading. */
+/* The same minimum as the reading beside it, so the two always match however the reading wraps. */
+#matrix-v2 .cm-table-launch-row .v-button{flex:0 0 auto;min-height:44px;height:auto;padding:0 14px;font-size:12px;white-space:nowrap}
+/* Rob: lose the spacing between the rows. They are a list of four short facts; a gap between
+   them made the card taller for nothing. */
+.cm-table-rules{display:grid;gap:0;margin:0}
+.cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px;line-height:1.55}
 @media(max-width:900px){
   /* A phone reads the table as a column of seats: four quadrants stacked, the rules above them,
      because a 2x2 table at 390px gives each seat 180px and nothing fits in it. */
-  .cm-lobby-table{grid-template-columns:minmax(0,1fr);grid-template-rows:none;aspect-ratio:auto}
+  .cm-lobby-table{grid-template-columns:minmax(0,1fr);grid-template-rows:none;aspect-ratio:auto;width:100%}
   .cm-seat-q .cm-seat-body{padding:0}
   .cm-table-center{position:static;transform:none;width:auto;min-width:0;aspect-ratio:auto;overflow:visible;order:-1;box-shadow:none}
 }
@@ -2586,3 +2601,8 @@ button.cm-building { pointer-events: none; }
    its toolbar stacks rather than running out of the popover. */
 .cm-lobby-menu .cm-menu-toolbar{display:grid;gap:8px}
 .cm-lobby-lede{margin:-6px 0 18px;color:var(--v-muted);font-size:14px}
+
+/* THE WAY TO A HOST THAT CAN PLAY. Shown only on a copy that cannot reach one -- Rob asked for
+   a link he can click rather than an address he has to retype. */
+.cm-table-elsewhere{margin:8px 0 0;font-size:11px;text-align:center;color:color-mix(in srgb,var(--table-ink) 66%,transparent);line-height:1.45}
+.cm-table-elsewhere a{color:var(--table-ink);font-weight:600}
