@@ -137,3 +137,17 @@ body.setup-screen>.recommended-actions{display:none!important}
 .player-mat .zoom-card-grid .group-label{height:16px;box-sizing:border-box;overflow:hidden;padding:0 2px;line-height:16px;font-size:10px}
 .primary-seat .free-card,.focus-mat-stage .free-card{width:var(--free-card-width,19cqw)}
 .zoom-card-grid .counter-dice{left:1px;bottom:16%;gap:1px;max-width:95%}.zoom-card-grid .die{font-size:clamp(5px,.7cqw,9px);padding:0 1px;line-height:1.2}.zoom-card-grid .badge{font-size:clamp(7px,1.2cqw,13px);padding:1px 3px}
+
+/* THE TABLE NOTICE (Stage A.6.1). The first board component written on the design tokens rather
+   than on literals -- B.0 published them at :root, so this reads the same palette as the rest of
+   CrankMagic and Stage B will move it rather than rewrite it. No raw hex below on purpose. */
+.table-notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;width:min(92vw,380px);display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4);background:var(--color-panel,Canvas);color:var(--color-ink,CanvasText);border:1px solid var(--color-line,CanvasText);border-radius:var(--radius-card,14px);box-shadow:0 24px 60px -20px rgb(0 0 0 / .65)}
+.table-notice[hidden]{display:none}
+.table-notice-who{font-size:var(--text-h3);line-height:1.25}
+.table-notice-what{margin:0;font-size:var(--text-body-size,14px);line-height:var(--leading-body,1.5);color:var(--color-muted,CanvasText)}
+.table-notice-art{padding:0;border:0;background:none;cursor:zoom-in;align-self:center;width:62%;border-radius:var(--radius-control);overflow:hidden}
+.table-notice-art img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:var(--radius-control)}
+.table-notice-art:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.table-notice-actions{display:flex;align-items:center;gap:var(--space-3)}
+.table-notice-actions .primary-action{flex:1 1 auto;min-height:40px}
+.table-notice-more{color:var(--color-muted,CanvasText);font-size:var(--text-small,12px);white-space:nowrap}

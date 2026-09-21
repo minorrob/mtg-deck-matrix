@@ -3,6 +3,9 @@ import {openGameSetup} from '/setup.mjs';
 import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn,engineIsWorking,firstDrawSkipped} from '/action-policy.mjs';
 import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
+// Earlier running hosts do not advertise this module until their next restart, and a hard import
+// of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
+const {noticesFor,lifeDelta}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null}));
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
@@ -81,6 +84,55 @@ function canSelectCard(c){return live?.ui.selectables.includes(c.cardId)||((atta
 function phaseName(phase){return ({MAIN1:'main phase 1',MAIN2:'main phase 2',END_OF_TURN:'end step',COMBAT_DECLARE_ATTACKERS:'declare attackers',COMBAT_DECLARE_BLOCKERS:'declare blockers'})[String(phase).toUpperCase()]||String(phase&&phase!=='null'?phase:'Setup').replaceAll('_',' ').toLowerCase();}
 function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.playerId===viewerSeatId?'YOUR TURN':p?`${p.name}’s turn`:frame()?.turn===0?'SETTING UP':'TURN OWNER UNAVAILABLE'} · Turn ${frame()?.turn??0} · ${phaseName(phase)}`;}
 function notifyAction(text){$('notice').textContent=text;noticeUntil=Date.now()+6500;let toast=$('action-notice');if(!toast){toast=el('div','action-notice');toast.id='action-notice';toast.setAttribute('role','status');document.body.append(toast);}(($('focus').open)?$('focus'):document.body).append(toast);toast.textContent=text;toast.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.hidden=true,6500);}
+/* A NOTICE YOU CAN ACTUALLY READ.
+ *
+ * Rob: "You already have pop-ups when other players play cards, which is great, but they should
+ * have an 'Ok' button to close them as they pop-up and close too fast to read or inspect the
+ * card." The pop-up he means is notifyAction above -- text only, on a 6500ms timer, gone before
+ * a card name registers. These do not time out, carry the card, and wait to be dismissed.
+ *
+ * Several land in one turn, so they queue and play back oldest first with the backlog visible.
+ * One at a time: four overlays stacked is worse than none.
+ */
+const noticeSeen=new Set(),noticeQueue=[],cardMemory=new Map();let noticePrimed=false;
+/* A card that has left play is gone from every zone, so the art it was drawn with is remembered
+   here -- otherwise the one notice that most needs a picture, "your creature died", has none. */
+function rememberCards(f){for(const p of f?.players||[])for(const z of Object.values(p.zones||{}))for(const c of z.cards||[])if(c?.cardId!=null&&!cardMemory.has(c.cardId))cardMemory.set(c.cardId,c);}
+function cardById(id){return id==null?null:cardMemory.get(id)||null;}
+const noticeBox=el('div','table-notice');noticeBox.id='table-notice';noticeBox.hidden=true;noticeBox.setAttribute('role','alertdialog');noticeBox.setAttribute('aria-live','assertive');document.body.append(noticeBox);
+function showNextNotice(){
+  const row=noticeQueue[0];
+  if(!row){noticeBox.hidden=true;noticeBox.replaceChildren();return;}
+  noticeBox.replaceChildren();noticeBox.hidden=false;
+  const who=row.playerId===viewerSeatId?'You':(names[row.playerId]||'Another player');
+  const delta=lifeDelta(row);
+  const headline=delta!==null?`${who} ${delta<0?'lost':'gained'} ${Math.abs(delta)} life`:`${who} · ${row.name||'Table'}`;
+  noticeBox.append(el('strong','table-notice-who',headline));
+  const card=cardById(row.cardId);
+  if(card?.art){
+    const shot=el('button','table-notice-art');const img=el('img');img.src=card.art;img.alt=card.name||'Card';shot.append(img);
+    shot.title='Open a larger view of this card';
+    shot.addEventListener('click',()=>inspect(card,1,true));
+    noticeBox.append(shot);
+  }
+  noticeBox.append(el('p','table-notice-what',row.label||''));
+  const row2=el('div','table-notice-actions');
+  const ok=button('OK',()=>{noticeQueue.shift();showNextNotice();},'primary-action');
+  row2.append(ok);
+  if(noticeQueue.length>1)row2.append(el('small','table-notice-more',`${noticeQueue.length-1} more`));
+  noticeBox.append(row2);
+  ok.focus({preventScroll:true});
+}
+function pumpNotices(){
+  if(!live?.telemetry)return;
+  const fresh=noticesFor(live.telemetry.recent,noticeSeen,viewerSeatId,{priming:!noticePrimed});
+  noticePrimed=true;
+  if(!fresh.length)return;
+  /* A backlog that outgrows a turn is a backlog nobody clears, so the oldest fall off. */
+  noticeQueue.push(...fresh);while(noticeQueue.length>12)noticeQueue.shift();
+  if(noticeQueue.length===fresh.length)showNextNotice();
+  else if(!noticeBox.hidden)showNextNotice();
+}
 function playRestriction(c){
   if(!live)return 'Connect to your live table first.';
   if(live.ui.choice||live.ui.nativeFallback)return 'Finish the current card choice first.';
@@ -460,7 +512,7 @@ function renderCombat(force=false){
 selectPane('history');
 function render(){
   document.querySelector('.focus-eyebrow').textContent=live?'FOCUSED BOARD · LIVE GAME':'FOCUSED BOARD · REPLAY';
-  const f=frame();$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
+  const f=frame();rememberCards(f);$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
   $('prev').disabled=index===0;$('next').disabled=index===data.frames.length-1;
   follow.textContent='Follow active player: '+(followActive?'on':'off');
   const activeSeat=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);promptAi.hidden=!live||guestMode||activeSeat?.kind!=='ai';promptAi.disabled=aiPrompting;promptAi.textContent=aiPrompting?'Prompting AI…':activeSeat?'Prompt '+(activeSeat.name||'AI'):'Prompt AI';
@@ -811,7 +863,7 @@ function applyLiveView(value){
       updatePendingCasts();
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent=guestMode?'LIVE TABLE · INVITED SEAT':'LIVE TABLE · LOCAL HOST';document.querySelector('.scrubber').hidden=true;
       const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt,[...pendingCasts.values()].map(c=>[c.cardId,c.stage])]);if(key!==lastState&&draggingCard===null&&!resizingBoard&&!decisionPointer){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
-      renderDecision();renderHistory();renderGuidance();renderCombat();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
+      renderDecision();renderHistory();renderGuidance();renderCombat();pumpNotices();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
     }else if(guestMode){
       $('phase').textContent='Waiting for the game to finish starting…';
       $('notice').textContent='The match is being set up. This will only take a moment.';
