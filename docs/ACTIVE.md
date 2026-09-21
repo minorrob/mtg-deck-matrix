@@ -2,64 +2,64 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — everything of the 2026-09-21 session is merged |
-| **Branch** | `main`; nothing open |
+| **Holder** | Free — #322 to #327 merged; #328 open and green-pending |
+| **Branch** | `main`; `claude/alerts-poison-and-draws` open as #328 |
 | **Since** | 2026-09-21 |
-| **Doing** | **Track V is merged through the Play lobby, and the live-game gate is cleared.** #306 took the lobby to wireframe 2b and measured the Explore graph for the first time. The color-identity fan now draws — it never had, because every quadrant's wedge swept 90° outside its own quadrant and was clipped away. `tests/wireframe-conformance.mjs` is new: the handoff README grades `screens/*.dc.html` as hi-fi ("Recreate pixel-close") and the wireframes as lo-fi ("follow their structure and content order"), so screens are measured in pixels by `tools/compare-to-screen.mjs` and wireframes are held to structure and content there. |
-| **Next for whoever picks this up** | **Read `docs/live-game-readiness-2026-09-21.md`.** Rob is running run-book steps 5–9 himself. The work after that, in order: the mat surface (`game/ui/review.mjs`, `game/ui/mats.css`) against wireframes 2e and 2f — also the last raw-hex blind spot, ceiling 475 and nothing watching it; then the nine wireframe pages and four dialog groups, extending `tests/wireframe-conformance.mjs`; then Gallery Explore's two recorded pixel differences. |
+| **Doing** | **Stage A is nearly finished and the board has joined the design system.** The plan is `docs/plan-board-information-layer.md`, which supersedes the stage list in `docs/plan-board-onto-the-design-system.md`. |
+| **Next for whoever picks this up** | **Stage B** — the board becomes the Play surface of the one app, measured against wireframes 2e/2f, with `game/ui` held to its raw-hex ratchet. Then the **card extraction skill** (API pilot, not Forge). Rob confirmed Stage B is on the agenda *after* the engine work. |
 
-## The live-game gate is cleared
+## What Stage A turned out to be
 
-This file used to name #259, #260, #262 and #263 as PRs that had to be triaged before any
-live-game test. **All four were already merged** — every commit of that chain is an ancestor of
-`main` — and all four are now closed with their evidence. #263's one remaining commit would have
-*regressed* things: it deletes `C.views.game` from `crankmagic-online.js`, which `main` already
-fixed better by wrapping that view rather than overwriting it. **Nothing blocks the test.**
+The original Stage A listed four things. **That list was too short**, and Rob's four-player pod
+showed why: a game you cannot *follow* is not one you can play. Six findings in a row were all one
+finding — the board had the facts and never drew them.
 
-## The architecture fact that reorders the remaining work
+| | |
+|---|---|
+| A.1 | The lag measurement — and the board that was never connecting at all (`review.mjs` opened Game setup unconditionally for the host) |
+| A.2 | A spent prompt is not a decision. Forge never clears `prompt`, so `/^Priority:/` matched an answered string and the board said "Your action" over a dead button. `ui.inputType` is the fact to stand on |
+| A.3 | `End game` and `Auto-pass turn` out of the action row; neither lost |
+| A.4 | The skipped first draw explained where the player was refused (CR 103.8a, two-player only) |
+| A.5 | **Answered.** The starting player *does* draw in a four-player pod — read out of Rob's own match journal, not predicted |
+| A.6.1 | A notice with card art and an **OK button**, replacing a 6500ms text toast |
+| A.6.3 | History carries the card and says **why** — the reason was already in the label |
+| A.6.4 | Incoming damage where blocks are chosen, with double strike counted twice |
+| A.6.2 | Poison and your own draw, both present in the feed and never announced |
 
-**A live game is played in Forge, not in the browser.** `crankmagic-game.js` draws the lobby and
-never drew a board. The browser's mat surface is `game/ui/review.mjs` with `game/ui/mats.css`,
-reached at `/play` and routed by `game/ui/play-entry.mjs` — `guest-live.mjs` for a remote guest,
-`review.mjs` for the host or a recorded match. So the DELTA's table view and focus view are a
-redesign of **that** surface, and "get a live game up and running" is the run-book, not board work.
+## B.0 is done, and it is smaller than it looks
 
-## Proven on this machine today, 2026-09-21
+`crankmagic-design.css` had **no `:root` block at all** — all 350 rules *and* every token scoped to
+`#matrix-v2`, an id the board's root does not carry. Naming `:root` as well publishes the **values**
+without the **rules**: the board gets the palette and no element styling.
 
-Run-book steps **1, 2, 3 and 4** all pass here — see
-`docs/live-game-readiness-2026-09-21.md` for each command and its output. The suite is 98
-green with browser suites driving Chrome; the doctor says *Ready to host a game*; every card
-in all 7 decks resolves to a Forge card script; and the import gate refuses an invented card
-by name before preparation. **Steps 5 to 9 need a game and are Rob's.**
-## Open, for the designer's gap list
+**The board loads it from `/app/crankmagic-design.css`**, a path the host already served, so the
+palette arrives on a page reload rather than a host restart. Verified live: `--color-panel` →
+`#231f1b`, radius 18px from `--radius-card`.
 
-- No **light** value for `--st-watch`, `--st-draft` or `--st-physical`; ours are in the Felt and Cream register and marked as ours in `tests/design-tokens.mjs`.
-- **No `--mana-C`** for colorless, so `.cm-color.C` keeps a literal and the Library's `{C}` cannot come from a token. A **land icon** is still missing; rows use the screen's own placeholder "L" disc.
-- The Gallery Deck Page screen puts a brass "Open the buy list →" in the Next card while the hero already carries a brass primary — **two accent-filled buttons**, against the guide's own "exactly one".
-- The Explore Entry screen states a **join total**; the graph payload carries none, so the sub-line states the card count only rather than inventing one.
-- The graph's legend sits **top right**, not bottom right: with the 340px card pane beside it the stage is ~630px and the reach sliders already fill the bottom edge.
+`game/ui` raw hex is ratcheted at **463** — today's true measurement across all five stylesheets.
+The earlier figure of 402 counted four and missed `guest.css`.
 
-## Not done, by surface
+## Two limits found by measuring, which the next person should not re-discover
 
-- **Explore graph**: the head is still the old toolbar rather than h1 36px + 44px search + segmented connections + Filters with a count badge; node radii and the pane's layout untouched.
-- **Library**: the five-dropdown filter row the screen draws in place of Filters and Columns.
-- **Deck page**: "the action row follows the tab" — the row wraps to three lines because the app has two buttons the screen does not.
-- **Lobby**: the commander card in the outer bottom corner and its detail column, Choose mat, Host tools as a menu, and the 10-second auto-launch countdown (the poll is wired; the countdown is not drawn).
-- **Playmat**: the DELTA omits the printed turn-steps list and life box "because the app shows both" — the app does not yet, so the guide stays until the turn-step ribbon exists.
-- **Wireframed pages and dialogs**, and the Game Host announcer voice (V.5b backlog).
+**The adapter reports exactly nine keywords** — flying, reach, trample, first strike, double
+strike, deathtouch, lifelink, infect, wither (`ForgeProbe.java:241`). Menace, protection,
+indestructible, shadow and fear never leave the engine. Widening that is a Java change and a
+rebuild. `incomingAt` takes the union of whatever arrives, so they pass straight through when it
+happens.
 
-## Found in the repository
+**Two of Rob's alerts need card text, not events.** "Exiled with a return condition" and "a
+mechanic triggered by other players" cannot be derived from the event stream. They are the first
+consumer of the **card extraction skill** — the knowledge would be read by the board, not only
+written by the pilot.
 
-- The `v-` study layer in `crankmagic-design.css` (`.v-cover`, `.v-showcase`, `.v-gnode`, `.v-cardfan`) appears only under `design/` and **is never rendered**. Delete it rather than restyle it.
-- `crankmagic.css` references **`--v-text` twice — a token that does not exist** (it is `--v-ink`), so those two colors silently inherit.
-- **"Seat it" with no deck chosen does nothing and says nothing.** The dialog refuses silently. Predates the redesign.
+## Standing facts for the next session
 
-## Five things this session learned the hard way
-
-- **Render every visible change, and drive it.** The deck page threw `Cannot access 'heroTint' before initialization`; the Explore entry rendered the word `NaN`; the role-lens row hid itself because `CrankFacets.values()` returns an array of `{value,count}` read as a map; the lobby's color fan drew nothing because a seat's identity is on `seat.commanders[0]`. Suites were green through the first, `node --check` passed the second, nothing threw on the third, and the fourth made an empty table and a seated one identical.
-- **Remove a superseded CSS rule, do not out-weigh it.** `grep '.selector{'` returns only its first match — count them.
-- **Two things wearing the same word.** `crankmagic-collection.js` has a `purpose` column that is the *slot's* purpose and a card's *Primary Purpose* from the classifier.
-- **A ceiling that reads only `.css` cannot see a canvas.** `crankmagic-graph.js` held 38 navy literals through a sweep that took the stylesheet 730 → 137. Its ceiling is zero now.
-- **Check the branch before committing.** The lobby went to `main` by mistake; nothing reached `origin/main`, but `git branch --show-current` costs nothing.
-
-Update this file as your last act. Rules: `AGENTS.md`.
+- The host serves `game/ui/*` **per request**, so UI changes land on reload. Anything the host
+  *imports* — `serve-review.mjs`, the gateway, the launcher — needs a restart.
+- Restarting mints a **new** cloudflared address unless `COMMANDER_GUEST_PUBLIC_ORIGIN` is passed.
+  Both restarts this session preserved `medium-linking-replies-take` that way.
+- `tools/first-draw-check.mjs` and `tools/board-latency.mjs` are read-only and can watch a live
+  game. Neither invents a verdict it did not observe.
+- **A.6.1, A.6.3, A.6.4 and A.6.2 have not yet run against a live game.** The visuals were verified
+  against the running host's stylesheet and the rules are unit-tested, but Rob's pod closed before
+  they landed. The first new game is what proves them.
