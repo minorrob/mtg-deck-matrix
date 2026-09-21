@@ -542,7 +542,9 @@
         ? EMBEDDED_DESKTOP_DEKS
         : (desktopDekDecks || []);
       try {
-        const dekPack = await lobbyApi("/api/desktop-deks");
+        /* The host wants its session token for this one, as it does for /api/table. Called
+           without it, it answered 403 and the embedded fallback quietly took over. */
+        const dekPack = await lobbyApi("/api/desktop-deks", {token: setup && setup.token});
         if (Array.isArray(dekPack && dekPack.decks) && dekPack.decks.length) desktopDekDecks = dekPack.decks;
       } catch (_) { /* embedded fallback */ }
       const live = (setup.decks || []).filter((d) =>
@@ -847,7 +849,8 @@
        still missing. The countdown's own seconds are written straight into this element by
        tickCountdown rather than through a redraw -- a redraw a second would rebuild the table,
        restart four canvas animations and drop focus out of whatever the host was using. */
-    const line = countdownEndsAt ? countdownLine()
+    const line = launchError ? 'Error starting the table. Send the report?'
+      : countdownEndsAt ? countdownLine()
       : !w.seated ? 'No one is seated yet.'
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
       : 'Every seat is ready. Starting…';
@@ -861,8 +864,8 @@
         <div><dt>Remote guests</dt><dd>${lobby.opponents.some((o) => o && o.role === 'human') ? 'on' : 'off'}</dd></div>
       </dl>
       <div class="cm-table-launch-row">
-        <p class="cm-table-launch" role="status" aria-live="polite">${e(line)}</p>
-        ${b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
+        <p class="cm-table-launch${launchError ? " is-error" : ""}" role="status" aria-live="polite" ${launchError ? `title="${e(launchError)}"` : ""}>${e(line)}</p>
+        ${launchError ? b("Send Log", "lobby-send-log", {}, true, {cls: "compact"}) : b(countdownEndsAt ? "Stop" : "Start", countdownEndsAt ? "lobby-stop-now" : "lobby-start-now", {}, !countdownEndsAt, {cls: "compact"})}
       </div>
     </section>`;
   }
@@ -1159,6 +1162,9 @@
      table that is still ready would have started counting straight back up -- so an explicit
      stop is remembered until the table stops being ready or the host presses Start. */
   let countdownStopped = false;
+  /* One go and one more, then stop and say so. Rob: "It should try up to 1 additional time." */
+  const START_ATTEMPTS = 2;
+  let startAttempts = 0, launchError = '';
 
   function countdownLine() {
     const left = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
@@ -1193,10 +1199,11 @@
   function syncCountdown(ready) {
     if (!ready) {
       countdownStopped = false;   /* the table will count again when it is ready again */
+      startAttempts = 0; launchError = '';
       if (countdownEndsAt) cancelCountdown('A seat is no longer ready. The countdown stopped.');
       return;
     }
-    if (!countdownEndsAt && !startInFlight && !countdownStopped) beginCountdown();
+    if (!countdownEndsAt && !startInFlight && !countdownStopped && !launchError) beginCountdown();
   }
 
   let startInFlight = false;
@@ -1765,8 +1772,15 @@ actions["lobby-email-invite"] = async (el) => {
     const name = el.dataset.name || "Commander";
     if (!src) return;
     document.querySelectorAll(".cm-lobby-art-pop").forEach((n) => n.remove());
+    /* Rob: the pop-up should be 80-110% of the card on the table. It had no width at all, so it
+       took the image's natural size and bore no relation to the card that opened it. 105% of the
+       measured card, with a floor of 300px: at 105% of a small quadrant's card the oracle text
+       would be the size it is on the table, and reading the card is what a pop-up is for. */
+    const from = el.getBoundingClientRect();
+    const popWidth = Math.round(Math.max(300, Math.min(from.width * 1.05, window.innerWidth - 48)));
     const pop = document.createElement("div");
     pop.className = "cm-lobby-art-pop";
+    pop.style.setProperty("--cm-pop-w", popWidth + "px");
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", name);
     pop.innerHTML = `<button type="button" class="cm-lobby-art-pop-backdrop" data-action="lobby-art-close" aria-label="Close"></button><button type="button" class="cm-lobby-art-pop-card" data-action="lobby-art-close" aria-label="Close enlarged art"><img src="${e(src)}" alt="${e(name)}"></button>`;
@@ -2131,6 +2145,7 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
     const t = table();
     if (!L.startReady(t, lobby)) { C.notice(t.why || 'Ready Up every occupied seat and fix any blocked decks.', true); return; }
     countdownStopped = false;
+    startAttempts = 0; launchError = '';   /* pressing Start is asking to try again */
     beginCountdown();
   };
   actions["lobby-stop-now"] = () => { countdownStopped = true; cancelCountdown("Countdown stopped. Press Start when you are ready."); };
@@ -2184,9 +2199,31 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
       lobbyResumeTabletop();
     } catch (err) {
       startInFlight = false;
+      const why = (err && err.message) ? err.message : String(err);
+      startAttempts += 1;
+      if (startAttempts < START_ATTEMPTS) {
+        /* One more go, and say that is what is happening rather than flashing the same error. */
+        C.notice(`Starting failed (${why}). Trying once more…`, true);
+        countdownEndsAt = 0;
+        redraw();
+        beginCountdown();
+        return;
+      }
+      /* Out of tries. Hold the failure where the person is looking, with what it was and when,
+         so Send Log has something worth sending. */
+      launchError = `${why}\n\nAt: ${new Date().toISOString()}\nRoute: ${location.href}\nSeats: ${L.activeSeats(lobby).length}\nBracket: ${lobby.bracket}`;
       redraw();
-      C.notice((err && err.message) ? err.message : String(err), true);
     }
+  };
+
+  /* SEND LOG. The third state of the launch button, shown only while an error is. It opens the
+     default mail client with the failure already written out -- a person who has just watched a
+     table fail to start should not have to retype what happened. */
+  actions["lobby-send-log"] = () => {
+    if (!launchError) return;
+    const subject = encodeURIComponent('CrankMagic: the table failed to start');
+    const body = encodeURIComponent(`This is the error CrankMagic reported when the countdown finished.\n\n${launchError}\n`);
+    window.location.href = `mailto:minor.rob@gmail.com?subject=${subject}&body=${body}`;
   };
 
 

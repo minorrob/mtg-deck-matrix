@@ -191,6 +191,7 @@
    sized from its own words with a floor and a ceiling rather than a bare percentage, so
    "Start" and "Stop" both sit comfortably at every table width. */
 .cm-table-launch-row{display:grid;grid-template-columns:1fr minmax(64px,22%);gap:8px;align-items:stretch;margin:12px 0 0}
+.cm-table-launch.is-error{background:color-mix(in srgb,var(--st-remove) 22%,var(--table-panel));color:color-mix(in srgb,var(--st-remove) 60%,var(--table-ink));cursor:help}
 .cm-table-launch{margin:0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
 #matrix-v2 .cm-table-launch-row .v-button{min-height:0;padding:0 8px;font-size:12px;white-space:nowrap}
 .cm-table-rules{display:grid;gap:6px;margin:0}
@@ -2451,7 +2452,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-lobby-art-btn:focus-visible{outline:2px solid var(--v-accent);outline-offset:2px}
 .cm-lobby-art-pop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px}
 .cm-lobby-art-pop-backdrop{position:absolute;inset:0;border:0;padding:0;margin:0;background:#000a;cursor:pointer}
-.cm-lobby-art-pop-card{position:relative;z-index:1;padding:0;border:0;border-radius:var(--v-radius-card);overflow:hidden;background:var(--v-bg);box-shadow:0 16px 48px #000c;cursor:pointer}
+/* Sized from the card that opened it (--cm-pop-w), so it reads as that card lifting off the
+   table rather than as an unrelated picture. */
+.cm-lobby-art-pop-card{position:relative;z-index:1;width:var(--cm-pop-w,320px);max-width:calc(100vw - 48px);max-height:calc(100vh - 48px);aspect-ratio:488/680;padding:0;border:0;border-radius:var(--v-radius-card);overflow:hidden;background:var(--v-bg);box-shadow:0 16px 48px #000c;cursor:pointer}
 .cm-lobby-art-pop-card img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
 
 .cm-lobby-summary{display:flex;flex-direction:column;gap:12px;max-width:520px}

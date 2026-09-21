@@ -448,4 +448,49 @@ check("every route a lobby control navigates to exists", () => {
   assert.deepEqual(dead, [], `a hash with no view falls back to Decks, so the link looks like it worked`);
 });
 
+/* ------------------------------------------------------------ when starting fails, batch 6 */
+
+// From Rob's testing, 2026-09-21: "When the countdown finished I got an HTTP 404 error ... Then
+// the countdown just starts over. It should try up to 1 additional time, then report back in the
+// status box in the middle (instead of the error) a statement indicating an error and if they
+// want to send the error report to me. (e.g. Error: Send error report?) Then the Start/Stop
+// button should have a 3rd option that only appears when that text shows error, which should be
+// 'Send Log' ... opens default e-mail client and pastes the error into the text with
+// pre-populating my e-mail minor.rob@gmail.com as the To field."
+//
+// The restart was mine: lobby-start's catch sets startInFlight = false and redraws, the redraw
+// asks syncCountdown, the table is still ready, and it counts down into the same failure again,
+// for ever. A loop that retries a failing call without limit is worse than one that stops,
+// because it buries the message that would explain it.
+check("a failed start is retried once and then stops", () => {
+  assert.match(game, /START_ATTEMPTS\s*=\s*2/,
+    "the first go and one more, which is what Rob asked for");
+  assert.match(game, /launchError/, "the failure is held, not just shown once in a toast");
+});
+
+check("the launch box carries the error, and offers to send it", () => {
+  const panel = /function centerPanel\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(panel, "centerPanel not found");
+  assert.match(panel[0], /launchError/, "the box states the error instead of the countdown line");
+  assert.match(panel[0], /lobby-send-log/, "and the button becomes Send Log while it is showing");
+});
+
+check("Send Log opens a mail client addressed to Rob, carrying the error", () => {
+  const act = /actions\["lobby-send-log"\][\s\S]*?\n  \};/.exec(game);
+  assert.ok(act, "the send-log action not found");
+  assert.match(act[0], /minor\.rob@gmail\.com/, "his address, as he gave it");
+  assert.match(act[0], /mailto:/, "the default mail client");
+  assert.match(act[0], /launchError/, "with the error in the body, not a blank message");
+});
+
+// "When I click on a card in the lobby, it's pop-up image should be 80-110% the size of the card
+// on the table." It had no width rule at all, so it took the image's natural size and bore no
+// relation to the card it came from.
+check("the card pop-up is sized from the card that opened it", () => {
+  const act = /actions\["lobby-art-zoom"\][\s\S]*?\n  \};/.exec(game);
+  assert.ok(act, "the zoom action not found");
+  assert.match(act[0], /getBoundingClientRect/,
+    "the pop-up is sized from the clicked card's measured width, not from the image's own size");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
