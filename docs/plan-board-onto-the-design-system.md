@@ -294,3 +294,24 @@ player receives priority during the untap step."**
 **Nobody has watched a four-player pod.** The first-draw rule is two-player only; if a starting
 player fails to draw in a pod, that is a real bug and this is where it was predicted. That is
 Stage A.5, and it is Rob's to run.
+
+### The four-player prediction, checked on our side
+
+The risk named above was: *"If anything on our side of the bridge encodes 'the starting player
+skips the first draw' without asking how many players are at the table, it is correct in Rob's
+two-player test and wrong in every four-player pod."*
+
+**Checked, and it is not present.** Exactly two places in our code reason about the first-turn
+draw, and both ask:
+
+| | |
+|---|---|
+| `ForgeBrowserBridge.java:102` | `!(getTurn()==1 && getPlayers().size()==2)` — gates whether the draw-step card is offered |
+| `action-policy.mjs` `firstDrawSkipped()` | `turn===1 && players.length===2 && turnPlayerId===viewer` — gates the explanation |
+
+Neither performs or suppresses the draw itself; that is `PhaseHandler.onPhaseBegin` in Forge. So in
+a pod, the draw-step card **is** offered to the starting player on turn one and no explanation
+fires.
+
+This narrows Stage A.5 but does not close it: **Forge's own behavior in a four-player pod still has
+not been watched by anyone.** That remains the thing to check first and trust least.
