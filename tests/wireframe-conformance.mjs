@@ -578,4 +578,29 @@ check("a seat whose role is set can go back to the choice", () => {
     "choosing Human or AI was a one-way door; only Clear the table undid it, and that empties the table");
 });
 
+/* --------------------------------------------- a table that started does not start again, batch 9 */
+
+// From Rob, 2026-09-21: "It counted down from 10, then launched forge, then started counting
+// again, then I got the error" — *A standalone match is already running.*
+//
+// Mine. `syncCountdown` knew about `startInFlight`, a manual stop and an error, but had no notion
+// of a game that had ALREADY STARTED. The moment `lobby-start` finished, `startInFlight` went
+// false, the table was still ready, and it counted straight down into launching a second game on
+// top of the first. **The error he saw was the engine refusing to be started twice, which was the
+// only part of the sequence working correctly.**
+check("a table that has launched does not count down again", () => {
+  assert.match(game, /gameLaunched/, "the lobby has to know a game is already running");
+  const sync = /function syncCountdown\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(sync, "syncCountdown not found");
+  assert.match(sync[0], /gameLaunched/,
+    "without this the countdown relaunches into the engine it just started");
+});
+
+check("the launch box says the game is running, and offers the table", () => {
+  const panel = /function centerPanel\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(panel, "centerPanel not found");
+  assert.match(panel[0], /gameLaunched/, "the reading reflects a running game");
+  assert.match(panel[0], /lobby-open-table/, "and the button goes to it rather than starting another");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
