@@ -147,6 +147,61 @@ try {
     await page.evaluate(() => { const d = document.querySelector("dialog[open]"); if (d) d.close(); });
   } else say("mats", "Choose mat is offered", false, "no Choose mat control found");
 
+  /* ---- 5. the host's menu: does it paint, does it toggle, does every control do something ---- */
+  await openMenu();
+  const menu = await page.evaluate(() => {
+    const m = document.querySelector(".cm-lobby-menu");
+    if (!m) return {err: "the menu did not open"};
+    const cs = getComputedStyle(m);
+    const transparent = cs.backgroundColor === "rgba(0, 0, 0, 0)" || cs.backgroundColor === "transparent";
+    return {
+      inTokens: !!m.closest("#matrix-v2"),
+      background: cs.backgroundColor,
+      transparent,
+      controls: [...m.querySelectorAll("button,select,input")].map((x) => x.name || (x.textContent || "").trim()),
+      /* a control that carries neither a data-action nor a delegated change action cannot do
+         anything, whatever it looks like */
+      unwired: [...m.querySelectorAll("button,select,input")]
+        .filter((x) => !x.dataset.action && !x.dataset.actionChange && x.type !== "submit")
+        .map((x) => x.name || (x.textContent || "").trim()),
+    };
+  });
+  say("menu", "the host's menu paints with the app's tokens", !menu.err && menu.inTokens && !menu.transparent,
+    menu.err || `${menu.inTokens ? "inside #matrix-v2" : "OUTSIDE #matrix-v2"}, background ${menu.background}`);
+  say("menu", "every control in the menu is wired to something", !menu.err && menu.unwired.length === 0,
+    menu.err || (menu.unwired.length ? "unwired: " + menu.unwired.join(" | ") : menu.controls.join(" | ")));
+
+  await page.locator('[data-action="lobby-host-tools"]').click();
+  await page.waitForTimeout(600);
+  const closed = await page.evaluate(() => !document.querySelector(".cm-lobby-menu"));
+  say("menu", "pressing Host tools again closes it", closed, closed ? "" : "a second menu opened behind the first");
+
+  /* ---- 6. the launch row, and that the countdown actually counts ---- */
+  const row = await page.evaluate(() => {
+    const r = document.querySelector(".cm-table-launch-row");
+    if (!r) return {err: "no launch row"};
+    const btn = r.querySelector("[data-action]");
+    const box = r.querySelector(".cm-table-launch");
+    return {
+      cols: getComputedStyle(r).gridTemplateColumns,
+      button: btn && btn.textContent.trim(),
+      action: btn && btn.dataset.action,
+      text: box && box.textContent.trim(),
+    };
+  });
+  say("launch", "the launch row is a reading and a button", !row.err && !!row.button,
+    row.err || `columns ${row.cols} · "${row.text}" · [${row.button}]`);
+
+  await page.locator('[data-action="lobby-history"]').click();
+  await page.waitForTimeout(900);
+  const hist = await page.evaluate(() => {
+    const d = document.querySelector("dialog[open]");
+    return {open: !!d, title: d && d.querySelector("h2") && d.querySelector("h2").textContent, route: location.hash};
+  });
+  say("links", "Game history opens history, not the Decks page", hist.open && /history/i.test(hist.title || ""),
+    `dialog ${hist.open ? "open: " + hist.title : "did not open"} · hash ${hist.route}`);
+  await page.evaluate(() => { const d = document.querySelector("dialog[open]"); if (d) d.close(); });
+
   say("errors", "no uncaught page errors while driving", consoleErrors.length === 0, consoleErrors.slice(0, 3).join(" | "));
 
   await context.close();

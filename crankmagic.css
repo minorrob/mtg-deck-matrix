@@ -187,7 +187,12 @@
 .cm-table-rules dt{color:color-mix(in srgb,var(--table-ink) 60%,transparent)}
 .cm-table-rules dd{margin:0;font-weight:600;color:var(--table-ink)}
 /* The launch line is a box, not a sentence: it is the table speaking, not the host. */
-.cm-table-launch{margin:12px 0 0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center}
+/* Rob: two columns, the reading and a Start button taking 15-25% on the right. The button is
+   sized from its own words with a floor and a ceiling rather than a bare percentage, so
+   "Start" and "Stop" both sit comfortably at every table width. */
+.cm-table-launch-row{display:grid;grid-template-columns:1fr minmax(64px,22%);gap:8px;align-items:stretch;margin:12px 0 0}
+.cm-table-launch{margin:0;padding:9px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
+#matrix-v2 .cm-table-launch-row .v-button{min-height:0;padding:0 8px;font-size:12px;white-space:nowrap}
 .cm-table-rules{display:grid;gap:6px;margin:0}
 .cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
 @media(max-width:900px){

@@ -371,4 +371,81 @@ check("the table's card is a share of the table's width, and no taller than its 
   assert.match(rule[1], /min-width:/, "with a floor, so the launch line does not wrap to a third row");
 });
 
+/* ------------------------------------------------------------------- starting the game, batch 5 */
+
+// From Rob's testing, 2026-09-21: "all 4 show ready, but the game didn't start. I'd like for this
+// status row to be 2 columns, with a 15-25% column width on the right with the button 'Start',
+// which auto-forces a 10 second countdown (which counts down in the text box to the left of the
+// button; the current text) to launch."
+//
+// The table never started itself. The README describes a table that does -- "There is no Launch
+// button: the table starts itself with the 10 s countdown once all four seats report ready" --
+// but nothing in the lobby ever counted or launched; `canStartSoon` only produced a sentence.
+// Rob has since asked for a Start button as well, which supersedes the README on that point.
+check("the launch row is a text box and a Start button", () => {
+  const panel = /function centerPanel\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(panel, "centerPanel not found");
+  assert.match(panel[0], /cm-table-launch-row/, "the launch line and the button share a row");
+  assert.match(panel[0], /lobby-start-now/, "a Start control the host can press at any time");
+  const rule = /\.cm-table-launch-row\{([^}]*)\}/.exec(css);
+  assert.ok(rule, "the row needs a rule");
+  assert.match(rule[1], /grid-template-columns:[^;]*(1fr|auto)/, "two columns: the reading, then the button");
+});
+
+check("a countdown exists and launches when it reaches zero", () => {
+  assert.match(game, /COUNTDOWN_SECONDS\s*=\s*10/, "ten seconds, as Rob asked and the README says");
+  assert.match(game, /beginCountdown/, "something has to start it");
+  assert.match(game, /cancelCountdown/, "and losing readiness has to stop it");
+});
+
+/* --------------------------------------------------------------------------- the host's menu */
+
+// "the host tools screen menu is fully transparent, and when I press the button host tools again,
+// it doesn't close the menu."
+//
+// Every design token is declared on `#matrix-v2` (crankmagic-design.css lines 19, 21, 45). The
+// menu was appended to `document.body`, OUTSIDE that element, so every var(--v-*) in `.cm-menu`
+// resolved to nothing and the background disappeared. Custom properties inherit down the DOM, and
+// a popover is in the top layer for PAINT but still inherits from its DOM parent -- so the fix is
+// where it is appended, not what it is painted with. This affects every popover menu in the app.
+check("a popover menu is appended where the tokens are", () => {
+  assert.ok(!/document\.body\.appendChild\(menu\)/.test(game),
+    "appending to document.body puts the menu outside #matrix-v2, where --v-* does not exist");
+  assert.match(game, /matrix-v2[\s\S]{0,120}appendChild\(menu\)|appendChild\(menu\)/,
+    "the menu is appended inside the element that declares the tokens");
+});
+
+check("pressing Host tools again closes the menu", () => {
+  const act = /actions\["lobby-host-tools"\][\s\S]*?\n  \};/.exec(game);
+  assert.ok(act, "the host tools action not found");
+  assert.match(act[0], /hidePopover|\.remove\(\)/,
+    "a second press has to close what the first one opened, not stack another behind it");
+});
+
+/* ------------------------------------------------------------------------ every link goes somewhere */
+
+// "When I click Game History, it takes me back to the Decks page." It did: the action set
+// location.hash = "reports", and there is no `reports` view -- crankmagic-app.js `route()` falls
+// back to `decks` for any hash it does not know. A dead link that lands somewhere plausible is
+// worse than one that errors, because nothing looks wrong.
+check("every route a lobby control navigates to exists", () => {
+  const views = new Set();
+  for (const file of ["crankmagic-app.js", "crankmagic-decks.js", "crankmagic-collection.js",
+    "crankmagic-discover.js", "crankmagic-game.js", "crankmagic-online.js", "crankmagic-lab.js",
+    "crankmagic-pull.js", "crankmagic-change-ui.js", "crankmagic-how.js", "crankmagic-orders.js",
+    "crankmagic-trade.js", "crankmagic-shop.js"]) {
+    let text = "";
+    try { text = readFileSync(file, "utf8"); } catch { continue; }
+    for (const m of text.matchAll(/views\.([a-zA-Z]+)\s*=/g)) views.add(m[1]);
+  }
+  /* Comments describe the dead routes they replaced, so they are stripped before scanning --
+     otherwise the note explaining a fix reads as the bug still being there. */
+  const code = game.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/[^\n]*/g, "$1");
+  const dead = [];
+  for (const m of code.matchAll(/location\.hash\s*=\s*["']([a-zA-Z]+)["']/g)) {
+    if (!views.has(m[1])) dead.push(m[1]);
+  }
+  assert.deepEqual(dead, [], `a hash with no view falls back to Decks, so the link looks like it worked`);
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
