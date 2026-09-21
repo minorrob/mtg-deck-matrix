@@ -85,18 +85,32 @@ Recorded here rather than patched one at a time, because most of them are the co
 | 11.5 | "End my turn" *and* "Auto-pass turn" both present; one should be **Skip step** | Step 3 |
 | 11.6 | "Continue from Untap" jumped to Main 1, skipping the card draw | **Probably correct rules** — see below |
 
-### 11.6 is very likely not a bug
+### 11.6 is not a bug — in a two-player game
 
-The board said *"D1 Quintorius Spirits, you are going first!"* **In Magic, the player who goes
-first does not draw on their first turn.** So a jump from untap to main phase 1, with no draw, is
-the rule being applied.
+The board said *"D1 Quintorius Spirits, you are going first!"* and the game Rob was testing had
+two players, him and one AI. **CR 103.8a: "In a two-player game, the player who plays first skips
+the draw step of their first turn."** So untap jumping to main phase 1 with no draw was the rule
+being applied correctly.
 
-What *is* a defect is that nothing said so. He clicked the draw pile, was told the draw "had to
-wait until my draw step", and then watched the draw step not happen — which reads as the game
-losing his card. The board should say the first-turn draw is skipped because he is on the play.
+I first wrote this as a general rule and Rob corrected it: **it is not one.** There is no
+equivalent clause for ordinary multiplayer, so in a four-player Commander pod everyone draws,
+including whoever goes first. The skip belongs to two-player games and to shared-team-turns games,
+and to nothing else.
 
-**This needs confirming against the engine before anything is built on it.** It is stated here as
-the likeliest reading, not as a finding.
+That correction turns one finding into two things to do.
+
+**The defect that stands.** Nothing explained it. He clicked the draw pile, was told his draw "had
+to wait until my draw step", and then watched the draw step not happen — which reads as the game
+losing his card. The board should say the first-turn draw is skipped because he is on the play,
+and say it in the place he was just refused.
+
+**The thing to watch for.** If anything on our side of the bridge encodes "the starting player
+skips the first draw" without asking how many players are at the table, it is correct in Rob's
+two-player test and **wrong in every four-player pod** — which is the only size that matters for
+this product. Forge implements the comprehensive rules and should get this right on its own; the
+risk is in our adapter or our UI second-guessing it. **Worth an explicit check in the first
+four-player run: does the starting player draw on turn one?** If they do not, that is a real bug
+and this is where it was predicted.
 
 ### 11.4 is a real one
 
@@ -155,3 +169,66 @@ overlap got one. A control that is going to become available should be present a
 reason, not absent and then appearing; a poll that gates a button should not be the thing a person
 waits on. **Nothing here is built until there is a number for how long each control takes to
 become usable**, because "feels slow" cannot be fixed and 5,000ms can.
+
+---
+
+## Recommended order of execution
+
+Four stages. The principle: **make the game playable before making it look right**, because
+redesigning a surface whose interaction model is still wrong means doing it twice. Stage A
+therefore changes only *behavior* — what is presented and when a control becomes usable — and
+nothing about appearance, so none of it is thrown away by Stage B.
+
+### Stage A — a game you can actually play through
+
+Nothing here is a redesign. Everything here survives one.
+
+1. **Put a number on the lag.** "We don't leave users hanging for 5 seconds" cannot be fixed until
+   each control has a measured time-to-usable. A probe drives a real match and records, per
+   control, how long from the state arriving to the control being enabled. That number is the
+   acceptance test for the rest of this stage.
+2. **Stop asking for input where no player has priority.** Untap is the case Rob hit; the same
+   question should be asked of every step the board presents.
+3. **Remove the duplicate and the dangerous.** `End game` out of the action row — it is already in
+   Game setup, so nothing is lost. One turn control, not two.
+4. **Say what the rules just did.** The skipped first draw is the example; any step the engine
+   skips on the player's behalf should say why, in the place they were refused.
+5. **Rob plays a four-player pod end to end.** This is the point of the stage. It also settles the
+   four-player draw question above.
+
+**Checkpoint:** a full game played without needing me. Everything after this is quality.
+
+### Stage B — the board becomes the Play surface of the one app
+
+The large one. The board stops being `/review` with its own stylesheets and becomes a view drawn
+in the same shell, on the same tokens, with the same type — `review.mjs` keeping the bridge, the
+polling and the action policy, and losing its own chrome. Measured against wireframes 2e and 2f
+with the two tools the lobby already uses, and `game/ui` added to the raw-hex ratchet so the 322
+literals cannot come back.
+
+**Why not first:** its whole value is that the play surface looks like the product. If the
+interaction model underneath is still wrong, that value is spent twice.
+
+### Stage C — the public link shows Play only
+
+Small, and depends on B. One build, the rail reduced to Play for guests, and a line saying the
+rest of CrankMagic is at github.io.
+
+### Stage D — setting a table up from the web
+
+Pieces 2 to 5 of `plan-web-to-local-table-2026-09-21.md`: Send Local, invitations into the web
+lobby, Ready packaging a deck. **Genuinely last, because setting a table up locally already
+works** — this stage buys convenience, not capability, and the stages above buy capability.
+
+---
+
+## What I would not do
+
+- **Not tokenize the three board stylesheets.** It would produce a second system that resembles
+  the first and drifts the moment either moves. Stage B is more work and is the only version of
+  this that stays true.
+- **Not carry on in batches.** The last eleven were reactive and that is what Rob objected to.
+  Each stage above ends at a checkpoint he can judge, rather than at whatever he happened to
+  notice.
+- **Not build on the first-draw reading until a four-player game has run.** It is correct for two
+  players and would be wrong for four, and no one has watched four.
