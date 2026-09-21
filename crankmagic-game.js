@@ -8,7 +8,7 @@
  * list is stripped and backfilled to a legal hundred, which server seat each human takes, when
  * Start may be pressed, and what the prepare body says. This file turns those answers into a
  * page, turns the reader's clicks back into a config, and does the fetching. Nothing about a
- * bracket, a colour identity or a seat id is spelled twice, and tests/crankmagic-lobby.mjs
+ * bracket, a color identity or a seat id is spelled twice, and tests/crankmagic-lobby.mjs
  * fails if any of it comes back here.
  *
  * LOBBY UX LOCK (Trey): four seat boxes always; host deck modal with progressive disclosure;
@@ -106,7 +106,7 @@
   const MANA_COLORS = [["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]];
 
   function colorPillsHtml(inputName = "commanderColor") {
-    return `<div class="cm-color-pills cm-lobby-color-pills" role="group" aria-label="Colour identity filter">${MANA_COLORS.map(([k, name]) =>
+    return `<div class="cm-color-pills cm-lobby-color-pills" role="group" aria-label="Color identity filter">${MANA_COLORS.map(([k, name]) =>
       `<label class="cm-color-pill" title="${e(name)}" aria-label="${e(name)}"><input type="checkbox" name="${inputName}" value="${k}"><img src="assets/mana/${k}.svg?v=1" alt="${e(name)}"></label>`
     ).join("")}</div>`;
   }
@@ -746,6 +746,98 @@
     const line = traits ? `${roleLabel} · ${traits}` : roleLabel;
     return `<span class="cm-muted">${e(line)}</span>`;
   }
+  /* WHICH ELEMENT A SEAT WEARS. The state is read from what the lobby already knows about the
+     seat rather than from a new field: a seat with a blocked check is in error, a seat that is
+     ready is leaves, a seat with a deck but no ready flag is still resolving, an invited human
+     is wheat, and an empty chair is mist. */
+  function seatState(seat, check, ready, opp) {
+    if (check && !check.ok) return 'error';
+    if (ready) return 'ready';
+    if (seat) return 'deck';
+    if (opp && opp.role === 'human') return 'invited';
+    return 'empty';
+  }
+
+  /* THE COLOR-IDENTITY FAN (DELTA B.2). Ninety degrees from the quadrant's inner corner --
+     the one touching the center panel -- one wedge per color of the commander's identity in
+     WUBRG order, a thin light seam between them, and a single wash for a mono-color seat
+     because a fan of one wedge is just a wash. The wedges are --mana-* tokens, so a seat's
+     colors are the same colors its deck's tile wears. */
+  const WUBRG = ['W', 'U', 'B', 'R', 'G'];
+  function identityFan(colors, corner) {
+    const ci = WUBRG.filter((c) => (colors || []).includes(c));
+    if (!ci.length) return '';
+    /* the inner corner in unit coordinates, and the quarter-turn the fan sweeps from it */
+    const at = {tl: [0, 0, 0], tr: [1, 0, 90], bl: [0, 1, 270], br: [1, 1, 180]}[corner] || [1, 1, 180];
+    const [cx, cy, from] = at;
+    const R = 1.45, step = 90 / ci.length;
+    const pt = (deg) => {
+      const r = (deg - 90) * Math.PI / 180;
+      return [(cx + Math.cos(r) * R).toFixed(4), (cy + Math.sin(r) * R).toFixed(4)];
+    };
+    const wedges = ci.map((c, i) => {
+      const a0 = from + step * i, a1 = from + step * (i + 1);
+      const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+      return `<path d="M${cx} ${cy} L${x0} ${y0} A${R} ${R} 0 0 1 ${x1} ${y1} Z" fill="var(--mana-${c})"></path>`;
+    }).join('');
+    const seams = ci.length > 1 ? ci.slice(1).map((c, i) => {
+      const [x, y] = pt(from + step * (i + 1));
+      return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--poster-ink)" stroke-width=".006" opacity=".45"></line>`;
+    }).join('') : '';
+    return `<svg class="cm-seat-fan" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">${wedges}${seams}</svg>`;
+  }
+
+  /* A quadrant: the sea behind, the fan over it, the seat's own content above both. `corner`
+     is where the quadrant's INNER corner is -- the one that touches the center panel -- which
+     is what the fan radiates from and what the label and card are placed away from. */
+  function quadrant(corner, cls, colors, state, inner) {
+    return `<article class="cm-seat-q cm-q-${corner}${cls ? ' ' + cls : ''}" data-state="${e(state)}">
+      <canvas class="cm-seat-sea" data-sea="${e(state)}" aria-hidden="true"></canvas>
+      ${identityFan(colors, corner)}
+      <div class="cm-seat-body">${inner}</div>
+    </article>`;
+  }
+
+  /* THE CENTER PANEL (DELTA B.5). The table's rules, read-only to everyone but the host, and
+     one line saying what the table is waiting for. There is no Launch button: the table starts
+     itself once every occupied seat reports ready, which is what `waiting` counts. */
+  function canStartSoon() {
+    const seated = [lobby.host, ...lobby.opponents].filter((p) => p && p.seat);
+    const notReady = seated.filter((p) => !p.ready).length;
+    return {seated: seated.length, notReady};
+  }
+  function centerPanel(t, w) {
+    const line = !w.seated ? 'No one is seated yet.'
+      : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
+      : 'Every seat is ready. The table starts itself.';
+    return `<section class="cm-table-center" aria-label="Table rules">
+      <h2>The rules of this table</h2>
+      <dl class="cm-table-rules">
+        <div><dt>Bracket</dt><dd>${e(String(lobby.bracket || 3))}</dd></div>
+        <div><dt>Game Changer cap</dt><dd>${e(lobby.cap === '' || lobby.cap === undefined ? 'the bracket default' : String(lobby.cap))}</dd></div>
+        <div><dt>Seats</dt><dd>${w.seated} of ${L.MAX_SEATS}</dd></div>
+      </dl>
+      <p class="cm-table-launch" role="status">${e(line)}</p>
+      <p class="cm-muted cm-table-setby">Set by the host, under Host tools.</p>
+    </section>`;
+  }
+
+  /* Each quadrant's canvas is painted by CrankSea with the element its state names. The
+     handles are kept so a redraw stops the old animations rather than leaving four more
+     requestAnimationFrame loops running behind the new ones -- which is how a lobby that is
+     redrawn on every ready toggle ends up with twenty. */
+  let seaStops = [];
+  function startSeas() {
+    seaStops.forEach((stop) => { try { stop(); } catch (err) { /* already gone */ } });
+    seaStops = [];
+    if (typeof CrankSea === 'undefined') return;
+    for (const canvas of C.main.querySelectorAll('.cm-seat-sea')) {
+      const box = canvas.getBoundingClientRect();
+      const w = Math.max(80, Math.round(box.width || 320)), h = Math.max(60, Math.round(box.height || 200));
+      seaStops.push(CrankSea.startSea(canvas, {width: w, height: h, element: CrankSea.elementFor(canvas.dataset.sea), opacity: .5}));
+    }
+  }
+
   function seatBoxHost(t) {
     const seat = lobby.host && lobby.host.seat;
     const check = seat ? t.checks.find((c) => c.seatId === seat.id) : null;
@@ -924,7 +1016,7 @@
       ? (lobby.rulesConfirmed.summary || L.rulesSummary(bracket, lobby.cap))
       : "Confirm bracket and Game Changer cap before seating reads as final.";
 
-    const rules = `<section class="v-panel cm-lobby-rules"><h2>The rules of this table</h2>
+    const rules = `<section class="v-panel cm-lobby-rules"><h2>Host tools</h2><p class="cm-muted">The table above states these; this is where the host changes them.</p>
       <div class="cm-toolbar">
         ${s("Bracket", "lobbyBracket", brackets, String(bracket.n))}
         ${f("Game Changer cap", "lobbyCap", lobby.cap === "" ? "" : String(lobby.cap), `type="number" min="0" max="20" placeholder="${e(bracket.gameChangers === Infinity ? "no limit" : String(bracket.gameChangers))}"`)}
@@ -933,9 +1025,32 @@
       <p class="cm-lobby-says">${e(summary)}</p>
     </section>`;
 
-    const seats = `<div class="cm-lobby-seats">
-      ${seatBoxHost(t)}
-      ${lobby.opponents.map((opp, i) => seatBoxOpp(i, opp, t)).join("")}
+    /* THE TABLE (DELTA B.1). Four quadrants in the order the players sit -- 2 and 3 across the
+       top, 4 and you across the bottom, so you are bottom-right and the seat opposite you is
+       top-left -- with the rules at the center. Each quadrant's INNER corner is the one
+       touching the center panel; that is what the color fan radiates from, and the seat's
+       label and card sit away from it, in the outer corners, so the panel can overlap nothing
+       that carries a name or a control. */
+    /* A seat carries its commander on seat.commanders[0]; the identity is that card's, not the
+       seat's. Reading seat.colorIdentity returned undefined for every seat, so the fan drew
+       nothing and an empty table looked exactly like a seated one. */
+    const seatColors = (seat) => (seat && seat.commanders && seat.commanders[0] && seat.commanders[0].colorIdentity) || [];
+    const opps = lobby.opponents;
+    const oppQuad = (i, corner) => {
+      const opp = opps[i];
+      if (!opp) return quadrant(corner, 'is-absent', [], 'empty', '');
+      const seat = opp.seat;
+      const check = seat ? t.checks.find((c) => c.seatId === seat.id) : null;
+      return quadrant(corner, '', seatColors(seat), seatState(seat, check, !!opp.ready, opp), seatBoxOpp(i, opp, t));
+    };
+    const hostSeat = lobby.host && lobby.host.seat;
+    const hostCheck = hostSeat ? t.checks.find((c) => c.seatId === hostSeat.id) : null;
+    const seats = `<div class="cm-lobby-table">
+      ${oppQuad(0, 'br')}
+      ${oppQuad(1, 'bl')}
+      ${oppQuad(2, 'tr')}
+      ${quadrant('tl', 'is-you', seatColors(hostSeat), seatState(hostSeat, hostCheck, !!(lobby.host && lobby.host.ready), null), seatBoxHost(t))}
+      ${centerPanel(t, canStartSoon())}
     </div>`;
 
     const canStart = L.startReady(t, lobby);
@@ -960,7 +1075,8 @@
     /* Who the private table is waiting on (C.2), drawn while one is open on the local host and
        otherwise empty. The module that draws it is the same one the guest and host pages use. */
     const live = `<div class="cm-lobby-live" aria-live="polite"></div>`;
-    C.main.innerHTML = head + rules + seats + live + read;
+    C.main.innerHTML = head + seats + live + read + rules;
+    startSeas();
     pollLiveReadiness();
 
     const bracketEl = $("[name=lobbyBracket]");
