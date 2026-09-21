@@ -836,6 +836,19 @@ if(!new URLSearchParams(location.search).has('replay')){
     document.body.classList.remove('setup-screen');
     try{await startLive();}
     catch(error){$('notice').textContent='Connection failed: '+error.message+' · Return to the table lobby.';$('phase').textContent='Connection failed';}
-  }else{document.body.classList.add('setup-screen');await openGameSetup();}
+  }else{
+    /* THE BOARD LOOKS BEFORE IT ASKS. This branch used to open Game setup unconditionally, so a
+       host arriving from the lobby -- with a match already playing -- was shown 'Build your
+       table' for a table that was already built, and the live poller never started. Measured:
+       zero reads of the game view in forty seconds against a match whose status was 'playing'.
+       Only the guest path ever called startLive(). Setup is the fallback now, not the default. */
+    let playing=false;
+    try{const state=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());playing=['starting','ready','playing'].includes(state&&state.status);}catch(error){playing=false;}
+    if(playing){
+      document.body.classList.remove('setup-screen');
+      try{await startLive();}
+      catch(error){document.body.classList.add('setup-screen');await openGameSetup();}
+    }else{document.body.classList.add('setup-screen');await openGameSetup();}
+  }
 }
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==window.parent||window.parent===window)return;if(event.data?.type==='crankmagic-setup')openGameSetup(event.data.imported).catch(error=>{$('notice').textContent=error.message;});});
