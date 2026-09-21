@@ -20,11 +20,14 @@
 import assert from "node:assert/strict";
 import {readFileSync, readdirSync, statSync} from "node:fs";
 import path from "node:path";
+import {fileURLToPath} from "node:url";
 
 let checks = 0;
 const check = (label, fn) => { fn(); checks += 1; void label; };
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\//, "")), "..");
+/* fileURLToPath, not a hand-rolled strip of the leading slash: that trick turns `/C:/x` into
+   `C:/x` on Windows and `/home/x` into `home/x` on Linux, where it is suddenly relative. */
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const scripts = [];
 const walk = (dir) => {
