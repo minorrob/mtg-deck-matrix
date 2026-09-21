@@ -54,7 +54,7 @@ exact path to a live game, and it was invisible to the tool built to catch it.
 
 - `README.md:28` — `--color-aether` … *"focus ring"*
 - `README.md:44` — *"Focus ring 2px `--color-aether`"*
-- `design-system/readme.md:20` — *"Focus ring 2px in the aether colour"*
+- `design-system/readme.md:20` — a focus ring of 2px in the aether color
 
 We shipped `outline:3px solid var(--v-accent)` — brass, and a third too thick. Brass is the
 primary-action color, so a focus ring in it says *"this is the primary"* about whatever happens
@@ -101,7 +101,7 @@ product lock — the lock exists. The **DELTA should be updated to match the UI*
 | **DR-P09 (S2)** | The Desktop shortcut's working directory is outside the repo. Changing a `.lnk` on Rob's desktop is his machine, not this branch. |
 | **CM-DS-001 / CM-DS-004 (S2)** | Correct, and bigger than it looks: **129** `v-*` selectors in `crankmagic-design.css` are never emitted by the app (audited against every `.js`, `.html` and `crankmagic.css`), including the navy `.v-cover` gradients. Deleting them deserves its own PR with a rendering of every route, because 21 `v-*` classes **are** live (`v-button`, `v-panel`, `v-nav`, `v-brand*`, `v-aether*`, `v-dialog`, `v-field`, `v-term`, `v-eyebrow`, `v-top`) and a careless sweep would take them. |
 | **CM-DS-011 (S2)** | Same PR as above. `#matrix-v2 h1{font-size:36px;font-weight:700}` is not dead — it is *winning*, and it is the id-vs-class trap already recorded in `docs/INDEX-where-things-live.md`. It should be dropped to a class when the dead layer goes, so the Gallery layer stops competing with an id. |
-| **L-02 (S2)** | Real, and the design calls it *"the highest-priority behaviour on the Library → Sheet view"* (README:95). It is a feature — in-place numeric editors with Enter/Tab/Escape/arrow semantics — not a correction, and it belongs in the Library lane rather than mid-Play. |
+| **L-02 (S2)** | Real, and the design calls it the highest-priority behavior on the Library → Sheet view (README:95). It is a feature — in-place numeric editors with Enter/Tab/Escape/arrow semantics — not a correction, and it belongs in the Library lane rather than mid-Play. |
 | **LIB-06 (S2), LIB-01/LIB-04 (S3), D-03b (S3), W-DECKS-02/03/04/05** | Reasonable and checkable; Decks/Library lane. Recorded here so they are not lost. |
 | **DR-P05, DR-P03, DR-P06, DR-P02 (Play)** | The handoff itself says Play is **IN FLUX** and *"Do not fight mid-merge Play commits"*. Agreed. DR-P05's End table / force-advance are levers for a **running** game; the lobby has none. |
 

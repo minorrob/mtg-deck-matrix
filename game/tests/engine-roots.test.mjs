@@ -12,7 +12,7 @@
  *
  * So the doctor passed while Start failed, which is the worst possible pair: the check that
  * exists to tell you the machine is ready said yes, and the thing it was checking for was looked
- * for somewhere else. `check-my-decks.mjs` and `setup-catalog.mjs` both honour the environment
+ * for somewhere else. `check-my-decks.mjs` and `setup-catalog.mjs` both honor the environment
  * variables; the launcher was the one place that did not.
  *
  * These hold the launcher to the same convention, and to naming what it looked for when it comes
