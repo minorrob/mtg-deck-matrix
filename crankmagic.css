@@ -39,6 +39,43 @@
 @media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:640px){.cm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+/* THE LOBBY AS A TABLE (V.5a, DELTA-play-and-implementation.md section B). Four quadrants in the
+   order the players sit, 2 and 3 across the top and 4 and you across the bottom, with the rules
+   at the center. The center panel overlaps the quadrants on purpose: each seat keeps its label
+   and its card in its OUTER corners, so the panel can never cover a name or a control. */
+.cm-lobby-table{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));aspect-ratio:16/10;max-height:72vh;gap:2px;border-radius:var(--v-radius-tile);overflow:hidden;border:1px solid var(--v-line);background:var(--v-line);margin:0 0 18px}
+.cm-seat-q{position:relative;isolation:isolate;min-width:0;overflow:hidden;background:var(--v-panel)}
+/* The sea fills the quadrant and stays behind everything; the fan is over it and under the seat. */
+.cm-seat-sea{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+.cm-seat-fan{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.6;pointer-events:none}
+.cm-seat-body{position:relative;z-index:2;height:100%;display:flex;min-width:0}
+/* The seat's own card keeps every class and handler it had; what changes is that it sits on the
+   table rather than in a row, and its ground is the sea rather than a panel. */
+.cm-seat-body .cm-lobby-seat{flex:1 1 auto;min-width:0;align-self:start;background:color-mix(in srgb,var(--v-bg) 70%,transparent);backdrop-filter:blur(4px);border:1px solid var(--v-line);border-radius:var(--v-radius-card);margin:0;padding:14px 16px;overflow:auto;max-height:100%}
+.cm-seat-q.is-absent .cm-seat-body{align-items:center;justify-content:center}
+/* Which way a quadrant faces. The inner corner is the one named; the seat is pushed away from it
+   so the center panel overlaps only the sea. */
+.cm-q-br .cm-seat-body{padding:12px 30% 30% 12px}
+.cm-q-bl .cm-seat-body{padding:12px 12px 30% 30%}
+.cm-q-tr .cm-seat-body{padding:30% 30% 12px 12px}
+.cm-q-tl .cm-seat-body{padding:30% 12px 12px 30%}
+/* The center panel: the rules every player reads and the one line that replaced Launch. */
+.cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:min(30%,330px);min-width:210px;padding:18px 20px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line);box-shadow:0 18px 44px -20px var(--poster-ground)}
+.cm-table-center h2{font-size:16px;margin:0 0 12px}
+.cm-table-rules{display:grid;gap:6px;margin:0 0 12px}
+.cm-table-rules div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cm-table-rules dt{color:var(--v-muted)}
+.cm-table-rules dd{margin:0;font-weight:600}
+.cm-table-launch{margin:0;font-size:13px;font-weight:600;color:var(--v-ink)}
+.cm-table-setby{margin:6px 0 0;font-size:12px}
+@media(max-width:900px){
+  /* A phone reads the table as a column of seats: four quadrants stacked, the rules above them,
+     because a 2x2 table at 390px gives each seat 180px and nothing fits in it. */
+  .cm-lobby-table{grid-template-columns:minmax(0,1fr);grid-template-rows:none;aspect-ratio:auto;max-height:none}
+  .cm-seat-q .cm-seat-body{padding:0}
+  .cm-table-center{position:static;transform:none;width:auto;min-width:0;order:-1;box-shadow:none}
+}
 /* THE EXPLORE ENTRY (Track V.4d, the guide's step 4, against screens/Gallery Explore Entry.dc.html).
    The page says what it is for in one sentence, offers its own search, and then three doors as
    cards rather than three buttons in a row. Each door carries its own hue in --door, so they are
@@ -311,7 +348,7 @@
 /* THE FILTER PANEL IS TWELVE COLUMNS OF ONE SHAPE: a label above a control that fills its
    track. It did not used to be. A <select> sizes to its widest option and a text <input>
    to a default twenty characters, so a track holding "Quintorius, History Chaser" or a
-   free-text box blew past its 145px minimum and shoved its neighbours sideways -- which
+   free-text box blew past its 145px minimum and shoved its neighbors sideways -- which
    on a narrow window reads as the controls covering each other. Every control now fills
    its own track and nothing decides the layout but the grid. Bottom-aligned, so a label
    that wraps to two lines does not drop its control out of the row. */
@@ -812,7 +849,7 @@ button.cm-badge-link:hover{background:var(--v-raised);color:var(--v-ink)}
 #matrix-v2.cm-stage .cm-facet-status{margin:0}
 /* Taller than the window on purpose. Fitting the canvas to the viewport is right for the
    default layout, where the page is a page; in presentation mode the canvas IS the page,
-   and a ring of thirty neighbours wants room the fold does not have. It runs about 40%
+   and a ring of thirty neighbors wants room the fold does not have. It runs about 40%
    past the bottom and the page scrolls to it. The pane follows: sizePane() writes its
    height from the canvas, so the two stay level without a second number to keep in sync. */
 #matrix-v2.cm-stage .cm-graph-grid-tall{--cm-graph-h:clamp(560px,calc((100vh - 178px) * 1.4),1800px);gap:14px}
@@ -1005,7 +1042,7 @@ button.cm-badge-link:hover{background:var(--v-raised);color:var(--v-ink)}
    that is only an icon is .cm-icon-button at 36 square. Typed chevrons are gone from the
    labels -- a ▾ from one font and a ⌄ from another sat at different baselines and nudged
    the button height -- and the caret is a 10px inline SVG the label carries instead.
-   tests/uat/geometry.mjs measures every .v-button in a shared row against its neighbours. */
+   tests/uat/geometry.mjs measures every .v-button in a shared row against its neighbors. */
 #matrix-v2 .v-button{white-space:nowrap}
 #matrix-v2 .v-button.compact{min-height:32px;padding:0 10px;font-size:12px}
 #matrix-v2 .cm-icon-button{display:inline-grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;
