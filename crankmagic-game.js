@@ -1157,8 +1157,10 @@
      readiness -- a seat stands up, a deck stops validating -- stops it, because a table that
      keeps counting toward a game it can no longer start is lying to the room. */
   /* CAN ANYTHING HERE START A GAME? A game is launched by the helper on this machine, so a
-     copy served from the web cannot start one at all -- an https page fetching
-     http://127.0.0.1 is mixed content, which the browser blocks. Counting down to a call that
+     copy served from the web cannot start one without the browser's permission: Chrome gates
+     a public page reaching a loopback address behind Local Network Access, and denies it by
+     default ("Permission was denied for this request to access the loopback address"). It is a
+     permission, not mixed content -- http://127.0.0.1 is a trustworthy origin. Counting down to a call that
      cannot succeed is what produced Rob's "HTTP 404" on GitHub Pages. null means not asked
      yet, which is treated as 'do not count' until the answer arrives. */
   let hostReachable = null;
@@ -2052,7 +2054,7 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
          the app is served from somewhere else and /api/... resolves against that origin. */
       const err = (data && (data.error || data.message))
         || (res.status === 404
-          ? `The local host did not answer ${path}. A game is played by CrankMagic Online on your own computer; this copy is served from ${location.origin}, which has no game host.`
+          ? `Nothing answered ${path}. A game runs on CrankMagic Online on your own computer; this page is served from ${location.origin}, which has no game host of its own.`
           : res.statusText || ('HTTP ' + res.status));
       throw new Error(err);
     }
@@ -2171,7 +2173,7 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
   actions["lobby-start-now"] = () => {
     const t = table();
     if (hostReachable === false) {
-      C.notice('A game is played by CrankMagic Online on your own computer, and this copy cannot reach it. Open http://127.0.0.1:8768/ there to play.', true);
+      C.notice('A game runs on your own computer, and the browser blocks this page from reaching it. Open http://127.0.0.1:8768/ on that machine to play.', true);
       return;
     }
     if (!L.startReady(t, lobby)) { C.notice(t.why || 'Ready Up every occupied seat and fix any blocked decks.', true); return; }

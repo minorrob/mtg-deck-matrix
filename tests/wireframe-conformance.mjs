@@ -529,8 +529,9 @@ check("the lobby does not count down when no host can answer", () => {
 check("a host that does not answer says so in words, not a status code", () => {
   const api = /async function lobbyApi\([\s\S]*?\n  \}/.exec(game);
   assert.ok(api, "lobbyApi not found");
-  assert.match(api[0], /local host/i,
-    '"HTTP 404" tells a person nothing; the message should name what did not answer');
+  assert.match(api[0], /location\.origin/,
+    '"HTTP 404" tells a person nothing; the message should name the origin that answered instead');
+  assert.match(api[0], /game host/i, "and say what is missing there");
 });
 
 console.log(`wireframe-conformance: ${checks} checks passed`);
