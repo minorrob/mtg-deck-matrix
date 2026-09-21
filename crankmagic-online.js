@@ -13,20 +13,31 @@
   const lobbyView=C.views.game;
   let hostStatus={checked:false,available:false};
   async function checkLocalHost(){
-    if(location.hostname!=='127.0.0.1'){hostStatus={checked:true,available:false};return;}
+    /* Two different reasons a game cannot start, and they need different words. A page served
+       from the web cannot reach a host on this machine at all -- an https page fetching
+       http://127.0.0.1 is mixed content and the browser blocks it -- so there is nothing to
+       retry and 'Check again' would be a lie. A local page whose host is not running is a
+       thing you fix by starting it. */
+    const local=location.hostname==='127.0.0.1'||location.hostname==='localhost';
+    if(!local){hostStatus={checked:true,available:false,reason:'remote-origin'};return;}
     try{
       const response=await fetch('http://127.0.0.1:8768/api/health',{signal:AbortSignal.timeout(2500),cache:'no-store'}),result=await response.json();
-      hostStatus={checked:true,available:response.ok&&result.product==='CrankMagic Online'&&result.protocol===1};
-    }catch{hostStatus={checked:true,available:false};}
+      const ok=response.ok&&result.product==='CrankMagic Online'&&result.protocol===1;
+      hostStatus={checked:true,available:ok,reason:ok?'':'not-running'};
+    }catch{hostStatus={checked:true,available:false,reason:'not-running'};}
   }
   C.views.game=async()=>{
     if(!hostStatus.checked)await checkLocalHost();
     if(lobbyView)await lobbyView();
-    if(location.hostname==='127.0.0.1'&&!hostStatus.available){
+    if(!hostStatus.available){
+      const remote=hostStatus.reason==='remote-origin';
       const banner=document.createElement('div');banner.className='cm-host-offline-banner';
-      banner.innerHTML=`<div class="v-panel cm-host-status"><h3>Local host offline</h3><p>The CrankMagic Online helper is not running. Start it to enable online multiplayer games.</p><p><strong>To start:</strong> Run the PowerShell helper script or use Codex with: <code>Use $start-crankmagic to start my local game host</code></p><button class="v-button" id="host-recheck">Check again</button><a class="v-button" href="#online">Online setup →</a></div>`;
+      banner.innerHTML=remote
+        ? `<div class="v-panel cm-host-status"><h3>Games run on your own computer</h3><p>This is the web copy of CrankMagic. It can show you the table, but a game is played by the helper running on your machine, and Chrome will not let a page from the web reach an address on your own computer without being asked first.</p><p><strong>To play:</strong> start CrankMagic Online on your computer and open <code>http://127.0.0.1:8768/</code> there. Seats you set up here stay here — this copy keeps its own library.</p><a class="v-button" href="#online">What CrankMagic Online is →</a></div>`
+        : `<div class="v-panel cm-host-status"><h3>Local host offline</h3><p>The CrankMagic Online helper is not running. Start it to enable online multiplayer games.</p><p><strong>To start:</strong> Run the PowerShell helper script or use Codex with: <code>Use $start-crankmagic to start my local game host</code></p><button class="v-button" id="host-recheck">Check again</button><a class="v-button" href="#online">Online setup →</a></div>`;
       C.main.insertBefore(banner,C.main.firstChild);
-      banner.querySelector('#host-recheck').addEventListener('click',async()=>{hostStatus.checked=false;C.render();});
+      const recheck=banner.querySelector('#host-recheck');
+      if(recheck)recheck.addEventListener('click',async()=>{hostStatus.checked=false;C.render();});
     }
   };
   C.views.online=async()=>{

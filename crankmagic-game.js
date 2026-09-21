@@ -1156,6 +1156,25 @@
      moment the table is ready, and Start begins it at any time the host wants. Losing
      readiness -- a seat stands up, a deck stops validating -- stops it, because a table that
      keeps counting toward a game it can no longer start is lying to the room. */
+  /* CAN ANYTHING HERE START A GAME? A game is launched by the helper on this machine, so a
+     copy served from the web cannot start one without the browser's permission: Chrome gates
+     a public page reaching a loopback address behind Local Network Access, and denies it by
+     default ("Permission was denied for this request to access the loopback address"). It is a
+     permission, not mixed content -- http://127.0.0.1 is a trustworthy origin. Counting down to a call that
+     cannot succeed is what produced Rob's "HTTP 404" on GitHub Pages. null means not asked
+     yet, which is treated as 'do not count' until the answer arrives. */
+  let hostReachable = null;
+  async function probeHost() {
+    const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+    if (!local) { hostReachable = false; return false; }
+    try {
+      const res = await fetch('/api/health', {cache: 'no-store'});
+      const data = await res.json();
+      hostReachable = !!(res.ok && data && data.product === 'CrankMagic Online');
+    } catch (_) { hostReachable = false; }
+    return hostReachable;
+  }
+
   const COUNTDOWN_SECONDS = 10;
   let countdownEndsAt = 0, countdownTimer = null;
   /* Stop has to mean stop. cancelCountdown redraws, the redraw asks syncCountdown again, and a
@@ -1203,6 +1222,7 @@
       if (countdownEndsAt) cancelCountdown('A seat is no longer ready. The countdown stopped.');
       return;
     }
+    if (hostReachable !== true) return;   /* nothing here can launch a game */
     if (!countdownEndsAt && !startInFlight && !countdownStopped && !launchError) beginCountdown();
   }
 
@@ -1294,7 +1314,8 @@
 
     const canStart = L.startReady(t, lobby);
     /* the clock follows the table, not the other way round */
-    setTimeout(() => syncCountdown(L.startReady(table(), lobby)), 0);
+    (hostReachable === null ? probeHost() : Promise.resolve(hostReachable))
+      .then(() => syncCountdown(L.startReady(table(), lobby)));
     const startWhy = !lobby.host ? "Seat your deck first."
       : !lobby.host.ready ? "Ready Up on your seat."
       : !t.ready ? (t.why || "Fix blocked seats.")
@@ -1777,7 +1798,9 @@ actions["lobby-email-invite"] = async (el) => {
        measured card, with a floor of 300px: at 105% of a small quadrant's card the oracle text
        would be the size it is on the table, and reading the card is what a pop-up is for. */
     const from = el.getBoundingClientRect();
-    const popWidth = Math.round(Math.max(300, Math.min(from.width * 1.05, window.innerWidth - 48)));
+    /* 105% of the card, then Rob asked for another 40% on top of that: 1.47. The floor moves
+       with it so a small table still gives a readable card. */
+    const popWidth = Math.round(Math.max(420, Math.min(from.width * 1.47, window.innerWidth - 48)));
     const pop = document.createElement("div");
     pop.className = "cm-lobby-art-pop";
     pop.style.setProperty("--cm-pop-w", popWidth + "px");
@@ -2026,7 +2049,13 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
     let data = null;
     try { data = await res.json(); } catch (_) { data = null; }
     if (!res.ok) {
-      const err = (data && (data.error || data.message)) || res.statusText || ('HTTP ' + res.status);
+      /* "HTTP 404" tells a person nothing. The host always answers with a JSON body, so a
+         response without one did not come from the host at all -- which is what happens when
+         the app is served from somewhere else and /api/... resolves against that origin. */
+      const err = (data && (data.error || data.message))
+        || (res.status === 404
+          ? `Nothing answered ${path}. A game runs on CrankMagic Online on your own computer; this page is served from ${location.origin}, which has no game host of its own.`
+          : res.statusText || ('HTTP ' + res.status));
       throw new Error(err);
     }
     return data;
@@ -2143,6 +2172,10 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
 
   actions["lobby-start-now"] = () => {
     const t = table();
+    if (hostReachable === false) {
+      C.notice('A game runs on your own computer, and the browser blocks this page from reaching it. Open http://127.0.0.1:8768/ on that machine to play.', true);
+      return;
+    }
     if (!L.startReady(t, lobby)) { C.notice(t.why || 'Ready Up every occupied seat and fix any blocked decks.', true); return; }
     countdownStopped = false;
     startAttempts = 0; launchError = '';   /* pressing Start is asking to try again */

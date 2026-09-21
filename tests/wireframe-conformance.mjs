@@ -493,4 +493,45 @@ check("the card pop-up is sized from the card that opened it", () => {
     "the pop-up is sized from the clicked card's measured width, not from the image's own size");
 });
 
+/* ------------------------------------------------- a lobby that cannot start, and says so, batch 7 */
+
+// Rob's Send Log, 2026-09-21, answered the 404 in one line:
+//
+//   HTTP 404
+//   Route: https://minorrob.github.io/mtg-deck-matrix/#game
+//
+// He was on GitHub Pages. `fetch('/api/setup')` resolved to https://minorrob.github.io/api/setup,
+// which does not exist -- a bare 404 with no body, exactly what the message implied. And from an
+// https page, reaching http://127.0.0.1:8768 is mixed content, which browsers block outright, so
+// Play on Pages can never start a game at all.
+//
+// The defect is not the 404. It is that the Play tab there looks completely operational: the
+// banner in crankmagic-online.js was gated on `location.hostname === '127.0.0.1'`, so on any
+// other origin it never appeared, the table rendered as normal, the countdown ran, and the first
+// thing that told anyone was an HTTP status code.
+const online = readFileSync("crankmagic-online.js", "utf8");
+
+check("the host banner is shown wherever the host is missing, not only on 127.0.0.1", () => {
+  assert.ok(!/location\.hostname===['"]127\.0\.0\.1['"]&&!hostStatus\.available/.test(online),
+    "gating the banner on the local hostname hides it on exactly the origins that cannot play");
+  assert.match(online, /hostStatus\.reason|remote-origin/,
+    "a page served from the web and a host that is not running are different problems and need different words");
+});
+
+check("the lobby does not count down when no host can answer", () => {
+  assert.match(game, /hostReachable/, "the lobby has to know whether anything can start a game");
+  const sync = /function syncCountdown\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(sync, "syncCountdown not found");
+  assert.match(sync[0], /hostReachable/,
+    "counting down to a call that cannot succeed is the loop that produced the 404");
+});
+
+check("a host that does not answer says so in words, not a status code", () => {
+  const api = /async function lobbyApi\([\s\S]*?\n  \}/.exec(game);
+  assert.ok(api, "lobbyApi not found");
+  assert.match(api[0], /location\.origin/,
+    '"HTTP 404" tells a person nothing; the message should name the origin that answered instead');
+  assert.match(api[0], /game host/i, "and say what is missing there");
+});
+
 console.log(`wireframe-conformance: ${checks} checks passed`);
