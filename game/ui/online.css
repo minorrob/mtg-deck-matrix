@@ -163,3 +163,17 @@ body.setup-screen>.recommended-actions{display:none!important}
 .history-thumb:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:2px}
 .history-detail{margin:2px 0 0;font-size:var(--text-small,12px);line-height:var(--leading-body,1.5);color:var(--color-muted,CanvasText)}
 .history-detail[hidden]{display:none}
+
+/* WHAT IS COMING AT YOU (Stage A.6.4). Tokens with system-color fallbacks, same as the notice. */
+.incoming-head{display:flex;flex-direction:column;gap:2px;padding:var(--space-2,8px) var(--space-3,12px);border-radius:var(--radius-control,12px);background:var(--color-raised,Canvas);border:1px solid var(--color-line,CanvasText)}
+.incoming-head>strong{font-size:var(--text-h3,16px);line-height:1.2}
+.incoming-head>small{color:var(--color-muted,CanvasText);font-size:var(--text-small,12px)}
+.incoming-keywords{text-transform:capitalize}
+.incoming-warn{color:var(--color-accent,Highlight)}
+.incoming-cards{display:flex;gap:var(--space-2,8px);flex-wrap:wrap;margin-top:var(--space-2,8px)}
+.incoming-card{width:84px;padding:0;border:0;background:none;color:inherit;cursor:zoom-in;display:flex;flex-direction:column;gap:2px;text-align:left}
+.incoming-card img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:var(--radius-control,12px)}
+.incoming-card span{font-size:var(--text-small,12px);line-height:1.25}
+.incoming-card small{font-size:var(--text-label,11px);color:var(--color-muted,CanvasText)}
+.incoming-card:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:2px}
+.incoming-card[disabled]{cursor:default;opacity:.8}

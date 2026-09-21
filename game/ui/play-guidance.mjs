@@ -47,3 +47,57 @@ export function combatTotals(attacks=[]){
   for(const row of attacks){if(!row.defender)continue;const key=row.defender.kind+':'+row.defender.id;let total=defenders.get(key);if(!total){total={...row.defender,power:0,unblockedPower:0,commanderPower:0,infectPower:0,flyingPower:0,tramplePower:0,groundPower:0};defenders.set(key,total);}const power=Math.max(0,Number(row.attacker.power)||0);total.power+=power;if(!row.blocked&&!row.blockers.length)total.unblockedPower+=power;if(row.attacker.commander)total.commanderPower+=power;if(row.attacker.keywords?.includes('infect'))total.infectPower+=power;if(row.attacker.keywords?.includes('flying'))total.flyingPower+=power;else total.groundPower+=power;if(row.attacker.keywords?.includes('trample'))total.tramplePower+=power;}
   return [...defenders.values()];
 }
+
+/* WHAT IS COMING AT YOU, AND OF WHAT KIND.
+ *
+ * Rob, at a declare-blockers prompt, 2026-09-21: "I'd like to see the card attacking me and know
+ * the total damage and type of damage coming."
+ *
+ * combatTotals above already computed every number he asked for; it was only ever drawn in the
+ * Combat pane, which is not where a player is looking while deciding blocks. This narrows it to
+ * one seat so the decision panel can carry it, and gathers the keywords that change what the
+ * damage DOES -- deathtouch and first strike are not power, and a player reading a number without
+ * them is reading the wrong thing.
+ *
+ * Rob, immediately after: "There are definitely more damage types than just those. Have to
+ * consider first strike, double strike, and similar." He is right, and for DOUBLE STRIKE it is
+ * not a labelling problem but an arithmetic one: a double striker deals its power in the
+ * first-strike step AND again in the normal step, so a raw power total understates what is
+ * coming. `potential` counts it twice; `total.power` is left alone because combatTotals is used
+ * elsewhere and means raw power there.
+ *
+ * VERIFIED BEFORE COUNTING IT TWICE, because Rob asked whether Forge had already done so:
+ * ForgeProbe.java:242 sends `"power", c.getNetPower()`, which is the creature's CURRENT power --
+ * printed power plus counters and static effects. Double strike is not in that number; Forge
+ * applies it by running a first-strike damage step and then a normal one. So doubling here is the
+ * first and only time it is doubled.
+ *
+ * The same line confirms the casing: ForgeProbe.java:241 emits keywords as
+ * `keyword.name().toLowerCase().replace('_',' ')`, so DOUBLE_STRIKE arrives as "double strike".
+ *
+ * WHAT THIS CANNOT SEE. That adapter reports exactly nine keywords -- flying, reach, trample,
+ * first strike, double strike, deathtouch, lifelink, infect, wither. Menace, protection,
+ * indestructible, shadow, fear and the rest never leave the engine, so "and similar" is capped by
+ * the adapter and not by this file. Widening it is a Java change and a rebuild.
+ *
+ * The list below is still a union of whatever actually arrives rather than a hard-coded set, so
+ * the day the adapter sends more, this passes them straight through.
+ */
+const has=(row,word)=>(row?.attacker?.keywords||[]).some(k=>String(k).toLowerCase()===word);
+const power=(row)=>Math.max(0,Number(row?.attacker?.power)||0);
+const strikes=(row)=>has(row,'double strike')?2:1;
+export function incomingAt(attacks=[],playerId){
+  const mine=(attacks||[]).filter(r=>r.defender&&r.defender.kind==='player'&&r.defender.id===playerId);
+  const total=combatTotals(mine)[0]||null;
+  const keywords=[...new Set(mine.flatMap(r=>(r.attacker?.keywords||[]).map(k=>String(k).toLowerCase())))].sort();
+  const open=mine.filter(r=>!r.blocked&&!r.blockers?.length);
+  return {
+    total,attackers:mine,keywords,
+    potential:mine.reduce((n,r)=>n+power(r)*strikes(r),0),
+    unblockedPotential:open.reduce((n,r)=>n+power(r)*strikes(r),0),
+    /* Named separately because they change what a block COSTS, not what the damage totals:
+       deathtouch makes any blocker trade, first strike can kill a blocker before it answers. */
+    deathtouch:mine.some(r=>has(r,'deathtouch')),
+    firstStrike:mine.some(r=>has(r,'first strike')||has(r,'double strike')),
+  };
+}
