@@ -1,0 +1,333 @@
+<title>CrankMagic Engine Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{
+  --bg:#f5f0e6;--panel:#fffdf8;--raised:#ece5d7;--line:#d9d0bf;--muted:#6e665a;--ink:#1f1c18;
+  --accent:#2f8f5b;--on-accent:#f7fbf6;--money:#d0603c;--aether:#4aa6d8;
+  --good:#2f8f5b;--warn:#b8841e;--crit:#c0392b;
+  --display:'Young Serif',Georgia,'Times New Roman',serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1815;--panel:#231f1b;--raised:#2d2823;--line:#3a342c;--muted:#a99e90;--ink:#f5f0e8;
+    --accent:#d9a441;--on-accent:#1a1815;--money:#f0b35a;--aether:#7cc4ff;
+    --good:#5cc98a;--warn:#e0b25a;--crit:#e8735f;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1815;--panel:#231f1b;--raised:#2d2823;--line:#3a342c;--muted:#a99e90;--ink:#f5f0e8;
+  --accent:#d9a441;--on-accent:#1a1815;--money:#f0b35a;--aether:#7cc4ff;
+  --good:#5cc98a;--warn:#e0b25a;--crit:#e8735f;color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 64px;padding-inline:20px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,4.5vw,44px);line-height:1.1}
+h2{font-size:26px;margin-block:48px 14px;padding-top:18px;border-top:1px solid var(--line)}
+h3{font-size:19px;margin-block:22px 8px}
+p{margin:0 0 12px;max-width:72ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.lede{font-size:18px;max-width:70ch;color:var(--ink)}
+.meta{color:var(--muted);font-size:14px;margin-top:10px}
+.verdict{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);padding:18px 20px;margin-top:24px;border-radius:4px}
+.verdict p{max-width:none}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:22px}
+.tile{background:var(--panel);border:1px solid var(--line);padding:14px 16px;border-radius:4px}
+.tile .n{font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.tile .l{color:var(--muted);font-size:13px;margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0 6px}
+.scroll{overflow-x:auto}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-weight:600;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:var(--raised);padding:1px 5px;border-radius:3px}
+pre{background:var(--raised);border:1px solid var(--line);padding:12px 14px;border-radius:4px;overflow-x:auto;font-size:13px;line-height:1.45}
+ul{padding-left:20px;margin:0 0 12px}li{margin-bottom:6px;max-width:75ch}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.chart{background:var(--panel);border:1px solid var(--line);padding:14px 16px;border-radius:4px}
+.chart h4{margin:0 0 4px;font-weight:600;font-size:14px}
+.chart .sub{color:var(--muted);font-size:13px;margin-bottom:10px}
+.bars{display:grid;grid-template-columns:64px 1fr 56px;gap:6px 10px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.bars .k{color:var(--muted)}
+.bars .track{height:12px;background:var(--raised);border-radius:3px;position:relative}
+.bars .fill{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.bars .v{text-align:right}
+.arch{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.layer{border:1px solid var(--line);background:var(--panel);padding:10px 14px;border-radius:4px;display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start}
+.layer b{font-weight:600}
+.layer .kind{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.layer.keep{border-left:4px solid var(--aether)}
+.layer.new{border-left:4px solid var(--accent)}
+.layer.gone{border-left:4px solid var(--money)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.gate{border-color:var(--accent);color:var(--ink);background:color-mix(in oklab,var(--accent) 14%,var(--panel))}
+.phase{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.phase .no{font-family:var(--display);font-size:26px;color:var(--muted);line-height:1}
+.phase h3{margin:0 0 4px}
+.phase .est{color:var(--muted);font-size:13px;margin-top:6px}
+.decision{background:var(--panel);border:1px solid var(--line);padding:12px 16px;border-radius:4px;margin-bottom:10px}
+.decision b{font-weight:600}
+.decision .rec{color:var(--accent);font-weight:600;font-size:13px;letter-spacing:.03em;text-transform:uppercase}
+.note{color:var(--muted);font-size:14px}
+.status{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.s-crit{background:var(--crit)}.s-warn{background:var(--warn)}.s-good{background:var(--good)}
+@media (max-width:640px){.layer{grid-template-columns:1fr}.phase{grid-template-columns:1fr}.phase .no{font-size:20px}}
+@media (prefers-reduced-motion:no-preference){.bars .fill{transition:width .3s ease}}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">CrankMagic · Development plan · 2026-09-20</div>
+  <h1>Retiring Forge for a rules engine of our own</h1>
+  <p class="lede">A deterministic, plain-JavaScript Commander engine under <code>game/engine/</code> that plays any hundred Commander-legal cards a player brings, built behind the bridge and journal contracts the table already speaks, verified against Forge while it still exists, then Forge and the Java runtime removed.</p>
+  <p class="meta">Measured on Personal-HP against <code>main</code> at <code>ca4aca0</code> and Forge <code>58bcd59</code> (2.0.15-SNAPSHOT). The executable version of this plan is <code>docs/engine/PLAN.md</code> in the repository; this page is <code>docs/engine/engine-plan.html</code> beside it.</p>
+
+  <div class="verdict">
+    <p><b>Recommendation.</b> Build it, in three measured tiers that are the build order and not three finish lines: the seven live decks first (477 cards, 64 effect primitives), the 2,367-card library second, the whole Commander-legal pool third (roughly 28,000 to 30,000 cards; the exact count is fixed by the first Scryfall pull). At pool scale, card definitions come from a template parser, then a Claude-API compiler, then hand-authoring for the residue, with a per-card support ledger and a fuzzing harness that plays random legal decks on both engines to find what no human game would. Go live on a closed vocabulary of the 40 most-used primitives and the families 20 or more cards use, which reaches 80.5 percent of the pool; the next 40 primitives are enhancement 1 (94.3 percent) and the remaining 112 are enhancement 2. Keep Forge as the default engine behind a flag until the go-live gate, use it only as a behavioral oracle, move it out of the product at go-live and keep it as a local oracle through the enhancements. Never copy or translate its scripts. Estimated at 24 to 43 agent sessions to go-live and 7 to 14 more for the enhancements. All seven decisions are answered; the plan waits on one condition.</p>
+  </div>
+  <div class="verdict" style="border-left-color:var(--money);margin-top:12px">
+    <p><b>Start condition and release shape.</b> Nothing here starts until Track V is fully live, with live games 100 percent operational on the Gallery redesign through Play. Then this plan and the separately scoped cloud-host migration kick off together as one major product release; the cloud plan will be updated to reflect this one. The engine is built for the local host first and is kept cloud-ready from the first commit. Rob owns the totality of CrankMagic, the play engine included, under the repository's Source-Available License, for personal use now and potential sale later; "product enhancements" here mean CrankMagic releases, not engine-only drops.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="n">477</div><div class="l">distinct cards in the seven live decks, all resolvable</div></div>
+    <div class="tile"><div class="n">64</div><div class="l">effect primitives those decks need (Forge has 192)</div></div>
+    <div class="tile"><div class="n">2,367</div><div class="l">library cards; 112 primitives cover all but 2</div></div>
+    <div class="tile"><div class="n">80.5%</div><div class="l">of the whole pool inside the go-live vocabulary</div></div>
+    <div class="tile"><div class="n">11</div><div class="l">choice modes in the bridge contract, kept as is</div></div>
+    <div class="tile"><div class="n">1,288</div><div class="l">lines of GPL Java adapter to delete</div></div>
+    <div class="tile"><div class="n">100</div><div class="l">Node suites that must stay green (71 + 29)</div></div>
+  </div>
+
+  <h2>Why leave Forge</h2>
+  <p>Each reason is on record in the repository. None is a matter of taste.</p>
+  <div class="scroll"><table>
+    <tr><th>Cost of staying</th><th>Where it shows</th></tr>
+    <tr><td><span class="status s-crit"></span>The adapter is GPL-3.0-or-later and cannot be relicensed, inside a repository whose license reserves every commercial right</td><td><code>THIRD-PARTY-NOTICES.md</code>, <code>LICENSE</code> §4</td></tr>
+    <tr><td><span class="status s-crit"></span>Native AI is uncertified. Source inspection found paths that read unrevealed opponent libraries, and <code>AI:RemoveDeck:All</code> silently sidelines 13 of the pod's cards</td><td><code>game/docs/c0-evidence.md</code>, <code>ai-card-support.md</code></td></tr>
+    <tr><td><span class="status s-warn"></span>A 2 GB JVM, Maven, a Swing profile and a four-minute launch deadline sit between "Launch game" and a board</td><td><code>local-game-launcher.mjs</code>, <code>local-table-runtime.mjs</code></td></tr>
+    <tr><td><span class="status s-warn"></span>Any decision the bridge cannot represent falls back to "finish this choice in the engine window"</td><td><code>ForgeBrowserBridge.java</code>, the <code>DELEGATE</code> path</td></tr>
+    <tr><td><span class="status s-warn"></span>Nothing touching Forge can be proven by a cloud session or CI; the readiness plan names this the gap the project over-trusted green suites across</td><td><code>AGENTS.md</code>, readiness plan §12</td></tr>
+    <tr><td><span class="status s-warn"></span>Pause is not a save: recovery exists for the opening choice only. The static site cannot play at all</td><td><code>game/README.md</code>, C0 evidence</td></tr>
+    <tr><td><span class="status s-good"></span>Two library cards already have no Forge script; the pin drifts every set</td><td>measured: Baldin, Century Herdmaster; Notorious Sliver War</td></tr>
+  </table></div>
+
+  <h2>The rules surface, measured</h2>
+  <p>Every deck and library card was resolved to its Forge script and the script's ability lines were counted. Forge's vocabulary is the ruler here, not the design; the engine's own primitive set is in the plan's appendix.</p>
+  <div class="scroll"><table>
+    <tr><th>Pool</th><th class="num">Cards</th><th class="num">Effect primitives</th><th class="num">Trigger kinds</th><th class="num">Static modes</th><th class="num">Replacements</th><th class="num">Keywords</th><th class="num">Cost atoms</th></tr>
+    <tr><td>Seven live decks</td><td class="num">477</td><td class="num">64</td><td class="num">22</td><td class="num">12</td><td class="num">5</td><td class="num">53</td><td class="num">39</td></tr>
+    <tr><td>Library (<code>data/cards.json</code>)</td><td class="num">2,367</td><td class="num">112</td><td class="num">49</td><td class="num">23</td><td class="num">15</td><td class="num">124</td><td class="num">106</td></tr>
+    <tr><td>All of Forge, a proxy for the Commander-legal pool</td><td class="num">33,821</td><td class="num">192</td><td class="num">138</td><td class="num">77</td><td class="num">34</td><td class="num">216</td><td class="num">436</td></tr>
+  </table></div>
+  <div class="chart" style="margin-top:16px">
+    <h4>Whole pool covered, by primitives implemented</h4>
+    <div class="sub">Of 33,821 Forge scripts. Forty-three primitives serve five cards or fewer; that tail is what the fuzz harness is for. The legality filter will remove silver-border, conspiracy, Vanguard and Planechase constructs before any of this is built.</div>
+    <div class="bars">
+      <span class="k">top 20</span><div class="track"><div class="fill" style="width:70%"></div></div><span class="v">23,513</span>
+      <span class="k">top 40</span><div class="track"><div class="fill" style="width:85%"></div></div><span class="v">28,637</span>
+      <span class="k">top 80</span><div class="track"><div class="fill" style="width:95%"></div></div><span class="v">32,109</span>
+      <span class="k">top 120</span><div class="track"><div class="fill" style="width:98.8%"></div></div><span class="v">33,408</span>
+      <span class="k">top 160</span><div class="track"><div class="fill" style="width:99.8%"></div></div><span class="v">33,768</span>
+      <span class="k">all 192</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">33,821</span>
+    </div>
+  </div>
+  <h3>The three vocabulary tiers</h3>
+  <p>A primitive tier alone does not bound the work: the cards inside the top 40 primitives still touch 126 trigger kinds, 71 static modes and 211 keywords between them. A tier is a closed vocabulary across all five dimensions, and a card is in the tier when everything it uses is in the vocabulary.</p>
+  <div class="scroll"><table>
+    <tr><th>Tier</th><th class="num">Primitives</th><th class="num">Triggers</th><th class="num">Statics</th><th class="num">Replacements</th><th class="num">Keywords</th><th class="num">Cards inside</th><th class="num">Share</th></tr>
+    <tr><td><b>Go-live</b>: top 40 primitives plus every family used by 20 or more cards</td><td class="num">40</td><td class="num">41</td><td class="num">20</td><td class="num">9</td><td class="num">117</td><td class="num">27,218</td><td class="num">80.5%</td></tr>
+    <tr><td><b>Enhancement 1</b>: top 80 primitives plus every family used by 5 or more cards</td><td class="num">80</td><td class="num">69</td><td class="num">37</td><td class="num">16</td><td class="num">200</td><td class="num">31,878</td><td class="num">94.3%</td></tr>
+    <tr><td><b>Enhancement 2</b>: everything the legality filter keeps</td><td class="num">192</td><td class="num">138</td><td class="num">77</td><td class="num">34</td><td class="num">216</td><td class="num">33,821</td><td class="num">100%</td></tr>
+  </table></div>
+  <p class="note">Two deck primitives, Proliferate and ManaReflected, fall outside the go-live 40 by pool frequency; tier 0 builds them anyway because the seven decks need them, so the go-live vocabulary is "the 40 plus what tier 0 already built". Cards outside the vocabulary are refused at prepare with the missing construct named, never played as a no-op.</p>
+
+  <div class="two" style="margin-top:16px">
+    <div class="chart">
+      <h4>Deck cards fully covered, by primitives implemented</h4>
+      <div class="sub">Of 477. A card counts when every primitive it uses exists. Most-used primitives first.</div>
+      <div class="bars">
+        <span class="k">top 10</span><div class="track"><div class="fill" style="width:58%"></div></div><span class="v">277</span>
+        <span class="k">top 20</span><div class="track"><div class="fill" style="width:81%"></div></div><span class="v">385</span>
+        <span class="k">top 30</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="v">427</span>
+        <span class="k">top 40</span><div class="track"><div class="fill" style="width:94%"></div></div><span class="v">449</span>
+        <span class="k">top 50</span><div class="track"><div class="fill" style="width:97%"></div></div><span class="v">463</span>
+        <span class="k">top 64</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">477</span>
+      </div>
+    </div>
+    <div class="chart">
+      <h4>Library cards fully covered, by primitives implemented</h4>
+      <div class="sub">Of 2,365 resolvable. The long tail is 48 primitives the decks never touch.</div>
+      <div class="bars">
+        <span class="k">top 10</span><div class="track"><div class="fill" style="width:45%"></div></div><span class="v">1,062</span>
+        <span class="k">top 20</span><div class="track"><div class="fill" style="width:69%"></div></div><span class="v">1,622</span>
+        <span class="k">top 40</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="v">2,078</span>
+        <span class="k">top 60</span><div class="track"><div class="fill" style="width:95%"></div></div><span class="v">2,244</span>
+        <span class="k">top 80</span><div class="track"><div class="fill" style="width:98%"></div></div><span class="v">2,321</span>
+        <span class="k">top 112</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">2,365</span>
+      </div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px">The deck pool's top ten: ChangeZone 100, Mana 97, Draw 69, Token 67, Tap 55, Cleanup 41, Destroy 41, PutCounter 30, GainLife 28, LoseLife 27. Its triggers are dominated by zone changes (138) and phases (23); its replacements are almost entirely "enters tapped / with counters / exile instead" (53 of 58). Across the whole pool, 407 cards are vanilla and 1,814 are keywords only, and the top 40 keyword families cover 90 percent. The kernel stays narrow; the card-definition layer is where the pool's size lands, and it is built as a pipeline for that reason.</p>
+
+  <h2>Any hundred cards</h2>
+  <p>Hand-writing a definition and a scenario per card is how the first 477 shape the schema. It is not how 30,000 get done. From the library onward, definitions come from a pipeline in order of trust, and every card carries a record of how far it has been proven.</p>
+  <div class="arch">
+    <div class="layer new"><span class="kind">Default</span><div><b>A Claude-API compiler, the default for every card.</b> Schema as the tool definition, oracle text, the pre-pass result and the primitive catalog in; a script out. Every result is schema-validated, smoke-tested in a fixture game, checked for what it reveals against the projection, and, while Forge exists, differential-checked in fuzzed games. The key comes from Windows Credential Manager, the way the OpenAI pilot's does, and never touches a file, page, URL or log. Cost and pass rate measured on a 200-card sample first.</div></div>
+    <div class="layer new"><span class="kind">Pre-pass</span><div><b>A deterministic template parser from oracle text.</b> Keyword lines; "When, Whenever, At [event], [effect]"; "[cost]: [effect]"; "[selector] get +N/+N"; "as long as"; "you may"; "unless"; "instead". Its partial result is handed to the compiler as a hint. Keyword-only and vanilla cards need no API call at all.</div></div>
+    <div class="layer new"><span class="kind">Wins</span><div><b>Hand-authored definitions win wherever one exists.</b> Rob's uploads dropped into a hand folder, definitions worked out with Claude in chat, the residue the compiler cannot make pass, and every adjudicated divergence. Tier 0 is hand-authored because it shapes the schema.</div></div>
+    <div class="layer keep"><span class="kind">Ledger</span><div><b><code>data/engine/support.json</code>.</b> Per card: <code>verified</code> (scenario or adjudicated differential evidence), <code>compiled</code> (schema and smoke only), or <code>unsupported</code>; the oracle-text hash it was compiled from; its source; its evidence. Shown per card at prepare. A changed oracle text demotes the card until it is recompiled.</div></div>
+    <div class="layer keep"><span class="kind">Fuzz</span><div><b>Random legal decks, seeded games, both engines.</b> Singleton, color identity, a random commander; random-legal pilots; the same decisions replayed on Forge while it exists. Every exception and divergence is filed with a minimized reproduction. No human plays 30,000 cards; this does, at roughly a thousand games an hour on Personal-HP.</div></div>
+    <div class="layer keep"><span class="kind">Refresh</span><div><b>A set-refresh workflow modeled on Load Live.</b> Pulls the Scryfall bulk, diffs oracle ids and text hashes, updates the banned list, marks changed cards unsupported, commits the data and lists what needs compiling.</div></div>
+  </div>
+  <p class="note" style="margin-top:12px">The honest form of "any hundred cards": every Commander-legal card has a definition, measured play requires every card at the table to be verified, casual play can seat compiled cards behind a visible label, and unsupported always blocks. That is decision 6.</p>
+
+  <h2>Architecture</h2>
+  <p>The deprecation lever is the contract, not the code. The seat <code>view</code> and <code>action</code> envelope, the eleven choice modes, the <code>CommanderProbeEvent@1</code> journal and the <code>CommanderPodPack@1</code> pod are all kept byte-compatible, so the table broker, lobby, guest gateway, API pilots, force-advance, telemetry and match reports keep working while the engine underneath is swapped.</p>
+  <div class="arch">
+    <div class="layer keep"><span class="kind">Kept</span><div><b>Play page, table, lobby, gateway, pilots, reports.</b> <code>crankmagic-game.js</code>, <code>game/ui/*</code>, <code>table-broker.mjs</code>, <code>guest-gateway.mjs</code>, <code>ai-pilot.mjs</code>, <code>match-report.mjs</code>, <code>match-telemetry.mjs</code>. No change until the Play page renders on both engines in phase 4.</div></div>
+    <div class="layer keep"><span class="kind">Kept</span><div><b>The contracts.</b> <code>view</code> / <code>action</code> / <code>concede</code>; choice modes one, many, order, boolean, index, integer, text, amount, damage, draw, ack; journal kinds named after the Forge events that reports already read.</div></div>
+    <div class="layer new"><span class="kind">New</span><div><b><code>game/server/engine-runtime.mjs</code>.</b> Same six exports as the Java launcher, engine in a <code>worker_threads</code> Worker, same game-directory files plus a full checkpoint at every pending choice. Selected by <code>CRANKMAGIC_ENGINE=forge|crank</code> until the parity gate.</div></div>
+    <div class="layer new"><span class="kind">New</span><div><b><code>game/engine/</code>.</b> Seeded RNG with tape and replay; one authoritative state; rules modules citing their Comprehensive Rules sections (turn, priority, stack, mana, targets, SBAs, triggers, replacements, layers, combat, copy, commander, mulligan); one visibility function feeding every projection; a controller loop that only ever asks through a validated choice record.</div></div>
+    <div class="layer new"><span class="kind">New</span><div><b>Card script <code>CrankCardScript@1</code>.</b> JSON per card written from Scryfall oracle text: costs, abilities, effect primitives, a small selector grammar, a declaration of what the card reveals. Each definition ships with a scenario test. A coverage tool reports definition / test / supported per deck and for the library.</div></div>
+    <div class="layer new"><span class="kind">New</span><div><b>Pilots.</b> <code>random-legal</code> for termination and determinism tests; <code>house-pilot</code> replacing native Forge AI, fed only its seat projection, scoring with <code>card-classify.js</code> roles, graph strategies and the existing difficulty budgets, with cheap rollouts; <code>tape-pilot</code> for recorded-decision replay. API pilots unchanged.</div></div>
+    <div class="layer gone"><span class="kind">Removed at G5</span><div><b>Forge and Java.</b> <code>game/engine-adapter/</code> (9 files, 1,288 lines), <code>forge.lock.json</code>, <code>build-forge.ps1</code>, the probe and proof tools, <code>forge-card-index.mjs</code>, Forge checks in the doctor, the JDK and Maven under <code>CrankMagic\runtime</code>, the two environment variables, and the Forge section of the notices.</div></div>
+  </div>
+  <div class="legend"><span><i style="background:var(--aether)"></i>kept as is</span><span><i style="background:var(--accent)"></i>new</span><span><i style="background:var(--money)"></i>removed</span></div>
+
+  <h2>Data and knowledge required</h2>
+  <div class="scroll"><table>
+    <tr><th>Need</th><th>Source</th><th>Lands in</th></tr>
+    <tr><td>Oracle data for every Commander-legal card: faces, layouts, loyalty, defense, produced mana, token links, legalities</td><td>Scryfall bulk <code>oracle_cards</code> filtered by <code>legalities.commander</code>, via a new <code>tools/build-engine-cards.mjs</code>; <code>data/cards.json</code> has oracle text for 2,367 cards but not faces or tokens</td><td><code>data/engine/oracle.json</code> (compact, loaded lazily), <code>support.json</code></td></tr>
+    <tr><td>Token definitions for the whole pool</td><td>Scryfall token objects reached through <code>all_parts</code></td><td><code>data/engine/tokens.json</code></td></tr>
+    <tr><td>A primitive catalog the compiler can read</td><td>generated from the effect modules' headers by a test</td><td><code>data/engine/primitives.json</code></td></tr>
+    <tr><td>The oracle-text templates the parser must know</td><td>CR 701 and 702 plus a frequency tool over the pool's own sentences</td><td><code>docs/engine/templates.md</code></td></tr>
+    <tr><td>Comprehensive Rules</td><td>WotC text, pinned by URL and effective date; not committed</td><td><code>docs/engine/rules-map.md</code>, module headers</td></tr>
+    <tr><td>Commander rules and banned list</td><td>Rules Committee text, dated snapshot</td><td><code>data/engine/banned-&lt;date&gt;.json</code></td></tr>
+    <tr><td>Strategy knowledge for the house pilot</td><td><code>data/graph.json</code>, loops, strategies, <code>card-classify.js</code>, <code>pilot-policy.mjs</code></td><td>reused unchanged</td></tr>
+    <tr><td>Existing proofs to port red-first</td><td><code>RulesProbe.java</code> loss rules, hidden-selection and bridge-protocol checks, the seed-42 pod</td><td><code>tests/engine-*.mjs</code></td></tr>
+    <tr><td>Forge as a behavioral oracle (transition only)</td><td>the pinned checkout and JDK on this machine</td><td><code>game/tools/engine-diff.mjs</code>, evidence committed</td></tr>
+  </table></div>
+
+  <h2>Technical infrastructure</h2>
+  <div class="scroll"><table>
+    <tr><th>Item</th><th>Today</th><th>Needed</th></tr>
+    <tr><td>Runtime</td><td>Node 24 locally, Node 22 in CI, no npm anywhere</td><td>the same; zero-dependency ESM that also loads in a browser Worker</td></tr>
+    <tr><td>Tests</td><td><code>runtests.sh</code> over <code>tests/*.mjs</code> and <code>game/tests/*.test.mjs</code></td><td>new <code>tests/engine-*.mjs</code> suites; card scenarios run by one suite; all run in CI for the first time</td></tr>
+    <tr><td>Host</td><td><code>serve-review.mjs</code> on 8768, <code>doctor.mjs</code></td><td><code>engine-runtime.mjs</code> behind the flag; doctor swaps Java checks for an engine-cards check at G5</td></tr>
+    <tr><td>Randomness and hashing</td><td>Forge <code>TapeRandom</code>, Java SHA-256</td><td><code>rng.mjs</code> (splitmix32 seeding xoshiro128**) with tape and replay; one hashing adapter over <code>node:crypto</code> and WebCrypto</td></tr>
+    <tr><td>Persistence</td><td>pod, manifest, events, projections, summary</td><td>the same files plus <code>checkpoint.json</code> at every pending choice</td></tr>
+    <tr><td>Budgets, asserted by a suite</td><td>tens of seconds to boot</td><td>boot under 200 ms with the pool index lazy; <code>view()</code> under 2 ms; legal actions under 5 ms; a full random-legal four-player game under 3 s; 64 rollouts per decision under 300 ms; fuzzing at 1,000 games an hour</td></tr>
+    <tr><td>Compile pipeline</td><td>none</td><td><code>engine-compile.mjs</code> calling the Claude API with the key Rob has stored in Windows Credential Manager, read through the script the OpenAI pilot uses; batch, resumable, idempotent by oracle-text hash; never a key in a file, page, URL or log</td></tr>
+    <tr><td>Cloud readiness</td><td>Java process on one machine</td><td>a storage adapter for journal, checkpoints and the card index; a match as a value (pod, seed, tape, checkpoint) that resumes identically on another process, proven by a test; the bridge envelope as the only interface</td></tr>
+    <tr><td>Fuzz and differential runs</td><td>none</td><td>a scheduled local task while Forge exists; results committed as evidence, never as a green claim</td></tr>
+    <tr><td>Set refresh</td><td><code>live-load.yml</code> as the pattern</td><td><code>engine-cards.yml</code>, manual dispatch, commits data and the list of cards needing compilation</td></tr>
+  </table></div>
+
+  <h2>Phases and gates</h2>
+  <p>One PR per topic, a red-first test named in every commit, the full suite before every push. Estimates are agent sessions ending at the 95% usage pivot.</p>
+
+  <div class="phase"><div class="no">0</div><div><h3>Decisions and scaffolding</h3>Plan and ADR committed under <code>docs/engine/</code>; the <code>CRANKMAGIC_ENGINE</code> flag read by the host, default <code>forge</code>; the engine skeleton and its first suite; the inventory tool and its committed output; the Scryfall build tool and <code>data/engine/</code>. <span class="pill gate">Gate: Rob's seven decisions answered; CI green with the new suites</span><div class="est">1 to 2 sessions</div></div></div>
+  <div class="phase"><div class="no">1</div><div><h3>Kernel without cards</h3>RNG, state and journal with a determinism test; turn structure, priority, stack and the controller loop; mana and payment; combat with multiple defenders; state-based actions and the ported loss rules; triggers with APNAP; replacements; layers; commander rules and the London mulligan; the projection and the hidden-information property test. <span class="pill gate">Gate: 1,000 seeded vanilla games complete, replay to the same hash, no hidden card in any seat view</span><div class="est">4 to 6 sessions</div></div></div>
+  <div class="phase"><div class="no">2</div><div><h3>Card script and compiler</h3>The schema and selector grammar; the top 25 deck primitives; the 53 deck keyword families; the coverage tool and scenario runner; the card index with <code>resolve</code> and <code>suggest</code>. <span class="pill gate">Gate: every deck primitive and keyword has a unit test</span><div class="est">2 to 3 sessions</div></div></div>
+  <div class="phase"><div class="no">3</div><div><h3>Tier 0: the seven decks</h3>Batches of 40 to 60 cards by primitive frequency, each with a scenario. <span class="pill gate">G1: all seven decks play 100 seeded games each against house pilots and against random-legal pilots with zero exceptions; determinism and hidden information hold</span><div class="est">4 to 8 sessions</div></div></div>
+  <div class="phase"><div class="no">4</div><div><h3>Host integration behind the flag</h3>The engine runtime with the launcher's six exports; house-pilot seats in setup; doctor, deck check and prepare legality on the engine index; the Play page rendered on both engines, before and after. <span class="pill gate">G2: one human and three house pilots to a finished game in the browser; a four-seat lobby game through the gateway; report and telemetry from the engine journal</span><div class="est">2 to 3 sessions</div></div></div>
+  <div class="phase"><div class="no">5</div><div><h3>Differential verification against Forge</h3>A tape pilot; the same pod and seed through both engines with recorded decisions; per-priority normalized state compared; every divergence adjudicated against the Comprehensive Rules and logged, because Forge can be wrong too. <span class="pill gate">G3: 30 seeded games per deck with every divergence adjudicated and engine-side ones fixed</span><div class="est">2 to 3 sessions</div></div></div>
+  <div class="phase"><div class="no">6</div><div><h3>Tier 1: the library, and the pipeline</h3>The template catalog from a frequency tool over the pool; the parser, red-first, measured by its share of the library; the primitive catalog and the compiler on a 200-card sample with cost and pass rate reported; the support ledger shown at prepare instead of Forge AI warnings; the fuzz harness with automatic filing; the remaining library primitives, triggers, statics, replacements and keywords in batches. <span class="pill gate">G4a: every library card verified or compiled; parser share and compiler pass rate reported; 500 fuzzed library games with every divergence adjudicated</span><div class="est">4 to 7 sessions</div></div></div>
+  <div class="phase"><div class="no">7</div><div><h3>Go-live vocabulary over the pool</h3>A whole-pool ledger starting at unsupported, each card carrying the constructs it needs so prepare can name what is missing; the go-live vocabulary closed, one family per red-first PR; parser and compiler runs over every in-vocabulary card in batches, each a PR carrying its ledger delta; nightly fuzz and differential runs on random decks drawn from the in-vocabulary set; the residue and every divergence hand-authored; the set-refresh workflow exercised on a real release. <span class="pill gate">G4: about 27,200 in-vocabulary cards verified or compiled; every other card refused at prepare with its missing construct named; the verified share accepted by Rob; zero exceptions across 5,000 fuzzed games; a refresh run end to end; the default flag flips to <code>crank</code></span><div class="est">5 to 10 sessions; the range narrows once phase 6 reports the parser's share and the compiler's pass rate</div></div></div>
+  <div class="phase"><div class="no">8</div><div><h3>Cutover: Forge leaves the product</h3>A game night on the new engine, including a deck nobody at the table has played before; the GPL adapter and the Forge tools move out of the repository to a local-only oracle folder beside the Forge checkout so the differential runner keeps working; one PR removes the Forge list from the product and updates notices, README, AGENTS, doctor and CI. <span class="pill gate">G5: no Forge or Java reference in the repository outside history; CI green; doctor green with no JDK on the PATH; the differential runner still runs from the oracle folder</span><div class="est">1 to 2 sessions</div></div></div>
+  <div class="phase"><div class="no">9</div><div><h3>Enhancement 1</h3>The next 40 primitives and every family used by 5 or more cards, one PR per family; parser and compiler runs over the newly in-vocabulary cards; fuzz and differential against the oracle folder. <span class="pill gate">G6: about 31,900 cards (94.3 percent) verified or compiled; zero exceptions across 5,000 fuzzed games from the enlarged set</span><div class="est">3 to 6 sessions</div></div></div>
+  <div class="phase"><div class="no">10</div><div><h3>Enhancement 2</h3>The remaining 112 primitives and every remaining family the legality filter keeps; the one-card constructs get a scenario each rather than a parser rule; the last differential runs; then Rob deletes the Forge checkout, the runtime and the oracle folder. <span class="pill gate">G7: every Commander-legal card verified or compiled; no card refused for a missing construct; fuzzing runs without Forge on invariants and exceptions alone</span><div class="est">4 to 8 sessions</div></div></div>
+  <div class="phase"><div class="no">11</div><div><h3>Static-site play (after)</h3>The same engine in a Web Worker from the Play page: a solo table on GitHub Pages with no host, save and resume from any decision, the pool index loaded on demand. <span class="pill">Optional</span><div class="est">2 to 3 sessions</div></div></div>
+
+  <h2>Testing strategy</h2>
+  <ul>
+    <li><b>Kernel units</b> per rules module, each test naming the Comprehensive Rules clause it proves, written before the module.</li>
+    <li><b>Card scenarios</b>, at least one per definition: a starting position, decisions, assertions on the projection. The definition PR adds the scenario first.</li>
+    <li><b>Properties</b>: determinism, termination under random-legal play, no hidden information in any projection, no action outside the enumerated set ever accepted, a retried action applies once.</li>
+    <li><b>Contract</b>: the envelope, the eleven modes and the event kinds reports consume, pinned by a suite alongside the existing bridge-parity and decision-ui suites.</li>
+    <li><b>Differential</b>: Forge versus engine on recorded decisions, local only, evidence committed.</li>
+    <li><b>Live</b>: a real table to turn 3 with a journal, a finished game, a four-seat lobby, per readiness §10 and §12.</li>
+    <li><b>Performance</b>: the budgets above, asserted by a suite that skips only when its flag is unset.</li>
+  </ul>
+
+  <h2>Decisions, all answered on 2026-09-20</h2>
+  <p>The executing session works under these as settled and does not reopen them.</p>
+  <div class="decision"><b>1. License: full ownership of the whole of CrankMagic, the play engine included.</b> <span class="rec">Decided.</span> Everything is Rob's under the repository's Source-Available License, for personal use now and potential sale later; the engine and its card definitions join that whole and never carry anyone else's license. Clean room from the Comprehensive Rules and Scryfall oracle text; Forge is a behavioral oracle only; the GPL exception in <code>LICENSE</code> §4(a) is removed at go-live when the adapter leaves the product. The licensing section below has the exact edits.</div>
+  <div class="decision"><b>2. Local host first, then the cloud.</b> <span class="rec">Decided.</span> The cloud-host migration is scoped separately, its plan will be updated to reflect this one, and the two ship as one major release. The engine keeps six cloud-readiness constraints from the first commit: no filesystem assumption inside the engine, no Windows-only path or call, a match as a value that moves between hosts, the bridge envelope as the only interface, seat visibility enforced inside the engine, and the Forge tooling kept out of the runtime.</div>
+  <div class="decision"><b>3. Track V fully live first.</b> <span class="rec">Decided.</span> The Gallery redesign through Play ships and live games run 100 percent operational on it; then this plan and the cloud migration kick off together. No engine PR opens before Rob confirms that.</div>
+  <div class="decision"><b>4. Forge's fate.</b> <span class="rec">Decided.</span> Out of the product at go-live, kept as a local-only oracle beside the Forge checkout until enhancement 2 ends, then deleted by Rob.</div>
+  <div class="decision"><b>5. Compiler by default; hand-authored wins.</b> <span class="rec">Decided.</span> The Claude-API compiler is the default path for every card. A hand-authored definition wins wherever one exists: Rob's uploads, definitions worked out with Claude in chat, the residue and the divergence fixes. Tier 0 is hand-authored because it shapes the schema. Cost and pass rate on a 200-card sample come to Rob before any pool run is spent.</div>
+  <div class="decision"><b>6. What may sit at a table.</b> <span class="rec">Standing default.</span> Measured play requires every card verified; casual play seats compiled cards behind a visible per-card label; unsupported always blocks. Rob sets the verified share he wants before the default flag flips at G4.</div>
+  <div class="decision"><b>7. The API key is in Windows Credential Manager.</b> <span class="rec">Decided.</span> Compilation runs on Personal-HP and reads the key through the same script the OpenAI pilot uses; the refresh workflow on GitHub commits data and lists what needs compiling but never compiles. The credential's name is confirmed before the first call.</div>
+  <p class="note" style="margin:6px 0 14px">Also decided: the finish line is any Commander-legal hundred; go-live on the top 40 primitives, the next 40 as enhancement 1, the remaining 112 as enhancement 2.</p>
+
+  <h2>Licensing the engine</h2>
+  <p>Rob's intent is full ownership of the totality of CrankMagic, the play engine included. The repository's license already does that: it vests the whole of the software in him and lists in §4 the only things it cannot, which are the GPL adapter and third-party content and data. The engine needs no new license; it needs the existing one applied cleanly and the one carve-out that is code removed. After go-live, everything in the product that is code is Rob's, and everything that is not is third-party content kept separable by path.</p>
+  <ul>
+    <li><b>File headers.</b> Every engine file opens with Rob's copyright line pointing at <code>LICENSE</code>; a test fails any engine file without it or carrying another license's identifier.</li>
+    <li><b><code>LICENSE</code> §2(c)</b> adds the rules engine and its card definitions to the parts that may not be incorporated elsewhere. <b>§4(a)</b>, the GPL exception, is deleted at go-live, and the notices replace the Forge section with a historical note that no Forge code or data remains.</li>
+    <li><b>An ADR</b> records the clean-room rule, the provenance of compiled definitions under the Anthropic commercial terms in force at the time (cited by date and confirmed before the first compile run), and the provenance of hand-authored ones.</li>
+    <li><b>Wizards' content, and keeping the option open.</b> CrankMagic, engine included, is Rob's. Card names, oracle text and rules text are Wizards of the Coast's, and the Fan Content Policy prohibits commercializing fan content. CrankMagic is for personal use unless Wizards is interested. Rob wants to be able to disentangle their content from his IP easily if that conversation happens, provided it is not a heavy lift. It is not: the kernel never needs card text and every definition already lives in the card directories with its oracle-text hash, so the separation is a naming convention the design already has, held by a light check at no extra cost. Disentangling, if ever wanted, is a directory exclusion when packaging. Nothing in the plan is gated on it.</li>
+  </ul>
+
+  <h2>Risks</h2>
+  <div class="scroll"><table>
+    <tr><th>Risk</th><th>Mitigation</th></tr>
+    <tr><td>The rules long tail: layers, replacement ordering, copies, control changes</td><td>CR-cited units, the differential runner, an adjudicated divergence log, and unsupported constructs refusing at prepare</td></tr>
+    <tr><td>Thirty thousand cards cannot all be right at once</td><td>the ledger makes the residue visible per card; measured play needs verified; the fuzz harness keeps finding the residue after Forge is gone; a misbehaving card is demoted, reproduced and fixed</td></tr>
+    <tr><td>The compiler produces plausible, wrong scripts</td><td>schema, smoke test, declared reveals checked against the projection, differential fuzzing while Forge exists, and compiled never counts as verified</td></tr>
+    <tr><td>Forge is not ground truth either</td><td>every divergence is adjudicated against the Comprehensive Rules and logged with the clause; agreement with Forge is evidence, not proof</td></tr>
+    <tr><td>The card script grows into a second Forge</td><td>a closed primitive set per tier; a new primitive needs a test, a catalog entry and a fuzz pass; constructs the legality filter removes are never implemented</td></tr>
+    <tr><td>License contamination by copying Forge</td><td>decision 1 and an explicit prohibition in the executing prompt; the inventory tool reads Forge only to count</td></tr>
+    <tr><td>Game nights depend on Forge meanwhile</td><td>the flag keeps Forge default until G4; both paths render the same Play page</td></tr>
+    <tr><td>Two sessions in the repository at once</td><td>decision 3; engine work stays out of the page layer until phase 4.4</td></tr>
+    <tr><td>The house pilot is weaker than Forge's AI at first</td><td>difficulty budgets already exist, rollouts are cheap in JavaScript, API pilots remain</td></tr>
+    <tr><td>Estimates are wrong</td><td>gates are behavioral, not calendar; the status table is updated at every pivot</td></tr>
+  </table></div>
+
+  <h2>Removal checklist, phase 8</h2>
+  <ul>
+    <li>Move <code>game/engine-adapter/</code>, <code>build-forge.ps1</code>, the probe and rules tools, <code>forge-card-index.mjs</code> and <code>engine-diff.mjs</code> to the local oracle folder with a README saying it is GPL-derived and not part of the product; delete the proof and parity tools, <code>ai-compatibility.mjs</code> and its JSON, and the Forge index test.</li>
+    <li>Repoint <code>doctor.mjs</code>, <code>check-my-decks.mjs</code>, <code>setup-catalog.mjs</code>, <code>serve-review.mjs</code>; the engine runtime is the launcher.</li>
+    <li>Rewrite the Forge sections of the notices, <code>AGENTS.md</code>, <code>game/README.md</code>, the start guide and the readiness run-book.</li>
+    <li>After enhancement 2, Rob removes <code>CRANKMAGIC_FORGE_ROOT</code>, <code>CRANKMAGIC_JDK_ROOT</code>, <code>CrankMagic\forge</code>, <code>CrankMagic\runtime</code> and the oracle folder; the topology memory note is updated.</li>
+  </ul>
+
+  <h2>The prompt for the executing session</h2>
+  <pre>Do not open an engine PR until I confirm that Track V is fully live and live games are 100% operational
+on it. Until then, your only permitted act under this plan is to restate it back to me.
+
+Pick up CrankMagic at C:\Users\robmi\CrankMagic\repo (the only clone you may run git in). Read, in
+this order, before doing anything: AGENTS.md, docs/ACTIVE.md, docs/handoff-fable-2026-09-20.md
+(section 4 especially), game/docs/readiness-plan-2026-09-18.md (sections 10 and 12), game/README.md,
+then docs/engine/PLAN.md in full.
+
+Then restate to me, before touching anything: the objective (including that the engine must play any
+hundred Commander-legal cards a player brings, going live on the top-40 vocabulary), the rules you are
+working under, the seven settled decisions in section 9 as you understand them, and what "done" looks
+like for the first PR. If anything is wrong I will stop you; otherwise carry on.
+
+Licensing rules you follow without exception: everything under game/engine/ is mine outright and carries
+the header in section 12.5; nothing from Forge enters the repository in any form; card text stays in the
+card directories by convention so Wizards' content can be disentangled from my IP by path if I ever need
+to, at no extra cost; the Claude API key is read from Windows Credential Manager and never appears in a
+file, page, URL, log or commit; you confirm the credential name and the Anthropic terms with me before
+the first compile run.
+
+Work the phases in section 6 in order. One PR per topic. A test that was red first for every change,
+named in the commit. The full suite with PAGE_BUDGET_REQUIRED=1 GEOMETRY_REQUIRED=1 bash runtests.sh -q,
+browser suites driving Chrome through UAT_PLAYWRIGHT and UAT_CHROME. Every visible change rendered for
+me in chat, before and after, with node tools/render-routes.mjs. Never touch data/deck-ratings.json,
+data/simulation-summary.json, sim/ or data/deck-guides.json. American English only; the ratchet in
+tests/feature-wiring.mjs fails you if you add a UK spelling. Never copy, translate or paraphrase a
+Forge card script or Forge source into this repository; Forge is a behavioral test oracle only.
+Branch as claude/engine-&lt;topic&gt;, push before you stop, update docs/ACTIVE.md as your last act, merge
+to main only on a CI result you just read, and treat pending as not green. Tell me plainly when you
+are wrong. At 95% of your usage, stop building: update the plan's status table, commit, merge what is
+green, and leave the next model a clean start.</pre>
+</div>
