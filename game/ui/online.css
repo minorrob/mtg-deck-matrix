@@ -151,3 +151,15 @@ body.setup-screen>.recommended-actions{display:none!important}
 .table-notice-actions{display:flex;align-items:center;gap:var(--space-3)}
 .table-notice-actions .primary-action{flex:1 1 auto;min-height:40px}
 .table-notice-more{color:var(--color-muted,CanvasText);font-size:var(--text-small,12px);white-space:nowrap}
+
+/* HISTORY WITH THE CARD IN IT (Stage A.6.3). Tokens, with system-color fallbacks so a palette
+   that failed to load still leaves the feed readable. */
+.history-row.history-openable{display:flex;gap:var(--space-3,12px);align-items:flex-start;cursor:pointer;border-radius:var(--radius-control,12px);padding:var(--space-2,8px)}
+.history-row.history-openable:hover,.history-row.history-openable:focus-visible{background:var(--color-raised,Canvas);outline:none}
+.history-row.history-openable:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:1px}
+.history-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+.history-thumb{flex:0 0 auto;width:46px;padding:0;border:0;background:none;cursor:zoom-in;border-radius:var(--radius-control,12px);overflow:hidden}
+.history-thumb img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:var(--radius-control,12px)}
+.history-thumb:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:2px}
+.history-detail{margin:2px 0 0;font-size:var(--text-small,12px);line-height:var(--leading-body,1.5);color:var(--color-muted,CanvasText)}
+.history-detail[hidden]{display:none}
