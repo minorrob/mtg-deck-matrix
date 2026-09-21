@@ -2,12 +2,27 @@
 
 | | |
 | --- | --- |
-| **Holder** | Claude Code (Opus 5), local session on Personal-HP |
-| **Branch** | `claude/v5b-game-board` — open, with PR #300 (`claude/v5a-lobby-table`) also open |
-| **Since** | 2026-09-20 |
-| **Doing** | **Track V, the Gallery redesign, and the start of Play.** Merged: V.1c #289, V.3 #291, V.4a #292, V.4b #293, V.4c #294, V.4d #295, V.4e #296, V.4f #297, V.4g #299 — the tokens, the rail, the deck tiles, the deck page bento, the Library, the Explore entry and the Explore graph. Open: **#300** the Play lobby as a table (four quadrants, the rules at its center, the launch line replacing the Launch button), and **`claude/v5b-game-board`** the playmat's zone frames plus the architecture finding below. |
-| **Next for whoever picks this up** | **Read `docs/handoff-live-game-test-2026-09-20.md` first.** Merge #300 and the board branch once their CI is green, reading the result on the head you are merging. Then the live-game run-book, `game/docs/readiness-plan-2026-09-18.md` §12, from step 4 — `node game/tools/preflight.mjs` passes steps 1 to 3 on this machine today. Rob's boundary for the previous session was: pause before playing a game through, and hand that test off. That is what this is. |
+| **Holder** | Free — the 2026-09-20 session closed with everything merged |
+| **Branch** | `main` at `f4c8401`; nothing of that session is open |
+| **Since** | 2026-09-21 |
+| **Doing** | **Track V is merged through the Explore graph, and Play has begun.** #289 the tokens and the sweep · #291 the 216 px rail · #292 the deck tiles · #293 the deck page bento · #294 and #297 the Library · #295 and #296 the Explore entry · #299 the Explore graph canvas reading tokens · #300 the Play lobby as a table · #301 the playmat frames and the live-game handoff · #302 the screen-comparison pairs · #303 the standards audit. |
+| **Next for whoever picks this up** | **Read `docs/handoff-live-game-test-2026-09-20.md`, then `docs/audit-standards-2026-09-20.md`.** The audit ends with five things in order. **Before any live-game test, triage the four open PRs below** — they are fixes to the exact path that test walks. |
 
+## Four open PRs that predate that session and bear on the live game
+
+| PR | Opened | What |
+|---|---|---|
+| #259 | 2026-09-17 | mulligan hang: seat-scope decisions, green ack, diagnostics |
+| #260 | 2026-09-18 | P0 live hang: double mulligan, untap freeze, View hand / Auto-pass / End game / AI stall |
+| #262 | 2026-09-17 | host root redirects to live Game setup (the recorded-game freeze) |
+| #263 | 2026-09-17 | guest stuck on the recorded-game loader after entering a live table |
+
+These were not reviewed by the 2026-09-20 session and their CI was not read there. They describe
+hangs in the mulligan, the untap step and guest entry — which is steps 5 and 6 of the run-book,
+the first steps that play a game. **Deciding what to do with them is the first thing the
+live-game session should do**, before running a test they may already fix or may conflict with.
+#290, the UK spellings a reader actually sees, is also open and came from a task that session
+spawned.
 ## The architecture fact that reorders the remaining work
 
 **A live game is played in Forge, not in the browser.** `crankmagic-game.js` draws the lobby and
