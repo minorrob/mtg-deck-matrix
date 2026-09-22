@@ -52,6 +52,15 @@ minted, `guest.mjs` 200.
 - The host already mints invitations as `${guestOrigin}/#table=…&invite=…` and seals each one to
   the table id it was issued against.
 - The board is `/review`, and it already links back to `/app/#decks`.
+- **A deck already crosses from `github.io` to the host, and pieces 4 and 5 should build on it
+  rather than invent a second path.** `game/ui/handoff.mjs` is the receiving half: the web copy
+  opens `/handoff#handoff=<uuid>`, the two windows shake hands by `postMessage` against an origin
+  allow-list of exactly `http://127.0.0.1:8768` and `https://minorrob.github.io`, the host imports
+  the deck through `/api/import-deck` and writes a **return channel** into `sessionStorage`
+  (`CrankMagicReturnChannel@1`, carrying the nonce, the origin and the source deck id). That
+  return channel is most of piece 5's "results come back" already sitting there unused. The
+  allow-list is also the thing to update first when the host's port or the web origin changes,
+  because a mismatch there fails silently — the message is simply ignored.
 
 ## What has to be built
 
