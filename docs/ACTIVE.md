@@ -2,75 +2,79 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #322 to #328 all merged; nothing open |
+| **Holder** | Free — #321 to #337 all merged; nothing open |
 | **Branch** | `main`; nothing open |
-| **Since** | 2026-09-21 |
-| **Doing** | **Stage A is nearly finished and the board has joined the design system.** The plan is `docs/plan-board-information-layer.md`, which supersedes the stage list in `docs/plan-board-onto-the-design-system.md`. |
-| **Next for whoever picks this up** | **Stage B** — the board becomes the Play surface of the one app, measured against wireframes 2e/2f, with `game/ui` held to its raw-hex ratchet. Then the **card extraction skill** (API pilot, not Forge). Rob confirmed Stage B is on the agenda *after* the engine work. |
+| **Since** | 2026-09-22 |
+| **Doing** | **Stage A is complete and Stage B is six of eight pieces in.** The board is on the design tokens, laid out as the wireframe's 2×2, and no longer prints what the app carries. Plans: `docs/plan-stage-b-board.md` (the frames, measured), `docs/plan-board-information-layer.md` (Stage A.6 and the extraction skill), `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`. |
+| **Next for whoever picks this up** | **Play a game first.** Everything in Stage B has been measured and none of it has been seen with cards on the boards. Then B.6b, B.6c and B.2b — all three want a live surface to judge against. |
 
-## What Stage A turned out to be
+## Stage A, finished
 
-The original Stage A listed four things. **That list was too short**, and Rob's four-player pod
-showed why: a game you cannot *follow* is not one you can play. Six findings in a row were all one
-finding — the board had the facts and never drew them.
+Six of Rob's findings turned out to be one finding: **the board had the facts and never drew them.**
 
 | | |
 |---|---|
-| A.1 | The lag measurement — and the board that was never connecting at all (`review.mjs` opened Game setup unconditionally for the host) |
-| A.2 | A spent prompt is not a decision. Forge never clears `prompt`, so `/^Priority:/` matched an answered string and the board said "Your action" over a dead button. `ui.inputType` is the fact to stand on |
-| A.3 | `End game` and `Auto-pass turn` out of the action row; neither lost |
-| A.4 | The skipped first draw explained where the player was refused (CR 103.8a, two-player only) |
-| A.5 | **Answered.** The starting player *does* draw in a four-player pod — read out of Rob's own match journal, not predicted |
-| A.6.1 | A notice with card art and an **OK button**, replacing a 6500ms text toast |
-| A.6.3 | History carries the card and says **why** — the reason was already in the label |
-| A.6.4 | Incoming damage where blocks are chosen, with double strike counted twice |
-| A.6.2 | Poison and your own draw, both present in the feed and never announced |
+| A.1 | The lag measurement — which found the board was never connecting at all |
+| A.2 | A spent prompt is not a decision. Forge never clears `prompt`, so `/^Priority:/` matched an answered string. `ui.inputType` is the fact to stand on |
+| A.3 | `End game` and `Auto-pass turn` out of the action row |
+| A.4 | The skipped first draw explained where the player was refused (CR 103.8a, two players only) |
+| A.5 | **Answered from Rob's own match journal:** the starting player *does* draw in a four-player pod |
+| A.6.1–4 | Notices with an OK button, history with the card and the reason, incoming damage where blocks are chosen, poison and your own draw |
 
-## B.0 is done, and it is smaller than it looks
+## Stage B, against wireframes 2e and 2f
 
-`crankmagic-design.css` had **no `:root` block at all** — all 350 rules *and* every token scoped to
-`#matrix-v2`, an id the board's root does not carry. Naming `:root` as well publishes the **values**
-without the **rules**: the board gets the palette and no element styling.
+**The frames are numbers, not sketches** — React trees with inline styles, extracted once into
+`docs/plan-stage-b-board.md` so nobody re-derives them. Drawn at half scale; double for the build.
 
-**The board loads it from `/app/crankmagic-design.css`**, a path the host already served, so the
-palette arrives on a page reload rather than a host restart. Verified live: `--color-panel` →
-`#231f1b`, radius 18px from `--radius-card`.
+| | |
+|---|---|
+| B.1 | The step strip — `Turn 4 · You`, brass step chip, `4 / 7`, **`Next: …`** |
+| B.2 | Four **identical** 16:9 boards in one 2×2. Measured 584×329 each at three widths |
+| B.3 | The center counter — 152px, four totals on their own `--seat` colors, the disc cycles life → commander damage → poison |
+| B.4 | The hand on the mat's bottom edge. **Zero overlap**, tested with real-sized cards |
+| B.5a | The panel slides **over** the mat; the mat stays 1368px whether it is open or shut |
+| B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now |
 
-`game/ui` raw hex is ratcheted at **463** — today's true measurement across all five stylesheets.
-The earlier figure of 402 counted four and missed `guest.css`.
+### What is left, and why each one waits
 
-## Two limits found by measuring, which the next person should not re-discover
+- **B.5b — the rail overlay.** `/review` is a standalone page. There is no CrankMagic rail on it to
+  bring back, so the control would open an empty drawer. It arrives when the board becomes a view
+  of the one app.
+- **B.6b — the History band.** Not "add a band": 2f wants a real row between the zone pairs, and
+  the mat's absolute layout has no gap there. It re-proportions every board's zones, which cannot
+  be judged without cards on screen.
+- **B.6c — the left pane of the other three boards.** Focus is a modal dialog today; this is the
+  structural piece.
+- **B.6d — the Coach surface.** 2f says plainly "its logic is a later phase".
+- **B.2b — the light mat.** The frame draws the play surface cream (`#e9e4da`) under dark chrome.
+  **Rob's call, deliberately untouched** — it changes the whole feel and carries a raw-hex cost.
+
+## Three limits found by measuring, which the next person should not re-discover
 
 **The adapter reports exactly nine keywords** — flying, reach, trample, first strike, double
 strike, deathtouch, lifelink, infect, wither (`ForgeProbe.java:241`). Menace, protection,
-indestructible, shadow and fear never leave the engine. Widening that is a Java change and a
-rebuild. `incomingAt` takes the union of whatever arrives, so they pass straight through when it
-happens.
+indestructible, shadow and fear never leave the engine. Widening it is a Java change and a rebuild.
 
-**Two of Rob's alerts need card text, not events.** "Exiled with a return condition" and "a
-mechanic triggered by other players" cannot be derived from the event stream. They are the first
-consumer of the **card extraction skill** — the knowledge would be read by the board, not only
-written by the pilot.
+**Forge can take back mana but never a land.** `setUndoable(true)` is called in exactly two places,
+both mana effects, and `recordUndoableActions()` is reached only from `MagicStack.add()`, which a
+land play never touches. That is CR 305.1 rather than an omission, and it is why the control is
+called "Take mana back" instead of "Undo".
 
-**Both limits are the Forge adapter's, and PR #305 answers them.** `docs/engine/PLAN.md` §3.4
-specifies `CrankCardScript@1`, where keywords are `abilities[]` per card (no hand-list to fall
-behind), a conditional exile is an `effects[]` primitive with an `until` duration, and an ability
-that watches other players is a `triggered` ability with a `condition`. **Rob's "card extraction
-skill" and §3.4's model compiler are the same mechanism** — it already calls the Claude API with
-the schema as a tool definition. So the skill should emit `CrankCardScript@1` rather than a format
-of its own; two card-semantics vocabularies across a 30,000-card pool is exactly the debt that plan
-exists to avoid. Written that way the same artifact serves the pilot today, the board's two alerts
-today, and the engine later with no migration. The full comparison is at the end of
-`docs/plan-board-information-layer.md`.
+**Two of Rob's alerts need card text, not events** — "exiled with a return condition" and "a
+mechanic triggered by other players". They are the first consumer of the card extraction skill, and
+`docs/plan-card-extraction-skill.md` is the design: emit `CrankCardScript@1` (#305 §3.4) so one
+artifact serves the pilot now and the engine later.
 
-## Standing facts for the next session
+## Standing facts
 
 - The host serves `game/ui/*` **per request**, so UI changes land on reload. Anything the host
-  *imports* — `serve-review.mjs`, the gateway, the launcher — needs a restart.
-- Restarting mints a **new** cloudflared address unless `COMMANDER_GUEST_PUBLIC_ORIGIN` is passed.
-  Both restarts this session preserved `medium-linking-replies-take` that way.
-- `tools/first-draw-check.mjs` and `tools/board-latency.mjs` are read-only and can watch a live
+  *imports* — `serve-review.mjs`, `game/server/*`, `match-telemetry.mjs`, the launcher — needs a
+  restart. A **new** file in the served map needs one too, so import new `game/ui` modules
+  optionally (`await import(...).catch(...)`), the way `review.mjs` already does.
+- Restarting mints a **new** cloudflared address unless `COMMANDER_GUEST_PUBLIC_ORIGIN` is passed
+  back. Every restart this session preserved `medium-linking-replies-take` that way.
+- The adapter is compiled by the launcher at every game start, so a Java change needs no build
+  step — but it fails at game start rather than in a test, so compile it against the pinned jar
+  before committing.
+- `tools/board-latency.mjs` and `tools/first-draw-check.mjs` are read-only and safe against a live
   game. Neither invents a verdict it did not observe.
-- **A.6.1, A.6.3, A.6.4 and A.6.2 have not yet run against a live game.** The visuals were verified
-  against the running host's stylesheet and the rules are unit-tested, but Rob's pod closed before
-  they landed. The first new game is what proves them.
