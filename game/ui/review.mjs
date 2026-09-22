@@ -6,6 +6,10 @@ import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
 const {noticesFor,lifeDelta,eventKindLabel,historyScopes}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null,eventKindLabel:k=>k||'table event',historyScopes:()=>new Set(['all'])}));
+/* Audio is optional in the strongest sense: an older host that does not serve these two modules
+   still runs the board, it just runs it quietly. Same shape as the import above. */
+const {createPlayAudio}=await import('/play-audio.mjs').catch(()=>({createPlayAudio:()=>null}));
+const {soundsFor}=await import('/play-audio-events.mjs').catch(()=>({soundsFor:()=>[]}));
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals,incomingAt}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[],incomingAt:()=>({total:null,attackers:[],keywords:[],potential:0,unblockedPotential:0,deathtouch:false,firstStrike:false})}));
@@ -228,6 +232,93 @@ function pumpNotices(){
   if(noticeQueue.length===fresh.length)showNextNotice();
   else if(!noticeBox.hidden)showNextNotice();
 }
+/* SOUND.
+ *
+ * Two halves, both already tested without a browser: play-audio-events.mjs turns the telemetry
+ * feed into clip names, play-audio.mjs plays them. This is the only place that knows about both,
+ * and all it does is arm the engine, pump the feed into it and choose a bed.
+ *
+ * THE GESTURE IS THE WHOLE DIFFICULTY. A browser will not let a page make a sound until somebody
+ * has interacted with it, and it refuses silently. So the AudioContext is built and resumed
+ * synchronously inside the first pointerdown -- awaiting the pack's index first would end the
+ * gesture and lose the permission with no error anywhere.
+ */
+let audio=null,audioState='waiting',audioSeen=new Set(),audioPrimed=false;
+function startAudio(){
+  document.removeEventListener('pointerdown',startAudio);document.removeEventListener('keydown',startAudio);
+  if(audioState!=='waiting')return;
+  audioState='starting';
+  let context=null;
+  try{const Ctor=window.AudioContext||window.webkitAudioContext;context=new Ctor();context.resume?.();}catch{audioState='unavailable';return;}
+  (async()=>{
+    const index=await fetch('/audio/sound-index.json').then(r=>r.ok?r.json():null).catch(()=>null);
+    if(!index){audioState='unavailable';try{context.close();}catch{}renderAudioSettings();return;}
+    audio=createPlayAudio({index,basePath:'/audio/',storage:localStorage,makeContext:()=>context});
+    if(!audio){audioState='unavailable';renderAudioSettings();return;}
+    await audio.arm();
+    audioState=audio.isArmed()?'on':'unavailable';
+    renderAudioSettings();pumpAudio();updateBed();
+  })();
+}
+document.addEventListener('pointerdown',startAudio);document.addEventListener('keydown',startAudio);
+
+function pumpAudio(){
+  if(!audio||!live?.telemetry)return;
+  /* Its own `seen` set, because audio and the notices filter the same feed differently. Priming
+     on the first pass is why arriving at a board mid-game is not eighty sounds at once. */
+  for(const slug of soundsFor(live.telemetry.recent,audioSeen,{viewerSeatId,state:live.state,priming:!audioPrimed}))audio.play(slug);
+  audioPrimed=true;
+  updateBed();
+}
+/* R11: "start bgm_game_main when the live game becomes ready/playing; crossfade to bgm_combat when
+ * attackers declared; return after combat; tension bed optional under poison/commander damage
+ * thresholds."
+ *
+ * The thresholds are two-thirds of each lethal clock -- 7 of 10 poison, 14 of 21 commander damage.
+ * Ten and twenty-one are the game's, and the board prints both on every seat; two-thirds is the
+ * one number chosen here, and it lands whole on both clocks. R11 names no other clock, so life is
+ * deliberately not one of them.
+ */
+function underThreat(){
+  const you=live?.state?.players?.find(p=>p.playerId===viewerSeatId)?.health;
+  return !!you&&((you.poison??0)>=7||(you.commanderDamageMax??0)>=14);
+}
+function updateBed(){
+  if(!audio)return;
+  const state=live?.state;
+  /* No live table means this page is the lobby: the seat is being built, or the last game has
+     ended and the board is back to setup. The pack's own bed for that is the lobby one. */
+  if(!state){audio.startBgm('bgm_lobby_mythic_calm');return;}
+  if(state.gameOver)audio.startBgm('bgm_victory_linger');
+  else if(/^COMBAT_/.test(String(state.phase||'').toUpperCase()))audio.startBgm('bgm_combat_battle_shimmer');
+  else if(underThreat())audio.startBgm('bgm_tension_darkening_myth');
+  else audio.startBgm('bgm_game_aether_voyage');
+}
+
+/* The pack's three ui rows, which are specifications rather than sounds: an SFX slider, a BGM
+   slider and a mute. Nothing is drawn until the engine is actually running -- a slider that
+   cannot change anything is worse than no slider. */
+const audioBox=el('div','audio-settings');
+function renderAudioSettings(){
+  audioBox.replaceChildren(el('strong','audio-title','Sound'));
+  if(audioState!=='on'){
+    audioBox.append(el('small','audio-note',audioState==='unavailable'
+      ?'Sound is unavailable on this table.':'Sound starts when you touch the board.'));
+    return;
+  }
+  const now=audio.volumes();
+  const mute=el('label','audio-mute'),box=el('input');box.type='checkbox';box.checked=now.muted;
+  box.addEventListener('change',()=>{audio.setMuted(box.checked);if(!box.checked)updateBed();renderAudioSettings();});
+  mute.append(box,el('span','','Mute all'));audioBox.append(mute);
+  for(const [bus,label] of [['sfx','Effects'],['bgm','Music']]){
+    const row=el('label','audio-slider',label+' '),slider=el('input'),out=el('output','',Math.round(now[bus]*100)+'%');
+    slider.type='range';slider.min='0';slider.max='100';slider.step='1';slider.value=Math.round(now[bus]*100);
+    slider.disabled=now.muted;slider.setAttribute('aria-label',label+' volume');
+    slider.addEventListener('input',()=>{out.textContent=slider.value+'%';audio.setBusVolume(bus,Number(slider.value)/100);});
+    row.append(slider,out);audioBox.append(row);
+  }
+}
+
 function playRestriction(c){
   if(!live)return 'Connect to your live table first.';
   if(live.ui.choice||live.ui.nativeFallback)return 'Finish the current card choice first.';
@@ -805,7 +896,7 @@ hideInfo.title='Card, Tracker, History and Combat. Slides over the table rather 
 hideInfo.setAttribute('aria-expanded','false');
 document.body.classList.add('hide-information');
 $('view-deck').before(hideInfo);
-viewOptions.append(hideOthers);document.body.append(viewOptions);const viewButton=button('View options',()=>viewOptions.togglePopover());$('view-deck').before(viewButton);
+renderAudioSettings();viewOptions.append(hideOthers,audioBox);document.body.append(viewOptions);const viewButton=button('View options',()=>viewOptions.togglePopover());$('view-deck').before(viewButton);
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
 $('card-detail').addEventListener('click',()=>$('card-detail').close());
@@ -1175,14 +1266,14 @@ function applyLiveView(value){
       updatePendingCasts();
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent=guestMode?'LIVE TABLE · INVITED SEAT':'LIVE TABLE · LOCAL HOST';document.querySelector('.scrubber').hidden=true;
       const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt,[...pendingCasts.values()].map(c=>[c.cardId,c.stage])]);if(key!==lastState&&draggingCard===null&&!resizingBoard&&!decisionPointer){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
-      renderDecision();renderHistory();renderGuidance();renderCombat();pumpNotices();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
+      renderDecision();renderHistory();renderGuidance();renderCombat();pumpNotices();pumpAudio();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
     }else if(guestMode){
       $('phase').textContent='Waiting for the game to finish starting…';
       $('notice').textContent='The match is being set up. This will only take a moment.';
     }
 }
 window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
-window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
+window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
 if(guestMode)$('setup').textContent='Table lobby';
 if(!new URLSearchParams(location.search).has('replay')){

@@ -265,3 +265,14 @@ body.table-view>header{position:relative;z-index:50}
 .focus-tile:hover{border-color:var(--color-accent,Highlight)}
 .focus-pane-mine,.focus-pane-table{font-size:var(--text-small,12px)}
 .focus-pane.is-closed .focus-tile,.focus-pane.is-closed .focus-pane-mine,.focus-pane.is-closed .focus-pane-table{display:none}
+/* Sound, inside View options. The three ui rows the pack ships as specifications rather than as
+   clips: an effects slider, a music slider and a mute. Bordered off from the view controls above
+   it because it is settings rather than another way of looking at the board. */
+.audio-settings{display:grid;gap:7px;border-top:1px solid var(--edge);padding-top:9px;margin-top:2px}
+.audio-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.audio-note{color:var(--muted);font-size:12px}
+.audio-mute{display:flex;align-items:center;gap:7px;font-size:13px}
+.audio-slider{display:grid;grid-template-columns:64px 1fr 40px;align-items:center;gap:8px;font-size:13px}
+.audio-slider input{width:100%}
+.audio-slider input:disabled{opacity:.4}
+.audio-slider output{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}

@@ -2,11 +2,45 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #321 to #337 all merged; nothing open |
-| **Branch** | `main`; nothing open |
+| **Holder** | Claude — the play-audio track, #341 to #346 |
+| **Branch** | `claude/play-audio-live` (#346). #341, #342 and #345 merged; #344 and #346 open and stacked |
 | **Since** | 2026-09-22 |
 | **Doing** | **Stage A is complete and Stage B is six of eight pieces in.** The board is on the design tokens, laid out as the wireframe's 2×2, and no longer prints what the app carries. Plans: `docs/plan-stage-b-board.md` (the frames, measured), `docs/plan-board-information-layer.md` (Stage A.6 and the extraction skill), `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`. |
-| **Next for whoever picks this up** | **Play a game first.** Everything in Stage B has been measured and none of it has been seen with cards on the boards. Then B.6b, B.6c and B.2b — all three want a live surface to judge against. |
+| **Next for whoever picks this up** | **Play a four-player pod.** Nothing in Stage B has been seen with cards on four boards. The sound has now been heard in a real two-seat game — lobby bed, game bed, draw, land, ETB, combat bed, no page errors — but a pod is where the board wipe and the token batch would turn up. Then B.6b, B.5b and B.2b, all three of which want a live surface to judge against. |
+
+## Play audio, all five phases in
+
+The pack Rob generated (`crankmagic2-play-audio-generated`, 88 files, 5.3 MB) is served by the
+host and the gateway, and the board plays it. `docs/plan-play-audio.md` carries the detail; the
+shape is three modules that do not know about each other.
+
+| | |
+|---|---|
+| `play-audio-rules.mjs` | R1–R7 and R13 as pure functions of a type line. Has never heard of a speaker |
+| `play-audio.mjs` | Two Web Audio buses, lazy decode, crossfade. Context, fetch and storage injected, so it runs headless |
+| `play-audio-events.mjs` | The feed → clip names. A second consumer of the same `recent` the notices read, with its own filter and its own `seen` set |
+| `review.mjs` | The only place that knows about all three: arms, pumps, chooses a bed, draws the sliders |
+
+**The gesture is the whole difficulty**, and it is worth knowing before touching this: a browser
+refuses to play anything on a page nobody has clicked, and refuses *silently*. The context is
+therefore built and resumed **synchronously inside the first `pointerdown`** — one `await` before
+that call and the permission is gone with no error anywhere.
+
+**It has been heard in a real game.** A two-seat match against the native Forge AI, driven from a
+browser: the lobby bed, the game bed crossfading in when the table went live, the viewer's own
+draw, a land, a permanent arriving, and the combat bed at the first `COMBAT_` step — with no page
+errors. Engine event → journal → `match-telemetry` → `play-audio-events` → `play-audio` → network,
+all of it.
+
+**Three clips can never play**, and `UNREACHABLE_FROM_THE_FEED` in `play-audio-events.mjs` says
+why, with a test that fails if a fourth one quietly joins them. `sfx_event_counterspell` needs a
+telemetry row that does not exist (`GameEventSpellRemovedFromStack` reaches `public-stack.mjs` but
+not `match-telemetry.mjs`); `sfx_event_equip` and `sfx_event_crew` need `CrankCardScript@1` from
+the engine plan — the same dependency the two blocked board alerts wait on.
+
+**Two claims in the plan were wrong and are struck through in it rather than footnoted.**
+`GameEventTurnBegan` does not exist anywhere in this repository, and the countered-spell row never
+reaches the feed. Both were ticked ✅ in the plan's own mapping table before anyone looked.
 
 ## Stage A, finished
 
