@@ -258,3 +258,27 @@ commander only; click one to swap it into focus)", with "My board", "Table view"
 ### B.6d — CrankMagic Coach
 A slide-over in aether blue with a wand icon. **2f says plainly "its logic is a later phase"**, so
 what B.6 owes is the surface, not the assistant.
+
+### B.6b is not "add a band" — it re-proportions the mat's right side
+
+Measured from `game/ui/mats.css`, the mat places its zones absolutely rather than on a grid:
+
+| zone | position |
+|---|---|
+| Battlefield | `left:3.6% width:64% top:5.5% height:54%` |
+| Lands | `top:69% height:24%` |
+| Command · Exile | `left:73%` / `left:86%`, both `top:38%` |
+| Library · Graveyard | `left:73%` / `left:86%`, both `top:70%` |
+
+2f puts the History band at `gridColumn:'2 / span 2', gridRow:'3'` — **a real row between the two
+pairs**, with the pairs at rows 1–2 and 4. Here the pairs sit at 38% and 70%, and the upper pair is
+card-shaped (488:680), so it reaches most of the way to 70% on its own. **The gap the band needs
+does not exist; it has to be made**, by moving the lower pair down and shortening the upper pair.
+
+That changes the zone geometry of every board, and there is no way to check it without a game on
+screen: a pile that is card-shaped at one height is a sliver at another, and the only honest test
+is cards in it. The first attempt at B.2 went wrong in exactly this way — geometry that measured
+correctly and broke a live board.
+
+**So B.6b waits for a live game to verify against.** The numbers above are the starting point; the
+work is re-proportioning, not inserting.
