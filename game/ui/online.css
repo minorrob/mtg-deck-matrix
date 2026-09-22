@@ -239,3 +239,13 @@ body.table-view.hide-information main{grid-template-columns:minmax(0,1fr)}
 @media(prefers-reduced-motion:reduce){body.table-view main>aside{transition:none}}
 
 body.table-view>header{position:relative;z-index:50}
+
+/* B.6a (wireframe 2f): the turn's steps as a ribbon in the Focus header — done struck through,
+   current brass, the rest waiting. */
+.focus-steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.focus-step{padding:2px 10px;border-radius:var(--radius-pill,999px);border:1px solid var(--color-line,CanvasText);font-size:var(--text-small,12px);color:var(--color-muted,CanvasText);white-space:nowrap}
+.focus-step.is-done{text-decoration:line-through;opacity:.55}
+.focus-step.is-now{background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);border-color:var(--color-accent,Highlight);font-weight:700}
+.focus-size{display:inline-flex;gap:4px}
+.focus-size button{min-width:34px;padding:2px 8px;border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText);font-size:var(--text-small,12px)}
+.focus-size button[aria-pressed=true]{background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);border-color:var(--color-accent,Highlight);font-weight:700}

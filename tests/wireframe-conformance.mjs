@@ -780,6 +780,29 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(boardCss, /body\.table-view>header\{[^}]*z-index:50/,
       "the top strip is the whole control surface, so it stays above the panel that slides under it");
   });
+  // 2f: "the printed turn-steps list and life box are dropped; the app carries both", and "the
+  // header band carries the turn's steps as a ribbon — done struck through, current brass", plus
+  // "the S · M · L card-size switch".
+  //
+  // Dropping them only became right once the app did carry both: B.1's strip and B.3's counter.
+  // Before that it would have lost information, which is why the frame pairs the two clauses.
+  check("the mat no longer prints what the strip and the counter carry", () => {
+    assert.equal(board.includes("mat-turn-guide"), false,
+      "the turn sequence is the step strip's job now, not printed on each of four boards");
+    assert.equal(board.includes("mat-life"), false,
+      "life is the center counter's job now");
+  });
+  check("Focus carries the steps as a ribbon instead", () => {
+    assert.match(board, /function focusSteps\(/, "the modal has no strip behind it, so it grows its own");
+    assert.match(boardCss, /\.focus-step\.is-done\{[^}]*line-through/, "done steps are struck through");
+    assert.match(boardCss, /\.focus-step\.is-now\{[^}]*var\(--color-accent/, "the current step is brass");
+  });
+  check("card size is S, M and L rather than a percentage", () => {
+    const html = readFileSync("game/ui/review.html", "utf8");
+    assert.match(html, /focus-size-s[\s\S]{0,200}focus-size-m[\s\S]{0,200}focus-size-l/,
+      "2f names three sizes; the slider asked for a number instead");
+    assert.equal(html.includes('id="focus-size-value"'), false, "the percentage readout goes with it");
+  });
   check("nothing sits below the mat but the hand", () => {
     const hand = /body\.table-view \.hand\{([^}]*)\}/.exec(boardCss);
     assert.ok(hand, "the hand rule");

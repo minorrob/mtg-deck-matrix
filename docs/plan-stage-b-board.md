@@ -219,3 +219,42 @@ CrankMagic rail on it to bring back, so `☰` would have nothing to toggle. That
 board becomes a view of the one app — the original Stage B framing in
 `docs/plan-board-information-layer.md` — and it is a piece of its own, not a line of CSS. Recorded
 here rather than faked with a button that opens an empty drawer.
+
+---
+
+## B.6, and the finding that made it much smaller than it looked
+
+**The focused board is already a 2f playmat.** `focusBoard()` renders `matView(p, true)`, and that
+mat already draws Battlefield over Lands on the left, Command Zone · Exile over Library · Graveyard
+in two narrow columns on the right, with italic serif zone names in the corners, over the playmat
+art chosen in the lobby. That is 2f's core sentence, already built.
+
+So B.6 is not the zone layout. It is the chrome around it, and it splits:
+
+### B.6a — done
+**"The printed turn-steps list and life box are dropped; the app carries both."** They were printed
+on the mat — which means on *each of four boards* after B.2. B.1's step strip and B.3's center
+counter carry both now, so dropping them removes four copies of one fact. **That clause only became
+safe to obey once B.1 and B.3 existed**, which is why the frame pairs it with "the app carries
+both".
+
+Focus is a modal with no strip behind it, so it grows the ribbon 2f asks for instead: the turn's
+steps, done struck through, current brass. A board that does not hold the turn shows the sequence
+with nothing marked — claiming a step for a player who has no position in it would be the board
+inventing a fact.
+
+**"The S · M · L card-size switch"** replaces a 100–180% range slider called Board zoom. Same three
+values, named rather than numbered.
+
+### B.6b — the History band
+2f puts the live log in the band between the two zone pairs (`gridColumn:'2 / span 2', gridRow:'3'`),
+newest first, click to search. Today that band is empty mat art and History lives in the side panel.
+
+### B.6c — the left pane of other boards
+"their own board large, the other three as small aspect-locked tiles in a left pane (name and
+commander only; click one to swap it into focus)", with "My board", "Table view" and a collapse
+(◂). Focus is a modal dialog today, so this is the structural piece.
+
+### B.6d — CrankMagic Coach
+A slide-over in aether blue with a wand icon. **2f says plainly "its logic is a later phase"**, so
+what B.6 owes is the surface, not the assistant.
