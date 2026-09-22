@@ -257,7 +257,7 @@ function startAudio(){
     if(!audio){audioState='unavailable';renderAudioSettings();return;}
     await audio.arm();
     audioState=audio.isArmed()?'on':'unavailable';
-    renderAudioSettings();pumpAudio();
+    renderAudioSettings();pumpAudio();updateBed();
   })();
 }
 document.addEventListener('pointerdown',startAudio);document.addEventListener('keydown',startAudio);
@@ -286,7 +286,9 @@ function underThreat(){
 function updateBed(){
   if(!audio)return;
   const state=live?.state;
-  if(!state){audio.stopBgm();return;}
+  /* No live table means this page is the lobby: the seat is being built, or the last game has
+     ended and the board is back to setup. The pack's own bed for that is the lobby one. */
+  if(!state){audio.startBgm('bgm_lobby_mythic_calm');return;}
   if(state.gameOver)audio.startBgm('bgm_victory_linger');
   else if(/^COMBAT_/.test(String(state.phase||'').toUpperCase()))audio.startBgm('bgm_combat_battle_shimmer');
   else if(underThreat())audio.startBgm('bgm_tension_darkening_myth');
@@ -1271,7 +1273,7 @@ function applyLiveView(value){
     }
 }
 window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
-window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();audio?.stopBgm();audioSeen=new Set();audioPrimed=false;live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
+window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
 if(guestMode)$('setup').textContent='Table lobby';
 if(!new URLSearchParams(location.search).has('replay')){
