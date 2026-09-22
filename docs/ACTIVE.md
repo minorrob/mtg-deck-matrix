@@ -6,7 +6,7 @@
 | **Branch** | `claude/play-audio-live` (#346). #341, #342 and #345 merged; #344 and #346 open and stacked |
 | **Since** | 2026-09-22 |
 | **Doing** | **Stage A is complete and Stage B is six of eight pieces in.** The board is on the design tokens, laid out as the wireframe's 2×2, and no longer prints what the app carries. Plans: `docs/plan-stage-b-board.md` (the frames, measured), `docs/plan-board-information-layer.md` (Stage A.6 and the extraction skill), `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`. |
-| **Next for whoever picks this up** | **Play a game first, and listen to it.** Nothing in Stage B has been seen with cards on the boards, and no clip has yet played because a game did something — the sound is held by tests and by a browser check, not by a pod. Then B.6b, B.5b and B.2b, all three of which want a live surface to judge against. |
+| **Next for whoever picks this up** | **Play a four-player pod.** Nothing in Stage B has been seen with cards on four boards. The sound has now been heard in a real two-seat game — lobby bed, game bed, draw, land, ETB, combat bed, no page errors — but a pod is where the board wipe and the token batch would turn up. Then B.6b, B.5b and B.2b, all three of which want a live surface to judge against. |
 
 ## Play audio, all five phases in
 
@@ -25,6 +25,12 @@ shape is three modules that do not know about each other.
 refuses to play anything on a page nobody has clicked, and refuses *silently*. The context is
 therefore built and resumed **synchronously inside the first `pointerdown`** — one `await` before
 that call and the permission is gone with no error anywhere.
+
+**It has been heard in a real game.** A two-seat match against the native Forge AI, driven from a
+browser: the lobby bed, the game bed crossfading in when the table went live, the viewer's own
+draw, a land, a permanent arriving, and the combat bed at the first `COMBAT_` step — with no page
+errors. Engine event → journal → `match-telemetry` → `play-audio-events` → `play-audio` → network,
+all of it.
 
 **Three clips can never play**, and `UNREACHABLE_FROM_THE_FEED` in `play-audio-events.mjs` says
 why, with a test that fails if a fourth one quietly joins them. `sfx_event_counterspell` needs a

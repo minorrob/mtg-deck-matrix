@@ -181,10 +181,22 @@ cannot change anything is worse than no slider.
 
 All five phases are merged or in flight as of 2026-09-22, in six PRs (#341 and #342–#346).
 
-**Still not heard with live cards.** The event mapping is held by fourteen tests driven through
-the real `summarizeEvents`, and the engine was driven in a real browser against the real files,
-but no clip has yet played because a game did something. That is the next check, and it needs a
-pod.
+**Heard in a real game, 2026-09-22.** A two-seat match against the native Forge AI, driven from a
+browser the way a player drives it, fetched these and nothing else in its first few turns — with
+no page errors:
+
+```
+bgm/bgm_lobby_mythic_calm.mp3      the lobby, before the table went live
+bgm/bgm_game_aether_voyage.mp3     crossfaded in when it did
+sfx/sfx_event_draw.mp3             the viewer's own draw
+sfx/sfx_play_land.mp3              a land
+sfx/sfx_event_etb.mp3              a permanent arriving
+bgm/bgm_combat_battle_shimmer.mp3  crossfaded again at the first COMBAT_ step
+```
+
+That is the whole chain in one line of evidence: engine event → journal → `match-telemetry` →
+`play-audio-events` → `play-audio` → network. **Not yet heard in a four-player pod**, where the
+board wipe and the token batch are likeliest to turn up.
 
 **Three clips can never play**, each for a reason recorded in `UNREACHABLE_FROM_THE_FEED`:
 `sfx_event_counterspell` needs a telemetry row that does not exist; `sfx_event_equip` and
