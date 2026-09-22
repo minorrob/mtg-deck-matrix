@@ -68,3 +68,14 @@ test("an engine event name is turned into English, including ones nobody listed"
   assert.equal(eventKindLabel("GameEventFlipCoin"), "flip coin");
   assert.equal(eventKindLabel(undefined), "table event");
 });
+
+/* Rob's alert list, 2026-09-21. These two were in the feed all along and never reached anybody. */
+test("poison and your own draw are announced", () => {
+  assert.equal(isWorthANotice(row({playerId: ME, kind: "GameEventPlayerPoisoned", label: "Poison 0 → 3"}), ME), true,
+    "ten poison counters ends a game; it is not a footnote");
+  assert.equal(isWorthANotice(row({playerId: ME, kind: "GameEventCardChangeZone", label: "Drew a card"}), ME), true);
+  /* An opponent's draw does not reach the viewer's feed at all -- match-telemetry.mjs drops it --
+     so this only has to be true for rows that do arrive. */
+  assert.equal(isWorthANotice(row({playerId: ME, kind: "GameEventCardChangeZone", label: "Hand → Graveyard"}), ME), false,
+    "an ordinary zone shuffle is still not a notice");
+});

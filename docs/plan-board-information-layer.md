@@ -156,3 +156,79 @@ block play. Recorded here so it is not lost, with the three things to settle bef
 
 **What I would not do:** build any of A.6 before B.0. It is an hour's difference and it is the
 difference between building these once and building them twice.
+
+---
+
+## A.6.2, checked against what the data can actually support
+
+Rob's alert list, each against the feed rather than against a guess.
+
+| He asked for | State |
+|---|---|
+| Lose life / gain life | **Shipped A.6.1.** `Life 40 → 37`, reported as "lost 3". |
+| Lose a card, card destroyed, card exiled | **Shipped A.6.1.** `Died · battlefield → graveyard`, `Left battlefield → Exile`. |
+| Commander damage | **Shipped A.6.1.** `match-telemetry.mjs` appends `· commander damage` when the source is a commander. |
+| **Poisoned** | **Was in the feed and could never be announced.** `GameEventPlayerPoisoned` produces `Poison 0 → 3`, but the row was pushed without its `kind`, and the notice rule keys on `kind`. Fixed by sending `kind` and `phase` on that push — which also stops the history detail line calling every one of those rows "table event". |
+| **Draw a card** | **Was deliberately dropped.** `if(from==='Library'&&to==='Hand')continue;` kept an opponent's card secret and hid *your own* draw from you. Now kept for the viewer only; an opponent's drawn card is not in `known`, so it cannot be named by accident. |
+| Attack declared against you | **Covered better by A.6.4.** The declare-blockers panel now shows the attacking cards and the damage. A separate notice on top of it would be noise. |
+| **Card exiled with a return condition** | **Cannot be done yet — needs the card's text.** Nothing in the event stream says an exile is conditional; that lives in the exiling card's oracle text. |
+| **A card whose mechanic triggers off other players** | **Cannot be done yet — same reason.** Knowing a card triggers on what other players do means reading its triggered abilities. |
+
+### The last two are the harvesting track's first customer
+
+Both need a machine-readable answer to *"what does this card actually do"* — which is exactly what
+Rob's card extraction skill produces:
+
+> "we need to write a card extraction skill that the AI API executes as part of the API pilot."
+
+So the two alerts that cannot be built today are not blocked on the board at all. They are the
+first thing the extracted card knowledge would be **read** by, rather than only written to. Worth
+knowing when that track is specified: it has a consumer on this side already waiting.
+
+---
+
+## What today's limits actually are, against PR #305
+
+**Rob, 2026-09-21:** *"Take note of PR #305 when you articulate what we can't do today, but what we
+can do when we build and change engines."*
+
+[#305](https://github.com/minorrob/mtg-deck-matrix/pull/305) is the merged plan to deprecate Forge
+for CrankMagic's own Commander rules engine (`docs/engine/PLAN.md`). Read against it, **every limit
+this board work hit is a property of the Forge adapter, not of the product** — and each one has a
+named answer in that plan.
+
+| Can't do today | Why | What #305 changes |
+|---|---|---|
+| Report more than **nine keywords** | `ForgeProbe.java:241` hand-lists flying, reach, trample, first strike, double strike, deathtouch, lifelink, infect, wither. Menace, protection, indestructible, shadow and fear never leave the engine. Widening it is a Java change and a rebuild. | §3.4: `CrankCardScript@1` carries `abilities[]` of kind `keyword` **per card**. There is no hand-maintained list to fall behind, because keywords are card data rather than adapter data. |
+| Alert on a **card exiled with a return condition** | Nothing in the event stream says an exile is conditional. That lives in the exiling card's oracle text. | §3.4: `effects[]` are named primitives with typed parameters and `until` durations. A conditional exile is *expressed*, so it can be read. |
+| Alert on **a card whose mechanic triggers off other players** | Same: knowing an ability watches other players means reading its triggered abilities. | §3.4: `abilities[]` includes `triggered`, each with `condition` and the `text` it implements. |
+| Know **what a card exposes to whom** | The projection's hidden-information rules are enforced by hand and checked by `HiddenSelectionCheck`. | §3.4: `reveals` states what each card's effects expose, "so the projection can be checked". |
+
+### The card extraction skill and #305's compiler are the same thing
+
+Rob asked for *"a card extraction skill that the AI API executes as part of the API pilot"*. §3.4
+already specifies that mechanism:
+
+> **Model compiler** (`game/tools/engine-compile.mjs`), the default. It calls the Claude API with
+> the schema as a tool definition, the oracle text, the parser's pre-pass result and the primitive
+> catalog, and receives a script.
+
+**So the extraction skill should emit `CrankCardScript@1`, not a format of its own.** Building a
+separate representation of "what this card does" for the pilot would create a second vocabulary
+that the engine work then has to reconcile — and reconciling two card-semantics formats across a
+30,000-card pool is exactly the kind of debt this plan exists to avoid.
+
+Written as a subset of the engine's schema instead, the same artifact serves three consumers:
+
+1. **Today** — the API pilot reads it to play a card Forge cannot pilot well.
+2. **Today** — the board reads it for the two alerts above.
+3. **Later** — the engine executes it, with no migration.
+
+That also fits the order Rob set: #305 starts only once Track V is live and games are fully
+operational (§1.1), and Rob confirmed on 2026-09-21 that the board redesign belongs *after* the
+engine work. The extraction skill can begin before either, provided it writes the engine's schema.
+
+**One caveat worth keeping honest:** §3.4's compiler is validated, smoke-tested and
+differential-checked against Forge before its output is trusted. A skill that writes the same
+schema without those gates is producing unverified card semantics. Whatever the pilot consumes
+first should carry the same validation, or be explicit that it is advisory only.

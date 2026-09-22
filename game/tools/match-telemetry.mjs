@@ -21,7 +21,10 @@ export function summarizeEvents(events,visibleCards,viewerSeatId=0){
       else if(kind==='GameEventAttackersDeclared'){const assignments=[];for(const entry of Array.isArray(f.attackersMap)?f.attackersMap:[]){const target=Number.isInteger(entry.key?.playerId)?entry.key.name:known.get(entry.key?.cardId)?.name;for(const card of entry.value||[]){const name=known.get(card.cardId)?.name;if(name)assignments.push(name+' → '+(target||'defender'));}}message=assignments.length?'Attackers declared · '+assignments.join('; '):'No attackers declared';}
       else{const assignments=[];for(const defender of Array.isArray(f.blockers)?f.blockers:[])for(const entry of defender.value||[]){const attacker=known.get(entry.key?.cardId)?.name;if(!attacker)continue;const blockers=(entry.value||[]).filter(c=>c.cardId!==entry.key.cardId).map(c=>known.get(c.cardId)?.name).filter(Boolean);assignments.push(attacker+(blockers.length?' blocked by '+blockers.join(' + '):' · no blockers'));}message='Blockers declared'+(assignments.length?' · '+assignments.join('; '):' · assignment details unavailable');}
       if(kind==='GameEventPlayerPoisoned')counts.poisonChanges++;else if(kind==='GameEventManaPool')counts.manaChanges++;
-      if(Number.isInteger(player?.playerId))recent.push({id:e.eventId,turn:e.data?.turn??null,cardId:null,name:player.name||'Player',playerId:player.playerId,label:message});continue;
+      /* These rows went out without their kind or phase, so the history detail line called every
+         one of them "table event" and the notice rule -- which keys on kind -- could not see
+         poison at all. Both were available here the whole time. */
+      if(Number.isInteger(player?.playerId))recent.push({id:e.eventId,turn:e.data?.turn??null,phase,kind,cardId:null,name:player.name||'Player',playerId:player.playerId,label:message});continue;
     }
     if(kind==='GameEventShuffle'){
       counts.shuffles++;
@@ -41,8 +44,12 @@ export function summarizeEvents(events,visibleCards,viewerSeatId=0){
     else if(kind==='GameEventLandPlayed'){source=f.land;actor=f.player?.playerId;label='Land played';metric='lands';}
     else if(kind==='GameEventCardChangeZone'){
       source=f.card;actor=f.to?.player?.playerId??f.from?.player?.playerId;const from=f.from?.zoneType,to=f.to?.zoneType;
-      if(from==='Library'&&to==='Hand')continue;
-      label=from==='Battlefield'&&to==='Graveyard'?'Died · battlefield → graveyard':to==='Battlefield'?'Entered battlefield':from==='Battlefield'?`Left battlefield → ${to||'ceased to exist'}`:`${from||'Created'} → ${to||'ceased to exist'}`;
+      /* A DRAW IS PRIVATE TO EVERYONE EXCEPT THE PLAYER DRAWING. Dropping every Library -> Hand
+         kept an opponent's card secret and also hid the viewer's OWN draw from them -- the one
+         they are entitled to see, and the one Rob asked to be told about. Scoped to the viewer.
+         An opponent's drawn card is not in `known` anyway, so it could not be named by accident. */
+      if(from==='Library'&&to==='Hand'&&(f.to?.player?.playerId??actor)!==viewerSeatId)continue;
+      label=from==='Library'&&to==='Hand'?'Drew a card':from==='Battlefield'&&to==='Graveyard'?'Died · battlefield → graveyard':to==='Battlefield'?'Entered battlefield':from==='Battlefield'?`Left battlefield → ${to||'ceased to exist'}`:`${from||'Created'} → ${to||'ceased to exist'}`;
       const hit=damage.get(source?.cardId);if(from==='Battlefield'&&hit?.turn===e.data?.turn)label+=` · earlier this turn: ${hit.amount} damage from ${hit.name}`;
     }
     else if(kind==='GameEventCardDamaged'){source=f.card;const name=known.get(f.source?.cardId)?.name||'a source';label=`${f.amount} damage from ${name}`;damage.set(source?.cardId,{amount:f.amount,name,turn:e.data?.turn});}

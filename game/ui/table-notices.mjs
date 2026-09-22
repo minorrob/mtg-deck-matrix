@@ -29,6 +29,9 @@ const LOUD = new Set([
   "GameEventCardChangeZone",
   "GameEventPlayerDamaged",
   "GameEventCardCounters",
+  /* Poison was in the feed from the start and could never be announced, because the row it
+     arrives on was pushed without its `kind`. Ten of these ends a game; it is not a footnote. */
+  "GameEventPlayerPoisoned",
 ]);
 
 /* A life total moving is reported without a `kind` (match-telemetry.mjs line 38), so it is
@@ -38,6 +41,8 @@ const LIFE = /^Life\s+(-?\d+)\s*→\s*(-?\d+)$/;
 /* A creature entering the battlefield follows the cast that put it there, so announcing both says
    the same thing twice. A creature LEAVING is the case Rob could not explain. */
 const LEFT_PLAY = /^(Died|Left battlefield)/;
+/* Your own draw, which match-telemetry.mjs now keeps for the viewer only. */
+const DREW = /^Drew a card$/;
 
 export function isWorthANotice(row, viewerSeatId) {
   if (!row || !row.id) return false;
@@ -46,7 +51,7 @@ export function isWorthANotice(row, viewerSeatId) {
   if (!LOUD.has(row.kind)) return false;
   /* You know what you just cast and what land you just played. */
   if (mine && (row.kind === "GameEventSpellAbilityCast" || row.kind === "GameEventLandPlayed")) return false;
-  if (row.kind === "GameEventCardChangeZone") return LEFT_PLAY.test(row.label || "");
+  if (row.kind === "GameEventCardChangeZone") return LEFT_PLAY.test(row.label || "") || DREW.test(row.label || "");
   return true;
 }
 
