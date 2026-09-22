@@ -195,8 +195,19 @@ bgm/bgm_combat_battle_shimmer.mp3  crossfaded again at the first COMBAT_ step
 ```
 
 That is the whole chain in one line of evidence: engine event → journal → `match-telemetry` →
-`play-audio-events` → `play-audio` → network. **Not yet heard in a four-player pod**, where the
-board wipe and the token batch are likeliest to turn up.
+`play-audio-events` → `play-audio` → network.
+
+**Heard in a four-player pod too**, on Rob's own host after the 2026-09-22 restart — eight clips
+including `sfx_event_life_gain`, with both beds crossfading on their own triggers and zero page
+errors.
+
+**R9's board wipe and R10's token batch have still never fired in a live game, and that is not for
+want of trying.** `qa-pod.mjs` reaches turn two to four and no further, unpredictably: one run got
+to turn four in four minutes and another to turn two in eleven. It clicks whatever the board is
+waiting on without understanding it, so it neither plays well nor gets out of the way, and a
+four-player native-AI pod does not march on its own. Both rules are held by tests driven through
+the real `summarizeEvents`; seeing them fire needs a driver that actually plays, which is a
+different tool from the one that puts cards on screen to judge a layout.
 
 **Three clips can never play**, each for a reason recorded in `UNREACHABLE_FROM_THE_FEED`:
 `sfx_event_counterspell` needs a telemetry row that does not exist; `sfx_event_equip` and
