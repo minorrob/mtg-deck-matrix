@@ -414,7 +414,25 @@ check("the launch row is a text box and a Start button", () => {
      stretched to a row taller than either, so the two never matched — and Rob asked for them to
      be the same height. */
   assert.match(rule[1], /display:flex/, "the reading and the button sit in one row");
-  assert.match(rule[1], /align-items:stretch/, "and take the same height");
+  /* THIS CHECK USED TO REQUIRE `align-items:stretch`, AND STRETCH DID NOT DELIVER WHAT IT ASKED
+     FOR. Measured on the running lobby, 2026-09-21: the reading was 213x44 and the button 49x60 —
+     the button stretched past a row the reading never filled, so the two were 16px apart, which is
+     the exact mismatch this check exists to prevent. Rob: "I want a horizontal, not vertical
+     rectangle for the button here... the same height as the [reading] container next to the
+     button" — and to take about 10% off both once they matched.
+     They now carry the SAME EXPLICIT HEIGHT, so the check asserts the outcome rather than a
+     mechanism that was never producing it. */
+  const body = (sel) => { const m = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\{([^}]*)\\}").exec(css); return m ? m[1] : null; };
+  const height = (text) => { const m = /(?:^|;)height:\s*(\d+)px/.exec(text || ""); return m ? Number(m[1]) : null; };
+  const reading = body(".cm-table-launch"), start = body(".cm-table-launch-row .v-button");
+  assert.ok(reading && start, "the reading and the Start button each need a rule");
+  const readingH = height(reading), startH = height(start);
+  assert.ok(readingH && startH, `both state an explicit height (reading ${readingH}, button ${startH})`);
+  assert.equal(readingH, startH, "and it is the same height, which stretch never achieved");
+  /* Horizontal, not vertical: a button narrower than it is tall was the thing Rob objected to. */
+  const startW = /min-width:\s*(\d+)px/.exec(start);
+  assert.ok(startW && Number(startW[1]) > startH,
+    `the Start button is wider than it is tall (min-width ${startW ? startW[1] : "unset"}, height ${startH})`);
 });
 
 check("a countdown exists and launches when it reaches zero", () => {
