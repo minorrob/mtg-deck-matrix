@@ -98,3 +98,55 @@ test('a gateway with no web lobby configured behaves exactly as before',async t=
   const pre=await request(info.origin,'/table/join',{method:'OPTIONS',headers:{Origin:'https://minorrob.github.io','Access-Control-Request-Method':'POST'}});
   assert.equal(pre.headers.get('access-control-allow-origin'),null,'opening this up is opt-in, never the default');
 });
+
+/* THE GATEWAY COULD ALWAYS DO THIS. NOTHING EVER ASKED IT TO.
+ *
+ * Every test above proves the web-lobby CORS path works -- the preflight, the allow-origin header,
+ * the refusal of any other origin. It is reached through COMMANDER_WEB_ORIGIN, and until
+ * 2026-09-22 the launcher had no parameter for it and never set it. So the cloud lobby could not
+ * reach a live tunnel at all: measured from https://minorrob.github.io against a real gateway,
+ * every route including /health returned "TypeError: Failed to fetch" while curl got 200 from the
+ * same machine.
+ *
+ * A capability with no way to switch it on is not a capability, so this holds the wiring rather
+ * than the behavior. */
+test('the launcher can switch the web lobby on, and says which origin by default',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const script=readFileSync(new URL('../tools/start-crankmagic.ps1',import.meta.url),'utf8');
+  assert.match(script,/\$env:COMMANDER_WEB_ORIGIN/,
+    'the host reads COMMANDER_WEB_ORIGIN; something has to set it');
+  assert.match(script,/\[string\]\$WebOrigin\s*=/,
+    'and it is a parameter, so a different deployment can name its own lobby');
+  assert.match(script,/minorrob\.github\.io/,
+    'defaulting to the published lobby is what makes it work without being asked');
+});
+
+/* CORS ON THE GATEWAY IS HALF A DOOR. THE PAGE HAS ITS OWN LOCK.
+ *
+ * The 2026-09-22 UAT switched COMMANDER_WEB_ORIGIN on and proved the gateway then answers the
+ * published lobby -- Access-Control-Allow-Origin, Vary: Origin, the lot, confirmed against a live
+ * tunnel. The browser still could not reach it, with no CORS message anywhere, because the page's
+ * own Content-Security-Policy never named a tunnel:
+ *
+ *   connect-src 'self' http://127.0.0.1:8768 https://api.scryfall.com https://json.edhrec.com https://archidekt.com
+ *
+ * CSP is evaluated before CORS, so the request never left. Note what IS on that list: the loopback
+ * address, which docs/plan-web-to-local-table-2026-09-21.md had already measured Chrome refusing
+ * under Local Network Access. The policy was written for the approach that does not work and not
+ * for the one that does.
+ *
+ * A quick tunnel's hostname is new every session, so a static page cannot name one. The wildcard
+ * is the only form that can work, and it is a deliberate widening: the page may talk to any
+ * trycloudflare host. What protects the table is that the gateway is token-guarded and the address
+ * has to be handed to the user in the first place. */
+test('the published pages may talk to a tunnel, or the gateway CORS is unreachable',async()=>{
+  const {readFileSync}=await import('node:fs');
+  for(const page of ['index.html','crankmagic.html']){
+    const html=readFileSync(new URL('../../'+page,import.meta.url),'utf8');
+    const csp=/content="([^"]*connect-src[^"]*)"/.exec(html);
+    assert.ok(csp,`${page} carries a Content-Security-Policy`);
+    const connect=/connect-src ([^;]+)/.exec(csp[1])[1];
+    assert.match(connect,/https:\/\/\*\.trycloudflare\.com/,
+      `${page} must allow a guest tunnel; the gateway's CORS cannot be reached without it`);
+  }
+});
