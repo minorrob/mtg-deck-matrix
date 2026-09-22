@@ -5,7 +5,7 @@ import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
-const {noticesFor,lifeDelta,eventKindLabel}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null,eventKindLabel:k=>k||'table event'}));
+const {noticesFor,lifeDelta,eventKindLabel,historyScopes}=await import('/table-notices.mjs').catch(()=>({noticesFor:()=>[],lifeDelta:()=>null,eventKindLabel:k=>k||'table event',historyScopes:()=>new Set(['all'])}));
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals,incomingAt}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[],incomingAt:()=>({total:null,attackers:[],keywords:[],potential:0,unblockedPotential:0,deathtouch:false,firstStrike:false})}));
@@ -449,9 +449,30 @@ for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']
 const combatPane=el('section','combat-pane');combatPane.id='combat-pane';combatPane.hidden=true;combatPane.setAttribute('role','tabpanel');combatPane.setAttribute('aria-labelledby','tab-combat');const combatTab=button('Combat',()=>selectPane('combat'));combatTab.id='tab-combat';combatTab.setAttribute('role','tab');combatTab.setAttribute('aria-controls','combat-pane');
 const tracker=el('section','tracker-pane');tracker.id='tracker-pane';tracker.setAttribute('role','tabpanel');tracker.setAttribute('aria-labelledby','tab-tracker');
 $('inspector').setAttribute('role','tabpanel');$('inspector').setAttribute('aria-labelledby','tab-info');$('events').setAttribute('role','tabpanel');$('events').setAttribute('aria-labelledby','tab-history');tabs.append(infoTab,statsTab,historyTab,combatTab);sidebar.prepend(tabs);sidebar.append(tracker,combatPane);
-function selectPane(value){if(value==='combat'&&hideInformation){hideInformation=false;document.body.classList.remove('hide-information');hideInfo.textContent='Hide information pane';mountControls();refreshBoards();}trackerTab=value;combatPane.hidden=value!=='combat';combatTab.setAttribute('aria-selected',String(value==='combat'));if(value==='combat')renderCombat(true);for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']])b.setAttribute('aria-selected',String(value===id));for(const n of sidebar.querySelectorAll('.aside-title,#inspector'))n.hidden=value!=='info';for(const n of sidebar.querySelectorAll('.log-header,#events'))n.hidden=value!=='history';tracker.hidden=value!=='tracker';if(value==='tracker')renderTracker(true);if(value==='history')renderHistory();}
+function selectPane(value){if(value==='combat'&&hideInformation){hideInformation=false;document.body.classList.remove('hide-information');hideInfo.textContent='Hide information pane';mountControls();refreshBoards();}trackerTab=value;combatPane.hidden=value!=='combat';combatTab.setAttribute('aria-selected',String(value==='combat'));if(value==='combat')renderCombat(true);for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']])b.setAttribute('aria-selected',String(value===id));for(const n of sidebar.querySelectorAll('.aside-title,#inspector'))n.hidden=value!=='info';for(const n of sidebar.querySelectorAll('.log-header,#events,.log-scope'))n.hidden=value!=='history';tracker.hidden=value!=='tracker';if(value==='tracker')renderTracker(true);if(value==='history')renderHistory();}
 function historyRows(){if(!frame())return [];return live?(live.telemetry?.recent||[]):data.log.filter(e=>e.sequence<=frame().sequence).slice(-80).reverse().map(e=>({id:e.eventId,turn:e.turn,label:logText(e),name:''}));}
-let historyQuery='',historyLimit=80,historyPhases=false;
+let historyQuery='',historyLimit=80,historyPhases=false,historyWhose='all';
+/* THE STANDING EXPLANATION MOVES BEHIND A QUESTION MARK, and a filter takes its place.
+ * Rob, 2026-09-21: "this text here should be behind a question mark next to 'Table events'. Also,
+ * under 'Table events' title, a small dropdown with options 'All History' (default), 'My History',
+ * and 'Targeting Me'."
+ * Three lines of standing copy at the top of a 280px pane cost more than they explain once you
+ * have read them once. The filter is what the pane needed that space for. */
+const HISTORY_HELP='Recorded public activity, newest first. Select an entry for its detail — the phase, the kind of event and the seat. Select a card for a larger view. Private draws and private choices are never shown; your own draws are, because they are yours.';
+const HISTORY_SCOPES=[['all','All history'],['mine','My history'],['at-me','Affecting me']];
+function mountHistoryHeader(){
+  const head=document.querySelector('.log-header');if(!head||head.querySelector('.log-help'))return;
+  const help=button('?',()=>showDialog('About Table events',el('p','fine',HISTORY_HELP)),'log-help');
+  help.title='What this pane shows';help.setAttribute('aria-label','What Table events shows');
+  (head.querySelector('strong')||head).after(help);
+  const pick=el('select','log-scope');pick.setAttribute('aria-label','Filter game history');
+  for(const [value,label] of HISTORY_SCOPES){const o=el('option','',label);o.value=value;if(value===historyWhose)o.selected=true;pick.append(o);}
+  /* Rob corrected the third option from 'targeting me' to 'the events that had an effect on me,
+     done by myself and other players' -- who caused it is not the question. See historyScopes(). */
+  pick.addEventListener('change',()=>{historyWhose=pick.value;historyKey='';renderHistory();});
+  head.after(pick);
+}
+mountHistoryHeader();
 /* ONE HISTORY ENTRY, WITH THE CARD AND THE REASON.
  *
  * Rob: "the cards they play by having the card image included in the History log... I can then
@@ -487,9 +508,9 @@ function historyRowNode(e){
   row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
   return row;
 }
-function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recorded public activity · newest first. Select an entry for detail; select a card for a larger view. Private draws and choices are hidden.'));
+function historyContent(){const body=el('div','history-feed'),rows=historyRows();
   const search=el('input');search.type='search';search.placeholder='Find a card or event…';search.setAttribute('aria-label','Search game history');search.value=historyQuery;const phaseLabel=el('label','fine'),phaseToggle=el('input');phaseToggle.type='checkbox';phaseToggle.checked=historyPhases;phaseLabel.append(phaseToggle,document.createTextNode(' Include phase changes'));const list=el('div'),more=button('Show more events',()=>{historyLimit+=80;draw();});
-  function draw(){list.replaceChildren();const visible=rows.filter(e=>(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit))list.append(historyRowNode(e));if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
+  function draw(){list.replaceChildren();const visible=rows.filter(e=>historyScopes(e,viewerSeatId).has(historyWhose)&&(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit))list.append(historyRowNode(e));if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
   search.addEventListener('input',()=>{historyQuery=search.value;draw();});phaseToggle.addEventListener('change',()=>{historyPhases=phaseToggle.checked;draw();});body.append(search,phaseLabel,list,more);draw();return body;}
 let historyKey='';
 function renderHistory(){if(document.activeElement?.matches('input[aria-label="Search game history"]'))return;const rows=historyRows(),key=JSON.stringify(rows);if(key===historyKey)return;historyKey=key;$('event-count').textContent=rows.length+' events';$('events').replaceChildren(historyContent());if($('detail').open&&$('detail').dataset.history==='true')$('detail-body').replaceChildren(historyContent());}

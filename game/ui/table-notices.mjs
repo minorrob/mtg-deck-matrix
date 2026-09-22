@@ -73,6 +73,42 @@ export function eventKindLabel(kind) {
   return KINDS[kind] || (kind ? String(kind).replace(/^GameEvent/, "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase() : "table event");
 }
 
+/* WHOSE ROW IS THIS?
+ *
+ * Rob, 2026-09-21: a history filter with "All History", "My History" and "Targeting Me".
+ *
+ * `row.playerId` cannot answer that on its own, because match-telemetry.mjs sets it to whoever
+ * the row is ABOUT, and that is the actor for a cast and the victim for damage. So the kind has
+ * to decide which of the two it means.
+ *
+ * The third filter was first written as "targeting me", and Rob corrected it: "Maybe not
+ * targeting me, but I (as a player) want to filter to the events that had an effect on me, done
+ * by myself and other players." That is a better rule and a different one — it does not care who
+ * caused it, only whether the viewer was CHANGED. Which is just as well, because true targeting
+ * data is only in the label as "targeting <card names>", names cards rather than players, and so
+ * could never have answered "did that target ME".
+ *
+ * The two sets overlap on purpose. Drawing a card is something you did AND something that changed
+ * you, so it belongs in both; a row can carry `mine` and `at-me` at once.
+ */
+const DID_IT = new Set(["GameEventSpellAbilityCast", "GameEventLandPlayed", "GameEventCardTapped"]);
+const CHANGED_ME = new Set(["GameEventPlayerDamaged", "GameEventPlayerPoisoned", "GameEventCardCounters"]);
+
+export function historyScopes(row, viewerSeatId) {
+  const out = new Set(["all"]);
+  if (!row || row.playerId !== viewerSeatId) return out;
+  const label = row.label || "";
+  if (DID_IT.has(row.kind)) out.add("mine");
+  if (CHANGED_ME.has(row.kind) || LIFE.test(label)) out.add("at-me");
+  if (row.kind === "GameEventCardChangeZone") {
+    /* A draw is both: you did it, and it changed your hand. Anything of yours entering or
+       leaving play changed you, whoever caused it. */
+    if (DREW.test(label)) { out.add("mine"); out.add("at-me"); }
+    else if (LEFT_PLAY.test(label) || /^Entered battlefield$/.test(label)) out.add("at-me");
+  }
+  return out;
+}
+
 /* How much a life change moved, so a notice can say "lost 3" rather than "Life 40 → 37". */
 export function lifeDelta(row) {
   const m = LIFE.exec(row?.label || "");

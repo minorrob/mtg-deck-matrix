@@ -198,15 +198,15 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* Flex, not grid. As a grid the reading kept its content height while the button stretched to a
    row that was taller than either of them, so the two never matched. In a flex row
    align-items:stretch means exactly what it says: both children take the height of the taller. */
-.cm-table-launch-row{display:flex;gap:8px;align-items:stretch;margin:6px 0 0}
+.cm-table-launch-row{display:flex;gap:8px;align-items:center;margin:6px 0 0}
 .cm-table-launch.is-error{background:color-mix(in srgb,var(--st-remove) 22%,var(--table-panel));color:color-mix(in srgb,var(--st-remove) 60%,var(--table-ink));cursor:help}
-.cm-table-launch{flex:1 1 auto;margin:0;min-height:44px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
+#matrix-v2 .cm-table-launch{flex:1 1 auto;margin:0;min-height:40px;height:40px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--table-ink) 8%,var(--table-panel));color:var(--table-ink);font-size:12px;font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;min-width:0}
 /* height:100% on a stretched grid item asks for a percentage of a row whose height it is also
    helping to decide, and the browser resolves that by growing. Stretch alone is the answer:
    both cells then take the row's height, and the row takes the taller natural content, which
    is the reading. */
 /* The same minimum as the reading beside it, so the two always match however the reading wraps. */
-#matrix-v2 .cm-table-launch-row .v-button{flex:0 0 auto;min-height:44px;height:auto;padding:0 14px;font-size:12px;white-space:nowrap}
+#matrix-v2 .cm-table-launch-row .v-button{flex:0 0 auto;height:40px;min-height:0;min-width:88px;padding:0 14px;font-size:12px;white-space:nowrap}
 /* Rob: lose the spacing between the rows. They are a list of four short facts; a gap between
    them made the card taller for nothing. */
 .cm-table-rules{display:grid;gap:0;margin:0;line-height:1.35}
