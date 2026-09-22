@@ -255,9 +255,15 @@ newest first, click to search. Today that band is empty mat art and History live
 commander only; click one to swap it into focus)", with "My board", "Table view" and a collapse
 (◂). Focus is a modal dialog today, so this is the structural piece.
 
-### B.6d — CrankMagic Coach
-A slide-over in aether blue with a wand icon. **2f says plainly "its logic is a later phase"**, so
-what B.6 owes is the surface, not the assistant.
+### B.6d — CrankMagic Coach: NOT TO BE BUILT YET
+2f draws a slide-over in aether blue with a wand icon and says plainly "its logic is a later
+phase". An earlier version of this plan read that as "B.6 owes the surface, not the assistant".
+**That was wrong**, and Rob settled it on 2026-09-22: *"No the coach shouldn't be available before
+it's functional (that's a standing rule for everything)."*
+
+So nothing is built. No button, no empty panel, no menu entry. A control that does nothing teaches
+a player it is broken and costs the credibility of the controls that work. The Coach is drawn when
+the Coach exists, and the frame having drawn it is not a reason to draw it early.
 
 ### B.6b is not "add a band" — it re-proportions the mat's right side
 
@@ -282,3 +288,25 @@ correctly and broke a live board.
 
 **So B.6b waits for a live game to verify against.** The numbers above are the starting point; the
 work is re-proportioning, not inserting.
+
+---
+
+## The standing rule, and what it costs elsewhere
+
+**Rob, 2026-09-22:** *"No the coach shouldn't be available before it's functional (that's a
+standing rule for everything)."*
+
+It applies to everything, so the rest of this repository is worth checking against it rather than
+only the Coach:
+
+| | |
+|---|---|
+| **Take mana back** | Appears only when `ui.canUndo` is true, and Forge is asked again at submit time. Never drawn inert. |
+| **Table notices, history detail, incoming damage, poison** | All drive from real telemetry rows. Nothing is drawn for an event that did not happen. |
+| **Panel, step strip, center counter** | All carry live data. |
+| **Card onboarding** | **Worth Rob's eye.** The panel does real work — it resolves each card the engine cannot pilot against the card database and reports a real ratio — and it says plainly, when it finishes, that AI onboarding of the rest is not wired yet. Nothing on it is inert. But the header reads "Onboarding your cards", which is the phrase Rob asked for and describes the finished feature rather than today's pass. |
+
+**The onboarding header is the one thing that sits close to the line.** It is not a dead control,
+and it discloses what it has not done, so it is not a shell. It is also named for what it will be.
+That is Rob's call rather than one to make silently: the honest alternatives are to leave it (the
+disclosure carries the weight) or to name it for the pass it actually runs until extraction lands.
