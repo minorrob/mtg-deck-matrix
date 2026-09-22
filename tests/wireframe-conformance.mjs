@@ -734,6 +734,30 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(table[1], /grid-template-columns:minmax\(0,1fr\) \d+px minmax\(0,1fr\)/,
       "two board columns with a fixed spacer between them, which B.3's counter straddles");
   });
+  // 2e: "The center counter shows four life totals in the seats' colors; the inner logo disc
+  // cycles what YOU see: life -> commander damage taken from each opponent -> poison from each."
+  // Drawn 76px on a half-scale sketch, so 152 here, with a 30px disc doubling to 60.
+  check("the center counter straddles the channel at the frame's size", () => {
+    const counter = /body\.table-view \.table-counter\{([^}]*)\}/.exec(boardCss);
+    assert.ok(counter, "the center counter rule");
+    assert.match(counter[1], /grid-column:2/, "it sits in the mat's middle column");
+    assert.match(counter[1], /grid-row:2/, "and the zero-height middle row, overflowing both");
+    assert.match(counter[1], /width:152px/, "76px on a half-scale frame is 152 built");
+    assert.match(counter[1], /border-radius:50%/, "a disc");
+  });
+  check("each total wears its own seat's color", () => {
+    const cell = /\.table-counter \.counter-cell\{([^}]*)\}/.exec(boardCss);
+    assert.ok(cell, "the counter cell rule");
+    assert.match(cell[1], /var\(--seat\)/,
+      "the frame's four literals are one pod's color identities; the board's own --seat tokens are what 'the seats' colors' means here");
+    assert.match(cell[1], /tabular-nums/, "totals line up as they change");
+  });
+  check("the inner disc cycles what the counter shows", () => {
+    assert.match(board, /COUNTER_MODES=\['life','commander','poison'\]/,
+      "life -> commander damage taken from each -> poison from each, in that order");
+    assert.match(board, /ownerSeatId/,
+      "commander damage is read from ForgeProbe's {commanderId, ownerSeatId, name, damage} rows, not keyed by player id");
+  });
   check("nothing sits below the mat but the hand", () => {
     const hand = /body\.table-view \.hand\{([^}]*)\}/.exec(boardCss);
     assert.ok(hand, "the hand rule");
