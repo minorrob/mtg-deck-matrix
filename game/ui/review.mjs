@@ -106,6 +106,56 @@ function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.play
 /* Drawn as elements rather than one string so the current step can carry the brass chip the
    frame specifies. Falls back to the old sentence whenever there is no live phase -- setup,
    replay and the moment before the first projection arrives all land there. */
+/* THE CENTER COUNTER (Stage B.3, wireframe 2e).
+ *
+ * "The center counter shows four life totals in the seats' colors; the inner logo disc cycles
+ * what YOU see: life -> commander damage taken from each opponent -> poison from each."
+ *
+ * Commander damage is the total dealt TO YOU BY that seat's commander, which is the number that
+ * decides a game and the one no board has ever shown. Poison likewise. A seat with nothing to
+ * report in the current mode reads as a dash rather than a zero, so an empty number never looks
+ * like a real one.
+ */
+const COUNTER_MODES=['life','commander','poison'];
+const COUNTER_LABELS={life:'Life',commander:'Commander damage to you',poison:'Poison on each player'};
+let counterMode='life';
+function counterValue(p,mode){
+  if(mode==='life')return p.health?.life ?? '—';
+  if(mode==='poison')return p.health?.poison ?? '—';
+  /* commander damage the viewer has taken from this seat; their own seat has none to show */
+  if(p.playerId===viewerSeatId)return '—';
+  const me=frame()?.players?.find(x=>x.playerId===viewerSeatId);
+  const from=me?.health?.commanderDamage;
+  if(!from)return '—';
+  /* ForgeProbe.java:250 — an array of {commanderId, ownerSeatId, name, damage, remaining}.
+     A seat can field two commanders, so damage FROM that seat is the sum of its entries. */
+  if(!Array.isArray(from))return '—';
+  const rows=from.filter(d=>d.ownerSeatId===p.playerId);
+  if(!rows.length)return '—';
+  const n=rows.reduce((t,d)=>t+(Number(d.damage)||0),0);
+  return Number.isFinite(n)?n:'—';
+}
+function renderTableCounter(f){
+  const host=$('table-counter');if(!host)return;
+  const players=(f?.players||[]).slice(0,4);
+  if(!live||players.length<2){host.hidden=true;return;}
+  host.hidden=false;
+  const key=JSON.stringify([counterMode,players.map(p=>[p.playerId,counterValue(p,counterMode)])]);
+  if(host.dataset.key===key)return;host.dataset.key=key;
+  host.replaceChildren();
+  host.setAttribute('aria-label',COUNTER_LABELS[counterMode]);
+  for(const p of players){
+    const cell=el('span','counter-cell tone-'+p.playerId);
+    cell.textContent=String(counterValue(p,counterMode));
+    cell.title=names[p.playerId]+' · '+COUNTER_LABELS[counterMode];
+    host.append(cell);
+  }
+  const disc=button('',()=>{counterMode=COUNTER_MODES[(COUNTER_MODES.indexOf(counterMode)+1)%COUNTER_MODES.length];host.dataset.key='';renderTableCounter(frame());},'counter-disc');
+  disc.title='Showing '+COUNTER_LABELS[counterMode]+'. Select to cycle: life, commander damage to you, poison.';
+  disc.setAttribute('aria-label',disc.title);
+  const mark=el('img');mark.src='/crankmagic-logo.webp';mark.alt='';disc.append(mark);
+  host.append(disc);
+}
 function renderStepStrip(){
   const host=$('phase'),at=stepPosition(frame()?.phase);
   if(at<0){host.textContent=turnLabel();return;}
@@ -668,7 +718,7 @@ function render(){
   follow.textContent='Follow active player: '+(followActive?'on':'off');
   const activeSeat=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);promptAi.hidden=!live||guestMode||activeSeat?.kind!=='ai';promptAi.disabled=aiPrompting;promptAi.textContent=aiPrompting?'Prompting AI…':activeSeat?'Prompt '+(activeSeat.name||'AI'):'Prompt AI';
   if(followActive&&followedTurn!==f.turn&&turnPlayer()){primarySeat=turnPlayer().playerId;followedTurn=f.turn;}
-  for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);renderSeat(p);}
+  for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);renderSeat(p);}renderTableCounter(f);
   for(const p of f.players.filter(p=>p.playerId!==primarySeat)){const seat=$('seat-'+p.playerId);seat.querySelector('.seat-heading').append(button('Show board',()=>setPrimarySeat(p.playerId)));}
   const you=f.players.find(p=>p.playerId===viewerSeatId);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
   renderHistory();

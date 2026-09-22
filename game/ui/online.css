@@ -219,3 +219,13 @@ body.table-view.hide-opponents .seat:not(.primary-seat){display:none}
 body.table-view.hide-opponents .table{grid-template-columns:minmax(0,1fr)}
 body.table-view.hide-opponents .primary-seat{grid-column:1;grid-row:1}
 body.table-view.hide-opponents .hand{grid-column:1;grid-row:2}
+
+/* THE CENTER COUNTER (Stage B.3, wireframe 2e). The frame draws it at 76px on a half-scale
+   sketch, so 152px here, with a 60px inner disc and 18px numerals. It sits in the grid's middle
+   column and zero-height middle row and overflows both, which is what that channel is for. */
+body.table-view .table-counter{grid-column:2;grid-row:2;z-index:3;position:relative;width:152px;height:152px;border-radius:50%;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;place-self:center;background:var(--color-panel,Canvas);border:2px solid var(--color-line,CanvasText);box-shadow:0 16px 36px -16px rgb(0 0 0 / .75)}
+body.table-view .table-counter[hidden]{display:none}
+.table-counter .counter-cell{display:grid;place-items:center;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-ink,CanvasText);background:color-mix(in srgb,var(--seat) 20%,transparent)}
+.table-counter .counter-disc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60px;height:60px;padding:0;border-radius:50%;background:var(--color-panel,Canvas);border:1px solid var(--color-line,CanvasText);display:grid;place-items:center;cursor:pointer}
+.table-counter .counter-disc img{width:36px;height:36px;display:block}
+.table-counter .counter-disc:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:2px}
