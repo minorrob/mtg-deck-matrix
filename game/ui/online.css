@@ -249,3 +249,19 @@ body.table-view>header{position:relative;z-index:50}
 .focus-size{display:inline-flex;gap:4px}
 .focus-size button{min-width:34px;padding:2px 8px;border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText);font-size:var(--text-small,12px)}
 .focus-size button[aria-pressed=true]{background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);border-color:var(--color-accent,Highlight);font-weight:700}
+
+/* B.6c (wireframe 2f): the other three boards as aspect-locked tiles in a left pane. The mat
+   keeps everything it had and shares the width; the pane collapses so the board takes it all. */
+.focus-dialog .focus-content{display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-rows:auto auto;align-content:start;gap:12px}
+.focus-dialog .focus-content>.focus-pane{grid-column:1;grid-row:1/-1}
+.focus-dialog .focus-content>.focus-mat-stage,.focus-dialog .focus-content>.focus-hand{grid-column:2;min-width:0;width:100%;margin:0;justify-self:center}
+.focus-dialog .focus-content:has(.focus-pane.is-closed){grid-template-columns:auto minmax(0,1fr)}
+.focus-pane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.focus-pane-bar{display:flex;justify-content:flex-end}
+.focus-pane-collapse{width:28px;height:28px;padding:0;border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText)}
+.focus-tile{aspect-ratio:16/9;width:100%;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px;text-align:left;border-radius:var(--radius-control,12px);border:1px solid var(--seat);background:color-mix(in srgb,var(--seat) 12%,transparent);color:var(--color-ink,CanvasText);cursor:pointer;overflow:hidden}
+.focus-tile strong{font-size:var(--text-small,12px);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.focus-tile small{font-size:var(--text-label,11px);color:var(--color-muted,CanvasText);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.focus-tile:hover{border-color:var(--color-accent,Highlight)}
+.focus-pane-mine,.focus-pane-table{font-size:var(--text-small,12px)}
+.focus-pane.is-closed .focus-tile,.focus-pane.is-closed .focus-pane-mine,.focus-pane.is-closed .focus-pane-table{display:none}

@@ -470,6 +470,43 @@ function focusSteps(p){
   });
   return ribbon;
 }
+/* THE OTHER THREE BOARDS (Stage B.6c, wireframe 2f).
+ *
+ * Tiles carry a name and a commander and nothing else -- the frame is explicit, and a tile that
+ * tried to be a board would compete with the one in focus. Each swaps itself into focus.
+ *
+ * The collapse is remembered for the session rather than reset on every open: a player who has
+ * put the pane away has said something about how they want to play, and reopening a board is not
+ * a reason to argue with it.
+ */
+let focusPaneClosed=false;
+function focusPane(current){
+  const pane=el('aside','focus-pane');pane.setAttribute('aria-label','Other boards');
+  pane.classList.toggle('is-closed',focusPaneClosed);
+  const bar=el('div','focus-pane-bar');
+  const collapse=button(focusPaneClosed?'\u25b8':'\u25c2',()=>{focusPaneClosed=!focusPaneClosed;focusBoard(current);},'focus-pane-collapse');
+  collapse.title=focusPaneClosed?'Show the other boards':'Hide the other boards and give this one the whole width';
+  collapse.setAttribute('aria-expanded',String(!focusPaneClosed));
+  bar.append(collapse);pane.append(bar);
+  if(focusPaneClosed)return pane;
+  const others=(frame()?.players||[]).filter(x=>x.playerId!==current.playerId);
+  for(const other of others){
+    const tile=button('',()=>focusBoard(other),'focus-tile tone-'+other.playerId);
+    tile.append(el('strong','',names[other.playerId]));
+    const commander=other.zones?.Command?.cards?.[0]?.name||other.commander||'';
+    if(commander)tile.append(el('small','',commander));
+    tile.title='Bring '+names[other.playerId]+"'s board into focus";
+    pane.append(tile);
+  }
+  const mine=(frame()?.players||[]).find(x=>x.playerId===viewerSeatId);
+  if(mine&&mine.playerId!==current.playerId){
+    const back=button('My board',()=>focusBoard(mine),'focus-pane-mine');
+    back.title='Return to your own board';pane.append(back);
+  }
+  const table=button('Table view',()=>$('focus').close(),'focus-pane-table');
+  table.title='Back to all four boards';pane.append(table);
+  return pane;
+}
 function focusBoard(p){
   if(!p)return;
   const dialog=$('focus');dialog.className='focus-dialog tone-'+p.playerId;dialog.dataset.seat=p.playerId;
@@ -479,6 +516,7 @@ function focusBoard(p){
      is where the steps live in Focus. */
   $('focus-status').replaceChildren(el('strong','',turnLabel()),focusSteps(p),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
   const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);releaseCardLayouts(content);content.replaceChildren();
+  content.append(focusPane(p));
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
   if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
   else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));

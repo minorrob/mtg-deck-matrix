@@ -803,6 +803,27 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
       "2f names three sizes; the slider asked for a number instead");
     assert.equal(html.includes('id="focus-size-value"'), false, "the percentage readout goes with it");
   });
+  // 2f: "their own board large, the other three as small aspect-locked tiles in a left pane (name
+  // + commander only; click one to swap it into focus). 'My board' is always one click; 'Table
+  // view' returns to the four-up table... The pane collapses so the board takes the whole width."
+  check("Focus carries the other three boards as aspect-locked tiles", () => {
+    assert.match(board, /function focusPane\(/, "the pane exists");
+    const tile = /\.focus-tile\{([^}]*)\}/.exec(boardCss);
+    assert.ok(tile, "the tile rule");
+    assert.match(tile[1], /aspect-ratio:16\/9/, "boards keep 16:9 at any size, tiles included");
+    assert.match(board, /focus-pane-mine/, "'My board' is always one click");
+    assert.match(board, /focus-pane-table/, "'Table view' returns to the four-up table");
+    assert.match(boardCss, /\.focus-pane\.is-closed \.focus-tile/, "the pane collapses");
+  });
+  // .focus-hand carries margin:auto, which centered a max-width block when .focus-content was one.
+  // As a grid item that same margin shrink-wraps it — measured 24x34, floating mid-stage, before
+  // this was caught. Anything placed in that grid has to state its own width.
+  check("the hand fills its column rather than shrink-wrapping in the grid", () => {
+    const placed = /\.focus-dialog \.focus-content>\.focus-mat-stage,\.focus-dialog \.focus-content>\.focus-hand\{([^}]*)\}/.exec(boardCss);
+    assert.ok(placed, "the placement rule for the stage and the hand");
+    assert.match(placed[1], /width:100%/, "margin:auto would otherwise collapse it to its content");
+    assert.match(placed[1], /margin:0/, "and the auto margin has to be cleared for that to hold");
+  });
   check("nothing sits below the mat but the hand", () => {
     const hand = /body\.table-view \.hand\{([^}]*)\}/.exec(boardCss);
     assert.ok(hand, "the hand rule");
