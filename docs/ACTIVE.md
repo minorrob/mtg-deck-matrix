@@ -2,8 +2,8 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #341 to #346 merged; #347 open |
-| **Branch** | `claude/board-fits-one-screen` (#347). Everything else merged to `main` |
+| **Holder** | Free — #341 to #347 all merged; nothing open |
+| **Branch** | `main`; nothing open |
 | **Since** | 2026-09-22 |
 | **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
 | **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
@@ -131,8 +131,16 @@ artifact serves the pilot now and the engine later.
   *imports* — `serve-review.mjs`, `game/server/*`, `match-telemetry.mjs`, the launcher — needs a
   restart. A **new** file in the served map needs one too, so import new `game/ui` modules
   optionally (`await import(...).catch(...)`), the way `review.mjs` already does.
-- Restarting mints a **new** cloudflared address unless `COMMANDER_GUEST_PUBLIC_ORIGIN` is passed
-  back. Every restart this session preserved `medium-linking-replies-take` that way.
+- **`COMMANDER_GUEST_PUBLIC_ORIGIN` does not keep a tunnel alive; it only changes what the host
+  SAYS.** This note used to read "every restart preserved `medium-linking-replies-take` that way",
+  and on 2026-09-22 that address no longer resolved at all — `curl` could not even find it in DNS,
+  while the gateway itself answered `200` on `127.0.0.1:8769`. Passing a stale origin back is
+  therefore **worse than not passing it**: the lobby offers remote invitations that lead nowhere,
+  instead of saying plainly that this host is local-only.
+  The host does not run `cloudflared`; `game/tools/start-crankmagic.ps1 -RemoteGuests` does. So a
+  plain `node game/tools/serve-review.mjs` has no tunnel and should not claim one. **Check the
+  address answers from outside before passing it back**, and relaunch through the script when
+  remote guests are actually wanted.
 - The adapter is compiled by the launcher at every game start, so a Java change needs no build
   step — but it fails at game start rather than in a test, so compile it against the pinned jar
   before committing.
