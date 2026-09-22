@@ -854,6 +854,11 @@
       : countdownEndsAt ? countdownLine()
       : !w.seated ? 'No one is seated yet.'
       : w.notReady ? `Launches when every seat is ready · ${w.notReady} to go`
+      /* A copy with no host reachable cannot start anything, and saying "Starting…" there is a
+         promise the page cannot keep: on github.io probeHost() is false off loopback, and the note
+         below already tells the reader where the game actually runs. Measured 2026-09-22 — the
+         cloud read "Every seat is ready. Starting…" while the local copy read "Starting in 10…". */
+      : hostReachable === false ? 'Every seat is ready. Open the local host to play.'
       : 'Every seat is ready. Starting…';
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" aria-hidden="true">
@@ -1353,7 +1358,7 @@
       </dl>
       ${t.pod.partial ? note(t.pod.partial) : ""}
       <p class="cm-muted">Turn order is shuffled when the game starts.</p>
-      <div class="cm-actions"><button type="button" class="v-button${canStart ? " primary" : ""}" data-action="lobby-start"${canStart ? "" : " disabled"}>${canStart ? "Start the game" : "Not ready yet"}</button><span class="cm-muted">${e(startWhy || "The board is not built yet. This button will deal the first hands once it is.")}</span></div></section>` : "";
+      <div class="cm-actions"><button type="button" class="v-button${canStart ? " primary" : ""}" data-action="lobby-start"${canStart ? "" : " disabled"}>${canStart ? "Start the game" : "Not ready yet"}</button><span class="cm-muted">${e(canStart ? "" : startWhy || "The board is not built yet. This button will deal the first hands once it is.")}</span></div></section>` : "";
 
     /* Who the private table is waiting on (C.2), drawn while one is open on the local host and
        otherwise empty. The module that draws it is the same one the guest and host pages use. */

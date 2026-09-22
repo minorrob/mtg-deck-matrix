@@ -435,6 +435,43 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
     "and it calls the module for each of them");
 }
 
+/* THE NOTE BESIDE START USED TO SAY THE OPPOSITE OF THE BUTTON.
+ *
+ * `startWhy` is deliberately EMPTY when the table can start — it exists to name what is blocking —
+ * and the template fell back to "The board is not built yet. This button will deal the first hands
+ * once it is." whenever it was empty. So the discouraging sentence appeared exactly when the
+ * button worked, and never when it did not. A UAT on 2026-09-22 read it on both platforms, beside
+ * an enabled Start, and filed the button as non-functional on the strength of its own copy.
+ */
+{
+  const source = readFileSync(new URL("../crankmagic-game.js", import.meta.url), "utf8");
+  const at = source.indexOf('data-action="lobby-start"');
+  ok(at > 0, "the lobby draws a start row");
+  const row = source.slice(at, at + 420);
+  const note = /<span class="cm-muted">\$\{e\(([^]*?)\)\}<\/span>/.exec(row);
+  ok(note, "the start row carries a note beside the button");
+  ok(/canStart \?/.test(note[1]),
+    "the note must branch on canStart: startWhy is EMPTY when the table is ready, so an "
+    + "ungated fallback shows its discouraging sentence exactly when the button works");
+}
+
+/* A COPY THAT CANNOT START A GAME MUST NOT SAY IT IS STARTING ONE.
+ *
+ * The status line's last fallback was a flat "Every seat is ready. Starting…", with no reference
+ * to whether a host had been found. On github.io no host can be reached — probeHost() returns
+ * false off loopback, and fifteen lines below, the page already says so in its own note — so the
+ * published lobby announced a launch that could never happen. Measured on 2026-09-22: cloud read
+ * "Every seat is ready. Starting…" at the same moment the local copy read "Starting in 10…".
+ */
+{
+  const source = readFileSync(new URL("../crankmagic-game.js", import.meta.url), "utf8");
+  const at = source.indexOf("'Every seat is ready.");
+  ok(at > 0, "the lobby has a ready-to-start line");
+  const around = source.slice(Math.max(0, at - 420), at + 160);
+  ok(/hostReachable/.test(around),
+    "the ready-to-start line must know whether a host was found before it claims a launch");
+}
+
 /* ---- pure ---- */
 {
   const before = JSON.stringify(live);
