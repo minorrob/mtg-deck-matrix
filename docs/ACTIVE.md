@@ -69,14 +69,38 @@ Six of Rob's findings turned out to be one finding: **the board had the facts an
 | B.5a | The panel slides **over** the mat; the mat stays 1368px whether it is open or shut |
 | B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now |
 
+### The board has now been seen with cards, and it was wrong in two ways
+
+`game/tools/qa-pod.mjs` starts a pod against the native Forge AI, plays it far enough that the
+boards have something on them, photographs it and measures it. **Three Stage B pieces were blocked
+for a week on the sentence "cannot be judged without cards on screen"; they are not blocked any
+more.** Run it against a second host on a spare port unless the one in use is idle:
+
+```
+node game/tools/qa-pod.mjs --out shots/ --port 8778 --turns 3
+```
+
+The first run found both of these, and no CSS-shape suite could have:
+
+- **The hand was 500px below the fold** at 1920×1080. A card is *dragged* from the hand onto a
+  mat, so a hand off screen is not a cosmetic problem. Fixed by bounding the mat by the viewport's
+  height and taking its width from 16:9 — which is what `mats.css` already did for its own compact
+  overview, so the approach had a precedent rather than being invented.
+- **The counter sat on a player's own name**, because all four headings rode the top edge. Frame 2e
+  had said how to avoid that (`column-reverse` on the bottom row) and nothing had implemented it.
+
+Both are in #347, and the harness reports the `fold` line, the audio clips a real game played and
+the page-error count on every run.
+
 ### What is left, and why each one waits
 
 - **B.5b — the rail overlay.** `/review` is a standalone page. There is no CrankMagic rail on it to
   bring back, so the control would open an empty drawer. It arrives when the board becomes a view
   of the one app.
 - **B.6b — the History band.** Not "add a band": 2f wants a real row between the zone pairs, and
-  the mat's absolute layout has no gap there. It re-proportions every board's zones, which cannot
-  be judged without cards on screen.
+  the mat's absolute layout has no gap there. It re-proportions every board's zones. **No longer
+  blocked** — `qa-pod.mjs` puts cards on screen to judge it against. It is still the riskiest thing
+  left, because a pile that is card-shaped at one height is a sliver at another.
 - **B.6c — the left pane of the other three boards.** Focus is a modal dialog today; this is the
   structural piece.
 - **B.6d — the Coach.** Not to be built until it works. 2f draws it and says "its logic is a later
