@@ -2,8 +2,8 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #322 to #327 merged; #328 open and green-pending |
-| **Branch** | `main`; `claude/alerts-poison-and-draws` open as #328 |
+| **Holder** | Free — #322 to #328 all merged; nothing open |
+| **Branch** | `main`; nothing open |
 | **Since** | 2026-09-21 |
 | **Doing** | **Stage A is nearly finished and the board has joined the design system.** The plan is `docs/plan-board-information-layer.md`, which supersedes the stage list in `docs/plan-board-onto-the-design-system.md`. |
 | **Next for whoever picks this up** | **Stage B** — the board becomes the Play surface of the one app, measured against wireframes 2e/2f, with `game/ui` held to its raw-hex ratchet. Then the **card extraction skill** (API pilot, not Forge). Rob confirmed Stage B is on the agenda *after* the engine work. |
