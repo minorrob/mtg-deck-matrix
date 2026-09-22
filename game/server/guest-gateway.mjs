@@ -55,6 +55,15 @@ const publicFiles=new Map([
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`/playmats/${name}.png`,['image/png',`playmat:${name}`]])
 ]);
 
+/* The play-audio pack. Registered from the pack's own index rather than a second hand-written
+   list: a sound the gateway does not serve is silence for every remote player, and a list that
+   has to be kept in step with the host's is a list that will not be. */
+export function registerPlayAudio(names){
+  for(const name of names){
+    const type=name.endsWith('.json')?'application/json; charset=utf-8':'audio/mpeg';
+    publicFiles.set('/audio/'+name,[type,'audio/'+name]);
+  }
+}
 function bearer(req){const value=req.headers.authorization||'';return value.startsWith('Bearer ')?value.slice(7):'';}
 async function body(req,limit){
   const declared=Number(req.headers['content-length']||0);if(declared>limit)throw Object.assign(Error('Request is too large'),{status:413});
