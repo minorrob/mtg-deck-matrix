@@ -728,6 +728,47 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.doesNotMatch(primary[1], /grid-(column|row)/,
       "primary-seat says which board is yours, not which one is bigger — Focus is frame 2f's job");
   });
+  // 2e, on the boards: "flex-direction: column for the top row, column-reverse for the bottom --
+  // so each header rides its OUTER edge and the center counter never covers a name or a control."
+  //
+  // PHOTOGRAPHED FAILING in a live four-player pod, 2026-09-22 — the first time this board had
+  // been seen with cards on it. All four headings sat on the top edge, so the counter's lower two
+  // quadrants landed on the bottom-left board's controls and on the human seat's own name. The
+  // frame anticipated exactly that and said how to avoid it; nothing had implemented the clause.
+  check("the bottom row's headings ride the outer edge, clear of the counter", () => {
+    const seat = /body\.table-view \.seat\{([^}]*)\}/.exec(boardCss);
+    assert.match(seat[1], /display:flex/, "a board stacks its heading and its mat");
+    assert.match(seat[1], /flex-direction:column/, "heading above the mat on the top row");
+    const bottom = /body\.table-view \.seat\.west,body\.table-view \.seat\.south\{([^}]*)\}/.exec(boardCss);
+    assert.ok(bottom, "a rule for the two boards on the bottom row");
+    assert.match(bottom[1], /flex-direction:column-reverse/,
+      "and below the mat on the bottom row, so no heading sits under the counter");
+  });
+
+  // "Nothing sits below the mat but your hand" is about order. This is about the fold, which only
+  // a live pod could show: at 1920x1080 the four boards came out 912x329 apiece and the hand
+  // started at y=1274 -- some 500px below the bottom of the screen. You cannot drag a card from a
+  // hand you cannot see onto a mat you cannot see at the same time, and that drag is the whole
+  // interaction. The boards are therefore bounded by the viewport's HEIGHT and take their width
+  // from 16:9, rather than filling the width and growing however tall that makes them.
+  check("the four boards and the hand fit one screen together", () => {
+    const seat = /body\.table-view \.seat\{([^}]*)\}/.exec(boardCss);
+    assert.match(seat[1], /max-height:calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)/,
+      "two rows of boards share what the viewport has left after the chrome and the hand");
+    assert.match(seat[1], /max-width:100%/,
+      "and a board still never overflows its column on a narrow screen");
+    assert.doesNotMatch(seat[1], /(^|;)width:100%/,
+      "a board that fills the width cannot also be bounded by the height; 16:9 gives it the width");
+    // And once the boards take their width from their height, the mat must stop being full-bleed
+    // or they float apart with the counter marooned in the space between. The frame draws them
+    // almost touching, with the counter straddling a 20px channel. So the mat is as wide as two
+    // boards plus that channel and its gaps, and centered.
+    const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
+    assert.match(table[1], /max-width:calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\*32\/9 \+ \d+px\)/,
+      "the mat is two 16:9 boards wide plus the channel, not the whole window");
+    assert.match(table[1], /margin-inline:auto/, "and centered in whatever is left");
+  });
+
   check("the mat leaves a middle channel for the center counter", () => {
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
     assert.ok(table, "the mat rule");
