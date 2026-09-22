@@ -2,11 +2,11 @@
 
 | | |
 | --- | --- |
-| **Holder** | Claude — the play-audio track, #341 to #346 |
-| **Branch** | `claude/play-audio-live` (#346). #341, #342 and #345 merged; #344 and #346 open and stacked |
+| **Holder** | Free — #341 to #346 merged; #347 open |
+| **Branch** | `claude/board-fits-one-screen` (#347). Everything else merged to `main` |
 | **Since** | 2026-09-22 |
-| **Doing** | **Stage A is complete and Stage B is six of eight pieces in.** The board is on the design tokens, laid out as the wireframe's 2×2, and no longer prints what the app carries. Plans: `docs/plan-stage-b-board.md` (the frames, measured), `docs/plan-board-information-layer.md` (Stage A.6 and the extraction skill), `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`. |
-| **Next for whoever picks this up** | **Play a four-player pod.** Nothing in Stage B has been seen with cards on four boards. The sound has now been heard in a real two-seat game — lobby bed, game bed, draw, land, ETB, combat bed, no page errors — but a pod is where the board wipe and the token batch would turn up. Then B.6b, B.5b and B.2b, all three of which want a live surface to judge against. |
+| **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
+| **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
 
 ## Play audio, all five phases in
 
@@ -67,7 +67,8 @@ Six of Rob's findings turned out to be one finding: **the board had the facts an
 | B.3 | The center counter — 152px, four totals on their own `--seat` colors, the disc cycles life → commander damage → poison |
 | B.4 | The hand on the mat's bottom edge. **Zero overlap**, tested with real-sized cards |
 | B.5a | The panel slides **over** the mat; the mat stays 1368px whether it is open or shut |
-| B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now |
+| B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now. **Seen working with cards** |
+| B.6c | The other three boards as a left pane in Focus, with Table view and a collapse. **Seen working with cards** |
 
 ### The board has now been seen with cards, and it was wrong in two ways
 
@@ -99,10 +100,9 @@ the page-error count on every run.
   of the one app.
 - **B.6b — the History band.** Not "add a band": 2f wants a real row between the zone pairs, and
   the mat's absolute layout has no gap there. It re-proportions every board's zones. **No longer
-  blocked** — `qa-pod.mjs` puts cards on screen to judge it against. It is still the riskiest thing
-  left, because a pile that is card-shaped at one height is a sliver at another.
-- **B.6c — the left pane of the other three boards.** Focus is a modal dialog today; this is the
-  structural piece.
+  blocked, and now measured** — the gap between the two pile pairs is 4.8% of the mat, about
+  25px, and a band needs three times that. The plan carries the two ways to make the room and
+  what each costs. **It is Rob’s call now, not a measurement question.**
 - **B.6d — the Coach.** Not to be built until it works. 2f draws it and says "its logic is a later
   phase"; Rob's standing rule (2026-09-22) is that nothing is available before it is functional, so
   the surface waits for the logic rather than arriving ahead of it.

@@ -289,6 +289,33 @@ correctly and broke a live board.
 **So B.6b waits for a live game to verify against.** The numbers above are the starting point; the
 work is re-proportioning, not inserting.
 
+### Measured in a live game, 2026-09-22
+
+`game/tools/qa-pod.mjs` and a Focus shot give the real figures rather than the CSS's intent, as
+percentages of the mat:
+
+| zone | measured |
+|---|---|
+| Battlefield (`mat-zone`) | `top 5.7%  height 53.7%  left 3.7%  width 63.8%` |
+| Upper pile pair | `top 38.1%  height 27.1%  left 72.9%  width 11.5%` |
+
+So the upper pair ends at **65.2%** and the lower pair begins at **70%**. **The gap is 4.8% of the
+mat's height** — about 25px on the 530px mat the Focus view draws. A band needs three times that.
+
+Two ways to make the room, and they are not equivalent:
+
+1. **Re-proportion, as the plan assumed.** Shorten the upper pair to about 22% and push the lower
+   pair to about 74%. That yields roughly 12% for the band and makes both pile pairs shorter than
+   a card at some board sizes — the sliver failure this section warns about, and it lands on all
+   four boards at once, not only in Focus.
+2. **Use the space that is already empty.** The mat's right column carries nothing in the DOM
+   between `5%` and `38%` — that region is where the playmat art prints its steps list and its
+   "Life" box. Putting the band there costs no zone any height, but it sits over artwork Rob chose
+   and away from where 2f draws it.
+
+**This is Rob's call, not a measurement question any more.** Option 2 is cheaper and safer; option
+1 is what the frame draws. The figures above are what either one has to work with.
+
 ---
 
 ## The standing rule, and what it costs elsewhere
