@@ -758,6 +758,28 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(board, /ownerSeatId/,
       "commander damage is read from ForgeProbe's {commanderId, ownerSeatId, name, damage} rows, not keyed by player id");
   });
+  // 2e: "the right panel is closed (Panel > slides it over the mat for Card · Tracker · History ·
+  // Combat)". An overlay, not a column — the play surface is the whole window and the panel visits
+  // it. The rail half of that sentence is not here and cannot be: /review is a standalone page
+  // with no CrankMagic rail to bring back. It arrives when the board becomes a view of the app.
+  check("the panel slides over the mat rather than taking a column from it", () => {
+    const aside = /body\.table-view main>aside\{([^}]*)\}/.exec(boardCss);
+    assert.ok(aside, "the panel rule");
+    assert.match(aside[1], /position:fixed/, "an overlay, not a grid track");
+    const closed = /body\.table-view\.hide-information main>aside\{([^}]*)\}/.exec(boardCss);
+    assert.ok(closed, "the closed state");
+    assert.match(closed[1], /transform:translateX\(100%\)/, "it slides off rather than vanishing");
+    const main = /body\.table-view main\{([^}]*)\}/.exec(boardCss);
+    assert.ok(main, "the main rule");
+    assert.doesNotMatch(main[1], /grid-template-columns:[^;]*\s\d|clamp\(/,
+      "the mat keeps the full width whether the panel is open or shut");
+  });
+  check("the panel starts closed and the strip carries its control", () => {
+    assert.match(board, /hideInformation=true/, "the play surface is the whole window until asked otherwise");
+    assert.match(board, /panelLabel=\(\)=>hideInformation\?'Panel/, "the control reads Panel, as 2e names it");
+    assert.match(boardCss, /body\.table-view>header\{[^}]*z-index:50/,
+      "the top strip is the whole control surface, so it stays above the panel that slides under it");
+  });
   check("nothing sits below the mat but the hand", () => {
     const hand = /body\.table-view \.hand\{([^}]*)\}/.exec(boardCss);
     assert.ok(hand, "the hand rule");
