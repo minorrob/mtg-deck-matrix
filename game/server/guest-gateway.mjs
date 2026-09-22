@@ -43,6 +43,7 @@ const publicFiles=new Map([
   ['/action-policy.mjs',['text/javascript; charset=utf-8','action-policy.mjs']],
   ['/table-notices.mjs',['text/javascript; charset=utf-8','table-notices.mjs']],
   ['/card-onboarding.mjs',['text/javascript; charset=utf-8','card-onboarding.mjs']],
+  ['/play-audio-rules.mjs',['text/javascript; charset=utf-8','play-audio-rules.mjs']],
   ['/card-layout.mjs',['text/javascript; charset=utf-8','card-layout.mjs']],
   ['/handoff.mjs',['text/javascript; charset=utf-8','handoff.mjs']],
   ['/crankmagic-logo.webp',['image/webp','crankmagic-logo.webp']],
