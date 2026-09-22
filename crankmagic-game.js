@@ -863,6 +863,7 @@
         <div><dt>Deck cost cap</dt><dd>${e(C.money(BUDGET))}</dd></div>
         <div><dt>AI pilot</dt><dd>${e(aiPilotLabel())}</dd></div>
         <div><dt>Remote guests</dt><dd>${lobby.opponents.some((o) => o && o.role === 'human') ? 'on' : 'off'}</dd></div>
+        <div><dt>Local host</dt><dd><a class="cm-table-host-link" href="${gameLaunched ? hostOrigin() + '/review' : hostOrigin()}" target="_blank" rel="noopener">${e(hostOrigin().replace(/^https?:\/\//, '') + (gameLaunched ? '/review' : ''))}</a></dd></div>
       </dl>
       <div class="cm-table-launch-row">
         <p class="cm-table-launch${launchError ? " is-error" : ""}" role="status" aria-live="polite" ${launchError ? `title="${e(launchError)}"` : ""}>${e(line)}</p>
@@ -1174,6 +1175,7 @@
      permission, not mixed content -- http://127.0.0.1 is a trustworthy origin. Counting down to a call that
      cannot succeed is what produced Rob's "HTTP 404" on GitHub Pages. null means not asked
      yet, which is treated as 'do not count' until the answer arrives. */
+  const hostOrigin = () => (location.hostname === '127.0.0.1' || location.hostname === 'localhost') ? location.origin : 'http://127.0.0.1:8768';
   let hostReachable = null;
   async function probeHost() {
     const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';

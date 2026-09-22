@@ -93,3 +93,20 @@ test('the skipped first draw is explained only where the rule actually applies',
   const pod={state:{turn:1,turnPlayerId:0,players:[{playerId:0},{playerId:1},{playerId:2},{playerId:3}]}};
   assert.equal(firstDrawSkipped(pod,0),false,'a four-player pod draws, including whoever goes first');
 });
+
+/* Rob, 2026-09-21: "I should be able to... untap the mana that I used to cast it if I want to
+ * until it's no longer legal to do so." Forge decides when that is -- ForgeBrowserBridge asks
+ * PlayerControllerHuman.canUndoLastAction(), which requires the player to hold priority and to own
+ * a non-empty undo stack. The board must not decide it for itself, so the only thing to pin here
+ * is that the flag is carried through untouched and nothing invents it. */
+test('take-mana-back is offered only when the engine says so',()=>{
+  const view=(ui)=>({state:{turn:4,turnPlayerId:0,priorityPlayerId:0,stackSize:0,phase:'MAIN1'},ui:{prompt:'Priority: Rob',ok:'OK',okEnabled:true,inputType:'InputPassPriority',...ui}});
+  assert.equal(view({canUndo:true}).ui.canUndo,true);
+  assert.equal(view({canUndo:false}).ui.canUndo,false);
+  /* An adapter that has not been rebuilt sends no such field; the board must read that as "no
+     button" rather than as "undefined is truthy enough". */
+  assert.equal(!!view({}).ui.canUndo,false,'an older adapter offers nothing rather than a dead button');
+  /* And it is never inferred from having priority: holding priority with an empty undo stack is
+     the ordinary case and must not light the button. */
+  assert.equal(!!view({canUndo:false}).ui.canUndo,false);
+});

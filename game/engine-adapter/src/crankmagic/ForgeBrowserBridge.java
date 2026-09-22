@@ -67,17 +67,25 @@ public final class ForgeBrowserBridge {
     }
     synchronized Map<String,Object> view(){
         String inputType="";Map<Integer,String> actions=new TreeMap<>();Map<String,Object> payment=null;
-        boolean activeInput=true;
+        boolean activeInput=true,canUndo=false;
         if(controller instanceof forge.player.PlayerControllerHuman human){
             var input=human.getInputQueue().getInput();if(input!=null)inputType=input.getClass().getSimpleName();
             activeInput=input!=null;
+            /* TAKING THE MANA BACK. Rob, 2026-09-21: "I should be able to... untap the mana that I
+               used to cast it if I want to until it's no longer legal to do so."
+               Forge keeps an undo stack of mana abilities -- ManaEffect and ManaReflectedEffect are
+               the only things that ever call setUndoable(true) -- and MagicStack.undo() refunds the
+               mana it paid. canUndoLastAction() additionally requires this player to hold priority.
+               A land play is NOT on it: playing a land never reaches MagicStack.add(), which is the
+               only caller of recordUndoableActions. That is the rules, not an omission (CR 305.1). */
+            try{canUndo=human.canUndoLastAction();}catch(RuntimeException ignored){canUndo=false;}
             if(input instanceof forge.gamemodes.match.input.InputPayMana){var paid=human.getPlayer().getPaidForSA();if(paid!=null){var root=paid.getRootAbility();payment=ForgeProbe.obj("abilityId",paid.getId(),"sourceId",paid.getHostCard().getId(),"triggered",root.isTrigger(),"automaticEligible",root.getActivatingPlayer()==human.getPlayer()&&!root.isTrigger()&&(root.isSpell()||root.isActivatedAbility()));}}
             if(pending==null&&!actionInFlight&&game!=null)for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command))for(Card card:p.getCardsIn(zone)){
                 if(!card.getView().canBeShownTo(human.getPlayer().getView()))continue;
                 try{String action=human.getActivateDescription(card.getView());if(action!=null&&!action.isBlank())actions.put(card.getId(),action);}catch(RuntimeException ignored){}
             }
         }
-        return ForgeProbe.obj("viewerSeatId",seatId,"viewerPlayerId",viewer()==null?null:viewer().getId(),"revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled&&activeInput,"cancelEnabled",cancelEnabled&&activeInput,"selectables",selectables,"selectableCards",selectableCards,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"payment",payment,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
+        return ForgeProbe.obj("viewerSeatId",seatId,"viewerPlayerId",viewer()==null?null:viewer().getId(),"revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled&&activeInput,"cancelEnabled",cancelEnabled&&activeInput,"selectables",selectables,"selectableCards",selectableCards,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"canUndo",canUndo,"payment",payment,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
     }
     forge.game.player.Player viewer(){return controller instanceof forge.player.PlayerControllerHuman h?h.getPlayer():null;}
     synchronized Map<String,Object> concede(){
@@ -340,7 +348,10 @@ public final class ForgeBrowserBridge {
             if(actionInFlight||pending!=null||controller==null||!fallback.isEmpty())throw new IllegalArgumentException("Complete the current decision first");
             if(controller instanceof forge.player.PlayerControllerHuman h&&h.getInputQueue().getInput()==null)throw new IllegalArgumentException("This seat has no active decision");
             if(kind.equals("ok")&&!okEnabled||kind.equals("cancel")&&!cancelEnabled)throw new IllegalArgumentException("Button is unavailable");
-            if(!Set.of("ok","cancel","card","player").contains(kind))throw new IllegalArgumentException("Unsupported action");
+            /* Asked of Forge rather than trusted from the browser: the undo stack may have been
+               cleared between the view that offered the button and this request. */
+            if(kind.equals("undo")&&!(controller instanceof forge.player.PlayerControllerHuman u&&u.canUndoLastAction()))throw new IllegalArgumentException("There is nothing to undo. Mana can be taken back only while you still hold priority, and casting a spell or playing a land ends that.");
+            if(!Set.of("ok","cancel","card","player","undo").contains(kind))throw new IllegalArgumentException("Unsupported action");
             // Reserve before scheduling: retries cannot apply a second payment or selection.
             receiptPayloads.put(id,request.toString());receipt(id);queuedRevision=++revision;actionInFlight=true;lastAction=ForgeProbe.obj("id",id,"status","pending");
         }
@@ -349,6 +360,7 @@ public final class ForgeBrowserBridge {
                 synchronized(this){if(revision!=queuedRevision||pending!=null||!fallback.isEmpty())throw new IllegalArgumentException("The decision changed before this action could be applied");}
                 switch(kind){
                     case "ok":controller.selectButtonOk();break;
+                    case "undo":controller.undoLastAction();break;
                     case "cancel":{
                         Map<String,Object> cancelled=null;
                         if(controller instanceof forge.player.PlayerControllerHuman human){

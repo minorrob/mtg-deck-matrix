@@ -204,3 +204,68 @@ force-advance lever exists (`/api/table/force-advance`) and was exercised by the
 mulligan and untap paths are what the old #259/#260 work was about, and that work is merged but
 has never been watched end to end. **This is the part of the flow to test first and trust least**,
 and nothing in this plan changes it.
+
+---
+
+## Pieces 3–5, made concrete: a guest's own decks
+
+**Rob, 2026-09-21:** *"imagine if I invite a human player… the invite should include a link to the
+CrankMagic main page. They may go ahead and create their deck there and save it… Then they click
+their unique link to join the seat. In the game, they would want… to see the decks that I have
+created in CrankMagic now available to them. These would be stored in their browser cache. Is there
+a way for their link to my local host… to then also read the deck cache files?"*
+
+### The one thing that cannot work
+
+**A page on the tunnel origin cannot read storage belonging to `minorrob.github.io`.** Different
+origins; the same-origin policy is the foundation of the browser security model, and no header,
+flag or permission opens it. So "the local host link reads their decks" is out, permanently.
+
+**And it is not cache.** Cache is HTTP-level and evictable. Their decks are in IndexedDB under the
+github.io origin. The distinction carries a consequence worth stating plainly: **that storage is
+per-browser and per-device, and it can be cleared.** A guest who builds a deck on their phone and
+joins from their laptop has nothing there. That is inherent to a design with no accounts, not a
+defect — and it is the strongest argument for accounts if CrankMagic ever wants them.
+
+### What works instead: the page that owns the storage sends it
+
+This repository already does exactly this for the host — `game/ui/handoff.mjs` plus
+`crankmagic-online.js`, with a nonce, an origin allowlist, a 120-second expiry and single use.
+Neither side reads the other's storage; the owner reads its own and posts it.
+
+For a guest there is a better version, and the endpoints already exist:
+
+| Step | Endpoint | State |
+|---|---|---|
+| Invite lands them on **github.io** carrying the tunnel address and their token | — | piece 3 |
+| They choose a deck **on github.io**, where their storage lives | — | small, new |
+| Ready sends the resolved hundred | **`POST /table/deck`** | **exists** |
+| Gateway accepts one named web origin | `webOrigin` | **shipped, #320** |
+| After the game, the result comes back | **`GET /match/report`** | **exists** |
+| Written into their library | `attachMatchReport` | **exists**, for the host |
+
+**Prefer this over the postMessage handoff.** The guest never leaves github.io to pick a deck, so
+their storage is read by the page that owns it and only the resolved list crosses the wire. No
+popup, so no popup blocker. And the handoff machinery is currently pinned to loopback anyway —
+`handoff.mjs` allowlists exactly two origins and `crankmagic-online.js` hard-codes
+`http://127.0.0.1:8768` in four places, so the postMessage route would need both ends
+parameterised first.
+
+### The host needs no changes
+
+A guest's deck arrives as `source:'upload'` and goes through the same `importWorkshopDeck()` the
+host's own handoff uses: exactly 100 cards, one or two commanders, no commander duplicated, every
+name resolved against the card database. Same road, already paved.
+
+`prepareGuestDeck` refuses `source:'library'` for guests unless the host sets `shareLibrary` — that
+is about **the host's** saved decks, correctly, and does not affect a guest's own.
+
+### The two things that will bite
+
+1. **The tunnel address is ephemeral.** A guest invited on Monday and playing on Friday gets a
+   different `trycloudflare` address. The invite has to carry the current one and the web lobby has
+   to say plainly when the address it holds no longer answers, or it fails silently and looks like
+   the host's machine is down.
+2. **The return path has no opener.** The host's match report rides `window.opener`; a guest on
+   github.io has none. `GET /match/report` with the invite token is the answer, over the same CORS
+   the deck used.
