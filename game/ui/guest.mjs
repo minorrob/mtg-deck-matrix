@@ -47,7 +47,7 @@ function render(value){
   const seats=el('div','seats');for(const seat of tableState.seats){const card=el('div','seat'+(seat.seatId===session.seatId?' you':''));card.append(el('strong','',seat.seatId===session.seatId?'You':seat.name||`Seat ${seat.seatId+1}`),el('span','',seat.kind==='ai'?'AI player':'Human player'),el('small','',!seat.occupied?'Waiting for player':seat.ready?'Ready':seat.connected?'Choosing a deck':'Disconnected'),...(seat.commander?[el('small','',seat.commander)]:[]));seats.append(card);}host.append(seats);
   /* Who the table is waiting on, by name and reason (C.2). The readiness object rides along with
      every /table answer, so this costs no extra request. */
-  if(value.readiness)host.append(renderConnectionPanel(value.readiness,{el,youSeatId:session.seatId,countdownAt:tableState.countdownAt}));
+  if(value.readiness)host.append(renderConnectionPanel(value.readiness,{el,youSeatId:session.seatId,countdownAt:tableState.countdownAt,launchError:tableState.launchError}));
   const own=tableState.seats.find(s=>s.seatId===session.seatId),actions=el('div','actions');
   if(tableState.phase==='selecting'||tableState.phase==='countdown'){
     host.append(deckPanel(value,own));const ready=button(own.ready?'Not ready':'Ready to play',async()=>{try{await api('/table/ready',{method:'POST',body:{ready:!own.ready}});await refresh();}catch(error){message(error.message,true);}},own.ready?'':'primary');ready.disabled=!own.deckVersion;actions.append(ready);

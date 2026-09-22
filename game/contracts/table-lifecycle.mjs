@@ -24,7 +24,7 @@ export function countdownBlockers(table) {
 export function createTable({tableId,seats,settings}) {
   if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
   if(seats.some((s,i)=>s.seatId!==i||!['human','ai'].includes(s.kind)))throw Error('Invalid seats');
-  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,...(settings?{settings:structuredClone(settings)}:{}),
+  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,launchError:null,...(settings?{settings:structuredClone(settings)}:{}),
     seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false}))};
 }
 export function transitionTable(previous,event,{now,launchId}={}) {
@@ -56,13 +56,25 @@ export function transitionTable(previous,event,{now,launchId}={}) {
     }
     case 'tick':
       if(t.phase!=='countdown'||now<t.countdownAt)throw Error('Countdown has not completed');
-      if(!launchId)throw Error('Launch identity required');t.phase='starting';t.launchId=launchId;t.generation++;t.countdownAt=null;break;
+      if(!launchId)throw Error('Launch identity required');t.phase='starting';t.launchId=launchId;t.generation++;t.countdownAt=null;t.launchError=null;break;
     case 'engine-started':
       if(t.phase!=='starting'||event.launchId!==t.launchId||!event.matchId)throw Error('Wrong engine launch');
       t.phase='playing';t.matchId=event.matchId;break;
+    /* AN AI SEAT KEEPS ITS READINESS HERE, BECAUSE NOTHING CAN EVER GIVE IT BACK.
+     *
+     * Clearing every seat used to end the table for good: readiness is granted to an AI seat when
+     * the table is built and nowhere else but a rematch, and an AI seat has nobody to press its
+     * button. A UAT on 2026-09-22 watched an invited guest join, choose a deck, press Ready and
+     * then wait nine minutes on two bots that could never become ready again. `completed`, below,
+     * already knew a reset has to treat AI seats differently.
+     *
+     * The humans do re-confirm. A launch that failed is worth a person looking at before it is
+     * tried again, and now there is something to look at: the reason travels with the event
+     * instead of being written to an outbox nobody publishes. */
     case 'engine-failed':
       if(t.phase!=='starting'||event.launchId!==t.launchId)throw Error('Wrong engine launch');
-      t.phase='selecting';t.launchId=null;t.seats.forEach(s=>s.ready=false);break;
+      t.phase='selecting';t.launchId=null;t.launchError=event.error?String(event.error):'The rules engine did not start';
+      t.seats.forEach(s=>s.ready=s.kind==='ai');break;
     case 'completed':
       if(t.phase!=='playing'||event.matchId!==t.matchId)throw Error('Wrong completed match');
       // The clock the rematch deadline is measured from, so waiting on an answer is bounded.

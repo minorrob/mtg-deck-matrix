@@ -5,8 +5,12 @@
    genuine one and not a stub of my own invention. */
 import {readFileSync} from "node:fs";
 
-const CARDS = JSON.parse(readFileSync("/home/user/mtg-deck-matrix/data/cards.json", "utf8")).cards;
-const NOT_FOUND = readFileSync("/home/user/mtg-deck-matrix/tests/fixtures/scryfall-flavor-name.json", "utf8");
+/* Resolved against this file, not against an absolute path from whatever machine wrote it. Both
+   of these read `/home/user/mtg-deck-matrix/...` until 2026-09-22, so on any checkout that was not
+   that container the whole production journey suite died here — and died AFTER the geometry pass
+   had printed its confident green line, which is why nobody noticed for as long as nobody did. */
+const CARDS = JSON.parse(readFileSync(new URL("../../data/cards.json", import.meta.url), "utf8")).cards;
+const NOT_FOUND = readFileSync(new URL("../fixtures/scryfall-flavor-name.json", import.meta.url), "utf8");
 const byName = new Map(CARDS.map(c => [c.name.toLowerCase(), c]));
 // Scryfall's named?exact= matches flavor names too -- that is how "Splinter, Vengeful
 // Sensei" resolves to Ink-Eyes, Servant of Oni. The stub must do the same or it would

@@ -151,7 +151,9 @@ export class TableBroker{
   async processOutbox(){
     const item=this.#state.outbox.find(x=>x.status==='pending'||x.status==='running');if(!item)return null;if(typeof this.#launch!=='function')throw Error('No match launcher configured');
     item.status='running';this.#save();try{const matchId=await this.#launch({table:safeClone(this.#state.table),decks:safeClone(this.#state.deckSnapshots),launchId:item.launchId,matchId:item.matchId});if(matchId!==item.matchId)throw Error('Launcher returned the wrong match identity');item.status='done';this.#transition({type:'engine-started',seatId:0,launchId:item.launchId,matchId});return matchId;}
-    catch(error){item.status='failed';item.error=String(error.message||error);this.#transition({type:'engine-failed',seatId:0,launchId:item.launchId});throw error;}
+    /* The reason goes onto the TABLE, not only onto this outbox item. The item is internal and
+       nothing publishes it, so a guest watching a launch fail used to be told nothing at all. */
+    catch(error){item.status='failed';item.error=String(error.message||error);this.#transition({type:'engine-failed',seatId:0,launchId:item.launchId,error:item.error});throw error;}
   }
   async complete(matchId){this.#state.lastMatchId=matchId;this.#state.matchSeats[matchId]=safeClone(this.#state.table.seats);this.#save();return this.#transition({type:'completed',seatId:0,matchId});}
   async disconnectExpired(){

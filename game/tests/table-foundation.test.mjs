@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createTable,transitionTable} from '../contracts/table-lifecycle.mjs';
+import {createTable,transitionTable,countdownBlockers} from '../contracts/table-lifecycle.mjs';
 import {SeatAccess} from '../contracts/seat-access.mjs';
 const initial=()=>createTable({tableId:'table-a',seats:[{seatId:0,kind:'human',occupied:true},{seatId:1,kind:'human'},{seatId:2,kind:'ai'}]});
 test('ready countdown is invalidated by edits; one launch; unanimous rematch retains seats and reselects decks',()=>{
@@ -14,6 +14,41 @@ test('ready countdown is invalidated by edits; one launch; unanimous rematch ret
   go({type:'rematch-vote',seatId:0,accept:true});assert.throws(()=>go({type:'next-selection'}),/Waiting/);
   go({type:'rematch-vote',seatId:1,accept:true});go({type:'next-selection'});assert.equal(t.phase,'selecting');assert.ok(t.seats.every(s=>s.occupied&&!s.ready));assert.equal(t.seats[1].deckVersion,'new-deck');
 });
+/* A FAILED LAUNCH USED TO END THE TABLE, PERMANENTLY AND IN SILENCE.
+ *
+ * Found by a UAT on 2026-09-22 in which an agent played an invited guest: it joined, chose a deck,
+ * pressed Ready, and then sat for nine minutes. `engine-failed` cleared every seat including the
+ * AI seats, and an AI seat has nobody to press its button -- readiness is granted when the table
+ * is built and, before this, nowhere else but a rematch. So the table waited forever on two bots.
+ * Two cases below, `completed`, already knew AI seats need restoring on a reset; this one did not.
+ *
+ * The reason was lost too. table-broker.mjs recorded it on its outbox item, which nothing
+ * publishes, and dispatched the transition without it, so the authoritative table could not say
+ * why it had stopped. */
+test('a failed launch leaves the table startable, and says why it failed',()=>{
+  let t=initial();const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
+  go({type:'join',seatId:1});for(let seatId=0;seatId<3;seatId++){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
+  go({type:'countdown'});go({type:'tick'},10000);assert.equal(t.phase,'starting');
+  go({type:'engine-failed',launchId:'launch-1',error:'Forge did not become ready within four minutes'});
+
+  assert.equal(t.phase,'selecting');
+  assert.equal(t.launchId,null);
+  /* The AI seat keeps its readiness, because nothing can ever give it back. */
+  assert.equal(t.seats[2].ready,true,'an AI seat has no one to press Ready for it');
+  /* The humans re-confirm: a failed launch is worth a person looking at before it is tried again. */
+  assert.equal(t.seats[0].ready,false);
+  assert.equal(t.seats[1].ready,false);
+  /* And the table itself carries the reason, rather than it living on an outbox nobody reads. */
+  assert.equal(t.launchError,'Forge did not become ready within four minutes');
+
+  /* The table is not dead: the humans say ready again and it starts. */
+  go({type:'ready',seatId:0,ready:true});go({type:'ready',seatId:1,ready:true});
+  assert.deepEqual(countdownBlockers(t),[],'nothing blocks a retry');
+  go({type:'countdown'},20000);go({type:'tick'},30000);
+  assert.equal(t.phase,'starting');
+  assert.equal(t.launchError,null,'a new launch clears the last failure');
+});
+
 test('disconnect cancels readiness; grace precedes release; stale updates rejected',()=>{
   let t=initial();const go=(event,now)=>t=transitionTable(t,{...event,revision:t.revision},{now});
   go({type:'disconnect',seatId:0},100);assert.throws(()=>go({type:'expire',seatId:0},60099));

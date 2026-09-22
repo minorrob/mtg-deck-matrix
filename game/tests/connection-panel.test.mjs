@@ -168,3 +168,26 @@ test('the three pages that draw the panel import this module and the servers pub
   assert.match(read('game/tools/serve-review.mjs'), /'connection\.mjs'/, 'and hands it to the guest gateway');
   for (const css of ['game/ui/guest.css', 'game/ui/setup.css', 'crankmagic.css']) assert.match(read(css), /\.connection-panel/, css + ' styles it');
 });
+
+/* WHAT A GUEST IS TOLD WHEN THE LAUNCH FAILED A MOMENT AGO.
+ *
+ * The panel already rendered a 'failed' launch STAGE, and during the 2026-09-22 UAT a guest still
+ * watched "Starting the rules engine" for nine minutes: that stage lives in the runtime's
+ * in-memory launchProgress, which can go stale or be overwritten. The table's own launchError is
+ * authoritative and persisted, so the panel prefers it and a reset table can still say why. */
+test('a table that failed to launch says so, even when the runtime stage has gone stale', () => {
+  let t = createTable({tableId: 't', seats: [{seatId: 0, kind: 'human', occupied: true}, {seatId: 1, kind: 'human', occupied: true}, {seatId: 2, kind: 'ai'}]});
+  const go = (event, now = 0) => t = transitionTable(t, {...event, revision: t.revision}, {now, launchId: 'L1'});
+  for (const seatId of [0, 1, 2]) { go({type: 'deck', seatId, deckVersion: 'd' + seatId}); go({type: 'ready', seatId, ready: true}); }
+  go({type: 'countdown'}); go({type: 'tick'}, 10000);
+  go({type: 'engine-failed', launchId: 'L1', error: 'Forge did not become ready within four minutes'});
+
+  /* The runtime still claims it is spawning -- exactly the stale state the UAT met. */
+  const readiness = {...readinessOf(t), launch: {stage: 'engine-spawning', error: null}};
+  const d = describeReadiness(readiness, {now: 20000, youSeatId: 1, launchError: t.launchError});
+  assert.equal(d.tone, 'failed', 'a table carrying a launch error is not merely "waiting"');
+  assert.match(d.headline, /did not become ready/, 'the reason reaches the reader');
+
+  /* And the AI seat is ready again, so the panel blames only the humans who must re-confirm. */
+  assert.deepEqual(d.waitingOn.sort(), ['Seat 1', 'You']);
+});
