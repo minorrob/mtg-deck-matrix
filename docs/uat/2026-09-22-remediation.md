@@ -7,7 +7,16 @@
 
 ## The short version
 
-**Eleven findings. Six of them are one finding.**
+**Thirteen findings. One of them stops the thing you asked for from working at all.**
+
+**A guest can join, pick a deck and press Ready — and then the table can never start.** An agent
+playing a real friend got through the invitation, the deck and the Ready button, and was then
+stranded for nine minutes with no error of any kind. One failed engine launch clears every seat's
+readiness including the AI seats, and **nothing in the codebase ever re-readies an AI seat except
+a rematch**. Confirmed against the live table, not inferred. That is **U-12**, and it is the first
+thing to fix.
+
+
 
 The two lobbies look identical because they are the same code, and they are not the same table.
 The cloud copy is a local-storage mock with seats, costs, a countdown and a Start button, none of
@@ -34,7 +43,9 @@ rather than features, and each is marked as such.
 
 | ID | S | Finding | Nature |
 |---|---|---|---|
+| **U-12** | **S1** | **A failed launch strands the table forever, silently — AI seats can never be re-readied** | **Bug** |
 | **U-05** | S1 | The two lobbies do not mirror — they are different tables | Design |
+| **U-13** | S2 | The guest's first two minutes: run-together labels, contradictory statuses, a 184-item dropdown, no cost confirmation | Copy / UX |
 | **U-11** | S2 | The production release gate cannot run — two hardcoded container paths | **Connection** |
 | **U-10** | S2 | Cloud cannot reach the gateway; the CORS mechanism is built and off | **Connection** |
 | **U-02** | S2 | "Start the game" says in its own copy that it does not work, and is enabled | Standing rule |
@@ -72,7 +83,28 @@ The smallest change with the largest honesty return, and it stands alone.
 *Test:* a conformance check asserting the cloud build renders no enabled control whose own copy
 says it does not work, and no countdown text when `probeHost()` is false.
 
-### R1b · Make the release gate runnable — **S** · *connection, not new work* · **do this first**
+### R0 · A failed launch must not strand the table — **S** · **do this first**
+
+`game/contracts/table-lifecycle.mjs:65`, `case 'engine-failed'`, clears every seat's readiness
+including the AI seats, and nothing re-readies an AI seat afterwards. Two lines below,
+`case 'completed'` shows the shape the fix should take — it already special-cases `s.kind==='ai'`.
+
+Three parts, all small:
+
+1. **`engine-failed` restores AI readiness**, the way `completed` restores AI rematch intent.
+2. **The failure becomes visible.** `local-table-runtime.mjs:59` already holds the real reason —
+   *"Forge did not become ready within four minutes"* — and throws it somewhere nobody sees. It
+   belongs on the lobby, for the host and every guest, in place of an orange "Starting the rules
+   engine" that never changes.
+3. **The host gets a way out** — a retry, so a table that has failed once is not dead.
+
+*Test, red first:* drive a table to `engine-failed` and assert the AI seats come back ready and the
+table can still start; assert the failure reason reaches the public table view.
+
+**Why first:** it is the only finding that makes Rob's stated scenario — invite a friend, fill the
+rest with AI — unrecoverable, and an agent hit it on the first attempt.
+
+### R1b · Make the release gate runnable — **S** · *connection, not new work*
 
 `tests/uat/scryfall-stub.mjs:8-9` read `/home/user/mtg-deck-matrix/…`. Resolve both against the
 repo root as every other suite does. Ten journeys and the seven-tour walk come back with it —
@@ -117,6 +149,23 @@ Ready packages their resolved hundred to the host; results travel back after the
 `sessionStorage` with the nonce, the origin and the source deck id, and nothing reads it. Extend
 that path rather than inventing a second one.
 
+### R5b · The guest's first two minutes — **S/M** · *copy and one default*
+
+U-13, in the order a guest meets it. Most of it is wording:
+
+- **Fix the missing separator.** `"Choosing a deckChulane, Teller of Tales"` appears on every seat
+  card in every state. One space.
+- **Default the deck source to "Use a preloaded CrankMagic deck".** Today it defaults to the CSV
+  upload — the only option a new guest cannot complete.
+- **Give the 184-entry dropdown a filter**, and mark which decks fit the table's cap and bracket.
+- **Confirm an accepted deck**: its name, its card count, its cost against the $225 cap.
+- **One vocabulary for seat state**, and one list. Today two lists give a seat three different
+  words at once.
+- **Say why "Ready to play" is disabled** while it is.
+- **Hide the "Deck name" box** when it does not apply.
+- **Explain "bracket 3"** and the Base / Tuned / Pod Fun / Max axis, at least on hover.
+- **Stop re-rendering the whole lobby every poll** — it replaces open dropdowns under the user.
+
 ### R6 · The small ones — **S**, one PR
 
 U-01 (make `#new` a route or stop advertising it), U-06 (say why a view is unavailable, or do not
@@ -146,8 +195,9 @@ I have not assumed an answer to any of these.
 - **The workshop was walked as a journey, not case by case.** A 76-case pass already covered it on
   2026-09-21 and its queue is still open. Re-finding those would have doubled the apparent size of
   this report without adding a fact.
-- **MP-03 onward** — a guest agent is walking the invitation as this is written; results append to
-  the log.
+- **MP-07 to MP-09** — own-hand and opponent-hand visibility, two agents at once, and a mid-game
+  departure. **Not reached**, because U-12 stopped the table starting. They are the first thing to
+  re-run once R0 lands.
 - **Deep board play** — `qa-pod.mjs` reaches turn two to four and no further, so the board wipe and
   token batch audio rules still have not fired in a live game (see `docs/plan-play-audio.md`).
 - **Mobile and offline** were not re-run; they are covered by the existing journeys.
@@ -156,10 +206,18 @@ I have not assumed an answer to any of these.
 
 ## Suggested order, if you want one
 
-**R1 and R2 together, first.** They are both small, R1 removes every untrue statement on screen,
-and R2 costs one launcher flag and unblocks everything after it. That is a single afternoon and it
-turns the biggest finding from structural into scheduled.
+**R0 first, on its own.** It is the only finding that makes the thing you asked about impossible
+rather than merely wrong, and it is a small fix in a file that already shows the shape of it.
 
-Then **R6** while the context is warm, **R3**, **R4**, and **R5** last.
+**Then R1b and R2 together.** Both small. R1b makes the release gate run again — ten journeys and
+the seven-tour walk come back with it — and R2 costs one launcher flag and unblocks everything
+after it. That pair is an afternoon, and it turns the second-biggest finding from structural into
+scheduled.
+
+Then **R1** (stop both lobbies saying untrue things), then **R6** and **R5b** while the context is
+warm, then **R3**, **R4**, **R5**.
+
+**And re-run MP-07 to MP-09 the moment R0 lands.** Whether a guest sees their own hand and not
+anyone else's is the one security-shaped question this run could not reach.
 
 **Awaiting your sign-off before any of this is built.**
