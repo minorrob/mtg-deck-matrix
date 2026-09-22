@@ -152,3 +152,42 @@ same template, resolving to `location.origin` on loopback and to the documented 
 Correct, and it is structural rather than a decision anyone has to enforce: `/review` is served by
 the local host and by the guest gateway. github.io has no board route at all. A guest reaches a
 board only through the tunnel, which is the gateway serving the same files.
+
+---
+
+## B.2 attempted, measured, reverted — 2026-09-22
+
+Tried as a CSS change: the frame's grid on `.arena`, `aspect-ratio:16/9` on `.seat`, and the four
+breakpoint re-guesses removed. Measured at 1600 / 1280 / 1000px:
+
+```
+  west    190x107  ratio 1.778
+  north   190x107  ratio 1.778
+  east    190x107  ratio 1.778
+  south  1028x578  ratio 1.778
+  identical: NO      16:9: all four
+```
+
+**The ratio held everywhere. The boards were still not identical, and CSS cannot make them so.**
+
+`review.mjs:46` builds an `.opponent-boards` container and moves seats 1–3 into it
+(`opponents.append($('seat-'+id))`), leaving only the viewer's seat in `.arena`; `render()` keeps
+that split every frame (`p.playerId===primarySeat ? opponents.after(seat) : opponents.append(seat)`).
+**The three opponents are not siblings of the viewer's board in any grid**, so no grid rule can
+size them together.
+
+Screenshotted against Rob's live game: the ratio change also pushed his hand over the mat's bottom
+edge and squashed an opponent seat. **Reverted the same minute.** B.1's strip was unaffected and
+stayed.
+
+### So B.2 is a JavaScript change, not a stylesheet one
+
+1. Stop moving seats into `.opponent-boards`; place all four in `.arena` at the frame's positions.
+2. `primarySeat` stops meaning "the big one" and means only "the one Focus opens" — which is what
+   frame 2f is for.
+3. "Hide other boards" survives as a View option but no longer changes anyone's size, because the
+   frame says the four are always identical.
+4. The hand moves onto the mat's bottom edge in the same pass (B.4), because it is the mat's fourth
+   grid row in the frame and freeing it from the current layout is what stops it colliding.
+
+**B.2 and B.4 should therefore land together.** Splitting them is what broke the hand.
