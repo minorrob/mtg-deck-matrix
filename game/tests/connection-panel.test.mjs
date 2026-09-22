@@ -207,3 +207,21 @@ test('a guest seat card stacks its fields instead of running them together', asy
     'the status and the commander are adjacent <small> siblings; without display:block they '
     + 'concatenate, which is what a guest actually read');
 });
+
+/* A GUEST'S FIRST CHOICE SHOULD NOT BE THE ONE THEY CANNOT MAKE.
+ *
+ * The deck-source list opened on "Upload Moxfield two-column CSV" — the single option that needs
+ * a file a newly invited friend does not have. An agent playing a guest in the 2026-09-22 UAT had
+ * to know to change it before it could do anything at all. The preloaded decks are the option
+ * that always works, so they lead. */
+test('the guest deck chooser opens on the source that needs nothing', async () => {
+  const {readFileSync} = await import('node:fs');
+  const src = readFileSync(new URL('../ui/guest.mjs', import.meta.url), 'utf8');
+  const list = /for\(const \[value,label\]of \[(.*?)\]\)/s.exec(src);
+  assert.ok(list, 'the deck source list is built from an array of [value,label] pairs');
+  const first = /\['([a-z]+)'/.exec(list[1])[1];
+  assert.equal(first, 'preloaded',
+    'a guest with no file must be able to proceed without first discovering the dropdown');
+  assert.match(src, /const deckDraft={source:'preloaded'/,
+    'and the draft opens on it, because the select reads its value from the draft, not from list order');
+});

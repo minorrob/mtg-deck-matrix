@@ -37,7 +37,10 @@ export class TableBroker{
   #save(){mkdirSync(dirname(this.#file),{recursive:true});this.#state.access=this.#access.snapshot();const temp=this.#file+'.tmp';writeFileSync(temp,JSON.stringify(this.#state,null,2));renameSync(temp,this.#file);}
   #transition(event,extra={}){this.#state.table=transitionTable(this.#state.table,{...event,revision:this.#state.table.revision},{now:this.#clock(),...extra});this.#save();return this.#state.table;}
   hostView(){return safeClone(this.#state.table);}
-  invite(seatId,ttl=600000){const seat=this.#state.table.seats[seatId];if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');const code=this.#access.invite({tableId:this.#state.table.tableId,seatId,generation:this.#state.membershipEpochs[seatId],now:this.#clock(),ttl});this.#save();return {tableId:this.#state.table.tableId,seatId,invite:code,expiresIn:ttl};}
+  /* The table is told, so the countdown waits for whoever this link was sent to. Without it the
+     host readies, the AI seats are ready from birth, and an unoccupied seat is not judged — so a
+     table launched before its invited guest had opened the link. */
+  invite(seatId,ttl=600000){const seat=this.#state.table.seats[seatId];if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');const code=this.#access.invite({tableId:this.#state.table.tableId,seatId,generation:this.#state.membershipEpochs[seatId],now:this.#clock(),ttl});this.#transition({type:'invited',seatId});this.#save();return {tableId:this.#state.table.tableId,seatId,invite:code,expiresIn:ttl};}
   async join(input){
     if(!input||input.tableId!==this.#state.table.tableId||typeof input.invite!=='string')throw Object.assign(Error('Invitation required'),{status:401});
     const table=safeClone(this.#state.table),access=new SeatAccess(this.#access.snapshot());let claimed;

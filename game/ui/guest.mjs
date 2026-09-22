@@ -4,7 +4,9 @@ const status=document.querySelector('#status'),host=document.querySelector('#tab
 /* The render key ignores sub-five-second movement in quiet time, so a guest typing a deck name is
    not interrupted by a redraw every heartbeat; the panel still updates within five seconds. */
 const renderKeyOf=value=>JSON.stringify({...value,readiness:value.readiness&&{...value.readiness,seats:(value.readiness.seats||[]).map(s=>({...s,quietForMs:s.quietForMs===null?null:Math.floor(s.quietForMs/5000)}))}});
-const deckDraft={source:'upload',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
+/* The preloaded decks lead and are the default: they are the one source that needs nothing
+   a newly invited guest does not already have. */
+const deckDraft={source:'preloaded',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
 function message(text,error=false){status.textContent=text;status.className=error?'error':'notice';status.hidden=false;}
@@ -25,7 +27,7 @@ async function redeem(){
 
 function deckPanel(table,seat){
   const panel=el('div','deck panel'),title=el('h2','',seat.deckVersion?'Choose this deck again or replace it':'Choose your deck');panel.append(title);
-  const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['upload','Upload Moxfield two-column CSV'],['preloaded','Use a preloaded CrankMagic deck'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
+  const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['preloaded','Use a preloaded CrankMagic deck'],['upload','Upload Moxfield two-column CSV'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
   source.value=deckDraft.source;const name=el('input');name.placeholder='Deck name';name.setAttribute('aria-label','Deck name');name.value=deckDraft.name;name.addEventListener('input',()=>deckDraft.name=name.value);
   const upload=el('div','choice'),file=el('input');file.type='file';file.accept='.csv,text/csv';file.setAttribute('aria-label','Moxfield deck CSV');const csv=el('textarea');csv.placeholder='Card Name,Count\nForest,99\n\nCommander Name,1';csv.setAttribute('aria-label','Deck CSV contents');csv.value=deckDraft.csv;csv.addEventListener('input',()=>deckDraft.csv=csv.value);file.addEventListener('change',async()=>{csv.value=file.files[0]?await file.files[0].text():'';deckDraft.csv=csv.value;});upload.append(file,csv,el('p','fine','Use two columns: card name and count. Put one blank line between the 99-card library and commander.'));
   const catalog=el('div','choice'),saved=el('select');saved.setAttribute('aria-label','Preloaded deck');for(const d of table.catalog?.decks||[]){const option=el('option','',`${d.name} · ${d.commander}`);option.value=d.id;option.dataset.commander=d.commander;saved.append(option);}if(deckDraft.deckId)saved.value=deckDraft.deckId;saved.addEventListener('change',()=>deckDraft.deckId=saved.value);catalog.append(saved);

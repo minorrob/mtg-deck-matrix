@@ -49,6 +49,47 @@ test('a failed launch leaves the table startable, and says why it failed',()=>{
   assert.equal(t.launchError,null,'a new launch clears the last failure');
 });
 
+/* A TABLE MUST NOT START WITHOUT THE FRIEND IT INVITED.
+ *
+ * countdownBlockers judges only OCCUPIED seats, and the comment above it explains why: "An EMPTY
+ * chair is not an unready player" — seats empty out when somebody exits, when a reconnect grace
+ * runs out, when a rematch drops the people who said no. All true of a chair somebody LEFT.
+ *
+ * A chair nobody has sat in yet, with a live invitation out, is a different thing. Rob's scenario
+ * is two humans and two AI: the host readies, the AI seats are ready from birth, the invited seat
+ * is unoccupied and therefore not counted, and the table counts down and launches before the
+ * guest has opened their link. Proven on 2026-09-22 — blockers came back empty with seat 1 empty
+ * and an invitation outstanding.
+ */
+test('an outstanding invitation holds the countdown',()=>{
+  let t=createTable({tableId:'t',seats:[{seatId:0,kind:'human',occupied:true},{seatId:1,kind:'human'},{seatId:2,kind:'ai'},{seatId:3,kind:'ai'}]});
+  const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'L'});
+  for(const seatId of [0,2,3]){go({type:'deck',seatId,deckVersion:'d'+seatId});go({type:'ready',seatId,ready:true});}
+
+  go({type:'invited',seatId:1});
+  assert.equal(t.seats[1].invited,true);
+  assert.deepEqual(countdownBlockers(t).map(b=>b.reason),['invitation sent, not joined yet'],
+    'the guest you invited is the one person worth waiting for');
+  assert.throws(()=>go({type:'countdown'}),/Every seat must be ready/);
+
+  /* They arrive, choose a deck and ready up: the table is free to go. */
+  go({type:'join',seatId:1});
+  assert.equal(t.seats[1].invited,false,'arriving clears it');
+  go({type:'deck',seatId:1,deckVersion:'d1'});go({type:'ready',seatId:1,ready:true});
+  assert.deepEqual(countdownBlockers(t),[]);
+  go({type:'countdown'});
+  assert.equal(t.phase,'countdown');
+
+  /* And the host can still give up on someone who never comes. */
+  let u=createTable({tableId:'u',seats:[{seatId:0,kind:'human',occupied:true},{seatId:1,kind:'human'},{seatId:2,kind:'ai'}]});
+  const go2=(event,now=0)=>u=transitionTable(u,{...event,revision:u.revision},{now,launchId:'L'});
+  for(const seatId of [0,2]){go2({type:'deck',seatId,deckVersion:'d'+seatId});go2({type:'ready',seatId,ready:true});}
+  go2({type:'invited',seatId:1});
+  go2({type:'uninvited',seatId:1});
+  assert.equal(u.seats[1].invited,false);
+  assert.deepEqual(countdownBlockers(u),[],'withdrawing the invitation releases the table');
+});
+
 test('disconnect cancels readiness; grace precedes release; stale updates rejected',()=>{
   let t=initial();const go=(event,now)=>t=transitionTable(t,{...event,revision:t.revision},{now});
   go({type:'disconnect',seatId:0},100);assert.throws(()=>go({type:'expire',seatId:0},60099));
