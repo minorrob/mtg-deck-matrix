@@ -541,9 +541,7 @@ function renderOnboarding(q){
     reel.replaceChildren(...spinnerWindow(queue.cards,Math.min(run.done,Math.max(0,queue.total-1))).map(row=>{
       const line=el('div','onboard-line'+(row.current?' is-current':''));line.dataset.distance=String(row.distance);
       line.textContent=row.name||' ';return line;}));
-    note.textContent=run.finished
-      ? `${run.known} of ${queue.total} already have rules text here. AI onboarding of the rest is not wired yet.`
-      : 'Reading each card the engine cannot pilot well.';
+    note.textContent=run.finished?`${run.known} of ${queue.total} already have rules text here. AI onboarding of the rest is not wired yet.`:'';
   };
   if(onboarding?.choiceId!==q.id){
     onboarding={choiceId:q.id,done:0,known:0,finished:queue.total===0};

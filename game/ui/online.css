@@ -195,5 +195,6 @@ body.setup-screen>.recommended-actions{display:none!important}
 .onboard-line[data-distance="2"]{opacity:.18;filter:blur(1.6px)}
 .onboard-line[data-distance="1"]{opacity:.5;filter:blur(.5px)}
 .onboard-line.is-current{opacity:1;filter:none;color:var(--color-ink,CanvasText);font-size:var(--text-h3,16px);font-weight:600}
+.onboard-note:empty{display:none}
 .onboard-note{margin:0;font-size:var(--text-label,11px);line-height:1.45;text-align:center;color:var(--color-muted,CanvasText)}
 @media(prefers-reduced-motion:reduce){.onboard-line{transition:none}}
