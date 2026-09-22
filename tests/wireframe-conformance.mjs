@@ -753,7 +753,11 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
   // from 16:9, rather than filling the width and growing however tall that makes them.
   check("the four boards and the hand fit one screen together", () => {
     const seat = /body\.table-view \.seat\{([^}]*)\}/.exec(boardCss);
-    assert.match(seat[1], /max-height:max\(\d+px,calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)\)/,
+    // --table-viewport rather than 100dvh: embedded in the web app the board is an iframe, and
+    // 100dvh there is the FRAME's height, not the height anyone can see. crankmagic-online.js has
+    // been posting the visible height all along and review.mjs stored it in a variable no
+    // stylesheet read. Standalone has no such message and falls back.
+    assert.match(seat[1], /max-height:max\(\d+px,calc\(\(var\(--table-viewport,100dvh\) - var\(--board-chrome\)\)\/2\)\)/,
       "two rows of boards share what the viewport has left after the chrome and the hand — with a "
       + "floor, because the same arithmetic gives 84px boards on a 768px-tall screen and 150px on a "
       + "900px one. A short window scrolls; it does not get four slivers.");
@@ -768,7 +772,7 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
     // The floor has to be in BOTH, and a live run at 1600x900 is what proved it: flooring only the
     // seat's height left the boards at 267x150, because the mat's own width cap was what bound.
-    assert.match(table[1], /max-width:calc\(max\(\d+px,\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)\*32\/9 \+ \d+px\)/,
+    assert.match(table[1], /max-width:calc\(max\(\d+px,\(var\(--table-viewport,100dvh\) - var\(--board-chrome\)\)\/2\)\*32\/9 \+ \d+px\)/,
       "the mat is two 16:9 boards wide plus the channel, not the whole window — and never narrower "
       + "than the floor, or the seat's own floor can never bind");
     assert.match(table[1], /margin-inline:auto/, "and centered in whatever is left");

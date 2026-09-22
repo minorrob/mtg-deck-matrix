@@ -23,7 +23,7 @@ body.table-view main{display:grid;grid-template-columns:minmax(0,1fr);padding:12
    specific the max-width is. Two formulas for one measurement is one too many, and this is the
    one that knows about the channel, the gaps and the floor. The other still governs anything
    that is not the table view. */
-body.table-view .table{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);grid-template-rows:auto 0 auto auto;align-items:center;justify-items:center;gap:12px;width:auto;max-width:calc(max(240px,(100dvh - var(--board-chrome))/2)*32/9 + 64px);margin-inline:auto}
+body.table-view .table{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);grid-template-rows:auto 0 auto auto;align-items:center;justify-items:center;gap:12px;width:auto;max-width:calc(max(240px,(var(--table-viewport,100dvh) - var(--board-chrome))/2)*32/9 + 64px);margin-inline:auto}
 body.table-view .seat.north{grid-column:1;grid-row:1}
 body.table-view .seat.east{grid-column:3;grid-row:1}
 body.table-view .seat.west{grid-column:1;grid-row:3}
@@ -33,12 +33,16 @@ body.table-view .arena{display:contents}
 /* Bounded by the viewport's HEIGHT, taking its width from 16:9 — not the other way round. A live
    pod at 1920x1080 put the hand 500px below the bottom of the screen, and a card is dragged from
    the hand onto the mat, so both have to be on screen at once. --board-chrome is everything that
-   is not a board: the app header, the step strip, the recommended band, the gaps and the hand. */
+   is not a board: the app header, the step strip, the recommended band, the gaps and the hand.
+   --table-viewport rather than 100dvh, because inside the web app the board is an iframe and
+   100dvh is the FRAME’s height, not the height anyone can see. crankmagic-online.js has been
+   posting the visible height all along and review.mjs has been storing it in a variable no
+   stylesheet read. It reads it now; standalone has no such message and falls back. */
 /* The floor matters as much as the cap. Below about 1000px of viewport this arithmetic gives
    84px boards on a 768px screen and 150px on a 900px one — slivers nobody can play on. 240px is
    what 1080 produces and what was verified readable, so a shorter window scrolls instead. */
 body.table-view{--board-chrome:600px}
-body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:max(240px,calc((100dvh - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
+body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:max(240px,calc((var(--table-viewport,100dvh) - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
 /* 2e: "column for the top row, column-reverse for the bottom — so each header rides its OUTER
    edge and the center counter never covers a name or a control." */
 body.table-view .seat.west,body.table-view .seat.south{flex-direction:column-reverse}
