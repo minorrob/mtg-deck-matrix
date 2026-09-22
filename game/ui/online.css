@@ -203,3 +203,11 @@ body.setup-screen>.recommended-actions{display:none!important}
    as a primary, because it is a correction rather than the expected next step. */
 .undo-mana{border-color:var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText)}
 .undo-mana:hover{border-color:var(--color-accent,Highlight)}
+
+/* THE STEP STRIP (Stage B.1, wireframe 2e). Values from docs/plan-stage-b-board.md — the frame is
+   drawn at half scale, so its 8px type is 16px here and its 1px/6px chip padding is 2px/12px. */
+#phase{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+#phase .step-turn{white-space:nowrap}
+#phase .step-chip{padding:2px 12px;border-radius:8px;background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);font-weight:700;white-space:nowrap;text-transform:capitalize}
+#phase .step-count{color:var(--color-muted,CanvasText);font-variant-numeric:tabular-nums;white-space:nowrap}
+#phase .step-next{color:var(--color-muted,CanvasText);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}

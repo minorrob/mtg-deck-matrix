@@ -84,7 +84,47 @@ function attackSelection(){return live?.ui.inputType==='InputAttack'||/Select cr
 function blockSelection(){return live?.ui.inputType==='InputBlock'||/Select.*blocker|select.*block target/i.test(live?.ui.prompt||'');}
 function canSelectCard(c){return live?.ui.selectables.includes(c.cardId)||((attackSelection()||blockSelection())&&!!live?.ui.cardActions?.[c.cardId]);}
 function phaseName(phase){return ({MAIN1:'main phase 1',MAIN2:'main phase 2',END_OF_TURN:'end step',COMBAT_DECLARE_ATTACKERS:'declare attackers',COMBAT_DECLARE_BLOCKERS:'declare blockers'})[String(phase).toUpperCase()]||String(phase&&phase!=='null'?phase:'Setup').replaceAll('_',' ').toLowerCase();}
+/* THE STEP STRIP (Stage B.1, frame 2e).
+ *
+ * The wireframe's top strip reads "Turn 4 · You", a brass chip for the current step, "3 / 6 ▾",
+ * and "Next: declare attackers". Today the board says "YOUR TURN · Turn 4 · main phase 1" and
+ * never says what is coming. Measurements and copy are in docs/plan-stage-b-board.md, extracted
+ * from wireframes/Wireframes.dc.html frame 2e rather than chosen here.
+ *
+ * The frame draws six steps and omits untap, which agrees with the untap work of 2026-09-21: no
+ * player acts there. This uses the board's own seven groups so the count matches the guide already
+ * drawn on each seat, and reports position within them.
+ */
+const STEP_GROUPS=[['UNTAP'],['UPKEEP'],['DRAW'],['MAIN1'],
+  ['COMBAT_BEGIN','COMBAT_DECLARE_ATTACKERS','COMBAT_DECLARE_BLOCKERS','COMBAT_FIRST_STRIKE_DAMAGE','COMBAT_DAMAGE','COMBAT_END'],
+  ['MAIN2'],['END_OF_TURN','CLEANUP']];
+const STEP_NAMES=['Untap','Upkeep','Draw','Main','Combat','Main 2','End'];
+function stepPosition(phase){const p=String(phase||'').toUpperCase();return STEP_GROUPS.findIndex(g=>g.includes(p));}
 function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.playerId===viewerSeatId?'YOUR TURN':p?`${p.name}’s turn`:frame()?.turn===0?'SETTING UP':'TURN OWNER UNAVAILABLE'} · Turn ${frame()?.turn??0} · ${phaseName(phase)}`;}
+/* "Next: …" — the step after this one, or the next player when this turn is ending. */
+/* Drawn as elements rather than one string so the current step can carry the brass chip the
+   frame specifies. Falls back to the old sentence whenever there is no live phase -- setup,
+   replay and the moment before the first projection arrives all land there. */
+function renderStepStrip(){
+  const host=$('phase'),at=stepPosition(frame()?.phase);
+  if(at<0){host.textContent=turnLabel();return;}
+  const p=turnPlayer(),who=p?.playerId===viewerSeatId?'You':p?p.name:'—';
+  host.replaceChildren();
+  host.append(el('b','step-turn',`Turn ${frame()?.turn ?? 0} · ${who}`));
+  host.append(el('span','step-chip',STEP_NAMES[at]));
+  host.append(el('span','step-count',`${at + 1} / ${STEP_GROUPS.length}`));
+  const next=nextStepLabel();
+  if(next)host.append(el('span','step-next',next));
+}
+function nextStepLabel(){
+  const at=stepPosition(frame()?.phase);
+  if(at<0)return '';
+  if(at<STEP_GROUPS.length-1)return 'Next: '+STEP_NAMES[at+1].toLowerCase();
+  const players=frame()?.players||[],turnId=frame()?.turnPlayerId;
+  const i=players.findIndex(p=>p.playerId===turnId);
+  const after=i>=0&&players.length?players[(i+1)%players.length]:null;
+  return after?`Next: ${after.playerId===viewerSeatId?'your':after.name+'’s'} turn`:'';
+}
 function notifyAction(text){$('notice').textContent=text;noticeUntil=Date.now()+6500;let toast=$('action-notice');if(!toast){toast=el('div','action-notice');toast.id='action-notice';toast.setAttribute('role','status');document.body.append(toast);}(($('focus').open)?$('focus'):document.body).append(toast);toast.textContent=text;toast.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.hidden=true,6500);}
 /* A NOTICE YOU CAN ACTUALLY READ.
  *
@@ -622,7 +662,7 @@ function renderCombat(force=false){
 selectPane('history');
 function render(){
   document.querySelector('.focus-eyebrow').textContent=live?'FOCUSED BOARD · LIVE GAME':'FOCUSED BOARD · REPLAY';
-  const f=frame();rememberCards(f);$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
+  const f=frame();rememberCards(f);renderStepStrip();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
   $('prev').disabled=index===0;$('next').disabled=index===data.frames.length-1;
   follow.textContent='Follow active player: '+(followActive?'on':'off');
   const activeSeat=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);promptAi.hidden=!live||guestMode||activeSeat?.kind!=='ai';promptAi.disabled=aiPrompting;promptAi.textContent=aiPrompting?'Prompting AI…':activeSeat?'Prompt '+(activeSeat.name||'AI'):'Prompt AI';
