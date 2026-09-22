@@ -183,3 +183,18 @@ body.setup-screen>.recommended-actions{display:none!important}
 .log-help{width:22px;height:22px;padding:0;flex:0 0 auto;border-radius:var(--radius-pill,999px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-muted,CanvasText);font-size:var(--text-small,12px);line-height:1;cursor:help}
 .log-help:hover{color:var(--color-ink,CanvasText)}
 .log-scope{width:100%;margin:var(--space-2,8px) 0 0;padding:6px 8px;font-size:var(--text-small,12px);border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText)}
+
+/* THE ONBOARDING REEL. Rob's reference: five card names stacked, the one being processed sharp in
+   the middle, the outer two barely legible and blurred, on a transparent background. The fade is
+   driven by data-distance so the markup carries no styling decisions. */
+.onboard{display:flex;flex-direction:column;align-items:center;gap:var(--space-2,8px);width:100%;background:none}
+.onboard-title{font-size:var(--text-h3,16px);line-height:1.25;text-align:center;color:var(--color-ink,CanvasText)}
+.onboard-count{font-size:var(--text-body-size,14px);color:var(--color-muted,CanvasText);font-variant-numeric:tabular-nums}
+.onboard-reel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:132px;overflow:hidden;background:none;-webkit-mask-image:linear-gradient(to bottom,transparent,black 28%,black 72%,transparent);mask-image:linear-gradient(to bottom,transparent,black 28%,black 72%,transparent)}
+.onboard-line{font-size:var(--text-small,12px);line-height:1.5;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--color-muted,CanvasText);transition:opacity var(--motion-fast,250ms) var(--motion-ease,ease),filter var(--motion-fast,250ms) var(--motion-ease,ease)}
+.onboard-line[data-distance="2"]{opacity:.18;filter:blur(1.6px)}
+.onboard-line[data-distance="1"]{opacity:.5;filter:blur(.5px)}
+.onboard-line.is-current{opacity:1;filter:none;color:var(--color-ink,CanvasText);font-size:var(--text-h3,16px);font-weight:600}
+.onboard-note:empty{display:none}
+.onboard-note{margin:0;font-size:var(--text-label,11px);line-height:1.45;text-align:center;color:var(--color-muted,CanvasText)}
+@media(prefers-reduced-motion:reduce){.onboard-line{transition:none}}

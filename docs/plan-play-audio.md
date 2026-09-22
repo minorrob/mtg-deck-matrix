@@ -7,28 +7,36 @@ background music from `crankmagic-audio-pack`.
 
 ## What the pack actually contains, measured
 
-Source: `C:\Users\robmi\OneDrive\Desktop\crankmagic-play-audio-generated\crankmagic-audio-pack`.
+**Updated 2026-09-21, later the same day.** Rob generated the two missing beds and the pack moved:
+`crankmagic2-play-audio-generated\crankmagic-audio-pack` supersedes the original, which no longer
+exists. **88 audio files** (83 SFX + **5** BGM beds), **5.3 MB**. Both
+`bgm_tension_darkening_myth` and `bgm_victory_linger` are present, so **R11's tension bed ships as
+written** and there is a victory bed. The only rows still without audio are the three `ui` settings
+rows — specifications, not sounds. The counts in the table below are the original measurement; the
+corrected figures are the ones above.
+
+Source: `C:\Users\robmi\OneDrive\Desktop\crankmagic2-play-audio-generated\crankmagic-audio-pack`.
 
 | | |
 |---|---|
 | Index rows | **91** (`sound-index.json`, `.csv`, and the workbook) |
-| Generated audio files | **86** — 83 SFX + 3 BGM beds |
-| Total size | **4.3 MB** |
-| Rows with no file | **5** — see below |
+| Generated audio files | **88** — 83 SFX + 5 BGM beds |
+| Total size | **5.3 MB** |
+| Rows with no file | **3**, all of them Settings specifications — see below |
 | Resolution Rules | **13** (R1–R13), a sheet in the workbook |
 
 **By kind:** creature tribe 39, event 23, subtype 10, card type 9, bgm 5, ui 3, supertype 2.
 **By priority:** P0 25, P1 55, P2 11.
 
-**The three BGM beds that exist:** `bgm_lobby_mythic_calm` (60s), `bgm_game_aether_voyage` (75s),
-`bgm_combat_battle_shimmer` (45s).
+**The five BGM beds:** `bgm_lobby_mythic_calm` (60s), `bgm_game_aether_voyage` (75s),
+`bgm_combat_battle_shimmer` (45s), `bgm_tension_darkening_myth`, `bgm_victory_linger`.
 
-### The five rows with no audio
+### The rows with no audio
 
 | Row | Consequence |
 |---|---|
-| `bgm_tension_darkening_myth` | **R11 asks for a tension bed under poison and commander-damage thresholds. It does not exist.** Either drop that rule or generate the bed. |
-| `bgm_victory_linger` | No victory bed; the victory *SFX* row does exist. |
+| `bgm_tension_darkening_myth` | ~~Missing~~ — **generated 2026-09-21. R11 ships as written.** |
+| `bgm_victory_linger` | ~~Missing~~ — **generated 2026-09-21.** |
 | `setting_sfx_volume`, `setting_bgm_volume`, `setting_mute_all` | Specifications, not sounds — they describe the Settings panel to build. |
 
 ---
@@ -49,8 +57,8 @@ Worth fixing in the plan rather than discovering during integration.
    Map through the manifest rather than through the stub's example names.
 4. **Guests need the files too.** Anything not added to the guest gateway's public list is silence
    for every remote player. The host map and the gateway map both need the whole pack, added by a
-   loop over the manifest rather than 86 hand-written lines.
-5. **4.3 MB over a `trycloudflare` tunnel.** Fine on the host; it is a real download for a remote
+   loop over the manifest rather than 88 hand-written lines.
+5. **5.3 MB over a `trycloudflare` tunnel.** Fine on the host; it is a real download for a remote
    guest on a phone. Load lazily and never block play on it.
 
 ---
@@ -99,7 +107,7 @@ event batch is a token batch; several `Died` rows in one batch is a wipe. The �
 Each its own PR with a test that was red first, in the repo's usual way.
 
 ### 1. The pack lands and is served
-`game/ui/assets/audio/` (83 SFX + 3 BGM). `game/ui/assets` already holds 6.7 MB of playmats, and
+`game/ui/assets/audio/` (83 SFX + 5 BGM). `game/ui/assets` already holds 6.7 MB of playmats, and
 `tests/page-budget.mjs` counts **visible words, not bytes**, so nothing budget-wise objects.
 Host and gateway serve them by looping the manifest. A test asserts **every manifest slug resolves
 to a file and every file is in the manifest** — the failure mode otherwise is one silent 404 per
@@ -118,7 +126,8 @@ A second consumer of `table-notices.mjs`, with its own filter. Token-batch and b
 
 ### 4. BGM, and the gesture problem
 Lobby bed on the lobby, game bed on the board, crossfade to combat when attackers are declared and
-back afterwards (R11) — minus the tension bed, which does not exist. Arms on first interaction;
+back afterwards (R11), including the tension bed under the poison and commander-damage thresholds
+and the victory linger, both of which now exist. Arms on first interaction;
 says so until then.
 
 ### 5. Settings
@@ -133,7 +142,6 @@ startled by their own laptop.
 
 - **Not hook audio into the board at a dozen points** as the stub suggests. One feed, two
   consumers.
-- **Not ship the tension bed rule (R11) as if the bed exists.** It does not.
 - **Not commit the generator scripts or the ElevenLabs key path.** The pack regenerates from
   outside the repo; the repo takes the output.
 - **Not start on this before the engine work Rob has sequenced ahead of it**, unless he says
@@ -145,7 +153,6 @@ startled by their own laptop.
 
 1. **Default volume, and default muted or not?** My recommendation is audio on at ~40% SFX / 25%
    BGM but a **one-time "sound is on" line** the first time, so nobody is ambushed.
-2. **Generate the two missing beds** (`bgm_tension_darkening_myth`, `bgm_victory_linger`), or drop
-   R11's tension rule and the victory bed?
-3. **Guests: ship the pack to them, or host-only for now?** 4.3 MB over the tunnel on a phone is
+2. ~~Generate the two missing beds?~~ **Done 2026-09-21** — both are in the pack.
+3. **Guests: ship the pack to them, or host-only for now?** 5.3 MB over the tunnel on a phone is
    the trade.

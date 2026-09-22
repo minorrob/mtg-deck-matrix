@@ -10,6 +10,8 @@ const {noticesFor,lifeDelta,eventKindLabel,historyScopes}=await import('/table-n
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals,incomingAt}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[],incomingAt:()=>({total:null,attackers:[],keywords:[],potential:0,unblockedPotential:0,deathtouch:false,firstStrike:false})}));
 import '/handoff.mjs';
+// Earlier running hosts do not advertise this module until their next restart.
+const {parseOnboardingChoice,onboardingSeat,onboardingHeadline,spinnerWindow}=await import('/card-onboarding.mjs').catch(()=>({parseOnboardingChoice:()=>null,onboardingSeat:()=>null,onboardingHeadline:()=>'Onboarding cards',spinnerWindow:()=>[]}));
 // Lazy-load workshop classification modules — not needed for guest live connect
 let cardClassifyLoaded=false,facetsLoaded=false;
 async function ensureCardClassify(){if(!cardClassifyLoaded){await import('/app/card-classify.js').catch(()=>{});cardClassifyLoaded=true;}}
@@ -508,6 +510,58 @@ function historyRowNode(e){
   row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
   return row;
 }
+/* ONBOARDING THE CARDS FORGE CANNOT PILOT.
+ *
+ * Rob, 2026-09-21: "instead of showing me this screenshot... show me text saying 'Onboarding your
+ * cards...[# of cards processed / # of cards to process]' where the ratio here is real time.
+ * Directly below this header, show a real time slot machine-type vertical spinner of card names
+ * as they're processed."
+ *
+ * Forge's own dialog is an acknowledgment nobody can act on, listing cards its AI plays badly. The
+ * list is the work queue, so the dialog becomes the progress view for it.
+ *
+ * WHAT THE PASS ACTUALLY DOES TODAY, said plainly because the header must not overclaim: it
+ * resolves each card against the card database and records whether we hold its rules text. That is
+ * the input the AI extraction step needs, and that step is NOT wired yet -- it is the card
+ * extraction skill of docs/plan-board-information-layer.md, which emits CrankCardScript@1. When it
+ * lands it replaces the body of the per-card step and nothing else here changes.
+ */
+let onboarding=null;
+function renderOnboarding(q){
+  const queue=parseOnboardingChoice(q);
+  const seats=(frame()?.players||[]).map(p=>({playerId:p.playerId,name:p.name,kind:data.pod?.seats?.[p.playerId]?.kind||'human'}));
+  const seat=onboardingSeat(queue.deck,seats);
+  const head=el('div','onboard');
+  head.append(el('strong','onboard-title',onboardingHeadline(queue.deck,seat,viewerSeatId)));
+  const count=el('span','onboard-count'),reel=el('div','onboard-reel'),note=el('p','onboard-note');
+  head.append(count,reel,note);options.append(head);
+  const draw=()=>{
+    const run=onboarding;
+    count.textContent=`${run.done} / ${queue.total}`;
+    reel.replaceChildren(...spinnerWindow(queue.cards,Math.min(run.done,Math.max(0,queue.total-1))).map(row=>{
+      const line=el('div','onboard-line'+(row.current?' is-current':''));line.dataset.distance=String(row.distance);
+      line.textContent=row.name||' ';return line;}));
+    note.textContent=run.finished?`${run.known} of ${queue.total} already have rules text here. AI onboarding of the rest is not wired yet.`:'';
+  };
+  if(onboarding?.choiceId!==q.id){
+    onboarding={choiceId:q.id,done:0,known:0,finished:queue.total===0};
+    draw();
+    /* One card at a time, slowly enough to read. The engine is not waiting on this -- Continue
+       stays live throughout, so nobody is held at a progress bar. */
+    (async()=>{
+      if(!trackerFacts){trackerFacts=new Map();try{const d=await fetch('/app/data/cards.json').then(r=>r.json());for(const c of d.cards)trackerFacts.set(c.name,c);}catch{/* offline: every card counts as unknown */}}
+      for(const name of queue.cards){
+        if(onboarding?.choiceId!==q.id)return;
+        if(trackerFacts.get(name)?.oracleText)onboarding.known++;
+        onboarding.done++;
+        draw();
+        await new Promise(r=>setTimeout(r,180));
+      }
+      if(onboarding?.choiceId===q.id){onboarding.finished=true;draw();}
+    })();
+  }else draw();
+  buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]}),'primary-action'));
+}
 function historyContent(){const body=el('div','history-feed'),rows=historyRows();
   const search=el('input');search.type='search';search.placeholder='Find a card or event…';search.setAttribute('aria-label','Search game history');search.value=historyQuery;const phaseLabel=el('label','fine'),phaseToggle=el('input');phaseToggle.type='checkbox';phaseToggle.checked=historyPhases;phaseLabel.append(phaseToggle,document.createTextNode(' Include phase changes'));const list=el('div'),more=button('Show more events',()=>{historyLimit+=80;draw();});
   function draw(){list.replaceChildren();const visible=rows.filter(e=>historyScopes(e,viewerSeatId).has(historyWhose)&&(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit))list.append(historyRowNode(e));if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
@@ -808,6 +862,7 @@ function renderDecision(){
     else if(q.mode==='amount')buttons.append(button('Confirm allocation',()=>gameAction({kind:'answer',choiceId:q.id,amounts:[...options.querySelectorAll('input[data-recipient]')].map(n=>Number(n.value))})));
     else if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
     else if(q.mode==='text'){buttons.append(button('Submit',()=>gameAction({kind:'answer',choiceId:q.id,text:$('choice-text').value})));buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,cancel:true})));}
+    else if(q.mode==='ack'&&parseOnboardingChoice(q))renderOnboarding(q);
     else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
     else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
     else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
