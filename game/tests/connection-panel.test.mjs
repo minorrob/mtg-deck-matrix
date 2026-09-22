@@ -191,3 +191,19 @@ test('a table that failed to launch says so, even when the runtime stage has gon
   /* And the AI seat is ready again, so the panel blames only the humans who must re-confirm. */
   assert.deepEqual(d.waitingOn.sort(), ['Seat 1', 'You']);
 });
+
+/* "Choosing a deckChulane, Teller of Tales" — one seat card, two facts, no gap.
+ *
+ * The guest seat card appends a status <small> and a commander <small> as siblings. Its own
+ * stylesheet already stacks the two fields above them (`.seat strong,.seat span{display:block}`)
+ * and stops short of the smalls, so the last two run together inline. An agent playing a guest in
+ * the 2026-09-22 UAT read it on every seat card in every state: "ReadyPurphoros, God of the Forge",
+ * "Choosing a deckAtraxa, Praetors' Voice". */
+test('a guest seat card stacks its fields instead of running them together', async () => {
+  const {readFileSync} = await import('node:fs');
+  const css = readFileSync(new URL('../ui/guest.css', import.meta.url), 'utf8');
+  const stacked = /\.seat[^{}]*\bsmall\b[^{}]*\{[^}]*display:block/.test(css);
+  assert.ok(stacked,
+    'the status and the commander are adjacent <small> siblings; without display:block they '
+    + 'concatenate, which is what a guest actually read');
+});

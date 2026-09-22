@@ -110,8 +110,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 297,
-      "sha": "abfdb6f734c337da"
+      "version": 298,
+      "sha": "2aaacb41bee52408"
     },
     "crankmagic-assets.js": {
       "version": 30,
@@ -250,8 +250,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 297,
-      "sha": "6ba9dc6543400278"
+      "version": 298,
+      "sha": "b69e8212d8067c00"
     },
     "crankmagic-tabletop.js": {
       "version": 17,
