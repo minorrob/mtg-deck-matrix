@@ -1,13 +1,13 @@
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
-import {appendFileSync} from 'node:fs';
+import {appendFileSync,readdirSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {setupCatalog,prepareSetup,prepareLobby,importWorkshopDeck,FORGE_ROOT} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,livePod,browserBridge,browserBridgeForSeat,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
-import {createGuestGateway} from '../server/guest-gateway.mjs';
+import {createGuestGateway,registerPlayAudio} from '../server/guest-gateway.mjs';
 import {createLocalTableRuntime,restoreLocalTableRuntime} from '../server/local-table-runtime.mjs';
 import {createApiPilotRunner} from './ai-pilot.mjs';
 import {chooseForcedAction} from './force-advance.mjs';
@@ -35,6 +35,12 @@ files.set('/table-notices.mjs',['game/ui/table-notices.mjs','text/javascript']);
 files.set('/card-onboarding.mjs',['game/ui/card-onboarding.mjs','text/javascript']);
 files.set('/card-layout.mjs',['game/ui/card-layout.mjs','text/javascript']);
 for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
+/* The play-audio pack, served by walking what is on disk: a sound added to the pack is served
+   on the next restart rather than waiting for somebody to remember two lists. */
+files.set('/audio/sound-index.json',['game/ui/assets/audio/sound-index.json','application/json']);
+for(const kind of ['sfx','bgm'])for(const file of readdirSync(resolve(root,'game/ui/assets/audio/'+kind))){
+  if(file.endsWith('.mp3'))files.set('/audio/'+kind+'/'+file,['game/ui/assets/audio/'+kind+'/'+file,'audio/mpeg']);
+}
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
 files.set('/setup.mjs',['game/ui/setup.mjs','text/javascript']);
@@ -58,6 +64,15 @@ const guestAssets=new Map([
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])
 ]);
+/* Guests get the same pack over the tunnel; both sides are driven from the same walk of disk. */
+{
+  const names=['sound-index.json'];
+  for(const kind of ['sfx','bgm'])for(const file of readdirSync(resolve(root,'game/ui/assets/audio/'+kind))){
+    if(file.endsWith('.mp3'))names.push(kind+'/'+file);
+  }
+  for(const name of names)guestAssets.set('audio/'+name,'game/ui/assets/audio/'+name);
+  registerPlayAudio(names);
+}
 const storedOpenAiSession=loadOpenAiCredential();
 let aiSession=storedOpenAiSession,soloPilotRunner=null,soloPilotMonitor=null;
 function apiSeats(value){return (value?.seats||[]).filter(s=>s.kind==='ai'&&(s.pilot?.kind==='api'||s.aiProvider)).map(s=>({seatId:s.seatId,provider:s.pilot?.provider||s.aiProvider,model:s.pilot?.model||s.aiModel}));}
@@ -255,7 +270,7 @@ createServer(async(req,res)=>{
   if(req.method==='GET'&&pathname==='/'){res.writeHead(302,{'Location':'/app/#game','Cache-Control':'no-store'});res.end();return;}
   const entry=files.get(pathname);
   if(req.method!=='GET'||!entry){res.writeHead(404);res.end();return;}
-  try {const body=await readFile(resolve(root,entry[0]));res.writeHead(200,{'Content-Type':entry[1]+'; charset=utf-8','Cache-Control':'no-store',
+  try {const body=await readFile(resolve(root,entry[0]));res.writeHead(200,{'Content-Type':/^(text\/|application\/(json|javascript)$)/.test(entry[1])?entry[1]+'; charset=utf-8':entry[1],'Cache-Control':'no-store',
     ...(pathname.startsWith('/app/')?{}:{'Content-Security-Policy':pathname==='/crankmagic-online-overview.html'
       ?"default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'none'; connect-src 'none'; object-src 'none'; frame-ancestors 'self'"
       :"default-src 'self'; img-src 'self' https://cards.scryfall.io; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'self'"})});res.end(body);}
