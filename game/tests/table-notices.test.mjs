@@ -7,7 +7,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import {noticesFor, isWorthANotice, lifeDelta, eventKindLabel} from "../ui/table-notices.mjs";
+import {noticesFor, isWorthANotice, lifeDelta, eventKindLabel, historyScopes} from "../ui/table-notices.mjs";
 
 const row = (over) => ({id: "e" + Math.random(), turn: 3, playerId: 1, kind: "GameEventSpellAbilityCast", name: "Odric", label: "Spell cast", ...over});
 const ME = 0;
@@ -78,4 +78,37 @@ test("poison and your own draw are announced", () => {
      so this only has to be true for rows that do arrive. */
   assert.equal(isWorthANotice(row({playerId: ME, kind: "GameEventCardChangeZone", label: "Hand → Graveyard"}), ME), false,
     "an ordinary zone shuffle is still not a notice");
+});
+
+/* Rob asked for a history filter: All History, My History, Targeting Me. `row.playerId` alone
+ * cannot separate the last two, because telemetry sets it to whoever the row is ABOUT — the actor
+ * for a cast, the victim for damage. */
+test("a history row knows whether you did it or it was done to you", () => {
+  const S = (over) => [...historyScopes(row({playerId: ME, ...over}), ME)].sort();
+  assert.deepEqual(S({kind: "GameEventSpellAbilityCast", label: "Spell cast"}), ["all", "mine"]);
+  assert.deepEqual(S({kind: "GameEventLandPlayed", label: "Land played"}), ["all", "mine"]);
+  assert.deepEqual(S({kind: "GameEventCardChangeZone", label: "Drew a card"}), ["all", "at-me", "mine"],
+    "a draw is both: you did it, and it changed your hand");
+  assert.deepEqual(S({kind: "GameEventCardChangeZone", label: "Died · battlefield → graveyard"}), ["all", "at-me"],
+    "your own creature dying is something done to you");
+  assert.deepEqual(S({kind: "GameEventPlayerDamaged", label: "3 combat damage to You"}), ["all", "at-me"]);
+  assert.deepEqual(S({kind: "GameEventPlayerPoisoned", label: "Poison 0 → 3"}), ["all", "at-me"]);
+  assert.deepEqual(S({kind: undefined, label: "Life 40 → 37"}), ["all", "at-me"]);
+  /* Somebody else's row is in "all" and nothing else, whatever kind it is. */
+  assert.deepEqual([...historyScopes(row({playerId: 2, kind: "GameEventSpellAbilityCast"}), ME)], ["all"]);
+  assert.deepEqual([...historyScopes(null, ME)], ["all"], "a missing row does not throw");
+});
+
+/* Rob's correction, 2026-09-21: "Maybe not targeting me, but I (as a player) want to filter to the
+ * events that had an effect on me, done by myself and other players." Who caused it is not the
+ * question; whether the viewer was changed is. */
+test("the third filter is everything that changed you, whoever caused it", () => {
+  const S = (over) => [...historyScopes(row({playerId: ME, ...over}), ME)].sort();
+  assert.ok(S({kind: "GameEventCardChangeZone", label: "Entered battlefield"}).includes("at-me"),
+    "your permanent arriving changed you as much as it leaving did");
+  assert.ok(S({kind: "GameEventCardCounters", label: "2 counters added"}).includes("at-me"));
+  /* An opponent killing your creature and you sacrificing it are the same row shape; both count. */
+  assert.ok(S({kind: "GameEventCardChangeZone", label: "Died · battlefield → graveyard"}).includes("at-me"));
+  /* And a cast is still only an action, not a change to you. */
+  assert.deepEqual(S({kind: "GameEventSpellAbilityCast", label: "Spell cast"}), ["all", "mine"]);
 });
