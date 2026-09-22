@@ -753,8 +753,10 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
   // from 16:9, rather than filling the width and growing however tall that makes them.
   check("the four boards and the hand fit one screen together", () => {
     const seat = /body\.table-view \.seat\{([^}]*)\}/.exec(boardCss);
-    assert.match(seat[1], /max-height:calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)/,
-      "two rows of boards share what the viewport has left after the chrome and the hand");
+    assert.match(seat[1], /max-height:max\(\d+px,calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)\)/,
+      "two rows of boards share what the viewport has left after the chrome and the hand — with a "
+      + "floor, because the same arithmetic gives 84px boards on a 768px-tall screen and 150px on a "
+      + "900px one. A short window scrolls; it does not get four slivers.");
     assert.match(seat[1], /max-width:100%/,
       "and a board still never overflows its column on a narrow screen");
     assert.doesNotMatch(seat[1], /(^|;)width:100%/,
@@ -764,8 +766,11 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     // almost touching, with the counter straddling a 20px channel. So the mat is as wide as two
     // boards plus that channel and its gaps, and centered.
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
-    assert.match(table[1], /max-width:calc\(\(100dvh - var\(--board-chrome[^)]*\)\)\/2\*32\/9 \+ \d+px\)/,
-      "the mat is two 16:9 boards wide plus the channel, not the whole window");
+    // The floor has to be in BOTH, and a live run at 1600x900 is what proved it: flooring only the
+    // seat's height left the boards at 267x150, because the mat's own width cap was what bound.
+    assert.match(table[1], /max-width:calc\(max\(\d+px,\(100dvh - var\(--board-chrome[^)]*\)\)\/2\)\*32\/9 \+ \d+px\)/,
+      "the mat is two 16:9 boards wide plus the channel, not the whole window — and never narrower "
+      + "than the floor, or the seat's own floor can never bind");
     assert.match(table[1], /margin-inline:auto/, "and centered in whatever is left");
   });
 

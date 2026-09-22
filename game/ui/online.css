@@ -17,8 +17,13 @@ body.table-view>.replaybar{padding:8px 16px}
 body.table-view main{display:grid;grid-template-columns:minmax(0,1fr);padding:12px 16px 0;gap:16px;height:auto;min-height:0;overflow:visible}
 /* B.2/B.4 (wireframe 2e): one 2x2 of equal 16:9 boards, a narrow middle column and a zero-height
    middle row for the center counter to straddle (B.3), and the hand on the mat's bottom edge.
-   The frame is drawn at half scale, so its 20px spacer and 6px gap are 40px and 12px here. */
-body.table-view .table{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);grid-template-rows:auto 0 auto auto;align-items:center;justify-items:center;gap:12px;max-width:calc((100dvh - var(--board-chrome))/2*32/9 + 64px);margin-inline:auto}
+   The frame is drawn at half scale, so its 20px spacer and 6px gap are 40px and 12px here.
+   width:auto is load-bearing: mats.css carries its own `.table{width:min(100%,calc((100dvh -
+   495px)*1.5))}` for the compact overview, and a smaller width beats a larger max-width however
+   specific the max-width is. Two formulas for one measurement is one too many, and this is the
+   one that knows about the channel, the gaps and the floor. The other still governs anything
+   that is not the table view. */
+body.table-view .table{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);grid-template-rows:auto 0 auto auto;align-items:center;justify-items:center;gap:12px;width:auto;max-width:calc(max(240px,(100dvh - var(--board-chrome))/2)*32/9 + 64px);margin-inline:auto}
 body.table-view .seat.north{grid-column:1;grid-row:1}
 body.table-view .seat.east{grid-column:3;grid-row:1}
 body.table-view .seat.west{grid-column:1;grid-row:3}
@@ -29,8 +34,11 @@ body.table-view .arena{display:contents}
    pod at 1920x1080 put the hand 500px below the bottom of the screen, and a card is dragged from
    the hand onto the mat, so both have to be on screen at once. --board-chrome is everything that
    is not a board: the app header, the step strip, the recommended band, the gaps and the hand. */
+/* The floor matters as much as the cap. Below about 1000px of viewport this arithmetic gives
+   84px boards on a 768px screen and 150px on a 900px one — slivers nobody can play on. 240px is
+   what 1080 produces and what was verified readable, so a shorter window scrolls instead. */
 body.table-view{--board-chrome:600px}
-body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:calc((100dvh - var(--board-chrome))/2);padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
+body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:max(240px,calc((100dvh - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
 /* 2e: "column for the top row, column-reverse for the bottom — so each header rides its OUTER
    edge and the center counter never covers a name or a control." */
 body.table-view .seat.west,body.table-view .seat.south{flex-direction:column-reverse}
