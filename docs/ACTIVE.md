@@ -45,7 +45,9 @@ Six of Rob's findings turned out to be one finding: **the board had the facts an
   be judged without cards on screen.
 - **B.6c — the left pane of the other three boards.** Focus is a modal dialog today; this is the
   structural piece.
-- **B.6d — the Coach surface.** 2f says plainly "its logic is a later phase".
+- **B.6d — the Coach.** Not to be built until it works. 2f draws it and says "its logic is a later
+  phase"; Rob's standing rule (2026-09-22) is that nothing is available before it is functional, so
+  the surface waits for the logic rather than arriving ahead of it.
 - **B.2b — the light mat.** The frame draws the play surface cream (`#e9e4da`) under dark chrome.
   **Rob's call, deliberately untouched** — it changes the whole feel and carries a raw-hex cost.
 
