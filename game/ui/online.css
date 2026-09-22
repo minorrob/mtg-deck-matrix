@@ -198,3 +198,8 @@ body.setup-screen>.recommended-actions{display:none!important}
 .onboard-note:empty{display:none}
 .onboard-note{margin:0;font-size:var(--text-label,11px);line-height:1.45;text-align:center;color:var(--color-muted,CanvasText)}
 @media(prefers-reduced-motion:reduce){.onboard-line{transition:none}}
+
+/* Take mana back — the one recoverable action Forge offers. Sits beside the confirm, not styled
+   as a primary, because it is a correction rather than the expected next step. */
+.undo-mana{border-color:var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText)}
+.undo-mana:hover{border-color:var(--color-accent,Highlight)}

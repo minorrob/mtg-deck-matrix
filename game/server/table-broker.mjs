@@ -8,7 +8,7 @@ const safeClone=value=>structuredClone(value);
 const ACTION_KEYS=new Set(['matchId','actionId','revision','kind','choiceId','targetId','indices','value','amounts','skip','text','cancel']);
 function validateAction(input){
   if(!input||Object.keys(input).some(key=>!ACTION_KEYS.has(key)))throw Error('Unknown action field');
-  if(typeof input.matchId!=='string'||!input.matchId||typeof input.actionId!=='string'||!/^[a-f\d]{8}-[a-f\d]{4}-[1-5][a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i.test(input.actionId)||!Number.isSafeInteger(input.revision)||input.revision<0||!['ok','cancel','card','player','answer'].includes(input.kind))throw Error('Invalid action envelope');
+  if(typeof input.matchId!=='string'||!input.matchId||typeof input.actionId!=='string'||!/^[a-f\d]{8}-[a-f\d]{4}-[1-5][a-f\d]{3}-[89ab][a-f\d]{3}-[a-f\d]{12}$/i.test(input.actionId)||!Number.isSafeInteger(input.revision)||input.revision<0||!['ok','cancel','card','player','answer','undo'].includes(input.kind))throw Error('Invalid action envelope');
   if(['card','player'].includes(input.kind)&&!Number.isSafeInteger(input.targetId))throw Error('Action target required');
   if(input.kind==='answer'&&typeof input.choiceId!=='string')throw Error('Choice identity required');
   for(const key of ['indices','amounts'])if(input[key]!==undefined&&(!Array.isArray(input[key])||input[key].length>256||input[key].some(n=>!Number.isSafeInteger(n)||n<0)))throw Error('Invalid action selection');

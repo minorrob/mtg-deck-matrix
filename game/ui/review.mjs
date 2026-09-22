@@ -910,6 +910,16 @@ function renderDecision(){
     }
     
     buttons.append(confirm);
+    /* TAKING THE MANA BACK (Rob, 2026-09-21). Forge has an undo stack and we never exposed it.
+       It is labeled for what it actually does rather than "Undo": the only things Forge ever
+       marks undoable are mana abilities, so this returns tapped lands and floating mana and
+       cannot take back a land drop or a cast. Calling it "Undo" would promise the one thing it
+       will not do. `canUndo` is Forge's own canUndoLastAction(), which also requires priority. */
+    if(ui.canUndo){
+      const undo=button('Take mana back',()=>gameAction({kind:'undo'}),'undo-mana');
+      undo.title='Untap the lands you tapped and return floating mana. Available until you play a land, cast a spell or pass priority.';
+      buttons.append(undo);
+    }
     
     if(debugDecisions){
       const debugInfo=el('p','decision-debug-info',`Debug: viewerSeat=${viewerSeatId} ok=${ui.ok} okEnabled=${ui.okEnabled} nativeFallback=${!!ui.nativeFallback} inputType=${ui.inputType||'none'} revision=${live?.revision||0}`);
