@@ -6,12 +6,14 @@
  * own name. Both of those were found the first time this ran, and neither was visible any other
  * way.
  *
- *   node game/tools/qa-pod.mjs --out shots/ [--port 8768] [--turns 3] [--width 1920] [--height 1080]
+ *   node game/tools/qa-pod.mjs --out shots/ [--port 8768] [--turns 3] [--minutes 6]
+ *                                  [--width 1920] [--height 1080]
  *
  * It starts a pod against the NATIVE Forge AI, so it spends no API tokens; plays until the turn
- * counter reaches --turns by clicking whatever the board is waiting on; writes the screenshots and
- * a measurement of the board's geometry; and closes the game. The close is in a finally, because a
- * harness that leaves an engine running is worse than no harness.
+ * counter reaches --turns or --minutes runs out, whichever comes first, by clicking whatever the
+ * board is waiting on; writes the screenshots and a measurement of the board's geometry; and
+ * closes the game. The close is in a finally, because a harness that leaves an engine running is
+ * worse than no harness.
  *
  * TWO THINGS THE HOST REQUIRES that are easy to miss from outside a browser: the session token
  * from /api/setup as X-Commander-Token, and an Origin header matching the host's own origin. Both
@@ -19,6 +21,15 @@
  *
  * Run it against a SECOND host on a spare port rather than the one in use, unless the one in use
  * is idle: starting a pod here ends whatever game was running there.
+ *
+ * WHAT IT CANNOT DO. It reaches turn two to four and no further, and not predictably: one run got
+ * to turn four in four minutes and another to turn two in eleven. It clicks whatever the board is
+ * waiting on without understanding it, so it neither plays well nor gets out of the way, and a
+ * four-player native-AI pod does not march on its own. That is fine for the job — cards on screen
+ * to judge a layout against — and useless for anything that needs a developed board. The audio's
+ * board-wipe and token-batch rules are the live examples: they are held by tests driven through
+ * the real summarizeEvents, and no run here has ever reached a turn that would fire them. Getting
+ * there needs a driver that actually plays, which is a different tool.
  */
 import {createRequire} from "node:module";
 import {mkdirSync, writeFileSync} from "node:fs";
@@ -31,6 +42,11 @@ const out = argv.get("out");
 if (!out) { console.error("qa-pod: --out <directory> is required"); process.exit(2); }
 const port = Number(argv.get("port") || 8768);
 const turns = Number(argv.get("turns") || 3);
+/* --turns is a target, not a promise, so there has to be a budget as well or a pod that stalls
+   runs forever. It is a DEADLINE rather than a click count: the first version capped iterations at
+   200, which quietly stopped at turn 4 when asked for 7 and reported that as if it were the
+   answer. A flag that does not mean what it says is worse than no flag. */
+const minutes = Number(argv.get("minutes") || 6);
 const width = Number(argv.get("width") || 1920);
 const height = Number(argv.get("height") || 1080);
 const HOST = `http://127.0.0.1:${port}`;
@@ -71,7 +87,8 @@ try {
   await page.mouse.click(Math.round(width / 2), Math.round(height / 2));   /* arms the audio, as a player does */
 
   let turn = 0;
-  for (let i = 0; i < 200 && turn < turns; i += 1) {
+  const deadline = Date.now() + minutes * 60000;
+  while (turn < turns && Date.now() < deadline) {
     await page.waitForTimeout(1200);
     turn = await page.evaluate(() => {
       /* Whatever the board is waiting on. Nothing here chooses a play -- the point is to reach a
@@ -83,7 +100,11 @@ try {
       return Number(document.body.innerText.match(/Turn (\d+)/)?.[1] || 0);
     });
   }
-  console.log(`qa-pod: reached turn ${turn}`);
+  /* Say which one stopped it. "reached turn 4" when 7 was asked for reads like a finding rather
+     than a timeout, and that is how the first version misled me. */
+  console.log(turn >= turns
+    ? `qa-pod: reached turn ${turn}`
+    : `qa-pod: reached turn ${turn} of ${turns} — the ${minutes}-minute budget ran out, not the game. Raise --minutes.`);
   await page.waitForTimeout(2000);
 
   await page.screenshot({path: path.join(out, "board.png")});
