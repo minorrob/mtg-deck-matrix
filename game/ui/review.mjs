@@ -456,11 +456,28 @@ function boardGroups(cards){
   }
   return [...buckets];
 }
+/* The turn's steps as a ribbon: done struck through, the current one brass, the rest waiting.
+   Only the turn player has a position in the sequence, so another seat's board shows the
+   sequence without marking one -- claiming a step for a player who does not hold the turn
+   would be the board inventing a fact. */
+function focusSteps(p){
+  const ribbon=el('div','focus-steps');ribbon.setAttribute('aria-label','Turn steps');
+  const at=turnPlayer()?.playerId===p.playerId?stepPosition(frame()?.phase):-1;
+  STEP_NAMES.forEach((name,i)=>{
+    const step=el('span','focus-step'+(at<0?'':i<at?' is-done':i===at?' is-now':''),name);
+    if(i===at)step.setAttribute('aria-current','step');
+    ribbon.append(step);
+  });
+  return ribbon;
+}
 function focusBoard(p){
   if(!p)return;
   const dialog=$('focus');dialog.className='focus-dialog tone-'+p.playerId;dialog.dataset.seat=p.playerId;
   $('focus-title').textContent=names[p.playerId];
-  $('focus-status').replaceChildren(el('strong','',turnLabel()),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
+  /* 2f: "The header band carries the turn's steps as a ribbon — done struck through, current
+     brass, sliding on as the engine advances." The modal has no top strip behind it, so this
+     is where the steps live in Focus. */
+  $('focus-status').replaceChildren(el('strong','',turnLabel()),focusSteps(p),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
   const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);releaseCardLayouts(content);content.replaceChildren();
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
   if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
@@ -495,12 +512,11 @@ function matView(p,focused=false){
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
   }
   for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){const position=freePositions.get(card.cardId),piece=el('div','free-card');piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';piece.append(cardButton(card));mat.append(piece);}
-  const guide=el('div','mat-turn-guide');guide.setAttribute('aria-label','Turn sequence reminder');
-  const phaseGroups=[['UNTAP'],['UPKEEP'],['DRAW'],['MAIN1'],['COMBAT_BEGIN','COMBAT_DECLARE_ATTACKERS','COMBAT_DECLARE_BLOCKERS','COMBAT_FIRST_STRIKE_DAMAGE','COMBAT_DAMAGE','COMBAT_END'],['MAIN2'],['END_OF_TURN','CLEANUP']];
-  ['1. Untap','2. Upkeep','3. Draw','4. Main phase 1','5. Combat','6. Main phase 2','7. End / cleanup'].forEach((phase,i)=>{const current=turnPlayer()?.playerId===p.playerId&&phaseGroups[i].includes(frame().phase),step=el('span',current?'current-phase':'',phase);if(current)step.setAttribute('aria-current','step');guide.append(step);});
-  mat.append(guide);
-  const life=button('',()=>showHealth(p),'mat-life');life.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}; inspect counters`);
-  life.append(el('small','','Life'),el('strong','',p.health.life));mat.append(life);
+  /* B.6a (2f): the printed turn-steps list and the life box are gone from the mat. B.1's step
+     strip and B.3's center counter carry both now, and printing them again on each of four
+     boards was four copies of one fact. The Focus view has neither, so it grows the ribbon
+     2f asks for instead — see focusSteps below. */
+
   for(const [zone,label,cls] of pileZones)mat.append(pileButton(p,zone,label,`mat-pile ${cls}`));
   if((p.playerId===primarySeat||focused)&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
   return mat;
@@ -758,7 +774,15 @@ $('card-detail').addEventListener('click',()=>$('card-detail').close());
 $('close-focus').addEventListener('click',()=>$('focus').close());
 $('focus').addEventListener('close',mountControls);
 for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
-$('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-zoom',e.target.value+'%');$('focus').style.setProperty('--focus-scale',e.target.value/100);$('focus-size-value').textContent=e.target.value+'%';});
+/* 2f asks for "the S · M · L card-size switch" rather than a percentage: three named sizes a
+   player picks once, not a number they tune. The values are the ends and middle of the slider
+   this replaces, so nothing about how the mat scales has changed. */
+for(const id of ['focus-size-s','focus-size-m','focus-size-l'])$(id).addEventListener('click',e=>{
+  const size=Number(e.currentTarget.dataset.size);
+  $('focus').style.setProperty('--focus-zoom',size+'%');$('focus').style.setProperty('--focus-scale',size/100);
+  for(const other of ['focus-size-s','focus-size-m','focus-size-l'])$(other).setAttribute('aria-pressed',String($(other)===e.currentTarget));
+});
+$('focus-size-s').setAttribute('aria-pressed','true');
 $('view-hand').addEventListener('click',()=>{
   const viewer=frame().players.find(p=>p.playerId===viewerSeatId);
   if(viewer)focusBoard(viewer);else notifyAction('Connect to a live table to view your hand.');
