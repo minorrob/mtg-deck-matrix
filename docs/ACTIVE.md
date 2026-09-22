@@ -2,8 +2,8 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #341 to #347 all merged; nothing open |
-| **Branch** | `main`; nothing open |
+| **Holder** | Free — #341 to #348 all merged; nothing open |
+| **Branch** | `main`; nothing open. **8768 is running this code** — restarted 2026-09-22 after the last merge, verified with a pod. It is **local-only**: relaunch through `start-crankmagic.ps1 -RemoteGuests` when remote guests are wanted. |
 | **Since** | 2026-09-22 |
 | **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
 | **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
