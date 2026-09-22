@@ -699,4 +699,47 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     "and then the launch box has to offer the way in");
 });
 
+/* ------------------------------------------------- the play board, frame 2e (Stage B.2 / B.4) */
+
+// The frame is emphatic, and both halves have already been got wrong once:
+//   "The four boards are always identical in size (one 2x2 grid of equal 16:9 tracks; content
+//    clips inside, never grows a board) and keep 16:9 at every size."
+//   "Nothing sits below the mat but your hand."
+//
+// The first attempt at this put aspect-ratio on .seat and left review.mjs still moving three seats
+// into an .opponent-boards container, so the ratio held and the boards were still 190x107 against
+// 1028x578 — measured at three widths before it was reverted. No stylesheet can size elements that
+// are not siblings, so the structural half is guarded here too: the container must stay gone.
+{
+  const boardCss = readFileSync("game/ui/online.css", "utf8");
+  const board = readFileSync("game/ui/review.mjs", "utf8");
+  check("the four boards are equal 16:9 tracks", () => {
+    const seat = /body\.table-view \.seat\{([^}]*)\}/.exec(boardCss);
+    assert.ok(seat, "the play board's seat rule");
+    assert.match(seat[1], /aspect-ratio:16\/9/, "each board keeps 16:9 at every size");
+    assert.match(seat[1], /overflow:hidden/, "content clips inside a board rather than growing it");
+  });
+  check("no board is sized differently from the others", () => {
+    assert.equal(board.includes("opponent-boards"), false,
+      "review.mjs must not move seats into a separate container; boards that are not siblings cannot be sized together");
+    assert.equal(boardCss.includes(".opponent-boards"), false, "and no rule may style a container that no longer exists");
+    const primary = /body\.table-view \.primary-seat\{([^}]*)\}/.exec(boardCss);
+    assert.ok(primary, "the owner's board is still marked");
+    assert.doesNotMatch(primary[1], /grid-(column|row)/,
+      "primary-seat says which board is yours, not which one is bigger — Focus is frame 2f's job");
+  });
+  check("the mat leaves a middle channel for the center counter", () => {
+    const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
+    assert.ok(table, "the mat rule");
+    assert.match(table[1], /grid-template-columns:minmax\(0,1fr\) \d+px minmax\(0,1fr\)/,
+      "two board columns with a fixed spacer between them, which B.3's counter straddles");
+  });
+  check("nothing sits below the mat but the hand", () => {
+    const hand = /body\.table-view \.hand\{([^}]*)\}/.exec(boardCss);
+    assert.ok(hand, "the hand rule");
+    assert.match(hand[1], /grid-column:1\/-1/, "the hand spans the mat's full width");
+    assert.match(hand[1], /grid-row:4/, "on the mat's bottom row, under both board rows");
+  });
+}
+
 console.log(`wireframe-conformance: ${checks} checks passed`);

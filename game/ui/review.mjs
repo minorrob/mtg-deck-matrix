@@ -42,8 +42,9 @@ if(guestMode){
   });
 }
 document.body.classList.add('table-view');
-const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
-$('seat-1').before(opponents);for(const id of [1,2,3])opponents.append($('seat-'+id));
+/* B.2: the four boards are one 2x2 of equal tracks, so there is no opponents container and no
+   primary board. The frame: "The four boards are always identical in size... and keep 16:9 at
+   every size." Which board Focus opens is what primarySeat means now, and nothing else. */
 function reportCanvasSize(){if(window.parent!==window)window.parent.postMessage({type:'crankmagic-canvas-size',height:Math.ceil(document.body.getBoundingClientRect().height)},location.origin);}
 new ResizeObserver(reportCanvasSize).observe(document.body);
 window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===window.parent&&event.data?.type==='crankmagic-viewport'&&Number.isFinite(event.data.height))document.body.style.setProperty('--table-viewport',Math.max(400,Math.min(4000,event.data.height))+'px');});
@@ -667,7 +668,7 @@ function render(){
   follow.textContent='Follow active player: '+(followActive?'on':'off');
   const activeSeat=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);promptAi.hidden=!live||guestMode||activeSeat?.kind!=='ai';promptAi.disabled=aiPrompting;promptAi.textContent=aiPrompting?'Prompting AI…':activeSeat?'Prompt '+(activeSeat.name||'AI'):'Prompt AI';
   if(followActive&&followedTurn!==f.turn&&turnPlayer()){primarySeat=turnPlayer().playerId;followedTurn=f.turn;}
-  for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);if(p.playerId===primarySeat)opponents.after(seat);else opponents.append(seat);renderSeat(p);}
+  for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);renderSeat(p);}
   for(const p of f.players.filter(p=>p.playerId!==primarySeat)){const seat=$('seat-'+p.playerId);seat.querySelector('.seat-heading').append(button('Show board',()=>setPrimarySeat(p.playerId)));}
   const you=f.players.find(p=>p.playerId===viewerSeatId);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
   renderHistory();
