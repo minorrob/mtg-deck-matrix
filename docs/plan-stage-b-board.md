@@ -191,3 +191,31 @@ stayed.
    grid row in the frame and freeing it from the current layout is what stops it colliding.
 
 **B.2 and B.4 should therefore land together.** Splitting them is what broke the hand.
+
+---
+
+## B.5, done as B.5a — and why the rail half is not here
+
+Frame 2e: *"CrankMagic's rail is hidden (☰ brings it back as an overlay, not a column) and the right
+panel is closed (Panel ▸ slides it over the mat…)."*
+
+**The panel half is done.** It was a grid track 240–340px wide that the mat had to share; it is now
+a fixed overlay that starts closed and slides over the mat. Measured at 1400px:
+
+| | panel closed | panel open |
+|---|---|---|
+| panel left edge | **1400** (off-screen) | **1040** |
+| mat width | **1368** | **1368** |
+
+The mat does not shrink when the panel opens — the panel *visits* the surface rather than taking
+from it, which is the whole point of the sentence.
+
+The top strip stays above it, verified by hit-testing every header control with `elementFromPoint`
+while the panel was open: **zero covered**. Without that the panel would hide the control that
+closes it.
+
+**The rail half is not done and cannot be yet.** `/review` is a standalone page. There is no
+CrankMagic rail on it to bring back, so `☰` would have nothing to toggle. That arrives when the
+board becomes a view of the one app — the original Stage B framing in
+`docs/plan-board-information-layer.md` — and it is a piece of its own, not a line of CSS. Recorded
+here rather than faked with a button that opens an empty drawer.
