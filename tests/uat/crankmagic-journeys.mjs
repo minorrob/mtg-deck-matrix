@@ -15,6 +15,7 @@ page.on('pageerror',error=>errors.push(error.message));
    The one deliberate live-network step is the offline one near the end; the stub is
    removed before it so that step stays honest. */
 const {stubNetwork}=await import('./scryfall-stub.mjs');const scryfallCalls=[];await stubNetwork(page,scryfallCalls);
+const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.waitForTimeout(400);};
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
@@ -39,7 +40,11 @@ async function count(label,n,scope=page){
 }
 /* The rungs live in the Status fly-out now: hover its toggle, and a rung opens the same strip. */
 async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hover();const sub=page.locator('#cm-status-submenu');await sub.getByRole('button',{name:label,exact:true}).waitFor();await count(label,n,sub);}
-async function newDeck(){await nav('Decks');await click('Create a deck');await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize & reserve');await click('Confirm change');await waitDialog();}
+/* "Create a deck" became "New deck" opening a Create / Import / Lab wizard, and this journey went
+   on naming the old button. It had been unrunnable since someone left an absolute container path
+   in scryfall-stub.mjs, so nothing ever said so: a gate that cannot start cannot rot loudly. The
+   wizard path is taken by its data-action, which is stable where the visible label was not. */
+async function newDeck(){await nav('Decks');await click('New deck');await page.locator('[data-action=wizard-create]').click();await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize & reserve');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY);await page.getByRole('heading',{name:'Build it. Make it yours.'}).waitFor({timeout:45000});eq((await state()).lots.length,0);
  /* HOW A DECK COMES TOGETHER: a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
@@ -114,7 +119,7 @@ try{
  await click('Menu');const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
  await click('Menu');await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
  await click('Menu');await click('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
- await nav('Build');await page.locator('#cm-lab-form').waitFor({timeout:45000});
+ await lab();await page.locator('#cm-lab-form').waitFor({timeout:45000});
  /* Deck Lab's sections collapse now and Deck Definition starts closed, so the deck-name
     field is in the DOM but not fillable until it is opened. Opened here rather than right
     after nav(): the view renders asynchronously, so anything run before the form exists
@@ -145,7 +150,7 @@ try{
     list rows under that group -- each with a Status fly-out that turns a plan into a copy. */
  await click('Save this deck');await page.waitForTimeout(900);current=await state();
  const labDeck=current.decks.find(d=>d.name==='Constructive run');ok(labDeck&&labDeck.status==='draft');ok(labDeck.groupId&&current.groups.some(g=>g.id===labDeck.groupId));
- await nav('Cards');await page.getByRole('table').waitFor();
+ await nav('Library');await page.getByRole('table').waitFor();
  await page.locator('select[name=groupPick]').selectOption(labDeck.groupId);await page.locator('.cm-chip').filter({hasText:'Group: Constructive run'}).waitFor();
  ok((await page.locator('tbody tr.cm-row-card').count())>1);
  const labTotal=labDeck.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0);
@@ -194,7 +199,7 @@ try{
  /* The Tabletop (docs/crankmagic-tabletop-plan.md TB1): the same rows as piles on a slate mat. The
     status placards are the status column's tallies, the Bench rail the Bench rows, a grouping
     change is remembered, and the list's search narrows every pile at once. */
- await nav('Cards');await page.locator('#cm-roster-table').waitFor();
+ await nav('Library');await page.locator('#cm-roster-table').waitFor();
  /* The Cards header (Rob, 14 September): the counts are chips that filter, List · Sheet · Table sit on the
     tab row under More, the tab row has no scrollbar, and the To buy tab has a Table of its own. */
  {const h=await page.evaluate(()=>{const tabs=document.querySelector('.cm-tabs.cm-cards-tabs'),sw=document.querySelector('.cm-view-switch');return {scroll:tabs.scrollHeight-tabs.clientHeight,inRow:!!sw&&tabs.contains(sw),views:[...sw.querySelectorAll('button')].map(b=>b.textContent.trim()).join(' '),kpis:document.querySelectorAll('.cm-kpi').length};});
@@ -593,13 +598,13 @@ try{
   await vp.goto(BASE+'/'+ENTRY+linkText.slice(linkText.indexOf('#')));await vp.locator('.cm-trade-grid').waitFor({timeout:45000});eq(await vp.locator('.cm-trade-card').count(),expected,'the visitor sees the same cards from the link alone');eq((await vp.locator('.cm-trade-card strong').allInnerTexts()).sort(),names.slice().sort());
   await vp.goto(BASE+'/'+ENTRY+'#trade?d=broken');await vp.locator('#cm-main').getByText(/does not carry a trade list/).waitFor();
   await visitor.close();
-  await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
+  await nav('Library');await page.locator('#cm-roster-table').waitFor();}
 
  /* A DECK FROM A LIST YOU HAVE NOT IMPORTED YET (Rob, 16 September). "The cards in a collection group"
     with "Create a new collection group" was the one combination Start a new deck answered with a refusal:
     a new group is empty, so it had nothing to start from. Continue now opens the import, and the rows it
     reads land in the new group and come straight back as the deck's list -- no second trip through Cards. */
- {await nav('Decks');await click('Create a deck');await page.getByRole('heading',{name:'Start a new deck',exact:true}).waitFor();
+ {await nav('Decks');await click('New deck');await page.getByRole('heading',{name:'Start a new deck',exact:true}).waitFor();
   ok(/commander picker/.test(await page.locator('#cm-new-deck-road').innerText()),'the line under the selects names the road Continue takes');
   {const one=await page.getByLabel('Start from').boundingBox(),two=await page.getByRole('dialog').getByLabel('Collection group').boundingBox();
    eq(Math.round(one.width),Math.round(two.width),'the two selects are one width');eq(Math.round(one.x),Math.round(two.x),'and one left edge');}
@@ -617,7 +622,7 @@ try{
    eq(d.groupId,g.id,'the deck is attached to the group the list landed in');
    eq(d.slots.filter(r=>r.purpose==='main').length,3,'all three rows came across as the deck’s list');}
   /* Leave the route where the next walk expects it: a deck page belongs to a deck this library has. */
-  await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
+  await nav('Library');await page.locator('#cm-roster-table').waitFor();}
 
  /* AN OLDER LIBRARY AFTER AN UPGRADE (schema 2 still in IndexedDB): the app read it migrated but saved against the
     raw copy, so every save failed with "Unsupported collection schema." — the toast Rob saw at boot and on a strategy
@@ -630,7 +635,7 @@ try{
   const stored=await page.evaluate(()=>new Promise((res,rej)=>{const r=indexedDB.open('crankmagic-library',1);r.onsuccess=()=>{const db=r.result,g=db.transaction('state').objectStore('state').get('current');g.onsuccess=()=>{const v=g.result.schemaVersion;db.close();res(v);};g.onerror=()=>rej(g.error);};r.onerror=()=>rej(r.error);}));
   eq(stored,3,'the first save after the upgrade stored the migrated library');eq((await state()).preferences.schemaProbe,true,'and the save itself went through');
   await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.undo(s.revision);}finally{r.close();}});eq((await state()).preferences.schemaProbe,undefined,'undo of that save works on the migrated copy too');}
- await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
+ await nav('Library');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
  await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
  current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');
  const krenkoOwned=()=>current.lots.filter(l=>l.cardId===krenkoKey&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),ownedBefore=krenkoOwned();
@@ -662,9 +667,9 @@ try{
   const sleeved=CrankReadiness(await state()).sleeved;ok(new RegExp(`^${sleeved}\\b`).test((await page.locator('.cm-change-reading').first().locator('dd').first().innerText()).trim()));
   const changeDownload=page.waitForEvent('download');await click('Export Excel');const changeFile=await changeDownload;ok(/-change-list\.xlsx$/.test(changeFile.suggestedFilename()));ok((await fs.stat(await changeFile.path())).size>2000);
   const ticks=page.locator('[data-change-tick]:not([disabled])');if(await ticks.count()){const before=(await state()).revision;await ticks.first().check();await page.waitForTimeout(900);ok((await state()).revision>before);ok(await page.locator('.cm-change-row.is-done').count()>=1);}}
- await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('More');await page.getByRole('button',{name:'Make the change for Journey Goblins'}).click();await page.locator('.cm-change').waitFor();
+ await nav('Library');await page.locator('#cm-roster-table').waitFor();await click('More');await page.getByRole('button',{name:'Make the change for Journey Goblins'}).click();await page.locator('.cm-change').waitFor();
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
- await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
+ await nav('Library');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
  /* THE BENCH SURVIVES A DECK SCOPE (Rob, 14 September): working on one deck, what you already
     own and no deck has reserved is exactly what you want in front of you. The To buy tab still
     drops it, because money is not the question there. */
@@ -687,7 +692,7 @@ try{
  /* Every row on one page: the strip counts every matched row and a band header only exists
     for the rows on the page, so the two agree only with paging off. */
  await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.commit({id:crypto.randomUUID(),type:'preferences',values:{pageSize:'all'}},s.revision);}finally{r.close();}});
- await nav('Cards');await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor({timeout:45000});await page.locator('.cm-band-dollars').first().waitFor();
+ await nav('Library');await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor({timeout:45000});await page.locator('.cm-band-dollars').first().waitFor();
  const money=await page.evaluate(()=>{const num=t=>Number(String(t).replace(/[^0-9.]/g,''));return {total:num(document.querySelector('#cm-shop-total').textContent),bands:[...document.querySelectorAll('.cm-band-dollars')].map(el=>num(el.textContent))};});
  ok(money.total>0);eq(money.total.toFixed(2),money.bands.reduce((n,x)=>n+x,0).toFixed(2));
  await page.locator('#cm-roster-query').fill('Lightning Bolt');await page.waitForTimeout(300);await row('Lightning Bolt','Journey Goblins').getByRole('button',{name:'Bought',exact:true}).click();await page.waitForTimeout(900);current=await state();
@@ -701,7 +706,7 @@ try{
  const revBefore=current.revision;await page.getByRole('tab',{name:/^Orders/}).click();await page.locator('.cm-orders').waitFor();eq(await page.locator('.cm-order-row').count(),1);
  await click('Arrived → bench');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();eq(current.revision,revBefore+1);eq(CrankOrders(current)[0].arrived,CrankOrders(current)[0].copies);
  await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
- await nav('Discover');await page.locator('#cm-graph').waitFor({timeout:45000});
+ await nav('Explore');await page.locator('#cm-graph').waitFor({timeout:45000});
  /* ENTER FOCUSES THE BEST MATCH: a prefix is enough, and the exact name wins over a longer
     one that starts the same way. */
  await page.locator('#cm-graph-query').fill('sol rin');await page.locator('#cm-graph-query').press('Enter');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();eq(await page.locator('#cm-graph-query').inputValue(),'Sol Ring');
@@ -959,8 +964,8 @@ try{
     earlier, not a snapshot from the Lab run half a journey ago — anything recorded in between
     is a real change and would read here as an offline fault. */
  const beforeOffline=await state();
- await page.unroute('**://api.scryfall.com/**');await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Cards');await page.getByRole('table').waitFor();eq((await state()).lots,beforeOffline.lots);await context.setOffline(false);
- await page.setViewportSize({width:390,height:844});await nav('Decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Cards');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.unroute('**://api.scryfall.com/**');await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Library');await page.getByRole('table').waitFor();eq((await state()).lots,beforeOffline.lots);await context.setOffline(false);
+ await page.setViewportSize({width:390,height:844});await nav('Decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Library');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  eq(errors,[]);console.log(`crankmagic-journeys: ${checks} checks passed across real deck assembly, imports, printing lots, corrections, concurrency, quota abort, backup restore, initial construction, graph navigation, offline and mobile.`);
 }catch(error){console.error(error);console.error('url:',page.url(),'| selected tab:',await page.evaluate(()=>document.querySelector('[role=tab][aria-selected=true]')?.textContent?.trim()||'(none)'));console.error((await page.locator('body').innerText()).slice(0,8500));await page.screenshot({path:'tests/uat/crankmagic-failure.png',fullPage:true});process.exitCode=1;}finally{await browser.close();}
 function CrankKey(name){return 'card:'+Buffer.from(name.normalize('NFKC').trim().toLowerCase()).toString('base64url');}

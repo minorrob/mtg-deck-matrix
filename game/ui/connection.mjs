@@ -89,8 +89,16 @@ export function describeReadiness(readiness, options = {}) {
   const rows = seats.map((seat) => describeSeat(seat, {youSeatId, now}));
   const tableReasons = Array.isArray(r.table) ? r.table.slice() : [];
   const waitingOn = rows.filter((row) => row.blocking).map((row) => row.name);
-  const launch = r.launch && r.launch.stage ? {stage: r.launch.stage, label: LAUNCH_SAYS[r.launch.stage] || r.launch.stage,
-    reason: r.launch.reason || r.launch.error || ""} : null;
+  /* THE TABLE'S OWN launchError OUTRANKS THE RUNTIME'S STAGE.
+   *
+   * The stage lives in an in-memory launchProgress that can be stale or overwritten; the error
+   * lives on the persisted table. A guest in the 2026-09-22 UAT watched "Starting the rules
+   * engine" for nine minutes after a launch had already failed, which is what that difference
+   * costs. When the table says a launch failed, that is what the panel reports. */
+  const failure = typeof o.launchError === "string" && o.launchError ? o.launchError : "";
+  const launch = failure ? {stage: "failed", label: LAUNCH_SAYS.failed, reason: failure}
+    : r.launch && r.launch.stage ? {stage: r.launch.stage, label: LAUNCH_SAYS[r.launch.stage] || r.launch.stage,
+      reason: r.launch.reason || r.launch.error || ""} : null;
   const phase = r.phase || "selecting";
   let headline = "";
   let tone = "waiting";
@@ -101,6 +109,11 @@ export function describeReadiness(readiness, options = {}) {
   } else if (phase === "starting") {
     headline = launch ? launch.label : "Starting the game";
     tone = launch && launch.stage === "failed" ? "failed" : "starting";
+  } else if (failure) {
+    /* Back in `selecting` after a failure: the seats are what block the retry, but the reason the
+       last attempt stopped is the thing a reader is actually waiting to be told. */
+    headline = `${LAUNCH_SAYS.failed}: ${failure}`;
+    tone = "failed";
   } else if (phase === "playing") { headline = "The game is on."; tone = "ok"; }
   else if (phase === "rematch") { headline = "Deciding on another game."; tone = "waiting"; }
   else if (r.ok) { headline = "Everyone is ready."; tone = "ok"; }

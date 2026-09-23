@@ -168,3 +168,60 @@ test('the three pages that draw the panel import this module and the servers pub
   assert.match(read('game/tools/serve-review.mjs'), /'connection\.mjs'/, 'and hands it to the guest gateway');
   for (const css of ['game/ui/guest.css', 'game/ui/setup.css', 'crankmagic.css']) assert.match(read(css), /\.connection-panel/, css + ' styles it');
 });
+
+/* WHAT A GUEST IS TOLD WHEN THE LAUNCH FAILED A MOMENT AGO.
+ *
+ * The panel already rendered a 'failed' launch STAGE, and during the 2026-09-22 UAT a guest still
+ * watched "Starting the rules engine" for nine minutes: that stage lives in the runtime's
+ * in-memory launchProgress, which can go stale or be overwritten. The table's own launchError is
+ * authoritative and persisted, so the panel prefers it and a reset table can still say why. */
+test('a table that failed to launch says so, even when the runtime stage has gone stale', () => {
+  let t = createTable({tableId: 't', seats: [{seatId: 0, kind: 'human', occupied: true}, {seatId: 1, kind: 'human', occupied: true}, {seatId: 2, kind: 'ai'}]});
+  const go = (event, now = 0) => t = transitionTable(t, {...event, revision: t.revision}, {now, launchId: 'L1'});
+  for (const seatId of [0, 1, 2]) { go({type: 'deck', seatId, deckVersion: 'd' + seatId}); go({type: 'ready', seatId, ready: true}); }
+  go({type: 'countdown'}); go({type: 'tick'}, 10000);
+  go({type: 'engine-failed', launchId: 'L1', error: 'Forge did not become ready within four minutes'});
+
+  /* The runtime still claims it is spawning -- exactly the stale state the UAT met. */
+  const readiness = {...readinessOf(t), launch: {stage: 'engine-spawning', error: null}};
+  const d = describeReadiness(readiness, {now: 20000, youSeatId: 1, launchError: t.launchError});
+  assert.equal(d.tone, 'failed', 'a table carrying a launch error is not merely "waiting"');
+  assert.match(d.headline, /did not become ready/, 'the reason reaches the reader');
+
+  /* And the AI seat is ready again, so the panel blames only the humans who must re-confirm. */
+  assert.deepEqual(d.waitingOn.sort(), ['Seat 1', 'You']);
+});
+
+/* "Choosing a deckChulane, Teller of Tales" — one seat card, two facts, no gap.
+ *
+ * The guest seat card appends a status <small> and a commander <small> as siblings. Its own
+ * stylesheet already stacks the two fields above them (`.seat strong,.seat span{display:block}`)
+ * and stops short of the smalls, so the last two run together inline. An agent playing a guest in
+ * the 2026-09-22 UAT read it on every seat card in every state: "ReadyPurphoros, God of the Forge",
+ * "Choosing a deckAtraxa, Praetors' Voice". */
+test('a guest seat card stacks its fields instead of running them together', async () => {
+  const {readFileSync} = await import('node:fs');
+  const css = readFileSync(new URL('../ui/guest.css', import.meta.url), 'utf8');
+  const stacked = /\.seat[^{}]*\bsmall\b[^{}]*\{[^}]*display:block/.test(css);
+  assert.ok(stacked,
+    'the status and the commander are adjacent <small> siblings; without display:block they '
+    + 'concatenate, which is what a guest actually read');
+});
+
+/* A GUEST'S FIRST CHOICE SHOULD NOT BE THE ONE THEY CANNOT MAKE.
+ *
+ * The deck-source list opened on "Upload Moxfield two-column CSV" — the single option that needs
+ * a file a newly invited friend does not have. An agent playing a guest in the 2026-09-22 UAT had
+ * to know to change it before it could do anything at all. The preloaded decks are the option
+ * that always works, so they lead. */
+test('the guest deck chooser opens on the source that needs nothing', async () => {
+  const {readFileSync} = await import('node:fs');
+  const src = readFileSync(new URL('../ui/guest.mjs', import.meta.url), 'utf8');
+  const list = /for\(const \[value,label\]of \[(.*?)\]\)/s.exec(src);
+  assert.ok(list, 'the deck source list is built from an array of [value,label] pairs');
+  const first = /\['([a-z]+)'/.exec(list[1])[1];
+  assert.equal(first, 'preloaded',
+    'a guest with no file must be able to proceed without first discovering the dropdown');
+  assert.match(src, /const deckDraft={source:'preloaded'/,
+    'and the draft opens on it, because the select reads its value from the draft, not from list order');
+});

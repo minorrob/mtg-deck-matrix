@@ -37,7 +37,10 @@ export class TableBroker{
   #save(){mkdirSync(dirname(this.#file),{recursive:true});this.#state.access=this.#access.snapshot();const temp=this.#file+'.tmp';writeFileSync(temp,JSON.stringify(this.#state,null,2));renameSync(temp,this.#file);}
   #transition(event,extra={}){this.#state.table=transitionTable(this.#state.table,{...event,revision:this.#state.table.revision},{now:this.#clock(),...extra});this.#save();return this.#state.table;}
   hostView(){return safeClone(this.#state.table);}
-  invite(seatId,ttl=600000){const seat=this.#state.table.seats[seatId];if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');const code=this.#access.invite({tableId:this.#state.table.tableId,seatId,generation:this.#state.membershipEpochs[seatId],now:this.#clock(),ttl});this.#save();return {tableId:this.#state.table.tableId,seatId,invite:code,expiresIn:ttl};}
+  /* The table is told, so the countdown waits for whoever this link was sent to. Without it the
+     host readies, the AI seats are ready from birth, and an unoccupied seat is not judged — so a
+     table launched before its invited guest had opened the link. */
+  invite(seatId,ttl=600000){const seat=this.#state.table.seats[seatId];if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');const code=this.#access.invite({tableId:this.#state.table.tableId,seatId,generation:this.#state.membershipEpochs[seatId],now:this.#clock(),ttl});this.#transition({type:'invited',seatId});this.#save();return {tableId:this.#state.table.tableId,seatId,invite:code,expiresIn:ttl};}
   async join(input){
     if(!input||input.tableId!==this.#state.table.tableId||typeof input.invite!=='string')throw Object.assign(Error('Invitation required'),{status:401});
     const table=safeClone(this.#state.table),access=new SeatAccess(this.#access.snapshot());let claimed;
@@ -151,7 +154,9 @@ export class TableBroker{
   async processOutbox(){
     const item=this.#state.outbox.find(x=>x.status==='pending'||x.status==='running');if(!item)return null;if(typeof this.#launch!=='function')throw Error('No match launcher configured');
     item.status='running';this.#save();try{const matchId=await this.#launch({table:safeClone(this.#state.table),decks:safeClone(this.#state.deckSnapshots),launchId:item.launchId,matchId:item.matchId});if(matchId!==item.matchId)throw Error('Launcher returned the wrong match identity');item.status='done';this.#transition({type:'engine-started',seatId:0,launchId:item.launchId,matchId});return matchId;}
-    catch(error){item.status='failed';item.error=String(error.message||error);this.#transition({type:'engine-failed',seatId:0,launchId:item.launchId});throw error;}
+    /* The reason goes onto the TABLE, not only onto this outbox item. The item is internal and
+       nothing publishes it, so a guest watching a launch fail used to be told nothing at all. */
+    catch(error){item.status='failed';item.error=String(error.message||error);this.#transition({type:'engine-failed',seatId:0,launchId:item.launchId,error:item.error});throw error;}
   }
   async complete(matchId){this.#state.lastMatchId=matchId;this.#state.matchSeats[matchId]=safeClone(this.#state.table.seats);this.#save();return this.#transition({type:'completed',seatId:0,matchId});}
   async disconnectExpired(){

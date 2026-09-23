@@ -4,7 +4,9 @@ const status=document.querySelector('#status'),host=document.querySelector('#tab
 /* The render key ignores sub-five-second movement in quiet time, so a guest typing a deck name is
    not interrupted by a redraw every heartbeat; the panel still updates within five seconds. */
 const renderKeyOf=value=>JSON.stringify({...value,readiness:value.readiness&&{...value.readiness,seats:(value.readiness.seats||[]).map(s=>({...s,quietForMs:s.quietForMs===null?null:Math.floor(s.quietForMs/5000)}))}});
-const deckDraft={source:'upload',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
+/* The preloaded decks lead and are the default: they are the one source that needs nothing
+   a newly invited guest does not already have. */
+const deckDraft={source:'preloaded',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
 function message(text,error=false){status.textContent=text;status.className=error?'error':'notice';status.hidden=false;}
@@ -25,7 +27,7 @@ async function redeem(){
 
 function deckPanel(table,seat){
   const panel=el('div','deck panel'),title=el('h2','',seat.deckVersion?'Choose this deck again or replace it':'Choose your deck');panel.append(title);
-  const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['upload','Upload Moxfield two-column CSV'],['preloaded','Use a preloaded CrankMagic deck'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
+  const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['preloaded','Use a preloaded CrankMagic deck'],['upload','Upload Moxfield two-column CSV'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
   source.value=deckDraft.source;const name=el('input');name.placeholder='Deck name';name.setAttribute('aria-label','Deck name');name.value=deckDraft.name;name.addEventListener('input',()=>deckDraft.name=name.value);
   const upload=el('div','choice'),file=el('input');file.type='file';file.accept='.csv,text/csv';file.setAttribute('aria-label','Moxfield deck CSV');const csv=el('textarea');csv.placeholder='Card Name,Count\nForest,99\n\nCommander Name,1';csv.setAttribute('aria-label','Deck CSV contents');csv.value=deckDraft.csv;csv.addEventListener('input',()=>deckDraft.csv=csv.value);file.addEventListener('change',async()=>{csv.value=file.files[0]?await file.files[0].text():'';deckDraft.csv=csv.value;});upload.append(file,csv,el('p','fine','Use two columns: card name and count. Put one blank line between the 99-card library and commander.'));
   const catalog=el('div','choice'),saved=el('select');saved.setAttribute('aria-label','Preloaded deck');for(const d of table.catalog?.decks||[]){const option=el('option','',`${d.name} · ${d.commander}`);option.value=d.id;option.dataset.commander=d.commander;saved.append(option);}if(deckDraft.deckId)saved.value=deckDraft.deckId;saved.addEventListener('change',()=>deckDraft.deckId=saved.value);catalog.append(saved);
@@ -47,7 +49,7 @@ function render(value){
   const seats=el('div','seats');for(const seat of tableState.seats){const card=el('div','seat'+(seat.seatId===session.seatId?' you':''));card.append(el('strong','',seat.seatId===session.seatId?'You':seat.name||`Seat ${seat.seatId+1}`),el('span','',seat.kind==='ai'?'AI player':'Human player'),el('small','',!seat.occupied?'Waiting for player':seat.ready?'Ready':seat.connected?'Choosing a deck':'Disconnected'),...(seat.commander?[el('small','',seat.commander)]:[]));seats.append(card);}host.append(seats);
   /* Who the table is waiting on, by name and reason (C.2). The readiness object rides along with
      every /table answer, so this costs no extra request. */
-  if(value.readiness)host.append(renderConnectionPanel(value.readiness,{el,youSeatId:session.seatId,countdownAt:tableState.countdownAt}));
+  if(value.readiness)host.append(renderConnectionPanel(value.readiness,{el,youSeatId:session.seatId,countdownAt:tableState.countdownAt,launchError:tableState.launchError}));
   const own=tableState.seats.find(s=>s.seatId===session.seatId),actions=el('div','actions');
   if(tableState.phase==='selecting'||tableState.phase==='countdown'){
     host.append(deckPanel(value,own));const ready=button(own.ready?'Not ready':'Ready to play',async()=>{try{await api('/table/ready',{method:'POST',body:{ready:!own.ready}});await refresh();}catch(error){message(error.message,true);}},own.ready?'':'primary');ready.disabled=!own.deckVersion;actions.append(ready);

@@ -3,7 +3,11 @@ param(
     [int]$GuestPort = 8769,
     [string]$OpenAiCredential = 'crankmagic_openai_api',
     [switch]$RemoteGuests,
-    [string]$GuestPublicOrigin = ''
+    [string]$GuestPublicOrigin = '',
+    # The one web lobby the guest gateway will answer. The gateway has always been able to do
+    # this -- validated origin, proper preflight, every other origin refused -- and nothing ever
+    # set it, so the published lobby could not reach a live tunnel at all. Pass '' to switch it off.
+    [string]$WebOrigin = 'https://minorrob.github.io'
 )
 $ErrorActionPreference = 'Stop'
 if ($Port -lt 1024 -or $Port -gt 65535) { throw 'The local host port must be between 1024 and 65535.' }
@@ -82,6 +86,7 @@ $env:COMMANDER_PORT = "$Port"
 $env:COMMANDER_GUEST_PORT = "$GuestPort"
 $env:COMMANDER_OPENAI_CREDENTIAL = $OpenAiCredential
 $env:COMMANDER_GUEST_PUBLIC_ORIGIN = $GuestPublicOrigin
+$env:COMMANDER_WEB_ORIGIN = $WebOrigin
 try {
 $child = Start-Process -FilePath $nodePath -ArgumentList 'game/tools/serve-review.mjs' -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logDir "$stamp-out.log") -RedirectStandardError (Join-Path $logDir "$stamp-error.log")
 for ($attempt = 0; $attempt -lt 30; $attempt++) {
