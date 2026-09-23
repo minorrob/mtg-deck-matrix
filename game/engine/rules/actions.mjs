@@ -18,14 +18,32 @@
  * turn, with an empty stack, and while they have a land drop left (CR 305.2). Every clause is a
  * separate way to get it wrong, so each is a separate line below.
  *
- * WHAT IS NOT HERE YET, and is absent rather than stubbed: casting a spell needs mana and costs
- * (1.3), attacking needs combat (1.4), activating an ability needs the card script (phase 2). A
- * pilot handed this list today can play lands and pass, which is exactly what the kernel can do.
+ * A MANA ABILITY NEVER TOUCHES THE STACK (CR 605.3a). It cannot be responded to, it resolves as it
+ * is activated, and it may be activated any time its controller has priority — not only in a main
+ * phase. Putting it on the stack is the most visible rules error an engine can make: every land tap
+ * would become a window for instants and every game would play wrong from turn one.
+ *
+ * TIMING IS TWO RULES, NOT ONE. A sorcery-speed spell needs a main phase of its controller's own
+ * turn with an empty stack (CR 307.1). An instant needs priority and nothing else (CR 304.1). Using
+ * one test for both either forbids legal instants or allows sorceries during combat.
+ *
+ * WHAT IS DEFERRED AND IS NAMED RATHER THAN FAKED: CR 601.2g lets a player activate mana abilities
+ * DURING casting, once the total cost is known. Here, tapping and casting are separate offered
+ * actions — a legal sequence, and the one a human plays. A spell is offered when the POOL can pay
+ * for it, not when the battlefield could, so the engine never offers a cast it cannot complete.
+ * Automatic land-tapping belongs with the payment choice (§12.1 `payment.automaticEligible`).
+ *
+ * Attacking needs combat (1.4); non-mana activated abilities need the card script (phase 2). Both
+ * are absent rather than stubbed.
  */
 
 import {cardsIn, moveObject} from "../state/index.mjs";
+import {pushSpell} from "./stack.mjs";
+import {addMana, spend, parseManaCost, automaticPayment} from "./mana.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
+/* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
+const SORCERY_SPEED = ["Sorcery", "Creature", "Artifact", "Enchantment", "Planeswalker", "Battle"];
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -62,13 +80,40 @@ export function legalActions(state, player) {
     }
   }
 
+  /* CR 605.3a: any time you have priority, whatever the step. */
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (object.controller !== player) continue;
+    for (const ability of object.abilities ?? []) {
+      if (ability.kind !== "mana") continue;
+      if (ability.tapSelf && object.tapped) continue;
+      actions.push({kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card});
+    }
+  }
+
+  /* CR 601.2. Offered only when the pool can pay: the engine does not offer what it cannot do. */
+  for (const id of cardsIn(state, "hand", player)) {
+    const object = state.objects[id];
+    if (!object.manaCost) continue;
+    if (sorcerySpeed(object) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
+      continue;
+    const cost = parseManaCost(object.manaCost);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life});
+    if (!payment) continue;
+    actions.push({kind: "cast", objectId: id, label: object.card, payment});
+  }
+
   return actions;
 }
+
+const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
 
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
    across a network boundary submits a copy, not the object it was handed. */
-const sameAction = (a, b) => a.kind === b.kind && (a.objectId ?? null) === (b.objectId ?? null);
+const sameAction = (a, b) => a.kind === b.kind
+  && (a.objectId ?? null) === (b.objectId ?? null)
+  && (a.abilityId ?? null) === (b.abilityId ?? null);
 
 /**
  * Perform an action, after checking the engine actually offered it.
@@ -100,6 +145,52 @@ export function applyAction(state, player, action) {
       card,
       from: {zoneType: "Hand", player: {playerId: player}},
       to: {zoneType: "Battlefield", player: {playerId: player}},
+    }));
+    return events;
+  }
+
+  if (action.kind === "activate-mana") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    if (ability.tapSelf) {
+      object.tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+    }
+    addMana(state.players[player].manaPool, ability.produces);
+    events.push(event("GameEventManaPool", state, {
+      player: {playerId: player, name: state.players[player].name},
+      produced: {...ability.produces}, source: cardRef(state, action.objectId),
+    }));
+    /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
+    return events;
+  }
+
+  if (action.kind === "cast") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    /* Recomputed rather than trusted: the action arrived from a pilot, possibly across a network,
+       and the pool may have moved since it was offered. The offered check above proves the action
+       is still on the list, and this proves the payment still balances. */
+    const cost = parseManaCost(object.manaCost);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life});
+    if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
+    const card = cardRef(state, action.objectId);
+    spend(state.players[player].manaPool, payment.mana);
+    if (payment.life > 0) state.players[player].life -= payment.life;
+
+    const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
+    const entry = pushSpell(state, action.objectId, {controller: player, permanent});
+    events.push(event("GameEventSpellAbilityCast", state, {
+      card,
+      sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},
+      si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
+      targetDescription: "",
+    }));
+    events.push(event("GameEventCardChangeZone", state, {
+      card,
+      from: {zoneType: "Hand", player: {playerId: player}},
+      to: {zoneType: "Stack", player: {playerId: player}},
     }));
     return events;
   }

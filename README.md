@@ -420,7 +420,10 @@ the same final state and a byte-identical journal. `engine-mana` holds that the 
 not pay alike (`{W/U}` either color, `{2/W}` two generic or one white and mana value 2 either way,
 `{W/P}` white or two life and not mana at all), that `{C}` is a requirement rather than a generic
 symbol, that X is zero off the stack, and that when more than one payment is legal the engine
-offers the choice instead of guessing which color the player wanted to keep.
+offers the choice instead of guessing which color the player wanted to keep. `engine-cast` holds
+that a mana ability never touches the stack (CR 605.3a — the alternative would make every land tap
+a window for instants), that sorcery speed and instant speed are two different tests rather than
+one, and that a game with spells in it terminates and replays to the same hash.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -459,7 +462,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 83 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 84 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

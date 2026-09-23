@@ -116,6 +116,11 @@ export function addObject(state, object, zone, player = null) {
        system's answer (CR 613, phase 1.8); this is the base it starts from, and it comes from the
        card definition once the directory exists in phase 2. */
     types: Array.isArray(object.types) ? [...object.types] : [],
+    /* The printed mana cost, as text, and the abilities the card grants. Both come from the card
+       definition once `CrankCardScript@1` exists in phase 2; the kernel's tests set them directly,
+       which is how the field names get shaped by real cards before the schema is written. */
+    manaCost: object.manaCost ?? null,
+    abilities: Array.isArray(object.abilities) ? structuredClone(object.abilities) : [],
     owner: Number.isInteger(object.owner) ? object.owner : player,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
@@ -167,6 +172,7 @@ export function moveObject(state, id, zone, player = null) {
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   return addObject(state, {
-    card: from.card, types: from.types, owner: from.owner, controller: from.owner, token: from.token,
+    card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
+    owner: from.owner, controller: from.owner, token: from.token,
   }, zone, player);
 }
