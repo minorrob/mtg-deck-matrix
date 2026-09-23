@@ -639,7 +639,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, counter added (and once),
-  life gained, token created (once), becomes monstrous.
+  life gained, life lost, token created (once), becomes monstrous.
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.
