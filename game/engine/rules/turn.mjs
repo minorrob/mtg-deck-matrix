@@ -181,7 +181,10 @@ function arrive(state, events) {
   if (state.phase === "UNTAP") untap(state, events);
   if (state.phase === "DRAW" && !skipsFirstDraw(state)) draw(state, state.activePlayer, events);
   if (state.phase === "CLEANUP") cleanup(state, events);
+  /* CR 117.1a: the active player receives priority at the beginning of most steps, and CR 117.4's
+     count of consecutive passes starts fresh with the step. */
   state.priorityPlayer = hasPriority(state) ? state.activePlayer : null;
+  state.passes = 0;
 }
 
 /* ---- beginning, and moving on ---- */

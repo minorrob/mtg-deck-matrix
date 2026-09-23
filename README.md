@@ -405,7 +405,12 @@ that matters, so a correct replay is never reported as a divergence. On top of t
 in exactly one zone, and a card that changes zones becomes a new object (CR 400.7), so a creature
 that dies and returns remembers nothing of its old life. `engine-turn` holds the clock — the steps
 of CR 500.1 in order, under the phase names already on disk, the draw rule that applies to two
-players and not to a pod, and a turn that always reaches the next seat.
+players and not to a pod, and a turn that always reaches the next seat. `engine-stack` holds that
+a spell's card is really in the stack zone rather than still in hand with a note on it, and that an
+ability on the stack is not its source; `engine-priority` holds that passes count only when they
+are consecutive, that the active player receives priority after something resolves, and that a
+player who is out is never waited for — the difference between an engine that loses a game and one
+that stops with nothing to report.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -444,7 +449,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 78 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 80 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

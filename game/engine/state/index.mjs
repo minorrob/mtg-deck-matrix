@@ -54,6 +54,10 @@ export function createState(pod) {
     step: null,
     activePlayer: null,
     priorityPlayer: null,
+    /* CR 117.4 counts passes IN SUCCESSION, so this is consecutive passes since the last action or
+       resolution, never a running total. It lives in the state because a checkpoint taken part way
+       through a round has to resume part way through it. */
+    passes: 0,
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
@@ -71,6 +75,13 @@ export function createState(pod) {
       lostTo: null,
     })),
     zones,
+    /* THE STACK IS TWO THINGS AND THEY ARE NOT THE SAME LIST. `zones.stack` holds the cards
+       physically on the stack, because a spell's card really is in the stack zone (CR 405.1) and
+       the one-object-one-zone invariant covers it. `stack` holds the ENTRIES — a spell, an
+       activated ability, a trigger — in resolution order, and an ability has no card at all. They
+       are appended and popped together, and `engine-stack` pins that they never drift. */
+    stack: [],
+    nextStackId: 1,
     objects: {},
     /* Monotonic, and part of the state so a replay assigns the same ids and the same order. */
     nextObjectId: 1,
