@@ -153,6 +153,18 @@ function validateIndices(choice, request) {
     if (!Number.isInteger(n) || n < 0 || n >= size || seen.has(n)) throw new Error("Invalid selection");
     seen.add(n);
   }
+  /* SOME CHOICES OFFER THE SAME THING SEVERAL WAYS. Declaring attackers lists one option per
+     creature per defender, so two distinct indices can name the same creature — and a creature
+     attacks once (CR 508.1a). The record says which field has to stay unique, and every answerer is
+     held to it here rather than each being trusted to work it out. */
+  if (choice.exclusiveBy) {
+    const used = new Set();
+    for (const n of indices) {
+      const key = (choice.options ?? [])[n]?.[choice.exclusiveBy];
+      if (key !== undefined && used.has(key)) throw new Error("Invalid selection");
+      used.add(key);
+    }
+  }
   if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);
 }
 

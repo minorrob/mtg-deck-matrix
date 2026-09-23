@@ -39,6 +39,7 @@ import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
+import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -196,6 +197,8 @@ function cleanup(state, events) {
 export function awaitingChoice(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+    return mulliganChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
@@ -221,9 +224,15 @@ export function awaitingChoice(state) {
  * @param {Array<number>} indices  positions in the choice's options, as the controller validated
  * @returns {Array} events for the caller to journal
  */
-export function resolveAwaiting(state, indices, amounts = null) {
+export function resolveAwaiting(state, indices, amounts = null, rng = null) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
+
+  /* The mulligan is the one decision that consumes randomness, because keeping or not decides
+     whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),
+     so the stream is handed in rather than held. */
+  if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
+    return resolveMulligan(state, awaiting, indices, rng);
 
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);

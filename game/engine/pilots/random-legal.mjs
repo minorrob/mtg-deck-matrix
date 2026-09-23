@@ -82,10 +82,22 @@ export function randomLegalPilot(rng) {
       const options = choice.options ?? [];
       const take = min + rng.int(Math.max(0, Math.min(max, options.length) - min) + 1);
       /* Draw without replacement, because an index repeated is not a second selection and the
-         controller refuses it. */
+         controller refuses it.
+       *
+       * `exclusiveBy` is the other half: declaring attackers lists one option per creature per
+       * defender, so two distinct indices can still name the same creature, and a creature attacks
+       * once. Without this the pilot produces an illegal answer and the game stops — which is how
+       * the phase 1 gate found this on its first run, and which no single-rule suite would have. */
       const pool = options.map((_, index) => index);
       const indices = [];
-      for (let i = 0; i < take; i += 1) indices.push(...pool.splice(rng.int(pool.length), 1));
+      const used = new Set();
+      for (let i = 0; i < take && pool.length > 0; i += 1) {
+        const [index] = pool.splice(rng.int(pool.length), 1);
+        const key = choice.exclusiveBy ? options[index]?.[choice.exclusiveBy] : undefined;
+        if (key !== undefined && used.has(key)) continue;
+        if (key !== undefined) used.add(key);
+        indices.push(index);
+      }
       return {indices};
     },
   };

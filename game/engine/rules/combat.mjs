@@ -112,6 +112,11 @@ export const attackers = {
          possible is one per creature. */
       min: 0,
       max: new Set(options.map((o) => o.cardId)).size,
+      /* ONE OPTION PER CREATURE PER DEFENDER, so two options can name the same creature. Declaring
+         that here means every answerer -- a browser seat, the house pilot, an API pilot -- is held
+         to it by `controller.mjs`, rather than each being trusted to work it out. The refusal in
+         `resolve` stays as the last line, but nothing should reach it. */
+      exclusiveBy: "cardId",
       options,
     };
   },
@@ -210,6 +215,8 @@ export const blockers = {
       mode: "many",
       min: 0,
       max: new Set(options.map((o) => o.cardId)).size,
+      /* One option per blocker per attacker, so the same rule applies (CR 509.1a). */
+      exclusiveBy: "cardId",
       options,
     };
   },

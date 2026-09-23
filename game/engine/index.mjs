@@ -34,15 +34,20 @@ export const ENGINE_PROTOCOL = 1;
 export const ENGINE_STATUS = Object.freeze({
   id: ENGINE_ID,
   protocol: ENGINE_PROTOCOL,
-  phase: 0,
+  /* PHASE 1: THE KERNEL, AND ITS GATE HAS PASSED. `engine-gate` runs what §6 asks for — a thousand
+     four-player Commander games of lands, vanilla creatures and commanders, every one to
+     completion, byte-identical on replay, and no hidden card in any seat's projection.
+   *
+     What is NOT here is cards. Every one of the 31,830 rows in `data/engine/support.json` is still
+     `unsupported`, so `createGame` refuses and the flag still defaults to forge. The rules work;
+     there is nothing yet for them to work on. */
+  phase: 1,
   /* What is built and green, module by module. Not a claim that a game can be played. */
   implemented: Object.freeze([
-    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection", "replacement", "layers", "commander",
+    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast",
+    "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate",
   ]),
-  /* Phase 1's gate, from §6: a four-player game of vanilla creatures and lands with commanders
-     running to completion for 1,000 seeds, the same hash on replay, no hidden card in any seat
-     projection. Until that passes, this engine plays nothing. */
-  next: "the London mulligan (CR 103.4), the last of phase 1, triggers, replacement, layers, commander, mulligan, projection, state-based actions, triggers, layers, commander, projection",
+  next: "phase 2: the CrankCardScript@1 schema, the selector grammar, the effect primitives and the compiler",
 });
 
 export class EngineNotImplemented extends Error {

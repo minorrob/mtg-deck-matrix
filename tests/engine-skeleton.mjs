@@ -22,13 +22,14 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 
 eq(ENGINE_ID, "crank", "the flag value that selects this engine");
 eq(ENGINE_PROTOCOL, 1, "the journal and projection protocol this engine speaks");
-eq(ENGINE_STATUS.phase, 0, "phase 0 until the kernel gate passes");
+eq(ENGINE_STATUS.phase, 1,
+  "phase 1: the kernel gate has passed, which `engine-gate` runs -- a thousand four-player Commander games");
 /* The list names what is built and green, module by module. It is NOT a claim that a game can be
    played — there is no mana and no combat — and `createGame` still refuses below. Its job is to let
    a caller ask what exists rather than find out by catching an exception. Every name here has a
    suite; a name without one would be the exact lie this field exists to prevent. */
 eq(ENGINE_STATUS.implemented,
-  ["rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection", "replacement", "layers", "commander"],
+  ["rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate"],
   "the status names what is actually built, and nothing that is not");
 ok(ENGINE_STATUS.implemented.every((name) => existsSync(new URL(`./engine-${name}.mjs`, import.meta.url))),
   "and every name it claims has a suite in this directory holding it up");
@@ -40,7 +41,7 @@ ok(Object.isFrozen(ENGINE_STATUS), "the status is read, never edited by a caller
 let thrown = null;
 try { createGame({seats: []}, {seed: "test"}); } catch (error) { thrown = error; }
 ok(thrown instanceof EngineNotImplemented, "createGame refuses rather than returning a fiction");
-ok(/phase 0/.test(thrown.message), "the refusal names the phase it is at");
+ok(/phase 1/.test(thrown.message), "the refusal names the phase it is at");
 ok(/CRANKMAGIC_ENGINE=forge/.test(thrown.message), "and what to run instead");
 eq(thrown.engine, "crank", "the error carries the engine it came from, for a log that has both");
 
