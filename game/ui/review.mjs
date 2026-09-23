@@ -833,7 +833,22 @@ endGameButton.hidden=true;
 endGameButton.title='End this game and return to setup. The journal is kept.';
 document.querySelector('header').append(endGameButton);
 
+/* U-07, Rob 2026-09-23: "hide both". The live board carries gameplay and nothing else, so the two
+ * controls that leave it are hidden while a match is running and come back the moment it is over.
+ * 'finished' is deliberately NOT a live status here -- once the game has ended you want Game setup
+ * to start the next one, and End game to clear the table.
+ *
+ * GUEST MODE IS LEFT ALONE. There the same button reads 'Table lobby' and navigates to '/', which
+ * is a guest's only way out of a table. Hiding that would repeat exactly the mistake U-07 nearly
+ * made with End current game. */
+function syncAwayLinks(state){
+  const live=['starting','ready','playing'].includes(state?.status);
+  const workshop=document.querySelector('.workshop-link');
+  if(workshop)workshop.hidden=!guestMode&&live;
+  if($('setup'))$('setup').hidden=!guestMode&&live;
+}
 function syncEndGame(state){
+  syncAwayLinks(state);
   /* 'starting' BELONGS IN THIS LIST. The setup dialog's version left it out, correctly for itself:
      it opens after a game exists. The header is on screen from the moment the board loads, and the
      launcher reports 'starting' until Forge writes live-status.json into the game directory
