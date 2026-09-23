@@ -23,7 +23,7 @@ themselves:
 3. **The adapter is GPL**, and it is the one part of CrankMagic that is not Rob's.
 
 The measured scope of replacing it is smaller than "implement Magic" suggests.
-`docs/engine/engine-inventory-2026-09-20.json` counted it: Rob's seven decks use **477 distinct
+`game/docs/engine-inventory.json` counted it: Rob's seven decks use **477 distinct
 cards needing 64 distinct effect APIs**, and **the top 30 of those APIs cover 90% of the 477**. His
 whole library is 2,367 cards needing 112 APIs, the top 50 covering 92%.
 
