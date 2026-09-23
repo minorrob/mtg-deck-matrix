@@ -393,6 +393,79 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 
 ## Verify before pushing
 
+The rules engine that will replace Forge (`docs/engine/PLAN.md`, `docs/engine/ADR-001-own-engine.md`)
+is held by `engine-skeleton` — the entry point refuses loudly and the `CRANKMAGIC_ENGINE`
+flag defaults to `forge` — and `engine-headers`, which fails on any engine file that does
+not say whose it is or that carries another license.
+Its kernel begins with determinism, because everything else rests on it: `engine-rng` holds that
+one seed is one stream, that a shuffle is an unbiased permutation and that a checkpoint resumes it
+exactly, and `engine-journal` holds that a state hash ignores key order while noticing everything
+that matters, so a correct replay is never reported as a divergence. On top of those,
+`engine-state` holds the two invariants the rest of the kernel will be built against: one object is
+in exactly one zone, and a card that changes zones becomes a new object (CR 400.7), so a creature
+that dies and returns remembers nothing of its old life. `engine-turn` holds the clock — the steps
+of CR 500.1 in order, under the phase names already on disk, the draw rule that applies to two
+players and not to a pod, and a turn that always reaches the next seat. `engine-stack` holds that
+a spell's card is really in the stack zone rather than still in hand with a note on it, and that an
+ability on the stack is not its source; `engine-priority` holds that passes count only when they
+are consecutive, that the active player receives priority after something resolves, and that a
+player who is out is never waited for — the difference between an engine that loses a game and one
+that stops with nothing to report. `engine-controller` holds the decision envelope §12.1 pins: the
+same choice record, action body and refusal messages `ForgeBrowserBridge` serves today, so the
+board, the gateway and the API pilots do not change when the engine underneath does, and a retried
+action is never a second decision. `engine-actions` holds that legality is enumerated rather than
+asserted — the engine offers what a player may do and refuses what it did not offer — and plays a
+forty-turn four-player game of lands with the `random-legal` pilot twice from the same seed, for
+the same final state and a byte-identical journal. `engine-mana` holds that the three hybrids do
+not pay alike (`{W/U}` either color, `{2/W}` two generic or one white and mana value 2 either way,
+`{W/P}` white or two life and not mana at all), that `{C}` is a requirement rather than a generic
+symbol, that X is zero off the stack, and that when more than one payment is legal the engine
+offers the choice instead of guessing which color the player wanted to keep. `engine-cast` holds
+that a mana ability never touches the stack (CR 605.3a — the alternative would make every land tap
+a window for instants), that sorcery speed and instant speed are two different tests rather than
+one, and that a game with spells in it terminates and replays to the same hash. `engine-combat`
+holds the thing that cannot be retrofitted — every attacking creature chooses its own defender, so
+two creatures at one seat and a third at another is an ordinary turn rather than an edge case —
+along with summoning sickness as a question about control rather than about entering, attackers
+tapping unless they have vigilance, and lethal damage coming before the damage moves on.
+`engine-sba` carries across what the Java `RulesProbe` asserted, as claims about this engine: two
+commanders' damage is not pooled, gaining life does not erase it, noncombat damage from a commander
+does not count toward it, an empty library is not a loss until you draw from it, and a player who
+is out takes their board with them. `engine-trigger` holds that a trigger waits for priority rather
+than resolving where it happened, that the active player's goes on the stack first and therefore
+resolves last, that a player with two orders their own, and that "whenever this creature dies" can
+still see the creature — the look-back is the event envelope carrying the card as it was, not a
+shadow copy of the board. `engine-projection` decides what a seat may see, once, inside the engine,
+so a routing mistake in a host can lose a game but cannot leak one: an opponent's hand is a count,
+a library is hidden from its owner too, and the property is checked by playing whole random games
+and looking for any hidden card's name anywhere in any seat's view, under any key, at any depth —
+a test that only checked the zones somebody thought of could not catch a leak through a field added
+later, which is how that bug arrives. `engine-replacement` holds that a replaced event never
+happens at all — a creature exiled instead of dying did not die, and nothing that watches for
+deaths sees one — that each effect applies once to a given event so two of them cannot bounce it
+back and forth forever, that the affected object's controller chooses which applies first because
+the order decides the outcome, and that a prevention shield wears out. `engine-layers` keeps the
+state holding printed values and derives current ones on demand, so an effect leaving costs
+nothing: it holds that layers are categories rather than priorities, that an effect setting power
+applies before one adding to it whichever was played first, that counters come after both, and that
+dependency beats timestamp. Combat, state-based actions and the projection all read through it, so
+an anthem, a counter and an animated land are the same creature to all three. `engine-commander`
+holds CR 903: color identity reads the rules text as well as the mana cost and ignores reminder
+text, so a colorless artifact that makes black mana is a black card; the tax counts casts from the
+command zone rather than casts, and is part of the cost, so a commander a player cannot afford is
+never offered; and the command-zone replacement is a choice put to the card's OWNER, because
+leaving a commander in a graveyard is where a reanimation starts. `engine-mulligan` holds the
+London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
+kept, the player chooses which cards go, and they go to the bottom.
+
+`engine-gate` is the one that asks whether the rules together produce a game. It plays **a thousand
+whole four-player Commander games** — mulligan to finish, driven end to end by the random-legal
+pilot — and holds all three clauses of the phase 1 gate at once: every game runs to completion with
+no exception, the same seed replays to the same state hash and a byte-identical journal, and no
+seat's projection ever contains a card it may not see. It takes about ten seconds, which is why it
+runs in full rather than on a sample; a fraction of a gate is not a gate. It found two real defects
+on its first two runs that no single-rule suite would have.
+
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
 
@@ -430,7 +503,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 72 Node suites here, plus 29 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 93 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

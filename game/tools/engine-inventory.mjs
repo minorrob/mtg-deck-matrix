@@ -1,8 +1,33 @@
-import {readFileSync, readdirSync, writeFileSync} from 'node:fs';
-import {join} from 'node:path';
-const R='C:/Users/robmi/CrankMagic/repo', F='C:/Users/robmi/CrankMagic/forge';
-const OUT='C:/Users/robmi/AppData/Local/Temp/claude/C--Users-robmi/7acc4d27-5580-4f28-8270-45cd9335ebe1/scratchpad/inventory.json';
-const {buildForgeCardIndex}=await import('file:///C:/Users/robmi/CrankMagic/repo/game/contracts/forge-card-index.mjs');
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+
+/* WHAT THE ENGINE ACTUALLY HAS TO IMPLEMENT, COUNTED RATHER THAN GUESSED.
+ *
+ * docs/engine/PLAN.md section 12.4. This walks Forge card scripts and COUNTS THE CONSTRUCTS they
+ * use across three pools -- Rob's seven decks, his whole library, and every card Forge ships --
+ * so the engine plan is scoped from a measurement instead of an impression. It is what produced
+ * the figure the pivot decision rested on: the seven decks need 64 distinct effect APIs, and the
+ * top 30 of those cover 90% of their 477 cards.
+ *
+ * IT READS FORGE AND COPIES NOTHING. The output is counts and names of constructs, which is a
+ * measurement of a pool, not a translation of anyone's code. No script text is stored. That
+ * distinction is the clean-room rule in docs/engine/ADR-001-own-engine.md and it is the reason
+ * this file may exist at all.
+ *
+ * LOCAL ONLY. CI has no Forge, so nothing in the suite runs this; its OUTPUT is committed instead
+ * (game/docs/engine-inventory.json) and that is what the plan and the tests read. Run it again
+ * when the decks or the library move:
+ *
+ *   node game/tools/engine-inventory.mjs [--out <path>]
+ */
+import {readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync} from 'node:fs';
+import {join, resolve, dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const R=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
+const F=process.env.CRANKMAGIC_FORGE_ROOT||resolve(R,'../forge');
+if(!existsSync(F)){console.error('This tool needs Forge as a measurement source. Set CRANKMAGIC_FORGE_ROOT, or clone Forge to '+F+'.');process.exit(2);}
+const outArg=process.argv.indexOf('--out');
+const OUT=outArg>0&&process.argv[outArg+1]?process.argv[outArg+1]:resolve(R,'game/docs/engine-inventory.json');
+const {buildForgeCardIndex}=await import(new URL('../contracts/forge-card-index.mjs', import.meta.url));
 const index=buildForgeCardIndex(F);
 const BS=String.fromCharCode(92);
 function parseScript(text){
@@ -54,4 +79,5 @@ for(const [label,T] of [['DECK',A],['LIBRARY',B]]) for(const d of ['apis','trigg
 console.log('\n=== FORGE ALL apis top 80 ===\n'+C.counts.apis.slice(0,80).map(([k,v])=>k+':'+v).join(' '));
 console.log('\n=== FORGE ALL keywords top 60 ===\n'+C.counts.keywords.slice(0,60).map(([k,v])=>k+':'+v).join(' '));
 delete C.perCard;
+mkdirSync(dirname(OUT),{recursive:true});
 writeFileSync(OUT,JSON.stringify({summary,deck:A,library:B,forge:C},null,1));

@@ -8,6 +8,26 @@
 | **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
 | **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
 
+## The engine has started — phase 0 done, phase 1 next
+
+Rob authorized phases 0 and 1 on 2026-09-22 after reading `docs/engine/PIVOT-OR-PERSIST.md`,
+overriding the plan's own start condition (decision 3, Track V first). `docs/engine/PLAN.md` §6
+carries the status table; `docs/engine/ADR-001-own-engine.md` carries the clean-room rule, which
+is the constraint everything else rests on: **the Comprehensive Rules and Scryfall oracle text come
+in, nothing from Forge comes in, and a divergence is adjudicated against the CR rather than settled
+by copying.**
+
+**Phase 0 is done (PR #353).** The scaffold refuses loudly and `CRANKMAGIC_ENGINE` defaults to
+`forge`, so the engine is unreachable by anyone who has not asked for it by name. The pool is
+fixed at **31,830 Commander-legal cards** in `data/engine/`, every ledger row `unsupported`.
+
+**Phase 1 is next and not started.** Begin at 1.1 — rng, state, zones, objects, players, journal,
+hashes, and the determinism test that stays forever. The gate to leave phase 1 is a four-player
+game of vanilla creatures and lands with commanders running to completion for **1,000 seeds** with
+no exception, the same hash on replay, and no hidden card in any seat projection. Estimated 4–6
+sessions; this session stopped before starting it, at the plan's own 95%-of-usage rule, rather
+than leaving half a kernel behind.
+
 ## Play audio, all five phases in
 
 The pack Rob generated (`crankmagic2-play-audio-generated`, 88 files, 5.3 MB) is served by the

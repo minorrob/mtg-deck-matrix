@@ -1,9 +1,42 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-20T02:37:49.747Z",
+ "generatedAt": "2026-09-23T01:02:07.969Z",
  "generator": "tools/data-manifest.mjs",
- "count": 18,
+ "count": 21,
  "files": [
+  {
+   "file": "data/engine/oracle.json",
+   "schema": "engine-oracle@1",
+   "stamp": "2026-09-23T00:54:47.910Z",
+   "generator": "tools/build-engine-cards.mjs",
+   "bytes": 14175852,
+   "sha256": "8a7804bc6e064b4c71baaac29a9a8ee6cd722cbe97250192230baf02b763fb44",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/engine/tokens.json",
+   "schema": "engine-tokens@1",
+   "stamp": "2026-09-23T00:54:47.910Z",
+   "generator": "tools/build-engine-cards.mjs",
+   "bytes": 422926,
+   "sha256": "9508f1194a64fe4c8e9de2edb0e3d243c5fab9a1aa1db67f5206afde8a59cc4b",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/engine/support.json",
+   "schema": "engine-support@1",
+   "stamp": "2026-09-23T00:54:47.910Z",
+   "generator": "tools/build-engine-cards.mjs",
+   "bytes": 3392341,
+   "sha256": "beda84ba0596eebc7ef7a36570216d10018e56f275d44b6861e129bbf61edc71",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
   {
    "file": "data/cards.json",
    "schema": "cards@2",

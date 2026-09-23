@@ -13,15 +13,15 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artefacts | 39 (30 JSON, 9 workbooks and documents) · 59.6 MB |
+| Artefacts | 42 (33 JSON, 9 workbooks and documents) · 76.8 MB |
 | Served to the app | 17 · 46.1 MB (6.9 MB precached by the worker, 37.0 MB cached on demand) |
-| Tool inputs | 2 |
+| Tool inputs | 5 |
 | Source workbooks and documents | 9 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
 | JSON with no timestamp | 5: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `sim/config.json`, `sim/opponents.json` |
-| Served or tool-input JSON with no producer found | 0 |
+| Served or tool-input JSON with no producer found | 2: `data/engine/support.json`, `data/engine/tokens.json` |
 
 ## The table
 
@@ -45,6 +45,9 @@ names the file and writes; **tests** are the suites that read it.
 | `data/commander-universe.json` | 1.5 MB | {schema, generatedAt, generator, count, source, counts, …} · cards 31,830 | schema commander-universe@1 | 2026-09-19 | tools/commander-universe.mjs | crankmagic-assets.js | yes | build-live-state.mjs, claude-api-cost.mjs, claude-api-grounding.mjs +4 | crankmagic-core.mjs, guide-agent.mjs, guide-measured.mjs | — | **serve** |  |
 | `data/deck-guides.json` | 7 KB | {schema, generator, count, schemaVersion, generatedAt, note, …} | schemaVersion 1, schema deck-guides@1 | 2026-09-08 | tools/generate-guides.mjs, tools/build_guide_shapes.py (declared) | crankmagic-assets.js, crankmagic-decks.js | yes | build_guide_shapes.py, claude-api-cost.mjs, commander-strategies.mjs +2 | card-records.mjs, guide-agent.mjs, guide-measured.mjs | — | **serve** |  |
 | `data/deck-ratings.json` | 450 KB | {schema, generator, count, schemaVersion, generatedAt, engine, …} · notes 14 | schemaVersion 1, schema deck-ratings@1, engine sim-engine.js +1 | 2026-09-19 | tools/sim/rate-decks.mjs (declared) | crankmagic-sim.js |  | refresh.mjs, generation-notes.mjs, rate-decks.mjs +1 | crankmagic-sim.mjs, deck-measure.mjs, generators.mjs +3 | — | **serve** |  |
+| `data/engine/oracle.json` | 13.5 MB | {schema, generatedAt, generator, source, count, cards} · cards 31,830 | schema engine-oracle@1 | 2026-09-23 | tools/build-engine-cards.mjs | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
+| `data/engine/support.json` | 3.2 MB | {schema, generatedAt, generator, count, legend, cards} · cards 31,830 | schema engine-support@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
+| `data/engine/tokens.json` | 413 KB | {schema, generatedAt, generator, count, tokens} · tokens 1,091 | schema engine-tokens@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
 | `data/flavor-names.json` | 35 KB | {schema, generatedAt, generator, count, source, fields, …} · cards 513 | schema flavor-names@1 | 2026-09-19 | tools/flavor-names.mjs | crankmagic-assets.js | yes | build-live-state.mjs, flavor-names.mjs, refresh.mjs | crankmagic-core.mjs | — | **serve** |  |
 | `data/game-history.json` | 335 B | {schema, generator, count, schemaVersion, compiledAt, sourceFiles, …} | schemaVersion 1, schema game-history@1 | 2026-09-14 | tools/compile-game-logs.mjs | — |  | compile-game-logs.mjs | — | compile-game-logs.yml | **tool input** | the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state |
 | `data/graph-played.json` | 20.6 MB | {schema, generator, count, format, generatedAt, cards, …} · played 701,916 | format 2, schema graph-played@2 | 2026-09-19 | tools/graph-amplifiers.mjs | crankmagic-assets.js, graph-payload.js, card-catalog.js | on demand | graph-amplifiers.mjs, refresh.mjs | graph-payload.mjs, refresh.mjs, service-worker.mjs | — | **serve** |  |
@@ -52,7 +55,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/lenses.json` | 19 KB | {generatedAt, lenses} · lenses 10 | — | 2026-09-11 | (a past sweep wrote it for the retired Copilot lenses; no tool writes it today) | — |  | — | — | — | **archive candidate** | its reader, sim-lenses.js, was swept with the retired pages; nothing reads it today |
 | `data/live-load.json` | 547 KB | {schema, format, version, generator, count, savedAt, …} · metadata 967, paid 747 | format crankmagic-live-load, version 1, schema live-load@1 | 2026-09-19 | tools/build-live-load.mjs, tools/scryfall-cache.mjs | crankmagic-exchange-ui.js |  | build-live-load.mjs, build-live-state.mjs, commander-strategies.mjs +3 | card-records.mjs, crankmagic-trace.mjs, live-load.mjs | live-load.yml | **serve** |  |
 | `data/live-state.json` | 1016 KB | {schema, format, version, generator, createdAt, checksum, …} | format crankmagic-backup, version 1, schema live-state@1 | 2026-09-19 | tools/data-manifest.mjs, tools/render-routes.mjs, tools/build-live-state.mjs (declared) +1 | crankmagic-exchange-ui.js |  | build-live-state.mjs, data-manifest.mjs, refresh.mjs +3 | collection-model.mjs, commander-snapshots.mjs, crankmagic-change.mjs +10 | live-load.yml | **serve** | fetched by Load Live (User Functions), not precached: it is a backup, replaced whole |
-| `data/manifest.json` | 6 KB | {schema, generatedAt, generator, count, files} · files 18 | schema manifest@1 | 2026-09-20 | tools/data-manifest.mjs | — |  | data-manifest.mjs, refresh.mjs | data-manifest.mjs, refresh.mjs | — | **tool input** |  |
+| `data/manifest.json` | 7 KB | {schema, generatedAt, generator, count, files} · files 21 | schema manifest@1 | 2026-09-23 | tools/data-manifest.mjs | — |  | data-manifest.mjs, refresh.mjs | data-manifest.mjs, refresh.mjs | — | **tool input** |  |
 | `data/simulation-summary.json` | 171 KB | {schema, generator, schemaVersion, generatedAt, engine, table, …} · builds 50, altCommanderCases 47 | schemaVersion 3, schema simulation-summary@3, engine v2.8 | 2026-09-08 | tools/sim/rate-decks.mjs (declared), tools/import_summary_metrics.py (declared) | crankmagic-sim.js |  | import_summary_metrics.py, refresh.mjs, bake-sweep.mjs +6 | crankmagic-sim.mjs, data-integrity.mjs, generators.mjs +2 | — | **serve** |  |
 | `data/source/CardPullList-2026-09-06-rev2.docx` | 19 KB | document | — | — | tools/import-pull-list.mjs | — |  | import-pull-list.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/CrankMagic-Load-Live-template.xlsx` | 7 KB | workbook | — | — | — | — |  | — | — | — | **source** | workbook or document the builders read; never fetched by a page |
