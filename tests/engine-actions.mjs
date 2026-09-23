@@ -77,7 +77,7 @@ const kinds = (state, player) => legalActions(state, player).map((a) => a.kind).
 {
   const s = dealt();
   advance(s);
-  eq(kinds(s, 0), ["pass"], "not in upkeep — a land is a main-phase action (CR 505.5b)");
+  eq(kinds(s, 0), ["pass"], "not in upkeep — a land is a main-phase action (CR 305.1)");
   walkTo(s, "COMBAT_DECLARE_ATTACKERS");
   eq(kinds(s, 0), ["pass"], "nor in combat");
 }

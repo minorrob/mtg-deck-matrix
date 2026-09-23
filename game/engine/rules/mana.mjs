@@ -19,7 +19,7 @@
  * {C} IS NOT GENERIC (CR 107.4c). A colorless mana requirement is paid only with colorless mana;
  * generic is paid with anything. The symbols look similar and the rules are opposite.
  *
- * X IS ZERO EXCEPT ON THE STACK (CR 202.3b). The deck page's curve, every "mana value 3 or less"
+ * X IS ZERO EXCEPT ON THE STACK (CR 202.3e). The deck page's curve, every "mana value 3 or less"
  * selector and the statistics all read mana value, so getting this wrong is visible in the app long
  * before it is visible in a game.
  *
@@ -89,7 +89,7 @@ function readSymbol(body, cost) {
  * The cost's mana value (CR 202.3).
  *
  * @param {object} cost  from `parseManaCost`
- * @param {{x?: number}} options  X's chosen value; zero anywhere but on the stack (CR 202.3b)
+ * @param {{x?: number}} options  X's chosen value; zero anywhere but on the stack (CR 202.3e)
  */
 export function manaValue(cost, {x = 0} = {}) {
   let total = 0;

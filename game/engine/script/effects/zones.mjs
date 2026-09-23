@@ -11,7 +11,7 @@
  * what came back. Inside a primitive this is the easiest rule in the kernel to forget, because the
  * id it was handed is right there and still reads fine.
  *
- * DESTROY IS NOT A ZONE CHANGE WITH A NICER NAME (CR 701.7). Indestructible stops it and does not
+ * DESTROY IS NOT A ZONE CHANGE WITH A NICER NAME (CR 701.8). Indestructible stops it and does not
  * stop a "put into its owner's graveyard" effect, regeneration replaces it, and a creature that
  * cannot be destroyed can still be sacrificed. Keeping them separate is what makes those three
  * behave differently later.
@@ -106,9 +106,9 @@ export function draw(state, params, context) {
 }
 
 /**
- * `destroy` — CR 701.7.
+ * `destroy` — CR 701.8.
  *
- * Indestructible stops it outright (CR 701.7b), and nothing is reported, because nothing happened.
+ * Indestructible stops it outright (CR 702.12b), and nothing is reported, because nothing happened.
  * An engine that reported a destruction and then left the permanent standing would be describing an
  * event that did not occur, which is the same mistake as reporting a death that was replaced.
  */
@@ -124,7 +124,7 @@ export function destroy(state, params, context) {
 }
 
 /**
- * `counterSpell` — CR 701.5a. The spell leaves the stack and goes to its owner's graveyard.
+ * `counterSpell` — CR 701.6a. The spell leaves the stack and goes to its owner's graveyard.
  *
  * `targets` are stack ids, not object ids: a spell on the stack is identified by where it is in the
  * resolution order, and two copies of one card can both be there.

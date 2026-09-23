@@ -101,7 +101,7 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   s.objects[theirs].keywords = ["Indestructible"];
   const events = run(s, {effect: "destroy", targets: [theirs]}, ctx);
   eq(cardsIn(s, "graveyard", 1).length, 0,
-    "indestructible cannot be destroyed (CR 701.7b) — which is why destroy is its own primitive and not a moveZone");
+    "indestructible cannot be destroyed (CR 702.12b) — which is why destroy is its own primitive and not a moveZone");
   eq(zoneOf(s, theirs), "battlefield", "it is still there");
   eq(events.length, 0, "and nothing is reported, because nothing happened");
 }
@@ -175,7 +175,7 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   run(s, {effect: "proliferate", chosen: [bear, theirs, {player: 0}]}, ctx);
   eq(s.objects[bear].counters["+1/+1"], 2, "proliferate adds one of each kind already there");
   eq(s.objects[theirs].counters["-1/-1"], 3, "including a kind its controller would rather not have");
-  eq(s.players[0].counters.poison, 2, "and it works on players too (CR 701.27a)");
+  eq(s.players[0].counters.poison, 2, "and it works on players too (CR 701.34a)");
 }
 {
   const {s, bear, ctx} = board();
@@ -240,7 +240,7 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   s.objects[spell].zone = "stack";
   run(s, {effect: "counterSpell", targets: [1]}, ctx);
   eq(s.stack.length, 0, "counterSpell takes it off the stack");
-  eq(cardsIn(s, "graveyard", 1).length, 1, "into its owner's graveyard (CR 701.5a)");
+  eq(cardsIn(s, "graveyard", 1).length, 1, "into its owner's graveyard (CR 701.6a)");
 }
 {
   const {s, ctx} = board();

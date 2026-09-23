@@ -16,7 +16,7 @@
  * "YOU CONTROL" IS THE ABILITY'S CONTROLLER, NOT THE CARD'S OWNER. A stolen creature's activated
  * ability says "you", and "you" is whoever is using it now.
  *
- * "TARGET" IS A RULE, NOT A LABEL (CR 115.4). Hexproof and shroud make a permanent an illegal
+ * "TARGET" IS A RULE, NOT A LABEL (CR 115.2). Hexproof and shroud make a permanent an illegal
  * choice, and a selector that carries `target: true` has to enforce that — otherwise every card
  * that targets quietly ignores the one keyword that exists to stop it.
  *
@@ -134,7 +134,7 @@ const names = (state, ids) => ids.map((id) => state.objects[id].card).sort();
     "and a player who is out is not a player any more (CR 800.4a)");
 }
 
-/* ---- targeting is a rule, not a label (CR 115.4) ---- */
+/* ---- targeting is a rule, not a label (CR 115.2) ---- */
 {
   const {s, theirs} = board();
   s.objects[theirs].keywords = ["Hexproof"];

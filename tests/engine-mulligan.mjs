@@ -1,4 +1,4 @@
-/* THE LONDON MULLIGAN: CR 103.4.
+/* THE LONDON MULLIGAN: CR 103.5.
  *
  * `docs/engine/PLAN.md` §3.3, thirteenth row ("London mulligan, four players"), and the last piece
  * of phase 1.
@@ -66,7 +66,7 @@ function play(state, rng, keep) {
   for (let seat = 0; seat < 4; seat += 1) eq(cardsIn(s, "hand", seat).length, 7, "seven cards each to open");
   eq(cardsIn(s, "library", 0).length, 92, "off the top of a shuffled library");
   eq(s.awaiting.kind, "mulligan-decision", "and the first seat is asked");
-  eq(s.awaiting.player, 0, "the starting player decides first (CR 103.4)");
+  eq(s.awaiting.player, 0, "the starting player decides first (CR 103.5)");
 
   const choice = awaitingChoice(s);
   eq(choice.mode, "boolean", "keep or mulligan");
@@ -92,7 +92,8 @@ function play(state, rng, keep) {
   beginMulligans(s, rng);
   const opening = cardsIn(s, "hand", 0).map((id) => s.objects[id].card);
 
-  /* Seat 0 mulligans once and then keeps; everybody else keeps at once. */
+  /* Seat 0 mulligans once and then keeps; everybody else keeps at once. In a FOUR-player game the
+     first mulligan is free (CR 103.5c), so nothing goes to the bottom and the hand is still seven. */
   let mulliganed = false;
   play(s, rng, (player) => {
     if (player !== 0) return true;
@@ -101,11 +102,11 @@ function play(state, rng, keep) {
     return false;
   });
 
-  eq(cardsIn(s, "hand", 0).length, 6,
-    "after one mulligan a kept hand is six — seven drawn, one bottomed (CR 103.4)");
-  eq(cardsIn(s, "library", 0).length, 93, "and the rest are in the library, including the bottomed one");
+  eq(cardsIn(s, "hand", 0).length, 7,
+    "after one mulligan a kept hand is still SEVEN — in a multiplayer game the first mulligan is free (CR 103.5c), which is the common path here because every game this engine plays has four seats");
+  eq(cardsIn(s, "library", 0).length, 92, "with the rest of the deck under it and nothing bottomed");
   const now = cardsIn(s, "hand", 0).map((id) => s.objects[id].card);
-  ok(now.join() !== opening.slice(0, 6).join(),
+  ok(now.join() !== opening.join(),
     "and it is a genuinely new hand, not the old one with a card removed — the first hand went back and was shuffled");
   for (const seat of [1, 2, 3]) eq(cardsIn(s, "hand", seat).length, 7, "seats that kept are untouched");
 }
@@ -115,15 +116,17 @@ function play(state, rng, keep) {
   const s = dealt();
   const rng = createRng("choose");
   beginMulligans(s, rng);
-  let mulliganed = false;
+  let mulliganed = 0;
   let guard = 0;
   let bottomChoice = null;
   while (!mulligansDone(s) && guard < 200) {
     guard += 1;
     const awaiting = s.awaiting;
     if (awaiting.kind === "mulligan-decision") {
-      const keep = awaiting.player !== 0 || mulliganed;
-      if (awaiting.player === 0 && !mulliganed) mulliganed = true;
+      /* TWO mulligans, because the first is free in a multiplayer game (CR 103.5c) and a free one
+         bottoms nothing -- there would be no question to ask. */
+      const keep = awaiting.player !== 0 || mulliganed >= 2;
+      if (awaiting.player === 0 && mulliganed < 2) mulliganed += 1;
       resolveAwaiting(s, [keep ? 0 : 1], null, rng);
       continue;
     }
@@ -174,15 +177,16 @@ function play(state, rng, keep) {
       continue;
     }
     if (awaiting.player === 0) {
-      eq(awaiting.count, 3, "three mulligans means three cards to the bottom");
+      eq(awaiting.count, 2,
+        "three mulligans means TWO cards to the bottom, because the first one was free (CR 103.5c)");
       sawSeven = awaitingChoice(s).options.length === 7;
     }
     const choice = awaitingChoice(s);
     resolveAwaiting(s, choice.options.slice(0, awaiting.count).map((_, i) => i), null, rng);
   }
   ok(sawSeven, "chosen from a full seven");
-  eq(cardsIn(s, "hand", 0).length, 4, "and a four-card hand is what three mulligans leaves");
-  eq(cardsIn(s, "library", 0).length, 95, "with the whole rest of the deck below");
+  eq(cardsIn(s, "hand", 0).length, 5, "and a five-card hand is what three mulligans leaves");
+  eq(cardsIn(s, "library", 0).length, 94, "with the whole rest of the deck below");
 }
 
 /* ---- you cannot bottom more cards than you have ---- */
@@ -237,7 +241,7 @@ function play(state, rng, keep) {
   }
   eq(asked.filter((p) => p === 1).length, 1, "a seat that kept on the first round is asked exactly once");
   eq(asked.filter((p) => p === 2).length, 3, "and one that mulliganed twice is asked three times");
-  eq(cardsIn(s, "hand", 2).length, 5, "ending on five");
+  eq(cardsIn(s, "hand", 2).length, 6, "ending on six -- two mulligans, one of them free");
 }
 
 /* ---- the same seed deals the same game ---- */

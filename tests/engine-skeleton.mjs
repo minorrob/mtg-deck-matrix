@@ -29,7 +29,7 @@ eq(ENGINE_STATUS.phase, 1,
    a caller ask what exists rather than find out by catching an exception. Every name here has a
    suite; a name without one would be the exact lie this field exists to prevent. */
 eq(ENGINE_STATUS.implemented,
-  ["rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects", "resolution"],
+  ["rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects", "resolution", "keywords"],
   "the status names what is actually built, and nothing that is not");
 ok(ENGINE_STATUS.implemented.every((name) => existsSync(new URL(`./engine-${name}.mjs`, import.meta.url))),
   "and every name it claims has a suite in this directory holding it up");
