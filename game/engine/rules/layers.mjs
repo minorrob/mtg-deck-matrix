@@ -62,13 +62,22 @@ function printed(state, id) {
 
 /* Does this effect apply to this object, given what it currently looks like? The question is asked
    against the PARTIALLY DERIVED object, which is what makes layer 2 able to change who an anthem
-   sees and layer 4 able to bring a land into a creature effect's reach. */
+   sees and layer 4 able to bring a land into a creature effect's reach.
+ *
+ * IT READS THE SELECTOR GRAMMAR'S KEYS, NOT A DIALECT OF ITS OWN. `script/filter.mjs` says
+ * `controller: "you"`, so this does too. It cannot CALL `compileSelector` — that matcher reads
+ * fully derived characteristics through `typesOf`, and deriving is what this is in the middle of
+ * doing, so it would recurse. Two matchers over one shape is fine; two spellings of the same idea
+ * is what produced a `pumpAll` that pumped the opponent's creatures as well, silently, because
+ * "you" was not a word this understood. */
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
   if (rule.ids && !rule.ids.includes(current.id)) return false;
   if (rule.types && !rule.types.every((type) => current.types.includes(type))) return false;
-  if (rule.controller === "self" && current.controller !== sourceController) return false;
+  if (rule.controller === "you" && current.controller !== sourceController) return false;
+  if (rule.controller === "opponent" && current.controller === sourceController) return false;
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
+  if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
   return true;
 }
 

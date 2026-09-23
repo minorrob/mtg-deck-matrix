@@ -39,7 +39,7 @@ const started = () => { const s = createState(pod); beginGame(s); return s; };
    permanents carry the same shape, which is what phase 2's card script will compile to. */
 const anthem = (over = {}) => ({id: "anthem", kind: "static", layer: 7, sublayer: "c",
   text: "Creatures you control get +1/+1.",
-  affects: {types: ["Creature"], controller: "self"}, apply: {power: 1, toughness: 1}, ...over});
+  affects: {types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}, ...over});
 
 /* ---- the layers are the ones CR 613.1 lists ---- */
 {
