@@ -53,11 +53,21 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
   const j = createJournal({matchId: "m1", seed: "s1"});
   eq(j.events(), [], "a fresh journal is empty");
 
-  j.write("GameEventTurnBegan", {turn: 1, player: 0});
+  const firstId = j.write("GameEventTurnBegan", {turn: 1, player: 0});
   j.write("GameEventCardDrawn", {player: 0, count: 1});
   const events = j.events();
   eq(events.length, 2, "each write is one event");
   eq(events[0].schema, EVENT_SCHEMA, "every event names its schema, so a reader can refuse an old one");
+
+  /* THE ENVELOPE IS THE ONE ALREADY ON DISK. `ForgeProbe.java` writes eventId, sequence and
+     visibility; `match-telemetry.mjs` keys its metadata, its rows and its cast-to-resolution
+     chains off eventId. An envelope missing it would leave every row with an undefined id and
+     fold every chain into one, which looks like a board that has stopped reporting. */
+  eq(events[0].eventId, "event:1", "every event carries the eventId the existing readers key off");
+  eq(events[1].eventId, "event:2", "derived from the sequence, so a replay produces the same ids");
+  eq(firstId, "event:1", "and write returns it, the way the probe's append does");
+  eq(events[0].visibility, "engine-private",
+    "the journal is the engine's own record; what a seat may see is the host's decision, not this file's");
   eq(events[0].kind, "GameEventTurnBegan", "the engine's event kinds, not a private vocabulary");
   eq(events[0].sequence, 1, "events are numbered from one");
   eq(events[1].sequence, 2, "and the numbers do not repeat");

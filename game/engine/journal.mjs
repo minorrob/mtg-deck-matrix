@@ -77,14 +77,31 @@ export function createJournal({matchId, seed}) {
     seed,
 
     /**
-     * Record something that happened. `data` is copied, so a later mutation of the caller's object
-     * cannot rewrite history — a journal is a record, not a view.
+     * Record something that happened, and return its event id. `data` is copied, so a later
+     * mutation of the caller's object cannot rewrite history — a journal is a record, not a view.
+     *
+     * THE ENVELOPE IS NOT OURS TO CHOOSE. `ForgeProbe.java` has been writing
+     * `{schema, eventId, sequence, visibility, kind, data}` for every match on disk, and
+     * `match-telemetry.mjs` keys its event metadata, its `recent` rows and its cast-to-resolution
+     * chains off `eventId`. Emitting only `sequence` would leave every row with an undefined id and
+     * collapse the chains into one — a board that goes quiet for no visible reason. The id is
+     * derived from the sequence rather than generated, so a replay produces the same ids.
      */
     write(kind, data = {}) {
       if (!kind) throw new Error("An event needs a kind");
       sequence += 1;
-      events.push({schema: EVENT_SCHEMA, sequence, matchId, kind, data: structuredClone(data)});
-      return sequence;
+      const eventId = `event:${sequence}`;
+      events.push({
+        schema: EVENT_SCHEMA,
+        eventId,
+        sequence,
+        /* The journal is the engine's own record; the host decides what a seat may see. */
+        visibility: "engine-private",
+        matchId,
+        kind,
+        data: structuredClone(data),
+      });
+      return eventId;
     },
 
     /** Everything written, as copies. */

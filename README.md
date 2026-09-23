@@ -403,7 +403,9 @@ exactly, and `engine-journal` holds that a state hash ignores key order while no
 that matters, so a correct replay is never reported as a divergence. On top of those,
 `engine-state` holds the two invariants the rest of the kernel will be built against: one object is
 in exactly one zone, and a card that changes zones becomes a new object (CR 400.7), so a creature
-that dies and returns remembers nothing of its old life.
+that dies and returns remembers nothing of its old life. `engine-turn` holds the clock — the steps
+of CR 500.1 in order, under the phase names already on disk, the draw rule that applies to two
+players and not to a pod, and a turn that always reaches the next seat.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -442,7 +444,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 77 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 78 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
