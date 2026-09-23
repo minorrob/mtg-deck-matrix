@@ -11,7 +11,7 @@
  * answer and does the thing. `resolution.mjs` drives the two halves and is what makes what follows
  * still happen afterwards.
  *
- * SCRY IS ONE CHOICE, NOT TWO (CR 701.18a): put any number on the bottom and the rest on top IN ANY
+ * SCRY IS ONE CHOICE, NOT TWO (CR 701.22a): put any number on the bottom and the rest on top IN ANY
  * ORDER. That is exactly the `manipulate` shape §12.1 already pins, with `toTop` and `toBottom` —
  * so the board can already draw it, `controller.mjs` already validates the ordering, and there is
  * no new dialogue for anybody to build.

@@ -31,3 +31,8 @@ game/.local/
 # reproducing CI locally -- with `npm install --no-save --no-package-lock playwright`, which
 # still leaves node_modules in the working tree. It is never part of a commit.
 node_modules/
+
+# The Comprehensive Rules are Wizards' copyrighted text and are deliberately NOT in this
+# repository (ADR-001, section 12.5). game/tools/check-citations.mjs reads them from outside it,
+# the way engine-inventory.mjs reads Forge. Only the verdict is committed.
+MagicCompRules*.txt

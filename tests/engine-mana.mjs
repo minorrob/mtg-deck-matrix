@@ -11,7 +11,7 @@
  * territory and the sort of thing nobody reports because they assume they misread the card.
  *
  * MANA VALUE IS NOT THE SAME QUESTION (CR 202.3). {2/W} counts as 2 whatever it is paid with, and X
- * counts as zero everywhere except on the stack (CR 202.3b). Deck statistics, "mana value 3 or
+ * counts as zero everywhere except on the stack (CR 202.3e). Deck statistics, "mana value 3 or
  * less" selectors and the curve on the deck page all read this, so it is worth its own checks.
  */
 import assert from "node:assert/strict";
@@ -42,7 +42,7 @@ const pool = (over = {}) => ({W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, ...over});
 {
   const x = parseManaCost("{X}{R}");
   eq(x.variable, 1, "one X");
-  eq(manaValue(x), 1, "X counts as zero while not on the stack (CR 202.3b)");
+  eq(manaValue(x), 1, "X counts as zero while not on the stack (CR 202.3e)");
   eq(manaValue(x, {x: 3}), 4, "and as its chosen value when there is one");
 }
 {

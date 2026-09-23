@@ -1,6 +1,6 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
-/* THE LONDON MULLIGAN: CR 103.4.
+/* THE LONDON MULLIGAN: CR 103.5.
  *
  * `docs/engine/PLAN.md` §3.3, last row, and the last piece of phase 1.
  *
@@ -16,7 +16,7 @@
  * WHICH CARDS GO IS THE PLAYER'S CHOICE, and it is the most consequential decision in the opening.
  * An engine that bottoms the last N cards drawn is not bottoming, it is punishing.
  *
- * EVERY SEAT DECIDES BEFORE ANYONE REDRAWS (CR 103.4a). The decisions of a round happen together.
+ * EVERY SEAT DECIDES BEFORE ANYONE REDRAWS (CR 103.5a). The decisions of a round happen together.
  * Resolving one seat completely before asking the next would let a later seat's shuffle depend on
  * an earlier seat's choice, and the game would stop being reproducible from its pod and seed alone
  * — which is the promise everything else here is built on.
@@ -90,12 +90,20 @@ function closeRound(state, rng, events) {
   for (const player of decidingOrder(state)) {
     if (m.answered[player] === undefined) continue;
     if (m.answered[player] === "keep") {
-      /* CR 103.4: on keeping, bottom one card per mulligan taken — but never more cards than the
-         player has. Seven mulligans keeps a hand of nothing, and an eighth still keeps a hand of
-         nothing; asking for eight cards out of seven is a question with no legal answer, which
-         stops a game rather than losing one. The fuzz at a thousand seeds is what found it. */
+      /* CR 103.5c: IN A MULTIPLAYER GAME THE FIRST MULLIGAN IS FREE. "The first mulligan a player
+         takes doesn't count toward the number of cards that player will put on the bottom of their
+         library." Every game this engine plays is a four-player Commander game, so this is not an
+         edge case — it is the common path, and charging for the first mulligan would quietly cost
+         a card in most opening hands anybody ever took. Found by reading the actual Comprehensive
+         Rules rather than working from memory.
+       *
+         And never more cards than the player has: seven mulligans keeps a hand of nothing and an
+         eighth still keeps a hand of nothing. Asking for eight out of seven is a question with no
+         legal answer, which stops a game rather than losing one; the thousand-seed fuzz found it. */
       const hand = cardsIn(state, "hand", player).length;
-      m.toBottom[player] = Math.min(m.taken[player] ?? 0, hand);
+      const taken = m.taken[player] ?? 0;
+      const free = state.players.length > 2 ? 1 : 0;
+      m.toBottom[player] = Math.min(Math.max(0, taken - free), hand);
       continue;
     }
     again.push(player);

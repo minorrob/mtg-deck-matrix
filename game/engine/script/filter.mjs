@@ -22,7 +22,7 @@
  *   ability says "you", and "you" is whoever is using it now. So control is read from the context
  *   passed at match time, and one compiled selector serves every seat.
  *
- *   "TARGET" IS A RULE, NOT A LABEL (CR 115.4). Hexproof and shroud make a permanent an illegal
+ *   "TARGET" IS A RULE, NOT A LABEL (CR 115.2). Hexproof and shroud make a permanent an illegal
  *   choice. A selector that carried `target: true` and did not enforce it would let every targeting
  *   card in the game ignore the keywords that exist to stop it — and the difference between the two
  *   is the half people forget: hexproof stops opponents, shroud stops everybody including you.
@@ -60,7 +60,7 @@ function assertGrammar(selector) {
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
 }
 
-/* CR 115.4, and the difference between the two keywords is the part worth getting right:
+/* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
 function canBeTargetedBy(state, id, chooser) {
   const keywords = keywordsOf(state, id);

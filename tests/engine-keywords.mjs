@@ -8,7 +8,7 @@
  * The combat system was already reading `Vigilance` and `Defender`, so these are the keywords it
  * half-knew about, finished.
  *
- * MENACE IS NOT A PER-BLOCKER RULE (CR 702.110b): "can't be blocked except by two or more
+ * MENACE IS NOT A PER-BLOCKER RULE (CR 702.111b): "can't be blocked except by two or more
  * creatures" is a constraint on the SET. Every individual blocker is legal; the set of one is not.
  * An engine that only ever asks "may this creature block that one" cannot express it, and menace
  * silently does nothing — which is how it is usually got wrong.
@@ -106,7 +106,7 @@ const step = (s, phase, limit = 40) => {
   eq(s.players[1].life, 38, "and the flier gets through");
 }
 
-/* ---- menace is a rule about the SET of blockers (CR 702.110b) ---- */
+/* ---- menace is a rule about the SET of blockers (CR 702.111b) ---- */
 {
   const s = atCombat((state) => {
     addObject(state, creature({card: "Menacer", owner: 0, controller: 0, keywords: ["Menace"]}), "battlefield");

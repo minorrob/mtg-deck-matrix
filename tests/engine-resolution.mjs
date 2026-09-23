@@ -14,7 +14,7 @@
  * resolution the same way it would at the top level, and what follows the modal is still waiting
  * behind it. Recursion would have had to unwind and rebuild itself across the pause.
  *
- * SCRY IS ONE CHOICE, NOT TWO. CR 701.18a: put any number on the bottom and the rest on top IN ANY
+ * SCRY IS ONE CHOICE, NOT TWO. CR 701.22a: put any number on the bottom and the rest on top IN ANY
  * ORDER. That is exactly the `manipulate` choice §12.1 already pins, with `toTop` and `toBottom` —
  * the board can already draw it and `controller.mjs` already validates it.
  *
@@ -78,7 +78,7 @@ const handNames = (s, seat) => cardsIn(s, "hand", seat).map((id) => s.objects[id
   const choice = awaitingChoice(s);
   eq(choice.mode, "order", "scry is an ordering");
   eq(choice.choiceKind, "manipulate", "in the manipulate shape §12.1 already pins, which the board can already draw");
-  ok(choice.toTop && choice.toBottom, "with both destinations allowed (CR 701.18a)");
+  ok(choice.toTop && choice.toBottom, "with both destinations allowed (CR 701.22a)");
   eq(choice.options.length, 2, "over the two cards looked at");
   eq(choice.options.map((o) => o.label), top, "which are the top two of the library");
 

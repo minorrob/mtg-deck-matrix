@@ -9,7 +9,7 @@
  * Combat already read `Vigilance` and `Defender`; everything else in the list was a word on a card
  * that nothing looked at, so a flier could be blocked by anything on the ground.
  *
- * MENACE IS NOT A PER-BLOCKER RULE (CR 702.110b). "Can't be blocked except by two or more
+ * MENACE IS NOT A PER-BLOCKER RULE (CR 702.111b). "Can't be blocked except by two or more
  * creatures" is a constraint on the SET: every individual blocker is legal and the set of one is
  * not. An engine whose only question is "may this creature block that one" cannot express it, and
  * menace then silently does nothing — which is the usual way it is got wrong. So there are two
@@ -66,7 +66,7 @@ export function canBlockAttacker(state, blockerId, attackerId) {
 export function blockersAreLegal(state, attackerId, blockerIds) {
   const blockers = blockerIds ?? [];
   if (blockers.length === 0) return true;
-  /* CR 702.110b */
+  /* CR 702.111b */
   if (has(state, attackerId, "Menace") && blockers.length < 2) return false;
   return blockers.every((id) => canBlockAttacker(state, id, attackerId));
 }

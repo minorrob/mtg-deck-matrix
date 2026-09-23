@@ -9,7 +9,7 @@
  * a primitive that subtracted life directly would walk straight past every shield on the board, and
  * every one of them would look like it was working because the number went down.
  *
- * PROLIFERATE ADDS ANOTHER, NOT A FIRST (CR 701.27a). A permanent with no counters gets nothing,
+ * PROLIFERATE ADDS ANOTHER, NOT A FIRST (CR 701.34a). A permanent with no counters gets nothing,
  * and a permanent with a counter its controller would rather not have gets another one. Both halves
  * catch people out, and an engine that reads it as "add a +1/+1 counter" is wrong in a way that
  * looks generous.
@@ -31,7 +31,7 @@ export function addMana(state, params, context) {
   })];
 }
 
-/** `tap` — CR 701.21. Something already tapped stays tapped and is not reported twice. */
+/** `tap` — CR 701.26. Something already tapped stays tapped and is not reported twice. */
 export function tap(state, params, context) {
   const events = [];
   for (const id of params.targets ?? []) {
@@ -44,7 +44,7 @@ export function tap(state, params, context) {
   return events;
 }
 
-/** `untap` — its opposite, CR 701.20. */
+/** `untap` — its opposite, CR 701.26. */
 export function untap(state, params, context) {
   const events = [];
   for (const id of params.targets ?? []) {
@@ -184,7 +184,7 @@ export function removeCounter(state, params, context) {
 }
 
 /**
- * `proliferate` — CR 701.27a.
+ * `proliferate` — CR 701.34a.
  *
  * For each chosen permanent or player that already has a counter, add ANOTHER of each kind it
  * already has. Not a +1/+1 counter, not a first counter: another of what is there. A permanent with

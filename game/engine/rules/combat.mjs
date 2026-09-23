@@ -251,7 +251,7 @@ export const blockers = {
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can block only one attacker; the same blocker was declared twice");
 
-    /* MENACE IS A RULE ABOUT THE SET (CR 702.110b), so it can only be checked once the whole
+    /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
        declaration is in. Every individual blocker was legal or it would not have been offered. */
     const bySeat = new Map();
     for (const option of picked) {
