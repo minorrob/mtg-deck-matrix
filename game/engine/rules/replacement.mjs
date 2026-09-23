@@ -43,6 +43,16 @@ function applies(state, ability, holder, proposal) {
   const watches = ability.watches ?? {};
   if (watches.event !== proposal.event) return false;
 
+  if (proposal.event === "enters") {
+    /* `who: "self"` is the permanent's own arrival ability. `holder` is null for it, because at
+       this moment the permanent is NOT on the battlefield to be a holder — see `applicable`. */
+    if (watches.who === "self") return holder === null;
+    if (holder === null) return false;
+    if (watches.types && !watches.types.every((type) => (proposal.types ?? []).includes(type))) return false;
+    if (watches.controller === "controller" && proposal.player !== holder.controller) return false;
+    return true;
+  }
+
   if (proposal.event === "zone-change") {
     if (watches.from && watches.from !== proposal.from) return false;
     if (watches.to && watches.to !== proposal.to) return false;
@@ -62,9 +72,19 @@ function applies(state, ability, holder, proposal) {
   return false;
 }
 
-/* Every effect that could apply right now, each with the object holding it. */
+/* Every effect that could apply right now, each with the object holding it.
+ *
+ * THE ENTERING PERMANENT'S OWN ABILITIES ARE READ FIRST, AND FROM NOWHERE (CR 614.12, 614.15). A
+ * land that enters tapped says so with its own ability, and at the moment that ability has to be
+ * read the land is a card in a hand or on the stack — it is not on the battlefield, so the scan
+ * below cannot find it. The proposal carries the abilities of the thing about to arrive, and they
+ * are put at the head of the list because a self-replacement applies before anybody else's (CR
+ * 614.15), which is what stops the order being a choice nobody should have to make. */
 function applicable(state, proposal) {
   const found = [];
+  for (const ability of proposal.entering?.abilities ?? []) {
+    if (applies(state, ability, null, proposal)) found.push({holderId: null, ability});
+  }
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];
@@ -78,6 +98,7 @@ function applicable(state, proposal) {
 
 /** Who chooses the order (CR 616.1): the affected object's controller, or the affected player. */
 function affectedPlayer(state, proposal) {
+  if (proposal.event === "enters") return proposal.player ?? null;
   if (proposal.event === "damage") return proposal.toPlayer ?? state.objects[proposal.toCard]?.controller ?? null;
   if (proposal.objectId !== undefined) return state.objects[proposal.objectId]?.controller ?? proposal.player ?? null;
   return proposal.player ?? null;
@@ -87,6 +108,17 @@ function applyOne(state, {holderId, ability}, proposal) {
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id]};
 
   if (ability.change?.to) next.to = ability.change.to;
+
+  /* CR 614.12: modifying how a permanent ENTERS, rather than where a card goes. The permanent is
+     not on the battlefield yet, so these land on the proposal and the caller applies them as part
+     of putting it there -- which is what makes it one event rather than a permanent that arrives
+     and is then tapped. */
+  if (ability.change?.entersTapped === true) next.tapped = true;
+  if (ability.change?.entersWithCounters) {
+    const {counter, count} = ability.change.entersWithCounters;
+    next.counters = {...(next.counters ?? {})};
+    next.counters[counter] = (next.counters[counter] ?? 0) + count;
+  }
 
   if (Number.isInteger(ability.prevent) && proposal.event === "damage") {
     const stopped = Math.min(ability.prevent, next.amount);
@@ -129,6 +161,25 @@ export function applyReplacements(state, proposal) {
   }
 
   return {proposal: current, applied: current.applied, awaiting: false};
+}
+
+/**
+ * How a permanent about to enter the battlefield is modified (CR 614.12).
+ *
+ * Asked BEFORE the card moves, because the abilities that answer it belong to the card as it is
+ * now — once it has moved it is a new object (CR 400.7). The caller applies the answer as part of
+ * putting the permanent down, which is what makes entering tapped ONE event: there is no moment
+ * where it is on the battlefield untapped, so nothing that watches for tapping sees anything.
+ *
+ * @returns {{tapped: boolean, counters: object}}
+ */
+export function enteringModifications(state, {objectId, player, types, abilities}) {
+  const {proposal} = applyReplacements(state, {
+    event: "enters", objectId, player, types: types ?? [],
+    entering: {abilities: abilities ?? []},
+    tapped: false, counters: {},
+  });
+  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}};
 }
 
 /** The choice (§12.1) for CR 616.1: which applicable effect happens first. */

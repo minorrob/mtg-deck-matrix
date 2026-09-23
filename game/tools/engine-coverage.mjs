@@ -72,6 +72,12 @@ const FORGE_TRIGGER = {
   LifeGained: "life gained", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
 };
 
+/* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
+   lord and goes through `layers.mjs`; `Moved` is a zone-change or entering replacement and goes
+   through `replacement.mjs`. Everything else is genuinely absent. */
+const FORGE_STATIC = {Continuous: "layers"};
+const FORGE_REPLACEMENT = {Moved: "replacement"};
+
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
    a flier unblockable by the ground. Coverage has to mean the second — the whole reason this file
@@ -93,11 +99,18 @@ function missingFor(card) {
     if (!event) { missing.push({kind: "trigger", name: trigger, why: "unmapped"}); continue; }
     if (!isTriggerEvent(event)) missing.push({kind: "trigger", name: event, why: "undeclared"});
   }
-  /* Statics and replacements are counted but not yet resolvable to named constructs: the card
-     script has to express them before "does the engine have this one" is a question with an answer.
-     They are listed so the gap is visible rather than counted as covered. */
-  for (const s of card.statics ?? []) missing.push({kind: "static", name: s, why: "statics arrive with the card script"});
-  for (const r of card.replacements ?? []) missing.push({kind: "replacement", name: r, why: "replacements arrive with the card script"});
+  /* WHICH STATICS AND REPLACEMENTS THE ENGINE CAN ACTUALLY EXECUTE. These were marked missing
+     unconditionally at first, which was wrong and overstated the gap badly: `Continuous` is an
+     anthem, and `layers.mjs` has executed card-script statics since 1.8. Forty-five cards in Rob's
+     decks were reported blocked by a rule the engine already had. */
+  for (const s of card.statics ?? []) {
+    if (FORGE_STATIC[s]) continue;
+    missing.push({kind: "static", name: s, why: "no engine support yet"});
+  }
+  for (const r of card.replacements ?? []) {
+    if (FORGE_REPLACEMENT[r]) continue;
+    missing.push({kind: "replacement", name: r, why: "no engine support yet"});
+  }
   for (const keyword of card.keywords ?? []) {
     const word = normalizeKeyword(keyword);
     const known = [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase());
