@@ -184,9 +184,12 @@ Record: `docs/decisions-2026-09-23.md`.
    (`review.html:2`) is a plain away-link to `/app/#decks` with no gameplay function — it **hides
    during a live match**. `Game setup` (`review.mjs:921`) **stays, always**: its dialog carries
    `End current game` (`setup.mjs:139`) and `Return to game` (`setup.mjs:70`), and `End current
-   game` is there because Rob moved it out of the action box on 2026-09-21. Hiding it would delete
-   the only way to end a game. `game/tests/host-routing.test.mjs:38` also asserts the markup
-   contains `Game setup`.
+   game` is there because Rob moved it out of the action box on 2026-09-21. **Rob decided with that
+   in hand: hide both.** So `End current game` has no route during a live match — a game plays to
+   completion and the controls return at status `finished`. If that is not wanted, `End current
+   game` needs a home outside `Game setup`; that is the one piece still to settle.
+   `game/tests/host-routing.test.mjs:38` also asserts the markup contains `Game setup`, so both stay
+   in the HTML and hide at runtime.
 3. **The cloud lobby's purpose. ANSWERED: a pointer.** It says "open the local host to play" and
    does nothing else. **U-02, U-03 and U-04 are retired outright.** R3, R4 and R5 are not built.
 

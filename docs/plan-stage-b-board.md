@@ -328,12 +328,13 @@ target(s) and effects**. Line 1 is `T6 · Rob · Cast`; line 2 is
 `Swords to Plowshares → Odric, Blood-Cursed · exiled, +4 life`. At 32px against the feed's 154px,
 four and a half rows fit where the three-line version held three and a third.
 
-**That makes B.6b a telemetry change as well as a layout one.** `match-telemetry.mjs` emits
-`{turn, phase, kind, cardId, name, playerId, label}` — user and card are fields, but action, targets
-and effects are all concatenated into `label`. Telemetry has to emit them as fields and derive
-`label` from them so nothing already reading `label` breaks. Effects is the deepest part: a
-resolution event says only `Resolved`, and what changed arrives in the events that follow it, so the
-existing `castEventId` chain has to collect them.
+**That makes B.6b a telemetry change as well as a layout one — but not a Forge one.** Rob,
+2026-09-23: *"Let's not worry about creating bandaids of forge's returned responses but ensure we
+address them in CME. We'll accept forge as is."* So the five-field contract is **CME's**, and
+`match-telemetry.mjs` stays a lossy producer into it: it fills user, card and its flattened `label`
+as the action, and leaves `targets` and `effects` empty. The row degrades to the card name alone
+when they are absent. On the Forge host the band therefore shows two of the five fields until CME is
+the engine, and that is the accepted price of not building work that gets thrown away.
 
 The record is `docs/decisions-2026-09-23.md`.
 

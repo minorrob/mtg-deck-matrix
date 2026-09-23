@@ -227,3 +227,46 @@ export const controllerOf = (state, id) => characteristicsOf(state, id).controll
 export const typesOf = (state, id) => characteristicsOf(state, id).types;
 /** What it currently has, after layer 6. */
 export const keywordsOf = (state, id) => characteristicsOf(state, id).keywords;
+
+/**
+ * LAST KNOWN INFORMATION (CR 113.7a) — everything about an object, captured before it leaves.
+ *
+ * "If the source is no longer in the zone it's expected to be in at that time, its last known
+ * information is used." A zone change makes a new object with no memory of the old one (CR 400.7),
+ * and a token in any zone but the battlefield ceases to exist outright (CR 111.7), so by the time
+ * anything asks about the thing that died, there is nothing left to ask.
+ *
+ * THE SNAPSHOT USED TO BE FIVE FIELDS: id, name, owner, controller and abilities. That was enough
+ * for "whenever this creature dies" to find its own trigger and no more. It was not enough for the
+ * far more common shape — "whenever a creature you control dies, each opponent loses life equal to
+ * ITS POWER" — because power was never recorded, and there is no way to recover it afterwards.
+ * Nor "if it was a Goblin", nor "return it with the counters it had".
+ *
+ * IT IS THE CHARACTERISTICS, NOT THE PRINTED VALUES. A 2/2 wearing two +1/+1 counters under an
+ * anthem died as a 5/5, and that is the number the trigger owes. So this runs the layers rather
+ * than reading the object's own fields, and `controller` is the post-layer-2 controller — a stolen
+ * creature dies under the thief, and its owner is a separate field for the cards that care.
+ */
+export function lastKnown(state, id) {
+  const object = state.objects[id];
+  if (!object) return null;
+  const current = characteristicsOf(state, id);
+  return {
+    cardId: id,
+    name: object.card,
+    owner: object.owner,
+    controller: current.controller,
+    types: [...current.types],
+    colors: [...current.colors],
+    keywords: [...current.keywords],
+    /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */
+    power: current.power ?? null,
+    toughness: current.toughness ?? null,
+    counters: {...current.counters},
+    damage: object.damage ?? 0,
+    tapped: object.tapped === true,
+    token: object.token === true,
+    commander: object.commander === true,
+    abilities: structuredClone(object.abilities ?? []),
+  };
+}

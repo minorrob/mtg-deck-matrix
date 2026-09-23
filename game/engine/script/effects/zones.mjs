@@ -18,6 +18,7 @@
  */
 
 import {moveObject, cardsIn} from "../../state/index.mjs";
+import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
 import {applyReplacements} from "../../rules/replacement.mjs";
@@ -47,10 +48,10 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   if (!object) return null;
   const from = object.zone;
   const card = cardRef(state, id);
-  const leftBehind = from === "battlefield"
-    ? {cardId: id, name: object.card, controller: object.controller, owner: object.owner,
-      abilities: structuredClone(object.abilities ?? [])}
-    : undefined;
+  /* Only a departure from the battlefield needs last known information (CR 113.7a): that is the
+     zone where an object had characteristics worth remembering. A card moving hand to graveyard
+     was never a 5/5. */
+  const leftBehind = from === "battlefield" ? lastKnown(state, id) : undefined;
 
   const {proposal} = applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,

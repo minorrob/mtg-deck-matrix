@@ -449,7 +449,12 @@ state holding printed values and derives current ones on demand, so an effect le
 nothing: it holds that layers are categories rather than priorities, that an effect setting power
 applies before one adding to it whichever was played first, that counters come after both, and that
 dependency beats timestamp. Combat, state-based actions and the projection all read through it, so
-an anthem, a counter and an animated land are the same creature to all three. `engine-commander`
+an anthem, a counter and an animated land are the same creature to all three. `engine-lki` holds CR
+113.7a, the last known information a dying permanent leaves behind: the snapshot runs the layers, so
+a 2/2 with two +1/+1 counters under an anthem is recorded as the 5/5 it died as, with its counters,
+its types and the controller it had rather than its owner. Without it "each opponent loses life
+equal to its power" compiles, runs and quietly produces zero, because there is nothing left to read
+a power from once CR 400.7 has made the card a new object. `engine-commander`
 holds CR 903: color identity reads the rules text as well as the mana cost and ignores reminder
 text, so a colorless artifact that makes black mana is a black card; the tax counts casts from the
 command zone rather than casts, and is part of the cost, so a commander a player cannot afford is
@@ -548,7 +553,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 100 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 101 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

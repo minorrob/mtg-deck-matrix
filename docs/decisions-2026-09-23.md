@@ -55,14 +55,44 @@ Checked rather than assumed. Every row `match-telemetry.mjs` emits carries
   casts append `· targeting X, Y` (line 70), player damage reads `3 combat damage to Krenko`
   (line 56), a death carries `· earlier this turn: 3 damage from Odric` (line 54).
 
-So telemetry must emit `action`, `targets[]` and `effects[]` as fields and **derive `label` from
-them**, so the side panel and everything else reading `label` keeps working unchanged.
+### Settled 2026-09-23: Forge is accepted as-is, and the contract belongs to CME
 
-**Effects needs the most work.** A resolution event says only `Resolved` or `Resolved without
-effect`; what actually changed arrives as the zone-change, damage and counter events that follow.
-Telemetry already correlates a cast to its resolution through `castEventId` chains, so the hook
-exists — collecting what followed the resolution onto that chain is the new part. Everything else is
-rendering.
+**Rob:** *"Let's not worry about creating bandaids of forge's returned responses but ensure we
+address them in CME. We'll accept forge as is."*
+
+This inverts who owns the event shape, and it is the cleaner arrangement:
+
+- **CME defines the history event contract** — `user`, `card`, `action`, `targets[]`, `effects[]` as
+  real fields. It is the engine that will be there at the end, so the schema is written for it
+  rather than reverse-engineered from Forge's.
+- **`match-telemetry.mjs` is a lossy producer into that contract.** No new Forge-side work, no
+  shimming, no parsing meaning back out of label strings. It fills what Forge gives — user, card,
+  and its flattened `label` as the action — and leaves `targets` and `effects` empty.
+- **The row degrades rather than breaks.** Line two falls back to the card name alone when the
+  fields are absent. The board already knows which engine served a view (`view.engine`), so the
+  difference is visible rather than silent.
+
+**What this costs:** on the Forge host the history band shows two of the five fields until CME is
+the engine. That is the accepted price of not building throwaway work.
+
+**Effects is the part CME has to design, not port.** A resolution event says only `Resolved` or
+`Resolved without effect`; what actually changed arrives as the zone-change, damage and counter
+events that follow it. Correlating a resolution to its consequences is new work either way, and it
+is now CME's to do properly rather than Forge's to approximate.
+
+### Done the same day: the last known information fix (CR 113.7a)
+
+The first thing addressed in CME under the rule above. The look-back snapshot left behind by a
+departing permanent was five fields — `cardId`, `name`, `owner`, `controller`, `abilities`. Enough
+for "whenever this creature dies" to find its own trigger; not enough for "each opponent loses life
+equal to **its power**", or "if it was a Goblin", or "return it with the counters it had". Those
+would have compiled, run and produced zero.
+
+`lastKnown()` in `rules/layers.mjs` now records the full characteristics, and it **runs the layers**
+rather than reading the object's fields — a 2/2 with two +1/+1 counters under an anthem is recorded
+as the 5/5 it died as, and a stolen creature records the thief as its controller with its owner kept
+separately. It replaced three identical thin literals (`sba.mjs` twice, `zones.mjs` once), and a
+trigger's `cause` now carries it. `tests/engine-lki.mjs`, 20 checks.
 
 ---
 
@@ -114,7 +144,14 @@ game shouldn't be a permanent fixture in the top right action box. (Don't want a
 it)"*. Hiding `Game setup` during a match would delete the only way to end a game and undo that
 decision.
 
-**So:** `Deck workshop ↗` hides during a live match. `Game setup` stays, always.
+**ANSWERED: hide both.** Rob, after reading the above: *"U-07 hide both."* The concern was raised
+and he decided with it in hand, so both controls hide while a match is live.
+
+**The consequence, which has to be handled rather than shipped:** with `Game setup` hidden during a
+live match, `End current game` has no route. A game in progress cannot be abandoned — it can only be
+played to completion, after which the controls return at status `finished`. That may be exactly what
+is wanted. If it is not, `End current game` needs a home that is not `Game setup`, and this is the
+one piece of U-07 still to settle.
 
 **Constraint:** `game/tests/host-routing.test.mjs:38` asserts the page markup contains `Game setup`,
 so it remains in the HTML whatever the runtime visibility.
