@@ -466,6 +466,27 @@ seat's projection ever contains a card it may not see. It takes about ten second
 runs in full rather than on a sample; a fraction of a gate is not a gate. It found two real defects
 on its first two runs that no single-rule suite would have.
 
+Phase 2 opens with `engine-vocabulary`, which turns §12.2's primitive catalog from a prose list into
+data — the compiler is handed it as an input, and the card schema has to refuse a name that is not
+in it, or an unsupported construct arrives silently. It also holds the seam between the engine's
+vocabulary and `card-classify.js`'s: the classifier's terms are checked against its real output over
+all 2,367 cards, so a typo in one of its regexes cannot emit a term that six reading files silently
+fail to match. Measuring that seam moved it — roles turn out to be strategic judgments no primitive
+derives, and it is the triggers and keywords that describe the same things and disagree.
+`engine-filter` is the selector grammar — the sentence "another target creature you control" as
+data, and the construct the compiler will emit most often. It holds that "another" means other than
+the source rather than other than the last one picked, that "you" is the ability's controller and
+not the card's owner, that `target` enforces hexproof and shroud (and that the two differ in
+exactly whom they stop), and that a key the grammar does not have is refused rather than ignored.
+`engine-schema` is `CrankCardScript@1` itself. Thirty-one thousand definitions will be written by a
+model, so it is not documentation — it is what stands between a plausible-looking generated
+document and a game that plays it wrong. Every effect must name a primitive from the catalog
+(`destroyCreature` is not one, reads perfectly, and would otherwise compile, validate, ship and do
+nothing); every ability carries the oracle sentence it implements, so it can be re-checked when the
+text changes; each ability kind is held to what its engine module actually needs, since a schema
+that agreed with itself and not with the engine would pass documents the engine then refused; and
+validation returns every problem at once, because the compiler retries against them.
+
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
 
@@ -503,7 +524,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 93 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 96 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
