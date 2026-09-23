@@ -40,6 +40,7 @@ import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
+import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -199,6 +200,7 @@ export function awaitingChoice(state) {
   if (!awaiting) return null;
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
     return mulliganChoice(state, awaiting);
+  if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
@@ -224,7 +226,7 @@ export function awaitingChoice(state) {
  * @param {Array<number>} indices  positions in the choice's options, as the controller validated
  * @returns {Array} events for the caller to journal
  */
-export function resolveAwaiting(state, indices, amounts = null, rng = null) {
+export function resolveAwaiting(state, indices, amounts = null, rng = null, extra = {}) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
 
@@ -233,6 +235,14 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null) {
      so the stream is handed in rather than held. */
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")
     return resolveMulligan(state, awaiting, indices, rng);
+
+  /* A card effect that stopped half way through. `extra` carries what generic indices cannot --
+     scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
+  if (awaiting.kind === "effect-choice") {
+    const outcome = answerResolution(state, indices, extra);
+    grantStepPriority(state, outcome.events);
+    return outcome.events;
+  }
 
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);

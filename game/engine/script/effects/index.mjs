@@ -9,10 +9,10 @@
  * Building in frequency order means the first thing that works is the thing most of his cards
  * actually do, and the number is checkable rather than a judgment somebody made.
  *
- * FOUR OF THE TWENTY-FIVE ARE NOT BUILT YET, and they are the four that ask a player something:
- * `dig`, `scry`, `discard` and `modal`. A resolution that stops half way through and resumes is
- * 2.2b. They are ABSENT rather than stubbed, and `runEffect` says so by name — the schema will
- * happily validate a card that uses one, so this is the loud half of that (principle 6).
+ * FOUR OF THE TWENTY-FIVE ASK A PLAYER SOMETHING -- `dig`, `scry`, `discard` and `modal` -- and
+ * none of them can be written as a function that returns events. They are `open`/`apply` pairs in
+ * `effects/asking.mjs`, driven by `resolution.mjs`, which is what lets an effect stop half way
+ * through and carry on. `runEffect` refuses to call one directly rather than running half of it.
  *
  * EVERY PRIMITIVE HAS THE SAME SHAPE: `(state, params, context) => events`. It mutates the state
  * and hands back what happened; nothing here holds a journal, for the same reason no rules module
@@ -65,16 +65,26 @@ export const TOP_25 = Object.freeze([
   "delayedTrigger", /* DelayedTrigger 5 */
 ]);
 
-/** The four that need a decision, and therefore 2.2b's resumable resolution. */
+/**
+ * The four that ask a player something.
+ *
+ * They are deliberately NOT in `EFFECTS`, because `EFFECTS` is the set of things that can be called
+ * as `(state, params, context) => events` and none of these can: each is an `open`/`apply` pair in
+ * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
+ * have made "is this built" answer yes to something no caller can use.
+ */
 export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal"]);
 
-/** Every primitive that is built. A name here that the catalog does not declare is a bug. */
+/** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
   moveZone, moveZoneAll, draw, destroy, counterSpell,
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
 });
+
+/** Whether the engine can perform this primitive at all, by either route. */
+export const isBuilt = (name) => Boolean(EFFECTS[name]) || NEEDS_A_DECISION.includes(name);
 
 /**
  * Run one effect.
@@ -91,9 +101,9 @@ export function runEffect(state, effect, context = {}) {
   const run = EFFECTS[name];
   if (!run) {
     const why = NEEDS_A_DECISION.includes(name)
-      ? "it asks a player something, and resumable resolution is 2.2b"
-      : "it has not been built yet";
-    throw new Error(`The primitive ${name} is declared but not implemented: ${why}`);
+      ? "it asks a player something; run it through resolution.mjs, which can stop and resume"
+      : "it is declared in the catalog and not implemented yet";
+    throw new Error(`The primitive ${name} cannot be run directly: ${why}`);
   }
   return run(state, effect, context) ?? [];
 }
