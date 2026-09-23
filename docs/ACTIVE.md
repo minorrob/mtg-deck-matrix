@@ -83,10 +83,10 @@ Six of Rob's findings turned out to be one finding: **the board had the facts an
 | | |
 |---|---|
 | B.1 | The step strip — `Turn 4 · You`, brass step chip, `4 / 7`, **`Next: …`** |
-| B.2 | Four **identical** 16:9 boards in one 2×2. Measured 584×329 each at three widths |
+| B.2 | Four **identical** 16:9 boards in one 2×2. **At 1920×1080: 533×300 each, mat 1131px** (measured live 2026-09-23). Earlier note said 584×329 with no viewport attached, which back-solves to a ~1258px-tall window — **always record the viewport, or the number cannot be checked against anything** |
 | B.3 | The center counter — 152px, four totals on their own `--seat` colors, the disc cycles life → commander damage → poison |
 | B.4 | The hand on the mat's bottom edge. **Zero overlap**, tested with real-sized cards |
-| B.5a | The panel slides **over** the mat; the mat stays 1368px whether it is open or shut |
+| B.5a | The panel slides **over** the mat; the mat's width does not change whether it is open or shut (1368px at the viewport that was measured at; 1131px at 1920×1080) |
 | B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now. **Seen working with cards** |
 | B.6c | The other three boards as a left pane in Focus, with Table view and a collapse. **Seen working with cards** |
 
@@ -118,6 +118,15 @@ the page-error count on every run.
 - **B.5b — the rail overlay.** `/review` is a standalone page. There is no CrankMagic rail on it to
   bring back, so the control would open an empty drawer. It arrives when the board becomes a view
   of the one app.
+- **The hand card, fixed 2026-09-23.** It drew at 152×212 against the frame's 68×92 because four
+  width rules across three stylesheets fought over one element and a `clamp(112px,10vw,152px)`
+  out-weighed the other three instead of replacing them (INDEX trap 2). The hand took 352px of a
+  1080px window while a whole board took 240, which pinned every board to its floor — and since a
+  2×2 of 16:9 boards is itself 16:9, the mat could only be 917px in a 1920px window. At the frame's
+  size the hand is 225px, `--board-chrome` drops 600→480, and the boards clear the floor:
+  **533×300, mat 1131**. Guarded now by `wireframe-conformance.mjs`, which also fails a second rule
+  for the same element.
+
 - **B.6b — the History band. ANSWERED 2026-09-23: option 2, the empty strip.** The band goes at
   `left:72% top:5.5% width:25.5% height:31%` and no zone moves. Re-proportioning was rejected: the
   gap between the pile pairs is 4.8% of the mat against the ~15% a band needs, and closing it makes

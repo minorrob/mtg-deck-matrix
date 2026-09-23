@@ -39,9 +39,18 @@ body.table-view .arena{display:contents}
    posting the visible height all along and review.mjs has been storing it in a variable no
    stylesheet read. It reads it now; standalone has no such message and falls back. */
 /* The floor matters as much as the cap. Below about 1000px of viewport this arithmetic gives
-   84px boards on a 768px screen and 150px on a 900px one — slivers nobody can play on. 240px is
-   what 1080 produces and what was verified readable, so a shorter window scrolls instead. */
-body.table-view{--board-chrome:600px}
+   84px boards on a 768px screen and 150px on a 900px one — slivers nobody can play on. 240px was
+   verified readable, so a shorter window scrolls instead of getting four slivers. It is no longer
+   what 1080 produces: with the hand at the frame's size, 1080 clears the floor at 300. */
+/* 600 WAS EXACTLY RIGHT FOR A 352px HAND, AND ONLY FOR THAT. Measured live at 1920x1080 on
+   2026-09-23: table top 212, seat 240, hand 352 -- 212+2*240+... filled the window to the pixel,
+   so the constant matched reality. It also meant the boards sat ON the 240 floor, and because a
+   2x2 of 16:9 boards is itself 16:9, the mat could then only be 240*32/9+64 = 917px in a 1920px
+   window. Half the screen was empty, and that is what Rob saw.
+   The hand was the reason: 152px cards against the frame's 68 (see below). At 68 the hand is
+   ~232px, which is 120px less chrome, so 600 becomes 480 -- and the boards clear the floor at
+   1080 for the first time: (1080-480)/2 = 300 tall, 533 wide, mat 1131. */
+body.table-view{--board-chrome:480px}
 body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:max(240px,calc((var(--table-viewport,100dvh) - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
 /* 2e: "column for the top row, column-reverse for the bottom — so each header rides its OUTER
    edge and the center counter never covers a name or a control." */
@@ -63,7 +72,7 @@ body.table-view .counter-tile{padding:5px}.counter-tile .life{font-size:25px}
 body.table-view .counter-tile .subtotals{display:flex;flex-wrap:wrap;gap:3px;font-size:8px}
 body.table-view .phone-label small,body.table-view .phone-bottom{display:none}
 body.table-view .hand{grid-column:1/-1;grid-row:4;padding:0;min-width:0;width:100%}
-body.table-view .hand-track .card{width:110px}
+
 .deck-dialog{width:min(1440px,96vw);max-height:94dvh;overflow:auto}
 .deck-dialog .dialog-head{position:sticky;top:-20px;background:#111c2b;z-index:3;padding:12px 0}
 .deck-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}
@@ -99,13 +108,13 @@ body.table-view footer{padding:12px 16px}
 @media(max-width:1200px){body.table-view main{grid-template-columns:1fr}body.table-view aside{display:flex;position:static;max-height:600px}}
 @media(max-width:720px){body.table-view .table{grid-template-columns:1fr;max-width:none}/* A phone stacks the four boards in one column and scrolls; bounding them by half the viewport
    height there would leave four slivers. */
-body.table-view .seat{max-height:none;width:100%}body.table-view #seat-0{grid-column:1;grid-row:1;max-width:none}body.table-view .center-counter{grid-column:1;grid-row:3}body.table-view .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}body.table-view main{padding:8px}body.table-view .hand-track .card{width:95px}}
+body.table-view .seat{max-height:none;width:100%}body.table-view #seat-0{grid-column:1;grid-row:1;max-width:none}body.table-view .center-counter{grid-column:1;grid-row:3}body.table-view .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}body.table-view main{padding:8px}}
 
 .board-resize{position:absolute;right:2px;bottom:2px;width:29px;height:29px;padding:0;border-radius:8px 0 8px 0;background:#244b56ed;color:#a1ffee;font-size:22px;cursor:nwse-resize;touch-action:none;z-index:3}
 .hand-draggable{touch-action:none;cursor:grab;user-select:none}.dragging-hand{cursor:grabbing}.drag-ghost{position:fixed!important;pointer-events:none!important;z-index:6000;opacity:.85;transform:rotate(-4deg);box-shadow:0 15px 35px #0008}
 
 /* Physical mats with a legible blue game HUD. */
-:root{--action-blue:#39cfff;--muted:#9bb9ce}
+:root{--action-blue:#39cfff;--muted:#9bb9ce;--danger:#ef887e}
 body.table-view{background:radial-gradient(ellipse at 50% 0,#122d40,#080f19 70%)}
 body.table-view .center-counter{display:none}
 .seat-health{margin-left:auto;display:flex;align-items:center;gap:9px;padding:3px 7px;background:transparent;border-color:transparent}
@@ -113,7 +122,15 @@ body.table-view .center-counter{display:none}
 body.table-view .seat{background:linear-gradient(120deg,#112434e8,#0a141fee);border-color:#30566e;border-top-color:var(--seat)}
 .seat.active-turn{box-shadow:0 0 0 1px #44c8fc,0 0 20px #10adf72b}.turn-badge,#phase{color:#68dcff}
 .replaybar{background:linear-gradient(90deg,#0a1b29,#15364b,#0a1b29);border-block:1px solid #2c536b}
-body.table-view .hand-track .card,.focus-dialog .hand-track .card{width:clamp(112px,10vw,152px)}
+/* THE FRAME'S HAND CARD IS 34x46 AT HALF SCALE, SO 68x92 BUILT -- plan-stage-b-board.md line 91,
+   under the doubling rule at line 16. It was drawing 152x212, 2.2x over, because this vw clamp
+   out-weighed three earlier width rules instead of replacing them (INDEX-where-things-live.md
+   trap 2). Measured live at 1920x1080: the hand took 352px of the window while a player's ENTIRE
+   board took 240. That 352 is what pinned every board to its 240px floor and left half the screen
+   empty, because a 2x2 of 16:9 boards is itself 16:9 -- every pixel of chrome costs width at 16:9
+   leverage. Focus (2f) is a separate frame with its own card budget and keeps its own size. */
+body.table-view .hand-track .card{width:68px}
+.focus-dialog .hand-track .card{width:clamp(112px,10vw,152px)}
 .player-mat .mat-battlefield .card{width:clamp(44px,13cqw,175px)}
 .focus-mat-stage .mat-battlefield .card{width:clamp(52px,13cqw,195px)}
 .card.selected-card,.card.selectable{outline:2px solid var(--action-blue);outline-offset:2px;box-shadow:0 0 16px #00c4ff9c}

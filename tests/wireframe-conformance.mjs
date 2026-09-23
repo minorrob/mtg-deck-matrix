@@ -778,6 +778,26 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(table[1], /margin-inline:auto/, "and centered in whatever is left");
   });
 
+  // THE HAND CARD HAD NO GUARD, AND FOUR RULES FOUGHT OVER IT. The frame draws it 34x46 at half
+  // scale, so 68x92 built (plan-stage-b-board.md line 91, under the doubling rule at line 16).
+  // What actually rendered, measured live at 1920x1080 on 2026-09-23, was 152x212 -- because
+  // `.card` said 103px, `.hand-track .card` said 104, a `body.table-view` rule said 110, and a
+  // later `clamp(112px,10vw,152px)` out-weighed all three instead of replacing them. That is trap
+  // 2 in docs/INDEX-where-things-live.md, and the cost was not cosmetic: the hand took 352px of a
+  // 1080px window while a player's ENTIRE board took 240, which pinned every board to its floor.
+  // A 2x2 of 16:9 boards is itself 16:9, so every pixel of chrome costs width at 16:9 leverage --
+  // the mat could only be 917px in a 1920px window, and half the screen sat empty.
+  check("the hand card is the size the frame draws, set in exactly one place", () => {
+    const rule = /body\.table-view \.hand-track \.card\{([^}]*)\}/.exec(boardCss);
+    assert.ok(rule, "a table-view rule for the hand card");
+    assert.match(rule[1], /width:68px/,
+      "68px built, which is the frame's 34px doubled — not a viewport clamp, which is how it grew");
+    const all = boardCss.match(/body\.table-view \.hand-track \.card\{/g) || [];
+    assert.equal(all.length, 1,
+      "and exactly ONE rule sets it: a second that out-weighs the first is how it reached 152px, "
+      + "and the dead one reads as though it still applies");
+  });
+
   check("the mat leaves a middle channel for the center counter", () => {
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
     assert.ok(table, "the mat rule");

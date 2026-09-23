@@ -11,6 +11,83 @@ the Forge replacement", CME means the same thing.
 
 ---
 
+## The framing, confirmed by Rob 2026-09-23
+
+**Forge is scaffolding.** It exists to enable the wrapper and ancillary build work now, and to let
+real games be played now. It is not a thing to polish — see the "accept Forge as-is" rule below.
+
+**CME is the target state engine, and part of a broader rebasing of the whole CrankMagic platform
+into a unified product experience with profiles, login and the rest.** This is new scope: a scan of
+`docs/` found no plan mentioning profiles or login (the only "profile" in
+`crankmagic-architecture.md` is a browser profile, and `plan-web-to-local-table-2026-09-21.md` is
+lobby-and-tunnel, not identity). It is recorded here because it had no home.
+
+Three consequences, two of which touch decisions on this page:
+
+1. **Identity stays out of the engine.** CME's players are seat-indexed integers and
+   `CommanderProbeProjection@1` filters by `viewerSeatId`. The host maps account to seat; the engine
+   never learns what an account is. If accounts leak in, checkpoints tie to a user table and replay
+   stops being pure — which costs the byte-identical 1,000-game gate. Free to hold now, expensive to
+   undo later.
+2. **`PLAN.md` §9.7 needs sharpening.** "Compilation runs on Personal-HP reading the credential
+   locally" was decided for a single-user local product. With logins and other people's decks it
+   does not reach them. The resolution: **the compiled-definition store ships as committed data** —
+   compiled once, read by everyone — rather than compilation moving server-side. Rob's machine stays
+   where compilation *runs*; it stops being where results *live*. This sharpens §9.6's "a cache is
+   mandatory" into "the cache is a committed artifact".
+3. **Checkpointing survives the rebase unchanged.** State is plain data and resume reads a file; with
+   profiles a game belongs to an account and resumes across devices. That is a storage change, not
+   an engine one. §3.2.4 already anticipated it.
+
+### The CME delivery sequence, given by Rob 2026-09-23
+
+1. **Build the engine.** `game/engine/`, to the point the two of us call it good enough.
+2. **Integrate it as a new branch, with CrankMagic as a standalone app.** Not a mode of the current
+   product — its own app.
+3. **Stand up storage, runtime, infrastructure and RBAC.**
+4. **Publish the app onto that new infrastructure.**
+5. **Test on that deployment, running in parallel with the CrankMagic Online + Forge instance**, so
+   the two can be compared and troubleshot side by side.
+
+Step 5 is the production form of what `PLAN.md` §7 already describes as the differential runner:
+Forge stays a behavioral oracle, and now it is a whole live instance rather than a test harness. It
+is also the reason §9.4 keeps Forge alive past go-live — the parallel instance IS that oracle.
+
+**Rob is writing the end-user journeys** — the invited guest and the host, moving through the
+completed CME app. That is an input we wait on, and it is what defines the RBAC roles, the join
+flow, and what a guest may see and do. Nothing in step 3 should be designed ahead of it.
+
+**Agreed the same day:**
+
+- The compiled-definition store **ships as committed data**.
+- **CME ships on the local host when we say it is good enough** — a checkpoint inside steps 1 and 2,
+  not a separate track.
+- The cache is **a committed artifact, scoped by user id or by a general id** for the things made
+  available to everyone.
+
+**One refinement on that last point, raised rather than assumed.** The user-versus-general split is
+right, and it belongs on **decks**, not on card definitions:
+
+- A **card definition** is a property of the card, not of a person. Sol Ring behaves identically for
+  everyone. If definitions were user-scoped, two players at one table could have the same card
+  resolve differently — a correctness failure, not a feature. So definitions are keyed by card
+  identity (Scryfall `oracle_id`) and are always general. Their only gradation is the status §9.6
+  already defines: `verified`, `compiled`, `unsupported`.
+- A **deck** is exactly where user-versus-general belongs: it belongs to a user, or it is published
+  for everyone. That is the case Rob described.
+
+Keeping the split on decks preserves the property that the same card plays the same way at every
+table, which is the one thing a rules engine cannot trade away.
+
+**Open, and it changes work order:** §9.2 ships local host and cloud as one major release. If CME is
+part of the platform rebase, CME can be *finished* and still not shippable, because the platform
+becomes the long pole. Recommendation: let CME ship on the local host as soon as it reaches parity,
+independently of the rebase, so the engine gets real play hours and real bug reports before the
+platform lands rather than both risks arriving together. Rob's call whether there is an interim
+release at all.
+
+---
+
 ## B.6b — the History band: **option 2, the empty strip**
 
 The band goes at `left:72% top:5.5% width:25.5% height:31%`. No zone moves. Its right edge lands at

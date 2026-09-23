@@ -809,6 +809,62 @@ function renderHistory(){if(document.activeElement?.matches('input[aria-label="S
 function openHistory(){showDialog('Game history',historyContent());$('detail').dataset.history='true';}
 const historyShortcut=button('History',openHistory);document.querySelector('header').append(historyShortcut);$('close-focus').before(button('History',openHistory));
 $('detail').addEventListener('close',()=>delete $('detail').dataset.history);
+
+/* END CURRENT GAME, IN THE HEADER — Rob, 2026-09-23.
+ *
+ * U-07 hides `Game setup` during a live match, and this control lived inside it (setup.mjs), so the
+ * only way out of a game in progress was about to disappear with it. It moves to the header rather
+ * than back into the action box, because Rob's 2026-09-21 objection still stands — "End game
+ * shouldn't be a permanent fixture in the top right action box. (Don't want accidental clicks of
+ * it)" — and a header button behind a modal answers that without sitting next to the controls a
+ * player presses every turn.
+ *
+ * THE TWO-CLICK CONFIRM BECOMES A POPUP. A button that relabels itself and waits for a second press
+ * is a confirm nobody reads; a modal can say what is lost and what is kept, which is the only thing
+ * a player needs to decide.
+ *
+ * IT IS NOT DRAWN WHEN IT WOULD NOT WORK. A resumed match was attached to rather than started, so
+ * this host cannot close it cleanly (`local-game-launcher.mjs:118`), and a guest never ends the
+ * host's game. Both are hidden rather than refused, per the standing rule that nothing is available
+ * before it works. */
+let endGameAllowed=false;
+const endGameButton=button('End game',openEndGame,'end-game');
+endGameButton.hidden=true;
+endGameButton.title='End this game and return to setup. The journal is kept.';
+document.querySelector('header').append(endGameButton);
+
+function syncEndGame(state){
+  /* 'starting' BELONGS IN THIS LIST. The setup dialog's version left it out, correctly for itself:
+     it opens after a game exists. The header is on screen from the moment the board loads, and the
+     launcher reports 'starting' until Forge writes live-status.json into the game directory
+     (local-game-launcher.mjs:76) -- which, measured with a pod, is most of a short game. Without it
+     the button never appeared once in three turns of real play. This is the same vocabulary the
+     board's own boot check uses. */
+  endGameAllowed=!guestMode&&['starting','ready','playing','finished'].includes(state?.status)&&!state?.resumed;
+  endGameButton.hidden=!endGameAllowed;
+}
+async function refreshEndGame(){
+  try{syncEndGame(await fetch('/api/live',{cache:'no-store'}).then(r=>r.json()));}catch{syncEndGame(null);}
+}
+function openEndGame(){
+  const body=el('div');
+  body.append(el('p','',`This game's journal is kept, so its record and match report survive. The live position is not — the game cannot be resumed once it ends.`));
+  const actions=el('div','end-game-actions');
+  const confirm=button('End game · keep journal',async()=>{
+    confirm.disabled=true;
+    try{
+      if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
+      const response=await fetch('/api/close-game',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:'{}'});
+      if(!response.ok)throw Error((await response.json().catch(()=>({}))).error||'The host could not end this game.');
+      $('detail').close();
+      window.dispatchEvent(new Event('crankmagic-game-closed'));
+      await openGameSetup();
+    }catch(error){confirm.disabled=false;body.append(el('p','fine',error.message));}
+  },'end-game-confirm');
+  actions.append(button('Keep playing',()=>$('detail').close()),confirm);
+  body.append(actions);
+  showDialog('End this game?',body);
+}
 function renderTracker(force=false){
   if(!frame())return;const t=live?.telemetry,key=JSON.stringify([trackerPlayer,t,frame().players]);if(!force&&key===trackerKey)return;trackerKey=key;tracker.replaceChildren();
   if(!trackerFacts){trackerFacts=new Map();fetch('/app/data/cards.json').then(r=>r.json()).then(d=>{for(const c of d.cards)trackerFacts.set(c.name,c);renderTracker(true);}).catch(()=>{});}
@@ -1194,7 +1250,9 @@ function renderDecision(){
        the top right action box. (Don't want accidental clicks of it)... You also have 'End my
        turn' and 'Auto-pass turn' in the action box. Don't need both."
 
-       Neither is lost. "End current game" is in Game setup (setup.mjs), behind a two-click
+       Neither is lost. "End current game" is now the header's End game button, behind a modal
+       confirm -- it was in Game setup until 2026-09-23, when U-07 hid that dialog during a live
+       match and would have taken the only way out of a game with it. It was a two-click
        confirm, which is the safer of the two and was always the one to keep. "Auto-pass turn" was
        a hand-rolled loop that pressed OK up to fifty times and broke on anything it did not
        recognize; "Skip to end" in the header does the same job through maySkipToEndOfTurn, which
@@ -1272,8 +1330,8 @@ function applyLiveView(value){
       $('notice').textContent='The match is being set up. This will only take a moment.';
     }
 }
-window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
-window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
+window.addEventListener('crankmagic-game-ready',async()=>{await startLive();await refreshEndGame();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
+window.addEventListener('crankmagic-game-closed',()=>{syncEndGame(null);livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
 if(guestMode)$('setup').textContent='Table lobby';
 if(!new URLSearchParams(location.search).has('replay')){
@@ -1288,7 +1346,7 @@ if(!new URLSearchParams(location.search).has('replay')){
        zero reads of the game view in forty seconds against a match whose status was 'playing'.
        Only the guest path ever called startLive(). Setup is the fallback now, not the default. */
     let playing=false;
-    try{const state=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());playing=['starting','ready','playing'].includes(state&&state.status);}catch(error){playing=false;}
+    try{const state=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());playing=['starting','ready','playing'].includes(state&&state.status);syncEndGame(state);}catch(error){playing=false;syncEndGame(null);}
     if(playing){
       document.body.classList.remove('setup-screen');
       try{await startLive();}
