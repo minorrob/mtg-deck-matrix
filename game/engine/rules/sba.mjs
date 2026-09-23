@@ -152,7 +152,11 @@ export function checkStateBasedActions(state) {
          that replaces destruction saves it. CR 704.5g: lethal damage destroys. Both end in the
          OWNER's graveyard (CR 108.3), which is why a borrowed creature dying goes home. */
       const toughness = toughnessOf(state, id);
-      if (toughness <= 0 || (object.damage > 0 && object.damage >= toughness)) {
+      /* CR 704.5h: damage from a source with deathtouch destroys whatever the toughness. That is a
+         state-based action and not the assignment rule -- the assignment rule only decides how much
+         has to be put on a blocker before damage may move past it. */
+      const deathtouched = object.deathtouched === true && toughness > 0;
+      if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
         /* WHAT DIED, INCLUDING ITS ABILITIES. A "whenever this creature dies" trigger has to be
            found after the creature is gone, and a zone change makes a new object (CR 400.7), so by

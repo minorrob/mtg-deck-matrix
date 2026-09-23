@@ -316,7 +316,12 @@ function arrive(state, events) {
      `open` returns false when there is nothing to decide, and the step just proceeds. */
   if (state.phase === "COMBAT_DECLARE_ATTACKERS") attackers.open(state);
   if (state.phase === "COMBAT_DECLARE_BLOCKERS") blockers.open(state);
-  if (state.phase === "COMBAT_DAMAGE" && !combatDamage.open(state)) events.push(...combatDamage.deal(state));
+  /* CR 510.4: the first-strike step deals its own damage, and then the regular step deals the rest.
+     Double strike is in both, which is why the two calls are the same code with a different step. */
+  if (state.phase === "COMBAT_FIRST_STRIKE_DAMAGE" && !combatDamage.open(state))
+    events.push(...combatDamage.deal(state, {step: "first"}));
+  if (state.phase === "COMBAT_DAMAGE" && !combatDamage.open(state))
+    events.push(...combatDamage.deal(state, {step: "regular"}));
   if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
   state.passes = 0;

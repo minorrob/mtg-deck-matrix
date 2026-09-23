@@ -28,16 +28,29 @@
  * `damage` mode — the same validator the board has always used — so the engine offers that record
  * rather than deciding for the player.
  *
- * WHAT IS DEFERRED AND NAMED RATHER THAN FAKED: first and double strike (CR 702.7, 702.4) need the
- * extra damage step, which the turn table already carries as a condition; trample, deathtouch,
- * lifelink, infect and protection are keyword families for phase 2; planeswalkers and battles as
- * defenders arrive with those card types. Creatures dying to lethal damage is a state-based action
- * and belongs to 1.5 — this file marks damage and does not destroy anything.
+ * THE KEYWORDS LIVE IN `keywords/combat.mjs` AND THIS FILE ASKS THEM. Evasion decides what is
+ * offered as a block, menace is checked against the whole declaration because it is a rule about
+ * the SET, deathtouch changes what lethal means for the assignment, trample decides what may be
+ * pushed past a blocker, and first and double strike decide which of the two damage steps a
+ * creature deals in. Keeping them there rather than here is what makes "which keywords does the
+ * engine know" a question with a file for an answer.
+ *
+ * WHAT IS STILL DEFERRED AND NAMED: protection and landwalk are keywords with an ARGUMENT — "from
+ * black", "Islandwalk" — and the card script has to express the quality before either can be
+ * enforced. Infect and wither change what damage does rather than who may block and go with the
+ * counters family. Planeswalkers and battles as defenders arrive with those card types.
+ *
+ * Creatures dying is still a state-based action (CR 704.5g, 704.5h) and belongs to `sba.mjs`. This
+ * file marks damage and destroys nothing.
  */
 
 import {cardsIn} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
+import {
+  canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
+  combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
+} from "../keywords/combat.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -147,9 +160,12 @@ export const attackers = {
       defenders: [...new Set(picked.map((o) => o.defenderId))],
       attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, blocked: false, blockers: []})),
       /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
-         No creature has first strike until phase 2 gives them keywords. */
+         Recomputed once blockers are in, because a blocker with first strike makes the step
+         happen just as an attacker with it does. */
       firstStrike: false,
     };
+    /* An attacker with first strike is enough on its own; a blocker can add to it later. */
+    state.combat.firstStrike = combatNeedsFirstStrike(state);
 
     /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
     for (const attack of state.combat.attacks) {
@@ -201,6 +217,9 @@ export const blockers = {
     for (const id of state.zones.battlefield) {
       if (!canBlock(state, id, awaiting.player)) continue;
       for (const attack of mine) {
+        /* Evasion, per blocker (CR 509.1b). A block the rules forbid is not offered at all, rather
+           than offered and then refused -- the same principle as legality being enumerated. */
+        if (!canBlockAttacker(state, id, attack.attacker)) continue;
         options.push({
           index: options.length,
           label: `${state.objects[id].card} blocks ${state.objects[attack.attacker].card}`,
@@ -232,6 +251,18 @@ export const blockers = {
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can block only one attacker; the same blocker was declared twice");
 
+    /* MENACE IS A RULE ABOUT THE SET (CR 702.110b), so it can only be checked once the whole
+       declaration is in. Every individual blocker was legal or it would not have been offered. */
+    const bySeat = new Map();
+    for (const option of picked) {
+      if (!bySeat.has(option.attackerId)) bySeat.set(option.attackerId, []);
+      bySeat.get(option.attackerId).push(option.cardId);
+    }
+    for (const [attackerId, ids] of bySeat) {
+      if (blockersAreLegal(state, attackerId, ids)) continue;
+      throw new Error(whyBlockersAreIllegal(state, attackerId, ids));
+    }
+
     const events = [];
     for (const option of picked) {
       const attack = state.combat.attacks.find((a) => a.attacker === option.attackerId);
@@ -246,6 +277,10 @@ export const blockers = {
         })),
       }));
     }
+
+    /* CR 510.4: whether the extra damage step happens can only be known once the blockers are in,
+       because a BLOCKER with first strike makes it happen just as an attacker with it does. */
+    state.combat.firstStrike = combatNeedsFirstStrike(state);
 
     /* The next defending player, if there is one; otherwise the step is done. */
     const next = nextDefenderToDeclare(state, awaiting.player);
@@ -315,29 +350,54 @@ export const combatDamage = {
    * Simultaneity is not a detail: a 2/2 blocking a 2/2 kills it AND dies, and dealing one side's
    * damage first would let the first to die deal nothing.
    */
-  deal(state) {
+  deal(state, {step = "regular"} = {}) {
     if (!state.combat) return [];
     const events = [];
     const pending = [];
+    /* CR 510.4: in the first-strike step only creatures with first or double strike deal damage;
+       in the regular step, everything except a first striker that is not also double. */
+    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    /* A creature that has left the battlefield deals no combat damage (CR 506.4). That is not a
+       guard against a missing object, it is the rule: a blocker killed in the first-strike step is
+       gone by the regular one and never hits back, which is the whole point of first strike. */
+    const stillThere = (id) => state.objects[id] !== undefined && state.objects[id].zone === "battlefield";
 
     for (const attack of state.combat.attacks) {
+      if (!stillThere(attack.attacker)) continue;
       const attackPower = power(state, attack.attacker);
-      if (!attack.blocked) {
-        /* CR 510.1a: an unblocked attacker assigns its damage to the player it is attacking. */
-        if (attackPower > 0) pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
-      } else if (attack.blockers.length === 1) {
-        if (attackPower > 0) pending.push({toCard: attack.blockers[0], amount: attackPower, source: attack.attacker});
-      } else if (attack.blockers.length > 1) {
-        const assignment = attack.assignment ?? [];
-        attack.blockers.forEach((id, index) => {
-          const amount = assignment[index] ?? 0;
-          if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
-        });
+      if (dealsNow(attack.attacker) && attackPower > 0) {
+        if (!attack.blocked) {
+          /* CR 510.1a: an unblocked attacker assigns its damage to the player it is attacking. */
+          pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
+        } else if (attack.blockers.length === 1 && stillThere(attack.blockers[0])) {
+          /* CR 702.19b: with trample, only LETHAL has to be assigned to the blocker and the rest
+             may be pushed through. Without it the excess is simply lost, which is the whole point
+             of chump blocking. Lethal is asked of the SOURCE as well as the target, because
+             deathtouch makes one damage lethal (CR 702.2b). */
+          const lethal = Math.min(attackPower, lethalNeededFrom(state, attack.attacker, attack.blockers[0]));
+          const over = trampleOver(state, attack.attacker, lethal);
+          const toBlocker = over > 0 ? lethal : attackPower;
+          if (toBlocker > 0) pending.push({toCard: attack.blockers[0], amount: toBlocker, source: attack.attacker});
+          if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
+        } else if (attack.blockers.length > 1) {
+          const assignment = attack.assignment ?? [];
+          let assigned = 0;
+          attack.blockers.forEach((id, index) => {
+            if (!stillThere(id)) return;
+            const amount = assignment[index] ?? 0;
+            assigned += amount;
+            if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
+          });
+          const over = trampleOver(state, attack.attacker, assigned);
+          if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
+        }
       }
       /* CR 510.1d: each blocking creature assigns its damage to the creature it is blocking. */
       for (const blocker of attack.blockers) {
+        if (!stillThere(blocker)) continue;
         const blockPower = power(state, blocker);
-        if (blockPower > 0) pending.push({toCard: attack.attacker, amount: blockPower, source: blocker});
+        if (dealsNow(blocker) && blockPower > 0)
+          pending.push({toCard: attack.attacker, amount: blockPower, source: blocker});
       }
     }
 
@@ -370,9 +430,26 @@ export const combatDamage = {
         }));
       } else {
         state.objects[hit.toCard].damage += hit.amount;
+        /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
+        markDeathtouch(state, hit.source, hit.toCard);
         events.push(event("GameEventCardDamaged", state, {
           card: cardRef(state, hit.toCard), source: cardRef(state, hit.source), amount: hit.amount,
         }));
+      }
+
+      /* CR 702.15a: lifelink is not a trigger and does not use the stack — the life is gained at
+         the same time the damage is dealt, by the source's CONTROLLER, whoever the damage went to. */
+      const linked = lifelinkFrom(state, hit.source, hit.amount);
+      if (linked > 0) {
+        const gains = state.objects[hit.source]?.controller;
+        if (gains !== undefined) {
+          const before = state.players[gains].life;
+          state.players[gains].life += linked;
+          events.push(event("GameEventPlayerLivesChanged", state, {
+            player: {playerId: gains, name: state.players[gains].name},
+            oldLives: before, newLives: state.players[gains].life, lifelink: true,
+          }));
+        }
       }
     }
     /* Creatures with lethal damage die as a state-based action (CR 704.5g), which is 1.5. Nothing
