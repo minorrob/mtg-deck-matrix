@@ -36,6 +36,7 @@
  */
 
 import {cardsIn} from "../state/index.mjs";
+import {applyReplacements} from "./replacement.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -326,9 +327,22 @@ export const combatDamage = {
       }
     }
 
-    /* Everything was computed from the board as it was; only now is any of it applied. */
-    for (const hit of pending) {
-      if (hit.toPlayer !== undefined) {
+    /* Everything was computed from the board as it was; only now is any of it applied — and each
+       hit goes through the replacement and prevention effects first (CR 615.1). A shield that stops
+       all of it means the damage EVENT does not happen (CR 615.4), which is why a prevented hit is
+       skipped rather than reported as zero damage. */
+    for (const raw of pending) {
+      const {proposal: hit} = applyReplacements(state, {
+        event: "damage",
+        toPlayer: raw.toPlayer,
+        toCard: raw.toCard,
+        amount: raw.amount,
+        sourceId: raw.source,
+        combat: true,
+      });
+      if (hit.prevented === true || hit.amount <= 0) continue;
+      hit.source = raw.source;
+      if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
         const before = state.players[hit.toPlayer].life;
         state.players[hit.toPlayer].life -= hit.amount;
         events.push(event("GameEventPlayerDamaged", state, {

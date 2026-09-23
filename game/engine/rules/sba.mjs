@@ -33,7 +33,14 @@
  * missing one.
  */
 
-import {moveObject} from "../state/index.mjs";
+import {moveObject, PER_PLAYER} from "../state/index.mjs";
+import {applyReplacements} from "./replacement.mjs";
+
+/* The capitalized zone names the projection and the telemetry use. */
+const ZONE_LABEL = {
+  library: "Library", hand: "Hand", battlefield: "Battlefield",
+  graveyard: "Graveyard", exile: "Exile", stack: "Stack", command: "Command",
+};
 
 const POISON_TO_LOSE = 10;
 /** CR 903.10a. Twenty-one from ONE commander, counted per commander. */
@@ -116,17 +123,22 @@ export function checkStateBasedActions(state) {
   for (let pass = 0; pass < 10; pass += 1) {
     let acted = false;
 
-    /* CR 704.5d: a token that has left the battlefield ceases to exist. */
-    for (const zone of ["graveyard", "hand", "library", "exile", "command"]) {
-      state.zones[zone].forEach((list, owner) => {
+    /* CR 704.5d: a token that has left the battlefield ceases to exist.
+     *
+     * PER-PLAYER ZONES ARE LISTS OF LISTS AND SHARED ZONES ARE ONE LIST. Treating them alike was a
+     * real bug here, invisible for as long as nothing ever reached exile — the first card that did
+     * made the loop try to iterate an object id. `PER_PLAYER` is the one place that distinction is
+     * written down, so it is the one this reads. */
+    for (const zone of ["graveyard", "hand", "library", "command", "exile", "stack"]) {
+      const lists = PER_PLAYER.includes(zone) ? state.zones[zone] : [state.zones[zone]];
+      for (const list of lists) {
         for (const id of [...list]) {
           if (state.objects[id]?.token !== true) continue;
           list.splice(list.indexOf(id), 1);
           delete state.objects[id];
           acted = true;
-          void owner;
         }
-      });
+      }
     }
 
     for (const id of [...state.zones.battlefield]) {
@@ -146,12 +158,21 @@ export function checkStateBasedActions(state) {
           cardId: id, name: object.card, controller: object.controller, owner: object.owner,
           abilities: structuredClone(object.abilities ?? []),
         };
-        moveObject(state, id, "graveyard", object.owner);
+        /* CR 614.1: the death is a PROPOSAL until the replacement effects have had it. A creature
+           that would die and is exiled instead did not die, so the event reported below is the
+           replaced one — reporting a death and then moving the card elsewhere would be describing
+           something that never happened, and every death-watcher would believe it. */
+        const {proposal} = applyReplacements(state, {
+          event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller,
+        });
+        const destination = proposal.to;
+        moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
+          ? object.owner : null);
         events.push(event("GameEventCardChangeZone", state, {
           card,
           leftBehind,
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
-          to: {zoneType: "Graveyard", player: {playerId: object.owner}},
+          to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
         acted = true;
       }
