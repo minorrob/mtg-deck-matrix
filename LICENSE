@@ -38,8 +38,9 @@ All of the following require the author's prior written permission:
   b) HOSTING or operating the Software, or any derivative of it, as a service
      available to anyone other than yourself, whether paid or free;
   c) INCORPORATING the Software or any part of it — including its data model,
-     its card-relationship graph, its simulator, or its user interface — into
-     any product, service or offering, whether or not that offering is paid;
+     its card-relationship graph, its simulator, its rules engine and its card
+     definitions, or its user interface — into any product, service or
+     offering, whether or not that offering is paid;
   d) REDISTRIBUTING the Software or a derivative of it to third parties;
   e) SUBLICENSING any right in the Software;
   f) Using the Software to TRAIN a machine-learning model intended for

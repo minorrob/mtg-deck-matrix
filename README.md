@@ -393,6 +393,11 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 
 ## Verify before pushing
 
+The rules engine that will replace Forge (`docs/engine/PLAN.md`, `docs/engine/ADR-001-own-engine.md`)
+is held by `engine-skeleton` — the entry point refuses loudly and the `CRANKMAGIC_ENGINE`
+flag defaults to `forge` — and `engine-headers`, which fails on any engine file that does
+not say whose it is or that carries another license.
+
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
 
@@ -430,7 +435,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 72 Node suites here, plus 29 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 74 Node suites here, plus 29 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

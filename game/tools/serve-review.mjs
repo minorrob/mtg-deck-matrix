@@ -20,6 +20,13 @@ const port=Number(process.env.COMMANDER_PORT||8768);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
 const authority='127.0.0.1:'+port,origin='http://'+authority;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
+/* WHICH RULES ENGINE RUNS A GAME. docs/engine/PLAN.md §6 phase 0.1.
+   'forge' is the default and stays the default until phase 1's gate passes, because the CrankMagic
+   engine plays nothing yet and must not be reachable by anyone who has not asked for it by name.
+   An unknown value is refused here rather than at game start, where it would look like a launch
+   failure. */
+const engineFlag=(process.env.CRANKMAGIC_ENGINE||'forge').trim().toLowerCase();
+if(!['forge','crank'].includes(engineFlag))throw Error(`CRANKMAGIC_ENGINE must be 'forge' or 'crank', not '${engineFlag}'`);
 const guestPort=Number(process.env.COMMANDER_GUEST_PORT||8769),guestHost=process.env.COMMANDER_GUEST_BIND||'127.0.0.1';
 if(!Number.isInteger(guestPort)||guestPort<1024||guestPort>65535)throw Error('Invalid guest port');
 const files=new Map([['/review',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
