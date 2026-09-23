@@ -39,6 +39,16 @@ export const KEYWORD_FAMILIES = Object.freeze({
   evasion: Object.freeze(["Flying", "Reach", "Menace"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender"]),
+  /**
+   * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
+   * that "which keywords actually do something" has one answer.
+   *
+   * `destroy` honors indestructible (CR 702.12b) and the selector grammar honors hexproof and
+   * shroud when a selector targets (CR 115.2). They were implemented before this file existed, and
+   * leaving them off the list made `engine-coverage` report them as words with no behavior — which
+   * is the very claim this module exists to stop being true by accident.
+   */
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud"]),
 });
 
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);

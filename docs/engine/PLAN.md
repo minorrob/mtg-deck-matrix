@@ -319,7 +319,7 @@ wherever one exists.** The parser is a free pre-pass that feeds the compiler, no
    throwing, and its declared reveals match what the projection shows) and, while Forge exists,
    differential-checked in fuzzed games. The key is read from Windows Credential Manager through
    `read-windows-credential.ps1`, the way the OpenAI pilot's is; the plan assumes the generic credential is named
-   `crankmagic_anthropic_api` and the executing session confirms the name with Rob before the first call. Cost and
+   `crankmagic_anthropic_api`, which Rob CONFIRMED on 2026-09-23, along with the key being in Windows Credential Manager. Cost and
    pass rate are measured on a 200-card sample before the pool run and reported to Rob.
 2. **Template pre-pass** (`game/engine/script/parse.mjs`), deterministic, from oracle text. Magic's oracle text is
    heavily templated: keyword lines; "When/Whenever/At [event], [effect]"; "[cost]: [effect]"; "[selector] get
@@ -429,7 +429,7 @@ finds nothing to undo, the engine keeps these constraints from the first commit,
 | Rendering proof | `node tools/render-routes.mjs`, `screens/*.dc.html` at 1280 px | unchanged; the Play page must render identically on both engines during the transition |
 | Performance budgets (enforced by a test) | Forge: tens of seconds to boot | engine boot under 200 ms with the pool index loaded lazily; `view()` under 2 ms; legal-action enumeration under 5 ms; a full four-player game with random-legal pilots under 3 s headless; 64 house-pilot rollouts per decision under 300 ms; the fuzz harness at 1,000 games per hour on Personal-HP |
 | Schema registry | `schema/index.mjs`, `schema/validate.mjs` | entries for `data/engine/*.json` and `CrankCardScript@1` |
-| Compile pipeline | none | `engine-compile.mjs` calling the Claude API with the key from Windows Credential Manager (Rob has stored it; assumed name `crankmagic_anthropic_api`, confirmed before the first call) through `read-windows-credential.ps1`, never a key in a file, a page, a URL or a log; batch, resumable, idempotent by oracle-text hash; the `claude-api` skill is read before the first call for model ids, tool use and pricing |
+| Compile pipeline | none | `engine-compile.mjs` calling the Claude API with the key from Windows Credential Manager (name `crankmagic_anthropic_api`, confirmed by Rob 2026-09-23) through `read-windows-credential.ps1`, never a key in a file, a page, a URL or a log; batch, resumable, idempotent by oracle-text hash; the `claude-api` skill is read before the first call for model ids, tool use and pricing |
 | Fuzz and differential runs | none | `engine-fuzz.mjs` and `engine-diff.mjs` as a scheduled local task (Task Scheduler on Personal-HP) while Forge exists; results committed as evidence, never as a green claim |
 | Set refresh | `live-load.yml` (workbook) as the pattern | `engine-cards.yml`, manual dispatch, commits data and the list of cards needing compilation |
 
