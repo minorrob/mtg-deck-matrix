@@ -435,7 +435,12 @@ is out takes their board with them. `engine-trigger` holds that a trigger waits 
 than resolving where it happened, that the active player's goes on the stack first and therefore
 resolves last, that a player with two orders their own, and that "whenever this creature dies" can
 still see the creature — the look-back is the event envelope carrying the card as it was, not a
-shadow copy of the board.
+shadow copy of the board. `engine-projection` decides what a seat may see, once, inside the engine,
+so a routing mistake in a host can lose a game but cannot leak one: an opponent's hand is a count,
+a library is hidden from its owner too, and the property is checked by playing whole random games
+and looking for any hidden card's name anywhere in any seat's view, under any key, at any depth —
+a test that only checked the zones somebody thought of could not catch a leak through a field added
+later, which is how that bug arrives.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -474,7 +479,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 87 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 88 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

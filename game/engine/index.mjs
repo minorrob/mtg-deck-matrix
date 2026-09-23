@@ -37,7 +37,7 @@ export const ENGINE_STATUS = Object.freeze({
   phase: 0,
   /* What is built and green, module by module. Not a claim that a game can be played. */
   implemented: Object.freeze([
-    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger",
+    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger", "projection",
   ]),
   /* Phase 1's gate, from §6: a four-player game of vanilla creatures and lands with commanders
      running to completion for 1,000 seeds, the same hash on replay, no hidden card in any seat
