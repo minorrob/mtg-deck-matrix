@@ -37,6 +37,7 @@
 
 import {cardsIn} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -47,6 +48,10 @@ const cardRef = (state, id) => {
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
 const has = (object, keyword) => (object.keywords ?? []).includes(keyword);
+/* Through the layers, so a creature granted vigilance or turned into one this turn is treated as
+   what it currently is rather than what was printed on it. */
+const isCreatureNow = (state, id) => typesOf(state, id).includes("Creature");
+const hasNow = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 
 /** CR 302.6: controlled continuously since the controller's most recent turn began. */
 const summoningSick = (state, object) => object.controlledSinceTurn >= state.turn;
@@ -54,17 +59,16 @@ const summoningSick = (state, object) => object.controlledSinceTurn >= state.tur
 /** CR 508.1a: untapped, not sick, no defender, and yours. */
 export function canAttack(state, id, player) {
   const object = state.objects[id];
-  return isCreature(object)
-    && object.controller === player
+  return isCreatureNow(state, id)
+    && controllerOf(state, id) === player
     && !object.tapped
     && !summoningSick(state, object)
-    && !has(object, "Defender");
+    && !hasNow(state, id, "Defender");
 }
 
 /** CR 509.1a: untapped, yours, and you are the one being attacked. */
 export function canBlock(state, id, player) {
-  const object = state.objects[id];
-  return isCreature(object) && object.controller === player && !object.tapped;
+  return isCreatureNow(state, id) && controllerOf(state, id) === player && !state.objects[id].tapped;
 }
 
 /** Everyone still in the game who is not the attacking player (CR 506.2). */
@@ -145,7 +149,7 @@ export const attackers = {
     /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
     for (const attack of state.combat.attacks) {
       const object = state.objects[attack.attacker];
-      if (has(object, "Vigilance")) continue;
+      if (hasNow(state, attack.attacker, "Vigilance")) continue;
       object.tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, attack.attacker), tapped: true}));
     }
@@ -245,9 +249,12 @@ export const blockers = {
 
 /* ---- combat damage ---- */
 
-const power = (state, id) => state.objects[id].power ?? 0;
-/** What it takes to kill it now: its toughness less the damage already marked (CR 510.1a). */
-const lethalFor = (state, id) => Math.max(0, (state.objects[id].toughness ?? 0) - state.objects[id].damage);
+/* CURRENT power and toughness, not printed. Combat that read the printed values would ignore every
+   anthem, every counter and every "becomes 1/1" on the board -- layers that nothing reads are
+   layers that do not exist. */
+const power = (state, id) => powerOf(state, id);
+/** What it takes to kill it now: its current toughness less the damage already marked (CR 510.1a). */
+const lethalFor = (state, id) => Math.max(0, toughnessOf(state, id) - state.objects[id].damage);
 
 export const combatDamage = {
   /* Only an attacker facing more than one blocker has a decision: with one blocker all its damage

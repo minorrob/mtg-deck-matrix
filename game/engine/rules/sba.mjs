@@ -35,6 +35,7 @@
 
 import {moveObject, PER_PLAYER} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
+import {toughnessOf, typesOf} from "./layers.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -143,11 +144,13 @@ export function checkStateBasedActions(state) {
 
     for (const id of [...state.zones.battlefield]) {
       const object = state.objects[id];
-      if (!isCreature(object)) continue;
+      /* Through the layers: a land animated this turn is a creature and dies like one, and a
+         creature set to 0 toughness by an effect dies whatever its printed toughness says. */
+      if (!typesOf(state, id).includes("Creature")) continue;
       /* CR 704.5f: toughness zero or less is PUT INTO the graveyard — not destroyed, so nothing
          that replaces destruction saves it. CR 704.5g: lethal damage destroys. Both end in the
          OWNER's graveyard (CR 108.3), which is why a borrowed creature dying goes home. */
-      const toughness = object.toughness ?? 0;
+      const toughness = toughnessOf(state, id);
       if (toughness <= 0 || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
         /* WHAT DIED, INCLUDING ITS ABILITIES. A "whenever this creature dies" trigger has to be

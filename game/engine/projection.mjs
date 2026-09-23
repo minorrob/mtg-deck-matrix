@@ -27,6 +27,8 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
+import {characteristicsOf} from "./rules/layers.mjs";
+
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
 
 /* The zone names the board uses. The engine's own keys are lower case; this is the boundary. */
@@ -58,18 +60,23 @@ function cardFor(state, id, canSeeFace) {
   if (!object) return null;
   const faceDown = object.faceDown === true;
   const named = canSeeFace && !faceDown;
+  const current = object.zone === "battlefield" ? characteristicsOf(state, id) : object;
   return {
     cardId: object.id,
     name: named ? object.card : null,
     faceDown,
     owner: object.owner,
-    controller: object.controller,
+    controller: object.zone === "battlefield" ? current.controller : object.controller,
     tapped: object.tapped,
     damage: object.damage,
     counters: {...object.counters},
-    types: named ? [...(object.types ?? [])] : [],
-    power: named ? object.power : null,
-    toughness: named ? object.toughness : null,
+    /* CURRENT characteristics for anything on the battlefield, so the board draws the creature a
+       player is actually looking at rather than what was printed on the card. Elsewhere there is
+       nothing to derive: a card in a graveyard is its printed self. */
+    types: named ? [...current.types] : [],
+    power: named ? current.power : null,
+    toughness: named ? current.toughness : null,
+    keywords: named ? [...current.keywords] : [],
     commander: object.commander === true,
   };
 }

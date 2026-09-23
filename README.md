@@ -444,7 +444,12 @@ later, which is how that bug arrives. `engine-replacement` holds that a replaced
 happens at all — a creature exiled instead of dying did not die, and nothing that watches for
 deaths sees one — that each effect applies once to a given event so two of them cannot bounce it
 back and forth forever, that the affected object's controller chooses which applies first because
-the order decides the outcome, and that a prevention shield wears out.
+the order decides the outcome, and that a prevention shield wears out. `engine-layers` keeps the
+state holding printed values and derives current ones on demand, so an effect leaving costs
+nothing: it holds that layers are categories rather than priorities, that an effect setting power
+applies before one adding to it whichever was played first, that counters come after both, and that
+dependency beats timestamp. Combat, state-based actions and the projection all read through it, so
+an anthem, a counter and an animated land are the same creature to all three.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -483,7 +488,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 89 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 90 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
