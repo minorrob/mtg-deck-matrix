@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/engine-tokens.json",
+  "title": "Token and emblem entries, kept apart from the deck pool because they are created rather than drawn.",
+  "type": "object",
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "tokens"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "engine-tokens@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-engine-cards.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mana": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mv": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "power": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toughness": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "defense": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ci": {
+            "type": "array"
+          },
+          "colors": {
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "keywords": {
+            "type": "array"
+          },
+          "layout": {
+            "type": "string"
+          },
+          "faces": {
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

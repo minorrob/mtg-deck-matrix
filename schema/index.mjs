@@ -13,6 +13,12 @@ export const HAND = "hand-maintained";
 export const STAMPS = ["generatedAt", "compiledAt", "savedAt", "createdAt", "amplifiersAt", "updatedAt", "revision"];
 
 export const REGISTRY = [
+  /* The rules engine's card data (docs/engine/PLAN.md section 6 phase 0.3). Checked by
+     tests/schemas.mjs rather than by re-running its generator: that generator downloads 24 MB
+     from Scryfall, and a suite that needs the network is a suite that fails on a train. */
+  {file: "data/engine/oracle.json", id: "engine-oracle@1", generator: "tools/build-engine-cards.mjs", checkedBy: "tests/schemas.mjs", main: "cards"},
+  {file: "data/engine/tokens.json", id: "engine-tokens@1", generator: "tools/build-engine-cards.mjs", checkedBy: "tests/schemas.mjs", main: "tokens"},
+  {file: "data/engine/support.json", id: "engine-support@1", generator: "tools/build-engine-cards.mjs", checkedBy: "tests/schemas.mjs", main: "cards"},
   {file: "data/cards.json", id: "cards@2", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
   {file: "data/card-facts.json", id: "card-facts@1", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
   {file: "data/commander-universe.json", id: "commander-universe@1", generator: "tools/commander-universe.mjs", checkedBy: "tools/commander-universe.mjs", main: "cards"},

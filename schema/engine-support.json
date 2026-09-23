@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/engine-support.json",
+  "title": "The support ledger: how far each card is proven. Every card starts unsupported, which blocks measured play rather than failing quietly.",
+  "type": "object",
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "cards",
+    "legend"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "engine-support@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-engine-cards.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "legend": {
+      "type": "object"
+    },
+    "cards": {
+      "type": "array",
+      "minItems": 1000,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unsupported",
+              "compiled",
+              "verified"
+            ]
+          },
+          "needs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

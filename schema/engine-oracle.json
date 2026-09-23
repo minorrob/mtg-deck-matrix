@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/engine-oracle.json",
+  "title": "Every Commander-legal card, trimmed to what a rules engine needs. Scryfall oracle data; no prices, images or rankings.",
+  "type": "object",
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "cards"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "engine-oracle@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-engine-cards.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "cards": {
+      "type": "array",
+      "minItems": 1000,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mana": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mv": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "power": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toughness": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "defense": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ci": {
+            "type": "array"
+          },
+          "colors": {
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "keywords": {
+            "type": "array"
+          },
+          "layout": {
+            "type": "string"
+          },
+          "faces": {
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
