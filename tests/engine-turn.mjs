@@ -54,6 +54,18 @@ function until(state, predicate, limit = 400) {
 }
 const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
+/* A table whose libraries are stocked. Since 1.5, walking through a draw step with an empty
+   library is a real loss (CR 704.5b) and takes that player's board with them, so a fixture that
+   crosses one has to be dealt cards or it is testing the loss rules by accident. */
+function started(n = 4, cards = 60) {
+  const s = createState(pod(n));
+  for (let seat = 0; seat < n; seat += 1)
+    for (let i = 0; i < cards; i += 1)
+      addObject(s, {card: `L${seat}-${i}`, owner: seat, controller: seat}, "library", seat);
+  beginGame(s);
+  return s;
+}
+
 /* ---- the sequence is CR 500.1, in order ---- */
 {
   eq(PHASE_NAMES, [
@@ -96,8 +108,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- untap untaps the active player's permanents and nobody else's (CR 502.1) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   const mine = addObject(s, {card: "Forest", owner: 0, controller: 0}, "battlefield");
   const theirs = addObject(s, {card: "Island", owner: 1, controller: 1}, "battlefield");
   s.objects[mine].tapped = true;
@@ -142,13 +153,13 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
   until(s, atPhase("DRAW"));
   eq(cardsIn(s, "library", 0).length, 0, "there was nothing to draw");
   eq(s.players[0].drewFromEmpty, true,
-    "the attempt is remembered — the loss belongs to state-based actions in 1.5, not to this file");
+    "the attempt is remembered here, and turned into a loss by state-based actions (CR 704.5b)");
+  eq(s.players[0].lost, true, "which they now are, because the check runs as the step gives out priority");
 }
 
 /* ---- mana empties at the end of every step (CR 500.4) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   s.players[0].manaPool.G = 3;
   const events = advance(s);
   eq(s.players[0].manaPool.G, 0,
@@ -160,8 +171,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- one land per turn, and the count resets (CR 305.2) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   s.players[0].landsPlayed = 1;
   until(s, (st) => st.activePlayer === 1);
   eq(s.players[0].landsPlayed, 0, "a new turn gives the land drop back");
@@ -169,13 +179,12 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- cleanup asks the active player to discard down to hand size (CR 514.1) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   for (let i = 0; i < 10; i += 1) addObject(s, {card: `C${i}`, owner: 0, controller: 0}, "hand", 0);
   for (let i = 0; i < 10; i += 1) addObject(s, {card: `D${i}`, owner: 1, controller: 1}, "hand", 1);
   until(s, atPhase("CLEANUP"));
-  eq(s.awaiting, {kind: "discard-to-hand-size", player: 0, count: 3},
-    "ten cards and a hand size of seven means three go — and the ENGINE DOES NOT PICK THEM");
+  eq(s.awaiting, {kind: "discard-to-hand-size", player: 0, count: 4},
+    "ten dealt plus the one drawn is eleven, and a hand size of seven means four go — and the ENGINE DOES NOT PICK THEM");
   ok(cardsIn(s, "hand", 1).length === 10,
     "only the active player discards; everyone else keeps a full hand (CR 514.1)");
 
@@ -183,35 +192,33 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
     "and the game does not move past a decision it is waiting on — skipping it would leave a turn that never happened looking like one that did"); checks += 1;
 
   const choice = awaitingChoice(s);
-  eq(choice.min, 3, "the choice asks for exactly three");
-  eq(choice.max, 3, "no more and no fewer");
+  eq(choice.min, 4, "the choice asks for exactly four");
+  eq(choice.max, 4, "no more and no fewer");
   eq(choice.mode, "many", "as a multiple selection, which is what the board draws");
-  eq(choice.options.length, 10, "over the whole hand");
+  eq(choice.options.length, 11, "over the whole hand");
   ok(choice.options.every((o) => Number.isInteger(o.cardId) && typeof o.label === "string"),
     "each option naming a card, so a player can tell them apart");
 
-  const events = resolveAwaiting(s, [0, 1, 2]);
+  const events = resolveAwaiting(s, [0, 1, 2, 3]);
   eq(s.awaiting, null, "answering it clears the wait");
   eq(cardsIn(s, "hand", 0).length, 7, "and the hand is at its maximum");
-  eq(cardsIn(s, "graveyard", 0).length, 3, "with the discards in the graveyard");
-  eq(events.filter((e) => e.kind === "GameEventCardChangeZone").length, 3, "each reported as a zone change");
+  eq(cardsIn(s, "graveyard", 0).length, 4, "with the discards in the graveyard");
+  eq(events.filter((e) => e.kind === "GameEventCardChangeZone").length, 4, "each reported as a zone change");
   ok(events[0].data.fields.discarded, "and marked as a discard rather than an ordinary move");
   advance(s);
   eq(s.turn, 2, "after which the turn ends normally");
 }
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   for (let i = 0; i < 10; i += 1) addObject(s, {card: `C${i}`, owner: 0, controller: 0}, "hand", 0);
   until(s, atPhase("CLEANUP"));
-  assert.throws(() => resolveAwaiting(s, [0, 1]), /exactly 3/i, "two is not three"); checks += 1;
-  assert.throws(() => resolveAwaiting(s, [0, 1, 1]), /Invalid selection/, "nor is the same card three times"); checks += 1;
-  assert.throws(() => resolveAwaiting(s, [0, 1, 99]), /Invalid selection/, "nor a card that is not in hand"); checks += 1;
-  eq(cardsIn(s, "hand", 0).length, 10, "and after all of that nothing has been discarded");
+  assert.throws(() => resolveAwaiting(s, [0, 1]), /exactly 4/i, "two is not four"); checks += 1;
+  assert.throws(() => resolveAwaiting(s, [0, 1, 1, 2]), /Invalid selection/, "nor is the same card twice"); checks += 1;
+  assert.throws(() => resolveAwaiting(s, [0, 1, 2, 99]), /Invalid selection/, "nor a card that is not in hand"); checks += 1;
+  eq(cardsIn(s, "hand", 0).length, 11, "and after all of that nothing has been discarded");
 }
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   until(s, atPhase("CLEANUP"));
   eq(s.awaiting, null, "a hand at or under the maximum is not asked anything");
   eq(awaitingChoice(s), null, "and there is no choice to offer");
@@ -219,8 +226,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- cleanup removes damage (CR 514.2) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   const bear = addObject(s, {card: "Bear", owner: 0, controller: 0}, "battlefield");
   s.objects[bear].damage = 2;
   until(s, atPhase("CLEANUP"));
@@ -229,8 +235,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- with nobody attacking, two combat steps do not happen (CR 506.5) ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   const seen = [];
   const was = s.activePlayer;
   seen.push(currentPhase(s));
@@ -244,8 +249,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- the turn passes, in seat order, and skips the dead ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   const seen = [];
   for (let turn = 0; turn < 4; turn += 1) {
     seen.push(s.activePlayer);
@@ -264,8 +268,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- priority follows the step ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   eq(hasPriority(s), false, "no priority in untap");
   advance(s);
   eq(currentPhase(s), "UPKEEP", "the next step is upkeep");
@@ -287,8 +290,7 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
 
 /* ---- it terminates ---- */
 {
-  const s = createState(pod(4));
-  beginGame(s);
+  const s = started();
   let steps = 0;
   while (s.turn < 20 && steps < 5000) { advance(s); steps += 1; }
   eq(s.turn, 20, "twenty turns are reached");

@@ -42,6 +42,12 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
    already out since an earlier turn unless `fresh` says otherwise. */
 function atCombat(setup = () => {}) {
   const state = createState(pod);
+  /* Libraries, because since 1.5 a draw step on an empty one is a real loss (CR 704.5b) and takes
+     that player's board with them — a fixture that crosses one is testing the loss rules by
+     accident rather than testing combat. */
+  for (let seat = 0; seat < 4; seat += 1)
+    for (let i = 0; i < 60; i += 1)
+      addObject(state, {card: `L${seat}-${i}`, owner: seat, controller: seat}, "library", seat);
   beginGame(state);
   setup(state);
   /* Everything placed by the setup came down on turn 1; move to turn 2 so it is not sick. */
@@ -230,8 +236,12 @@ function withAttack(setup = () => {}) {
     guard += 1;
   }
   eq(s.players[1].life, 40, "a blocked creature deals no damage to the player (CR 510.1c)");
-  eq(s.objects[named(s, "Blocker")[0]].damage, 3, "the blocker took the attacker's three");
-  eq(s.objects[named(s, "Bear")[0]].damage, 2, "and dealt its own two back — damage is simultaneous (CR 510.2)");
+  eq(named(s, "Blocker").length, 0,
+    "the 2/2 blocker took three and died to state-based actions as the next step gave out priority");
+  eq(s.zones.graveyard[1].filter((id) => s.objects[id].card === "Blocker").length, 1,
+    "into its owner's graveyard");
+  eq(s.objects[named(s, "Bear")[0]].damage, 2,
+    "and dealt its own two back before dying — damage is simultaneous (CR 510.2), so the 3/3 carries it and lives");
 }
 
 /* ---- two blockers: lethal before the damage moves on (CR 510.1c) ---- */

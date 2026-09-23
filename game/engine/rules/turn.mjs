@@ -37,6 +37,7 @@
 
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
+import {checkStateBasedActions, gameOver} from "./sba.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -222,14 +223,14 @@ export function resolveAwaiting(state, indices, amounts = null) {
 
   if (awaiting.kind === "declare-attackers") {
     const events = attackers.resolve(state, awaiting, indices);
-    grantStepPriority(state);
+    grantStepPriority(state, events);
     return events;
   }
   if (awaiting.kind === "declare-blockers") {
     /* Each defending player declares in turn; `blockers.resolve` names the next one, or clears the
        wait once the last has answered. */
     const events = blockers.resolve(state, awaiting, indices);
-    grantStepPriority(state);
+    grantStepPriority(state, events);
     return events;
   }
   if (awaiting.kind === "assign-combat-damage") {
@@ -237,7 +238,7 @@ export function resolveAwaiting(state, indices, amounts = null) {
     /* Another attacker may also face several blockers; each gets its own question, and only once
        the last is answered is any damage dealt — CR 510.2, all of it at the same time. */
     if (!combatDamage.open(state)) events.push(...combatDamage.deal(state));
-    grantStepPriority(state);
+    grantStepPriority(state, events);
     return events;
   }
 
@@ -267,7 +268,7 @@ export function resolveAwaiting(state, indices, amounts = null) {
     }));
   }
   state.awaiting = null;
-  grantStepPriority(state);
+  grantStepPriority(state, events);
   return events;
 }
 
@@ -286,15 +287,24 @@ function arrive(state, events) {
   if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
   state.passes = 0;
-  grantStepPriority(state);
+  grantStepPriority(state, events);
 }
 
 /* CR 117.1a: the active player receives priority at the beginning of most steps — but AFTER that
    step's turn-based actions (CR 508.2, 509.3, 510.3). While the engine is waiting on one, nobody
    holds priority, which is why an instant cast in the declare attackers step is cast at creatures
-   that are already attacking and already tapped. */
-function grantStepPriority(state) {
-  state.priorityPlayer = hasPriority(state) && !state.awaiting ? state.activePlayer : null;
+   that are already attacking and already tapped.
+ *
+ * CR 704.3: state-based actions are checked WHENEVER A PLAYER WOULD RECEIVE PRIORITY, which makes
+ * this the right and only place for it in the turn structure. Combat damage is dealt as this step
+ * begins, so the creatures it killed are already gone by the time anybody could respond. */
+function grantStepPriority(state, events = []) {
+  const wouldReceive = hasPriority(state) && !state.awaiting;
+  if (wouldReceive) events.push(...checkStateBasedActions(state));
+  /* A player can lose during their own turn. Priority then goes to nobody, and the step ends. */
+  const active = state.players[state.activePlayer];
+  state.priorityPlayer = wouldReceive && active && !active.lost ? state.activePlayer : null;
+  return events;
 }
 
 /* ---- beginning, and moving on ---- */
@@ -334,6 +344,11 @@ export function advance(state) {
      it would silently skip the discard, or in 1.4 the attack, and leave a turn that never happened
      looking exactly like one that did. */
   if (state.awaiting) throw new Error(`The ${state.awaiting.kind} decision has to be answered before the game moves on`);
+  /* A finished game has no next step, and saying so here is worth a line: without it the failure
+     surfaces from `nextLivingPlayer` as "every player has lost", which is true and tells a caller
+     nothing about what they did wrong. */
+  const over = gameOver(state);
+  if (over) throw new Error(`The game is over (${over.reason}); there is no next step`);
   const events = [];
 
   /* CR 500.4, on the way out of the step that is ending. */

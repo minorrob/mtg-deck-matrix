@@ -27,6 +27,7 @@ import {passPriority} from "../game/engine/rules/priority.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {hashState} from "../game/engine/journal.mjs";
+import {gameOver} from "../game/engine/rules/sba.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -35,7 +36,7 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 const pod = {matchId: "m", seed: "s", players: [{name: "Rob"}, {name: "Krenko"}, {name: "Atraxa"}, {name: "Shadrix"}]};
 
 const FOREST = {card: "Forest", types: ["Land"], abilities: [{id: "t-g", kind: "mana", tapSelf: true, produces: {G: 1}}]};
-const BEARS = {card: "Grizzly Bears", types: ["Creature"], manaCost: "{1}{G}"};
+const BEARS = {card: "Grizzly Bears", types: ["Creature"], manaCost: "{1}{G}", power: 2, toughness: 2};
 const BOLT = {card: "Lightning Bolt", types: ["Instant"], manaCost: "{R}"};
 
 function table() {
@@ -198,6 +199,8 @@ function playOut(seed, turnLimit = 30) {
   let steps = 0, casts = 0;
   while (state.turn <= turnLimit && steps < 40000) {
     steps += 1;
+    /* Since 1.5 a game can END, and advancing a finished one is refused. */
+    if (gameOver(state)) break;
     if (state.awaiting) { const a = pilot.answer(awaitingChoice(state)); resolveAwaiting(state, a.indices, a.amounts); continue; }
     if (state.priorityPlayer === null) { advance(state); continue; }
     const chosen = pilot.choose(legalActions(state, state.priorityPlayer));
