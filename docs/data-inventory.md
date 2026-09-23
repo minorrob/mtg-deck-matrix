@@ -13,15 +13,15 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artefacts | 39 (30 JSON, 9 workbooks and documents) · 59.6 MB |
+| Artefacts | 42 (33 JSON, 9 workbooks and documents) · 76.8 MB |
 | Served to the app | 17 · 46.1 MB (6.9 MB precached by the worker, 37.0 MB cached on demand) |
-| Tool inputs | 2 |
+| Tool inputs | 5 |
 | Source workbooks and documents | 9 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
 | JSON with no timestamp | 5: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `sim/config.json`, `sim/opponents.json` |
-| Served or tool-input JSON with no producer found | 0 |
+| Served or tool-input JSON with no producer found | 2: `data/engine/support.json`, `data/engine/tokens.json` |
 
 ## The table
 
@@ -45,6 +45,9 @@ names the file and writes; **tests** are the suites that read it.
 | `data/commander-universe.json` | 1.5 MB | {schema, generatedAt, generator, count, source, counts, …} · cards 31,830 | schema commander-universe@1 | 2026-09-19 | tools/commander-universe.mjs | crankmagic-assets.js | yes | build-live-state.mjs, claude-api-cost.mjs, claude-api-grounding.mjs +4 | crankmagic-core.mjs, guide-agent.mjs, guide-measured.mjs | — | **serve** |  |
 | `data/deck-guides.json` | 7 KB | {schema, generator, count, schemaVersion, generatedAt, note, …} | schemaVersion 1, schema deck-guides@1 | 2026-09-08 | tools/generate-guides.mjs, tools/build_guide_shapes.py (declared) | crankmagic-assets.js, crankmagic-decks.js | yes | build_guide_shapes.py, claude-api-cost.mjs, commander-strategies.mjs +2 | card-records.mjs, guide-agent.mjs, guide-measured.mjs | — | **serve** |  |
 | `data/deck-ratings.json` | 450 KB | {schema, generator, count, schemaVersion, generatedAt, engine, …} · notes 14 | schemaVersion 1, schema deck-ratings@1, engine sim-engine.js +1 | 2026-09-19 | tools/sim/rate-decks.mjs (declared) | crankmagic-sim.js |  | refresh.mjs, generation-notes.mjs, rate-decks.mjs +1 | crankmagic-sim.mjs, deck-measure.mjs, generators.mjs +3 | — | **serve** |  |
+| `data/engine/oracle.json` | 13.5 MB | {schema, generatedAt, generator, source, count, cards} · cards 31,830 | schema engine-oracle@1 | 2026-09-23 | tools/build-engine-cards.mjs | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
+| `data/engine/support.json` | 3.2 MB | {schema, generatedAt, generator, count, legend, cards} · cards 31,830 | schema engine-support@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
+| `data/engine/tokens.json` | 413 KB | {schema, generatedAt, generator, count, tokens} · tokens 1,091 | schema engine-tokens@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
 | `data/flavor-names.json` | 35 KB | {schema, generatedAt, generator, count, source, fields, …} · cards 513 | schema flavor-names@1 | 2026-09-19 | tools/flavor-names.mjs | crankmagic-assets.js | yes | build-live-state.mjs, flavor-names.mjs, refresh.mjs | crankmagic-core.mjs | — | **serve** |  |
 | `data/game-history.json` | 335 B | {schema, generator, count, schemaVersion, compiledAt, sourceFiles, …} | schemaVersion 1, schema game-history@1 | 2026-09-14 | tools/compile-game-logs.mjs | — |  | compile-game-logs.mjs | — | compile-game-logs.yml | **tool input** | the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state |
 | `data/graph-played.json` | 20.6 MB | {schema, generator, count, format, generatedAt, cards, …} · played 701,916 | format 2, schema graph-played@2 | 2026-09-19 | tools/graph-amplifiers.mjs | crankmagic-assets.js, graph-payload.js, card-catalog.js | on demand | graph-amplifiers.mjs, refresh.mjs | graph-payload.mjs, refresh.mjs, service-worker.mjs | — | **serve** |  |
