@@ -11,7 +11,7 @@
  * it is seven, which is exactly the sort of thing a person counting by eye gets wrong.
  *
  * IT REFUSES AT PREPARE TIME, BY NAME. Every card in `data/engine/support.json` is `unsupported`
- * today, so no real deck can be played yet. The useful behaviour is not to fail when the third turn
+ * today, so no real deck can be played yet. The useful behavior is not to fail when the third turn
  * reaches a card nobody wrote — it is to say, before the game starts, exactly which cards are
  * missing. That is readiness plan §10.5 and principle 6, and it is what makes the flag worth
  * flipping today: Rob can point it at a real deck and get a list.

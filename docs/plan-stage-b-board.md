@@ -313,8 +313,29 @@ Two ways to make the room, and they are not equivalent:
    "Life" box. Putting the band there costs no zone any height, but it sits over artwork Rob chose
    and away from where 2f draws it.
 
-**This is Rob's call, not a measurement question any more.** Option 2 is cheaper and safer; option
-1 is what the frame draws. The figures above are what either one has to work with.
+**ANSWERED 2026-09-23: option 2.** The band goes in the empty strip at
+`left:72% top:5.5% width:25.5% height:31%`; its right edge lands at 97.5%, flush with Exile and
+Graveyard, and no zone moves. Option 1 was rejected for the sliver failure described above.
+
+One thing was verified before choosing rather than taken from this plan: `.mat-turn-guide`
+(left 72%, top 6%, height 26%) and `.mat-life` (left 86%, top 6%) **do** have styles in `mats.css`
+in exactly that region — but nothing in `game/ui/` ever constructs either element. They are
+orphaned styles, so the band covers printed playmat artwork and no live element.
+
+**The row is specified too, and it is not the row drawn today.** Rob, 2026-09-23: two lines, not
+three; no card image at the surface, on hover instead; and the row must carry **user, card, action,
+target(s) and effects**. Line 1 is `T6 · Rob · Cast`; line 2 is
+`Swords to Plowshares → Odric, Blood-Cursed · exiled, +4 life`. At 32px against the feed's 154px,
+four and a half rows fit where the three-line version held three and a third.
+
+**That makes B.6b a telemetry change as well as a layout one.** `match-telemetry.mjs` emits
+`{turn, phase, kind, cardId, name, playerId, label}` — user and card are fields, but action, targets
+and effects are all concatenated into `label`. Telemetry has to emit them as fields and derive
+`label` from them so nothing already reading `label` breaks. Effects is the deepest part: a
+resolution event says only `Resolved`, and what changed arrives in the events that follow it, so the
+existing `castEventId` chain has to collect them.
+
+The record is `docs/decisions-2026-09-23.md`.
 
 ---
 
@@ -337,3 +358,9 @@ only the Coach:
 and it discloses what it has not done, so it is not a shell. It is also named for what it will be.
 That is Rob's call rather than one to make silently: the honest alternatives are to leave it (the
 disclosure carries the weight) or to name it for the pass it actually runs until extraction lands.
+
+**ANSWERED 2026-09-23 (B.7): leave the header, and finish the capability.** Rob made AI card
+onboarding a priority for both the local host and CME (the Forge replacement) rather than a later
+phase. The header names the finished feature because the feature is now being built. This is the
+same work as `PLAN.md` §9.6 — a deck's gap to 100% is filled at load time, and this panel is that
+step's UI. See `docs/decisions-2026-09-23.md`.

@@ -6,7 +6,7 @@
 | **Branch** | `main`; nothing open. **8768 is running this code** — restarted 2026-09-22 after the last merge, verified with a pod. It is **local-only**: relaunch through `start-crankmagic.ps1 -RemoteGuests` when remote guests are wanted. |
 | **Since** | 2026-09-22 |
 | **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
-| **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
+| **Next for whoever picks this up** | **Nothing is waiting on Rob. All eight open calls were answered 2026-09-23 — `docs/decisions-2026-09-23.md` is the record.** B.6b is the empty strip (option 2), B.2b stays dark, and the six others are settled there with what each one now requires. After those, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
 
 ## The engine has started — phase 0 done, phase 1 next
 
@@ -118,16 +118,19 @@ the page-error count on every run.
 - **B.5b — the rail overlay.** `/review` is a standalone page. There is no CrankMagic rail on it to
   bring back, so the control would open an empty drawer. It arrives when the board becomes a view
   of the one app.
-- **B.6b — the History band.** Not "add a band": 2f wants a real row between the zone pairs, and
-  the mat's absolute layout has no gap there. It re-proportions every board's zones. **No longer
-  blocked, and now measured** — the gap between the two pile pairs is 4.8% of the mat, about
-  25px, and a band needs three times that. The plan carries the two ways to make the room and
-  what each costs. **It is Rob’s call now, not a measurement question.**
+- **B.6b — the History band. ANSWERED 2026-09-23: option 2, the empty strip.** The band goes at
+  `left:72% top:5.5% width:25.5% height:31%` and no zone moves. Re-proportioning was rejected: the
+  gap between the pile pairs is 4.8% of the mat against the ~15% a band needs, and closing it makes
+  both pairs shorter than a card at small board sizes on all four boards at once. Verified while
+  deciding: `.mat-turn-guide` and `.mat-life` have styles in `mats.css` but **nothing in `game/ui/`
+  ever builds them**, so the strip is free and the band covers printed artwork only. See
+  `docs/decisions-2026-09-23.md`.
 - **B.6d — the Coach.** Not to be built until it works. 2f draws it and says "its logic is a later
   phase"; Rob's standing rule (2026-09-22) is that nothing is available before it is functional, so
   the surface waits for the logic rather than arriving ahead of it.
-- **B.2b — the light mat.** The frame draws the play surface cream (`#e9e4da`) under dark chrome.
-  **Rob's call, deliberately untouched** — it changes the whole feel and carries a raw-hex cost.
+- **B.2b — the light mat. ANSWERED 2026-09-23: stay dark.** The cream play surface (`#e9e4da`) is a
+  **post-release enhancement**, not dropped. There was no toggle to remove — a search of `game/`
+  found no light-mat control of any kind. See `docs/decisions-2026-09-23.md`.
 
 ## Three limits found by measuring, which the next person should not re-discover
 

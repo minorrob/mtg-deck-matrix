@@ -173,20 +173,22 @@ render the control), U-08 (report the new table's phase, not the previous one), 
 
 ---
 
-## Three things that are decisions, not defects
+## Three things that are decisions, not defects — ALL ANSWERED 2026-09-23
 
-I have not assumed an answer to any of these.
+Record: `docs/decisions-2026-09-23.md`.
 
-1. **U-09 — the ten-second self-start.** Convenient for an all-AI table; risky with an invited
-   human still choosing a deck. Options: leave it, lengthen it, or hold the countdown until every
-   *human* seat is occupied. My recommendation is the third, but it is your call because it
-   changes how you start every solo game.
-2. **U-07 — `Deck workshop ↗` and `Game setup` on the live board.** You asked whether the local
-   instance carries only what gameplay needs. These two do not, but they may be deliberate
-   conveniences. Remove, hide during a live match, or keep.
-3. **The cloud lobby's purpose.** R1 makes it honest; R3–R5 make it useful. If you would rather it
-   simply said "open the local host to play" and did nothing else, that is a smaller and entirely
-   defensible product, and it would retire U-02, U-03 and U-04 outright.
+1. **U-09 — the ten-second self-start. ANSWERED: hold the countdown until every *human* seat is
+   occupied**, then run it. An all-AI pod starts exactly as it does today.
+2. **U-07 — `Deck workshop ↗` and `Game setup` on the live board. ANSWERED: split them.** Rob asked
+   what the two actually were, and they are not the same kind of thing. `Deck workshop ↗`
+   (`review.html:2`) is a plain away-link to `/app/#decks` with no gameplay function — it **hides
+   during a live match**. `Game setup` (`review.mjs:921`) **stays, always**: its dialog carries
+   `End current game` (`setup.mjs:139`) and `Return to game` (`setup.mjs:70`), and `End current
+   game` is there because Rob moved it out of the action box on 2026-09-21. Hiding it would delete
+   the only way to end a game. `game/tests/host-routing.test.mjs:38` also asserts the markup
+   contains `Game setup`.
+3. **The cloud lobby's purpose. ANSWERED: a pointer.** It says "open the local host to play" and
+   does nothing else. **U-02, U-03 and U-04 are retired outright.** R3, R4 and R5 are not built.
 
 ---
 

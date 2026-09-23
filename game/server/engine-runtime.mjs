@@ -21,7 +21,7 @@
  *   still be running.
  *
  *   IT REFUSES BEFORE THE GAME, BY NAME. Every card in `data/engine/support.json` is `unsupported`
- *   today, so no real deck can be played yet. The useful behaviour is not to fail on the third turn
+ *   today, so no real deck can be played yet. The useful behavior is not to fail on the third turn
  *   when a card nobody wrote comes up — it is to say, at prepare time, exactly which cards are
  *   missing (readiness plan §10.5, principle 6). That is what makes the flag worth flipping now:
  *   point it at a real deck and get the list.
