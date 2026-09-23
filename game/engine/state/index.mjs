@@ -126,6 +126,15 @@ export function addObject(state, object, zone, player = null) {
        which is how the field names get shaped by real cards before the schema is written. */
     manaCost: object.manaCost ?? null,
     abilities: Array.isArray(object.abilities) ? structuredClone(object.abilities) : [],
+    /* Printed power and toughness, and the printed keywords. Null P/T is right for everything that
+       is not a creature; the layer system (CR 613, 1.8) decides what they currently are. */
+    power: Number.isInteger(object.power) ? object.power : null,
+    toughness: Number.isInteger(object.toughness) ? object.toughness : null,
+    keywords: Array.isArray(object.keywords) ? [...object.keywords] : [],
+    /* CR 302.6, summoning sickness: the turn this object came under its controller's control. A
+       zone change makes a new object, so an entering permanent gets the current turn and a creature
+       that has been out since an earlier one does not. Blank until a turn has begun. */
+    controlledSinceTurn: state.turn,
     owner: Number.isInteger(object.owner) ? object.owner : player,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
@@ -178,6 +187,7 @@ export function moveObject(state, id, zone, player = null) {
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   return addObject(state, {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
+    power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token,
   }, zone, player);
 }

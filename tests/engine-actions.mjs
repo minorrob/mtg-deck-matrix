@@ -166,7 +166,7 @@ function playOut(seed, turnLimit = 40) {
        attackers and blockers through the same field. */
     if (state.awaiting) {
       const answer = pilot.answer(awaitingChoice(state));
-      for (const e of resolveAwaiting(state, answer.indices)) journal.write(e.kind, e.data);
+      for (const e of resolveAwaiting(state, answer.indices, answer.amounts)) journal.write(e.kind, e.data);
       continue;
     }
     if (state.priorityPlayer === null) { for (const e of advance(state)) journal.write(e.kind, e.data); continue; }

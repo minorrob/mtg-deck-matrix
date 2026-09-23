@@ -43,6 +43,42 @@ export function randomLegalPilot(rng) {
       const min = choice.min ?? 0, max = choice.max ?? 0;
       if (choice.mode === "integer") return {value: min + rng.int(max - min + 1)};
       if (choice.mode === "ack") return {indices: []};
+      if (choice.mode === "text") return {cancel: true};
+
+      /* CR 510.1c: lethal to each in order before the damage moves on. Walking the list and giving
+         each what would kill it is the simplest assignment that satisfies the rule; anything left
+         over after every blocker has lethal goes on the last one, because the whole amount has to
+         be assigned somewhere. The controller validates this against the same rule, so a pilot that
+         could not produce a legal assignment would stall a game rather than play a bad one. */
+      if (choice.mode === "damage") {
+        const targets = choice.options ?? [];
+        const amounts = targets.map(() => 0);
+        let left = choice.total ?? 0;
+        for (let i = 0; i < targets.length; i += 1) {
+          const take = Math.min(left, Math.max(0, targets[i].lethal ?? 0));
+          amounts[i] = take;
+          left -= take;
+        }
+        if (left > 0 && amounts.length > 0) amounts[amounts.length - 1] += left;
+        return {indices: [], amounts};
+      }
+
+      /* CR 601.2d: each recipient gets at least the minimum, none gets more than its cap, and the
+         total is spent exactly. */
+      if (choice.mode === "amount") {
+        const targets = choice.options ?? [];
+        const minEach = choice.minEach ?? 0;
+        const amounts = targets.map(() => minEach);
+        let left = (choice.total ?? 0) - minEach * targets.length;
+        for (let i = 0; i < targets.length && left > 0; i += 1) {
+          const room = Math.max(0, (targets[i].max ?? 0) - amounts[i]);
+          const take = Math.min(left, room);
+          amounts[i] += take;
+          left -= take;
+        }
+        return {indices: [], amounts};
+      }
+
       const options = choice.options ?? [];
       const take = min + rng.int(Math.max(0, Math.min(max, options.length) - min) + 1);
       /* Draw without replacement, because an index repeated is not a second selection and the

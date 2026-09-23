@@ -36,6 +36,7 @@
  */
 
 import {cardsIn, moveObject} from "../state/index.mjs";
+import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -62,15 +63,14 @@ export const STEPS = Object.freeze([
 
 export const PHASE_NAMES = Object.freeze(STEPS.map((s) => s.phase));
 
-/* Whether a conditional step happens at all this turn.
- *
- * Both answer false for now because nothing declares attackers until 1.4. They are written as
- * predicates over state rather than as constants so that 1.4 changes this map and nothing else. */
+/* Whether a conditional step happens at all this turn. Predicates over state rather than flags, so
+   a rule that decides a step lives in one place. */
 const CONDITIONS = {
-  /* CR 506.5 */
+  /* CR 506.5: no attackers, no declare blockers step and no combat damage step. */
   attackers: (state) => (state.combat?.attacks?.length ?? 0) > 0,
-  /* CR 510.4: the first-strike damage step exists only if a creature in combat has first or
-     double strike. Until combat exists, it never does. */
+  /* CR 510.4: the first-strike damage step exists only if a creature in combat has first or double
+     strike. `combat.firstStrike` is set when attackers are declared and stays false until phase 2
+     gives creatures keywords, so for now the step never happens — which is correct, not deferred. */
   firstStrike: (state) => CONDITIONS.attackers(state) && (state.combat?.firstStrike ?? false) === true,
 };
 
@@ -193,6 +193,9 @@ function cleanup(state, events) {
 export function awaitingChoice(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
+  if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
+  if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
   if (awaiting.kind === "discard-to-hand-size") {
     const hand = cardsIn(state, "hand", awaiting.player);
     return {
@@ -213,9 +216,31 @@ export function awaitingChoice(state) {
  * @param {Array<number>} indices  positions in the choice's options, as the controller validated
  * @returns {Array} events for the caller to journal
  */
-export function resolveAwaiting(state, indices) {
+export function resolveAwaiting(state, indices, amounts = null) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
+
+  if (awaiting.kind === "declare-attackers") {
+    const events = attackers.resolve(state, awaiting, indices);
+    grantStepPriority(state);
+    return events;
+  }
+  if (awaiting.kind === "declare-blockers") {
+    /* Each defending player declares in turn; `blockers.resolve` names the next one, or clears the
+       wait once the last has answered. */
+    const events = blockers.resolve(state, awaiting, indices);
+    grantStepPriority(state);
+    return events;
+  }
+  if (awaiting.kind === "assign-combat-damage") {
+    const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
+    /* Another attacker may also face several blockers; each gets its own question, and only once
+       the last is answered is any damage dealt — CR 510.2, all of it at the same time. */
+    if (!combatDamage.open(state)) events.push(...combatDamage.deal(state));
+    grantStepPriority(state);
+    return events;
+  }
+
   const choice = awaitingChoice(state);
   if (!Array.isArray(indices) || indices.length !== awaiting.count)
     throw new Error(`This step needs exactly ${awaiting.count} card${awaiting.count === 1 ? "" : "s"}`);
@@ -242,6 +267,7 @@ export function resolveAwaiting(state, indices) {
     }));
   }
   state.awaiting = null;
+  grantStepPriority(state);
   return events;
 }
 
@@ -252,11 +278,23 @@ function arrive(state, events) {
   }));
   if (state.phase === "UNTAP") untap(state, events);
   if (state.phase === "DRAW" && !skipsFirstDraw(state)) draw(state, state.activePlayer, events);
+  /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
+     `open` returns false when there is nothing to decide, and the step just proceeds. */
+  if (state.phase === "COMBAT_DECLARE_ATTACKERS") attackers.open(state);
+  if (state.phase === "COMBAT_DECLARE_BLOCKERS") blockers.open(state);
+  if (state.phase === "COMBAT_DAMAGE" && !combatDamage.open(state)) events.push(...combatDamage.deal(state));
+  if (state.phase === "COMBAT_END") events.push(...endCombat(state));
   if (state.phase === "CLEANUP") cleanup(state, events);
-  /* CR 117.1a: the active player receives priority at the beginning of most steps, and CR 117.4's
-     count of consecutive passes starts fresh with the step. */
-  state.priorityPlayer = hasPriority(state) ? state.activePlayer : null;
   state.passes = 0;
+  grantStepPriority(state);
+}
+
+/* CR 117.1a: the active player receives priority at the beginning of most steps — but AFTER that
+   step's turn-based actions (CR 508.2, 509.3, 510.3). While the engine is waiting on one, nobody
+   holds priority, which is why an instant cast in the declare attackers step is cast at creatures
+   that are already attacking and already tapped. */
+function grantStepPriority(state) {
+  state.priorityPlayer = hasPriority(state) && !state.awaiting ? state.activePlayer : null;
 }
 
 /* ---- beginning, and moving on ---- */
