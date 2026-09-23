@@ -45,9 +45,9 @@ export const ENGINE_STATUS = Object.freeze({
   /* What is built and green, module by module. Not a claim that a game can be played. */
   implemented: Object.freeze([
     "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast",
-    "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema",
+    "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects",
   ]),
-  next: "2.2 the effect primitives, then 2.3 the keyword families and 2.4 engine-coverage",
+  next: "2.2b the four primitives that ask a player something, which needs a resolution that can stop and resume",
 });
 
 export class EngineNotImplemented extends Error {
