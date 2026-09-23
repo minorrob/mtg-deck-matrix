@@ -37,12 +37,12 @@ export const ENGINE_STATUS = Object.freeze({
   phase: 0,
   /* What is built and green, module by module. Not a claim that a game can be played. */
   implemented: Object.freeze([
-    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba",
+    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast", "combat", "sba", "trigger",
   ]),
   /* Phase 1's gate, from §6: a four-player game of vanilla creatures and lands with commanders
      running to completion for 1,000 seeds, the same hash on replay, no hidden card in any seat
      projection. Until that passes, this engine plays nothing. */
-  next: "1.6 triggered abilities with APNAP and look-back; then replacement effects, triggers, replacement, layers, commander, mulligan, projection, state-based actions, triggers, layers, commander, projection",
+  next: "1.7 replacement and prevention; then layers, triggers, replacement, layers, commander, mulligan, projection, state-based actions, triggers, layers, commander, projection",
 });
 
 export class EngineNotImplemented extends Error {

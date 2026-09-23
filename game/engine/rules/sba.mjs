@@ -138,9 +138,18 @@ export function checkStateBasedActions(state) {
       const toughness = object.toughness ?? 0;
       if (toughness <= 0 || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
+        /* WHAT DIED, INCLUDING ITS ABILITIES. A "whenever this creature dies" trigger has to be
+           found after the creature is gone, and a zone change makes a new object (CR 400.7), so by
+           then nothing on the board carries those abilities. This snapshot is the look-back CR
+           603.10a describes; without it the trigger simply never fires and nothing reports why. */
+        const leftBehind = {
+          cardId: id, name: object.card, controller: object.controller, owner: object.owner,
+          abilities: structuredClone(object.abilities ?? []),
+        };
         moveObject(state, id, "graveyard", object.owner);
         events.push(event("GameEventCardChangeZone", state, {
           card,
+          leftBehind,
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: "Graveyard", player: {playerId: object.owner}},
         }));

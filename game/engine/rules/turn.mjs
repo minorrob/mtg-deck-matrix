@@ -38,6 +38,7 @@
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -194,6 +195,7 @@ function cleanup(state, events) {
 export function awaitingChoice(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
@@ -221,6 +223,11 @@ export function resolveAwaiting(state, indices, amounts = null) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
 
+  if (awaiting.kind === "order-triggers") {
+    const events = resolveTriggerOrder(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "declare-attackers") {
     const events = attackers.resolve(state, awaiting, indices);
     grantStepPriority(state, events);
@@ -299,11 +306,20 @@ function arrive(state, events) {
  * this the right and only place for it in the turn structure. Combat damage is dealt as this step
  * begins, so the creatures it killed are already gone by the time anybody could respond. */
 function grantStepPriority(state, events = []) {
-  const wouldReceive = hasPriority(state) && !state.awaiting;
-  if (wouldReceive) events.push(...checkStateBasedActions(state));
-  /* A player can lose during their own turn. Priority then goes to nobody, and the step ends. */
+  if (hasPriority(state) && !state.awaiting) {
+    events.push(...checkStateBasedActions(state));
+    /* CR 603.3: waiting triggers go on the stack the next time a player would receive priority —
+       which is here, after state-based actions, so a trigger sees a board where the dead are
+       already gone. `openTriggers` returns true when a player has more than one and has to be
+       asked for the order, and that question holds priority off until it is answered. */
+    collectTriggers(state, events);
+    openTriggers(state);
+  }
+  /* Re-read after the above: a player can lose during their own turn, and ordering triggers can
+     have set a new wait. Either way priority goes to nobody. */
   const active = state.players[state.activePlayer];
-  state.priorityPlayer = wouldReceive && active && !active.lost ? state.activePlayer : null;
+  state.priorityPlayer = hasPriority(state) && !state.awaiting && active && !active.lost
+    ? state.activePlayer : null;
   return events;
 }
 
