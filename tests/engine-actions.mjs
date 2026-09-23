@@ -15,7 +15,7 @@
  */
 import assert from "node:assert/strict";
 import {createState, addObject, cardsIn, zoneOf} from "../game/engine/state/index.mjs";
-import {beginGame, advance, currentPhase} from "../game/engine/rules/turn.mjs";
+import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {pushAbility} from "../game/engine/rules/stack.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
@@ -161,6 +161,14 @@ function playOut(seed, turnLimit = 40) {
 
   while (state.turn <= turnLimit && steps < 20000) {
     steps += 1;
+    /* A turn-based action that needs an answer holds the game until it has one. This is the whole
+       driver contract: see `awaiting`, offer its choice, hand back an answer. Combat declares
+       attackers and blockers through the same field. */
+    if (state.awaiting) {
+      const answer = pilot.answer(awaitingChoice(state));
+      for (const e of resolveAwaiting(state, answer.indices)) journal.write(e.kind, e.data);
+      continue;
+    }
     if (state.priorityPlayer === null) { for (const e of advance(state)) journal.write(e.kind, e.data); continue; }
     const actions = legalActions(state, state.priorityPlayer);
     const chosen = pilot.choose(actions);

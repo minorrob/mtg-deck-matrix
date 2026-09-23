@@ -31,6 +31,7 @@ import assert from "node:assert/strict";
 import {createState, addObject, cardsIn} from "../game/engine/state/index.mjs";
 import {
   STEPS, PHASE_NAMES, beginGame, advance, currentPhase, hasPriority, nextLivingPlayer,
+  awaitingChoice, resolveAwaiting,
 } from "../game/engine/rules/turn.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 
@@ -164,6 +165,56 @@ const atPhase = (phase) => (state) => currentPhase(state) === phase;
   s.players[0].landsPlayed = 1;
   until(s, (st) => st.activePlayer === 1);
   eq(s.players[0].landsPlayed, 0, "a new turn gives the land drop back");
+}
+
+/* ---- cleanup asks the active player to discard down to hand size (CR 514.1) ---- */
+{
+  const s = createState(pod(4));
+  beginGame(s);
+  for (let i = 0; i < 10; i += 1) addObject(s, {card: `C${i}`, owner: 0, controller: 0}, "hand", 0);
+  for (let i = 0; i < 10; i += 1) addObject(s, {card: `D${i}`, owner: 1, controller: 1}, "hand", 1);
+  until(s, atPhase("CLEANUP"));
+  eq(s.awaiting, {kind: "discard-to-hand-size", player: 0, count: 3},
+    "ten cards and a hand size of seven means three go — and the ENGINE DOES NOT PICK THEM");
+  ok(cardsIn(s, "hand", 1).length === 10,
+    "only the active player discards; everyone else keeps a full hand (CR 514.1)");
+
+  assert.throws(() => advance(s), /answered|decision/i,
+    "and the game does not move past a decision it is waiting on — skipping it would leave a turn that never happened looking like one that did"); checks += 1;
+
+  const choice = awaitingChoice(s);
+  eq(choice.min, 3, "the choice asks for exactly three");
+  eq(choice.max, 3, "no more and no fewer");
+  eq(choice.mode, "many", "as a multiple selection, which is what the board draws");
+  eq(choice.options.length, 10, "over the whole hand");
+  ok(choice.options.every((o) => Number.isInteger(o.cardId) && typeof o.label === "string"),
+    "each option naming a card, so a player can tell them apart");
+
+  const events = resolveAwaiting(s, [0, 1, 2]);
+  eq(s.awaiting, null, "answering it clears the wait");
+  eq(cardsIn(s, "hand", 0).length, 7, "and the hand is at its maximum");
+  eq(cardsIn(s, "graveyard", 0).length, 3, "with the discards in the graveyard");
+  eq(events.filter((e) => e.kind === "GameEventCardChangeZone").length, 3, "each reported as a zone change");
+  ok(events[0].data.fields.discarded, "and marked as a discard rather than an ordinary move");
+  advance(s);
+  eq(s.turn, 2, "after which the turn ends normally");
+}
+{
+  const s = createState(pod(4));
+  beginGame(s);
+  for (let i = 0; i < 10; i += 1) addObject(s, {card: `C${i}`, owner: 0, controller: 0}, "hand", 0);
+  until(s, atPhase("CLEANUP"));
+  assert.throws(() => resolveAwaiting(s, [0, 1]), /exactly 3/i, "two is not three"); checks += 1;
+  assert.throws(() => resolveAwaiting(s, [0, 1, 1]), /Invalid selection/, "nor is the same card three times"); checks += 1;
+  assert.throws(() => resolveAwaiting(s, [0, 1, 99]), /Invalid selection/, "nor a card that is not in hand"); checks += 1;
+  eq(cardsIn(s, "hand", 0).length, 10, "and after all of that nothing has been discarded");
+}
+{
+  const s = createState(pod(4));
+  beginGame(s);
+  until(s, atPhase("CLEANUP"));
+  eq(s.awaiting, null, "a hand at or under the maximum is not asked anything");
+  eq(awaitingChoice(s), null, "and there is no choice to offer");
 }
 
 /* ---- cleanup removes damage (CR 514.2) ---- */

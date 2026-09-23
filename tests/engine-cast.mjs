@@ -20,7 +20,7 @@
  */
 import assert from "node:assert/strict";
 import {createState, addObject, cardsIn, zoneOf} from "../game/engine/state/index.mjs";
-import {beginGame, advance, currentPhase} from "../game/engine/rules/turn.mjs";
+import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {peekStack, stackSize, resolveTop} from "../game/engine/rules/stack.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
@@ -198,6 +198,7 @@ function playOut(seed, turnLimit = 30) {
   let steps = 0, casts = 0;
   while (state.turn <= turnLimit && steps < 40000) {
     steps += 1;
+    if (state.awaiting) { resolveAwaiting(state, pilot.answer(awaitingChoice(state)).indices); continue; }
     if (state.priorityPlayer === null) { advance(state); continue; }
     const chosen = pilot.choose(legalActions(state, state.priorityPlayer));
     if (chosen.kind === "pass") {

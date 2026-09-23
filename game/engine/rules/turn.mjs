@@ -162,15 +162,87 @@ function emptyManaPools(state, events) {
   }
 }
 
-/* CR 514.2. Damage wears off; without this it accumulates across turns and every creature
-   eventually dies to a scratch it took ten turns ago. */
+/* CR 514.1 and 514.2, which happen simultaneously: the active player discards down to their
+   maximum hand size, and all damage wears off. Without the second, damage accumulates across turns
+   and every creature eventually dies to a scratch it took ten turns ago.
+ *
+ * THE DISCARD IS A DECISION, SO THE ENGINE STOPS HERE AND ASKS. It does not pick cards. `awaiting`
+ * is how a turn-based action that needs an answer reaches the driver: the engine runs until it
+ * needs one, records what it needs, and returns. Declaring attackers and blockers (CR 508.1, 509.1)
+ * are the same shape and arrive in 1.4 through the same field.
+ *
+ * What is NOT here: CR 514.3a's second cleanup step, which happens when something triggers during
+ * cleanup or a state-based action is performed. There are no triggers until 1.6, so there is
+ * nothing that could cause one; it is named so the omission is visible rather than forgotten. */
 function cleanup(state, events) {
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
-  /* CR 514.1, discarding down to hand size, is a choice and belongs to the controller loop in
-     1.2c. It is named here so the omission is visible rather than forgotten. */
+  const player = state.players[state.activePlayer];
+  const over = cardsIn(state, "hand", state.activePlayer).length - (player.maxHandSize ?? 7);
+  if (over > 0) state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over};
   void events;
+}
+
+/**
+ * The choice record for whatever turn-based action the engine is waiting on (§12.1).
+ *
+ * Returns null when nothing is pending. The driver offers this to the controller, takes the answer
+ * and hands it to `resolveAwaiting`.
+ */
+export function awaitingChoice(state) {
+  const awaiting = state.awaiting;
+  if (!awaiting) return null;
+  if (awaiting.kind === "discard-to-hand-size") {
+    const hand = cardsIn(state, "hand", awaiting.player);
+    return {
+      id: `cleanup-discard:${state.turn}`,
+      title: `Discard ${awaiting.count} card${awaiting.count === 1 ? "" : "s"}`,
+      mode: awaiting.count === 1 ? "one" : "many",
+      min: awaiting.count,
+      max: awaiting.count,
+      options: hand.map((id, index) => ({index, label: state.objects[id].card, cardId: id})),
+    };
+  }
+  throw new Error(`No choice is defined for the turn-based action ${awaiting.kind}`);
+}
+
+/**
+ * Apply the answer to the pending turn-based action.
+ *
+ * @param {Array<number>} indices  positions in the choice's options, as the controller validated
+ * @returns {Array} events for the caller to journal
+ */
+export function resolveAwaiting(state, indices) {
+  const awaiting = state.awaiting;
+  if (!awaiting) throw new Error("The engine is not waiting on anything");
+  const choice = awaitingChoice(state);
+  if (!Array.isArray(indices) || indices.length !== awaiting.count)
+    throw new Error(`This step needs exactly ${awaiting.count} card${awaiting.count === 1 ? "" : "s"}`);
+
+  const events = [];
+  /* Resolve every index to a card id BEFORE moving anything: each move makes a new object and
+     rewrites the hand, so positions taken from the offered record would drift under us. */
+  const chosen = indices.map((index) => {
+    const option = choice.options[index];
+    if (!option) throw new Error("Invalid selection");
+    return option.cardId;
+  });
+  if (new Set(chosen).size !== chosen.length) throw new Error("Invalid selection");
+
+  for (const id of chosen) {
+    const card = cardRef(state, id);
+    const owner = state.objects[id].owner;
+    moveObject(state, id, "graveyard", owner);
+    events.push(event("GameEventCardChangeZone", state, {
+      card,
+      from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
+      to: {zoneType: ZONE_LABEL.graveyard, player: {playerId: owner}},
+      discarded: true,
+    }));
+  }
+  state.awaiting = null;
+  return events;
 }
 
 function arrive(state, events) {
@@ -220,6 +292,10 @@ export function beginGame(state, startingPlayer = 0) {
  */
 export function advance(state) {
   if (state.stepIndex === undefined) throw new Error("The game has not begun; call beginGame first");
+  /* A turn-based action that needs an answer holds the game here until it has one. Advancing past
+     it would silently skip the discard, or in 1.4 the attack, and leave a turn that never happened
+     looking exactly like one that did. */
+  if (state.awaiting) throw new Error(`The ${state.awaiting.kind} decision has to be answered before the game moves on`);
   const events = [];
 
   /* CR 500.4, on the way out of the step that is ending. */

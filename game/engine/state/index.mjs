@@ -54,6 +54,9 @@ export function createState(pod) {
     step: null,
     activePlayer: null,
     priorityPlayer: null,
+    /* A turn-based action that needs an answer, or null. The engine runs until it needs a decision,
+       records what it needs here and returns; the driver offers it and hands back the answer. */
+    awaiting: null,
     /* CR 117.4 counts passes IN SUCCESSION, so this is consecutive passes since the last action or
        resolution, never a running total. It lives in the state because a checkpoint taken part way
        through a round has to resume part way through it. */
@@ -70,6 +73,8 @@ export function createState(pod) {
          plus colorless; kept as a flat object so the state stays plain. */
       manaPool: {W: 0, U: 0, B: 0, R: 0, G: 0, C: 0},
       counters: {},
+      /* CR 402.2. Seven unless an effect says otherwise; the cleanup step reads it. */
+      maxHandSize: 7,
       landsPlayed: 0,
       lost: false,
       lostTo: null,
