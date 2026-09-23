@@ -11,7 +11,7 @@
  *      has not deliberately asked for it.
  */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, existsSync} from "node:fs";
 import path from "node:path";
 import {ROOT} from "../schema/index.mjs";
 import {createGame, ENGINE_ID, ENGINE_PROTOCOL, ENGINE_STATUS, EngineNotImplemented} from "../game/engine/index.mjs";
@@ -23,7 +23,15 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 eq(ENGINE_ID, "crank", "the flag value that selects this engine");
 eq(ENGINE_PROTOCOL, 1, "the journal and projection protocol this engine speaks");
 eq(ENGINE_STATUS.phase, 0, "phase 0 until the kernel gate passes");
-eq(ENGINE_STATUS.implemented, [], "nothing is implemented yet, and it says so rather than implying otherwise");
+/* The list names what is built and green, module by module. It is NOT a claim that a game can be
+   played — there is no mana and no combat — and `createGame` still refuses below. Its job is to let
+   a caller ask what exists rather than find out by catching an exception. Every name here has a
+   suite; a name without one would be the exact lie this field exists to prevent. */
+eq(ENGINE_STATUS.implemented,
+  ["rng", "journal", "state", "turn", "stack", "priority", "controller", "actions"],
+  "the status names what is actually built, and nothing that is not");
+ok(ENGINE_STATUS.implemented.every((name) => existsSync(new URL(`./engine-${name}.mjs`, import.meta.url))),
+  "and every name it claims has a suite in this directory holding it up");
 ok(typeof ENGINE_STATUS.next === "string" && ENGINE_STATUS.next.length > 10,
   "and it names what comes next, so a caller can ask instead of catching an exception to find out");
 ok(Object.isFrozen(ENGINE_STATUS), "the status is read, never edited by a caller");

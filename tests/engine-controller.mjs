@@ -156,7 +156,7 @@ const choiceOf = (over = {}) => ({
   const c = createController();
   c.offer({id: "a", title: "The spell resolves", mode: "ack", min: 0, max: 0, options: []});
   eq(c.answer({actionId: uuid(), revision: c.revision, kind: "answer", choiceId: "a", indices: []}).accepted, true,
-    "an acknowledgement takes no selection");
+    "an acknowledgment takes no selection");
 }
 
 /* ---- generic amounts (CR 601.2d, divided among recipients) ---- */

@@ -166,7 +166,7 @@ function translate(choice, request) {
     return {...request, kind: "answer", choiceId: choice.id, cancel: true};
   }
   if (request.kind === "ok") {
-    /* The board's OK button confirms the obvious answer: nothing for an acknowledgement, and the
+    /* The board's OK button confirms the obvious answer: nothing for an acknowledgment, and the
        first option for a yes-or-no, which is how the bridge orders them. */
     const indices = choice.mode === "ack" ? [] : [0];
     return {...request, kind: "answer", choiceId: choice.id, indices};

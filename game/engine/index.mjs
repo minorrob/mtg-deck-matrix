@@ -13,9 +13,14 @@
  * product, and a divergence between the two is adjudicated against the CR, not settled by
  * copying. See `docs/engine/ADR-001-own-engine.md`.
  *
- * PHASE 0. This is the scaffold. `createGame` throws until the phase 1 kernel lands, because a
- * stub that returns a plausible-looking game would let callers be written against a fiction and
- * would fail later, further from the cause. Principle 6: unsupported is loud.
+ * PHASE 0, STILL. `createGame` throws until the phase 1 kernel lands, because a stub that returned
+ * a plausible-looking game would let callers be written against a fiction and fail later, further
+ * from the cause. Principle 6: unsupported is loud.
+ *
+ * Pieces of the kernel now exist and `ENGINE_STATUS.implemented` names them. That list is not a
+ * promise that a game can be played — it cannot, there is no mana and no combat — it is so a
+ * caller can ask what is here instead of discovering it by catching an exception. The list moves
+ * only when a module's suite is green.
  */
 
 /** The flag value that selects this engine. `serve-review.mjs` reads CRANKMAGIC_ENGINE. */
@@ -30,11 +35,14 @@ export const ENGINE_STATUS = Object.freeze({
   id: ENGINE_ID,
   protocol: ENGINE_PROTOCOL,
   phase: 0,
-  implemented: Object.freeze([]),
+  /* What is built and green, module by module. Not a claim that a game can be played. */
+  implemented: Object.freeze([
+    "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions",
+  ]),
   /* Phase 1's gate, from §6: a four-player game of vanilla creatures and lands with commanders
      running to completion for 1,000 seeds, the same hash on replay, no hidden card in any seat
      projection. Until that passes, this engine plays nothing. */
-  next: "kernel: rng, state, zones, turn structure, priority, stack",
+  next: "1.3 mana, costs and payment; then combat, state-based actions, triggers, layers, commander, projection",
 });
 
 export class EngineNotImplemented extends Error {

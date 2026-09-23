@@ -112,6 +112,10 @@ export function addObject(state, object, zone, player = null) {
   state.objects[id] = {
     id,
     card: object.card ?? null,
+    /* The card's PRINTED types (CR 109.3). What an object's types currently are is the layer
+       system's answer (CR 613, phase 1.8); this is the base it starts from, and it comes from the
+       card definition once the directory exists in phase 2. */
+    types: Array.isArray(object.types) ? [...object.types] : [],
     owner: Number.isInteger(object.owner) ? object.owner : player,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
@@ -159,7 +163,10 @@ export function moveObject(state, id, zone, player = null) {
   if (at >= 0) fromList.splice(at, 1);
   delete state.objects[id];
 
-  /* Only the card and its owner survive the move. The owner does (CR 108.3): a card goes to its
-     OWNER's graveyard however long someone else controlled it. */
-  return addObject(state, {card: from.card, owner: from.owner, controller: from.owner, token: from.token}, zone, player);
+  /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
+     owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
+     controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
+  return addObject(state, {
+    card: from.card, types: from.types, owner: from.owner, controller: from.owner, token: from.token,
+  }, zone, player);
 }
