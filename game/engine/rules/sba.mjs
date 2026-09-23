@@ -36,6 +36,7 @@
 import {moveObject, PER_PLAYER} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {toughnessOf, typesOf} from "./layers.mjs";
+import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -168,6 +169,16 @@ export function checkStateBasedActions(state) {
         const {proposal} = applyReplacements(state, {
           event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller,
         });
+        /* CR 903.9a is a MAY, so the engine asks its OWNER — not its controller, which is why a
+           borrowed commander goes home. Asked before the move, like any replacement, so the
+           commander never reaches a graveyard at all. */
+        if (offersCommandZone(state, id, proposal.to)) {
+          state.awaiting = {
+            kind: "commander-replacement", player: object.owner, objectId: id,
+            name: object.card, to: proposal.to, damage: object.damage,
+          };
+          return events;
+        }
         const destination = proposal.to;
         moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
@@ -203,6 +214,37 @@ export function checkStateBasedActions(state) {
     state.outcomeReported = true;
     events.push(event("GameEventGameOutcome", state, outcome));
   }
+  return events;
+}
+
+/**
+ * Finish a commander's zone change once its owner has answered CR 903.9a.
+ *
+ * The move happens here rather than in `commander.mjs` because this is the module that knows what
+ * event to report; that one decides only where the card goes. Afterwards the whole check runs
+ * again, because a commander leaving can be the thing that settles something else.
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function finishCommanderReplacement(state, awaiting, indices) {
+  const id = awaiting.objectId;
+  const object = state.objects[id];
+  if (!object) throw new Error("That commander is no longer there to move");
+  const destination = resolveCommanderChoice(state, awaiting, indices);
+  const events = [];
+  const card = cardRef(state, id);
+  const leftBehind = {
+    cardId: id, name: object.card, controller: object.controller, owner: object.owner,
+    abilities: structuredClone(object.abilities ?? []),
+  };
+  moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
+  events.push(event("GameEventCardChangeZone", state, {
+    card,
+    leftBehind,
+    from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
+  }));
+  events.push(...checkStateBasedActions(state));
   return events;
 }
 

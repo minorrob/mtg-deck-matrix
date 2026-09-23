@@ -40,6 +40,7 @@
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {pushSpell} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment} from "./mana.mjs";
+import {commanderTax, recordCommanderCast} from "./commander.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
@@ -91,16 +92,26 @@ export function legalActions(state, player) {
     }
   }
 
-  /* CR 601.2. Offered only when the pool can pay: the engine does not offer what it cannot do. */
-  for (const id of cardsIn(state, "hand", player)) {
+  /* CR 601.2. Offered only when the pool can pay: the engine does not offer what it cannot do.
+     A commander is castable from the COMMAND ZONE as well as from hand (CR 903.8), and its tax is
+     part of the cost — so a taxed commander a player cannot afford is never offered, rather than
+     offered and refused at payment. */
+  const castable = [
+    ...cardsIn(state, "hand", player).map((id) => ({id, from: "hand"})),
+    ...cardsIn(state, "command", player)
+      .filter((id) => state.objects[id].commander === true)
+      .map((id) => ({id, from: "command"})),
+  ];
+  for (const {id, from} of castable) {
     const object = state.objects[id];
     if (!object.manaCost) continue;
     if (sorcerySpeed(object) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
       continue;
+    const tax = from === "command" ? commanderTax(state, player, id) : 0;
     const cost = parseManaCost(object.manaCost);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life});
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
     if (!payment) continue;
-    actions.push({kind: "cast", objectId: id, label: object.card, payment});
+    actions.push({kind: "cast", objectId: id, label: object.card, payment, from, tax});
   }
 
   return actions;
@@ -172,12 +183,16 @@ export function applyAction(state, player, action) {
     /* Recomputed rather than trusted: the action arrived from a pilot, possibly across a network,
        and the pool may have moved since it was offered. The offered check above proves the action
        is still on the list, and this proves the payment still balances. */
+    const fromCommand = object.zone === "command";
+    const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
     const cost = parseManaCost(object.manaCost);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life});
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
     if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     spend(state.players[player].manaPool, payment.mana);
     if (payment.life > 0) state.players[player].life -= payment.life;
+    /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
+    if (fromCommand) recordCommanderCast(state, player, action.objectId);
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const entry = pushSpell(state, action.objectId, {controller: player, permanent});
@@ -189,7 +204,7 @@ export function applyAction(state, player, action) {
     }));
     events.push(event("GameEventCardChangeZone", state, {
       card,
-      from: {zoneType: "Hand", player: {playerId: player}},
+      from: {zoneType: fromCommand ? "Command" : "Hand", player: {playerId: player}},
       to: {zoneType: "Stack", player: {playerId: player}},
     }));
     return events;

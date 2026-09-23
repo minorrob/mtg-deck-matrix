@@ -37,7 +37,8 @@
 
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
-import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sba.mjs";
+import {commanderChoice} from "./commander.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -195,6 +196,7 @@ function cleanup(state, events) {
 export function awaitingChoice(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
@@ -223,6 +225,11 @@ export function resolveAwaiting(state, indices, amounts = null) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
 
+  if (awaiting.kind === "commander-replacement") {
+    const events = finishCommanderReplacement(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "order-triggers") {
     const events = resolveTriggerOrder(state, awaiting, indices);
     grantStepPriority(state, events);

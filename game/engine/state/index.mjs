@@ -148,6 +148,11 @@ export function addObject(state, object, zone, player = null) {
     timestamp: state.nextTimestamp,
     /* Set by whatever created it; a token ceases to exist as a state-based action (CR 704.5d). */
     token: object.token === true,
+    /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
+       zone change along with the card's own characteristics. Three modules read it — the tax, the
+       command-zone replacement and the 21-damage tally — and for a while none of them could,
+       because it was read everywhere and written nowhere. */
+    commander: object.commander === true,
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -188,6 +193,6 @@ export function moveObject(state, id, zone, player = null) {
   return addObject(state, {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
-    owner: from.owner, controller: from.owner, token: from.token,
+    owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
   }, zone, player);
 }
