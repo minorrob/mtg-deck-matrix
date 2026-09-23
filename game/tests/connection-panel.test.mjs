@@ -103,10 +103,51 @@ test('everyone ready reads as ready, and a table with too few seats says so inst
   assert.deepEqual(d.tableReasons, ['A game needs at least two seats']);
 });
 
+/* A CHAIR THE HOST NEVER THOUGHT ABOUT STOPS THE GAME, AND SAYS WHAT TO DO ABOUT IT.
+ *
+ * Rob, 2026-09-23, offered "wait for them" or "start without them" and choosing neither: "If I
+ * never invited them and then I press start game then I should get a pop-up saying you haven't
+ * invited anybody to the seat but marked it as human. Remove the seat assignment or change it to
+ * AI to start the game." A standing rule the same day: where human behavior would break the game,
+ * do not allow it — and tell the person how to proceed.
+ *
+ * IT FIRES ON PRESSING START, NOT CONTINUOUSLY, and the difference is the whole design. Written
+ * into countdownBlockers first, it made a fresh four-seat table report an error for being a fresh
+ * four-seat table: that list is read to describe the table at rest, where chairs still to fill are
+ * normal. This is an instruction about one action.
+ *
+ * The four ways a chair legitimately empties — a withdrawn invitation, somebody leaving, a
+ * reconnect grace running out, a rematch decline — all mark the seat released, so none raise it. */
+test('pressing start with a human seat nobody was invited to is refused, and the refusal says how to fix it', () => {
+  let t = fresh();
+  t = step(t, {type: 'join', seatId: 1});
+  for (const seatId of [0, 1, 3]) { t = step(t, {type: 'deck', seatId, deckVersion: 'd' + seatId}); t = step(t, {type: 'ready', seatId, ready: true}); }
+
+  assert.throws(() => step(t, {type: 'countdown', seatId: 0}), (error) => {
+    assert.match(error.message, /Sam's seat is marked as a human but nobody has been invited to it/);
+    assert.match(error.message, /Remove the seat assignment or change it to AI to start the game/,
+      'the refusal names the way out, or it is just a refusal');
+    return true;
+  }, 'every seated player is ready and the table still refuses to start');
+
+  /* The table itself reads as normal meanwhile — the empty chair is not an error to display. */
+  const d = describeReadiness(readinessOf(t), {youSeatId: 0});
+  assert.ok(!d.tableReasons.some(r => /invited/.test(r)),
+    'and the panel at rest does not nag about it; a chair still to fill is not a fault');
+
+  /* Released by the host, and the same table starts. */
+  const released = step(t, {type: 'uninvited', seatId: 2});
+  assert.equal(step(released, {type: 'countdown', seatId: 0}).phase, 'countdown',
+    'saying "I am not filling that chair" releases the table');
+});
+
 test('the countdown counts, the launch stage is named, and a failed launch says why', () => {
   let t = fresh();
   t = step(t, {type: 'join', seatId: 1});
   for (const seatId of [0, 1, 3]) { t = step(t, {type: 'deck', seatId, deckVersion: 'd' + seatId}); t = step(t, {type: 'ready', seatId, ready: true}); }
+  /* Sam's chair is never invited, and since 2026-09-23 starting with one is refused, so the host
+     releases it first — which is the way out the refusal names. */
+  t = step(t, {type: 'uninvited', seatId: 2});
   t = step(t, {type: 'countdown'}, 1000);
   const counting = describeReadiness(readinessOf(t), {now: 4200, countdownAt: t.countdownAt});
   assert.equal(counting.headline, 'Starting in 7');
