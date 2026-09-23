@@ -275,8 +275,8 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   const {s, ctx} = board();
   assert.throws(() => run(s, {effect: "destroyCreature", targets: []}, ctx), /destroyCreature|primitive/i,
     "running something that is not a primitive is refused, not skipped"); checks += 1;
-  assert.throws(() => run(s, {effect: "dig", count: 3}, ctx), /dig|not built|2\.2b/i,
-    "and a primitive that is declared but not yet built says so — the schema would accept it, so this is the loud half"); checks += 1;
+  assert.throws(() => run(s, {effect: "dig", count: 3}, ctx), /dig|resolution/i,
+    "and a primitive that asks a player something refuses to be run directly, rather than running half of itself"); checks += 1;
 }
 
 console.log(`engine-effects: ${checks} checks passed — twenty-one of the twenty-five measured primitives, damage through prevention, pump that wears off because it was never written down, and indestructible that cannot be destroyed.`);

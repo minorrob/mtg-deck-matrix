@@ -492,6 +492,11 @@ across Rob's seven decks, and the top 25 are 90.9% of them. Twenty-one are built
 a player something need a resolution that can stop and resume, and are absent rather than stubbed.
 Damage goes through prevention, a pump is a continuous effect rather than a number written into the
 card so it wears off with nothing to undo, and indestructible cannot be destroyed.
+`engine-resolution` is the other four, and the machinery they need: a resolution that stops half
+way through and carries on, so "scry 2, then draw a card" asks between the two and the draw still
+happens. It is a queue rather than a call stack, which is what makes a modal containing a scry work
+with an effect still waiting behind the whole modal — and it is plain data, so a game saved in the
+middle of an effect resumes in the middle of that effect.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -530,7 +535,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 97 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 98 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
