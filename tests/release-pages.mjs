@@ -66,6 +66,14 @@ const ignored = built.get(".assetsignore").toString("utf8").split("\n");
 ok([".git", ".wrangler", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git, wrangler's scratch folder and the configuration off the site");
 ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
 
+/* Rob, 2026-09-24: "I don't want plain HTTP and I do want the analytics." */
+for (const p of PAGES) eq((/script-src ([^;"]*)/.exec(built.get(p).toString("utf8")) || [])[1], "'self' https://static.cloudflareinsights.com",
+  `${p} runs its own scripts and Cloudflare's analytics beacon, and nothing else`);
+const headers = built.get("_headers").toString("utf8");
+ok(/^\/\*\n\s+Strict-Transport-Security: max-age=31536000\n/.test(headers), "every path tells the browser to use https for a year (HSTS)");
+ok(headers.includes("X-Content-Type-Options: nosniff"), "and not to guess content types");
+ok(!ignored.includes("_headers"), "and _headers is uploaded, since Cloudflare reads it at deploy (it is parsed, never served)");
+
 /* The checks fail when they should. */
 const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
 ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
@@ -79,6 +87,8 @@ ok(broken((m) => m.set("data/huge.json", Buffer.alloc(25 * 1024 * 1024 + 1))).so
 const withConfig = (edit) => broken((m) => {const c = JSON.parse(m.get("wrangler.jsonc").toString()); edit(c); m.set("wrangler.jsonc", Buffer.from(JSON.stringify(c)));});
 ok(withConfig((c) => {c.workers_dev = true;}).some((p) => p.includes("second origin")), "a Worker left open on workers.dev is named");
 ok(withConfig((c) => {c.routes.push({pattern: "www.crankmagic.com", custom_domain: true});}).some((p) => p.includes("alone")), "a second custom domain is named");
+ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace("script-src 'self' https://static.cloudflareinsights.com", "script-src 'self' https://static.cloudflareinsights.com https://cdn.example")))).some((p) => p.includes("script-src")), "a page that would run scripts from anywhere else is named");
+ok(broken((m) => m.set("_headers", Buffer.from("/*\n  X-Content-Type-Options: nosniff\n"))).some((p) => p.includes("Strict-Transport-Security")), "a release without HSTS is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('href="https://crankmagic.com/"', `href="${FIRST_PUBLIC}"`)))).some((p) => p.includes("canonical")), "a page whose canonical link is not crankmagic.com is named");
 
 /* The walk reads what the app would load, not what its comments talk about. */
