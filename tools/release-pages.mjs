@@ -88,13 +88,13 @@ export function commitSource(ref = "origin/main") {
       at = nl + 1 + Number(size) + 1;
     }
   };
-  return {commit, date, files: new Set(entries.keys()), entries, readMany, read: (p) => {readMany([p]); return cache.get(p);}};
+  return {ref, commit, date, files: new Set(entries.keys()), entries, readMany, read: (p) => {readMany([p]); return cache.get(p);}};
 }
 
 /* The working tree as it would be committed: tracked files, current content. For the suite. */
 export function worktreeSource() {
   const files = new Set(git("ls-files", "-z").split("\0").filter(Boolean).filter((f) => existsSync(path.join(ROOT, f))));
-  return {commit: git("rev-parse", "HEAD"), date: new Date().toISOString().slice(0, 10), files, readMany: () => {}, read: (p) => readFileSync(path.join(ROOT, p))};
+  return {ref: "worktree", commit: git("rev-parse", "HEAD"), date: new Date().toISOString().slice(0, 10), files, readMany: () => {}, read: (p) => readFileSync(path.join(ROOT, p))};
 }
 
 const TEXT = /\.(html|js|mjs|css|json|webmanifest|svg|md|txt)$/i;
@@ -224,7 +224,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
     const body = source.read(f);
     built.set(f, PAGES.includes(f) || f === "crankmagic-sw.js" ? Buffer.from(transform(f, body.toString("utf8"), {profile, version, origin})) : body);
   }
-  built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: "main", origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
+  built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
   return {built, problems: verify(built, profile), version, mentions, reachedFrom};
 }

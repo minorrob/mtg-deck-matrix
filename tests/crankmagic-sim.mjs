@@ -313,7 +313,7 @@ check("cancelling rejects the run rather than leaving it pending forever", async
   const runner = Sim.createRunner({Worker: SilentWorker});
   const pending = runner.measure({lineup: [], config: {}, seats: []});
   runner.cancel();
-  await assert.rejects(pending, /cancelled/);
+  await assert.rejects(pending, /canceled/);
   assert.equal(runner.busy, false, "a cancelled runner must be ready for the next run");
 });
 
