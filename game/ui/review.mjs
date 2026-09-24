@@ -514,7 +514,19 @@ function enableHandDrag(node,card,battlefield=false){
       node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.removeEventListener('pointercancel',finish);
       draggingCard=null;
       if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');document.body.classList.remove('dragging-hand');const hit=document.elementFromPoint(event.clientX,event.clientY);target=hit?.closest('.player-mat[data-human-drop]');
-        if(event.type==='pointerup'&&battlefield){const onto=Number(hit?.closest('.card[data-card-id]')?.dataset.cardId),player=frame().players.find(p=>p.zones.Battlefield.cards.some(c=>c.cardId===card.cardId)),mat=hit?.closest('.player-mat');if(onto!==card.cardId&&player?.zones.Battlefield.cards.some(c=>c.cardId===onto)){const group=visualGroups.get(onto)||'group:'+onto;visualGroups.set(onto,group);visualGroups.set(card.cardId,group);freePositions.delete(onto);freePositions.delete(card.cardId);notifyAction('Cards grouped visually. Game state is unchanged.');}else if(mat&&Number(mat.dataset.seat)===player?.playerId){const r=mat.getBoundingClientRect();visualGroups.delete(card.cardId);freePositions.set(card.cardId,{x:Math.max(0,Math.min(.83,(event.clientX-r.left)/r.width-.065)),y:Math.max(0,Math.min(.64,(event.clientY-r.top)/r.height-.04))});}}
+        if(event.type==='pointerup'&&battlefield){const onto=Number(hit?.closest('.card[data-card-id]')?.dataset.cardId),player=frame().players.find(p=>p.zones.Battlefield.cards.some(c=>c.cardId===card.cardId)),mat=hit?.closest('.player-mat');if(onto!==card.cardId&&player?.zones.Battlefield.cards.some(c=>c.cardId===onto)){const group=visualGroups.get(onto)||'group:'+onto;visualGroups.set(onto,group);visualGroups.set(card.cardId,group);freePositions.delete(onto);freePositions.delete(card.cardId);notifyAction('Cards grouped visually. Game state is unchanged.');}else if(mat&&Number(mat.dataset.seat)===player?.playerId){
+          /* Dropped INTO a functional container, and stored against it (Rob, 2026-09-23). The zone
+             under the pointer wins; a drop on bare mat art falls back to the battlefield, which is
+             where the mat-relative version always put it. The clamps are now the container's own
+             edges less the card's footprint, rather than four fractions tuned against the mat. */
+          const zone=hit?.closest('.mat-zone')||mat.querySelector('.mat-battlefield');
+          const r=(zone||mat).getBoundingClientRect(),piece=mat.querySelector('.free-card');
+          const w=piece?piece.getBoundingClientRect().width/r.width:.17;
+          visualGroups.delete(card.cardId);
+          freePositions.set(card.cardId,{
+            zone:[...(zone?.classList||[])].find(c=>c.startsWith('mat-')&&c!=='mat-zone')||'mat-battlefield',
+            x:Math.max(0,Math.min(1-w,(event.clientX-r.left)/r.width-w/2)),
+            y:Math.max(0,Math.min(1-w*680/488*(r.width/r.height),(event.clientY-r.top)/r.height-.04))});}}
         else if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
     };
     node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});node.addEventListener('pointercancel',finish,{once:true});
@@ -627,6 +639,7 @@ function matView(p,focused=false){
     mat.addEventListener('dragleave',event=>{if(!mat.contains(event.relatedTarget))mat.classList.remove('drop-ready');});
     mat.addEventListener('drop',event=>{event.preventDefault();event.stopPropagation();mat.classList.remove('drop-ready');const raw=event.dataTransfer.getData('application/x-crankmagic-card');const id=/^\d+$/.test(raw)?Number(raw):draggingCard;const card=humanPlayer()?.zones.Hand.cards.find(c=>c.cardId===id);if(card)playCard(card);});
   }
+  const zoneBoxes=new Map();
   const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));
   const nonlands=p.zones.Battlefield.cards.filter(c=>!lands.includes(c));
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
@@ -638,9 +651,29 @@ function matView(p,focused=false){
     const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
     if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
     else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
-    zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
+    zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);zoneBoxes.set(cls,zone);
   }
-  for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){const position=freePositions.get(card.cardId),piece=el('div','free-card');piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';piece.append(cardButton(card));mat.append(piece);}
+  /* A DRAGGED CARD BELONGS TO ITS ZONE, NOT TO THE MAT. Rob, 2026-09-23: "put functional
+     boundaries around Battlefield and Lands outlines, then make the card positions relative to the
+     functional containers."
+     These used to be appended to the mat and positioned against the mat's own rectangle, clamped by
+     four magic fractions (.83, .64, -.065, -.04) that existed to keep a card roughly inside a zone
+     it had no relationship to. Dropped into its container instead, the percentages mean what they
+     say, the clamps are the container's edges, and a card cannot come to rest outside the outline
+     it is supposed to be in. Entries made before this carry no zone and default to the battlefield,
+     which is where every one of them was. */
+  for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){
+    const position=freePositions.get(card.cardId),piece=el('div','free-card');
+    piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';
+    piece.append(cardButton(card));
+    (zoneBoxes.get(position.zone)||zoneBoxes.get('mat-battlefield')||mat).append(piece);
+  }
+  if(focused){
+    const [preview,band]=historyBand();
+    mat.append(band);
+    /* The preview is a card, so it goes in a container and obeys that container's boundary. */
+    (zoneBoxes.get('mat-battlefield')||mat).append(preview);
+  }
   /* B.6a (2f): the printed turn-steps list and the life box are gone from the mat. B.1's step
      strip and B.3's center counter carry both now, and printing them again on each of four
      boards was four copies of one fact. The Focus view has neither, so it grows the ribbon
@@ -650,6 +683,138 @@ function matView(p,focused=false){
   if((p.playerId===primarySeat||focused)&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
   return mat;
 }
+/* B.6b — THE HISTORY BAND ON THE MAT (2f, Focus view).
+ *
+ * 2f draws the live log in a real row between the two pile pairs. That row does not exist: the mat
+ * places its zones absolutely, and measured in a live game the gap between the pairs is 4.8% of the
+ * mat -- about 25px -- against the ~15% a band needs. Rob chose option 2 on 2026-09-23: use the
+ * strip that is already empty. The old printed turn-guide and life-box rules survive in mats.css for that
+ * region but nothing in game/ui ever builds them (B.6a removed the last callers), so the band
+ * covers printed playmat artwork and no live element. No zone moves by a pixel.
+ *
+ * THE ROW IS TWO LINES, AND THAT IS ROB'S, 2026-09-23: "history rows should be smaller height (2
+ * rows not 3) and don't need to show card image at the surface but should show it on hover. History
+ * should include: user, card, action, target(s) and effects." At 32px a row against the feed's
+ * 154px, four and a half fit where the three-line version with thumbnails held three and a third.
+ *
+ * TARGETS AND EFFECTS ARE OPTIONAL, ON PURPOSE. The five-field contract belongs to CME
+ * (`docs/decisions-2026-09-23.md`): Forge is accepted as-is and `match-telemetry.mjs` is a lossy
+ * producer into it, filling user, card and its flattened `label` as the action. So the band reads
+ * `action`, `targets` and `effects` when an engine supplies them and degrades to the card name
+ * alone when it does not -- which is what the Forge host shows today. No parsing meaning back out
+ * of label strings; that was the bandaid Rob ruled out. */
+/* THE MAT'S RIGHT-HAND COLUMN LINES UP, ON EVERY PLAYMAT.
+ *
+ * Rob, 2026-09-23: the History box should align with the Command box below it, and the
+ * battlefield's bottom border should sit level with the bottom of Command and Exile.
+ *
+ * It cannot be written as fixed percentages because playmats carry layout variants (mats.css
+ * `[data-layout]`) that move the piles: Command sits at 73%/38% by default but at 70%/33% on gold,
+ * 34% on violet, 35% on moon and 18% on lotus, and the pile's HEIGHT is derived from its width
+ * through a 488:680 card ratio, so it depends on the mat's own aspect too. Measured on a live gold
+ * mat, a band written to the default numbers overhung the Command pile by three percent of the mat
+ * and sat two percent to its right.
+ *
+ * So the column is measured once the mat is laid out and everything is aligned to what is actually
+ * there. Any playmat added later is handled without another rule. */
+function alignToPiles(mat,band){
+  if(!mat)return;
+  const command=mat.querySelector('.mat-command'),exile=mat.querySelector('.mat-exile');
+  const field=mat.querySelector('.mat-battlefield');
+  const m=mat.getBoundingClientRect();
+  if(!m.width||!m.height||!command)return;
+  const c=command.getBoundingClientRect();
+  const left=(c.left-m.left)/m.width*100,top=(c.top-m.top)/m.height*100;
+  const bottom=(c.bottom-m.top)/m.height*100;
+
+  /* The battlefield's functional border ends level with the pile pair beside it. */
+  if(field){
+    const f=field.getBoundingClientRect(),fieldTop=(f.top-m.top)/m.height*100;
+    if(bottom>fieldTop)field.style.height=(bottom-fieldTop).toFixed(2)+'%';
+  }
+
+  if(!band)return;
+  const right=exile?(exile.getBoundingClientRect().right-m.left)/m.width*100:left+25.5;
+  band.style.left=left.toFixed(2)+'%';
+  band.style.width=Math.max(0,right-left).toFixed(2)+'%';
+  /* Two percent of clear mat between the band and the pile it sits above. */
+  const bandTop=5.5,available=top-bandTop-2;
+  band.hidden=available<12;
+  if(!band.hidden)band.style.height=available.toFixed(2)+'%';
+}
+
+const HISTORY_PHASE_ONLY=/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/i;
+function historyBandRow(e){
+  const row=el('div','mh-row');
+  row.tabIndex=0;
+  if(e.cardId!=null)row.dataset.cardId=String(e.cardId);
+  const who=e.playerId!=null?names[e.playerId]:'';
+  const action=e.action||(/^(main1|main2)$/i.test(e.label||'')?phaseName(e.label):e.label)||'';
+  row.append(el('div','mh-l1',`T${e.turn??'?'}${who?' · '+who:''}${action?' · '+action:''}`));
+  const second=el('div','mh-l2');
+  second.append(el('span','',e.name||''));
+  /* Arrays only. A producer that has not got to these yet leaves them off entirely rather than
+     sending an empty string, so there is never a stray arrow or separator with nothing after it. */
+  const targets=Array.isArray(e.targets)?e.targets.filter(Boolean):[];
+  const effects=Array.isArray(e.effects)?e.effects.filter(Boolean):[];
+  if(targets.length)second.append(el('span','tgt',' → '+targets.join(', ')));
+  if(effects.length)second.append(el('span','eff',' · '+effects.join(', ')));
+  row.append(second);
+  return row;
+}
+function historyBand(){
+  const band=el('section','mat-history');band.setAttribute('aria-label','Game history');
+  /* The hover preview lives on the MAT, not inside the band: the feed clips its own overflow so it
+     can scroll, and a preview drawn inside it would be clipped with the rows. */
+  const preview=el('div','mat-history-card');preview.hidden=true;
+  const rows=historyRows().filter(e=>!HISTORY_PHASE_ONLY.test(e.label||''));
+  const head=el('div','mh-head');
+  head.append(el('b','','History'),el('span','',String(rows.length)+' events'));
+  const feed=el('div','mh-feed');
+  for(const e of rows.slice(0,14))feed.append(historyBandRow(e));
+  if(!rows.length)feed.append(el('p','mh-empty','Public activity appears here as the game goes on.'));
+  band.append(head,feed);
+
+  /* THE PREVIEW IS A CARD, SO IT OBEYS A CONTAINER LIKE EVERY OTHER CARD. Rob, 2026-09-23, on the
+     first version, which was positioned at a percentage of the MAT: "Your battlefield card is half
+     off the right side of the battlefield container... Where is the functional boundary on the mat
+     battlefield outline that the cards are placed relative to it's left inner side."
+     It lives inside the battlefield zone now and is placed against that zone's inner edge, inside
+     the same 10pt padding, so it cannot reach past the outline whatever the mat or the layout. The
+     only thing computed here is which row it lines up with, clamped to the zone. */
+  const show=row=>{
+    const card=cardById(Number(row.dataset.cardId));
+    const box=preview.parentElement;
+    if(!card?.art||!box){preview.hidden=true;return;}
+    preview.replaceChildren(Object.assign(el('img'),{src:card.art,alt:card.name||'Card'}));
+    const b=box.getBoundingClientRect();
+    if(b.height){
+      const top=(row.getBoundingClientRect().top-b.top)/b.height*100;
+      const room=100-preview.getBoundingClientRect().height/b.height*100;
+      preview.style.top=Math.min(Math.max(top,0),Math.max(0,room))+'%';
+    }
+    preview.hidden=false;
+  };
+  const hide=()=>{preview.hidden=true;};
+  feed.addEventListener('mouseover',event=>{const row=event.target.closest('.mh-row');if(row)show(row);});
+  feed.addEventListener('mouseleave',hide);
+  feed.addEventListener('focusin',event=>{const row=event.target.closest('.mh-row');if(row)show(row);});
+  feed.addEventListener('focusout',hide);
+  /* Scrolling moves a row out from under a still cursor and fires no mouseleave. */
+  feed.addEventListener('scroll',hide);
+
+  /* THE STRIP IS NOT THE SAME HEIGHT ON EVERY MAT, and a fixed 31% was wrong. Playmats carry
+     layout variants (mats.css `[data-layout]`) that move the pile pairs: the default puts Command
+     at 38%, but gold puts it at 33%, violet 34%, moon 35% and lotus 18%. Measured on a live gold
+     mat the band's bottom edge landed at 36.5% and ran straight through the Command pile.
+     So the height is taken from where the upper pair ACTUALLY starts, once the mat is laid out,
+     which also covers any playmat added later without another rule here. Below twelve percent
+     there is not room for two rows and a header, and a band that shows one row is not a band --
+     lotus is the case that hits this today. It is hidden rather than drawn as a sliver. */
+  requestAnimationFrame(()=>alignToPiles(band.parentElement,band));
+  return [preview,band];
+}
+
 function attachBoardResize(box){
   if(boardWidth)box.style.maxWidth=boardWidth+'px';else box.style.removeProperty('max-width');
   const handle=el('button','board-resize','⤡');handle.type='button';handle.setAttribute('aria-label','Resize your board');handle.title='Drag to resize your board. Arrow keys adjust size; double-click resets.';
