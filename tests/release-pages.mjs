@@ -97,4 +97,24 @@ eq([...referencesOf("a.js", "const u = `assets/mana/${symbol}.svg`;", have)].sor
 eq([...referencesOf("a.js", "/* see docs/plan.md */ // and docs/plan.md\nfetch('data/cards.json?v=3')", have)], ["data/cards.json"], "a file named in a comment is not a reference; one fetched is");
 eq([...referencesOf("index.html", '<meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/mana/W.svg">', have)], ["assets/mana/W.svg"], "an absolute link to the app's own address is its own file");
 
+/* PRODUCTION HAS NO ACCOUNTS until Rob approves them on staging; STAGING HAS EVERYTHING they need. */
+for (const f of ["cloud-sync.js", "crankmagic-account.js"]) ok(!built.has(f), `${f} is not in the production release`);
+ok(PAGES.every((p) => !built.get(p).toString("utf8").includes("crankmagic-accounts")), "and neither production page is marked accounts-on");
+ok(!JSON.parse(built.get("wrangler.jsonc").toString("utf8")).main, "and production runs no Worker script");
+const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
+eq(staging.problems.filter((p) => !/ is pending: /.test(p)), [], "the staging build is complete except for values its Access application hands out");
+const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
+eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
+  "staging: its own Worker on staging.crankmagic.com, the API script run for /api/* only");
+eq(sw2.d1_databases, [{binding: "DB", database_name: "crankmagic-staging", database_id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26", migrations_dir: "cloud/migrations"}], "its own database, never production's");
+ok(["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs", "cloud/migrations/0001_accounts.sql", "cloud-sync.js", "crankmagic-account.js"].every((f) => sb.has(f)), "the Worker, its migration and the account module are all in it");
+ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("cloud/"), "and the Worker's source is not published as files");
+ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-accounts" content="on">')), "both staging pages are marked accounts-on");
+ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2, assets: {...sw2.assets, run_worker_first: ["/*"]}}))]]), PROFILES["cloud-staging"]).some((p) => p.includes("/api/* only")),
+  "a Worker that would run for every path, not just the API, is named");
+ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2, vars: {...sw2.vars, ACCESS_JWKS: "{\"keys\":[]}"}}))]]), PROFILES["cloud-staging"]).some((p) => p.includes("ACCESS_JWKS")),
+  "a release that would hand the Worker its own signing keys is refused");
+ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace("<meta charset=\"utf-8\">", "<meta charset=\"utf-8\">\n<meta name=\"crankmagic-accounts\" content=\"on\">"))]]), profile).some((p) => p.includes("release without accounts")),
+  "a production page marked accounts-on is named");
+
 console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);

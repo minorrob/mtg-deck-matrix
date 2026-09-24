@@ -36,3 +36,6 @@ node_modules/
 # repository (ADR-001, section 12.5). game/tools/check-citations.mjs reads them from outside it,
 # the way engine-inventory.mjs reads Forge. Only the verdict is committed.
 MagicCompRules*.txt
+
+# wrangler (Cloudflare CLI) writes its account cache and scratch files next to where it runs
+.wrangler/
