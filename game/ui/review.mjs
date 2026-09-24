@@ -983,7 +983,18 @@ function historyRowNode(e){
  * extraction skill of docs/plan-board-information-layer.md, which emits CrankCardScript@1. When it
  * lands it replaces the body of the per-card step and nothing else here changes.
  */
-let onboarding=null;
+let onboarding=null,onboardBox=null;
+function onboardDialog(){
+  if(!onboardBox){
+    onboardBox=el('dialog','onboard-dialog');onboardBox.id='onboard-dialog';
+    onboardBox.setAttribute('aria-label','Onboarding cards');
+    document.body.append(onboardBox);
+  }
+  return onboardBox;
+}
+/* Closed when the run finishes, and whenever the choice goes away -- a pop-up left over from a
+   decision nobody is being asked any more is just a box on the screen. */
+function closeOnboarding(){if(onboardBox?.open)onboardBox.close();}
 function renderOnboarding(q){
   const queue=parseOnboardingChoice(q);
   const seats=(frame()?.players||[]).map(p=>({playerId:p.playerId,name:p.name,kind:data.pod?.seats?.[p.playerId]?.kind||'human'}));
@@ -991,7 +1002,15 @@ function renderOnboarding(q){
   const head=el('div','onboard');
   head.append(el('strong','onboard-title',onboardingHeadline(queue.deck,seat,viewerSeatId)));
   const count=el('span','onboard-count'),reel=el('div','onboard-reel'),note=el('p','onboard-note');
-  head.append(count,reel,note);options.append(head);
+  head.append(count,reel,note);
+  /* A POP-UP, NOT A PANEL IN THE PAGE. Rob, 2026-09-24: "The onboarding cards view shouldn't be in
+     line on the page, but should be a pop-up, that once the onboarding is done, the window
+     auto-closes." Inline it sat between the mats and the hand and took a block of the window --
+     height this view cannot spare, which is the same complaint as the mats being small.
+     NOT modal, deliberately: the note below is a property worth keeping -- "Continue stays live
+     throughout, so nobody is held at a progress bar" -- and a modal would hold them at one. */
+  onboardDialog().replaceChildren(head);
+  if(!onboardDialog().open)onboardDialog().show();
   const draw=()=>{
     const run=onboarding;
     count.textContent=`${run.done} / ${queue.total}`;
@@ -1014,7 +1033,11 @@ function renderOnboarding(q){
         draw();
         await new Promise(r=>setTimeout(r,180));
       }
-      if(onboarding?.choiceId===q.id){onboarding.finished=true;draw();}
+      if(onboarding?.choiceId===q.id){
+        onboarding.finished=true;draw();
+        /* Long enough to read the last line, then it takes itself away. */
+        setTimeout(()=>{if(onboarding?.choiceId===q.id&&onboarding.finished)closeOnboarding();},1400);
+      }
     })();
   }else draw();
   buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]}),'primary-action'));
@@ -1407,7 +1430,7 @@ function renderDecision(){
     else if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
     else if(q.mode==='text'){buttons.append(button('Submit',()=>gameAction({kind:'answer',choiceId:q.id,text:$('choice-text').value})));buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,cancel:true})));}
     else if(q.mode==='ack'&&parseOnboardingChoice(q))renderOnboarding(q);
-    else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
+    else if(q.mode==='ack'){closeOnboarding();buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));}
     else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
     else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
   }else{

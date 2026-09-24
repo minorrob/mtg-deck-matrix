@@ -180,3 +180,9 @@ body:has(.focus-dialog[open]){overflow:hidden}
 .player-mat .mat-pile .card,.player-mat .mat-pile>img{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;max-width:100%;max-height:100%;object-fit:contain}
 .player-mat .mat-pile{display:flex;align-items:center;justify-content:center}
 .player-mat .library-back{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;aspect-ratio:488/680;max-width:100%;max-height:100%}
+/* The onboarding pop-up: over the board, not a block in the page (review.mjs, onboardDialog). */
+.onboard-dialog{position:fixed;inset:auto auto 24px 50%;transform:translateX(-50%);margin:0;z-index:30;
+  width:min(560px,calc(100vw - 32px));padding:14px 18px;border:1px solid color-mix(in srgb,var(--cyan) 30%,var(--edge));
+  border-radius:12px;background:color-mix(in srgb,var(--edge) 60%,black);color:var(--ink);
+  box-shadow:0 14px 40px rgb(0 0 0 / .6)}
+.onboard-dialog::backdrop{background:none}

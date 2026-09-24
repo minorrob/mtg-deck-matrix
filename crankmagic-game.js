@@ -1313,9 +1313,21 @@
     /* 2b's head: "Play", one line saying what the table is, and Game history beside Host tools.
        Seat an opponent and Clear the table move under Host tools -- they are the host's levers,
        and the README puts every host lever in that menu. */
-    const head = C.pageHead("Play",
+    /* THE LOCAL COPY WEARS THE BRAND INSTEAD OF A PAGE TITLE. Rob, 2026-09-24: "move the CrankMagic
+       logo, text, and mist over to where play is, removing the word 'Play' and add 'Online' to the
+       text 'CrankMagic'... Then don't show any of the left side bar."
+       The slot is filled after the markup lands, by MOVING the live brand block out of the hidden
+       sidebar -- see fitLocalHeader below. The cloud copy keeps its sidebar and its "Play" title. */
+    const local = C.isLocal();
+    const head = C.pageHead(local ? "" : "Play",
       b("Game history", "lobby-history", {}, true, {cls: "compact"})
-      + b("Host tools", "lobby-host-tools", {}, false, {cls: "compact", caret: true}), "game")
+      + b("Host tools", "lobby-host-tools", {}, false, {cls: "compact", caret: true})
+      /* The way back to the workshop, because this copy no longer carries one. The wording names
+         the controls that actually exist: the Menu's "Save a backup file" and "Restore from a
+         backup file". */
+      + (local ? `<a class="v-button cm-visit-crank" href="https://minorrob.github.io/mtg-deck-matrix/" target="_blank" rel="noopener"
+           title="Create a deck in CrankMagic, then Menu &rsaquo; Save a backup file. Here, Menu &rsaquo; Restore from a backup file brings your decks into CrankMagic Online.">Visit CrankMagic &#8599;</a>` : ""),
+      "game")
       + `<p class="cm-lobby-lede">The four seats laid out as they will sit; the table is the form and the status board.</p>`;
 
     const confirmed = lobby.rulesConfirmed
@@ -1397,6 +1409,10 @@
        otherwise empty. The module that draws it is the same one the guest and host pages use. */
     const live = `<div class="cm-lobby-live" aria-live="polite"></div>`;
     C.main.innerHTML = head + seats + live + read + rules;
+    /* The brand is MOVED, not copied: crankmagic-brand.js drives that exact canvas on a rAF, so a
+       clone would be a frozen frame. render() puts it back in the shell before each pass, so this
+       can take it again every time without it ever being lost. */
+    if (local) document.getElementById("cm-brand-slot")?.append(document.querySelector(".v-brand-block"));
     startSeas();
     pollLiveReadiness();
 

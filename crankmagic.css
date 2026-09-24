@@ -2674,3 +2674,25 @@ button.cm-building { pointer-events: none; }
    the dialog grows to fit it and stops scrolling. */
 #cm-dialog.cm-picker-dialog{width:min(980px,calc(100vw - 24px))}
 #cm-dialog.cm-picker-dialog .cm-commander-results{position:static;width:auto;max-height:calc(100dvh - 360px);overflow:auto}
+
+/* THE LOCAL COPY: a game host, not the workshop. Rob, 2026-09-24: "don't show any of the left side
+   bar. It is completely not required in the local version for the user to see and try to use in
+   the localhost", and the brand moves to where the page title was, followed by "Online".
+   #matrix-v2 carries the flag because the shell's own layout rules carry the id, and an id beats
+   any number of classes -- trap 1 in docs/INDEX-where-things-live.md. */
+#matrix-v2.cm-local .cm-sidebar{display:none}
+#matrix-v2.cm-local .cm-layout{grid-template-columns:minmax(0,1fr);display:block}
+#matrix-v2.cm-local main{padding-inline:clamp(16px,3vw,34px)}
+/* The moved brand sits on the title's baseline. It came out of a vertical rail, so its own column
+   layout is turned back into a row here. */
+#matrix-v2.cm-local .cm-page-name{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#matrix-v2.cm-local .cm-page-brand{display:flex;align-items:center}
+#matrix-v2.cm-local .cm-page-brand .v-brand-block{display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;padding:0;border:0;background:none}
+#matrix-v2.cm-local .cm-page-brand .v-brand-copy{display:flex;align-items:center}
+#matrix-v2.cm-local .cm-page-brand .v-brand-logo{width:42px;height:42px}
+#matrix-v2.cm-local .cm-page-online{font-family:var(--v-display,inherit);font-size:clamp(22px,2.6vw,34px);line-height:1;color:var(--v-muted)}
+/* "Visit CrankMagic" sits under the two head buttons and reads as secondary: thinner, quieter. */
+#matrix-v2.cm-local .cm-page-head .cm-actions{flex-wrap:wrap;justify-content:flex-end}
+.cm-visit-crank{flex-basis:100%;text-align:center;padding:5px 12px;font-size:12px;font-weight:500;
+  background:none;border:1px solid var(--v-line);color:var(--v-muted);text-decoration:none;border-radius:var(--v-radius-control)}
+.cm-visit-crank:hover,.cm-visit-crank:focus-visible{color:var(--v-text);border-color:var(--v-accent)}

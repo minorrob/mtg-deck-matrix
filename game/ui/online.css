@@ -64,7 +64,12 @@ body.table-view .seat>.seat-heading{order:1}
 body.table-view .seat>.mana-status{order:2}
 body.table-view .seat[hidden]{display:none}
 body.table-view .primary-seat{max-width:none}
-body.table-view .player-mat{height:auto!important;width:100%;aspect-ratio:var(--mat-ratio,1020/603);max-height:none;cursor:zoom-in}
+/* THE MAT KEEPS ITS OWN PROPORTION. Measured on a live board at 1920x1080: the mat came out
+   517x177, a ratio of 2.92 against the playmat's own 1020/603 = 1.69 -- a letterbox strip. `.seat`
+   is a column flex box, the mat is a flex item, and flex-shrink beats aspect-ratio: heading 28 +
+   mana band 70 + mat 306 is 404 in a 300px board, so the mat was squeezed to fit. flex:0 0 auto
+   stops the squeeze and the mat takes its height from its width, as a playmat must. */
+body.table-view .player-mat{height:auto!important;width:auto;max-width:100%;flex:0 0 auto;align-self:center;aspect-ratio:var(--mat-ratio,1020/603);max-height:100%;cursor:zoom-in}
 body.table-view .seat-heading{min-height:28px;margin-bottom:7px;flex-wrap:wrap}
 body.table-view .center-counter{position:static;transform:none;grid-column:1;grid-row:2;width:100%;max-width:none;align-self:start;margin:0;padding:7px;border-radius:16px}
 body.table-view .counter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -325,3 +330,9 @@ body.table-view>header{position:relative;z-index:50}
 .audio-slider input{width:100%}
 .audio-slider input:disabled{opacity:.4}
 .audio-slider output{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+/* THE MANA BAND IS NOT ON THE FOUR-UP. Frame 2e gives a board a thin header and a thin chip row and
+   then the play surface; there is no six-box mana grid in it, and none in the plans either. Measured
+   on a live board it was 70px of a 300px board -- with the 28px heading, a third of every board
+   spent on chrome while the mat was crushed to a 2.92 strip. Focus has the room and keeps it. */
+body.table-view .seat > .mana-status{display:none}
+.focus-dialog .mana-status{display:block}
