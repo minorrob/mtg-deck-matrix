@@ -50,8 +50,20 @@ export async function serveRepo() {
     }
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  return {server, base: `http://127.0.0.1:${server.address().port}`};
+  const port = server.address().port;
+  return {server, port, base: `http://${WEB_HOST}:${port}`};
 }
+
+/* THE PAGE IS SERVED AS THE WEB COPY, NOT THE LOCAL HOST. The app treats 127.0.0.1 and localhost
+   as the game host's own copy and hides the rail there (Rob, 2026-09-24), so a suite that loaded
+   the page from loopback was measuring a different product from the one it was written for, and
+   could not reach Menu at all. Chromium resolves this name to the loopback server instead, and is
+   told to treat it as secure, since the real web copy is https and the app needs crypto.subtle. */
+export const WEB_HOST = "crankmagic.test";
+const webArgs = (port) => [
+  `--host-resolver-rules=MAP ${WEB_HOST} 127.0.0.1`,
+  `--unsafely-treat-insecure-origin-as-secure=http://${WEB_HOST}:${port}`,
+];
 
 /* Everything a browser suite needs, or a skip. `name` is the suite's own name for its
    messages and `flag` the environment variable that makes a missing browser a failure. */
@@ -71,7 +83,7 @@ export async function openBrowser({name, flag}) {
   const chromium = module_.chromium || (module_.default && module_.default.chromium);
   if (!chromium) skip("the Playwright entry point exposes no chromium");
 
-  const {server, base} = await serveRepo();
+  const {server, port, base} = await serveRepo();
   let stub = null;
   try {({stubNetwork: stub} = await import("./scryfall-stub.mjs"));} catch {}
 
@@ -79,6 +91,7 @@ export async function openBrowser({name, flag}) {
   try {
     browser = await chromium.launch({
       headless: true,
+      args: webArgs(port),
       ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {}),
     });
   } catch (error) {
