@@ -57,18 +57,30 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic
 /* Folders that never ship, whatever references them. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\//;
 
+const PLAY = ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"];
+const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
+/* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
+const RELEASE = {
+  play: "coming-soon",
+  dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com"],
+  host: "cloudflare",
+  /* Rob, 2026-09-24: "I do want the analytics." Cloudflare Web Analytics' automatic setup injects its
+     beacon into every page; the policy allowed only this site's own scripts and refused it. The beacon
+     loads from this host and reports to the site's own origin, which connect-src 'self' already allows. */
+  scriptSources: ["https://static.cloudflareinsights.com"],
+};
+/* Values an Access application hands out once it exists (Zero Trust -> Access -> Applications). Until then
+   a cloud profile builds but refuses to be written out or committed: verify() names what is missing. */
+export const PENDING = "pending";
+
 export const PROFILES = {
-  pages: {
-    play: "coming-soon",
-    leaveOut: ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"],
-    dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com"],
-    /* Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now. */
-    origin: "https://crankmagic.com/",
-    host: "cloudflare",
-    /* Rob, 2026-09-24: "I do want the analytics." Cloudflare Web Analytics' automatic setup injects its
-       beacon into every page; the policy allowed only this site's own scripts and refused it. The beacon
-       loads from this host and reports to the site's own origin, which connect-src 'self' already allows. */
-    scriptSources: ["https://static.cloudflareinsights.com"],
+  /* Production. Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now.
+     Accounts stay out of it until Rob approves them on staging (merge as we go, behind the switch). */
+  pages: {...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: [...PLAY, ...ACCOUNTS]},
+  /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). */
+  "cloud-staging": {
+    ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: PLAY, accounts: "on",
+    cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, access: {team: PENDING, aud: PENDING}},
   },
 };
 
@@ -81,17 +93,26 @@ export const PROFILES = {
    .assetsignore keeps a clone's .git, wrangler's own .wrangler scratch folder (it writes one into the
    folder it deploys from, and its debug log walks it with the assets) and the configuration off the site. */
 export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
+/* A profile with a cloud gets the API Worker (cloud/worker.mjs) in front of /api/* only -- every other path
+   is still served straight from the assets, uninvoiced -- with its D1 database and its Access settings.
+   The Worker's source ships in the release tree for wrangler to bundle, and .assetsignore keeps it (and the
+   migrations) from being published as files. */
 export const HOST_FILES = {
-  cloudflare: ({date, origin}) => ({
+  cloudflare: ({date, origin, profile}) => ({
     "wrangler.jsonc": JSON.stringify({
-      name: "crankmagic",
+      name: profile.worker,
+      ...(profile.cloud ? {main: "cloud/worker.mjs"} : {}),
       compatibility_date: date,
-      assets: {directory: "./"},
+      assets: profile.cloud ? {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]} : {directory: "./"},
       routes: [{pattern: new URL(origin).host, custom_domain: true}],
       workers_dev: false,
       preview_urls: false,
+      ...(profile.cloud ? {
+        d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
+        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud},
+      } : {}),
     }, null, 2) + "\n",
-    ".assetsignore": ".git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n",
+    ".assetsignore": `.git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n${profile.cloud ? "cloud/\n" : ""}`,
     /* Rob, 2026-09-24: "I don't want plain HTTP." Parsed by Cloudflare, never served. HSTS tells a browser
        that has been here once never to use http:// for this address again; the first visit's redirect is
        the zone's Always Use HTTPS, a setting outside what the wrangler sign-in may change. */
@@ -209,7 +230,8 @@ export function transform(file, text, {profile, version, origin}) {
       const tag = new RegExp(`[ \\t]*<(?:script[^>]*\\bsrc="${escape(f)}(?:\\?v=\\d+)?"[^>]*>\\s*</script>|link[^>]*\\bhref="${escape(f)}(?:\\?v=\\d+)?"[^>]*>)[ \\t]*\\r?\\n?`, "g");
       out = out.replace(tag, "");
     }
-    out = must(out, out.replace(/(<meta charset="utf-8">\r?\n?)/i, `$1  <meta name="crankmagic-play" content="${profile.play}">\n  <meta name="crankmagic-version" content="${version}">\n`), "insert the play and version marks after <meta charset>");
+    const accounts = profile.accounts === "on" ? `  <meta name="crankmagic-accounts" content="on">\n` : "";
+    out = must(out, out.replace(/(<meta charset="utf-8">\r?\n?)/i, `$1  <meta name="crankmagic-play" content="${profile.play}">\n  <meta name="crankmagic-version" content="${version}">\n${accounts}`), "insert the play and version marks after <meta charset>");
     out = out.replace(/(connect-src[^;"]*)/, (csp) => profile.dropConnect.reduce((s, src) => s.replace(new RegExp(`\\s+${escape(src)}(?=[\\s;"])`, "g"), ""), csp));
     if (profile.scriptSources?.length) out = must(out, out.replace(/script-src 'self'(?=[;"])/, `script-src 'self' ${profile.scriptSources.join(" ")}`), "add the profile's script sources to a script-src of 'self' alone");
     if (origin && origin !== FIRST_PUBLIC) out = out.split(FIRST_PUBLIC).join(origin);
@@ -228,7 +250,7 @@ export function transform(file, text, {profile, version, origin}) {
 export function verify(built, profile) {
   const problems = [], files = new Set(built.keys());
   for (const f of files) if (NEVER.test(f)) problems.push(`${f} is in a folder that never ships`);
-  for (const f of profile.leaveOut) if (files.has(f)) problems.push(`${f} is Play, and Play is not in this release`);
+  for (const f of profile.leaveOut) if (files.has(f)) problems.push(PLAY.includes(f) ? `${f} is Play, and Play is not in this release` : `${f} is left out of this release, and is in it`);
   for (const [f, body] of built) {
     if (!TEXT.test(f)) continue;
     const text = body.toString("utf8");
@@ -248,7 +270,26 @@ export function verify(built, profile) {
     for (const [f, body] of built) if (body.length > CLOUDFLARE_MAX_FILE) problems.push(`${f} is ${(body.length / 1048576).toFixed(1)} MB, over Cloudflare's 25 MiB per file`);
     let config = null;
     try {config = JSON.parse(built.get("wrangler.jsonc")?.toString("utf8") || "");} catch {}
-    if (!config || config.name !== "crankmagic" || config.assets?.directory !== "./" || config.main) problems.push("wrangler.jsonc does not serve the release as static files from the Worker named crankmagic");
+    if (!config || config.name !== profile.worker || config.assets?.directory !== "./") problems.push(`wrangler.jsonc does not serve the release's files from the Worker named ${profile.worker}`);
+    if (!profile.cloud && config?.main) problems.push("wrangler.jsonc gives a release without a cloud a Worker script");
+    if (profile.cloud) {
+      /* The API runs for /api/* and nothing else, against this profile's database, as Access's audience. */
+      if (config?.main !== "cloud/worker.mjs") problems.push("wrangler.jsonc does not run cloud/worker.mjs");
+      if (config?.assets?.binding !== "ASSETS" || JSON.stringify(config?.assets?.run_worker_first) !== JSON.stringify(["/api/*"])) problems.push("wrangler.jsonc must run the Worker for /api/* only, with the assets bound as ASSETS");
+      const db = (config?.d1_databases || [])[0];
+      if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
+      for (const [name, value] of Object.entries(config?.vars || {})) if (value === PENDING) problems.push(`${name} is pending: create the Access application for ${profile.origin} and put its value in PROFILES["${Object.keys(PROFILES).find((k) => PROFILES[k] === profile)}"]`);
+      if (!config?.vars?.ACCESS_TEAM_DOMAIN || !config?.vars?.ACCESS_AUD) problems.push("wrangler.jsonc does not tell the Worker which Access application to trust");
+      if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
+      for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
+      if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
+      if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");
+    }
+    for (const p of PAGES) {
+      const marked = (built.get(p)?.toString("utf8") || "").includes(`<meta name="crankmagic-accounts" content="on">`);
+      if (profile.accounts === "on" && !marked) problems.push(`${p} is not marked accounts-on, so the account module would stay asleep`);
+      if (profile.accounts !== "on" && marked) problems.push(`${p} is marked accounts-on in a release without accounts`);
+    }
     const host = profile.origin ? new URL(profile.origin).host : "";
     const routes = config?.routes || [];
     if (host && !(routes.length === 1 && routes[0].pattern === host && routes[0].custom_domain === true)) problems.push(`wrangler.jsonc does not answer on ${host} alone, as a custom domain`);
@@ -286,13 +327,21 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   }
   built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
-  if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date, origin: origin || FIRST_PUBLIC}))) built.set(f, Buffer.from(text));
+  if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date, origin: origin || FIRST_PUBLIC, profile}))) built.set(f, Buffer.from(text));
+  /* The Worker and its migrations, from the same commit as the pages (never walked: nothing links to them). */
+  if (profile.cloud) {
+    const worker = [...source.files].filter((f) => /^cloud\/[\w.-]+\.mjs$|^cloud\/migrations\/[\w.-]+\.sql$/.test(f));
+    source.readMany(worker);
+    for (const f of worker) built.set(f, source.read(f));
+  }
   return {built, problems: verify(built, profile), version, mentions, reachedFrom};
 }
 
 /* Commit the build to release/pages with plumbing and a private index: the working tree, the
    checked-out branch and the real index are never touched. */
+export const releaseBranch = (profileName) => profileName === "pages" ? RELEASE_BRANCH : `release/${profileName}`;
 export function commitRelease(built, {commit, version, profileName}) {
+  const RELEASE_BRANCH = releaseBranch(profileName);
   const tmp = mkdtempSync(path.join(os.tmpdir(), "release-index-"));
   try {
     const env = {...process.env, GIT_INDEX_FILE: path.join(tmp, "index")};
@@ -305,11 +354,11 @@ export function commitRelease(built, {commit, version, profileName}) {
     const tree = execFileSync("git", ["-C", ROOT, "write-tree"], {env}).toString().trim();
     const parent = spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
       || spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
-    if (parent && git("rev-parse", `${parent}^{tree}`) === tree) return {commit: parent, tree, unchanged: true};
-    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app only; Play says Coming Soon.\n`;
+    if (parent && git("rev-parse", `${parent}^{tree}`) === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
+    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app only; Play says Coming Soon${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
     const next = execFileSync("git", ["-C", ROOT, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
     execFileSync("git", ["-C", ROOT, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
-    return {commit: next, tree, parent, unchanged: false};
+    return {commit: next, tree, parent, unchanged: false, branch: RELEASE_BRANCH};
   } finally {
     rmSync(tmp, {recursive: true, force: true});
   }
@@ -343,7 +392,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (arg("--out")) {writeOut(built, path.resolve(arg("--out"))); console.log(`written to ${path.resolve(arg("--out"))}`);}
   if (has("--commit")) {
     const r = commitRelease(built, {commit: source.commit, version, profileName});
-    console.log(r.unchanged ? `${RELEASE_BRANCH} already holds this build (${r.commit.slice(0, 7)}); nothing committed` : `${RELEASE_BRANCH} -> ${r.commit.slice(0, 7)} (tree ${r.tree.slice(0, 7)}); not pushed. Publish with: git push origin ${RELEASE_BRANCH}`);
+    console.log(r.unchanged ? `${r.branch} already holds this build (${r.commit.slice(0, 7)}); nothing committed` : `${r.branch} -> ${r.commit.slice(0, 7)} (tree ${r.tree.slice(0, 7)}); not pushed. Publish with: git push origin ${r.branch}`);
   }
   if (!arg("--out") && !has("--commit") && !has("--list")) console.log("Nothing written: add --out <dir>, --commit or --list.");
 }
