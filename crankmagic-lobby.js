@@ -116,7 +116,7 @@
     if (s.commanders.length && known.length) {
       const outside = s.cards.filter((c) => c.colorIdentity.some((x) => x !== "C" && !colors.has(x)));
       if (outside.length) add("identity", "blocking",
-        `${outside.length} card${outside.length === 1 ? " is" : "s are"} outside ${s.commanders.map((c) => c.name).join(" and ")}'s colour identity (${[...colors].map((x) => COLOR_NAME[x] || x).join(", ") || "colorless"}): ${list(outside.map((c) => c.name))}.`,
+        `${outside.length} card${outside.length === 1 ? " is" : "s are"} outside ${s.commanders.map((c) => c.name).join(" and ")}'s color identity (${[...colors].map((x) => COLOR_NAME[x] || x).join(", ") || "colorless"}): ${list(outside.map((c) => c.name))}.`,
         outside.map((c) => c.name));
     }
 
@@ -483,7 +483,7 @@
   const TYPE_BUCKETS = [["Creature", "#6dbf6d"], ["Instant", "#6aa8ff"], ["Sorcery", "#ff8a5c"], ["Artifact", "#c0c0c0"],
     ["Enchantment", "#e0a0ff"], ["Planeswalker", "#ff6ad5"], ["Land", "#c4a35a"], ["Other", "#8899aa"]];
   function typeCounts(s, lookups) {
-    const look = lookupsOf(lookups), buckets = TYPE_BUCKETS.map(([n, colour]) => [n, 0, colour]);
+    const look = lookupsOf(lookups), buckets = TYPE_BUCKETS.map(([n, color]) => [n, 0, color]);
     for (const row of [].concat(s.commanders || []).concat(s.cards || [])) {
       const quantity = Number(row.quantity) || 1;
       let tl = row.typeLine || "";

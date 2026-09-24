@@ -85,7 +85,7 @@
     for (const [role, min] of Object.entries(minimums)) if (t[role] !== undefined && t[role] < min) warnings.push({kind: role, says: `${t[role]} ${role === "wipe" ? "board wipes" : role === "draw" ? "card draw" : role} against a floor of ${min}.`});
     if (t.gameChangers > gcLimit) warnings.push({kind: "gameChangers", says: `${t.gameChangers} Game Changers; the bracket allows ${gcLimit}.`});
     for (const [name, n] of t.names) if (n > 1) { const c = cards.find((x) => String((x.card && x.card.name) || "").toLowerCase() === name).card; if (!isBasic(c) && !/A deck can have any number/i.test(String((c && c.oracleText) || ""))) warnings.push({kind: "singleton", says: `${c.name} ×${n}; one copy of a non-basic.`}); }
-    if (colors.size) for (const {card: c} of cards) if ((c && c.colorIdentity || []).some((x) => !colors.has(x))) warnings.push({kind: "identity", says: `${c.name} is outside the commander's colour identity.`});
+    if (colors.size) for (const {card: c} of cards) if ((c && c.colorIdentity || []).some((x) => !colors.has(x))) warnings.push({kind: "identity", says: `${c.name} is outside the commander's color identity.`});
     return {tally: t, land, warnings};
   }
 

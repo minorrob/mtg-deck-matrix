@@ -64,7 +64,7 @@
       hook: {type: "string", minLength: 40, maxLength: 180,
         description: "One sentence: the thing this deck does that no other deck at the table does."},
       archetype: {type: "string", minLength: 6, maxLength: 60,
-        description: "The recognised archetype, in the words a player would use."},
+        description: "The recognized archetype, in the words a player would use."},
       difficulty: {
         type: "object", additionalProperties: false, required: ["tier", "why"],
         properties: {

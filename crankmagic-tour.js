@@ -126,7 +126,7 @@ const TOURS=[
      copy:'One step out is the obvious partners. Two or three is where the deck you had not thought of lives.'},
     {view:'discover',selectors:['#cm-facet-summary','#cm-facet-bar'],
      title:'Narrow it',
-     copy:'By role, colour, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
+     copy:'By role, color, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
     {view:'discover',selectors:['#cm-card-view','#cm-graph-pop'],
      title:'Read it here',
      copy:'Click any card and the pane fills in: the printing itself, rules text and all, plus its set, its price and the bracket it puts a deck in. Inspect sits under the art and Add and/or Buy under the bracket line; Back — to whatever you were looking at before — waits above the graph, at its top-right corner, because it undoes a move on the canvas rather than anything about this card.'},
@@ -159,7 +159,7 @@ const TOURS=[
      copy:'What it is, what it costs, and where it lives. Click a row to see the card itself.'},
     {view:'cards',selectors:['[data-action=roster-filters]'],act:'openFilters',
      title:'Filter and group',
-     copy:'By deck, status, type or colour. Grouping is how you find the eleven copies of the same land spread across four decks.'},
+     copy:'By deck, status, type or color. Grouping is how you find the eleven copies of the same land spread across four decks.'},
     {view:'cards',selectors:['[data-action=new-group]'],
      title:'A group is a box that is not yet a deck',
      copy:'You start with four — Main Deck, Bench, To Trade, To Buy — and they are ordinary groups: rename them, delete the ones you do not use, add your own. A precon you took apart, a trade binder, the pile you came home from a convention with.'},
@@ -226,7 +226,7 @@ const TOURS=[
      copy:'At a booth you want the red cards under five dollars, not the whole list.'},
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=shop-buy]','.cm-row-actions','#cm-roster-table'],
      title:'Buy marks it owned',
-     copy:'And assigns it to the deck that was waiting for it. On a phone this is the whole interface: name, colour, type, rarity, price, Buy.'},
+     copy:'And assigns it to the deck that was waiting for it. On a phone this is the whole interface: name, color, type, rarity, price, Buy.'},
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=export-view]','[data-action=roster-more]'],act:'openMore',
      title:'Take it with you',
      copy:'Export exactly what you are looking at — the filters, the grouping and the columns — as a list you can print or hand to a shop.'},
@@ -265,7 +265,7 @@ const TOURS=[
      copy:'The same button, the other direction. Export from the phone, mail it home, restore on the desktop — and the statuses you set at the booth land on the machine you build on.'},
     {view:'decks',selectors:['[data-action=export-excel]'],act:'openMenu',
      title:'The other kind of export',
-     copy:'Excel gives you your collection plus everything the app worked out about it: real prices, colours, types, what each card is for. Cards in, metadata out.'},
+     copy:'Excel gives you your collection plus everything the app worked out about it: real prices, colors, types, what each card is for. Cards in, metadata out.'},
     {view:'decks',selectors:['[data-action=mirror]'],act:'openMenu',
      title:'Or never think about it again',
      copy:'Point it at a file once and it keeps that file current, so the backup is never the thing you forgot to do.'}]}];
@@ -356,7 +356,7 @@ function findTarget(step){
 
 /* No target, or nothing solid to point at: the popover goes to the middle of the screen and
    the spotlight shrinks out of the way. The finish card uses this state deliberately. */
-function centre(){
+function center(){
   const spot=$('#cm-tour-spotlight'),pop=$('#cm-tour-popover');
   Object.assign(spot.style,{left:'50%',top:'50%',width:'1px',height:'1px'});
   const width=Math.min(420,innerWidth-24);
@@ -365,9 +365,9 @@ function centre(){
 }
 
 function position(target){
-  if(!target)return centre();
+  if(!target)return center();
   const r=target.getBoundingClientRect();
-  if(r.width<8||r.height<8||r.bottom<0||r.top>innerHeight)return centre();
+  if(r.width<8||r.height<8||r.bottom<0||r.top>innerHeight)return center();
   const spot=$('#cm-tour-spotlight'),pop=$('#cm-tour-popover'),pad=7;
   Object.assign(spot.style,{
     left:`${Math.max(5,r.left-pad)}px`,top:`${Math.max(5,r.top-pad)}px`,
@@ -395,7 +395,7 @@ function place(step,index){
       position(target.isConnected?target:null);   // re-read: the page moved under that rect
       return;
     }
-    centre();
+    center();
     /* Twelve seconds, not six (found in the sweep, PR 6). Discover renders after its graph data
        lands, and on a cold cache that can outlast the old budget — after which the step was
        left pointing at the middle of the screen with a one-pixel spotlight and no way to tell
@@ -423,7 +423,7 @@ function show(){
   $('#cm-tour-back').disabled=tour.index===0;
   $('#cm-tour-next').textContent=step.finish?'Done':'Next';
   $('#cm-tour-again').hidden=!step.finish;
-  if(step.finish){layer().setAttribute('data-tour-hit','finish');centre();return;}
+  if(step.finish){layer().setAttribute('data-tour-hit','finish');center();return;}
   const params=typeof step.params==='function'?step.params():step.params||{};
   const here=C.route();
   const sameRoute=here.view===step.view&&Object.entries(params).every(([k,v])=>here.params.get(k)===v);
@@ -492,7 +492,7 @@ addEventListener('keydown',ev=>{
   if(ev.key==='ArrowLeft')return move(-1);
 });
 /* A step's target moves when the window does, and the popover has to follow it. */
-const reposition=()=>{if(tour&&!tour.steps[tour.index].finish)position(findTarget(tour.steps[tour.index]));else if(tour)centre();};
+const reposition=()=>{if(tour&&!tour.steps[tour.index].finish)position(findTarget(tour.steps[tour.index]));else if(tour)center();};
 addEventListener('resize',reposition);
 addEventListener('scroll',reposition,true);
 

@@ -21,7 +21,12 @@
   if (root) { root.CrankTrade = api; (root.CrankFeatures ||= []).push(api.feature); }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const VERSION = 1, APP_URL = "https://minorrob.github.io/mtg-deck-matrix/";
+  /* The public address comes from the page's canonical link, which tools/release-pages.mjs sets to
+     where a release is published; outside a page (the suite) it is the first public address. */
+  const VERSION = 1, APP_URL = (() => {
+    try { return new URL("./", document.querySelector('link[rel="canonical"]').href).href; }
+    catch { return "https://minorrob.github.io/mtg-deck-matrix/"; }
+  })();
   const fold = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   const isTradeGroup = (g) => g && (g.id === "group:to-trade" || fold(g.name) === "to trade");
 

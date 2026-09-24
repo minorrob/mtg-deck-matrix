@@ -330,7 +330,7 @@
       const done = live;
       live = null;
       stop();
-      if (done) done.reject(new Error("Measurement cancelled."));
+      if (done) done.reject(new Error("Measurement canceled."));
     }
 
     return {measure, cancel, stop, get busy() { return Boolean(live); }};
