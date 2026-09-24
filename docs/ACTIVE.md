@@ -2,11 +2,11 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #341 to #348 all merged; nothing open |
-| **Branch** | `main`; nothing open. **8768 is running this code** — restarted 2026-09-22 after the last merge, verified with a pod. It is **local-only**: relaunch through `start-crankmagic.ps1 -RemoteGuests` when remote guests are wanted. |
-| **Since** | 2026-09-22 |
-| **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
-| **Next for whoever picks this up** | **Nothing is waiting on Rob. All eight open calls were answered 2026-09-23 — `docs/decisions-2026-09-23.md` is the record.** B.6b is the empty strip (option 2), B.2b stays dark, and the six others are settled there with what each one now requires. After those, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
+| **Holder** | Claude Code on Personal-HP |
+| **Branch** | `claude/engine-hosting`, draft PR #359. **8768 is not running** (nothing listening, checked 2026-09-24); the next start picks up the new logo. |
+| **Since** | 2026-09-24 |
+| **Doing** | Picking up `docs/handoff-2026-09-24.md`. First act: the two browser suites were red at `ad65ad7` with the `*_REQUIRED` flags set (the rail is hidden on 127.0.0.1 and the harness served from there). Fixed in the harness at `0ac77f8`; the full gate passes, 137 suites. |
+| **Next for whoever picks this up** | The handoff's outstanding list: the new table design (`docs/design/2026-09-24-table/`) is not built; **the local host is not the app's lobby** (`docs/plan-web-to-local-table-2026-09-21.md`, five pieces, none started); horizontal scroll for zones that outgrow two rows; the Load pane's empty list is unproven. |
 
 ## The engine has started — phase 0 done, phase 1 next
 
