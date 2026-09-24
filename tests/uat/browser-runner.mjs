@@ -57,13 +57,14 @@ export async function serveRepo() {
 /* THE PAGE IS SERVED AS THE WEB COPY, NOT THE LOCAL HOST. The app treats 127.0.0.1 and localhost
    as the game host's own copy and hides the rail there (Rob, 2026-09-24), so a suite that loaded
    the page from loopback was measuring a different product from the one it was written for, and
-   could not reach Menu at all. Chromium resolves this name to the loopback server instead, and is
-   told to treat it as secure, since the real web copy is https and the app needs crypto.subtle. */
-export const WEB_HOST = "crankmagic.test";
-const webArgs = (port) => [
-  `--host-resolver-rules=MAP ${WEB_HOST} 127.0.0.1`,
-  `--unsafely-treat-insecure-origin-as-secure=http://${WEB_HOST}:${port}`,
-];
+   could not reach Menu at all. Chromium resolves this name to the loopback server instead.
+   The name ends in .localhost ON PURPOSE: the real web copy is https, and restoring a backup needs
+   crypto.subtle, which only a secure context has. Every name under .localhost is a secure context
+   by the Secure Contexts spec, with no flag. The first version used crankmagic.test plus
+   --unsafely-treat-insecure-origin-as-secure; installed Chrome honored the flag, the headless
+   Chromium in CI did not, and the restore failed there with nothing on screen but a timeout. */
+export const WEB_HOST = "crankmagic.localhost";
+const webArgs = () => [`--host-resolver-rules=MAP ${WEB_HOST} 127.0.0.1`];
 
 /* Everything a browser suite needs, or a skip. `name` is the suite's own name for its
    messages and `flag` the environment variable that makes a missing browser a failure. */
@@ -91,7 +92,7 @@ export async function openBrowser({name, flag}) {
   try {
     browser = await chromium.launch({
       headless: true,
-      args: webArgs(port),
+      args: webArgs(),
       ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {}),
     });
   } catch (error) {
