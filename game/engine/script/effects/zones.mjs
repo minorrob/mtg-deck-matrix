@@ -21,7 +21,7 @@ import {moveObject, cardsIn} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
-import {applyReplacements} from "../../rules/replacement.mjs";
+import {applyReplacements, enteringModifications} from "../../rules/replacement.mjs";
 
 const ZONE_LABEL = {
   library: "Library", hand: "Hand", battlefield: "Battlefield",
@@ -58,7 +58,20 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   });
   const destination = proposal.to;
   const holder = owner ?? object.owner;
+
+  /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
+     the card as it is now -- a zone change makes a new object. */
+  const entering = destination === "battlefield"
+    ? enteringModifications(state, {objectId: id, player: object.controller, types: object.types, abilities: object.abilities})
+    : null;
+
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
+  if (entering) {
+    if (entering.tapped) state.objects[moved].tapped = true;
+    for (const [counter, count] of Object.entries(entering.counters)) {
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+    }
+  }
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),

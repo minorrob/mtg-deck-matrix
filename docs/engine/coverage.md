@@ -10,21 +10,19 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 
 | Scope | Cards | Playable now | Share |
 | --- | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 260 | 54.5% |
-| the card library | 2365 | 1007 | 42.6% |
+| Rob's seven decks | 477 | 330 | 69.2% |
+| the card library | 2365 | 1213 | 51.3% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `Moved` | replacement | 53 | replacements arrive with the card script |
-| `Continuous` | static | 45 | statics arrive with the card script |
 | `Flash` | keyword | 15 | declared, no behavior |
 | `Equip` | keyword | 8 | declared, no behavior |
 | `Haste` | keyword | 6 | declared, no behavior |
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
-| `CombatDamageToughness` | static | 5 | statics arrive with the card script |
+| `CombatDamageToughness` | static | 5 | no engine support yet |
 | `mill` | api | 4 | declared, not built |
 | `destroyAll` | api | 4 | declared, not built |
 | `surveil` | api | 4 | declared, not built |
@@ -37,15 +35,15 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `ETBReplacement` | keyword | 4 | not declared |
 | `AlternateAdditionalCost` | keyword | 3 | not declared |
 | `addManaReflected` | api | 3 | declared, not built |
+| `Changeling` | keyword | 3 | declared, no behavior |
+| `sacrificeAll` | api | 3 | declared, not built |
 
 ## What blocks the rest — the card library
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `Continuous` | static | 324 | statics arrive with the card script |
-| `Moved` | replacement | 111 | replacements arrive with the card script |
 | `Equip` | keyword | 79 | declared, no behavior |
-| `ReduceCost` | static | 61 | statics arrive with the card script |
+| `ReduceCost` | static | 61 | no engine support yet |
 | `Flash` | keyword | 50 | declared, no behavior |
 | `copySpell` | api | 46 | declared, not built |
 | `ETBReplacement` | keyword | 43 | not declared |
@@ -62,4 +60,6 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `immediateTrigger` | api | 25 | declared, not built |
 | `copyPermanent` | api | 25 | declared, not built |
 | `Cycling` | keyword | 24 | declared, no behavior |
+| `attach` | api | 24 | declared, not built |
+| `Chapter` | keyword | 24 | not declared |
 
