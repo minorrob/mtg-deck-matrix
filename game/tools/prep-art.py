@@ -13,7 +13,7 @@ become small WebPs -- 26MB of source would otherwise land in a repository that s
 import sys
 from PIL import Image
 
-SRC = "C:/Users/robmi/CrankMagic"
+SRC = "C:/Users/robmi/CrankMagic/art"   # the sources moved here; see art/README.md
 OUT = sys.argv[1]
 
 
@@ -67,8 +67,15 @@ logo = Image.open(f"{SRC}/crankmagic_logo.png")
 bg = logo.convert("RGB").getpixel((0, 0))
 box = content_box(logo, bg, 26)
 # Square it around the artwork's centre so the header gets a round badge, not a letterboxed strip.
+#
+# TIGHT TO THE GEAR, NOT TO THE WHOLE ILLUSTRATION. The first pass took the full content box, which
+# includes the orbit's sweep far out to either side. The gear then filled about 60% of a 256px
+# frame, and the header draws that at 36px -- so the subject landed at roughly 22 pixels and Rob
+# reported the logo as not rendering at all. It was loading fine; it was just too small to read.
+# The orbit is the widest thing in the picture and the gear is the logo, so the square is taken
+# from the artwork's HEIGHT rather than its width.
 cx, cy = (box[0] + box[2]) // 2, (box[1] + box[3]) // 2
-side = max(box[2] - box[0], box[3] - box[1]) // 2 + 12
+side = (box[3] - box[1]) // 2 + 10
 square = (max(0, cx - side), max(0, cy - side),
           min(logo.size[0], cx + side), min(logo.size[1], cy + side))
 out = key_out(logo.crop(square), bg, 24, 40).resize((256, 256), Image.LANCZOS)
