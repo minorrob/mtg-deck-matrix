@@ -65,6 +65,10 @@ export const PROFILES = {
     /* Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now. */
     origin: "https://crankmagic.com/",
     host: "cloudflare",
+    /* Rob, 2026-09-24: "I do want the analytics." Cloudflare Web Analytics' automatic setup injects its
+       beacon into every page; the policy allowed only this site's own scripts and refused it. The beacon
+       loads from this host and reports to the site's own origin, which connect-src 'self' already allows. */
+    scriptSources: ["https://static.cloudflareinsights.com"],
   },
 };
 
@@ -88,6 +92,10 @@ export const HOST_FILES = {
       preview_urls: false,
     }, null, 2) + "\n",
     ".assetsignore": ".git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n",
+    /* Rob, 2026-09-24: "I don't want plain HTTP." Parsed by Cloudflare, never served. HSTS tells a browser
+       that has been here once never to use http:// for this address again; the first visit's redirect is
+       the zone's Always Use HTTPS, a setting outside what the wrangler sign-in may change. */
+    "_headers": "/*\n  Strict-Transport-Security: max-age=31536000\n  X-Content-Type-Options: nosniff\n",
   }),
 };
 
@@ -203,6 +211,7 @@ export function transform(file, text, {profile, version, origin}) {
     }
     out = must(out, out.replace(/(<meta charset="utf-8">\r?\n?)/i, `$1  <meta name="crankmagic-play" content="${profile.play}">\n  <meta name="crankmagic-version" content="${version}">\n`), "insert the play and version marks after <meta charset>");
     out = out.replace(/(connect-src[^;"]*)/, (csp) => profile.dropConnect.reduce((s, src) => s.replace(new RegExp(`\\s+${escape(src)}(?=[\\s;"])`, "g"), ""), csp));
+    if (profile.scriptSources?.length) out = must(out, out.replace(/script-src 'self'(?=[;"])/, `script-src 'self' ${profile.scriptSources.join(" ")}`), "add the profile's script sources to a script-src of 'self' alone");
     if (origin && origin !== FIRST_PUBLIC) out = out.split(FIRST_PUBLIC).join(origin);
   }
   if (file === "crankmagic-sw.js") {
@@ -230,6 +239,10 @@ export function verify(built, profile) {
     if (!text.includes(`<meta name="crankmagic-play" content="${profile.play}">`)) problems.push(`${p} is not marked ${profile.play}`);
     if (!/<meta name="crankmagic-version" content="[^"]+">/.test(text)) problems.push(`${p} does not say which version it is`);
     for (const src of profile.dropConnect) if (text.includes(src)) problems.push(`${p} still allows ${src}`);
+    /* Scripts come from this site and the profile's named sources, and from nowhere else. */
+    const scripts = (/script-src ([^;"]*)/.exec(text) || [])[1]?.trim().split(/\s+/) || [];
+    const allowed = ["'self'", ...(profile.scriptSources || [])];
+    if (scripts.join(" ") !== allowed.join(" ")) problems.push(`${p}'s script-src is "${scripts.join(" ")}", not "${allowed.join(" ")}"`);
   }
   if (profile.host === "cloudflare") {
     for (const [f, body] of built) if (body.length > CLOUDFLARE_MAX_FILE) problems.push(`${f} is ${(body.length / 1048576).toFixed(1)} MB, over Cloudflare's 25 MiB per file`);
@@ -242,6 +255,9 @@ export function verify(built, profile) {
     if (config && (config.workers_dev !== false || config.preview_urls !== false)) problems.push("wrangler.jsonc leaves a workers.dev or preview address open -- a second origin, with its own browser storage");
     const ignored = (built.get(".assetsignore")?.toString("utf8") || "").split("\n");
     for (const must of [".git", ".wrangler", "wrangler.jsonc"]) if (!ignored.includes(must)) problems.push(`.assetsignore does not keep ${must} off the site`);
+    if (ignored.includes("_headers")) problems.push(".assetsignore would keep _headers from Cloudflare, which reads it at deploy");
+    const hsts = /^\/\*\r?\n(?:[ \t]+.*\r?\n)*?[ \t]+Strict-Transport-Security:\s*max-age=(\d+)/m.exec(built.get("_headers")?.toString("utf8") || "");
+    if (!hsts || Number(hsts[1]) < 31536000) problems.push("_headers does not send Strict-Transport-Security for a year on every path -- Rob: no plain HTTP");
   }
   if (profile.origin) for (const p of PAGES) {
     const text = built.get(p)?.toString("utf8") || "";
