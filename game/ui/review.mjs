@@ -649,7 +649,7 @@ function matView(p,focused=false){
     for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
     const large=focused||p.playerId===primarySeat;
     const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
-    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
+    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);if(name!=='Lands')mat.style.setProperty('--mat-card-width',m.cardWidth+'px');list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
     else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);zoneBoxes.set(cls,zone);
   }
@@ -747,12 +747,16 @@ function alignToPiles(mat,band){
      battlefield's default overflowed two rows. The width is derived once, from the room the
      battlefield actually has after its 10pt padding, and everything reads it:
         2 rows * (w * 680/488) + one gap <= inner height
-     A card is never wider than a pile frame either, or the piles would have to grow to match. */
-  if(field){
+     A card is never wider than a pile frame either, or the piles would have to grow to match.
+
+     ON A LARGE BOARD cardGridMetrics OWNS THIS, because it also knows the zoom, the columns, the
+     group label and the gaps -- it sets --mat-card-width from its own answer, and this must not
+     fight it. Two functions writing one property is the problem this whole change is about. So
+     this only fills in for the small boards, which never run that layout. */
+  if(field&&!mat.querySelector('.zoom-card-grid')){
     const f=field.getBoundingClientRect(),pad=13.334,gap=6;
     const inner=f.height-pad*2,byHeight=(inner-gap)/2/(680/488);
-    const byPile=c.width;
-    const width=Math.max(28,Math.min(byHeight,byPile));
+    const width=Math.max(28,Math.min(byHeight,c.width));
     mat.style.setProperty('--mat-card-width',width.toFixed(1)+'px');
   }
 

@@ -131,7 +131,7 @@ body.table-view .seat{background:linear-gradient(120deg,#112434e8,#0a141fee);bor
    leverage. Focus (2f) is a separate frame with its own card budget and keeps its own size. */
 body.table-view .hand-track .card{width:68px}
 .focus-dialog .hand-track .card{width:clamp(112px,10vw,152px)}
-.player-mat .mat-battlefield .card{width:clamp(44px,13cqw,175px)}
+
 .focus-mat-stage .mat-battlefield .card{width:clamp(52px,13cqw,195px)}
 .card.selected-card,.card.selectable{outline:2px solid var(--action-blue);outline-offset:2px;box-shadow:0 0 16px #00c4ff9c}
 .card:focus-visible{outline:2px solid #80e1ff;outline-offset:3px}

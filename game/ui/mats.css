@@ -11,10 +11,10 @@
 .personal-mat .mat-zone{border:0;background:#05101926}
 .mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-style:italic;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
 .mat-cards{position:absolute;inset:3% 2% 16%;display:flex;flex-wrap:wrap;gap:5px;overflow:auto;align-content:start;padding:3px;scrollbar-width:thin}
-.player-mat .mat-cards .card{width:clamp(36px,11cqw,145px);height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
+.player-mat .mat-cards .card{height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
 .player-mat .mat-cards{padding:3px}
 .player-mat .mat-lands .mat-cards{inset:1% 1% 14%;flex-wrap:nowrap;align-items:start;overflow-y:hidden;padding:1px 3px}
-.player-mat .mat-lands .card{width:clamp(29px,7.6cqw,106px)}
+
 .player-mat .card .badge{font-size:clamp(7px,1.6cqw,12px);padding:1px 3px;right:1px;bottom:1px}
 .player-mat .card .count{font-size:clamp(7px,1.6cqw,12px);padding:1px;min-width:16px;right:1px;top:1px}
 .player-mat .card .fallback{font-size:clamp(7px,1.3cqw,12px);padding:4px}.player-mat .card .fallback b{font-size:14px}

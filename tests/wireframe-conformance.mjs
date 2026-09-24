@@ -839,6 +839,34 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
       + "and the dead one reads as though it still applies");
   });
 
+  /* ONE CARD SIZE ON THE MAT, AND NOTHING QUIETLY SETTING ITS OWN.
+   *
+   * Rob, 2026-09-23: "every card on the mat should be the same size (commander, representative top
+   * of the deck / library, graveyard, exile)", after "the card default size is too big for 2 rows.
+   * In battlefield".
+   *
+   * Four widths were in play and agreed nowhere -- clamp(36px,11cqw,145px) on the battlefield,
+   * clamp(29px,7.6cqw,106px) on lands, clamp(44px,13cqw,175px) again in online.css, and the piles
+   * sized by their own frame. The value is derived once now, from the room two rows actually need,
+   * and every card reads it. This is the guard: a later rule that sets a mat card's width to
+   * anything but that variable puts the mat back where it started, and a screenshot is the only
+   * other way that gets noticed. */
+  check("every card on the mat takes its width from one variable", () => {
+    const mats = readFileSync("game/ui/mats.css", "utf8");
+    const derived = /--mat-card-width/;
+    assert.match(mats, derived, "the mat declares a single card width");
+    const widths = [...mats.matchAll(/^([^{@/\n][^{\n]*\.card[^{\n]*|[^{@/\n][^{\n]*library-back[^{\n]*)\{([^}]*)\}/gm)]
+      .filter(([, sel]) => /player-mat|mat-pile|mat-cards|mat-lands|free-card/.test(sel))
+      .map(([, sel, body]) => [sel.trim(), (body.match(/(?:^|;)width:([^;]*)/) || [])[1]])
+      .filter(([, w]) => w);
+    assert.ok(widths.length, "there are mat card width rules to check");
+    for (const [sel, w] of widths) {
+      assert.match(w, derived,
+        `${sel} sets width:${w} instead of reading --mat-card-width — one rule going its own way is `
+        + `how four of them accumulated`);
+    }
+  });
+
   check("the mat leaves a middle channel for the center counter", () => {
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
     assert.ok(table, "the mat rule");
