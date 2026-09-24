@@ -1,7 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn,engineIsWorking,firstDrawSkipped} from '/action-policy.mjs';
-import {planZone,planLanes,GROUP_LABEL} from '/card-layout.mjs';
+import {planZone,planTwoRows,planLandRow,orderGroups,GROUP_LABEL} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
@@ -752,8 +752,8 @@ function matView(p,focused=false){
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
     const grouped=new Map();
-    for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
-    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));if(group.gridColumn){stack.style.gridColumn=group.gridColumn;stack.style.gridRow=group.gridRow;stack.classList.toggle('lane-second',group.gridRow==='2');}const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
+    for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const basic=name==='Lands'&&/\bBasic\b/.test(types);const label=name==='Lands'?(basic?card.name:'Lands'):card.token?(types.split('\u2014')[0].includes('Creature')?'Tokens':'Other tokens'):types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||(name==='Lands'?(basic?'basic:'+card.name:'land:'+card.cardId):label);if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),basic,label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
+    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));if(group.gridColumn){stack.style.gridColumn=group.gridColumn;stack.style.gridRow=group.gridRow;stack.classList.toggle('lane-second',group.gridRow==='2');}const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);if(group.pile)stack.classList.add('land-pile-group');const fan=el('div','card-fan'+(group.pile?' land-pile':stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
     /* EVERY MAT, AT EVERY SIZE, LAYS OUT THE SAME WAY: the commander's card width (alignToPiles), and a
        zone that never puts a card below its own bottom edge (card-layout.mjs, planZone). The small
        four-up boards used to stack every group once a zone held more than three, and the large ones
@@ -767,19 +767,20 @@ function matView(p,focused=false){
       const cardWidth=matCardWidth(mat);if(!cardWidth)return;
       const s=getComputedStyle(list),pad=parseFloat(s.paddingTop)||0;
       const box={width:zone.clientWidth-(parseFloat(s.paddingLeft)||0)-(parseFloat(s.paddingRight)||0),height:zone.clientHeight-pad*2,cardWidth,scrollbar:Math.max(0,scrollbarThickness()-pad)};
-      /* The battlefield keeps creatures on the first row and everything else on the second when it has
-         the height for two (card-layout.mjs, planLanes); otherwise, and for lands, one lane. */
-      const all=[...grouped.values()],creature=g=>g.cards.some(c=>/Creature/.test((c.typeLine||'').split('\u2014')[0]));
-      const plan=(name==='Battlefield'&&planLanes({...box,top:all.filter(creature),bottom:all.filter(g=>!creature(g))}))||planZone({...box,lands:name==='Lands',groups:all});
-      list.style.setProperty('--card-columns',plan.columns);list.dataset.columns=plan.columns;list.dataset.rows=plan.lanes?2:plan.rows;
-      if(plan.lanes)list.style.setProperty('--lane-slot',plan.slot+'px');
-      list.classList.toggle('single-row',!!plan.singleRow);list.classList.toggle('lanes',!!plan.lanes);
-      const key=[cardWidth,plan.columns,plan.lanes?plan.groups.map(g=>g.gridColumn+g.gridRow+g.cards.length).join():plan.capacity+':'+plan.maxStack,plan.singleRow].join(':');
+      /* The battlefield's rules are in card-layout.mjs (planTwoRows): reading order, creatures first,
+         one card per cell, stack only as deep as you must, scroll only when the cards do not fit. A zone
+         too short for two rows keeps one, in the same order. Lands are one row, basics in piles. */
+      const all=orderGroups(name,[...grouped.values()]);
+      const plan=name==='Lands'?planLandRow({width:box.width,cardWidth,groups:all}):(planTwoRows({...box,groups:all})||planZone({...box,groups:all}));
+      list.style.setProperty('--card-columns',plan.columns);list.dataset.columns=plan.columns;list.dataset.rows=plan.twoRows?2:plan.rows;
+      if(plan.twoRows)list.style.setProperty('--lane-slot',plan.slot+'px');
+      list.classList.toggle('single-row',!!plan.singleRow);list.classList.toggle('two-rows',!!plan.twoRows);
+      const key=[cardWidth,plan.columns,plan.twoRows||name==='Lands'?plan.groups.map(g=>(g.gridColumn||'')+(g.gridRow||'')+g.cards.length).join():plan.capacity+':'+plan.maxStack,plan.singleRow].join(':');
       if(key!==layoutKey){layoutKey=key;drawGroups(plan.groups);}
       /* THE SCROLL BAR LIVES IN THE BOTTOM 10pt, not in a row's height: cards still stop 10pt inside
          the outline (Rob, 2026-09-23) and the bar is the only mark the scrolling window makes. */
       list.style.paddingBottom='';
-      const scrolls=plan.singleRow||plan.lanes,bar=scrolls?list.offsetHeight-list.clientHeight:0;
+      const scrolls=plan.singleRow||plan.twoRows,bar=scrolls?list.offsetHeight-list.clientHeight:0;
       if(bar)list.style.paddingBottom=Math.max(0,pad-bar)+'px';
       if(scrolls)list.scrollLeft=zoneScroll.get(scrollKey)||0;
     };

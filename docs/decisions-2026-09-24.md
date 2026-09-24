@@ -53,7 +53,8 @@ grew with its cards (702px of list in a 578px battlefield). And the stacking dep
 from the total card count, so groups each rounding up came out as more items than columns — 14 cards
 in six groups became eight items at five columns. Now: if every card fits the rows the zone holds,
 they wrap; otherwise it is one row, groups fan only as deep as the height allows, and the rest is a
-sideways scroll. The bar has no track and lives in the bottom 10pt of the zone.
+sideways scroll. The bar has no track and lives in the bottom 10pt of the zone. Where the
+battlefield has room for two rows — Focus — section 8's rules govern instead.
 
 ## 4. The 10pt padding scales with the board below Focus size
 
@@ -95,28 +96,46 @@ width, carrying the id, and every card scales with it. This supersedes 2f's thre
 The backlog count that sat beside OK rides the check as a small "+N" badge. `qa-pod.mjs` clicks the
 check now, since it no longer finds an OK button.
 
-## 8. Two lanes on the battlefield: creatures, then everything else
+## 8. The battlefield's rules: reading order, creatures first
 
-> "Is it possible to set board cards that are supposed to be in row 2 of the battlefield skipping
-> columns where row 1 pushes down over row 2 (e.g. Goblin Tokens stack in this screenshot), but
-> putting cards in the second row where a card space is available (e.g. Skirk Prospector, below that
-> card, then the next below Sol Ring (though sol ring would go to second row as it's not a creature)?"
+It took two passes. The first kept creatures on row 1 and everything else on row 2 — Rob's first
+question, *"Is it possible to set board cards that are supposed to be in row 2 of the battlefield
+skipping columns where row 1 pushes down over row 2 … but putting cards in the second row where a card
+space is available"* — and it left row-1 cells empty above row-2 cards. His correction:
 
-Creatures (dorks and creature tokens included) run along the first row; artifacts, enchantments and
-the rest along the second. A first-row stack deeper than one card reaches into the second row and
-takes its column; a single card leaves the slot beneath it, and second-row cards fill those slots left
-to right before opening columns past the last creature. On his board: Sol Ring under Skirk Prospector,
-nothing under the token stack, Thornbite Staff in the next column. `planLanes` in
-`game/ui/card-layout.mjs`.
+> "The creature cards should be on the first row, only going to the second row once the first row is
+> full in the visible pane. You have empty spots next to the Goblin token stack on row 1 (above row 2
+> cards). Think through how the mechanics of the battleground should be designed to support the
+> flexibility. And perhaps articulate to me the rules that govern that space."
 
-Two details the geometry forced. At the commander's size two cards and two group labels were about ten
-pixels taller than the battlefield, so **a second-row label overlaps the foot of the card above it**,
-left-aligned and short, clear of that card's power and toughness. And the second row has room for one
-card and not a fan, so two enchantments stand side by side. A group that has to split now splits
-evenly — five at a depth of four is three and two — so a stack never sheds one stray card.
+On seeing the result: *"This is good!"* The rules, as built (`planTwoRows` and `orderGroups` in
+`game/ui/card-layout.mjs`, each held by a test that was broken on purpose and went red):
 
-When only one kind of card is on the battlefield, or the zone is too short for two rows (the four-up's
-small boards), the one-lane layout of section 3 applies.
+1. **Reading order.** Row 1 fills left to right across the visible width, then row 2 left to right. No
+   cell stays empty while a card further along has a place, and nothing goes past the right edge while
+   a visible cell is free.
+2. **Creatures first.** Creatures, mana creatures, creature tokens; then mana rocks, artifacts,
+   enchantments, other tokens (Treasure and the like), the rest. A group the player made goes with
+   its creatures if it has any. Within a group, the order the engine lists the cards.
+3. **A cell holds one card.** A stack is taller than a row, so it takes its whole column; a single
+   card leaves the cell under it for the next card in order.
+4. **Stack only as deep as you must.** Every card stands alone if the visible cells can hold them;
+   otherwise groups stack, evenly, only as deep as it takes to fit. A group that reaches row 2 stands
+   its cards up one per cell there.
+5. **Scroll only when the cards do not fit.** Past the deepest stacks the zone allows, the grid goes
+   on beyond the right edge a column at a time, and the zone scrolls sideways.
+6. **One row when there is room for one.** The four-up's small boards are too short for two; they
+   keep one row in the same order, stacking and scrolling by the same rules.
+
+On his board: row 1 is the creatures stack, Skirk Prospector, the Goblin token stack, Sol Ring and
+Thornbite Staff; row 2 is Shared Animosity under Skirk and Impact Tremors under Sol Ring; nothing
+scrolls. At the commander's size two cards and two labels were about ten pixels taller than the
+battlefield, so **a row-2 card's group label overlaps the foot of the card above it**, short and
+left-aligned, clear of that card's power and toughness.
+
+**A consequence worth knowing:** because creatures come first, a creature entering the battlefield
+moves the cards after it along one cell — a non-creature at the end of row 1 can drop to row 2.
+Tapping never moves anything; a tapped card only tilts where it is.
 
 ## 9. The hand has its own size, twice the frame's by default
 
@@ -130,6 +149,17 @@ views, remembered per browser. The four-up's `--board-chrome` grows by the extra
 brings, so the hand stays above the fold and the boards give up the room: at the default they are
 about 448×252 (533×300 with the old 68px hand). In Focus the hand sits below the board, as it did;
 the board-size bar trades one against the other.
+
+## 10. Lands: one row, basics in piles
+
+> "Also, can we stack basic mana cards in the Land section, then when 1 is tapped that single card in
+> the stack tilts slightly"
+
+Basic lands of one name are one pile, overlapping sideways so a slice of every card shows; each card
+in the pile is still its own card to click, and a tapped one tilts where it lies without moving the
+rest. Basics come first in W U B R G order, then the other lands as they arrived. The lands zone is
+one card tall, so it is one row, and it scrolls sideways when the row is wider than the zone.
+`planLandRow` in `game/ui/card-layout.mjs`.
 
 ## Found on the way: the four-up had been blank
 

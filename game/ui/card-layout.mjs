@@ -68,51 +68,107 @@ function splitGroups(groups,chunk){
   });
 }
 
-/* TWO LANES ON THE BATTLEFIELD: creatures along the first row, everything else along the second.
- *
- * Rob, 2026-09-24: "Is it possible to set board cards that are supposed to be in row 2 of the
- * battlefield skipping columns where row 1 pushes down over row 2 (e.g. Goblin Tokens stack in this
- * screenshot), but putting cards in the second row where a card space is available (e.g. Skirk
- * Prospector, below that card, then the next below Sol Ring (though sol ring would go to second row as
- * it's not a creature)?"
- *
- * So a first-row fan deeper than one card reaches into the second row and takes its column; a single
- * card leaves the slot under it free, and the second row fills those slots left to right before it
- * opens columns of its own past the end of the first. Depth is the shallowest that fits the width, as
- * everywhere else; past the deepest the zone allows, the lanes scroll sideways.
- *
- * A SECOND-ROW LABEL SITS OVER THE FOOT OF THE CARD ABOVE IT (online.css, .lane-second). At the
- * commander's size two cards and two labels were about ten pixels taller than the battlefield, so the
- * second row's label gives up its own line and overlaps the artist credit of the card above instead,
- * clear of that card's power and toughness on the right.
- *
- * Returns null when there is no second row to lay out -- one lane is empty, or the zone is too short
- * for two rows -- and the caller keeps planZone's one-lane layout. */
-export function planLanes({width,height,cardWidth,top,bottom,scrollbar=0}) {
-  if(!top.length||!bottom.length)return null;
-  const w=Math.max(12,cardWidth),card=w*CARD_RATIO,strip=w*FAN_STRIP,h=height-scrollbar;
-  const slot=GROUP_LABEL+card,second=slot+GRID_GAP;
-  const deepestTop=Math.max(1,Math.floor((h-slot)/strip)+1);
-  const deepestBottom=Math.floor((h-second-card)/strip)+1;
-  if(deepestBottom<1)return null;
-  const columns=Math.max(1,Math.floor((width+GRID_GAP)/(w+GRID_GAP)));
-  let best=null;
-  for(let chunk=1;chunk<=deepestTop;chunk+=1){
-    const layout=placeLanes(splitGroups(top,chunk),splitGroups(bottom,Math.min(chunk,deepestBottom)));
-    if(!best||layout.columns<best.columns)best=layout;
-    if(layout.columns<=columns){best=layout;break;}
-  }
-  return {...best,cardWidth:w,slot,lanes:true,available:columns,scroll:best.columns>columns};
+/* THE ORDER A ZONE'S GROUPS ARE LAID OUT IN. The battlefield puts creatures first -- its rule 2,
+   below -- then mana rocks, artifacts, enchantments, other tokens and the rest; a group the
+   player made goes with its creatures if it has any. Lands put basics first in W U B R G order, then
+   the rest as they arrived. Within a rank, the order the engine lists them. */
+const GROUP_RANK={Creatures:0,'Mana dorks':1,Tokens:2,'Mana rocks':10,Artifacts:11,Enchantments:12,'Other tokens':13,Other:14};
+const BASIC_ORDER=['Plains','Island','Swamp','Mountain','Forest','Wastes'];
+export function orderGroups(zoneName,groups){
+  const creature=g=>g.cards.some(c=>/Creature/.test((c.typeLine||'').split('\u2014')[0]));
+  const rank=zoneName==='Lands'
+    ?g=>{if(!g.basic)return 100;const at=BASIC_ORDER.findIndex(b=>g.label.includes(b));return at<0?50:at;}
+    :g=>g.manual?(creature(g)?5:15):(GROUP_RANK[g.label]??14);
+  return groups.map((g,i)=>({g,i})).sort((a,b)=>rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g);
 }
-function placeLanes(tops,bottoms){
-  const free=tops.map(t=>t.cards.length===1&&!t.manual);
-  const groups=tops.map((t,i)=>({...t,gridColumn:i+1,gridRow:free[i]?'1':'1 / span 2'}));
-  let column=0;
-  for(const b of bottoms){
-    while(column<free.length&&!free[column])column+=1;
-    if(column===free.length)free.push(true);
-    groups.push({...b,gridColumn:column+1,gridRow:'2'});
-    free[column]=false;column+=1;
+
+/* THE BATTLEFIELD'S RULES, WHEN IT HAS ROOM FOR TWO ROWS.
+ *
+ * Rob, 2026-09-24, after a first version that kept creatures and the rest in separate rows and so
+ * left cells empty: "The creature cards should be on the first row, only going to the second row once
+ * the first row is full in the visible pane. You have empty spots next to the Goblin token stack on
+ * row 1 (above row 2 cards). Think through how the mechanics of the battleground should be designed
+ * to support the flexibility. And perhaps articulate to me the rules that govern that space."
+ *
+ *   1. READING ORDER. Row 1 fills left to right across the visible width, then row 2 left to right.
+ *      No cell stays empty while a card further along the order has a place, and nothing goes past
+ *      the visible right edge while a visible cell is free.
+ *   2. CREATURES FIRST. The caller orders the groups -- creatures, mana creatures, creature tokens,
+ *      then mana rocks, artifacts, enchantments, other tokens, the rest -- so creatures take the first
+ *      cells and everything else the cells after them.
+ *   3. A CELL HOLDS ONE CARD. A stack is taller than a row, so it takes its whole column; a single
+ *      card leaves the cell beneath it for the next card in the order.
+ *   4. STACK ONLY AS DEEP AS YOU MUST. Every card stands alone if the visible cells can hold them;
+ *      otherwise groups stack, evenly, only as deep as it takes to fit. A group that reaches the
+ *      second row stands its cards up one per cell there, because a second-row cell holds one card.
+ *   5. SCROLL ONLY WHEN THE CARDS DO NOT FIT. Past the deepest stacks the zone allows, the grid
+ *      continues beyond the right edge a column at a time -- a stack takes one, single cards pair up
+ *      top and bottom -- and the zone scrolls sideways.
+ *
+ * A second-row card's group label sits over the foot of the card above it (online.css, .lane-second):
+ * at the commander's size two cards and two labels were about ten pixels taller than the battlefield.
+ *
+ * Returns null when the zone is too short for a second row -- the four-up's small boards -- and the
+ * caller keeps planZone's one row, in the same creatures-first order. */
+export function planTwoRows({width,height,cardWidth,groups,scrollbar=0}) {
+  if(!groups.length)return null;
+  const w=Math.max(12,cardWidth),card=w*CARD_RATIO,strip=w*FAN_STRIP,h=height-scrollbar;
+  const slot=GROUP_LABEL+card;
+  if(slot+GRID_GAP+card>h)return null;
+  const deepest=Math.max(1,Math.floor((h-slot)/strip)+1);
+  const visible=Math.max(1,Math.floor((width+GRID_GAP)/(w+GRID_GAP)));
+  let best=null;
+  for(let chunk=1;chunk<=deepest;chunk+=1){
+    const layout=flowTwoRows(splitGroups(groups,chunk),visible);
+    if(!layout.overflow){best=layout;break;}
+    if(!best||layout.columns<best.columns||(layout.columns===best.columns&&layout.groups.length<best.groups.length))best=layout;
   }
-  return {groups,columns:Math.max(free.length,1)};
+  return {...best,cardWidth:w,slot,twoRows:true,available:visible,scroll:best.columns>visible};
+}
+function flowTwoRows(pieces,visible){
+  const groups=[],below=[],rest=[];
+  const isStack=p=>p.manual||p.cards.length>1;
+  let i=0,column=0;
+  /* Rule 1: row 1, across the visible width. A stack claims the cell below it too (rule 3). */
+  for(;i<pieces.length&&column<visible;i+=1,column+=1){
+    const p=pieces[i];
+    groups.push({...p,gridColumn:column+1,gridRow:isStack(p)?'1 / span 2':'1'});
+    below[column]=!isStack(p);
+  }
+  /* Row 2: one card per free cell, left to right, in the same order (rule 4). */
+  let cell=0;
+  for(;i<pieces.length;i+=1){
+    const p=pieces[i];
+    if(p.manual){rest.push(p);continue;}
+    const loose=[];
+    p.cards.forEach((card,k)=>{
+      while(cell<column&&!below[cell])cell+=1;
+      if(cell<column){groups.push({...p,cards:[card],stacked:false,showLabel:k===0&&p.showLabel!==false,gridColumn:cell+1,gridRow:'2'});below[cell]=false;cell+=1;}
+      else loose.push(card);
+    });
+    if(loose.length)rest.push({...p,cards:loose,showLabel:loose.length===p.cards.length&&p.showLabel!==false});
+  }
+  /* Rule 5: past the edge, a column at a time. */
+  let open=false;
+  for(const p of rest){
+    if(isStack(p)){if(open){column+=1;open=false;}groups.push({...p,gridColumn:column+1,gridRow:'1 / span 2'});column+=1;}
+    else if(!open){groups.push({...p,gridColumn:column+1,gridRow:'1'});open=true;}
+    else{groups.push({...p,gridColumn:column+1,gridRow:'2'});open=false;column+=1;}
+  }
+  if(open)column+=1;
+  return {groups,columns:Math.max(1,column),overflow:rest.length};
+}
+
+/* LANDS: ONE ROW, AND BASICS IN PILES. Rob, 2026-09-24: "can we stack basic mana cards in the Land
+ * section, then when 1 is tapped that single card in the stack tilts slightly". The caller makes one
+ * group per basic land name and one per other land. A pile overlaps sideways -- a slice of every card
+ * shows, so each is still its own card to click and a tapped one tilts where it lies, without moving
+ * the others -- and is PILE_SLICE of a card wider per card after the first. The lands zone is one card
+ * tall, so a row is all it holds; past its width it scrolls. */
+export const PILE_SLICE=.22;
+export function planLandRow({width,cardWidth,groups}) {
+  const w=Math.max(12,cardWidth);
+  const total=groups.reduce((n,g)=>n+w+(g.cards.length-1)*w*PILE_SLICE,0)+GRID_GAP*Math.max(0,groups.length-1);
+  return {groups:groups.map(g=>({...g,stacked:false,pile:g.cards.length>1})),columns:groups.length,rows:1,capacity:groups.length,maxStack:1,
+    singleRow:true,cardWidth:w,scroll:total>width};
 }

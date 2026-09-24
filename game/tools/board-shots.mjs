@@ -128,10 +128,10 @@ try {
         .filter((c) => c.getBoundingClientRect().bottom > zoneNode.getBoundingClientRect().bottom + 1)
         .map((c) => c.getAttribute("aria-label")));
       return {mat: [Math.round(r.width), Math.round(r.height)], cardWidth: mat.style.getPropertyValue("--mat-card-width"),
-        widths: [...new Set(widths)], below, lanes: !!mat.querySelector(".mat-battlefield .lanes")};
+        widths: [...new Set(widths)], below, twoRows: !!mat.querySelector(".mat-battlefield .two-rows")};
     });
     writeFileSync(path.join(out, `focus-${tag}.json`), JSON.stringify({...facts, pageErrors: errors}, null, 2));
-    console.log(`board-shots ${tag}: mat ${facts.mat.join("x")}, every card ${facts.cardWidth}, two lanes ${facts.lanes ? "yes" : "no"}, page errors ${errors.length}`);
+    console.log(`board-shots ${tag}: mat ${facts.mat.join("x")}, every card ${facts.cardWidth}, two rows ${facts.twoRows ? "yes" : "no"}, page errors ${errors.length}`);
     if (facts.widths.length !== 1) failures.push(`${tag}: cards on the focused mat come in ${facts.widths.length} widths (${facts.widths.join(", ")}px)`);
     if (facts.below.length) failures.push(`${tag}: ${facts.below.length} card(s) below a zone's bottom edge: ${facts.below.join("; ")}`);
     if (errors.length) failures.push(`${tag}: page errors: ${errors.join(" | ")}`);

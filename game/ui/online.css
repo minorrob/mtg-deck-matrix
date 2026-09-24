@@ -199,9 +199,16 @@ body.setup-screen>.recommended-actions{display:none!important}
 .player-mat .mat-cards.zoom-card-grid.single-row{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:max-content;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--color-ink,white) 45%,transparent) transparent}
 /* TWO LANES (card-layout.mjs, planLanes): the first row is exactly one card and its label tall, so a
    deeper fan spans into the second and a single card leaves the slot under it for a second-row card. */
-.player-mat .mat-cards.zoom-card-grid.lanes{grid-auto-flow:row;grid-template-columns:repeat(var(--card-columns,1),var(--mat-card-width));grid-template-rows:var(--lane-slot) auto;justify-content:start;align-items:start;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--color-ink,white) 45%,transparent) transparent}
+.player-mat .mat-cards.zoom-card-grid.two-rows{grid-auto-flow:row;grid-template-columns:repeat(var(--card-columns,1),var(--mat-card-width));grid-template-rows:var(--lane-slot) auto;justify-content:start;align-items:start;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--color-ink,white) 45%,transparent) transparent}
 .player-mat .zoom-card-grid .battlefield-group,.player-mat .zoom-card-grid .battlefield-group.expanded-group{width:var(--mat-card-width);max-width:none;min-width:0}
-.player-mat .zoom-card-grid.lanes .lane-second>.group-label{position:relative;z-index:2;margin-top:-16px;width:fit-content;max-width:62%}
+.player-mat .zoom-card-grid.two-rows .lane-second>.group-label{position:relative;z-index:2;margin-top:-16px;width:fit-content;max-width:62%}
+/* LAND PILES (card-layout.mjs, planLandRow): basics of one name overlap sideways, a slice of each card
+   showing, every card whole and its own button -- so a tapped one tilts where it lies. */
+.player-mat .zoom-card-grid .battlefield-group.land-pile-group{width:auto}
+.player-mat .mat-lands .card-fan.land-pile{flex-direction:row;align-items:flex-start}
+.player-mat .mat-lands .card-fan.land-pile>.card+.card{margin-top:0;margin-left:calc(var(--fan-card-width) * -0.78)}
+.player-mat .mat-lands .card-fan.land-pile>.card:not(:last-child){height:auto;aspect-ratio:488/680;overflow:visible}
+.player-mat .mat-lands .card-fan.land-pile>.card:not(:last-child)>img{height:100%;object-fit:cover}
 .player-mat .zoom-card-grid .group-label{height:16px;box-sizing:border-box;overflow:hidden;padding:0 2px;line-height:16px;font-size:10px}
 .zoom-card-grid .counter-dice{left:1px;bottom:16%;gap:1px;max-width:95%}.zoom-card-grid .die{font-size:clamp(5px,.7cqw,9px);padding:0 1px;line-height:1.2}.zoom-card-grid .badge{font-size:clamp(7px,1.2cqw,13px);padding:1px 3px}
 

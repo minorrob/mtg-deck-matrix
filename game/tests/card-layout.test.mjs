@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cardGridMetrics,arrangeCardGroups,planZone,planLanes,CARD_RATIO,FAN_STRIP,GROUP_LABEL} from '../ui/card-layout.mjs';
+import {cardGridMetrics,arrangeCardGroups,planZone,planTwoRows,planLandRow,orderGroups,PILE_SLICE,CARD_RATIO,FAN_STRIP,GROUP_LABEL} from '../ui/card-layout.mjs';
 
 /* A fan's height: one whole card, a name strip for each card above it, and the group's label. */
 const fanHeight=(cards,w,label=GROUP_LABEL)=>label+w*CARD_RATIO+(cards-1)*w*FAN_STRIP;
@@ -88,41 +88,63 @@ test('a scrolling row gives the scroll bar the height the padding cannot hold',(
   }
 });
 
-/* TWO LANES (planLanes). Rob, 2026-09-24: row-2 cards skip the columns a deep row-1 stack reaches down
-   into, and take the slot under a single card. His board, at the default Focus pane: 159.2px cards in a
-   battlefield 880 x 470 inside its padding. */
-const lanesBoard=()=>({top:[group('Creatures',4,0),group('Mana dorks',1,10),group('Tokens',5,20)],
-  bottom:[group('Mana rocks',1,30),group('Artifacts',1,40),group('Enchantments',2,50)]});
-test("Rob's board in two lanes: Sol Ring under Skirk Prospector, nothing under the token stack",()=>{
-  const {top,bottom}=lanesBoard(),plan=planLanes({width:880,height:470,cardWidth:159.2,top,bottom});
-  assert.ok(plan,'two rows fit once the second row\'s label overlaps the card above');
-  const at=label=>plan.groups.filter(g=>g.label===label);
-  assert.deepEqual(at('Mana dorks').map(g=>[g.gridColumn,g.gridRow]),[[2,'1']],'Skirk Prospector is a single card in row 1');
-  assert.deepEqual(at('Mana rocks').map(g=>[g.gridColumn,g.gridRow]),[[2,'2']],'so Sol Ring takes the slot under it');
-  assert.equal(at('Tokens').length,1,'all five tokens stay one stack');
-  assert.equal(at('Tokens')[0].gridRow,'1 / span 2','and the stack reaches into row 2, taking its column');
-  assert.deepEqual(at('Artifacts').map(g=>[g.gridColumn,g.gridRow]),[[4,'2']],'the next second-row card goes past the token column');
+/* THE BATTLEFIELD'S RULES (planTwoRows, orderGroups). Rob, 2026-09-24: "The creature cards should be
+   on the first row, only going to the second row once the first row is full in the visible pane." His
+   board at the default Focus pane: 159.2px cards in a battlefield 880 x 470 inside its padding. */
+const typed=(label,n,from,type)=>({label,cards:Array.from({length:n},(_,i)=>({cardId:from+i,typeLine:type}))});
+const robGroupsTyped=()=>[typed('Creatures',4,0,'Creature \u2014 Goblin'),typed('Mana dorks',1,10,'Creature \u2014 Goblin'),
+  typed('Tokens',5,20,'Token Creature \u2014 Goblin'),typed('Mana rocks',1,30,'Artifact'),typed('Artifacts',1,40,'Artifact'),
+  typed('Enchantments',2,50,'Enchantment')];
+test("Rob's board: row 1 full across the pane, then row 2 in the cells under single cards",()=>{
+  const plan=planTwoRows({width:880,height:470,cardWidth:159.2,groups:robGroupsTyped()});
+  const cell=g=>[g.label,g.gridColumn,g.gridRow,g.cards.length];
+  assert.deepEqual(plan.groups.filter(g=>g.gridRow!=='2').map(cell),
+    [['Creatures',1,'1 / span 2',4],['Mana dorks',2,'1',1],['Tokens',3,'1 / span 2',5],['Mana rocks',4,'1',1],['Artifacts',5,'1',1]],
+    'no empty cell in row 1: after the creatures come Sol Ring and Thornbite Staff, and the stacks take their columns');
+  assert.deepEqual(plan.groups.filter(g=>g.gridRow==='2').map(cell),[['Enchantments',2,'2',1],['Enchantments',4,'2',1]],
+    'the enchantments stand one per cell, under Skirk Prospector and under Sol Ring');
+  assert.equal(plan.scroll,false,'and all of it fits the visible pane');
 });
-test('no column holds a deep first-row stack and a second-row card, and every second-row card fits',()=>{
-  let seed=11;const next=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
-  for(let run=0;run<200;run++){
-    const make=(n,from)=>Array.from({length:n},(_,i)=>group('g'+from+i,1+Math.floor(next()*7),(from+i)*100));
-    const cardWidth=60+next()*140,height=cardWidth*CARD_RATIO*2+GROUP_LABEL+40+next()*200,width=300+next()*1200;
-    const plan=planLanes({width,height,cardWidth,top:make(1+Math.floor(next()*4),0),bottom:make(1+Math.floor(next()*4),10)});
+test('reading order holds for any board: row 1 before row 2, one card per cell, every card once',()=>{
+  let seed=23;const next=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
+  for(let run=0;run<300;run++){
+    const groups=Array.from({length:1+Math.floor(next()*6)},(_,i)=>group('g'+i,1+Math.floor(next()*6),i*100));
+    const cardWidth=60+next()*140,height=cardWidth*CARD_RATIO*2+GROUP_LABEL+10+next()*260,width=200+next()*1300;
+    const plan=planTwoRows({width,height,cardWidth,groups});
     if(!plan)continue;
-    const spanning=new Set(plan.groups.filter(g=>g.gridRow==='1 / span 2').map(g=>g.gridColumn));
-    for(const g of plan.groups.filter(g=>g.gridRow==='2')){
-      assert.ok(!spanning.has(g.gridColumn),`run ${run}: a second-row card under a stack that reaches into row 2`);
-      const second=GROUP_LABEL+cardWidth*CARD_RATIO+5;
-      assert.ok(second+cardWidth*CARD_RATIO+(g.cards.length-1)*cardWidth*FAN_STRIP<=height+.01,`run ${run}: a second-row fan of ${g.cards.length} crosses the bottom`);
+    const ids=plan.groups.flatMap(g=>g.cards.map(c=>c.cardId)).sort((a,b)=>a-b);
+    assert.deepEqual(ids,groups.flatMap(g=>g.cards.map(c=>c.cardId)).sort((a,b)=>a-b),`run ${run}: every card exactly once`);
+    const taken=new Set();
+    for(const g of plan.groups){
+      const rows=g.gridRow==='1 / span 2'?['1','2']:[g.gridRow];
+      if(g.gridRow==='2')assert.equal(g.cards.length,1,`run ${run}: a second-row cell holds one card`);
+      if(g.cards.length>1)assert.equal(g.gridRow,'1 / span 2',`run ${run}: a stack takes its whole column`);
+      for(const r of rows){const key=g.gridColumn+':'+r;assert.ok(!taken.has(key),`run ${run}: two things in cell ${key}`);taken.add(key);}
     }
+    const visibleSecond=plan.groups.some(g=>g.gridRow==='2'&&g.gridColumn<=plan.available);
+    if(visibleSecond)for(let c=1;c<=plan.available;c++)assert.ok(taken.has(c+':1'),`run ${run}: row 2 used while row 1 cell ${c} is empty`);
+    const order=[...plan.groups].sort((a,b)=>{const ov=x=>x.gridColumn>plan.available?1:0;const row=x=>x.gridRow==='2'?2:1;
+      return ov(a)-ov(b)||(ov(a)?a.gridColumn-b.gridColumn||row(a)-row(b):row(a)-row(b)||a.gridColumn-b.gridColumn);});
+    assert.deepEqual(order.flatMap(g=>g.cards.map(c=>c.cardId)),groups.flatMap(g=>g.cards.map(c=>c.cardId)),`run ${run}: cards appear in reading order`);
   }
 });
-test('two lanes only when there are two kinds of card and room for two rows',()=>{
-  const {top,bottom}=lanesBoard();
-  assert.equal(planLanes({width:880,height:470,cardWidth:159.2,top,bottom:[]}),null,'creatures alone keep the one-lane layout');
-  assert.equal(planLanes({width:880,height:470,cardWidth:159.2,top:[],bottom}),null,'and so does everything else alone');
-  assert.equal(planLanes({width:880,height:300,cardWidth:159.2,top,bottom}),null,'a zone shorter than two cards has no second row');
+test('creatures come first, whatever order the engine lists them in',()=>{
+  const shuffled=[typed('Enchantments',1,1,'Enchantment'),typed('Tokens',2,2,'Token Creature \u2014 Goblin'),typed('Artifacts',1,4,'Artifact'),
+    typed('Creatures',1,5,'Creature \u2014 Elf'),typed('Mana rocks',1,6,'Artifact'),typed('Mana dorks',1,7,'Creature \u2014 Elf')];
+  assert.deepEqual(orderGroups('Battlefield',shuffled).map(g=>g.label),['Creatures','Mana dorks','Tokens','Mana rocks','Artifacts','Enchantments']);
+  const lands=[{label:'Lands',cards:[{cardId:1}]},{label:'Mountain',basic:true,cards:[{cardId:2}]},{label:'Forest',basic:true,cards:[{cardId:3}]},{label:'Plains',basic:true,cards:[{cardId:4}]}];
+  assert.deepEqual(orderGroups('Lands',lands).map(g=>g.label),['Plains','Mountain','Forest','Lands'],'basics first, in W U B R G order');
+});
+test('a battlefield too short for two rows keeps one',()=>{
+  assert.equal(planTwoRows({width:880,height:300,cardWidth:159.2,groups:robGroupsTyped()}),null);
+});
+test('lands: a basic of one name is one pile, a slice of each card showing, and the row scrolls when it must',()=>{
+  const mountains={label:'Mountain',basic:true,cards:[1,2,3,4,5].map(cardId=>({cardId}))},forge={label:'Lands',cards:[{cardId:6}]};
+  const plan=planLandRow({width:880,cardWidth:159.2,groups:[mountains,forge]});
+  assert.deepEqual(plan.groups.map(g=>[g.label,g.pile]),[['Mountain',true],['Lands',false]],'five Mountains, one pile');
+  assert.equal(plan.scroll,false,'a pile of five is about two cards wide, so the row fits');
+  assert.equal(planLandRow({width:300,cardWidth:159.2,groups:[mountains,forge]}).scroll,true,'and a row too wide for the zone scrolls');
+  assert.ok(PILE_SLICE>0&&PILE_SLICE<.5,'a slice, not a card');
 });
 test('a group that has to split, splits evenly',()=>{
   const parts=arrangeCardGroups([group('Tokens',5)],1,4).map(g=>g.cards.length);
