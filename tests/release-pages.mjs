@@ -60,8 +60,10 @@ for (const p of PAGES) {
 eq(version.origin, "https://crankmagic.com/", "version.json says where it is published");
 const wrangler = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 eq([wrangler.name, wrangler.assets, wrangler.main], ["crankmagic", {directory: "./"}, undefined], "wrangler.jsonc serves the release as static files, no script, from the Worker named crankmagic");
+eq([wrangler.routes, wrangler.workers_dev, wrangler.preview_urls], [[{pattern: "crankmagic.com", custom_domain: true}], false, false],
+  "on crankmagic.com alone: no workers.dev or preview address, each of which would be another origin with its own browser library");
 const ignored = built.get(".assetsignore").toString("utf8").split("\n");
-ok([".git", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git and the configuration off the site");
+ok([".git", ".wrangler", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git, wrangler's scratch folder and the configuration off the site");
 ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
 
 /* The checks fail when they should. */
@@ -74,6 +76,9 @@ ok(broken((m) => m.set("crankmagic.html", Buffer.from(m.get("crankmagic.html").t
 assert.throws(() => transform("index.html", "<html><head></head></html>", {profile, version: "x", origin: ""}), /nothing to change/, "a page without <meta charset> is refused, not half-edited"); checks++;
 ok(broken((m) => m.set(".assetsignore", Buffer.from("wrangler.jsonc\n"))).some((p) => p.includes(".git")), "an .assetsignore that would publish .git is named");
 ok(broken((m) => m.set("data/huge.json", Buffer.alloc(25 * 1024 * 1024 + 1))).some((p) => p.includes("25 MiB")), "a file over Cloudflare's limit is named");
+const withConfig = (edit) => broken((m) => {const c = JSON.parse(m.get("wrangler.jsonc").toString()); edit(c); m.set("wrangler.jsonc", Buffer.from(JSON.stringify(c)));});
+ok(withConfig((c) => {c.workers_dev = true;}).some((p) => p.includes("second origin")), "a Worker left open on workers.dev is named");
+ok(withConfig((c) => {c.routes.push({pattern: "www.crankmagic.com", custom_domain: true});}).some((p) => p.includes("alone")), "a second custom domain is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('href="https://crankmagic.com/"', `href="${FIRST_PUBLIC}"`)))).some((p) => p.includes("canonical")), "a page whose canonical link is not crankmagic.com is named");
 
 /* The walk reads what the app would load, not what its comments talk about. */

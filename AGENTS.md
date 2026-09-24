@@ -55,9 +55,9 @@ agent's call unless the PR is superseded by one the agent opened and the report 
 
 ## The production release
 
-`release/pages` is production. It is written only by `tools/release-pages.mjs --commit`, from a commit of
-`main`, and a push to it is a deploy — made only after `tests/uat/release-acceptance.mjs` passes on that
-exact build (`docs/release-pages.md`). Unfinished work may reach `main`; what reaches users is decided by
+`release/pages` is production's record: it is written only by `tools/release-pages.mjs --commit`, from a
+commit of `main`, and what is live at crankmagic.com is always a commit on it. A deploy is `wrangler deploy`
+of that same build, made only after `tests/uat/release-acceptance.mjs` passes on it (`docs/release-pages.md`). Unfinished work may reach `main`; what reaches users is decided by
 the builder's profile. Rob set this on 2026-09-24, when he chose to merge Account Cloud and Play into
 `main` as they are built rather than hold them on long branches.
 

@@ -2,9 +2,11 @@
 
 **What it is.** The web app and nothing else — no game host, no Forge, no engine, no tools, tests or
 documents — built from one commit of `main` by `tools/release-pages.mjs`, committed to the `release/pages`
-branch, and served by **Cloudflare at https://crankmagic.com/**: a Worker with static assets and no script,
-which Workers Builds deploys on every push to `release/pages` (production branch `release/pages`, preview
-builds off). Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
+branch, and served by **Cloudflare at https://crankmagic.com/**: the Worker `crankmagic`, static assets and
+no script, answering on crankmagic.com alone. It is deployed with `wrangler deploy` from the very folder the
+acceptance walk passed on — wrangler lives in `C:\Users\robmi\CrankMagic\workbench\cloudflare` (outside the
+repo, which has no dependencies) and was signed in to Rob's Cloudflare account by Rob on 2026-09-24.
+Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
 Play option (on that tab it should say 'Coming Soon'). I want to use everything else that exists in
 CrankMagic today as a production release."*
 
@@ -16,8 +18,9 @@ into `main` as they are built, behind a build switch. So `main` holds everything
 
 1. **`release/pages` is written only by the builder** (`--commit`), from a commit of `main`, never by hand,
    never from a feature branch, never from the working tree (`--worktree` refuses `--commit`).
-2. **A push to `release/pages` is a production deploy.** It happens only after the four journeys pass on the
-   exact build being pushed (step 3 below), and only by someone who says so in the handoff.
+2. **A deploy is `wrangler deploy` of the folder the walk passed on**, and `release/pages` is its record: the
+   same build is committed and pushed there, so what is live is always a commit anyone can read. It happens
+   only after the four journeys pass on that folder (step 3), and only by someone who says so in the handoff.
 3. **The build refuses rather than guesses.** A page that is not what it expects (no `<meta charset>`), a
    file the service worker lists but the release lacks, a Play module that got in, a leaked tool — it stops
    and names the file.
@@ -36,11 +39,12 @@ node tools/release-pages.mjs --out <empty folder>
 node <any static server> <folder> 8790
 UAT_BASE=http://crankmagic.localhost:8790 UAT_LIVE_NETWORK=1 UAT_SHOTS=<folder> node tests/uat/release-acceptance.mjs
 
-# 4. commit the same build to release/pages, then publish it
+# 4. commit the same build to release/pages (the record), push it, and deploy the tested folder
 node tools/release-pages.mjs --commit
 git push origin release/pages
+cd <folder> && C:/Users/robmi/CrankMagic/workbench/cloudflare/wrangler.cmd deploy
 
-# 5. Cloudflare deploys the push; walk the live site
+# 5. walk the live site
 UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
 ```
 
@@ -62,7 +66,7 @@ read.
 | Tightens | the security policy's `connect-src` loses `http://127.0.0.1:8768` and `https://*.trycloudflare.com` |
 | Never ships | `game/ tools/ tests/ docs/ design/ prototype/ graph/ payload*/ schema/ .github/ .claude/ data/engine/ data/source/ data/archive/ data/game-logs/` |
 | Moves the address | the profile's `origin`, `https://crankmagic.com/`, replaces the github.io address in the canonical and social links (`--origin` overrides it); the app reads its own address from the canonical link |
-| Hosts | `wrangler.jsonc` (the Worker `crankmagic`, static assets from `./`, no script) and `.assetsignore` (keeps the clone's `.git` and the configuration off the site); every file must fit Cloudflare's 25 MiB |
+| Hosts | `wrangler.jsonc` — the Worker `crankmagic`, static assets from `./`, no script, **crankmagic.com as its only address** (a custom domain; `workers_dev` and `preview_urls` off, because every extra address is another origin with its own browser library) — and `.assetsignore`, which keeps `.git`, wrangler's `.wrangler` scratch folder (it writes one into the folder it deploys from) and the configuration off the site. Every file must fit Cloudflare's 25 MiB |
 
 ## Known limits
 
