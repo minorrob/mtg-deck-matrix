@@ -60,6 +60,10 @@ const requires=attrs=>/(^|\s)(required|data-required)(\s|=|$)/.test(attrs);
 const labelled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
 function field(label,name,value='',attrs=''){return `<label>${labelled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
 function select(label,name,items,value,attrs=''){return `<label>${labelled(label,attrs)}<select name="${esc(name)}" aria-label="${esc(label)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}>${options(items,value)}</select></label>`;}
+/* This app's public address: the directory of the page's canonical link. tools/release-pages.mjs
+   rewrites that link to wherever a release is published; a page without one falls back to the
+   address the app was first published at. */
+function canonicalBase(){try{return new URL('./',document.querySelector('link[rel="canonical"]').href).href;}catch{return 'https://minorrob.github.io/mtg-deck-matrix/';}}
 function note(text,warn=false){return `<div class="cm-note${warn?' cm-warning':''}">${esc(text)}</div>`;}
 function head(kicker,title,description,controls=''){return `<header class="cm-page-head"><div><div class="v-eyebrow cm-eyebrow-warm">${esc(kicker)}</div><h1>${esc(title)}</h1><p>${esc(description)}</p></div><div class="cm-actions">${controls}</div></header>`;}
 /* THE PAGE NAME IS THE HEADING. Every page used to open on three lines -- an eyebrow, a
@@ -136,7 +140,10 @@ function describeData(){
   const known=rows.map(([,n])=>n).filter(n=>n!==null);
   const worst=known.length?Math.max(...known):null;
   const menu=$('#cm-data-dates');
-  if(menu)menu.innerHTML='<p>Card data</p>'+rows.map(([label,n])=>`<p class="cm-data-row${n!==null&&n>=STALE_DAYS?' cm-data-stale':''}"><span>${esc(label)}</span><span>${esc(ageWord(n))}</span></p>`).join('');
+  /* A release says which commit it is (tools/release-pages.mjs writes the meta); main does not. */
+  const version=document.querySelector('meta[name="crankmagic-version"]')?.content||'';
+  if(menu)menu.innerHTML='<p>Card data</p>'+rows.map(([label,n])=>`<p class="cm-data-row${n!==null&&n>=STALE_DAYS?' cm-data-stale':''}"><span>${esc(label)}</span><span>${esc(ageWord(n))}</span></p>`).join('')
+    +(version?`<p class="cm-data-row cm-version"><span>Version</span><span>${esc(version)}</span></p>`:'');
   const note=$('#cm-data-age');
   if(!note)return;
   note.hidden=worst===null;
@@ -292,12 +299,12 @@ const COLLECTION_TERMS=[
   ['bench','Bench','Cards you own that no deck has reserved and none is shortlisting. The spare pile everything else is drawn from.',[]],
   ['watched','Watched','A card you are considering for a deck: filed in that deck’s collection group, reserving nothing and moving nothing. You may own a copy or not.',['Watching']],
   ['to-buy','To buy','A seat in a finalized deck’s list that nothing you hold fills yet. It is what the deck asks you to buy.',[]],
-  ['ordered','Ordered','A copy you have paid for that has not arrived. It counts towards a deck the way an owned copy does, and cannot be put in a box.',[]],
+  ['ordered','Ordered','A copy you have paid for that has not arrived. It counts toward a deck the way an owned copy does, and cannot be put in a box.',[]],
   ['draft-list','Draft list','The hundred a deck claims before it is finalized. A draft reserves nothing, so no copy is committed to it.',[]],
   ['suggestion','Suggestion','A card linked to a deck as an option or an upgrade rather than as part of its hundred.',['Suggestions']],
   ['planned','Planned','A card written into a collection group as a line on a list. It is a plan, not a copy you hold.',[]],
   ['collection-group','Collection group','A named set of records. Every deck owns one, which is how a card is shortlisted for that deck without being reserved.',['Groups']],
-  ['group-piles-by','Group piles by','Which reading of a card sorts the table’s source shelves — its type, its colour, what it is for. It changes how the cards are arranged, never what they are.',[]],
+  ['group-piles-by','Group piles by','Which reading of a card sorts the table’s source shelves — its type, its color, what it is for. It changes how the cards are arranged, never what they are.',[]],
   ['status-piles','Status piles','The destinations along the foot of the table: where a card ends up, as against the shelves, which are where it comes from.',[]],
   ['primary-purpose','Primary Purpose','The one job a card is in a deck for, decided by a fixed ladder — finisher, extra turn, board wipe, multiplier, and so on down to its body and its tribe.',['Purpose']],
   ['card-type','Card type','The card’s first type line word — Creature, Instant, Land — before any dash.',[]],
@@ -406,8 +413,9 @@ document.addEventListener('click',async e=>{const el=e.target.closest('[data-act
    request is an e-mail to the maintainer from the reader's own mail client, sharing is a
    pre-written draft with the To line left for them, and the QR code is drawn in the page
    (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
-   whatever address this copy happens to be open on. */
-const APP_URL='https://minorrob.github.io/mtg-deck-matrix/',SUBSCRIBE_TO='minor.rob@gmail.com';
+   whatever address this copy happens to be open on: the page's canonical link, which
+   tools/release-pages.mjs sets to the address a release is published at. */
+const APP_URL=canonicalBase(),SUBSCRIBE_TO='minor.rob@gmail.com';
 function shareLinks(){const sub=$('#cm-share-subscribe'),mail=$('#cm-share-mail');if(!sub||!mail)return;
   sub.href='mailto:'+SUBSCRIBE_TO+'?subject='+encodeURIComponent('Subscribe me to CrankMagic updates')+'&body='+encodeURIComponent('Please add this address to the CrankMagic update list.\n\nName: \n\n(Sent from '+APP_URL+')');
   mail.href='mailto:?subject='+encodeURIComponent('CrankMagic: an intelligent Commander deck creator and card library')+'&body='+encodeURIComponent('Have a look at CrankMagic: '+APP_URL+'\n\nIt builds and measures Commander decks, keeps your card library, and works on a phone at the table.');}
@@ -455,11 +463,16 @@ try{repo=await CrankRepository.open();state=await repo.getState();await seedStar
    the wrappers inject catalogExact, commit and state dependencies so Hosted Play only passes
    public API params (seatLabel, commanders, cards, existingDeckId / deckId, report). */
 if(globalThis.CrankCollectionLobbyDraft){C.ensureLobbyDraft=options=>CrankCollectionLobbyDraft.ensureLobbyDraft({...options,catalogExact:name=>catalog?.exact?.(name)||null,commit:(...args)=>commit(...args),state});C.attachDeckReport=options=>CrankCollectionLobbyDraft.attachDeckReport({...options,commit:(...args)=>commit(...args),state});if(globalThis.CrankCollection){CrankCollection.ensureLobbyDraft=C.ensureLobbyDraft;CrankCollection.attachDeckReport=C.attachDeckReport;}}
-for(const module of globalThis.CrankFeatures||[])module(C);/* THE SITTING COMES BACK WITH THE PAGE (plan §2.7), re-validated against the library as it is
+for(const module of globalThis.CrankFeatures||[])module(C);
+/* PLAY, COMING SOON. The production release is the workshop without Play -- Rob, 2026-09-24: "on
+   that tab it should say 'Coming Soon'". tools/release-pages.mjs leaves the Play modules out of the
+   release and marks its pages <meta name="crankmagic-play" content="coming-soon">; the tab stays and
+   says so. Registered after the features, so it wins over any Play a feature registered. */
+if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soon')views.game=views.online=()=>{main.innerHTML=head('Play','Coming Soon','Playing your decks against friends and AI opponents is on its way. Building, testing, exploring and collecting are all here now.',button('Go to your decks','home',{},true));};/* THE SITTING COMES BACK WITH THE PAGE (plan §2.7), re-validated against the library as it is
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=312',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=313',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

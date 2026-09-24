@@ -15,6 +15,8 @@ page.on('pageerror',error=>errors.push(error.message));
    The one deliberate live-network step is the offline one near the end; the stub is
    removed before it so that step stays honest. */
 const {stubNetwork}=await import('./scryfall-stub.mjs');const scryfallCalls=[];await stubNetwork(page,scryfallCalls);
+/* A deck tile's first button is its ⋯ menu (since the deck-page redesign); Open deck is inside it. */
+const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button').first().click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
 const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.waitForTimeout(400);};
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
@@ -166,7 +168,7 @@ try{
  await page.locator('select[name=groupBy]').selectOption('');
  /* The whole draft at a status, from the deck page: every remaining card becomes a Wanted
     copy filed with the deck, so the group now holds the hundred as copies. */
- await click('Clear filters');await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByRole('button').first().click();
+ await click('Clear filters');await nav('Decks');await openDeck('Constructive run');
  /* LOG A GAME, READ IT BACK: the form's pickers are the deck's cards, and the Record card and
     the tile caption show the result. */
  await click('Log a game');await page.getByLabel('Card that won it').selectOption({label:'Krenko, Mob Boss'});await page.getByLabel('Finish').selectOption('1');await click('Save game record');await waitDialog();
@@ -184,7 +186,7 @@ try{
  await click('View report');await page.getByRole('dialog').getByText('Score',{exact:false}).first().waitFor();await page.getByRole('button',{name:'Close dialog'}).click();
  await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByText('61.5 pts').waitFor();checks+=1;
  /* SPIN OFF. The report carries the hundred it measured; from the report on the deck page that hundred becomes a deck of its own, with the report copied over and the original deck untouched. */
- await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).first().getByRole('button').first().click();await page.locator('.cm-deck-next').waitFor();
+ await openDeck('Constructive run');await page.locator('#cm-deck-next').waitFor();
  /* The hundred at a glance on the Overview (Rob, 14 September): the curve, two breakdown bars with keys, the key strategy in the vocabulary's words. */
  eq(await page.locator('#cm-sec-glance .cm-breakdown').count(),2,'the hundred by type and by Primary Purpose');ok((await page.locator('#cm-sec-glance .cm-breakdown-key li').count())>=3,'with their keys');eq(await page.locator('#cm-sec-glance .cm-curve').count(),1,'and the curve');ok(/key strategy/i.test(await page.locator('#cm-sec-glance').innerText()),'and the key strategy (the heading is set in capitals by CSS, so innerText reads it that way)');
  await page.getByRole('tab',{name:/^Overview/}).click();await page.locator('.cm-history-table').waitFor();await click('View report');await page.getByRole('dialog').getByRole('button',{name:'Spin off as a new deck'}).click();
@@ -654,14 +656,14 @@ try{
  await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
  await nav('Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 substitute/.test(t)));
- await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Ready to add/}).click();
+ await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Ready to add/}).click();
  await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* This substitute "stays for now" (nothing real is ready for its seat), so Select all leaves it alone, as Mark all added does; the row's own tick still moves it. */eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),0);await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* MAKE THE CHANGE (Rob, 14 September). The deck page's hero offers the change list for a final
     deck: four readings held to the mana formula and the floors, one physical swap per row with
     the row count the header states, an Excel export of the same rows, a tick that is one
     revision, and a way in from the Cards page's More menu. */
- await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Make the change/}).click();
+ await nav('Decks');await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Make the change/}).click();
  await page.locator('.cm-change').waitFor();eq(await page.locator('.cm-change-reading').count(),4);
  {const counts=await page.locator('.cm-change-counts').innerText();const n=Number(/(\d+) rows?/.exec(counts)[1]);eq(await page.locator('.cm-change-row').count(),n);
   const sleeved=CrankReadiness(await state()).sleeved;ok(new RegExp(`^${sleeved}\\b`).test((await page.locator('.cm-change-reading').first().locator('dd').first().innerText()).trim()));

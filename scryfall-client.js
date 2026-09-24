@@ -252,12 +252,12 @@
            its AbortError name so the loop below can tell "the caller changed their mind"
            from "the network stalled" -- the first propagates, the second is swallowed by
            the callers that already expect a lookup to be able to fail. */
-        const cancelled = init.signal && new Promise((_, reject) => {
-          const stop = () => reject(Object.assign(new Error("Request cancelled"), {name: "AbortError"}));
+        const canceled = init.signal && new Promise((_, reject) => {
+          const stop = () => reject(Object.assign(new Error("Request canceled"), {name: "AbortError"}));
           if (init.signal.aborted) stop();
           else init.signal.addEventListener("abort", stop, {once: true});
         });
-        cancelled?.catch(() => {});
+        canceled?.catch(() => {});
         let fire = null;
         const expiry = new Promise((_, reject) => {
           fire = setTimeout(() => {
@@ -269,7 +269,7 @@
         expiry.catch(() => {});   // raced, so its rejection is handled there or nowhere
         const timer = fire;
         try {
-          const payload = await Promise.race([expiry, ...(cancelled ? [cancelled] : []), enqueue(async () => {
+          const payload = await Promise.race([expiry, ...(canceled ? [canceled] : []), enqueue(async () => {
             stats.requests += 1;
             const response = await fetchImpl(`${baseUrl}${path}`, {
               method: init.method || "GET",

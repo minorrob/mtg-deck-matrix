@@ -264,11 +264,14 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   let total = 0; const byFile = [];
   for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
-     prose to take twenty-three with it. Lower it whenever a change takes it lower, the way the hex
-     ceiling works. What is left is mostly legacy prose and a handful of UK spellings that are
-     still on screen -- "Colour identity within" on Build is the loudest -- and those want their
-     own pass rather than riding on a restyle. */
-  const CEILING = 563;
+     prose to take twenty-three with it; 530 after the pass before the first production release
+     (2026-09-24), which took every UK spelling in the app's own on-screen words away -- "Colour
+     identity within" on Build, "Any colour" in the Library filter, the tour's copy, the
+     canceled-order messages -- and #290's four strings with them. Card names are printed names and
+     keep their spelling (Gandalf the Grey, Ultramarines Honour Guard). Lower it whenever a change
+     takes it lower, the way the hex ceiling works. What is left is legacy prose in comments and
+     documents. */
+  const CEILING = 530;
   ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
   /* and nothing written today carries one */
   for (const f of ["docs/design-intake-2026-09-20.md", "docs/handoff-fable-2026-09-20.md", "docs/design/2026-09-20-deck-page/INTAKE.md", "tests/design-tokens.mjs", "crankmagic-design.css"]) {

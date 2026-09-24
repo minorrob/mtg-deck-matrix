@@ -94,8 +94,8 @@
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 39,
-      "sha": "0bbe0cc5602b5a61"
+      "version": 40,
+      "sha": "e864335b0b434673"
     },
     "collection-repository.js": {
       "version": 4,
@@ -110,8 +110,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 312,
-      "sha": "ded880f11778b0cc"
+      "version": 313,
+      "sha": "70743be79276c1bb"
     },
     "crankmagic-assets.js": {
       "version": 30,
@@ -130,12 +130,12 @@
       "sha": "50b1441d682dc57e"
     },
     "crankmagic-change.js": {
-      "version": 2,
-      "sha": "860a367f343bf895"
+      "version": 3,
+      "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 70,
-      "sha": "fd0b010c785a0b53"
+      "version": 71,
+      "sha": "d5827ed7f225bbb6"
     },
     "crankmagic-decks.js": {
       "version": 69,
@@ -146,8 +146,8 @@
       "sha": "c117339a5d576e6a"
     },
     "crankmagic-discover.js": {
-      "version": 68,
-      "sha": "5b3f93088031fdbf"
+      "version": 69,
+      "sha": "f90db241c8924f4e"
     },
     "crankmagic-evidence.js": {
       "version": 3,
@@ -186,16 +186,16 @@
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 51,
-      "sha": "236a7b7542a63dab"
+      "version": 52,
+      "sha": "194747a11b4974d5"
     },
     "crankmagic-lens.js": {
       "version": 1,
       "sha": "5de2d4a9a4e4577a"
     },
     "crankmagic-lobby.js": {
-      "version": 4,
-      "sha": "5149198e6f445c55"
+      "version": 5,
+      "sha": "ecbc7b30ef555bcc"
     },
     "crankmagic-loops.js": {
       "version": 4,
@@ -242,32 +242,32 @@
       "sha": "d7f9fd867c8577ad"
     },
     "crankmagic-sim.js": {
-      "version": 20,
-      "sha": "bdf4032df94f3894"
+      "version": 21,
+      "sha": "bc408814790fb9fa"
     },
     "crankmagic-strategies.js": {
       "version": 2,
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 312,
-      "sha": "e1417b769df7ce2d"
+      "version": 313,
+      "sha": "3f4d8828d253f4c2"
     },
     "crankmagic-tabletop.js": {
       "version": 17,
       "sha": "0522803a479d9573"
     },
     "crankmagic-tour.js": {
-      "version": 16,
-      "sha": "aaeb937b39848a27"
+      "version": 17,
+      "sha": "9ab5974f6431140b"
     },
     "crankmagic-trace.js": {
       "version": 3,
       "sha": "aacb53a680b6bdd3"
     },
     "crankmagic-trade.js": {
-      "version": 1,
-      "sha": "1eb8517f3293129f"
+      "version": 2,
+      "sha": "085f4c39561b15bc"
     },
     "crankmagic.css": {
       "version": 202,
@@ -334,8 +334,8 @@
       "sha": "b6aff451bbef0894"
     },
     "draft-builder.js": {
-      "version": 7,
-      "sha": "1458f8a6a31715b4"
+      "version": 8,
+      "sha": "8d82b581f51f7cc0"
     },
     "game-record.js": {
       "version": 1,
@@ -358,8 +358,8 @@
       "sha": "e0645dacaa692f32"
     },
     "scryfall-client.js": {
-      "version": 9,
-      "sha": "73bac4a0e5ba03f2"
+      "version": 10,
+      "sha": "c46c73960d22eb44"
     },
     "shop-export.js": {
       "version": 1,

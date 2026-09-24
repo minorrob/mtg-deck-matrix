@@ -856,7 +856,7 @@
         ${r.under ? note(`Under the house minimum: ${r.min - r.count} more to reach ${r.min}. The minimums are the rules module's (crankmagic-rules.js).`, true) : `<p class="cm-muted">${r.min !== null ? `At or over the house minimum of ${r.min}.` : 'No house minimum for this role; the count is shown plain.'}</p>`}
         <div class="cm-lens-cols">
           <section><h4>In the deck <small>${r.have.length}</small></h4>${haveRows ? `<ul class="cm-lens-list">${haveRows}</ul>` : '<p class="cm-muted">No card in the hundred carries this role.</p>'}</section>
-          <section><h4>Could join it <small>${r.candidates.length}</small></h4>${candRows ? `<ul class="cm-lens-list">${candRows}</ul>${r.candidates.length > 40 ? `<p class="cm-muted">${r.candidates.length - 40} more, further down the ranking.</p>` : ''}` : '<p class="cm-muted">Nothing outside the hundred carries this role inside the deck\'s colours — not the bench, the buy list, the linked upgrades or the commander\'s co-play neighbours.</p>'}
+          <section><h4>Could join it <small>${r.candidates.length}</small></h4>${candRows ? `<ul class="cm-lens-list">${candRows}</ul>${r.candidates.length > 40 ? `<p class="cm-muted">${r.candidates.length - 40} more, further down the ranking.</p>` : ''}` : '<p class="cm-muted">Nothing outside the hundred carries this role inside the deck\'s colors — not the bench, the buy list, the linked upgrades or the commander\'s co-play neighbours.</p>'}
             <p class="cm-muted cm-lens-foot">Ranked by how often the commander\'s real decks run the card, then owned before ordered before not owned. <em>Swap for…</em> links the card as an uncommitted upgrade option on a slot you choose; the hundred does not change.</p></section>
         </div></div>`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · lens: ${r.lens}` : '';
@@ -885,7 +885,7 @@
       const identity = new Set((lead && lead.colorIdentity) || []), cap = deck.definition.perCardCap;
       const fence = (row) => {
         if (inDeck.has(row.id)) return {ok: true};
-        if (String(row.ci || '').split('').some((x) => x && !identity.has(x))) return {ok: false, why: 'outside the colour identity'};
+        if (String(row.ci || '').split('').some((x) => x && !identity.has(x))) return {ok: false, why: 'outside the color identity'};
         const rec = C.catalog.exact(row.name);
         if (cap !== null && cap !== undefined && rec && Number.isFinite(rec.price) && rec.price > cap) return {ok: false, why: `over the per-card cap (${C.money(rec.price)})`};
         return {ok: true};

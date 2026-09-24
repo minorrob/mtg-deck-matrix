@@ -53,6 +53,14 @@ squash whenever the commits carry their own reasoning and proof. Rob set this on
 2026-09-19; before that, merging was his alone. Closing someone else's PR is still not an
 agent's call unless the PR is superseded by one the agent opened and the report names it.
 
+## The production release
+
+`release/pages` is production. It is written only by `tools/release-pages.mjs --commit`, from a commit of
+`main`, and a push to it is a deploy — made only after `tests/uat/release-acceptance.mjs` passes on that
+exact build (`docs/release-pages.md`). Unfinished work may reach `main`; what reaches users is decided by
+the builder's profile. Rob set this on 2026-09-24, when he chose to merge Account Cloud and Play into
+`main` as they are built rather than hold them on long branches.
+
 ## American English, always
 
 Everything written here is American English: prose, comments, commit messages, labels, tests,

@@ -1,0 +1,69 @@
+/* THE PRODUCTION RELEASE holds the web app and nothing else, and Play in it says Coming Soon.
+ *
+ * tools/release-pages.mjs builds the release from one commit; this suite builds it from the working
+ * tree, in memory, and holds it to Rob's two sentences (2026-09-24): "the CrankMagic build minus the
+ * Play option (on that tab it should say 'Coming Soon')" and, asked what the branch holds, "Only the
+ * web app". Then it breaks the checks on purpose, because a check that cannot fail is a comment
+ * (AGENTS.md): a release missing a file the service worker lists, a Play module that got in, a page
+ * that forgot to say Coming Soon, a tool that leaked -- each must be named.
+ */
+import assert from "node:assert/strict";
+import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES} from "../tools/release-pages.mjs";
+
+let checks = 0;
+const ok = (value, message) => {assert.ok(value, message); checks++;};
+const eq = (a, b, message) => {assert.deepEqual(a, b, message); checks++;};
+const profile = PROFILES.pages;
+
+const {built, problems, mentions} = build({source: worktreeSource()});
+eq(problems, [], "the release built from this tree verifies");
+const files = [...built.keys()];
+
+/* Only the web app. */
+for (const f of ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", "crankmagic-app.js", "crankmagic-design.css", "data/cards.json", "data/graph.json", "sim-worker.js", "sim-engine.js", "sim/config.json", "LICENSE", "DISCLAIMER.md", ".nojekyll", "version.json"])
+  ok(built.has(f), `${f} is in the release`);
+eq(files.filter((f) => NEVER.test(f)), [], "nothing from game code, tools, tests, documents, the engine's data or the source workbooks");
+eq(files.filter((f) => /^(AGENTS|CLAUDE|BACKLOG|README|HOTFIX-SUMMARY)\.md$|\.(ps1|sh)$/.test(f)), [], "and none of the repository's own working files");
+for (const f of profile.leaveOut) ok(!built.has(f), `${f} is Play, and is not in the release`);
+ok(mentions.every((m) => / names (tools|data\/archive)\//.test(m)), `the names it declined to follow are tools and the archive, named as provenance: ${mentions.join("; ")}`);
+
+/* Play says Coming Soon, and nothing left can reach a game host. */
+for (const p of PAGES) {
+  const text = built.get(p).toString("utf8");
+  ok(text.includes('<meta name="crankmagic-play" content="coming-soon">'), `${p} is marked Coming Soon`);
+  ok(/<meta name="crankmagic-version" content="[0-9a-f]{7} · \d{4}-\d{2}-\d{2}">/.test(text), `${p} says which commit it is`);
+  ok(!/crankmagic-(game|lobby|online)\.(js|css)|collection-lobby-draft\.js/.test(text), `${p} loads no Play module`);
+  ok(!text.includes("127.0.0.1:8768") && !text.includes("trycloudflare.com"), `${p}'s security policy allows no connection to a game host or a tunnel`);
+  ok(/connect-src 'self' https:\/\/api\.scryfall\.com/.test(text), `${p} still reaches Scryfall`);
+}
+const app = built.get("crankmagic-app.js").toString("utf8");
+ok(/meta\[name="crankmagic-play"\]'\)\?\.content==='coming-soon'\)views\.game=views\.online=/.test(app), "the app answers the mark with the Coming Soon view, on #game and #online");
+ok(app.includes("'Play','Coming Soon'"), "which says Coming Soon under Play");
+ok(/meta\[name="crankmagic-version"\]/.test(app), "and the Menu reads the version mark");
+
+/* The service worker still runs, and everything it lists is in the release. */
+const sw = built.get("crankmagic-sw.js").toString("utf8");
+const lists = new Function("self", "caches", `${sw}\nreturn {SHELL, DATA, RUNTIME};`)({location: "https://example.test/", addEventListener() {}}, {});
+const listed = [...lists.SHELL, ...lists.DATA, ...lists.RUNTIME].map((u) => u.split("?")[0]);
+ok(listed.length > 40, `the worker still lists its shell and data (${listed.length})`);
+eq(listed.filter((f) => !built.has(f)), [], "and every file it lists is in the release");
+ok(!listed.some((f) => profile.leaveOut.includes(f)), "and none of them is Play");
+const version = JSON.parse(built.get("version.json").toString("utf8"));
+ok(/^[0-9a-f]{40}$/.test(version.commit) && version.profile === "pages", "version.json names the commit and the profile");
+
+/* The checks fail when they should. */
+const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
+ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
+ok(broken((m) => m.set("crankmagic-game.js", Buffer.from(""))).some((p) => p.includes("crankmagic-game.js")), "a Play module in the release is named");
+ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('content="coming-soon"', 'content="live"')))).some((p) => p.includes("not marked")), "a page that does not say Coming Soon is named");
+ok(broken((m) => m.set("tools/release-pages.mjs", Buffer.from(""))).some((p) => p.includes("never ships")), "a tool in the release is named");
+ok(broken((m) => m.set("crankmagic.html", Buffer.from(m.get("crankmagic.html").toString().replace("connect-src 'self'", "connect-src 'self' http://127.0.0.1:8768")))).some((p) => p.includes("127.0.0.1:8768")), "a page that can reach a game host again is named");
+assert.throws(() => transform("index.html", "<html><head></head></html>", {profile, version: "x", origin: ""}), /nothing to change/, "a page without <meta charset> is refused, not half-edited"); checks++;
+
+/* The walk reads what the app would load, not what its comments talk about. */
+const have = new Set(["assets/mana/W.svg", "assets/mana/U.svg", "assets/mana/x.png", "docs/plan.md", "data/cards.json"]);
+eq([...referencesOf("a.js", "const u = `assets/mana/${symbol}.svg`;", have)].sort(), ["assets/mana/U.svg", "assets/mana/W.svg"], "a template names every file of its kind in its folder");
+eq([...referencesOf("a.js", "/* see docs/plan.md */ // and docs/plan.md\nfetch('data/cards.json?v=3')", have)], ["data/cards.json"], "a file named in a comment is not a reference; one fetched is");
+eq([...referencesOf("index.html", '<meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/mana/W.svg">', have)], ["assets/mana/W.svg"], "an absolute link to the app's own address is its own file");
+
+console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);

@@ -252,7 +252,7 @@
     }
     if(bracketFit)notes.push(`Fitted to bracket ${ceiling}: ${bracketFit.carried} of the ${bracketFit.allowed} Game Changers it allows`
       +(bracketFit.added?`, ${bracketFit.added} of them brought in to spend the allowance`:'')
-      +(bracketFit.short?`. ${bracketFit.short} short of the allowance${bracketFit.blockedByBudget?` — the budget would not stretch to ${bracketFit.short===1?'another':'more'}`:' — the catalog holds no more in these colours'}, so this deck plays under its bracket rather than at it.`:'.'));
+      +(bracketFit.short?`. ${bracketFit.short} short of the allowance${bracketFit.blockedByBudget?` — the budget would not stretch to ${bracketFit.short===1?'another':'more'}`:' — the catalog holds no more in these colors'}, so this deck plays under its bracket rather than at it.`:'.'));
     else if(maxGameChangers!==Infinity)notes.push(`Bracket ceiling ${ceiling}: ${maxGameChangers===0?'no Game Changers were chosen':'at most three Game Changers were chosen ('+gameChangers+' in this list)'}.`);
     notes.push('Play style, speed, competitiveness and saltiness require your review. This initial pass does not steer by them and does not certify them.');
     return {slots:result,cards:[...new Set([...chosen.keys()])].map(lookup),issues,estimatedPrice:spend,relaxed,gameChangers,bracketFit,splurged,nonbasics,upgrades,seeded,

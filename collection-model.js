@@ -245,7 +245,7 @@
       let left=-delta;const commands=[],notes=[];
       for(const l of mine.sort((a,b)=>rank(a)-rank(b))){if(!left)break;const take=Math.min(left,l.quantity);commands.push(col==='own'?{type:'dispose',lotId:l.id,quantity:take,reason:'spreadsheet',confirmed:true}:{type:'removePending',lotId:l.id,quantity:take,confirmed:true});
         if(l.allocation)notes.push(`${take} reserved to ${deck(s,l.allocation.deckId).name}${l.location?.kind==='deck'?' and in its physical deck':''} ${take===1?'goes':'go'} too.`);left-=take;}
-      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${name}: ${col==='own'?'owned':'ordered'} ${have} → ${value}`},review:commands.some(k=>{const l=lot(s,k.lotId);return l.allocation||l.location?.kind==='deck';}),notes:[`${-delta} ${col==='own'?'owned cop'+(-delta===1?'y leaves':'ies leave')+' the library':'ordered cop'+(-delta===1?'y is':'ies are')+' cancelled'}.`,...notes]};
+      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${name}: ${col==='own'?'owned':'ordered'} ${have} → ${value}`},review:commands.some(k=>{const l=lot(s,k.lotId);return l.allocation||l.location?.kind==='deck';}),notes:[`${-delta} ${col==='own'?'owned cop'+(-delta===1?'y leaves':'ies leave')+' the library':'ordered cop'+(-delta===1?'y is':'ies are')+' canceled'}.`,...notes]};
     }
     const d=deck(s,edit.deckId),slotRow=d.slots.find(r=>r.purpose==='main'&&r.cardId===cardObj.id),t=slotRow?slotRow.quantity:0;
     const assigned=s.lots.filter(l=>l.allocation?.deckId===d.id&&slotRow&&l.allocation.slotId===slotRow.id),a=assigned.reduce((n,l)=>n+l.quantity,0),boxed=assigned.filter(l=>inDeck(s,l)).reduce((n,l)=>n+l.quantity,0);
@@ -562,7 +562,7 @@
         if(next<l.quantity)warning(l);
         l.quantity=next;summary=`${card(s,l.cardId).name}: ${next} ${l.source}`;break;}
       case 'dispose':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can leave the library.');warning(l);l=split(l,c.quantity);s.lots=s.lots.filter(x=>x.id!==l.id);summary=`Recorded ${text(c.reason,60)||'disposition'} of ${l.quantity} ${card(s,l.cardId).name}`;break;}
-      case 'removePending':{const l=lot(s,c.lotId);ensure(l.source!=='owned','Use a recorded disposition for owned cards.');warning(l);const part=split(l,c.quantity);s.lots=s.lots.filter(x=>x.id!==part.id);summary='Cancelled a pending acquisition; any deck requirement is still visible';break;}
+      case 'removePending':{const l=lot(s,c.lotId);ensure(l.source!=='owned','Use a recorded disposition for owned cards.');warning(l);const part=split(l,c.quantity);s.lots=s.lots.filter(x=>x.id!==part.id);summary='Canceled a pending acquisition; any deck requirement is still visible';break;}
       /* AN ORDER IS ONE THING YOU DID, NOT EIGHTY-FIVE. Eighty-five ticked rows and one dialog --
          vendor, reference, shipping, expected date -- become eighty-five ordered copies that all
          carry the same order record, each with its share of the shipping and the sheet price
