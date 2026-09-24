@@ -190,8 +190,25 @@ Record: `docs/decisions-2026-09-23.md`.
    game` needs a home outside `Game setup`; that is the one piece still to settle.
    `game/tests/host-routing.test.mjs:38` also asserts the markup contains `Game setup`, so both stay
    in the HTML and hide at runtime.
-3. **The cloud lobby's purpose. ANSWERED: a pointer.** It says "open the local host to play" and
-   does nothing else. **U-02, U-03 and U-04 are retired outright.** R3, R4 and R5 are not built.
+3. **The cloud lobby's purpose. ANSWERED: a pointer — BUILT 2026-09-23.** It says "open the local
+   host to play" and does nothing else. **U-02, U-03 and U-04 are retired outright.** R1 is
+   satisfied by removal rather than by fixing its three items, and R3, R4 and R5 are not built — a
+   pointer cannot do Send Local.
+
+   `views.game` in `crankmagic-game.js` now returns `cloudPointer()` on its first line when
+   `isLocalBuild()` is false, before the catalog load and before any seat, so no lobby control can
+   exist to be wrong. The local lobby is the same code and is untouched; deck building is untouched
+   on both. Verified from a real non-loopback origin (a static server on the LAN address, which is
+   the only thing that decides cloud from local): pointer present, `.cm-lobby-table` absent,
+   `[data-action="lobby-start"]` absent, one host link.
+
+   `tests/wireframe-conformance.mjs` gained "the cloud build returns a pointer before it builds a
+   lobby", which asserts the early return and that the pointer carries no Start, no countdown copy,
+   no seats and exactly one host link.
+
+   One bug caught by rendering it rather than trusting it: the host address first used
+   `cm-table-host-link`, whose color belongs to the light "Table rules" panel, so it shipped
+   invisible on the pointer's dark panel. It has its own class now.
 
 ---
 

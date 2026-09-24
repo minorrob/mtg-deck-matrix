@@ -235,7 +235,12 @@ so it remains in the HTML whatever the runtime visibility.
 
 ---
 
-## R1–R5 — what the cloud lobby is for: **option 3, a pointer**
+## R1–R5 — what the cloud lobby is for: **option 3, a pointer — BUILT 2026-09-23**
+
+Built the same day. `views.game` returns `cloudPointer()` on its first line when `isLocalBuild()` is
+false, before anything else runs. R1 is satisfied by removal rather than by fixing U-02, U-03 and
+U-04; R3, R4 and R5 are not built, because a pointer cannot do Send Local. The remediation doc
+carries the detail and the verification.
 
 The cloud lobby says "open the local host to play" and does nothing else. **U-02, U-03 and U-04 are
 retired outright** — they described behavior the lobby will no longer claim. R3, R4 and R5 are not

@@ -170,8 +170,49 @@ check("the page is headed Play, with one summary line", () => {
   assert.match(game, /C\.pageHead\("Play"/, 'the head should read "Play"');
 });
 
+/* THE CLOUD BUILD OFFERS NO GAME IT CANNOT DEAL.
+ *
+ * Rob, 2026-09-23, taking option 3 of the three the UAT offered: the cloud "simply said 'open the
+ * local host to play' and did nothing else", which retires U-02, U-03 and U-04 rather than fixing
+ * them. The remediation asked for "a conformance check asserting the cloud build renders no enabled
+ * control whose own copy says it does not work, and no countdown text when probeHost() is false" —
+ * and with a pointer the stronger thing is assertable: the lobby is never reached at all.
+ *
+ * U-02 was a "Start the game" button carrying its own admission, "The board is not built yet. This
+ * button will deal the first hands once it is." U-04 was "Every seat is ready. Starting…" printed
+ * by a copy that had no host. U-03 was the local host link drawn twice. None of them can occur on a
+ * page that returns before the lobby is built. */
+check("the cloud build returns a pointer before it builds a lobby", () => {
+  const body = game.slice(game.indexOf("views.game = async"));
+  const opening = body.slice(0, body.indexOf("\n"));
+  const firstStatement = body.slice(0, body.indexOf("loadHostCatalogDecks"));
+  assert.match(firstStatement, /if \(!isLocalBuild\(\)\) \{ C\.main\.innerHTML = cloudPointer\(\); return; \}/,
+    "the very first thing views.game does off the local host is render the pointer and return — "
+    + "before the catalog load, before any seat, so no lobby control can exist to be wrong");
+  assert.ok(opening.length, "views.game is still a function");
+
+  /* Bounded by the template's own end, not a character count: a fixed window ran past it into the
+     comment above views.game, which QUOTES the strings this is asserting are gone. */
+  const at = game.indexOf("const cloudPointer");
+  const pointer = game.slice(at, game.indexOf("</section>`;", at) + 12);
+  assert.doesNotMatch(pointer, /lobby-start/, "no Start control (U-02)");
+  assert.doesNotMatch(pointer, /Starting…|Every seat is ready|Not ready yet|Launches when/,
+    "no countdown or readiness copy (U-04)");
+  assert.doesNotMatch(pointer, /cm-lobby-table/, "and no seats");
+  /* U-03 was the host drawn as two separate links, so this counts anchors -- one link whose text
+     happens to be its own address is one link. */
+  assert.equal((pointer.match(/href="http:\/\/127\.0\.0\.1:8768/g) || []).length, 1,
+    "exactly one link to the local host, not two (U-03)");
+  assert.match(pointer, /Games run on your local host/, "and it says where games happen");
+});
+
 check("the head carries Game history and Host tools at its right", () => {
-  const head = game.slice(game.indexOf("C.pageHead(\"Play\""), game.indexOf("C.pageHead(\"Play\"") + 1400);
+  /* Anchored on the lobby itself, not on the first `C.pageHead("Play"` in the file. Since the
+     cloud build became a pointer (2026-09-23) there are two Play heads, and the pointer's comes
+     first in source -- so a positional search found a page that deliberately has no action row and
+     reported the lobby as broken. */
+  const body = game.slice(game.indexOf("views.game = async"));
+  const head = body.slice(0, body.indexOf("const confirmed"));
   assert.match(head, /Game history/, "2b's action row leads with Game history");
   assert.match(head, /Host tools/, "and carries Host tools beside it");
 });

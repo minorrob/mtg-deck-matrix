@@ -2612,3 +2612,6 @@ button.cm-building { pointer-events: none; }
 .cm-table-board-link a{color:var(--table-ink);font-weight:600}
 #matrix-v2 .cm-table-host-link{color:var(--table-ink);text-decoration:underline;text-underline-offset:2px}
 #matrix-v2 .cm-table-host-link:hover{color:var(--v-accent)}
+/* The pointer's host address. `--table-ink` is the ink of the light Table rules panel and is dark;
+   on the pointer's dark panel it rendered invisible. The accent reads on both. */
+.cm-pointer-host{color:var(--v-accent);text-decoration:underline;text-underline-offset:2px}
