@@ -2388,10 +2388,15 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-new-deck-wizard{max-width:56ch;padding:6px 0}
 .cm-new-deck-wizard > p{margin:0 0 18px;font-size:14px;color:var(--v-muted)}
 .cm-wizard-paths{display:flex;flex-direction:column;gap:12px}
+/* These are CONTROLS on a panel, so they take --v-raised. crankmagic-design.css line 38 states the
+   contract outright: "--v-raised  a CONTROL on that card -- lighter than the panel, always". They
+   were painted --v-panel, the same value as the surface beneath them, which is why they read as
+   three flat slabs; and :hover set --v-panel again, so the hover state was inert. */
 .cm-wizard-path{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px 18px;
-  text-align:left;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);
+  text-align:left;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);
   min-height:80px;cursor:pointer;transition:background .12s ease,border-color .12s ease}
-.cm-wizard-path:hover{background:var(--v-panel);border-color:var(--v-line)}
+.cm-wizard-path:hover,.cm-wizard-path:focus-visible{
+  background:color-mix(in srgb,var(--v-accent) 12%,var(--v-raised));border-color:var(--v-accent)}
 .cm-wizard-path strong{display:block;font-size:15px;font-weight:600;color:var(--v-text)}
 .cm-wizard-path span{display:block;font-size:13px;color:var(--v-muted);line-height:1.4;margin-top:2px}
 @media(max-width:640px){
@@ -2615,3 +2620,32 @@ button.cm-building { pointer-events: none; }
 /* The pointer's host address. `--table-ink` is the ink of the light Table rules panel and is dark;
    on the pointer's dark panel it rendered invisible. The accent reads on both. */
 .cm-pointer-host{color:var(--v-accent);text-decoration:underline;text-underline-offset:2px}
+
+/* LOAD: start a deck from one of your own (crankmagic-decks.js, wizard-load).
+   Two panes in one dialog, as Rob asked: the list on the left, and "to the right of this pop-up"
+   the deck it selects. Controls take --v-raised, which crankmagic-design.css defines as lighter
+   than the panel they sit on, always. */
+.cm-load-wizard{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);gap:16px;align-items:start}
+.cm-load-list{display:flex;flex-direction:column;gap:6px;max-height:58vh;overflow-y:auto;padding-right:4px;scrollbar-width:thin}
+.cm-load-item{text-align:left;padding:10px 12px;border-radius:var(--v-radius-control);border:1px solid var(--v-line);
+  background:var(--v-raised);color:var(--v-text);font-size:14px;cursor:pointer;transition:background .12s ease,border-color .12s ease}
+.cm-load-item:hover,.cm-load-item:focus-visible{background:color-mix(in srgb,var(--v-accent) 12%,var(--v-raised));border-color:var(--v-accent)}
+.cm-load-item.is-on{background:color-mix(in srgb,var(--v-accent) 20%,var(--v-raised));border-color:var(--v-accent);font-weight:600}
+.cm-load-detail{position:relative;min-width:0;display:flex;flex-direction:column;gap:12px}
+.cm-load-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cm-load-head h3{margin:0;font-size:17px}
+.cm-load-head p{margin:2px 0 0;font-size:13px}
+.cm-load-art{width:clamp(140px,38%,210px);height:auto;border-radius:var(--v-radius-card);align-self:flex-start;box-shadow:0 6px 18px rgb(0 0 0 / .35)}
+.cm-load-avg{margin:0;font-size:13px}
+.cm-load-avg strong{font-size:15px;font-variant-numeric:tabular-nums}
+.cm-load-cards{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;
+  border-top:1px solid var(--v-line);padding-top:8px}
+.cm-load-card{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  padding:5px 8px;border:0;border-radius:var(--v-radius-control);background:none;color:var(--v-text);font-size:13px;cursor:default}
+.cm-load-card:hover,.cm-load-card:focus-visible{background:var(--v-raised)}
+.cm-load-card b{font-variant-numeric:tabular-nums;color:var(--v-muted);font-weight:600}
+/* The hover preview sits over the pane and never takes the pointer, so moving across the list
+   cannot land on the preview and flicker. */
+.cm-load-preview{position:absolute;right:0;bottom:0;width:min(250px,60%);pointer-events:none;z-index:5}
+.cm-load-preview img{width:100%;height:auto;border-radius:var(--v-radius-card);box-shadow:0 10px 30px rgb(0 0 0 / .55)}
+@media(max-width:760px){.cm-load-wizard{grid-template-columns:minmax(0,1fr)}.cm-load-list{max-height:200px}.cm-load-preview{position:static;width:auto}}
