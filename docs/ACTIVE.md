@@ -6,7 +6,7 @@
 | **Branch** | `claude/engine-hosting` (#359). **8768 is not running**; the next start picks up the new logo. The spare host this session used on 8778 is stopped. |
 | **Since** | 2026-09-24 |
 | **Doing** | Nothing. The second session of 2026-09-24 reworked the board with Rob screenshot by screenshot: one card size (the commander's) on every mat, the battlefield's reading-order rules with creatures first, basic-land piles, a working board-size bar and pane divider, a hand with its own size, a one-row table notice — and found the four-up had been blank since `c115df4`, which it is not now. **`docs/decisions-2026-09-24.md` is the record; the second half of `docs/handoff-2026-09-24.md` is what is proven, how, and what is left.** |
-| **Next for whoever picks this up** | **The local host is still not the app's lobby** (`docs/plan-web-to-local-table-2026-09-21.md`, five pieces, none started) — Rob believes it is. Then the Load pane's empty list (unproven cause). To see the board with a developed battlefield without Forge: `node game/tools/board-shots.mjs` against a spare host; it fails on an off-size card or one below an edge. |
+| **Next for whoever picks this up** | **Read `docs/handoff-2026-09-24-direction.md` first.** Rob's direction (2026-09-24): github.io does everything but play; the local host shows only a rules-only pre-lobby, "Enter Lobby", the lobby, loading a deck backup, exporting game results, and the game. It lists what exists against that (measured), three decisions to put to Rob before building, and the work in order. First: those three decisions, then piece 1 — one pre-game flow. |
 
 ## The engine has started — phase 0 done, phase 1 next
 

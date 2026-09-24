@@ -169,3 +169,17 @@ mats collapsed to 7×4px, seats shrunk to their headings (396×223). `c115df4` h
 take their height from the viewport (the rule `tests/wireframe-conformance.mjs` already held) and
 their width from 16:9, and the mat grows into the height under its heading with its width from its
 ratio.
+
+## 11. The web app does everything but play; the local host is the table
+
+Rob, later the same day, as the direction for the next stretch of work:
+
+> "My expectation is that CrankMagic on Github.io is where everything but play happens. Then on Play
+> tab in github.io, I should have the redirect to local host. … This local host should not display
+> anything other than the pre-game setup, the lobby, the ability to load back up file of a user's decks
+> from CrankMagic on Github.io, the ability to export game results that can then be loaded into
+> CrankMagic on GitHub.io … and the actual game play."
+
+The full statement, what exists against it (measured), the three decisions still needed, the work in
+order and the proposed pivot gate are in **`docs/handoff-2026-09-24-direction.md`**. It supersedes pieces
+1–4 of `docs/plan-web-to-local-table-2026-09-21.md`: decks go out and results come back by file.
