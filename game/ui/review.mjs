@@ -668,12 +668,17 @@ function matView(p,focused=false){
     piece.append(cardButton(card));
     (zoneBoxes.get(position.zone)||zoneBoxes.get('mat-battlefield')||mat).append(piece);
   }
+  let matBand=null;
   if(focused){
     const [preview,band]=historyBand();
-    mat.append(band);
+    matBand=band;mat.append(band);
     /* The preview is a card, so it goes in a container and obeys that container's boundary. */
     (zoneBoxes.get('mat-battlefield')||mat).append(preview);
   }
+  /* EVERY mat, not just Focus: the battlefield's bottom border and the one card size are the mat's
+     geometry, and the four small boards need them as much as the big one. Only the band is
+     Focus-only, so it is passed as null elsewhere. */
+  requestAnimationFrame(()=>alignToPiles(mat,matBand));
   /* B.6a (2f): the printed turn-steps list and the life box are gone from the mat. B.1's step
      strip and B.3's center counter carry both now, and printing them again on each of four
      boards was four copies of one fact. The Focus view has neither, so it grows the ribbon
@@ -731,6 +736,24 @@ function alignToPiles(mat,band){
   if(field){
     const f=field.getBoundingClientRect(),fieldTop=(f.top-m.top)/m.height*100;
     if(bottom>fieldTop)field.style.height=(bottom-fieldTop).toFixed(2)+'%';
+  }
+
+  /* ONE CARD SIZE FOR THE WHOLE MAT, AND IT IS THE SIZE THAT FITS. Rob, 2026-09-23: "the card
+     default size is too big for 2 rows. In battlefield", and "every card on the mat should be the
+     same size (commander, representative top of the deck / library, graveyard, exile)".
+     Four different widths were in play -- clamp(36px,11cqw,145px) on the battlefield,
+     clamp(29px,7.6cqw,106px) on lands, clamp(44px,13cqw,175px) again in online.css, and the piles
+     sized by their own 11.5% frame -- so nothing on the mat matched anything else and the
+     battlefield's default overflowed two rows. The width is derived once, from the room the
+     battlefield actually has after its 10pt padding, and everything reads it:
+        2 rows * (w * 680/488) + one gap <= inner height
+     A card is never wider than a pile frame either, or the piles would have to grow to match. */
+  if(field){
+    const f=field.getBoundingClientRect(),pad=13.334,gap=6;
+    const inner=f.height-pad*2,byHeight=(inner-gap)/2/(680/488);
+    const byPile=c.width;
+    const width=Math.max(28,Math.min(byHeight,byPile));
+    mat.style.setProperty('--mat-card-width',width.toFixed(1)+'px');
   }
 
   if(!band)return;
@@ -811,7 +834,6 @@ function historyBand(){
      which also covers any playmat added later without another rule here. Below twelve percent
      there is not room for two rows and a header, and a band that shows one row is not a band --
      lotus is the case that hits this today. It is hidden rather than drawn as a sliver. */
-  requestAnimationFrame(()=>alignToPiles(band.parentElement,band));
   return [preview,band];
 }
 

@@ -165,3 +165,16 @@ body:has(.focus-dialog[open]){overflow:hidden}
 .player-mat .mat-lands .mat-cards{inset:0;padding:10pt}
 /* A card never grows past the room the padding leaves, however wide the zone gets. */
 .player-mat .mat-zone .card{max-height:100%;max-width:100%}
+
+/* ONE CARD SIZE ON THE MAT. Rob, 2026-09-23: "every card on the mat should be the same size
+   (commander, representative top of the deck / library, graveyard, exile)" and "the card default
+   size is too big for 2 rows. In battlefield".
+   --mat-card-width is derived in alignToPiles() from the room the battlefield actually has after
+   its 10pt padding, so two rows always fit, and every card on the mat reads the same value. It
+   replaces four competing widths that agreed with each other nowhere. The fallbacks are the old
+   clamps, for the frame between first paint and the measurement. */
+.player-mat .mat-cards .card,.player-mat .mat-lands .card,.player-mat .free-card{
+  width:var(--mat-card-width,clamp(36px,11cqw,145px))}
+.player-mat .mat-pile .card,.player-mat .mat-pile>img{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;max-width:100%;max-height:100%;object-fit:contain}
+.player-mat .mat-pile{display:flex;align-items:center;justify-content:center}
+.player-mat .library-back{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;aspect-ratio:488/680;max-width:100%;max-height:100%}
