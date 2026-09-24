@@ -186,3 +186,18 @@ body:has(.focus-dialog[open]){overflow:hidden}
   border-radius:12px;background:color-mix(in srgb,var(--edge) 60%,black);color:var(--ink);
   box-shadow:0 14px 40px rgb(0 0 0 / .6)}
 .onboard-dialog::backdrop{background:none}
+
+/* FOCUS: ONE CARD SIZE, AND THE HEADER'S TRAILING CONTROLS SIT TOGETHER (Rob, 2026-09-24).
+   The hand read --focus-card-width, a fixed 180px of its own, so it was smaller than the commander
+   beside it and did not move with S / M / L. It reads the same published width as the mat and the
+   piles now, a touch larger because he asked for "the same size (or even slightly bigger) than the
+   commander", and every card on screen scales together. */
+.focus-dialog .hand-track .card{width:calc(var(--mat-card-width,var(--focus-card-width)) * 1.06)}
+/* `.focus-header>button{margin-left:auto}` applies to EVERY trailing button, so History and Close
+   focus were each pushed right on their own and sat a header apart. Only the first of the group
+   takes the auto margin; the rest follow it. */
+.focus-header>button+button{margin-left:8px}
+/* The action menu now rides the step row, hard right and on one line. */
+.focus-status .live-controls{margin:0 0 0 auto;padding:6px 10px;gap:10px;flex:0 1 auto;max-width:60%}
+.focus-status .live-controls>p{font-size:12px;flex:0 1 auto;margin:0}
+.focus-status .live-buttons{flex-wrap:nowrap}

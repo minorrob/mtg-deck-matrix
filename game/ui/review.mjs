@@ -677,7 +677,14 @@ function matView(p,focused=false){
     for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
     const large=focused||p.playerId===primarySeat;
     const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
-    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);if(name!=='Lands')mat.style.setProperty('--mat-card-width',m.cardWidth+'px');list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
+    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);
+      /* ONE CARD SIZE, AND IT SCALES TOGETHER. Rob, 2026-09-24: "every card should be the same
+         size and scale together. This includes the commander card", and the hand "the same size
+         (or even slightly bigger) than the commander". The width is published on the mat for the
+         piles and, in Focus, on the dialog as well -- the hand lives outside the mat and could not
+         read a variable set on it, which is why it stayed at its own fixed 180px. */
+      if(name!=='Lands'){mat.style.setProperty('--mat-card-width',m.cardWidth+'px');
+        mat.closest('.focus-dialog')?.style.setProperty('--mat-card-width',m.cardWidth+'px');}list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
     else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);zoneBoxes.set(cls,zone);
   }
@@ -1243,7 +1250,11 @@ const controls=el('section','live-controls');controls.hidden=true;controls.setAt
 const actionDock=el('div','action-dock');sidebar.prepend(actionDock);
 const prompt=el('p'),decisionArt=el('div','decision-art'),options=el('div','live-options'),buttons=el('div','live-buttons');controls.append(prompt,decisionArt,options,buttons);
 let completionReport=null,completionLoading=false,completionFeedbackSaved=false,completionStatus='';
-function mountControls(){const host=$('focus').open&&Number($('focus').dataset.seat)===viewerSeatId?$('focus-hand'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
+/* IN FOCUS THE ACTION MENU RIDES THE STEP ROW. Rob, 2026-09-24: "the 'Your action' menu at the
+   bottom should be on the right side in the subheader row with current turn steps. It should be
+   justified right." It was prepended to the hand, which put a block of chrome between the mat and
+   the cards -- the row that already carries the turn and the steps is where a decision belongs. */
+function mountControls(){const host=$('focus').open&&Number($('focus').dataset.seat)===viewerSeatId?$('focus-status'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.append(controls);}
 let decisionPointer=false,lastCombatInput='';for(const area of [controls,combatPane])area.addEventListener('pointerdown',()=>{decisionPointer=true;});window.addEventListener('pointerup',()=>{setTimeout(()=>decisionPointer=false,0);});window.addEventListener('pointercancel',()=>decisionPointer=false);
 window.addEventListener('resize',mountControls);
 /* SAY WHAT THE RULES DID, WHERE THE PLAYER WAS REFUSED. Rob clicked his library on turn one, was
