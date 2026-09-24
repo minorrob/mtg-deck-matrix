@@ -828,15 +828,22 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
   // 1080px window while a player's ENTIRE board took 240, which pinned every board to its floor.
   // A 2x2 of 16:9 boards is itself 16:9, so every pixel of chrome costs width at 16:9 leverage --
   // the mat could only be 917px in a 1920px window, and half the screen sat empty.
-  check("the hand card is the size the frame draws, set in exactly one place", () => {
+  // Rob, 2026-09-24: the hand gets its own size bar, twice the frame's 68px by default -- and the boards
+  // make room for it, so the reason this check was written (a hand pushed off the screen) cannot recur.
+  check("the hand card has its own size, set in exactly one place, and the boards make room for it", () => {
     const rule = /body\.table-view \.hand-track \.card\{([^}]*)\}/.exec(boardCss);
     assert.ok(rule, "a table-view rule for the hand card");
-    assert.match(rule[1], /width:68px/,
-      "68px built, which is the frame's 34px doubled — not a viewport clamp, which is how it grew");
+    assert.match(rule[1], /width:var\(--hand-card-width,136px\)/,
+      "the hand's own size, 136px (the frame's 68 doubled, as Rob asked) until the player moves the bar");
     const all = boardCss.match(/body\.table-view \.hand-track \.card\{/g) || [];
     assert.equal(all.length, 1,
       "and exactly ONE rule sets it: a second that out-weighs the first is how it reached 152px, "
       + "and the dead one reads as though it still applies");
+    assert.equal(/\.focus-dialog \.hand-track \.card\{/.test(boardCss + readFileSync("game/ui/mats.css", "utf8")), false,
+      "Focus has no hand width of its own: three did, and the table-view rule out-weighed every one");
+    assert.match(boardCss, /--board-chrome:calc\(480px \+ \(var\(--hand-card-width\) - 68px\) \* 1\.3934\)/,
+      "the chrome grows by the height a bigger hand card adds, so the boards shrink and the hand stays on screen");
+    assert.match(board, /function handSizeControl\(/, "and the hand has its own size bar");
   });
 
   /* ONE CARD SIZE ON THE MAT, AND NOTHING QUIETLY SETTING ITS OWN.
@@ -936,23 +943,47 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(boardCss, /\.focus-step\.is-done\{[^}]*line-through/, "done steps are struck through");
     assert.match(boardCss, /\.focus-step\.is-now\{[^}]*var\(--color-accent/, "the current step is brass");
   });
-  check("card size is S, M and L rather than a percentage", () => {
+  /* THE BOARD-SIZE BAR REPLACES S / M / L. Rob, 2026-09-24: "I still see S, M, L at the top and not
+   * the gradient size scale bar, which will give the end user greater control and optionality." 2f's
+   * three sizes were what this check held until then -- and, measured, all three drew the same
+   * 1411x833 board, because two rules out-weighed the ones they set. So this holds the bar AND the
+   * rule that makes it do something: the focused mat's width, carrying the id. */
+  check("board size is a bar, and the bar really sizes the board", () => {
     const html = readFileSync("game/ui/review.html", "utf8");
-    assert.match(html, /focus-size-s[\s\S]{0,200}focus-size-m[\s\S]{0,200}focus-size-l/,
-      "2f names three sizes; the slider asked for a number instead");
-    assert.equal(html.includes('id="focus-size-value"'), false, "the percentage readout goes with it");
+    assert.match(html, /<input id="focus-size" type="range" min="50" max="200"/, "a continuous bar, 50% to 200%");
+    assert.equal(/focus-size-[sml]\b/.test(html), false, "S, M and L are gone rather than hidden");
+    assert.match(board, /\$\('focus'\)\.style\.setProperty\('--focus-zoom',size\/100\)/, "the bar sets one scale on the dialog");
+    assert.match(boardCss, /#focus \.focus-mat-stage \.player-mat\{width:calc\(100% \* var\(--focus-zoom,1\)\)/,
+      "and the focused mat's own width reads it, with the id -- the table's max-width:100% out-weighed the old cap");
   });
-  // 2f: "their own board large, the other three as small aspect-locked tiles in a left pane (name
-  // + commander only; click one to swap it into focus). 'My board' is always one click; 'Table
-  // view' returns to the four-up table... The pane collapses so the board takes the whole width."
-  check("Focus carries the other three boards as aspect-locked tiles", () => {
+  /* 2f: "their own board large, the other three as small tiles in a left pane (name + commander only;
+   * click one to swap it into focus). 'My board' is always one click; 'Table view' returns to the
+   * four-up table... The pane collapses so the board takes the whole width."
+   * Rob, 2026-09-24, on top of that: each tile is that board's exact miniature; the tile "should not
+   * result in all of that additional white space ... above/below each mat"; the divider makes the pane
+   * the player's width "down to whatever is about 50% of the current size"; and when it moves "the
+   * entire container should resize with it. Keep the Seat name the same size regardless." */
+  check("Focus carries the other three boards as tiles that hug their miniatures", () => {
     assert.match(board, /function focusPane\(/, "the pane exists");
     const tile = /\.focus-tile\{([^}]*)\}/.exec(boardCss);
     assert.ok(tile, "the tile rule");
-    assert.match(tile[1], /aspect-ratio:16\/9/, "boards keep 16:9 at any size, tiles included");
+    assert.match(tile[1], /flex:0 0 auto/, "a tile is as tall as what it holds, never stretched to fill the pane");
+    const mats = readFileSync("game/ui/mats.css", "utf8");
+    const mini = /#focus \.focus-tile-board \.player-mat\{([^}]*)\}/.exec(mats);
+    assert.ok(mini, "the miniature's rule, carrying the id");
+    assert.match(mini[1], /width:100%/, "the miniature spans the pane, so its height follows the divider");
+    assert.match(mini[1], /aspect-ratio:var\(--mat-ratio/, "at its playmat's own proportions");
     assert.match(board, /focus-pane-mine/, "'My board' is always one click");
     assert.match(board, /focus-pane-table/, "'Table view' returns to the four-up table");
     assert.match(boardCss, /\.focus-pane\.is-closed \.focus-tile/, "the pane collapses");
+  });
+  check("the pane's width is the player's, down to half, from a divider", () => {
+    assert.match(board, /const PANE_MIN_SHARE=\.5;/, "no narrower than half the width three boards fill");
+    assert.match(board, /setAttribute\('role','separator'\)/, "the divider is a separator a keyboard can move");
+    assert.match(boardCss, /grid-template-columns:calc\(clamp\(200px,23vw,480px\) \* var\(--focus-pane-share,1\)\)/,
+      "the column is a share of the default, so it keeps its meaning when the window changes");
+    assert.match(board, /el\('div','focus-pane'\)/,
+      "not an <aside>: the page sidebar's aside rules made it sticky and a scroller, and clipped the divider");
   });
   // .focus-hand carries margin:auto, which centered a max-width block when .focus-content was one.
   // As a grid item that same margin shrink-wraps it — measured 24x34, floating mid-stage, before

@@ -97,6 +97,8 @@ try {
       for (const b of document.querySelectorAll("button")) {
         if (b.offsetParent && !b.disabled && wanted.test(b.textContent.trim())) b.click();
       }
+      /* A table notice is acknowledged with a check mark rather than an OK button now. */
+      document.querySelector(".table-notice:not([hidden]) .table-notice-ack")?.click();
       return Number(document.body.innerText.match(/Turn (\d+)/)?.[1] || 0);
     });
   }

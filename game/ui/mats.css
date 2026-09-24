@@ -12,8 +12,6 @@
 .mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-style:italic;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
 .mat-cards{position:absolute;inset:3% 2% 16%;display:flex;flex-wrap:wrap;gap:5px;overflow:auto;align-content:start;padding:3px;scrollbar-width:thin}
 .player-mat .mat-cards .card{height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
-.player-mat .mat-cards{padding:3px}
-.player-mat .mat-lands .mat-cards{inset:1% 1% 14%;flex-wrap:nowrap;align-items:start;overflow-y:hidden;padding:1px 3px}
 
 .player-mat .card .badge{font-size:clamp(7px,1.6cqw,12px);padding:1px 3px;right:1px;bottom:1px}
 .player-mat .card .count{font-size:clamp(7px,1.6cqw,12px);padding:1px;min-width:16px;right:1px;top:1px}
@@ -38,7 +36,7 @@
 .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.counter-tile{padding:5px 9px}.counter-tile .life{font-size:30px}.phone-label{padding:0 3px 5px}.phone-bottom{padding-top:4px}
 .mat-dialog{width:min(1160px,96vw);max-height:96dvh;overflow:auto}.mat-dialog .player-mat{width:100%}.mat-dialog .mat-cards{max-height:none}.mat-dialog .mat-pile{max-height:none}
 .mat-dialog .dialog-head{margin-bottom:10px}
-.hand-carousel{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;align-items:center;min-width:0}.hand-arrow{padding:5px 0;font-size:30px;line-height:1.2}.hand-track,.focus-dialog .hand-track{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-height:none;padding:6px 4px 12px;scrollbar-width:thin;scroll-snap-type:x proximity}.hand-track .card{width:104px;scroll-snap-align:start}.focus-dialog .hand-track .card{width:var(--focus-card-width);scroll-snap-align:start}
+.hand-carousel{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;align-items:center;min-width:0}.hand-arrow{padding:5px 0;font-size:30px;line-height:1.2}.hand-track{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-height:none;padding:6px 4px 12px;scrollbar-width:thin;scroll-snap-type:x proximity}.hand-track .card{width:104px;scroll-snap-align:start}
 .focus-piles{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:0 0 18px;padding:12px;border:1px solid #324c59;background:#0c1825;border-radius:12px}.focus-pile{position:relative;width:92px;height:128px;display:flex;align-items:center;justify-content:center;padding:6px 6px 22px;border:1px solid #5b7180;background:#122434}.focus-pile>img{height:100%;max-width:100%;object-fit:contain;border-radius:4px}.focus-pile .library-back{height:100%;width:auto;max-width:100%}.focus-pile .mat-zone-label{font:11px Segoe UI,system-ui,sans-serif;bottom:4px;left:3px;right:3px;width:auto;text-align:center;padding:2px}.focus-pile .pile-count{font-size:14px;right:4px;top:4px}.focus-pile .pile-empty{font-size:28px}.deck-list-link{margin-left:auto;font-size:12px}
 /* Focus fills the viewport; only the content scrolls, and card rows always wrap. */
 .focus-dialog{--focus-card-width:180px;position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;padding:0;border:0;border-top:3px solid var(--seat);border-radius:0;background:radial-gradient(ellipse at top left,#213c414d,transparent 65%),#0c1520;overflow:hidden}
@@ -46,7 +44,7 @@
 body:has(.focus-dialog[open]){overflow:hidden}
 .focus-header{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:15px 22px;background:#111e2aed;border-bottom:1px solid #34505d}
 .focus-eyebrow{font-size:10px;letter-spacing:1.7px;color:var(--seat)}.focus-header h2{font-size:23px;margin:4px 0 0}.focus-header>button{margin-left:auto;white-space:nowrap}
-.focus-size{margin-left:auto;display:flex;align-items:center;gap:10px;color:#b9ccd6;font-size:12px}.focus-size input{width:140px;accent-color:var(--seat)}.focus-size output{width:46px;font-variant-numeric:tabular-nums}
+.focus-size{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--color-muted,CanvasText);font-size:12px;white-space:nowrap}.focus-size output{width:40px;font-variant-numeric:tabular-nums;color:var(--color-ink,CanvasText)}
 .focus-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 22px;background:#111e2a;color:#aabfcf;font-size:12px;border-bottom:1px solid #294151}.focus-status button{padding:6px 9px;font-size:12px}.focus-health{color:var(--seat);border-color:#4b7277}.focus-status>span{margin-right:10px}
 .focus-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:16px 22px 24px}
 .focus-board{display:flex;flex-wrap:wrap;align-items:stretch;gap:14px}
@@ -145,7 +143,7 @@ body:has(.focus-dialog[open]){overflow:hidden}
    "Battlefield" printed across it. They are decoration for an empty zone and furniture once it
    fills, so they go to the back of the mat's stacking context and the cards come forward. */
 .mat-zone-label{z-index:0}
-.player-mat .mat-cards,.player-mat .free-card,.mat-pile>img,.mat-pile .library-back,.mat-pile .card{position:relative;z-index:1}
+.player-mat .free-card,.mat-pile>img,.mat-pile .library-back,.mat-pile .card{position:relative;z-index:1}
 .player-mat .free-card{position:absolute}
 .pile-count{z-index:2}
 
@@ -164,8 +162,14 @@ body:has(.focus-dialog[open]){overflow:hidden}
 
    The piles get the boundary and no padding: one card fills the frame, and the frame IS the card's
    shape (488:680), so an inset would leave it floating in its own box. */
-.player-mat .mat-cards{inset:0;padding:10pt;box-sizing:border-box;align-content:start}
-.player-mat .mat-lands .mat-cards{inset:0;padding:10pt}
+/* ABSOLUTE, SO THE INSET HOLDS. The list was position:relative, which ignores an inset, so it was as
+   tall as its cards rather than as tall as its outline: measured in Focus at 1920x1080, 702px of list
+   in a 578px battlefield, and the second row of groups sat below the boundary (Rob, 2026-09-24). */
+/* THE 10pt SCALES WITH THE BOARD BELOW FOCUS SIZE. Rob, 2026-09-24, choosing it for the four-up: a
+   fixed 10pt on a board 208px tall left the lands room for a card 13px wide, and every card on the
+   mat is that one size. It is 10pt on the Focus board at 1920x1080 (1653px wide, where Rob set it)
+   and on anything larger, and in proportion on anything smaller. */
+.player-mat .mat-cards{position:absolute;z-index:1;inset:0;padding:min(10pt,100cqw*13.333/1653);box-sizing:border-box;align-content:start}
 /* A card never grows past the room the padding leaves, however wide the zone gets. */
 .player-mat .mat-zone .card{max-height:100%;max-width:100%}
 
@@ -188,12 +192,6 @@ body:has(.focus-dialog[open]){overflow:hidden}
   box-shadow:0 14px 40px rgb(0 0 0 / .6)}
 .onboard-dialog::backdrop{background:none}
 
-/* FOCUS: ONE CARD SIZE, AND THE HEADER'S TRAILING CONTROLS SIT TOGETHER (Rob, 2026-09-24).
-   The hand read --focus-card-width, a fixed 180px of its own, so it was smaller than the commander
-   beside it and did not move with S / M / L. It reads the same published width as the mat and the
-   piles now, a touch larger because he asked for "the same size (or even slightly bigger) than the
-   commander", and every card on screen scales together. */
-.focus-dialog .hand-track .card{width:calc(var(--mat-card-width,var(--focus-card-width)) * 1.06)}
 /* `.focus-header>button{margin-left:auto}` applies to EVERY trailing button, so History and Close
    focus were each pushed right on their own and sat a header apart. Only the first of the group
    takes the auto margin; the rest follow it. */
@@ -205,9 +203,16 @@ body:has(.focus-dialog[open]){overflow:hidden}
 
 /* The left pane's tiles carry a live miniature of each board (review.mjs, focusPane). The mat is
    a size container, so everything inside it scales with the tile; it is inert so the tile takes
-   the click, and it never scrolls -- a thumbnail with a scrollbar is not a thumbnail. */
-.focus-tile{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;cursor:pointer}
-.focus-tile-board{pointer-events:none;width:100%;border-radius:6px;overflow:hidden}
-.focus-tile-board .player-mat{width:100%;height:auto;aspect-ratio:var(--mat-ratio,1020/603);box-shadow:none;border-width:1px}
+   the click, and it never scrolls -- a thumbnail with a scrollbar is not a thumbnail.
+   THE TILE HUGS ITS BOARD. Rob, 2026-09-24: the tiles "should not result in all of that additional
+   white space in each container above/below each mat", and "when the user resizes the side bar, not
+   only should the mat expand/contract, but the entire container should resize with it. Keep the
+   Seat name the same size regardless." So a tile is its name, its commander and its board at the
+   pane's full width and the playmat's own proportions -- nothing stretched to fill -- and dragging
+   the divider changes all three tiles' heights with their boards while the text stays put. */
+.focus-tile-board{pointer-events:none;width:100%}
+/* The id is carried because body.table-view .player-mat{width:auto} out-weighs a class pair, and a
+   mat is inline-size contained, so an auto width inside a flex row is a width of nothing (trap 1). */
+#focus .focus-tile-board .player-mat{width:100%;height:auto;max-height:none;flex:none;aspect-ratio:var(--mat-ratio,1020/603);box-shadow:none;border-width:1px;border-radius:6px;overflow:hidden}
 .focus-tile-board .mat-cards,.focus-tile-board .mat-history,.focus-tile-board .mat-history-card{overflow:hidden}
 .focus-tile-board .mat-history,.focus-tile-board .mat-history-card,.focus-tile-board .castingPreview{display:none}

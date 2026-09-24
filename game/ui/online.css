@@ -50,8 +50,13 @@ body.table-view .arena{display:contents}
    The hand was the reason: 152px cards against the frame's 68 (see below). At 68 the hand is
    ~232px, which is 120px less chrome, so 600 becomes 480 -- and the boards clear the floor at
    1080 for the first time: (1080-480)/2 = 300 tall, 533 wide, mat 1131. */
-body.table-view{--board-chrome:480px}
-body.table-view .seat{width:auto;max-width:100%;height:auto;min-height:0;max-height:max(240px,calc((var(--table-viewport,100dvh) - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
+/* THE HAND HAS ITS OWN SIZE, AND THE BOARDS MAKE ROOM FOR IT. Rob, 2026-09-24: "Hand cards can be
+   bigger than cards on the mat. They should have their own card re-sizing slider bar. By Default they
+   should be 2x what you have currently" -- 68px then, so 136. The 480 above was measured with a 68px
+   hand card, so the chrome grows by exactly the extra height a bigger card brings: the hand stays on
+   screen and the four boards give up the room, rather than the hand dropping below the fold. */
+body.table-view{--hand-card-width:136px;--board-chrome:calc(480px + (var(--hand-card-width) - 68px) * 1.3934)}
+body.table-view .seat{width:auto;max-width:100%;height:max(240px,calc((var(--table-viewport,100dvh) - var(--board-chrome))/2));min-height:0;max-height:max(240px,calc((var(--table-viewport,100dvh) - var(--board-chrome))/2));padding:7px;position:relative;align-self:center;aspect-ratio:16/9;overflow:hidden;display:flex;flex-direction:column}
 /* 2e: "column for the top row, column-reverse for the bottom — so each header rides its OUTER
    edge and the center counter never covers a name or a control." */
 body.table-view .seat.west,body.table-view .seat.south{flex-direction:column-reverse}
@@ -69,7 +74,12 @@ body.table-view .primary-seat{max-width:none}
    is a column flex box, the mat is a flex item, and flex-shrink beats aspect-ratio: heading 28 +
    mana band 70 + mat 306 is 404 in a 300px board, so the mat was squeezed to fit. flex:0 0 auto
    stops the squeeze and the mat takes its height from its width, as a playmat must. */
-body.table-view .player-mat{height:auto!important;width:auto;max-width:100%;flex:0 0 auto;align-self:center;aspect-ratio:var(--mat-ratio,1020/603);max-height:100%;cursor:zoom-in}
+/* THE MAT TAKES THE HEIGHT UNDER ITS HEADING, AND ITS WIDTH FROM THAT. c115df4 made the width auto and
+   centered it, so the playmat kept its proportions -- but a mat is inline-size contained, so an auto
+   width is a width of nothing, and every board on the four-up went blank (measured live, 2026-09-24:
+   seats 396x223, mats 7x4). Growing into the seat's definite height and deriving the width from the
+   ratio keeps both halves of what that commit wanted. */
+body.table-view .player-mat{height:auto!important;width:auto;max-width:100%;flex:1 1 auto;min-height:0;align-self:center;aspect-ratio:var(--mat-ratio,1020/603);max-height:100%;cursor:zoom-in}
 body.table-view .seat-heading{min-height:28px;margin-bottom:7px;flex-wrap:wrap}
 body.table-view .center-counter{position:static;transform:none;grid-column:1;grid-row:2;width:100%;max-width:none;align-self:start;margin:0;padding:7px;border-radius:16px}
 body.table-view .counter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -93,10 +103,12 @@ body.table-view .hand{grid-column:1/-1;grid-row:4;padding:0;min-width:0;width:10
 body.table-view .hand .live-controls,.focus-hand .live-controls{margin:0 0 10px;padding:12px;background:#152233;border:1px solid #354c66;box-shadow:none;border-radius:10px;flex-wrap:wrap;gap:10px}
 .live-controls>p{flex-basis:100%;margin:0;font-size:12px;color:#b8cee2}.live-options{max-height:none}.ability-option{text-align:left;white-space:normal;max-width:500px}
 .focus-dialog.illustrated-mat .focus-content,.focus-content{background:#0c1520;padding:12px 20px;overflow:auto}
-.focus-mat-stage{width:var(--focus-zoom,100%);min-width:100%;max-width:none;margin:0 auto 12px}
-.focus-mat-stage .player-mat{max-width:min(1400px,calc((100dvh - 270px)*1.69*var(--focus-scale,1)));margin:auto;cursor:default}
-.focus-mat-stage .mat-cards .card{width:clamp(44px,11cqw,180px)}
-.focus-hand{max-width:1400px;margin:auto}.focus-dialog .hand-track .card{width:105px}
+.focus-mat-stage{margin:0 auto 12px}
+/* The board-size bar sets the focused mat's width (review.mjs, setFocusSize). The id is carried because
+   body.table-view .player-mat{max-width:100%} out-weighed the old cap, which is why S / M / L never
+   changed anything (trap 1). */
+#focus .focus-mat-stage .player-mat{width:calc(100% * var(--focus-zoom,1));max-width:none;margin-inline:auto;cursor:default}
+.focus-hand{max-width:1400px;margin:auto}
 .focus-dialog .focus-mat-stage .card.tapped{transform:rotate(7deg);opacity:.82}.focus-dialog .focus-mat-stage .card.tapped::after{content:none}
 .focus-mat-stage:has(.player-mat) .player-mat{min-width:400px}
 .card-dialog{cursor:zoom-out}.card-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -113,7 +125,7 @@ body.table-view footer{padding:12px 16px}
 @media(max-width:1200px){body.table-view main{grid-template-columns:1fr}body.table-view aside{display:flex;position:static;max-height:600px}}
 @media(max-width:720px){body.table-view .table{grid-template-columns:1fr;max-width:none}/* A phone stacks the four boards in one column and scrolls; bounding them by half the viewport
    height there would leave four slivers. */
-body.table-view .seat{max-height:none;width:100%}body.table-view #seat-0{grid-column:1;grid-row:1;max-width:none}body.table-view .center-counter{grid-column:1;grid-row:3}body.table-view .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}body.table-view main{padding:8px}}
+body.table-view .seat{max-height:none;height:auto;width:100%}body.table-view #seat-0{grid-column:1;grid-row:1;max-width:none}body.table-view .center-counter{grid-column:1;grid-row:3}body.table-view .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}body.table-view main{padding:8px}}
 
 .board-resize{position:absolute;right:2px;bottom:2px;width:29px;height:29px;padding:0;border-radius:8px 0 8px 0;background:#244b56ed;color:#a1ffee;font-size:22px;cursor:nwse-resize;touch-action:none;z-index:3}
 .hand-draggable{touch-action:none;cursor:grab;user-select:none}.dragging-hand{cursor:grabbing}.drag-ghost{position:fixed!important;pointer-events:none!important;z-index:6000;opacity:.85;transform:rotate(-4deg);box-shadow:0 15px 35px #0008}
@@ -134,10 +146,9 @@ body.table-view .seat{background:linear-gradient(120deg,#112434e8,#0a141fee);bor
    board took 240. That 352 is what pinned every board to its 240px floor and left half the screen
    empty, because a 2x2 of 16:9 boards is itself 16:9 -- every pixel of chrome costs width at 16:9
    leverage. Focus (2f) is a separate frame with its own card budget and keeps its own size. */
-body.table-view .hand-track .card{width:68px}
-.focus-dialog .hand-track .card{width:clamp(112px,10vw,152px)}
+body.table-view .hand-track .card{width:var(--hand-card-width,136px)}
+.hand-size{display:inline-flex;align-items:center;gap:8px;margin-left:12px;color:var(--color-muted,CanvasText);font-size:11px;white-space:nowrap}.hand-size output{min-width:36px;font-variant-numeric:tabular-nums;color:var(--color-ink,CanvasText)}.hand-size input[type=range]{width:140px;accent-color:var(--color-accent,Highlight)}
 
-.focus-mat-stage .mat-battlefield .card{width:clamp(52px,13cqw,195px)}
 .card.selected-card,.card.selectable{outline:2px solid var(--action-blue);outline-offset:2px;box-shadow:0 0 16px #00c4ff9c}
 .card:focus-visible{outline:2px solid #80e1ff;outline-offset:3px}
 .player-mat.drop-ready,.mat-pile.draw-ready{outline:3px solid var(--action-blue);box-shadow:0 0 18px #00c4ff77}
@@ -162,11 +173,11 @@ body.table-view .action-dock .live-controls{margin:0;padding:14px;border:0;borde
 .mana-status{display:flex;flex-wrap:wrap;gap:5px;padding:7px}.mana-source{display:grid;grid-template-columns:auto auto;gap:2px 6px;padding:4px 7px;border:1px solid #315269;border-radius:7px;background:#0b1c2b;font-size:11px}.mana-source small{grid-column:1/-1;color:#9ebdce;font-size:9px}.mana-source b{border-radius:50%;color:#d9efff}.mana-W b{color:#fff1b5}.mana-U b{color:#63caff}.mana-B b{color:#b9a4d9}.mana-R b{color:#ff9b81}.mana-G b{color:#97df94}.mana-legend{width:100%;font-size:9px;color:#9ebdce}
 .card-quick-actions{width:270px;max-height:90dvh;overflow:auto}.quick-card-image{width:240px;max-width:100%;border-radius:9px;display:block;margin:4px auto 10px}.quick-rules{font-size:12px;line-height:1.4;white-space:pre-line}.card-quick-actions::backdrop{background:transparent;backdrop-filter:none}
 .embedded-title{color:#a6e8ff;white-space:nowrap;margin-right:auto}.embedded header .preview,.embedded header .join-live:disabled{display:none}.embedded header{gap:7px;flex-wrap:wrap}.embedded header button{padding:8px 10px;font-size:12px}.quick-ability-options{display:grid;gap:6px}
-.battlefield-group{flex:0 0 auto;width:clamp(44px,13cqw,190px)}.group-label{display:block;color:#d2f2ff;background:#091c2de8;padding:2px 4px;font-size:clamp(7px,1.3cqw,11px);white-space:nowrap}.card-fan{display:flex;flex-direction:column;align-items:start;--fan-card-width:clamp(44px,13cqw,190px)}.player-mat .mat-cards .card-fan .card{width:var(--fan-card-width);flex-shrink:0}.card-fan .card+.card{margin-top:calc(var(--fan-card-width)*-1.15)}.card-fan .card:hover,.card-fan .card:focus-visible{z-index:20;outline:2px solid #43cfff}
+.battlefield-group{flex:0 0 auto;width:var(--mat-card-width,clamp(44px,13cqw,190px))}.group-label{display:block;color:#d2f2ff;background:#091c2de8;padding:2px 4px;font-size:clamp(7px,1.3cqw,11px);white-space:nowrap}.card-fan{display:flex;flex-direction:column;align-items:start;--fan-card-width:var(--mat-card-width,clamp(44px,13cqw,190px))}.player-mat .mat-cards .card-fan .card{width:var(--fan-card-width);flex-shrink:0}.card-fan .card+.card{margin-top:calc(var(--fan-card-width)*-1.15)}.card-fan .card:hover,.card-fan .card:focus-visible{z-index:20;outline:2px solid #43cfff}
 @media(max-width:720px){}
-.battlefield-group.expanded-group{width:auto;max-width:100%}.card-fan.spread-cards{flex-direction:row;flex-wrap:wrap;gap:5px}.card-fan.spread-cards .card+.card{margin-top:0}.mat-lands .card-fan{--fan-card-width:clamp(29px,7.6cqw,106px)}.mat-lands .battlefield-group:not(.expanded-group){width:clamp(29px,7.6cqw,106px)}.free-card{position:absolute;z-index:4;width:13cqw}.player-mat .free-card .card{width:100%;height:auto;aspect-ratio:488/680}.free-card:hover{z-index:21}
+.card-fan.spread-cards{flex-direction:row;flex-wrap:wrap;gap:5px}.card-fan.spread-cards .card+.card{margin-top:0}.free-card{position:absolute;z-index:4}.player-mat .free-card .card{width:100%;height:auto;aspect-ratio:488/680}.free-card:hover{z-index:21}
 .view-options{background:#10283c;border:1px solid #42c8ff;border-radius:10px;padding:12px;color:#eaf6ff}.view-options:popover-open{display:grid;gap:9px}.view-options::backdrop{background:transparent}body.table-view.hide-information main{grid-template-columns:minmax(0,1fr)}.mana-breakdown{font-size:12px;width:100%;border-collapse:collapse}.mana-breakdown th,.mana-breakdown td{text-align:left;padding:5px;border-bottom:1px solid #294c65}
-.mat-lands .group-label{display:none}.mat-battlefield>.mat-zone-label,.mat-lands>.mat-zone-label{top:-17px;bottom:auto;font-family:inherit;font-size:clamp(8px,1.4cqw,13px)}.player-mat .mat-battlefield .mat-cards{inset:2% 1% 1%}.player-mat .mat-lands .mat-cards{inset:1%}
+.mat-lands .group-label{display:none}.mat-battlefield>.mat-zone-label,.mat-lands>.mat-zone-label{top:auto;bottom:calc(100% + 2px);font-family:inherit;font-size:clamp(8px,1.4cqw,13px)}
 
 /* margin:0 here used to beat mats.css's own `.table{...;margin:auto}` on specificity, which
    pinned the mat to the left of the window once it stopped being full width. align-self:start is
@@ -174,12 +185,6 @@ body.table-view .action-dock .live-controls{margin:0;padding:14px;border:0;borde
 body.table-view .table{margin:0 auto;align-self:start}
 
 body.setup-screen>.recommended-actions{display:none!important}
-/* Use the available mat height for readable cards; miniature opponents keep their compact scale. */
-.primary-seat .mat-battlefield .card-fan,.focus-mat-stage .mat-battlefield .card-fan{--fan-card-width:clamp(70px,19cqw,240px)}
-.primary-seat .mat-battlefield .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-battlefield .battlefield-group:not(.expanded-group){width:clamp(70px,19cqw,240px)}
-.primary-seat .mat-lands .card-fan,.focus-mat-stage .mat-lands .card-fan{--fan-card-width:clamp(40px,9cqw,125px)}
-.primary-seat .mat-lands .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-lands .battlefield-group:not(.expanded-group){width:clamp(40px,9cqw,125px)}
-.primary-seat .free-card,.focus-mat-stage .free-card{width:19cqw}
 .ordered-choice{display:grid;grid-template-columns:22px minmax(0,1fr) 36px 36px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid #35566b}.ordered-choice button{padding:6px}.ordered-choice input{accent-color:#42c8ff}
 /* A fanned card's hit area is its visible name strip, never a hidden full-card rectangle. */
 .card-fan:not(.spread-cards)>.card:not(:last-child){height:calc(var(--fan-card-width)*.24);aspect-ratio:auto;overflow:hidden;min-height:0}
@@ -187,26 +192,36 @@ body.setup-screen>.recommended-actions{display:none!important}
 .card-fan:not(.spread-cards)>.card+.card{margin-top:0}
 .casting-targets{display:grid;gap:3px;font-size:12px;color:#b9edff}
 .card-zoom-control{display:grid;gap:7px;min-width:240px}.card-zoom-control input{width:100%;accent-color:#42c8ff}.card-zoom-control output{font-size:12px;color:#a6e8ff}
-.player-mat .mat-cards.zoom-card-grid{display:grid;grid-template-columns:repeat(var(--card-columns,3),minmax(0,1fr));gap:5px;align-content:start;justify-items:start;overflow:auto}
-.player-mat .zoom-card-grid .battlefield-group,.player-mat .zoom-card-grid .battlefield-group.expanded-group{width:var(--grid-card-width);max-width:none;min-width:0}
-.player-mat .zoom-card-grid .card-fan{--fan-card-width:var(--grid-card-width)}
+.player-mat .mat-cards.zoom-card-grid{display:grid;grid-template-columns:repeat(var(--card-columns,3),minmax(0,1fr));gap:5px;align-content:start;justify-items:start;overflow:hidden}
+/* ONE ROW THAT SCROLLS SIDEWAYS, when the rows a zone holds cannot take every card (card-layout.mjs,
+   planZone). It draws no frame of its own -- the zone's outline is the boundary -- and the bar has no
+   track, so the bar is the only mark the scrolling window makes (Rob, 2026-09-24). */
+.player-mat .mat-cards.zoom-card-grid.single-row{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:max-content;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--color-ink,white) 45%,transparent) transparent}
+/* TWO LANES (card-layout.mjs, planLanes): the first row is exactly one card and its label tall, so a
+   deeper fan spans into the second and a single card leaves the slot under it for a second-row card. */
+.player-mat .mat-cards.zoom-card-grid.lanes{grid-auto-flow:row;grid-template-columns:repeat(var(--card-columns,1),var(--mat-card-width));grid-template-rows:var(--lane-slot) auto;justify-content:start;align-items:start;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--color-ink,white) 45%,transparent) transparent}
+.player-mat .zoom-card-grid .battlefield-group,.player-mat .zoom-card-grid .battlefield-group.expanded-group{width:var(--mat-card-width);max-width:none;min-width:0}
+.player-mat .zoom-card-grid.lanes .lane-second>.group-label{position:relative;z-index:2;margin-top:-16px;width:fit-content;max-width:62%}
 .player-mat .zoom-card-grid .group-label{height:16px;box-sizing:border-box;overflow:hidden;padding:0 2px;line-height:16px;font-size:10px}
-.primary-seat .free-card,.focus-mat-stage .free-card{width:var(--free-card-width,19cqw)}
 .zoom-card-grid .counter-dice{left:1px;bottom:16%;gap:1px;max-width:95%}.zoom-card-grid .die{font-size:clamp(5px,.7cqw,9px);padding:0 1px;line-height:1.2}.zoom-card-grid .badge{font-size:clamp(7px,1.2cqw,13px);padding:1px 3px}
 
 /* THE TABLE NOTICE (Stage A.6.1). The first board component written on the design tokens rather
    than on literals -- B.0 published them at :root, so this reads the same palette as the rest of
    CrankMagic and Stage B will move it rather than rewrite it. No raw hex below on purpose. */
-.table-notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;width:min(92vw,380px);display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4);background:var(--color-panel,Canvas);color:var(--color-ink,CanvasText);border:1px solid var(--color-line,CanvasText);border-radius:var(--radius-card,14px);box-shadow:0 24px 60px -20px rgb(0 0 0 / .65)}
+/* One row and the card (Rob, 2026-09-24): who and which card on the left, what happened on the
+   right, a green check that acknowledges it -- and nothing else framing the card. */
+.table-notice{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;width:min(92vw,300px);display:flex;flex-direction:column;gap:6px;padding:6px;background:var(--color-panel,Canvas);color:var(--color-ink,CanvasText);border:1px solid var(--color-line,CanvasText);border-radius:var(--radius-card,14px);box-shadow:0 24px 60px -20px rgb(0 0 0 / .65)}
 .table-notice[hidden]{display:none}
-.table-notice-who{font-size:var(--text-h3);line-height:1.25}
-.table-notice-what{margin:0;font-size:var(--text-body-size,14px);line-height:var(--leading-body,1.5);color:var(--color-muted,CanvasText)}
-.table-notice-art{padding:0;border:0;background:none;cursor:zoom-in;align-self:center;width:62%;border-radius:var(--radius-control);overflow:hidden}
+.table-notice-head{display:flex;align-items:center;gap:8px;min-width:0;padding:2px 2px 0 6px}
+.table-notice-who{min-width:0;font-size:var(--text-body-size,14px);line-height:1.25;overflow-wrap:anywhere}
+.table-notice-what{margin-left:auto;font-size:var(--text-small,12px);line-height:1.3;color:var(--color-muted,CanvasText);text-align:right}
+.table-notice-ack{position:relative;flex:0 0 auto;width:30px;height:30px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--st-inbox,currentColor);background:color-mix(in srgb,var(--st-inbox,currentColor) 18%,transparent);color:var(--st-inbox,CanvasText);font-size:16px;font-weight:700;line-height:1;cursor:pointer}
+.table-notice-ack:hover{background:color-mix(in srgb,var(--st-inbox,currentColor) 34%,transparent)}
+.table-notice-ack:focus-visible{outline:2px solid var(--st-inbox,Highlight);outline-offset:2px}
+.table-notice-more{position:absolute;top:-7px;right:-9px;min-width:16px;padding:0 4px;border-radius:var(--radius-pill,999px);background:var(--color-raised,Canvas);color:var(--color-muted,CanvasText);font-size:10px;font-weight:600;line-height:16px}
+.table-notice-art{padding:0;border:0;background:none;cursor:zoom-in;width:100%;border-radius:var(--radius-control);overflow:hidden}
 .table-notice-art img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:var(--radius-control)}
 .table-notice-art:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
-.table-notice-actions{display:flex;align-items:center;gap:var(--space-3)}
-.table-notice-actions .primary-action{flex:1 1 auto;min-height:40px}
-.table-notice-more{color:var(--color-muted,CanvasText);font-size:var(--text-small,12px);white-space:nowrap}
 
 /* HISTORY WITH THE CARD IN IT (Stage A.6.3). Tokens, with system-color fallbacks so a palette
    that failed to load still leaves the feed readable. */
@@ -300,20 +315,33 @@ body.table-view>header{position:relative;z-index:50}
 .focus-step{padding:2px 10px;border-radius:var(--radius-pill,999px);border:1px solid var(--color-line,CanvasText);font-size:var(--text-small,12px);color:var(--color-muted,CanvasText);white-space:nowrap}
 .focus-step.is-done{text-decoration:line-through;opacity:.55}
 .focus-step.is-now{background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);border-color:var(--color-accent,Highlight);font-weight:700}
-.focus-size{display:inline-flex;gap:4px}
-.focus-size button{min-width:34px;padding:2px 8px;border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText);font-size:var(--text-small,12px)}
-.focus-size button[aria-pressed=true]{background:var(--color-accent,Highlight);color:var(--color-on-accent,Canvas);border-color:var(--color-accent,Highlight);font-weight:700}
+/* The bar's track brightens from small to large, so it says which way is bigger before it is touched. */
+.focus-size input[type=range]{-webkit-appearance:none;appearance:none;width:220px;height:20px;margin:0;background:transparent;cursor:pointer}
+.focus-size input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:var(--radius-pill,999px);background:linear-gradient(90deg,color-mix(in srgb,var(--color-accent,Highlight) 18%,transparent),var(--color-accent,Highlight))}
+.focus-size input[type=range]::-moz-range-track{height:8px;border-radius:var(--radius-pill,999px);background:linear-gradient(90deg,color-mix(in srgb,var(--color-accent,Highlight) 18%,transparent),var(--color-accent,Highlight))}
+.focus-size input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-5px;border-radius:50%;border:2px solid var(--color-bg,Canvas);background:var(--color-ink,CanvasText);box-shadow:0 1px 4px rgb(0 0 0 / .5)}
+.focus-size input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:2px solid var(--color-bg,Canvas);background:var(--color-ink,CanvasText)}
+.focus-size input[type=range]:focus-visible{outline:2px solid var(--color-accent,Highlight);outline-offset:4px;border-radius:var(--radius-pill,999px)}
 
 /* B.6c (wireframe 2f): the other three boards as aspect-locked tiles in a left pane. The mat
    keeps everything it had and shares the width; the pane collapses so the board takes it all. */
-.focus-dialog .focus-content{display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-rows:auto auto;align-content:start;gap:12px}
+/* THE PANE IS AS WIDE AS THREE BOARDS NEED TO FILL IT. Rob, 2026-09-24: "increase the height of each
+   box until the other player's boards fill the entire container", and, asked, to widen the pane rather
+   than stretch the miniatures. A board keeps its playmat's proportions, so its height comes from the
+   pane's width: at 1920x1080 three boards with their names fill the pane at about 440px, which leaves
+   the focused mat about 1410px wide. 23vw holds that across window sizes, within 200-480px. */
+.focus-dialog .focus-content{display:grid;grid-template-columns:calc(clamp(200px,23vw,480px) * var(--focus-pane-share,1)) minmax(0,1fr);grid-template-rows:auto auto;align-content:start;gap:12px}
 .focus-dialog .focus-content>.focus-pane{grid-column:1;grid-row:1/-1}
 .focus-dialog .focus-content>.focus-mat-stage,.focus-dialog .focus-content>.focus-hand{grid-column:2;min-width:0;width:100%;margin:0;justify-self:center}
 .focus-dialog .focus-content:has(.focus-pane.is-closed){grid-template-columns:auto minmax(0,1fr)}
-.focus-pane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.focus-pane{position:relative;display:flex;flex-direction:column;gap:8px;min-width:0}
+/* The divider sits in the 12px gap between the pane and the board, and shows itself on approach. */
+.focus-pane-divider{position:absolute;top:0;bottom:0;right:-10px;width:8px;z-index:2;cursor:col-resize;touch-action:none;outline:none}
+.focus-pane-divider::after{content:'';position:absolute;top:50%;left:50%;width:2px;height:48px;transform:translate(-50%,-50%);border-radius:2px;background:var(--color-line,CanvasText);transition:height .15s,background-color .15s}
+.focus-pane-divider:hover::after,.focus-pane-divider.is-dragging::after,.focus-pane-divider:focus-visible::after{height:120px;width:3px;background:var(--color-accent,Highlight)}
 .focus-pane-bar{display:flex;justify-content:flex-end}
 .focus-pane-collapse{width:28px;height:28px;padding:0;border-radius:var(--radius-control,12px);border:1px solid var(--color-line,CanvasText);background:var(--color-raised,Canvas);color:var(--color-ink,CanvasText)}
-.focus-tile{aspect-ratio:16/9;width:100%;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:8px;text-align:left;border-radius:var(--radius-control,12px);border:1px solid var(--seat);background:color-mix(in srgb,var(--seat) 12%,transparent);color:var(--color-ink,CanvasText);cursor:pointer;overflow:hidden}
+.focus-tile{flex:0 0 auto;width:100%;display:flex;flex-direction:column;justify-content:flex-start;gap:2px;padding:8px;text-align:left;border-radius:var(--radius-control,12px);border:1px solid var(--seat);background:color-mix(in srgb,var(--seat) 12%,transparent);color:var(--color-ink,CanvasText);cursor:pointer;overflow:hidden}
 .focus-tile strong{font-size:var(--text-small,12px);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .focus-tile small{font-size:var(--text-label,11px);color:var(--color-muted,CanvasText);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .focus-tile:hover{border-color:var(--color-accent,Highlight)}

@@ -1,7 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn,engineIsWorking,firstDrawSkipped} from '/action-policy.mjs';
-import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
+import {planZone,planLanes,GROUP_LABEL} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
@@ -55,12 +55,11 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,aiPrompting=false,noticeUntil=0,lastDecision='';
-const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null,holdResponsesTurn=null;
+const pendingCasts=new Map(),handPositions=new Map(),zoneScroll=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null,holdResponsesTurn=null;
 let primarySeat=viewerSeatId,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 /* B.5a: the panel starts CLOSED. The frame's play surface is the whole window, and the panel
    slides over the mat when it is wanted rather than holding a column that is mostly idle. */
 let hideOpponents=false,hideInformation=true;
-let cardZoom=100;try{const saved=Number(localStorage.getItem('crankmagic-card-zoom'));if(saved>=32&&saved<=140)cardZoom=saved;}catch{}
 const acknowledgedDecisions=new Map();
 const zoneLayouts=new Map(),cardLayoutObserver=new ResizeObserver(entries=>{for(const {target}of entries)zoneLayouts.get(target)?.();});
 function releaseCardLayouts(root){for(const zone of root.querySelectorAll('.mat-zone')){cardLayoutObserver.unobserve(zone);zoneLayouts.delete(zone);}}
@@ -234,7 +233,21 @@ function showNextNotice(){
   const who=row.playerId===viewerSeatId?'You':(names[row.playerId]||'Another player');
   const delta=lifeDelta(row);
   const headline=delta!==null?`${who} ${delta<0?'lost':'gained'} ${Math.abs(delta)} life`:`${who} · ${row.name||'Table'}`;
-  noticeBox.append(el('strong','table-notice-who',headline));
+  /* ONE ROW, THEN THE CARD. Rob, 2026-09-24: "the pop-up should have nearly nothing around the card
+     other than the header (e.g. "You - Plains"), then in the same row justified to the right should
+     be the action that took place (e.g. "drew a card") and at to it's right a green check mark to
+     acknowledge and close the window (removing the huge "Ok" button)." The backlog that used to sit
+     beside OK rides the check as a badge, so a queue of notices still says it is a queue. */
+  const head=el('div','table-notice-head');
+  head.append(el('strong','table-notice-who',headline));
+  if(row.label)head.append(el('span','table-notice-what',row.label));
+  const waiting=noticeQueue.length-1;
+  const ack=button('\u2713',()=>{noticeQueue.shift();showNextNotice();},'table-notice-ack');
+  ack.setAttribute('aria-label',waiting?`Acknowledge \u2014 ${waiting} more waiting`:'Acknowledge and close');
+  ack.title=ack.getAttribute('aria-label');
+  if(waiting)ack.append(el('span','table-notice-more','+'+waiting));
+  head.append(ack);
+  noticeBox.append(head);
   const card=cardById(row.cardId);
   if(card?.art){
     const shot=el('button','table-notice-art');const img=el('img');img.src=card.art;img.alt=card.name||'Card';shot.append(img);
@@ -242,13 +255,7 @@ function showNextNotice(){
     shot.addEventListener('click',()=>inspect(card,1,true));
     noticeBox.append(shot);
   }
-  noticeBox.append(el('p','table-notice-what',row.label||''));
-  const row2=el('div','table-notice-actions');
-  const ok=button('OK',()=>{noticeQueue.shift();showNextNotice();},'primary-action');
-  row2.append(ok);
-  if(noticeQueue.length>1)row2.append(el('small','table-notice-more',`${noticeQueue.length-1} more`));
-  noticeBox.append(row2);
-  ok.focus({preventScroll:true});
+  ack.focus({preventScroll:true});
 }
 function pumpNotices(){
   if(!live?.telemetry)return;
@@ -434,6 +441,25 @@ function handCarousel(cards,id){
   const observer=new ResizeObserver(()=>{if(shell.isConnected)update();});observer.observe(track);shell.dispose=()=>observer.disconnect();
   return shell;
 }
+/* THE HAND'S OWN SIZE BAR (Rob, 2026-09-24: hand cards "should have their own card re-sizing slider
+   bar", twice the old size by default). 100% is that default, 136px; one value serves the table's
+   hand and Focus's, every bar showing it moves together, and it is remembered on this browser. */
+const HAND_CARD=136;
+let handSize=100;try{const saved=Number(localStorage.getItem('crankmagic-hand-size'));if(saved>=50&&saved<=250)handSize=saved;}catch{}
+function applyHandSize(){
+  document.body.style.setProperty('--hand-card-width',Math.round(HAND_CARD*handSize/100)+'px');
+  for(const bar of document.querySelectorAll('.hand-size input')){bar.value=handSize;bar.nextElementSibling.textContent=handSize+'%';}
+}
+function handSizeControl(){
+  const label=el('label','hand-size');label.title='Make the cards in your hand bigger or smaller. Double-click for 100%.';
+  const bar=el('input');bar.type='range';bar.min='50';bar.max='250';bar.step='5';bar.value=handSize;bar.setAttribute('aria-label','Hand card size');
+  const value=el('output','',handSize+'%');
+  const set=v=>{handSize=Math.max(50,Math.min(250,Math.round(Number(v)/5)*5||100));try{localStorage.setItem('crankmagic-hand-size',String(handSize));}catch{}applyHandSize();};
+  bar.addEventListener('input',()=>set(bar.value));bar.addEventListener('dblclick',()=>set(100));
+  label.append('Hand size',bar,value);return label;
+}
+applyHandSize();
+document.querySelector('.hand .hand-label')?.append(handSizeControl());
 function disposeCarousels(host){for(const shell of host.querySelectorAll('.hand-carousel'))shell.dispose?.();}
 let deckFacts;
 async function deckView(){
@@ -611,8 +637,45 @@ function focusSteps(p){
  * a reason to argue with it.
  */
 let focusPaneClosed=false;
+/* THE PANE'S WIDTH IS THE PLAYER'S. Rob, 2026-09-24: "make the left side pane dynamically adjustable by
+   the end user adjusting the column width by adjusting the divider between their board and the side
+   pane, down to whatever is about 50% of the current size". It is kept as a share of the default --
+   the width at which three boards fill the pane at this window size (online.css) -- so it keeps its
+   meaning when the window changes. Remembered on this browser only. */
+const PANE_MIN_SHARE=.5;
+let paneShare=1;try{const saved=Number(localStorage.getItem('crankmagic-focus-pane'));if(saved>=PANE_MIN_SHARE&&saved<=1)paneShare=saved;}catch{}
+$('focus').style.setProperty('--focus-pane-share',paneShare);
+function paneDivider(pane){
+  const bar=el('div','focus-pane-divider');bar.tabIndex=0;
+  bar.setAttribute('role','separator');bar.setAttribute('aria-orientation','vertical');bar.setAttribute('aria-label','Width of the other boards');
+  bar.setAttribute('aria-valuemin',String(PANE_MIN_SHARE*100));bar.setAttribute('aria-valuemax','100');
+  bar.title='Drag to resize the other boards. Arrow keys adjust; double-click restores the full width.';
+  const set=share=>{
+    paneShare=Math.max(PANE_MIN_SHARE,Math.min(1,share));
+    $('focus').style.setProperty('--focus-pane-share',paneShare);bar.setAttribute('aria-valuenow',String(Math.round(paneShare*100)));
+    try{localStorage.setItem('crankmagic-focus-pane',String(paneShare));}catch{}
+  };
+  bar.setAttribute('aria-valuenow',String(Math.round(paneShare*100)));
+  bar.addEventListener('pointerdown',down=>{
+    if(down.button!==0)return;down.preventDefault();bar.setPointerCapture(down.pointerId);bar.classList.add('is-dragging');
+    const start=pane.getBoundingClientRect().width,full=start/paneShare,x=down.clientX;
+    const move=event=>set((start+event.clientX-x)/full);
+    const done=()=>{bar.classList.remove('is-dragging');bar.removeEventListener('pointermove',move);bar.removeEventListener('pointerup',done);bar.removeEventListener('pointercancel',done);};
+    bar.addEventListener('pointermove',move);bar.addEventListener('pointerup',done);bar.addEventListener('pointercancel',done);
+  });
+  bar.addEventListener('keydown',event=>{
+    const step={ArrowLeft:-.05,ArrowRight:.05}[event.key];
+    if(step){event.preventDefault();set(paneShare+step);}
+    else if(event.key==='Home'){event.preventDefault();set(PANE_MIN_SHARE);}
+    else if(event.key==='End'){event.preventDefault();set(1);}
+  });
+  bar.addEventListener('dblclick',()=>set(1));
+  return bar;
+}
 function focusPane(current){
-  const pane=el('aside','focus-pane');pane.setAttribute('aria-label','Other boards');
+  /* A div with the landmark role, not an <aside>: the page's own sidebar is styled as `aside`
+     (sticky, 85vh, its own scroll), and as one of those the pane clipped its divider. */
+  const pane=el('div','focus-pane');pane.setAttribute('role','complementary');pane.setAttribute('aria-label','Other boards');
   pane.classList.toggle('is-closed',focusPaneClosed);
   const bar=el('div','focus-pane-bar');
   const collapse=button(focusPaneClosed?'\u25b8':'\u25c2',()=>{focusPaneClosed=!focusPaneClosed;focusBoard(current);},'focus-pane-collapse');
@@ -650,6 +713,7 @@ function focusPane(current){
   }
   const table=button('Table view',()=>$('focus').close(),'focus-pane-table');
   table.title='Back to all four boards';pane.append(table);
+  pane.append(paneDivider(pane));
   return pane;
 }
 function focusBoard(p){
@@ -663,7 +727,7 @@ function focusBoard(p){
   const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);releaseCardLayouts(content);content.replaceChildren();
   content.append(focusPane(p));
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
-  if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
+  if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'),handSizeControl());hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
   else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));
   if(!dialog.open)dialog.showModal();content.scrollTop=scrollTop;syncModalViewport();mountControls();
 }
@@ -687,19 +751,42 @@ function matView(p,focused=false){
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
-    const grouped=new Map(),capacity=name==='Lands'?6:3,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
+    const grouped=new Map();
     for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
-    const large=focused||p.playerId===primarySeat;
-    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
-    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);
-      /* ONE CARD SIZE, AND IT SCALES TOGETHER. Rob, 2026-09-24: "every card should be the same
-         size and scale together. This includes the commander card", and the hand "the same size
-         (or even slightly bigger) than the commander". The width is published on the mat for the
-         piles and, in Focus, on the dialog as well -- the hand lives outside the mat and could not
-         read a variable set on it, which is why it stayed at its own fixed 180px. */
-      if(name!=='Lands'){mat.style.setProperty('--mat-card-width',m.cardWidth+'px');
-        mat.closest('.focus-dialog')?.style.setProperty('--mat-card-width',m.cardWidth+'px');}list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
-    else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
+    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));if(group.gridColumn){stack.style.gridColumn=group.gridColumn;stack.style.gridRow=group.gridRow;stack.classList.toggle('lane-second',group.gridRow==='2');}const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
+    /* EVERY MAT, AT EVERY SIZE, LAYS OUT THE SAME WAY: the commander's card width (alignToPiles), and a
+       zone that never puts a card below its own bottom edge (card-layout.mjs, planZone). The small
+       four-up boards used to stack every group once a zone held more than three, and the large ones
+       grew their cards past the piles on a slider; Rob, 2026-09-24: "Every card on the play mat
+       should be exactly the same size, always." */
+    list.classList.add('zoom-card-grid');
+    const scrollKey=`${focused?'focus':'table'}:${p.playerId}:${name}`;
+    let layoutKey='';
+    const layout=()=>{
+      if(!zone.isConnected||draggingCard!==null)return;
+      const cardWidth=matCardWidth(mat);if(!cardWidth)return;
+      const s=getComputedStyle(list),pad=parseFloat(s.paddingTop)||0;
+      const box={width:zone.clientWidth-(parseFloat(s.paddingLeft)||0)-(parseFloat(s.paddingRight)||0),height:zone.clientHeight-pad*2,cardWidth,scrollbar:Math.max(0,scrollbarThickness()-pad)};
+      /* The battlefield keeps creatures on the first row and everything else on the second when it has
+         the height for two (card-layout.mjs, planLanes); otherwise, and for lands, one lane. */
+      const all=[...grouped.values()],creature=g=>g.cards.some(c=>/Creature/.test((c.typeLine||'').split('\u2014')[0]));
+      const plan=(name==='Battlefield'&&planLanes({...box,top:all.filter(creature),bottom:all.filter(g=>!creature(g))}))||planZone({...box,lands:name==='Lands',groups:all});
+      list.style.setProperty('--card-columns',plan.columns);list.dataset.columns=plan.columns;list.dataset.rows=plan.lanes?2:plan.rows;
+      if(plan.lanes)list.style.setProperty('--lane-slot',plan.slot+'px');
+      list.classList.toggle('single-row',!!plan.singleRow);list.classList.toggle('lanes',!!plan.lanes);
+      const key=[cardWidth,plan.columns,plan.lanes?plan.groups.map(g=>g.gridColumn+g.gridRow+g.cards.length).join():plan.capacity+':'+plan.maxStack,plan.singleRow].join(':');
+      if(key!==layoutKey){layoutKey=key;drawGroups(plan.groups);}
+      /* THE SCROLL BAR LIVES IN THE BOTTOM 10pt, not in a row's height: cards still stop 10pt inside
+         the outline (Rob, 2026-09-23) and the bar is the only mark the scrolling window makes. */
+      list.style.paddingBottom='';
+      const scrolls=plan.singleRow||plan.lanes,bar=scrolls?list.offsetHeight-list.clientHeight:0;
+      if(bar)list.style.paddingBottom=Math.max(0,pad-bar)+'px';
+      if(scrolls)list.scrollLeft=zoneScroll.get(scrollKey)||0;
+    };
+    /* A live table redraws the board on every change, so the position a player scrolled to is kept
+       per seat and zone rather than snapping back to the first card each time. */
+    list.addEventListener('scroll',()=>zoneScroll.set(scrollKey,list.scrollLeft),{passive:true});
+    zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);zoneBoxes.set(cls,zone);
   }
   /* A DRAGGED CARD BELONGS TO ITS ZONE, NOT TO THE MAT. Rob, 2026-09-23: "put functional
@@ -771,7 +858,18 @@ function matView(p,focused=false){
  *
  * So the column is measured once the mat is laid out and everything is aligned to what is actually
  * there. Any playmat added later is handled without another rule. */
-function alignToPiles(mat,band){
+/* The mat's one card width, measured again whenever the mat has changed size since it was taken. */
+/* How thick the zones' thin horizontal scroll bar really is here, measured once rather than assumed. */
+let scrollbarSize=null;
+function scrollbarThickness(){
+  if(scrollbarSize===null){const probe=el('div');probe.style.cssText='position:absolute;visibility:hidden;width:60px;height:60px;overflow-x:scroll;scrollbar-width:thin';document.body.append(probe);scrollbarSize=probe.offsetHeight-probe.clientHeight;probe.remove();}
+  return scrollbarSize;
+}
+function matCardWidth(mat){
+  if(mat.dataset.measuredAt!==mat.clientWidth+'x'+mat.clientHeight)alignToPiles(mat);
+  return parseFloat(mat.style.getPropertyValue('--mat-card-width'))||0;
+}
+function alignToPiles(mat,band=mat?.querySelector(':scope > .mat-history')){
   if(!mat)return;
   const command=mat.querySelector('.mat-command'),exile=mat.querySelector('.mat-exile');
   const field=mat.querySelector('.mat-battlefield');
@@ -787,27 +885,43 @@ function alignToPiles(mat,band){
     if(bottom>fieldTop)field.style.height=(bottom-fieldTop).toFixed(2)+'%';
   }
 
-  /* ONE CARD SIZE FOR THE WHOLE MAT, AND IT IS THE SIZE THAT FITS. Rob, 2026-09-23: "the card
-     default size is too big for 2 rows. In battlefield", and "every card on the mat should be the
-     same size (commander, representative top of the deck / library, graveyard, exile)".
-     Four different widths were in play -- clamp(36px,11cqw,145px) on the battlefield,
-     clamp(29px,7.6cqw,106px) on lands, clamp(44px,13cqw,175px) again in online.css, and the piles
-     sized by their own 11.5% frame -- so nothing on the mat matched anything else and the
-     battlefield's default overflowed two rows. The width is derived once, from the room the
-     battlefield actually has after its 10pt padding, and everything reads it:
-        2 rows * (w * 680/488) + one gap <= inner height
-     A card is never wider than a pile frame either, or the piles would have to grow to match.
+  /* ONE CARD SIZE FOR THE WHOLE MAT, ALWAYS, AND IT IS THE COMMANDER'S. Rob, 2026-09-24: "Every
+     card on the play mat should be exactly the same size, always. The size of the commander card
+     ... is correct proportions to mat size." It had been derived from two battlefield rows (Rob,
+     2026-09-23), and the large boards let cardGridMetrics grow theirs past the piles on a slider:
+     measured at 1920x1080 in Focus, battlefield cards 240px and 279px, lands 125-145px, beside a
+     188px commander. Now it is the card that fits the Command frame, and every card on the mat reads
+     it -- battlefield, lands, piles, free cards.
 
-     ON A LARGE BOARD cardGridMetrics OWNS THIS, because it also knows the zoom, the columns, the
-     group label and the gaps -- it sets --mat-card-width from its own answer, and this must not
-     fight it. Two functions writing one property is the problem this whole change is about. So
-     this only fills in for the small boards, which never run that layout. */
-  if(field&&!mat.querySelector('.zoom-card-grid')){
-    const f=field.getBoundingClientRect(),pad=13.334,gap=6;
-    const inner=f.height-pad*2,byHeight=(inner-gap)/2/(680/488);
-    const width=Math.max(28,Math.min(byHeight,c.width));
-    mat.style.setProperty('--mat-card-width',width.toFixed(1)+'px');
+     THE LANDS OUTLINE MAKES ROOM FOR ONE. At that width a card was taller than the outline (261px in
+     233), so its bottom now sits level with Library and Graveyard -- the same rule as the
+     battlefield ending level with Command and Exile -- and its top rises only as far as a card and
+     the 10pt inside the outline need, never into the room the Lands label takes above it. Where a
+     playmat's frames still cannot hold one, the card shrinks to fit rather than spill, and every
+     other card shrinks with it. */
+  const pad=parseFloat(getComputedStyle(mat.querySelector('.mat-cards')||mat).paddingTop)||0,ratio=680/488;
+  /* Where the scroll bar is thicker than the padding it sits in (small boards), a row loses the rest. */
+  const bar=Math.max(0,scrollbarThickness()-pad);
+  let width=Math.min(command.clientWidth,command.clientHeight/ratio);
+  /* A pixel short of exact: a percentage height lands on whole pixels, and a card 0.6px taller than its
+     zone is a scroll bar for nothing. */
+  if(field)width=Math.min(width,(field.clientHeight-pad*2-GROUP_LABEL-bar-1)/ratio);
+  const lands=mat.querySelector('.mat-lands');
+  if(lands&&field){
+    const l=lands.getBoundingClientRect(),lower=[...mat.querySelectorAll('.mat-library,.mat-graveyard')].map(n=>n.getBoundingClientRect().bottom);
+    /* Clear of the Lands label, which sits on top of the outline at its own height (online.css). */
+    const label=lands.querySelector(':scope > .mat-zone-label'),labelRoom=label?Math.max(0,-label.offsetTop)+2:20;
+    const floor=field.getBoundingClientRect().bottom-m.top+labelRoom,base=Math.min(m.height,Math.max(l.bottom,...lower)-m.top);
+    const frame=l.height-lands.clientHeight;
+    const landTop=Math.max(floor,Math.min(l.top-m.top,base-(width*ratio+pad*2+bar+frame)));
+    lands.style.top=(landTop/m.height*100).toFixed(3)+'%';lands.style.height=((base-landTop)/m.height*100).toFixed(3)+'%';
+    width=Math.min(width,(base-landTop-frame-pad*2-bar-1)/ratio);
   }
+  width=Math.max(12,Math.floor(width*10)/10);
+  mat.style.setProperty('--mat-card-width',width+'px');mat.dataset.measuredAt=mat.clientWidth+'x'+mat.clientHeight;
+  /* The Focus hand lives outside the mat and reads the same width from the dialog. */
+  if(mat.closest('.focus-mat-stage'))mat.closest('.focus-dialog')?.style.setProperty('--mat-card-width',width+'px');
+  for(const zone of mat.querySelectorAll(':scope > .mat-zone'))zoneLayouts.get(zone)?.();
 
   if(!band)return;
   const right=exile?(exile.getBoundingClientRect().right-m.left)/m.width*100:left+25.5;
@@ -1220,7 +1334,10 @@ $('view-deck').before(follow,myBoard,holdResponses,skipToEnd);
 const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';promptAi.id='prompt-ai-button';
 $('view-deck').before(promptAi);
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
-const zoomControl=el('label','card-zoom-control','Card size '),zoomSlider=el('input'),zoomOutput=el('output','',cardZoom+'%');zoomSlider.type='range';zoomSlider.min='32';zoomSlider.max='140';zoomSlider.step='1';zoomSlider.value=cardZoom;zoomSlider.setAttribute('aria-label','Board card size');zoomControl.append(zoomSlider,zoomOutput);const setCardZoom=value=>{cardZoom=Math.max(32,Math.min(140,Number(value)));zoomSlider.value=cardZoom;zoomOutput.textContent=cardZoom===32?'Compact · 6 × 3':cardZoom+'%';try{localStorage.setItem('crankmagic-card-zoom',cardZoom);}catch{}for(const layout of zoneLayouts.values())layout();};zoomSlider.addEventListener('input',()=>setCardZoom(zoomSlider.value));viewOptions.append(zoomControl,button('Compact cards · 6 × 3',()=>setCardZoom(32)),button('Reset card size',()=>setCardZoom(100)));
+/* No card-size slider: it existed to make the battlefield's cards a different size from the piles,
+   which is what Rob ruled out on 2026-09-24 ("every card on the play mat should be exactly the same
+   size, always"). A board is made bigger or smaller as a whole -- the resize handle on your board,
+   S / M / L in Focus -- and every card moves with it. */
 const hideOthers=button('Hide other boards',()=>{hideOpponents=!hideOpponents;document.body.classList.toggle('hide-opponents',hideOpponents);hideOthers.textContent=hideOpponents?'Show other boards':'Hide other boards';refreshBoards();});
 /* 2e names this control 'Panel ▸' and puts it in the top strip beside History and Tools, not
    inside View options: it is one of the three things a player reaches for constantly. */
@@ -1237,15 +1354,23 @@ $('card-detail').addEventListener('click',()=>$('card-detail').close());
 $('close-focus').addEventListener('click',()=>$('focus').close());
 $('focus').addEventListener('close',mountControls);
 for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
-/* 2f asks for "the S · M · L card-size switch" rather than a percentage: three named sizes a
-   player picks once, not a number they tune. The values are the ends and middle of the slider
-   this replaces, so nothing about how the mat scales has changed. */
-for(const id of ['focus-size-s','focus-size-m','focus-size-l'])$(id).addEventListener('click',e=>{
-  const size=Number(e.currentTarget.dataset.size);
-  $('focus').style.setProperty('--focus-zoom',size+'%');$('focus').style.setProperty('--focus-scale',size/100);
-  for(const other of ['focus-size-s','focus-size-m','focus-size-l'])$(other).setAttribute('aria-pressed',String($(other)===e.currentTarget));
-});
-$('focus-size-s').setAttribute('aria-pressed','true');
+/* THE BOARD-SIZE BAR. Rob, 2026-09-24, of the S / M / L switch 2f had asked for: "not the gradient
+   size scale bar, which will give the end user greater control and optionality". Measured before it
+   went: S, M and L all drew the same 1411x833 board -- the stage's width was out-weighed by the grid's
+   placement rule and the mat's cap by the table's max-width:100%, so the switch never did anything.
+   The bar sets the focused mat's own width, and because every card on the mat is the commander's
+   size (alignToPiles), every card moves with it. 100% fills the width; past it the board scrolls.
+   Remembered on this browser only. */
+const focusSize=$('focus-size'),focusSizeValue=$('focus-size-value');
+function setFocusSize(value){
+  const size=Math.max(50,Math.min(200,Math.round(Number(value)/5)*5||100));
+  focusSize.value=size;focusSizeValue.textContent=size+'%';focusSize.setAttribute('aria-valuetext',size+' percent');
+  $('focus').style.setProperty('--focus-zoom',size/100);
+  try{localStorage.setItem('crankmagic-focus-size',String(size));}catch{}
+}
+focusSize.addEventListener('input',()=>setFocusSize(focusSize.value));
+focusSize.addEventListener('dblclick',()=>setFocusSize(100));
+{let saved=100;try{saved=Number(localStorage.getItem('crankmagic-focus-size'))||100;}catch{}setFocusSize(saved);}
 $('view-hand').addEventListener('click',()=>{
   const viewer=frame().players.find(p=>p.playerId===viewerSeatId);
   if(viewer)focusBoard(viewer);else notifyAction('Connect to a live table to view your hand.');
