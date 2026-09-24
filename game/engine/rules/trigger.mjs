@@ -98,8 +98,11 @@ export function collectTriggers(state, events) {
             controller: object.controller,
             /* The object AS IT WAS. For a death this is the only record of it that still exists. */
             source: {cardId: id, name: object.card},
-            /* What caused it, so an effect that refers to "that creature" has it. */
-            cause: event.data?.fields?.card ?? null,
+            /* What caused it, so an effect that refers to "that creature" has it. For a departure
+               that is the last known information (CR 113.7a) and not the bare identity reference:
+               "each opponent loses life equal to its power" needs the power of a thing that is no
+               longer anywhere, and `card` carries only enough to name it. */
+            cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
           });
         }
@@ -119,7 +122,7 @@ export function collectTriggers(state, events) {
           text: ability.text ?? ability.id,
           controller: gone.controller,
           source: {cardId: gone.cardId, name: gone.name},
-          cause: event.data.fields.card ?? null,
+          cause: gone,
           optional: ability.optional === true,
         });
       }

@@ -19,6 +19,10 @@ export function countdownBlockers(table) {
   for (const seat of table.seats) {
     if (seat.invited && !seat.occupied) blockers.push({seatId: seat.seatId, reason: 'invitation sent, not joined yet'});
   }
+  /* A human seat nobody was ever invited to is NOT judged here (U-09, 2026-09-23). It is refused
+     when the host presses start -- see `unfilledHumanSeats` below -- because it is an instruction
+     to one person about one action, and this list is read continuously to describe the table at
+     rest, where a chair still to be filled is perfectly normal. */
   for (const seat of seated) {
     if (!seat.connected) blockers.push({seatId: seat.seatId, reason: 'not connected'});
     else if (!seat.deckVersion) blockers.push({seatId: seat.seatId, reason: 'no validated deck'});
@@ -27,12 +31,35 @@ export function countdownBlockers(table) {
   return blockers;
 }
 
+/**
+ * Human seats nobody was invited to — checked when the host presses start, not continuously.
+ *
+ * Rob, 2026-09-23, offered "wait for them" or "start without them" and choosing neither: "If I
+ * never invited them and then I press start game then I should get a pop-up saying you haven't
+ * invited anybody to the seat but marked it as human. Remove the seat assignment or change it to
+ * AI to start the game." A standing rule the same day: where human behavior would break the game,
+ * do not allow it, and tell the person how to proceed.
+ *
+ * NOT IN `countdownBlockers`, deliberately. That list is read continuously to describe the table,
+ * and a table at rest with chairs still to fill is perfectly normal — putting this there made a
+ * fresh four-seat table report an error for existing as a four-seat table. This fires on the one
+ * action it is about.
+ *
+ * `released` is what separates a chair the host never thought about from one the table emptied
+ * normally: a withdrawn invitation, somebody leaving, a reconnect grace running out, or a rematch
+ * decline. `invited` alone could not carry that — it is a plain boolean that `uninvited` sets back
+ * to false, so "I took it back" and "I never sent one" looked identical.
+ */
+export function unfilledHumanSeats(table) {
+  return table.seats.filter(s => s.kind === 'human' && !s.occupied && !s.invited && !s.released);
+}
+
 /** Pure authoritative table transitions. Transport authenticates actor; clients never set time/IDs. */
 export function createTable({tableId,seats,settings}) {
   if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
   if(seats.some((s,i)=>s.seatId!==i||!['human','ai'].includes(s.kind)))throw Error('Invalid seats');
   return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,launchError:null,...(settings?{settings:structuredClone(settings)}:{}),
-    seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false,invited:false}))};
+    seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false,invited:false,released:false}))};
 }
 export function transitionTable(previous,event,{now,launchId}={}) {
   if(!Number.isSafeInteger(now))throw Error('Authoritative clock required');
@@ -45,8 +72,10 @@ export function transitionTable(previous,event,{now,launchId}={}) {
     case 'join':editable();if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');Object.assign(seat,{occupied:true,connected:true,ready:false,rematch:null,disconnectedAt:null,conceded:false,invited:false});cancel();break;
     /* The host sent a link, or took it back. Only the transport knows an invitation was minted;
        the table needs to know so the countdown waits for whoever it was sent to. */
-    case 'invited':if(!seat||seat.kind!=='human')throw Error('Only a human seat is invited');seat.invited=true;cancel();break;
-    case 'uninvited':if(!seat)throw Error('No such seat');seat.invited=false;break;
+    case 'invited':if(!seat||seat.kind!=='human')throw Error('Only a human seat is invited');seat.invited=true;seat.released=false;cancel();break;
+    /* Withdrawing is the host acting on the seat -- "start without them" -- so it releases the
+       table as it always has, and the never-invited block above does not then re-catch it. */
+    case 'uninvited':if(!seat)throw Error('No such seat');seat.invited=false;seat.released=true;break;
     case 'deck':editable();member();if(!event.deckVersion)throw Error('Validated deck version required');seat.deckVersion=event.deckVersion;seat.ready=false;cancel();break;
     case 'ready':editable();member();if(!seat.deckVersion||!seat.connected)throw Error('Connected seat and validated deck required');seat.ready=!!event.ready;cancel();break;
     case 'disconnect':member();seat.connected=false;seat.ready=false;seat.disconnectedAt=now;cancel();break;
@@ -55,12 +84,21 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       member();if(seat.kind!=='human')throw Error('AI does not exit through membership');
       if(event.type==='expire'&&(seat.connected||seat.disconnectedAt===null||now-seat.disconnectedAt<60000))throw Error('Reconnect grace has not expired');
       if(['playing','starting'].includes(t.phase))throw Error('Resolve active-match departure through engine policy first');
-      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false});cancel();break;
+      /* Released: somebody sat here and left. That is the table acting normally, not a chair the
+         host never thought about, so it must not raise the never-invited popup. The comment at the
+         top of this file names all three -- exit, reconnect grace, rematch decline. */
+      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false,released:true});cancel();break;
     case 'concede':
       member();if(seat.kind!=='human'||t.phase!=='playing')throw Error('No active human player can concede');
-      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true});break;
+      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true,released:true});break;
     case 'countdown': {
       if(t.phase!=='selecting')throw Error('Table is not selecting decks');
+      /* Checked before readiness, because it is the more useful thing to be told: "every seat must
+         be ready" about a chair nobody is sitting in sends the host looking for a player. */
+      const unfilled=unfilledHumanSeats(t);
+      if(unfilled.length)throw Error(unfilled.map(s=>
+        `${s.name?`${s.name}'s seat`:`Seat ${s.seatId+1}`} is marked as a human but nobody has been invited to it`)
+        .join('. ')+'. Remove the seat assignment or change it to AI to start the game');
       const blockers=countdownBlockers(t);
       if(blockers.length)throw Error('Every seat must be ready');
       t.phase='countdown';t.countdownAt=now+10000;break;
@@ -109,7 +147,7 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       // an empty chair nobody can fill would block the countdown exactly as the unanimity rule did.
       for(const s of t.seats){
         if(s.rematch===true&&(s.kind==='ai'||(s.occupied&&s.connected))){s.ready=false;s.rematch=null;continue;}
-        Object.assign(s,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false});
+        Object.assign(s,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false,released:true});
       }
       t.phase='selecting';t.launchId=null;t.matchId=null;t.rematchAt=null;break;
     }

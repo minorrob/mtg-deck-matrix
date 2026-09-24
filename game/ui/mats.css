@@ -11,10 +11,8 @@
 .personal-mat .mat-zone{border:0;background:#05101926}
 .mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-style:italic;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
 .mat-cards{position:absolute;inset:3% 2% 16%;display:flex;flex-wrap:wrap;gap:5px;overflow:auto;align-content:start;padding:3px;scrollbar-width:thin}
-.player-mat .mat-cards .card{width:clamp(36px,11cqw,145px);height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
-.player-mat .mat-cards{padding:3px}
-.player-mat .mat-lands .mat-cards{inset:1% 1% 14%;flex-wrap:nowrap;align-items:start;overflow-y:hidden;padding:1px 3px}
-.player-mat .mat-lands .card{width:clamp(29px,7.6cqw,106px)}
+.player-mat .mat-cards .card{height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
+
 .player-mat .card .badge{font-size:clamp(7px,1.6cqw,12px);padding:1px 3px;right:1px;bottom:1px}
 .player-mat .card .count{font-size:clamp(7px,1.6cqw,12px);padding:1px;min-width:16px;right:1px;top:1px}
 .player-mat .card .fallback{font-size:clamp(7px,1.3cqw,12px);padding:4px}.player-mat .card .fallback b{font-size:14px}
@@ -31,20 +29,22 @@
 .mat-pile .mat-zone-label{font-size:clamp(7px,1.35cqw,15px);left:-2px;bottom:-3px;white-space:nowrap}
 .pile-count{position:absolute;right:0;top:0;background:#07121cee;color:#fff;border-radius:4px;padding:1px 4px;font-size:clamp(8px,1.5cqw,15px)}
 .pile-empty{font-size:clamp(16px,3cqw,30px);color:#b8c5c5a8}
-.library-back{display:grid;place-items:center;width:86%;height:85%;border:2px solid #405b64;border-radius:4px;background:repeating-linear-gradient(45deg,#142635 0 7px,#1d3946 7px 8px);box-shadow:2px 2px 0 #617a80,4px 4px 0 #152e39}.library-back span{font-size:clamp(16px,3cqw,34px);color:#a3d4cc}
+/* The library shows a real card back now (review.mjs, cardBackFor) -- one of five, in a color
+   from that seat commander's identity -- so this styles an image instead of a CSS hatch. */
+.library-back{display:block;width:86%;height:auto;aspect-ratio:488/680;object-fit:contain;border-radius:4px;box-shadow:2px 2px 0 #617a80,4px 4px 0 #152e39}
 .center-counter{grid-column:1/3;grid-row:2;width:min(540px,90%);padding:7px 10px;border-radius:20px}
 .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.counter-tile{padding:5px 9px}.counter-tile .life{font-size:30px}.phone-label{padding:0 3px 5px}.phone-bottom{padding-top:4px}
 .mat-dialog{width:min(1160px,96vw);max-height:96dvh;overflow:auto}.mat-dialog .player-mat{width:100%}.mat-dialog .mat-cards{max-height:none}.mat-dialog .mat-pile{max-height:none}
 .mat-dialog .dialog-head{margin-bottom:10px}
-.hand-carousel{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;align-items:center;min-width:0}.hand-arrow{padding:5px 0;font-size:30px;line-height:1.2}.hand-track,.focus-dialog .hand-track{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-height:none;padding:6px 4px 12px;scrollbar-width:thin;scroll-snap-type:x proximity}.hand-track .card{width:104px;scroll-snap-align:start}.focus-dialog .hand-track .card{width:var(--focus-card-width);scroll-snap-align:start}
-.focus-piles{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:0 0 18px;padding:12px;border:1px solid #324c59;background:#0c1825;border-radius:12px}.focus-pile{position:relative;width:92px;height:128px;display:flex;align-items:center;justify-content:center;padding:6px 6px 22px;border:1px solid #5b7180;background:#122434}.focus-pile>img{height:100%;max-width:100%;object-fit:contain;border-radius:4px}.focus-pile .library-back{height:100%;width:80%;font-size:24px}.focus-pile .library-back span{font-size:25px}.focus-pile .mat-zone-label{font:11px Segoe UI,system-ui,sans-serif;bottom:4px;left:3px;right:3px;width:auto;text-align:center;padding:2px}.focus-pile .pile-count{font-size:14px;right:4px;top:4px}.focus-pile .pile-empty{font-size:28px}.deck-list-link{margin-left:auto;font-size:12px}
+.hand-carousel{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;align-items:center;min-width:0}.hand-arrow{padding:5px 0;font-size:30px;line-height:1.2}.hand-track{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;min-width:0;max-height:none;padding:6px 4px 12px;scrollbar-width:thin;scroll-snap-type:x proximity}.hand-track .card{width:104px;scroll-snap-align:start}
+.focus-piles{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:0 0 18px;padding:12px;border:1px solid #324c59;background:#0c1825;border-radius:12px}.focus-pile{position:relative;width:92px;height:128px;display:flex;align-items:center;justify-content:center;padding:6px 6px 22px;border:1px solid #5b7180;background:#122434}.focus-pile>img{height:100%;max-width:100%;object-fit:contain;border-radius:4px}.focus-pile .library-back{height:100%;width:auto;max-width:100%}.focus-pile .mat-zone-label{font:11px Segoe UI,system-ui,sans-serif;bottom:4px;left:3px;right:3px;width:auto;text-align:center;padding:2px}.focus-pile .pile-count{font-size:14px;right:4px;top:4px}.focus-pile .pile-empty{font-size:28px}.deck-list-link{margin-left:auto;font-size:12px}
 /* Focus fills the viewport; only the content scrolls, and card rows always wrap. */
 .focus-dialog{--focus-card-width:180px;position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;padding:0;border:0;border-top:3px solid var(--seat);border-radius:0;background:radial-gradient(ellipse at top left,#213c414d,transparent 65%),#0c1520;overflow:hidden}
 .focus-dialog[open]{display:flex;flex-direction:column}
 body:has(.focus-dialog[open]){overflow:hidden}
 .focus-header{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:15px 22px;background:#111e2aed;border-bottom:1px solid #34505d}
 .focus-eyebrow{font-size:10px;letter-spacing:1.7px;color:var(--seat)}.focus-header h2{font-size:23px;margin:4px 0 0}.focus-header>button{margin-left:auto;white-space:nowrap}
-.focus-size{margin-left:auto;display:flex;align-items:center;gap:10px;color:#b9ccd6;font-size:12px}.focus-size input{width:140px;accent-color:var(--seat)}.focus-size output{width:46px;font-variant-numeric:tabular-nums}
+.focus-size{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--color-muted,CanvasText);font-size:12px;white-space:nowrap}.focus-size output{width:40px;font-variant-numeric:tabular-nums;color:var(--color-ink,CanvasText)}
 .focus-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 22px;background:#111e2a;color:#aabfcf;font-size:12px;border-bottom:1px solid #294151}.focus-status button{padding:6px 9px;font-size:12px}.focus-health{color:var(--seat);border-color:#4b7277}.focus-status>span{margin-right:10px}
 .focus-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:16px 22px 24px}
 .focus-board{display:flex;flex-wrap:wrap;align-items:stretch;gap:14px}
@@ -97,3 +97,122 @@ body:has(.focus-dialog[open]){overflow:hidden}
 .player-mat[data-layout="violet"] .mat-command{left:71%;top:34%;width:12%;height:28%}.player-mat[data-layout="violet"] .mat-exile{left:85%;top:34%;width:12%;height:28%}
 .player-mat[data-layout="violet"] .mat-library{left:71%;top:68%;width:12%;height:28%}.player-mat[data-layout="violet"] .mat-graveyard{left:85%;top:68%;width:12%;height:28%}
 .focus-dialog.illustrated-mat .focus-content{background-image:linear-gradient(#0c1520e8,#0c1520ed),var(--playmat-image);background-size:cover;background-position:center}
+/* B.6b — THE HISTORY BAND (2f, Focus). Option 2 of the two ways to make room, chosen by Rob on
+   2026-09-23: the mat's right column carries nothing in the DOM between 5% and 38%, so the band
+   goes there and NO ZONE MOVES. Re-proportioning (option 1) would have shortened the upper pile
+   pair to ~22% and pushed the lower to 74%, making both pairs shorter than a card at small board
+   sizes, on all four boards at once. The right edge lands at 97.5%, flush with Exile and Graveyard.
+   Measured live at 1920x1080: a row is 32px against the feed's 154px, so four and a half fit.
+
+   EVERY COLOR HERE IS DERIVED, NOT WRITTEN. tests/design-tokens.mjs caps raw hex in game/ui and
+   the cap only goes down, so the band mixes the stylesheet's existing --cyan, --edge, --muted and
+   --action-blue with the black/white/transparent keywords rather than adding twenty-two more. */
+.mat-history{position:absolute;left:72%;top:5.5%;width:25.5%;height:31%;display:flex;flex-direction:column;
+  /* No border: the updated table design draws the History band as a tinted panel only
+     (Play Focus Mock, grid-column:2/span 2, background:rgba(10,9,8,.55), no border). */
+  background:color-mix(in srgb,var(--edge) 55%,black);border:0;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgb(0 0 0 / .55);z-index:4}
+.mh-head{display:flex;align-items:baseline;gap:.6em;flex:0 0 auto;padding:.45em .6em .35em;
+  border-bottom:1px solid color-mix(in srgb,var(--cyan) 22%,var(--edge));
+  font-size:clamp(6px,1.12cqw,12px);letter-spacing:.09em;text-transform:uppercase;color:var(--cyan)}
+.mh-head b{font-weight:650}
+.mh-head span{margin-left:auto;color:var(--muted);letter-spacing:0;text-transform:none}
+/* The last visible row fades rather than sitting cut in half, because the feed really does scroll. */
+.mh-feed{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:.25em .35em;display:flex;flex-direction:column;gap:.18em;
+  scrollbar-width:thin;-webkit-mask-image:linear-gradient(black 72%,transparent 99%);mask-image:linear-gradient(black 72%,transparent 99%)}
+.mat-history .mh-row{display:flex;flex-direction:column;padding:.26em .4em;border-radius:3px;line-height:1.2;cursor:default;
+  border-left:2px solid color-mix(in srgb,var(--action-blue) 55%,var(--edge));
+  background:color-mix(in srgb,var(--edge) 45%,transparent)}
+.mat-history .mh-row:hover,.mat-history .mh-row:focus-visible{background:color-mix(in srgb,var(--cyan) 12%,var(--edge));outline:none}
+.mat-history .mh-row:focus-visible{outline:1px solid var(--cyan);outline-offset:-1px}
+.mh-l1{font-size:clamp(5px,.96cqw,11px);color:var(--muted);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mh-l2{font-size:clamp(5.5px,1.1cqw,12px);color:color-mix(in srgb,var(--cyan) 14%,white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mh-l2 .tgt{color:color-mix(in srgb,var(--action-blue) 45%,var(--muted))}
+.mh-l2 .eff{color:color-mix(in srgb,var(--cyan) 70%,white)}
+.mh-empty{margin:0;padding:.5em;font-size:clamp(5px,1cqw,11px);color:color-mix(in srgb,var(--muted) 65%,transparent);line-height:1.3}
+/* Outside the band so the feed can clip its own rows without clipping this. */
+/* Inside the battlefield container, against its inner edge -- the same 10pt boundary every other
+   card obeys. It was positioned at a percentage of the MAT and hung over the outline. */
+.mat-history-card{position:absolute;right:10pt;top:10pt;width:22%;max-width:calc(100% - 20pt);
+  max-height:calc(100% - 20pt);aspect-ratio:488/680;border-radius:4px;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--muted) 70%,var(--edge));box-shadow:0 8px 20px rgb(0 0 0 / .7);
+  pointer-events:none;z-index:6;background:color-mix(in srgb,var(--edge) 70%,black)}
+.mat-history-card img{width:100%;height:100%;object-fit:cover;display:block}
+/* THE WORDS ON THE MAT SIT BEHIND THE CARDS. Rob, 2026-09-23: "the words on the mat should always
+   be behind the cards, e.g. 'battlefield'". The labels are appended after their card list, so they
+   painted over whatever was in the zone; a card dropped low in the Battlefield had the word
+   "Battlefield" printed across it. They are decoration for an empty zone and furniture once it
+   fills, so they go to the back of the mat's stacking context and the cards come forward. */
+.mat-zone-label{z-index:0}
+.player-mat .free-card,.mat-pile>img,.mat-pile .library-back,.mat-pile .card{position:relative;z-index:1}
+.player-mat .free-card{position:absolute}
+.pile-count{z-index:2}
+
+/* THE FUNCTIONAL BOUNDARY, AND THE 10pt INSIDE IT. Rob, 2026-09-23: "Define the functional
+   boundaries of the sections of the play mat, then the card positions are relative to the mat
+   container borders, instead of to the mat itself... Have 10pts of padding which then defines the
+   actual card placement boundaries... That padding goes for all 4 inner sides of battlefield and
+   lands. No padding required for the command, exile, library, and graveyard; just boundaries."
+
+   The zone outline IS the boundary. The 10pt inside it is where cards may actually sit, on all
+   four sides — so a card can no longer be flush with the border or, as a live shot on 2026-09-23
+   showed, hanging over the top of the Lands outline. The old rules described the same idea in
+   percentages that were really there to clear the zone label (bottom 16%, 14%), and percentages of
+   a mat that changes size do not hold a fixed margin. The label now sits behind the cards, so it
+   does not need the room reserved either.
+
+   The piles get the boundary and no padding: one card fills the frame, and the frame IS the card's
+   shape (488:680), so an inset would leave it floating in its own box. */
+/* ABSOLUTE, SO THE INSET HOLDS. The list was position:relative, which ignores an inset, so it was as
+   tall as its cards rather than as tall as its outline: measured in Focus at 1920x1080, 702px of list
+   in a 578px battlefield, and the second row of groups sat below the boundary (Rob, 2026-09-24). */
+/* THE 10pt SCALES WITH THE BOARD BELOW FOCUS SIZE. Rob, 2026-09-24, choosing it for the four-up: a
+   fixed 10pt on a board 208px tall left the lands room for a card 13px wide, and every card on the
+   mat is that one size. It is 10pt on the Focus board at 1920x1080 (1653px wide, where Rob set it)
+   and on anything larger, and in proportion on anything smaller. */
+.player-mat .mat-cards{position:absolute;z-index:1;inset:0;padding:min(10pt,100cqw*13.333/1653);box-sizing:border-box;align-content:start}
+/* A card never grows past the room the padding leaves, however wide the zone gets. */
+.player-mat .mat-zone .card{max-height:100%;max-width:100%}
+
+/* ONE CARD SIZE ON THE MAT. Rob, 2026-09-23: "every card on the mat should be the same size
+   (commander, representative top of the deck / library, graveyard, exile)" and "the card default
+   size is too big for 2 rows. In battlefield".
+   --mat-card-width is derived in alignToPiles() from the room the battlefield actually has after
+   its 10pt padding, so two rows always fit, and every card on the mat reads the same value. It
+   replaces four competing widths that agreed with each other nowhere. The fallbacks are the old
+   clamps, for the frame between first paint and the measurement. */
+.player-mat .mat-cards .card,.player-mat .mat-lands .card,.player-mat .free-card{
+  width:var(--mat-card-width,clamp(36px,11cqw,145px))}
+.player-mat .mat-pile .card,.player-mat .mat-pile>img{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;max-width:100%;max-height:100%;object-fit:contain}
+.player-mat .mat-pile{display:flex;align-items:center;justify-content:center}
+.player-mat .library-back{width:var(--mat-card-width,clamp(36px,11cqw,145px));height:auto;aspect-ratio:488/680;max-width:100%;max-height:100%}
+/* The onboarding pop-up: over the board, not a block in the page (review.mjs, onboardDialog). */
+.onboard-dialog{position:fixed;inset:auto auto 24px 50%;transform:translateX(-50%);margin:0;z-index:30;
+  width:min(560px,calc(100vw - 32px));padding:14px 18px;border:1px solid color-mix(in srgb,var(--cyan) 30%,var(--edge));
+  border-radius:12px;background:color-mix(in srgb,var(--edge) 60%,black);color:var(--ink);
+  box-shadow:0 14px 40px rgb(0 0 0 / .6)}
+.onboard-dialog::backdrop{background:none}
+
+/* `.focus-header>button{margin-left:auto}` applies to EVERY trailing button, so History and Close
+   focus were each pushed right on their own and sat a header apart. Only the first of the group
+   takes the auto margin; the rest follow it. */
+.focus-header>button+button{margin-left:8px}
+/* The action menu now rides the step row, hard right and on one line. */
+.focus-status .live-controls{margin:0 0 0 auto;padding:6px 10px;gap:10px;flex:0 1 auto;max-width:60%}
+.focus-status .live-controls>p{font-size:12px;flex:0 1 auto;margin:0}
+.focus-status .live-buttons{flex-wrap:nowrap}
+
+/* The left pane's tiles carry a live miniature of each board (review.mjs, focusPane). The mat is
+   a size container, so everything inside it scales with the tile; it is inert so the tile takes
+   the click, and it never scrolls -- a thumbnail with a scrollbar is not a thumbnail.
+   THE TILE HUGS ITS BOARD. Rob, 2026-09-24: the tiles "should not result in all of that additional
+   white space in each container above/below each mat", and "when the user resizes the side bar, not
+   only should the mat expand/contract, but the entire container should resize with it. Keep the
+   Seat name the same size regardless." So a tile is its name, its commander and its board at the
+   pane's full width and the playmat's own proportions -- nothing stretched to fill -- and dragging
+   the divider changes all three tiles' heights with their boards while the text stays put. */
+.focus-tile-board{pointer-events:none;width:100%}
+/* The id is carried because body.table-view .player-mat{width:auto} out-weighs a class pair, and a
+   mat is inline-size contained, so an auto width inside a flex row is a width of nothing (trap 1). */
+#focus .focus-tile-board .player-mat{width:100%;height:auto;max-height:none;flex:none;aspect-ratio:var(--mat-ratio,1020/603);box-shadow:none;border-width:1px;border-radius:6px;overflow:hidden}
+.focus-tile-board .mat-cards,.focus-tile-board .mat-history,.focus-tile-board .mat-history-card{overflow:hidden}
+.focus-tile-board .mat-history,.focus-tile-board .mat-history-card,.focus-tile-board .castingPreview{display:none}

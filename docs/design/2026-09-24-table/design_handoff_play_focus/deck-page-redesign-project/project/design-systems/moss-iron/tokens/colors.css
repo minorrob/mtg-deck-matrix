@@ -1,0 +1,67 @@
+/* Moss & Iron — dark is the default; [data-theme="light"] flips it. */
+:root{
+  color-scheme:dark;
+  --color-bg:#121511;
+  --color-panel:#181d17;
+  --color-raised:#22291f;
+  --color-line:#2f382c;
+  --color-ink:#eef1e8;
+  --color-muted:#97a391;
+  --color-accent:#5fae5c;
+  --color-on-accent:#0d120c;
+  --color-aether:#6fb7d9;
+  --color-money:#c9a24a;
+  --mana-W:#d9c98c;
+  --mana-U:#5f9fd6;
+  --mana-B:#8c8aa0;
+  --mana-R:#d66a4a;
+  --mana-G:#5fae5c;
+  --st-inbox:#5fae5c;
+  --st-pull:#3fa9a4;
+  --st-ordered:#4f86c9;
+  --st-buy:#c9a24a;
+  --st-standin:#a486d6;
+  --st-remove:#e0655a;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --color-bg:#efece3;
+  --color-panel:#faf8f2;
+  --color-raised:#e3dfd3;
+  --color-line:#cfc9ba;
+  --color-ink:#1a1f18;
+  --color-muted:#66705f;
+  --color-accent:#2e7d3a;
+  --color-on-accent:#f4f9f2;
+  --color-aether:#3f8fb8;
+  --color-money:#9a7420;
+  --mana-W:#b89a2a;
+  --mana-U:#2d78c4;
+  --mana-B:#6a6486;
+  --mana-R:#c25a3a;
+  --mana-G:#2e7d3a;
+  --st-inbox:#2e7d3a;
+  --st-pull:#1f8c88;
+  --st-ordered:#2d6cb8;
+  --st-buy:#b0842a;
+  --st-standin:#7a5ad0;
+  --st-remove:#c0392f;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}

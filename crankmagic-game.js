@@ -861,7 +861,7 @@
       : hostReachable === false ? 'Every seat is ready. Open the local host to play.'
       : 'Every seat is ready. Starting…';
     return `<section class="cm-table-center" aria-label="Table rules">
-      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" aria-hidden="true">
+      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
       <div class="cm-table-head"><h2>Table rules</h2><p class="cm-table-setby-top">set by the host</p></div>
       <dl class="cm-table-rules">
         <div><dt>Bracket</dt><dd>${e(String(lobby.bracket || 3))}</dd></div>
@@ -1180,11 +1180,28 @@
      permission, not mixed content -- http://127.0.0.1 is a trustworthy origin. Counting down to a call that
      cannot succeed is what produced Rob's "HTTP 404" on GitHub Pages. null means not asked
      yet, which is treated as 'do not count' until the answer arrives. */
-  const hostOrigin = () => (location.hostname === '127.0.0.1' || location.hostname === 'localhost') ? location.origin : 'http://127.0.0.1:8768';
+  /* One definition of "this page is the local host", because it decided three different things in
+     three different places and they have to agree: where the host is, whether it can be probed at
+     all, and whether the lobby is a table or a pointer. */
+  const isLocalBuild = () => location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+
+  /* What the cloud shows instead of a lobby. One instruction, the address, and the way to start the
+     host -- no seats, no countdown, no Start. Deck building is untouched and stays where it is;
+     this page is only about where a GAME happens. */
+  const cloudPointer = () => C.pageHead("Play", "", "game")
+    + `<section class="v-panel cm-play-pointer">
+      <h2>Games run on your local host</h2>
+      <p>CrankMagic plays through the rules host on your own computer. This copy is for building and
+      browsing decks; it cannot deal a hand, and it will not pretend it can.</p>
+      <!-- NOT cm-table-host-link: that class is colored for the light "Table rules" panel and
+           renders dark on dark here, which is how this shipped invisible the first time. -->
+      <p>Start the host, then open <a class="cm-pointer-host" href="http://127.0.0.1:8768/app/#game" target="_blank" rel="noopener">127.0.0.1:8768</a> to play.</p>
+      <div class="cm-actions"><a class="v-button primary" href="#online">How to start the host</a><a class="v-button" href="#decks">Deck editor</a></div>
+    </section>`;
+  const hostOrigin = () => isLocalBuild() ? location.origin : 'http://127.0.0.1:8768';
   let hostReachable = null;
   async function probeHost() {
-    const local = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
-    if (!local) { hostReachable = false; return false; }
+    if (!isLocalBuild()) { hostReachable = false; return false; }
     try {
       const res = await fetch('/api/health', {cache: 'no-store'});
       const data = await res.json();
@@ -1271,7 +1288,23 @@
     window.open(cachedGuestOrigin.replace(/\/$/, "") + "/", "_blank", "noopener");
   };
 
+  /* THE CLOUD LOBBY IS A POINTER, AND NOTHING ELSE.
+   *
+   * Rob, 2026-09-23, choosing option 3 of the three the UAT offered: the cloud "simply said 'open
+   * the local host to play' and did nothing else". That retires U-02, U-03 and U-04 outright
+   * rather than fixing them, and R3, R4 and R5 are not built.
+   *
+   * It is the honest product because the cloud copy CANNOT start a game, and not for want of
+   * trying: `probeHost()` returns false on github.io without even making the request, because
+   * http://127.0.0.1 from an https page is mixed content and the browser blocks it
+   * (crankmagic-online.js, line 18). A lobby that seats four players, counts down and offers
+   * "Start the game" against a host it can never reach was promising something it had no way to
+   * deliver -- which is what U-02 and U-04 were, and the second local-host link was U-03.
+   *
+   * Everything the cloud lobby used to draw is still drawn by the same code on the local host,
+   * where it works. This returns before any of it. */
   views.game = async () => {
+    if (!isLocalBuild()) { C.main.innerHTML = cloudPointer(); return; }
     try { await loadHostCatalogDecks(); } catch (_) {}
     if (!L) { C.main.innerHTML = C.pageHead("Play", "") + note("The lobby module has not loaded yet. Reload the page.", true); return; }
     const t = table();
@@ -1280,9 +1313,21 @@
     /* 2b's head: "Play", one line saying what the table is, and Game history beside Host tools.
        Seat an opponent and Clear the table move under Host tools -- they are the host's levers,
        and the README puts every host lever in that menu. */
-    const head = C.pageHead("Play",
+    /* THE LOCAL COPY WEARS THE BRAND INSTEAD OF A PAGE TITLE. Rob, 2026-09-24: "move the CrankMagic
+       logo, text, and mist over to where play is, removing the word 'Play' and add 'Online' to the
+       text 'CrankMagic'... Then don't show any of the left side bar."
+       The slot is filled after the markup lands, by MOVING the live brand block out of the hidden
+       sidebar -- see fitLocalHeader below. The cloud copy keeps its sidebar and its "Play" title. */
+    const local = C.isLocal();
+    const head = C.pageHead(local ? "" : "Play",
       b("Game history", "lobby-history", {}, true, {cls: "compact"})
-      + b("Host tools", "lobby-host-tools", {}, false, {cls: "compact", caret: true}), "game")
+      + b("Host tools", "lobby-host-tools", {}, false, {cls: "compact", caret: true})
+      /* The way back to the workshop, because this copy no longer carries one. The wording names
+         the controls that actually exist: the Menu's "Save a backup file" and "Restore from a
+         backup file". */
+      + (local ? `<a class="v-button cm-visit-crank" href="https://minorrob.github.io/mtg-deck-matrix/" target="_blank" rel="noopener"
+           title="Create a deck in CrankMagic, then Menu &rsaquo; Save a backup file. Here, Menu &rsaquo; Restore from a backup file brings your decks into CrankMagic Online.">Visit CrankMagic &#8599;</a>` : ""),
+      "game")
       + `<p class="cm-lobby-lede">The four seats laid out as they will sit; the table is the form and the status board.</p>`;
 
     const confirmed = lobby.rulesConfirmed
@@ -1364,6 +1409,10 @@
        otherwise empty. The module that draws it is the same one the guest and host pages use. */
     const live = `<div class="cm-lobby-live" aria-live="polite"></div>`;
     C.main.innerHTML = head + seats + live + read + rules;
+    /* The brand is MOVED, not copied: crankmagic-brand.js drives that exact canvas on a rAF, so a
+       clone would be a frozen frame. render() puts it back in the shell before each pass, so this
+       can take it again every time without it ever being lost. */
+    if (local) document.getElementById("cm-brand-slot")?.append(document.querySelector(".v-brand-block"));
     startSeas();
     pollLiveReadiness();
 

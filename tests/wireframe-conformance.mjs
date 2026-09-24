@@ -170,8 +170,49 @@ check("the page is headed Play, with one summary line", () => {
   assert.match(game, /C\.pageHead\("Play"/, 'the head should read "Play"');
 });
 
+/* THE CLOUD BUILD OFFERS NO GAME IT CANNOT DEAL.
+ *
+ * Rob, 2026-09-23, taking option 3 of the three the UAT offered: the cloud "simply said 'open the
+ * local host to play' and did nothing else", which retires U-02, U-03 and U-04 rather than fixing
+ * them. The remediation asked for "a conformance check asserting the cloud build renders no enabled
+ * control whose own copy says it does not work, and no countdown text when probeHost() is false" —
+ * and with a pointer the stronger thing is assertable: the lobby is never reached at all.
+ *
+ * U-02 was a "Start the game" button carrying its own admission, "The board is not built yet. This
+ * button will deal the first hands once it is." U-04 was "Every seat is ready. Starting…" printed
+ * by a copy that had no host. U-03 was the local host link drawn twice. None of them can occur on a
+ * page that returns before the lobby is built. */
+check("the cloud build returns a pointer before it builds a lobby", () => {
+  const body = game.slice(game.indexOf("views.game = async"));
+  const opening = body.slice(0, body.indexOf("\n"));
+  const firstStatement = body.slice(0, body.indexOf("loadHostCatalogDecks"));
+  assert.match(firstStatement, /if \(!isLocalBuild\(\)\) \{ C\.main\.innerHTML = cloudPointer\(\); return; \}/,
+    "the very first thing views.game does off the local host is render the pointer and return — "
+    + "before the catalog load, before any seat, so no lobby control can exist to be wrong");
+  assert.ok(opening.length, "views.game is still a function");
+
+  /* Bounded by the template's own end, not a character count: a fixed window ran past it into the
+     comment above views.game, which QUOTES the strings this is asserting are gone. */
+  const at = game.indexOf("const cloudPointer");
+  const pointer = game.slice(at, game.indexOf("</section>`;", at) + 12);
+  assert.doesNotMatch(pointer, /lobby-start/, "no Start control (U-02)");
+  assert.doesNotMatch(pointer, /Starting…|Every seat is ready|Not ready yet|Launches when/,
+    "no countdown or readiness copy (U-04)");
+  assert.doesNotMatch(pointer, /cm-lobby-table/, "and no seats");
+  /* U-03 was the host drawn as two separate links, so this counts anchors -- one link whose text
+     happens to be its own address is one link. */
+  assert.equal((pointer.match(/href="http:\/\/127\.0\.0\.1:8768/g) || []).length, 1,
+    "exactly one link to the local host, not two (U-03)");
+  assert.match(pointer, /Games run on your local host/, "and it says where games happen");
+});
+
 check("the head carries Game history and Host tools at its right", () => {
-  const head = game.slice(game.indexOf("C.pageHead(\"Play\""), game.indexOf("C.pageHead(\"Play\"") + 1400);
+  /* Anchored on the lobby itself, not on the first `C.pageHead("Play"` in the file. Since the
+     cloud build became a pointer (2026-09-23) there are two Play heads, and the pointer's comes
+     first in source -- so a positional search found a page that deliberately has no action row and
+     reported the lobby as broken. */
+  const body = game.slice(game.indexOf("views.game = async"));
+  const head = body.slice(0, body.indexOf("const confirmed"));
   assert.match(head, /Game history/, "2b's action row leads with Game history");
   assert.match(head, /Host tools/, "and carries Host tools beside it");
 });
@@ -778,6 +819,61 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(table[1], /margin-inline:auto/, "and centered in whatever is left");
   });
 
+  // THE HAND CARD HAD NO GUARD, AND FOUR RULES FOUGHT OVER IT. The frame draws it 34x46 at half
+  // scale, so 68x92 built (plan-stage-b-board.md line 91, under the doubling rule at line 16).
+  // What actually rendered, measured live at 1920x1080 on 2026-09-23, was 152x212 -- because
+  // `.card` said 103px, `.hand-track .card` said 104, a `body.table-view` rule said 110, and a
+  // later `clamp(112px,10vw,152px)` out-weighed all three instead of replacing them. That is trap
+  // 2 in docs/INDEX-where-things-live.md, and the cost was not cosmetic: the hand took 352px of a
+  // 1080px window while a player's ENTIRE board took 240, which pinned every board to its floor.
+  // A 2x2 of 16:9 boards is itself 16:9, so every pixel of chrome costs width at 16:9 leverage --
+  // the mat could only be 917px in a 1920px window, and half the screen sat empty.
+  // Rob, 2026-09-24: the hand gets its own size bar, twice the frame's 68px by default -- and the boards
+  // make room for it, so the reason this check was written (a hand pushed off the screen) cannot recur.
+  check("the hand card has its own size, set in exactly one place, and the boards make room for it", () => {
+    const rule = /body\.table-view \.hand-track \.card\{([^}]*)\}/.exec(boardCss);
+    assert.ok(rule, "a table-view rule for the hand card");
+    assert.match(rule[1], /width:var\(--hand-card-width,136px\)/,
+      "the hand's own size, 136px (the frame's 68 doubled, as Rob asked) until the player moves the bar");
+    const all = boardCss.match(/body\.table-view \.hand-track \.card\{/g) || [];
+    assert.equal(all.length, 1,
+      "and exactly ONE rule sets it: a second that out-weighs the first is how it reached 152px, "
+      + "and the dead one reads as though it still applies");
+    assert.equal(/\.focus-dialog \.hand-track \.card\{/.test(boardCss + readFileSync("game/ui/mats.css", "utf8")), false,
+      "Focus has no hand width of its own: three did, and the table-view rule out-weighed every one");
+    assert.match(boardCss, /--board-chrome:calc\(480px \+ \(var\(--hand-card-width\) - 68px\) \* 1\.3934\)/,
+      "the chrome grows by the height a bigger hand card adds, so the boards shrink and the hand stays on screen");
+    assert.match(board, /function handSizeControl\(/, "and the hand has its own size bar");
+  });
+
+  /* ONE CARD SIZE ON THE MAT, AND NOTHING QUIETLY SETTING ITS OWN.
+   *
+   * Rob, 2026-09-23: "every card on the mat should be the same size (commander, representative top
+   * of the deck / library, graveyard, exile)", after "the card default size is too big for 2 rows.
+   * In battlefield".
+   *
+   * Four widths were in play and agreed nowhere -- clamp(36px,11cqw,145px) on the battlefield,
+   * clamp(29px,7.6cqw,106px) on lands, clamp(44px,13cqw,175px) again in online.css, and the piles
+   * sized by their own frame. The value is derived once now, from the room two rows actually need,
+   * and every card reads it. This is the guard: a later rule that sets a mat card's width to
+   * anything but that variable puts the mat back where it started, and a screenshot is the only
+   * other way that gets noticed. */
+  check("every card on the mat takes its width from one variable", () => {
+    const mats = readFileSync("game/ui/mats.css", "utf8");
+    const derived = /--mat-card-width/;
+    assert.match(mats, derived, "the mat declares a single card width");
+    const widths = [...mats.matchAll(/^([^{@/\n][^{\n]*\.card[^{\n]*|[^{@/\n][^{\n]*library-back[^{\n]*)\{([^}]*)\}/gm)]
+      .filter(([, sel]) => /player-mat|mat-pile|mat-cards|mat-lands|free-card/.test(sel))
+      .map(([, sel, body]) => [sel.trim(), (body.match(/(?:^|;)width:([^;]*)/) || [])[1]])
+      .filter(([, w]) => w);
+    assert.ok(widths.length, "there are mat card width rules to check");
+    for (const [sel, w] of widths) {
+      assert.match(w, derived,
+        `${sel} sets width:${w} instead of reading --mat-card-width — one rule going its own way is `
+        + `how four of them accumulated`);
+    }
+  });
+
   check("the mat leaves a middle channel for the center counter", () => {
     const table = /body\.table-view \.table\{([^}]*)\}/.exec(boardCss);
     assert.ok(table, "the mat rule");
@@ -847,23 +943,47 @@ check("a blocked pop-up leaves a link instead of nothing", () => {
     assert.match(boardCss, /\.focus-step\.is-done\{[^}]*line-through/, "done steps are struck through");
     assert.match(boardCss, /\.focus-step\.is-now\{[^}]*var\(--color-accent/, "the current step is brass");
   });
-  check("card size is S, M and L rather than a percentage", () => {
+  /* THE BOARD-SIZE BAR REPLACES S / M / L. Rob, 2026-09-24: "I still see S, M, L at the top and not
+   * the gradient size scale bar, which will give the end user greater control and optionality." 2f's
+   * three sizes were what this check held until then -- and, measured, all three drew the same
+   * 1411x833 board, because two rules out-weighed the ones they set. So this holds the bar AND the
+   * rule that makes it do something: the focused mat's width, carrying the id. */
+  check("board size is a bar, and the bar really sizes the board", () => {
     const html = readFileSync("game/ui/review.html", "utf8");
-    assert.match(html, /focus-size-s[\s\S]{0,200}focus-size-m[\s\S]{0,200}focus-size-l/,
-      "2f names three sizes; the slider asked for a number instead");
-    assert.equal(html.includes('id="focus-size-value"'), false, "the percentage readout goes with it");
+    assert.match(html, /<input id="focus-size" type="range" min="50" max="200"/, "a continuous bar, 50% to 200%");
+    assert.equal(/focus-size-[sml]\b/.test(html), false, "S, M and L are gone rather than hidden");
+    assert.match(board, /\$\('focus'\)\.style\.setProperty\('--focus-zoom',size\/100\)/, "the bar sets one scale on the dialog");
+    assert.match(boardCss, /#focus \.focus-mat-stage \.player-mat\{width:calc\(100% \* var\(--focus-zoom,1\)\)/,
+      "and the focused mat's own width reads it, with the id -- the table's max-width:100% out-weighed the old cap");
   });
-  // 2f: "their own board large, the other three as small aspect-locked tiles in a left pane (name
-  // + commander only; click one to swap it into focus). 'My board' is always one click; 'Table
-  // view' returns to the four-up table... The pane collapses so the board takes the whole width."
-  check("Focus carries the other three boards as aspect-locked tiles", () => {
+  /* 2f: "their own board large, the other three as small tiles in a left pane (name + commander only;
+   * click one to swap it into focus). 'My board' is always one click; 'Table view' returns to the
+   * four-up table... The pane collapses so the board takes the whole width."
+   * Rob, 2026-09-24, on top of that: each tile is that board's exact miniature; the tile "should not
+   * result in all of that additional white space ... above/below each mat"; the divider makes the pane
+   * the player's width "down to whatever is about 50% of the current size"; and when it moves "the
+   * entire container should resize with it. Keep the Seat name the same size regardless." */
+  check("Focus carries the other three boards as tiles that hug their miniatures", () => {
     assert.match(board, /function focusPane\(/, "the pane exists");
     const tile = /\.focus-tile\{([^}]*)\}/.exec(boardCss);
     assert.ok(tile, "the tile rule");
-    assert.match(tile[1], /aspect-ratio:16\/9/, "boards keep 16:9 at any size, tiles included");
+    assert.match(tile[1], /flex:0 0 auto/, "a tile is as tall as what it holds, never stretched to fill the pane");
+    const mats = readFileSync("game/ui/mats.css", "utf8");
+    const mini = /#focus \.focus-tile-board \.player-mat\{([^}]*)\}/.exec(mats);
+    assert.ok(mini, "the miniature's rule, carrying the id");
+    assert.match(mini[1], /width:100%/, "the miniature spans the pane, so its height follows the divider");
+    assert.match(mini[1], /aspect-ratio:var\(--mat-ratio/, "at its playmat's own proportions");
     assert.match(board, /focus-pane-mine/, "'My board' is always one click");
     assert.match(board, /focus-pane-table/, "'Table view' returns to the four-up table");
     assert.match(boardCss, /\.focus-pane\.is-closed \.focus-tile/, "the pane collapses");
+  });
+  check("the pane's width is the player's, down to half, from a divider", () => {
+    assert.match(board, /const PANE_MIN_SHARE=\.5;/, "no narrower than half the width three boards fill");
+    assert.match(board, /setAttribute\('role','separator'\)/, "the divider is a separator a keyboard can move");
+    assert.match(boardCss, /grid-template-columns:calc\(clamp\(200px,23vw,480px\) \* var\(--focus-pane-share,1\)\)/,
+      "the column is a share of the default, so it keeps its meaning when the window changes");
+    assert.match(board, /el\('div','focus-pane'\)/,
+      "not an <aside>: the page sidebar's aside rules made it sticky and a scroller, and clipped the divider");
   });
   // .focus-hand carries margin:auto, which centered a max-width block when .focus-content was one.
   // As a grid item that same margin shrink-wraps it — measured 24x34, floating mid-stage, before

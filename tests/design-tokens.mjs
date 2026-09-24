@@ -161,7 +161,7 @@ function tokensIn(css, selectorRe) {
      sweep deliberately did not touch -- the flame icon's three gradient stops, the five-step
      rarity scale, the tabletop felt and shelf, and the colorless mana disc, for which the token
      set has no --mana-C. Those are named in the sweep's KEEP list and on the designer's gap list. */
-  const CEILING = {"crankmagic.css": 137, "game/ui": 463};
+  const CEILING = {"crankmagic.css": 137, "game/ui": 458};
   /* THE CANVAS IS A STYLESHEET TOO (Track V.4g). crankmagic-graph.js painted the Explore graph
      from 38 literals of the pre-Gallery navy, and no ceiling in this file could see them, because
      every ceiling here reads a .css file. That is how one page stayed entirely blue through a

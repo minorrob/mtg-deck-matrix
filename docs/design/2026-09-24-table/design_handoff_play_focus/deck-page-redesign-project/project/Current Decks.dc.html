@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="crankmagic-design.css">
+<link rel="stylesheet" href="crankmagic.css">
+<style>body{margin:0;background:#12161f}a{color:inherit}a:hover{color:#fff}</style>
+</helmet>
+<div id="matrix-v2" aria-label="CrankMagic" data-screen-label="Decks (current)">
+  <header class="v-top">
+    <div class="v-brand-block"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" width="52" height="52"><div class="v-brand-copy"><div class="v-brand">CrankMagic</div><div class="v-brand-subline">An Intelligent MtG: Commander Deck Creator &amp; Card Library</div></div></div>
+    <div class="cm-user-menu"><button class="v-button cm-tour-btn" type="button"><span class="cm-btn-label">Take a Tour</span></button><button class="v-button cm-share-btn" type="button"><span class="cm-btn-label">Share</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5"></path></svg></button><button class="v-button cm-feedback" type="button"><span class="cm-btn-label">Send Feedback</span></button><button class="v-button" type="button"><span class="cm-btn-label">User Functions</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5"></path></svg></button></div>
+  </header>
+  <div class="cm-layout"><aside class="cm-sidebar"><div class="v-nav-track"><nav class="v-nav-links" aria-label="Main pages"><a href="#decks" data-nav="decks" aria-current="page">Decks</a><ul class="cm-subnav"><sc-for list="{{ decks }}" as="d" hint-placeholder-count="7"><li><a href="#decks"><span>{{ d.name }}</span></a></li></sc-for><li><a href="#how"><span>How a deck comes together</span></a></li></ul><a href="#cards" data-nav="cards">Library</a><a href="#discover" data-nav="discover">Explore</a><a href="#game" data-nav="game">Play</a></nav></div><div class="cm-nav-note"><strong>Your cards. Your library.</strong><p>Saved in this browser. Export a backup to keep a copy elsewhere.</p><button class="cm-text-button" type="button">Back up now ↗</button></div></aside>
+    <main id="cm-main" tabindex="-1">
+      <header class="cm-page-head"><div class="cm-page-title"><h1>Decks</h1><button type="button" class="v-button cm-help-btn" aria-label="About this page">?</button></div><div class="cm-actions"><button type="button" class="v-button primary">New deck</button><button type="button" class="v-button" disabled="disabled">Compare selected</button></div></header>
+      <div class="cm-toolbar cm-toolbar-split"><a class="cm-how-link" href="#how">How a deck comes together</a><label class="cm-checkbox cm-show-archived"><input type="checkbox">Show archived</label></div>
+      <div class="cm-deck-grid">
+        <sc-for list="{{ decks }}" as="d" hint-placeholder-count="7">
+          <article class="cm-deck-tile cm-stage-{{ d.stage }}">{{ d.artEl }}<label class="cm-tile-pick" title="Tick to compare this deck"><input type="checkbox" aria-label="Compare {{ d.name }}"></label><button type="button"><small>{{ d.name }}</small><h3>{{ d.commander }}</h3><p>{{ d.mech }}</p><span class="cm-tile-mana">{{ d.pips }}</span><span class="cm-pill {{ d.pillKind }}">{{ d.stageLabel }}</span></button><div class="cm-tile-ready">{{ d.bar }}<span class="cm-tile-caption">{{ d.caption }}</span></div><footer><span>B{{ d.bracket }}</span><span class="cm-muted"></span><span class="cm-tile-tools"><button type="button" class="cm-icon-button cm-tile-menu-btn" aria-label="Deck options for {{ d.name }}">⋯</button></span></footer></article>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+  <footer class="cm-legal" role="contentinfo"><p><strong>CrankMagic</strong> is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved or endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p><p>Card data and images from Scryfall; commander ranks from EDHREC. Neither is affiliated with this project. Prices are dated snapshots, not offers. © 2026 Rob Minor — all rights reserved.</p></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const PIP = {W:'#fff0b4',U:'#53acff',B:'#696076',R:'#ee735f',G:'#66b889'};
+    const raw = [
+      ['D1 Quintorius Spirits','Quintorius, Loremaster',['R','W'],'Graveyard · ETB triggers · Tokens',8,2,0,null,'QL'],
+      ['D2 Chulane Value Loop','Chulane, Teller of Tales',['G','W','U'],'Landfall · Ramp · Draw',24,1,2,'assets/crankmagic/commander-chulane.webp'],
+      ['D3 Atraxa Proliferate',"Atraxa, Praetors' Voice",['W','U','B','G'],'Counters · Doublers & multipliers · Proliferate',13,0,0,'assets/crankmagic/commander-atraxa.webp'],
+      ['D4 Felothar Walls','Felothar the Steadfast',['W','B','G'],'Defender · Combat · Sacrifice',13,1,0,null,'FT'],
+      ['D5 Shadrix Aristocrats','Shadrix Silverquill',['W','B'],'Tokens · Drain & burn · Draw',19,1,0,'assets/crankmagic/commander-shadrix.webp'],
+      ['D6 Krenko Goblins','Krenko, Mob Boss',['R'],'Goblin tribal · Tokens · ETB triggers',15,0,2,'assets/crankmagic/commander-krenko.webp'],
+      ['D7 Maralen Exile Cast','Maralen, Fae Ascendant',['U','B','G'],'ETB triggers · Combo · Tap ability · Ramp',31,0,2,null,'MF'],
+    ];
+    const decks = raw.map(([name,commander,ci,mech,subs,pull,ordered,art,ini]) => {
+      const inBox = 100 - subs, buy = subs - pull - ordered, whole = 100;
+      const segs = [['inbox',inBox],['pull',pull],['ordered',ordered],['buy',buy]].filter(([,n])=>n>0);
+      const bar = h('div',{className:'cm-readiness',role:'img'},
+        ...segs.map(([k,n])=>h('i',{key:k,className:k,style:{flex:`${n} 1 0`}})),
+        h('b',{className:'standin',style:{left:`${inBox/whole*100}%`,width:`${subs/whole*100}%`}}));
+      const artEl = art ? h('img',{className:'cm-deck-art',src:art,alt:''}) : h('div',{className:'cm-deck-initials','aria-hidden':'true',style:{'--ci-a':PIP[ci[0]],'--ci-b':PIP[ci[1]]||PIP[ci[0]]}}, ini);
+      const pips = h('span',{className:'cm-colors','aria-label':ci.join(', ')}, ...ci.map(x=>h('img',{key:x,className:'cm-pip',src:`assets/mana/${x}.svg`,alt:''})));
+      const caption = [buy?`${buy} to buy`:'',ordered?`${ordered} ordered`:'',pull?`${pull} ready to add`:'',`${subs} substitutes`].filter(Boolean).join(' · ');
+      return {name,commander,mech,bracket:3,stage:'playable',stageLabel:'Playable',pillKind:'standin',bar,artEl,pips,caption};
+    });
+    return {decks};
+  }
+}
+</script>
+</body>
+</html>

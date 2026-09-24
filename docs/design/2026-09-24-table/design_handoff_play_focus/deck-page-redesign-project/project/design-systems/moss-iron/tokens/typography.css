@@ -1,0 +1,16 @@
+:root{
+  --font-display:'Barlow Condensed',Satoshi,system-ui,sans-serif;
+  --font-body:Satoshi,system-ui,sans-serif;
+  --display-weight:800;
+  --display-tracking:.01em;
+  --display-case:uppercase;
+  --text-h1:56px;
+  --text-h2:22px;
+  --text-h3:16px;
+  --text-body:14px;
+  --text-small:12px;
+  --text-label:11px;
+  --label-tracking:.08em;
+  --leading-body:1.5;
+  --leading-tight:1.05;
+}

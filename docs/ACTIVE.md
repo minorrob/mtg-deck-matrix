@@ -2,11 +2,11 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — #341 to #348 all merged; nothing open |
-| **Branch** | `main`; nothing open. **8768 is running this code** — restarted 2026-09-22 after the last merge, verified with a pod. It is **local-only**: relaunch through `start-crankmagic.ps1 -RemoteGuests` when remote guests are wanted. |
-| **Since** | 2026-09-22 |
-| **Doing** | **Stage A is complete, Stage B is seven of nine, and the play-audio track is finished.** The board is on the design tokens, laid out as the wireframe's 2×2, fits one screen with the hand, and plays the pack. Plans: `docs/plan-stage-b-board.md` (the frames, measured — and now measured again in a live game), `docs/plan-board-information-layer.md`, `docs/plan-card-extraction-skill.md`, `docs/plan-play-audio.md`, `docs/plan-web-to-local-table-2026-09-21.md` (planned, not started). |
-| **Next for whoever picks this up** | **Two decisions are Rob's and nothing else is blocked.** B.6b's history band — re-proportion every board, or use the empty strip the mat art already prints over; the plan has both with their costs. And B.2b's light mat. After that, `docs/plan-web-to-local-table-2026-09-21.md` is five pieces, none of them started. Run a pod with `game/tools/qa-pod.mjs` before and after any board change. |
+| **Holder** | **Claude Code on Personal-HP** — Rob's three-stage program, Stage 1 |
+| **Branch** | `claude/engine-hosting` (#359), being merged to `main`; then the Pages release branch |
+| **Since** | 2026-09-24 |
+| **Doing** | **Rob, 2026-09-24: "Ok, I'm done with Forge."** Three stages: (1) github.io becomes a production release of the web app minus Play, whose tab says "Coming Soon", published from a release branch that holds only the web app, after the deck creation, testing, exploring and acquiring journeys are tested; (2) *Account Cloud CrankMagic minus Play* — accounts, persistence, cloud storage, runtime — on its own branch, with Rob buying the cloud infrastructure on this session's guidance; (3) *Play with CrankMagic*, branched from (2): gameplay on the own engine, AI API calls behind an allowlist Rob controls, AI card reconciliation, pushed to production on that infrastructure. Nothing from (2) or (3) merges to `main` until the end of (3). Rob chose (AskUserQuestion): the release holds **only the web app**; the session switches the Pages source **after the tests, confirming first**; `main` is brought up to date by **merging the PRs and auditing every branch**. Progress: #358 merged (`fdc85d5`); #359 next. |
+| **Next for whoever picks this up** | Ask the holder. Superseded by Rob's pivot: `docs/plan-one-source-2026-09-24.md` Phases 1–2 (the local host playing `main`) and the local-host half of `docs/handoff-2026-09-24-direction.md`; both stay as the record of what was measured. |
 
 ## The engine has started — phase 0 done, phase 1 next
 
@@ -83,10 +83,10 @@ Six of Rob's findings turned out to be one finding: **the board had the facts an
 | | |
 |---|---|
 | B.1 | The step strip — `Turn 4 · You`, brass step chip, `4 / 7`, **`Next: …`** |
-| B.2 | Four **identical** 16:9 boards in one 2×2. Measured 584×329 each at three widths |
+| B.2 | Four **identical** 16:9 boards in one 2×2. **At 1920×1080: 533×300 each, mat 1131px** (measured live 2026-09-23). Earlier note said 584×329 with no viewport attached, which back-solves to a ~1258px-tall window — **always record the viewport, or the number cannot be checked against anything** |
 | B.3 | The center counter — 152px, four totals on their own `--seat` colors, the disc cycles life → commander damage → poison |
 | B.4 | The hand on the mat's bottom edge. **Zero overlap**, tested with real-sized cards |
-| B.5a | The panel slides **over** the mat; the mat stays 1368px whether it is open or shut |
+| B.5a | The panel slides **over** the mat; the mat's width does not change whether it is open or shut (1368px at the viewport that was measured at; 1131px at 1920×1080) |
 | B.6a | The mat stops printing the steps list and the life box — B.1 and B.3 carry both now. **Seen working with cards** |
 | B.6c | The other three boards as a left pane in Focus, with Table view and a collapse. **Seen working with cards** |
 
@@ -118,16 +118,28 @@ the page-error count on every run.
 - **B.5b — the rail overlay.** `/review` is a standalone page. There is no CrankMagic rail on it to
   bring back, so the control would open an empty drawer. It arrives when the board becomes a view
   of the one app.
-- **B.6b — the History band.** Not "add a band": 2f wants a real row between the zone pairs, and
-  the mat's absolute layout has no gap there. It re-proportions every board's zones. **No longer
-  blocked, and now measured** — the gap between the two pile pairs is 4.8% of the mat, about
-  25px, and a band needs three times that. The plan carries the two ways to make the room and
-  what each costs. **It is Rob’s call now, not a measurement question.**
+- **The hand card, fixed 2026-09-23.** It drew at 152×212 against the frame's 68×92 because four
+  width rules across three stylesheets fought over one element and a `clamp(112px,10vw,152px)`
+  out-weighed the other three instead of replacing them (INDEX trap 2). The hand took 352px of a
+  1080px window while a whole board took 240, which pinned every board to its floor — and since a
+  2×2 of 16:9 boards is itself 16:9, the mat could only be 917px in a 1920px window. At the frame's
+  size the hand is 225px, `--board-chrome` drops 600→480, and the boards clear the floor:
+  **533×300, mat 1131**. Guarded now by `wireframe-conformance.mjs`, which also fails a second rule
+  for the same element.
+
+- **B.6b — the History band. ANSWERED 2026-09-23: option 2, the empty strip.** The band goes at
+  `left:72% top:5.5% width:25.5% height:31%` and no zone moves. Re-proportioning was rejected: the
+  gap between the pile pairs is 4.8% of the mat against the ~15% a band needs, and closing it makes
+  both pairs shorter than a card at small board sizes on all four boards at once. Verified while
+  deciding: `.mat-turn-guide` and `.mat-life` have styles in `mats.css` but **nothing in `game/ui/`
+  ever builds them**, so the strip is free and the band covers printed artwork only. See
+  `docs/decisions-2026-09-23.md`.
 - **B.6d — the Coach.** Not to be built until it works. 2f draws it and says "its logic is a later
   phase"; Rob's standing rule (2026-09-22) is that nothing is available before it is functional, so
   the surface waits for the logic rather than arriving ahead of it.
-- **B.2b — the light mat.** The frame draws the play surface cream (`#e9e4da`) under dark chrome.
-  **Rob's call, deliberately untouched** — it changes the whole feel and carries a raw-hex cost.
+- **B.2b — the light mat. ANSWERED 2026-09-23: stay dark.** The cream play surface (`#e9e4da`) is a
+  **post-release enhancement**, not dropped. There was no toggle to remove — a search of `game/`
+  found no light-mat control of any kind. See `docs/decisions-2026-09-23.md`.
 
 ## Three limits found by measuring, which the next person should not re-discover
 

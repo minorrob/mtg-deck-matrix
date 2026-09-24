@@ -1,14 +1,18 @@
 import {PLAYMATS,defaultPlaymat,validPlaymat,readMatPreferences,saveMatPreference} from '/playmats.mjs';
 import {renderConnectionPanel} from '/connection.mjs';
 import {renderSwapPanel,loadCatalog} from '/unresolved.mjs';
-let catalog,config,prepared,activeLobby,busy=false,lobbyTimer,aiApiKey='',inviteEmailFocus=null;const inviteEmails=new Map();
+let catalog,config,prepared,activeLobby,busy=false,lobbyTimer,aiApiKey='',inviteEmailFocus=null,setupStage='';const inviteEmails=new Map();
 const hostRematchDraft={source:'library',name:'',deckId:'',commander:'',archidektUrl:'',csv:''};
 const e=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn,cls='')=>{const n=e('button',cls,text);n.type='button';n.addEventListener('click',fn);return n;};
 const money=n=>`$${Number(n).toFixed(2)}`;
 const dialog=e('dialog','game-setup');dialog.id='game-setup';dialog.setAttribute('aria-label','Game setup');document.body.append(dialog);
 const head=e('div','setup-heading');head.append(e('div','', 'GAME SETUP · COMMANDER'));
-function exitSetup(){if(window.parent===window)location.href='/app/#decks';else window.parent.postMessage({type:'crankmagic-exit'},location.origin);}
+/* CLOSING SETUP GOES BACK TO PLAY, NOT TO DECKS. Rob, 2026-09-24: "When I pressed 'Close setup',
+   it took me to the 'Decks' page, locally. NO. It should take me to the play page." This copy is
+   a game host -- Decks is the cloud app's job and its rail is hidden here, so landing on it left
+   the player on a page with no way back. */
+function exitSetup(){if(window.parent===window)location.href='/app/#game';else window.parent.postMessage({type:'crankmagic-exit'},location.origin);}
 const close=e('button','','Close setup ×');close.addEventListener('click',()=>{if(document.body.classList.contains('setup-screen'))exitSetup();else dialog.close();});head.append(close);dialog.append(head);
 dialog.addEventListener('cancel',event=>{if(document.body.classList.contains('setup-screen')){event.preventDefault();exitSetup();}});
 const actions=e('div','setup-actions');head.append(actions);
@@ -90,6 +94,22 @@ function render(message=''){
     else{const key=input('AI API key · held in local memory only',aiApiKey,'password',v=>{aiApiKey=v;});key.querySelector('input').autocomplete='new-password';global.append(key,e('p','setup-note','The key is sent only to the loopback host, held in process memory, excluded from game files and logs, and cleared when that host stops. Provider calls use only the AI seat’s permitted view and Forge-offered actions.'));}
   }
   content.append(e('p','setup-note',`Budget includes all 100 cards and the commander, using recorded USD estimates dated ${catalog.priceAsOf.slice(0,10)}; missing prices block preparation. Bracket checks include known Game Changers; play-pattern restrictions still require a table agreement. Bracket and AI difficulty are different settings.`));
+  /* TWO STEPS, NOT ONE PAGE. Rob, 2026-09-24: "the 'Build your Table' page is only setting the
+     table rules, then there is a 'Set up Game' option which opens the pre-lobby screen... In this
+     pre-lobby screen, I define if each player is human or AI, set AI decks, and send human
+     invites." Everything above this line is the table's rules; everything below it is the seats.
+     They were one scroll, so the rules and the roster argued for the same attention. */
+  if(!setupStage){
+    const go=e('button','setup-start','Set up game');
+    go.addEventListener('click',()=>{setupStage='seats';render();});
+    const only=e('div','setup-actions');only.append(go);
+    content.append(only);
+    actions.replaceChildren();
+    return;
+  }
+  const back=e('button','','‹ Table rules');
+  back.addEventListener('click',()=>{setupStage='';render();});
+  content.append(back);
   const seats=e('div','setup-seats');let aiOrdinal=0;
   for(const s of config.seats){
     const ai=s.kind==='ai',guest=s.kind==='human'&&s.seatId>0,aiNumber=ai?++aiOrdinal:null;
@@ -134,9 +154,10 @@ export async function openGameSetup(imported){
   const matPreferences=readMatPreferences();for(const s of config.seats)s.playmat=validPlaymat(matPreferences[s.seatId])?matPreferences[s.seatId]:validPlaymat(s.playmat)?s.playmat:defaultPlaymat(s.seatId);
   const current=await fetch('/api/live').then(r=>r.json());
   head.querySelector('.setup-resume')?.remove();
-  head.querySelector('.setup-end')?.remove();
   render(imported?'Your current CrankMagic deck has been received. Prepare the table to check costs and mechanics.':'');if(activeLobby)refreshLobby();if(['ready','playing'].includes(current.status)){const resume=e('button','setup-resume','Resume current table');resume.addEventListener('click',()=>window.dispatchEvent(new Event('crankmagic-game-ready')));head.insertBefore(resume,close);}
-  if(['ready','playing','finished'].includes(current.status)&&!current.resumed){const end=e('button','setup-end','End current game');end.addEventListener('click',async()=>{if(end.dataset.confirm!=='yes'){end.dataset.confirm='yes';end.textContent='End game · keep journal';render('Ending this game keeps its local journal, but the live position cannot be resumed. Click End game again to return to a fresh setup.');return;}try{end.disabled=true;await post('/api/close-game',{});window.dispatchEvent(new Event('crankmagic-game-closed'));await openGameSetup();}catch(error){end.disabled=false;render(error.message);}});head.insertBefore(end,close);}
+  /* "End current game" MOVED TO THE HEADER, 2026-09-23 (review.mjs). U-07 hides this dialog during
+     a live match, which would have taken the only way out of a game with it. Its two-click confirm
+     became a modal there. It is not duplicated here: one control, one place. */
   document.body.classList.add('setup-screen');if(window.parent!==window)window.parent.postMessage({type:'crankmagic-mode',mode:'setup'},location.origin);
   if(!dialog.open)dialog.show();
 }

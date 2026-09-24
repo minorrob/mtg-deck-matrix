@@ -35,7 +35,7 @@
 
 import {moveObject, PER_PLAYER} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {toughnessOf, typesOf} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf} from "./layers.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -158,14 +158,13 @@ export function checkStateBasedActions(state) {
       const deathtouched = object.deathtouched === true && toughness > 0;
       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
-        /* WHAT DIED, INCLUDING ITS ABILITIES. A "whenever this creature dies" trigger has to be
-           found after the creature is gone, and a zone change makes a new object (CR 400.7), so by
-           then nothing on the board carries those abilities. This snapshot is the look-back CR
-           603.10a describes; without it the trigger simply never fires and nothing reports why. */
-        const leftBehind = {
-          cardId: id, name: object.card, controller: object.controller, owner: object.owner,
-          abilities: structuredClone(object.abilities ?? []),
-        };
+        /* WHAT DIED, IN FULL. A "whenever this creature dies" trigger has to be found after the
+           creature is gone, and a zone change makes a new object (CR 400.7), so by then nothing on
+           the board carries those abilities. This snapshot is the look-back CR 603.10a describes
+           and the last known information CR 113.7a requires; without it the trigger either never
+           fires or fires without the numbers it is owed. `lastKnown` runs the layers, so what is
+           recorded is what died — counters and anthems included. */
+        const leftBehind = lastKnown(state, id);
         /* CR 614.1: the death is a PROPOSAL until the replacement effects have had it. A creature
            that would die and is exiled instead did not die, so the event reported below is the
            replaced one — reporting a death and then moving the card elsewhere would be describing
@@ -237,10 +236,7 @@ export function finishCommanderReplacement(state, awaiting, indices) {
   const destination = resolveCommanderChoice(state, awaiting, indices);
   const events = [];
   const card = cardRef(state, id);
-  const leftBehind = {
-    cardId: id, name: object.card, controller: object.controller, owner: object.owner,
-    abilities: structuredClone(object.abilities ?? []),
-  };
+  const leftBehind = lastKnown(state, id);
   moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
   events.push(event("GameEventCardChangeZone", state, {
     card,

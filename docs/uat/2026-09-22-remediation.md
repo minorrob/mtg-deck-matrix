@@ -173,20 +173,42 @@ render the control), U-08 (report the new table's phase, not the previous one), 
 
 ---
 
-## Three things that are decisions, not defects
+## Three things that are decisions, not defects — ALL ANSWERED 2026-09-23
 
-I have not assumed an answer to any of these.
+Record: `docs/decisions-2026-09-23.md`.
 
-1. **U-09 — the ten-second self-start.** Convenient for an all-AI table; risky with an invited
-   human still choosing a deck. Options: leave it, lengthen it, or hold the countdown until every
-   *human* seat is occupied. My recommendation is the third, but it is your call because it
-   changes how you start every solo game.
-2. **U-07 — `Deck workshop ↗` and `Game setup` on the live board.** You asked whether the local
-   instance carries only what gameplay needs. These two do not, but they may be deliberate
-   conveniences. Remove, hide during a live match, or keep.
-3. **The cloud lobby's purpose.** R1 makes it honest; R3–R5 make it useful. If you would rather it
-   simply said "open the local host to play" and did nothing else, that is a smaller and entirely
-   defensible product, and it would retire U-02, U-03 and U-04 outright.
+1. **U-09 — the ten-second self-start. ANSWERED: hold the countdown until every *human* seat is
+   occupied**, then run it. An all-AI pod starts exactly as it does today.
+2. **U-07 — `Deck workshop ↗` and `Game setup` on the live board. ANSWERED: split them.** Rob asked
+   what the two actually were, and they are not the same kind of thing. `Deck workshop ↗`
+   (`review.html:2`) is a plain away-link to `/app/#decks` with no gameplay function — it **hides
+   during a live match**. `Game setup` (`review.mjs:921`) **stays, always**: its dialog carries
+   `End current game` (`setup.mjs:139`) and `Return to game` (`setup.mjs:70`), and `End current
+   game` is there because Rob moved it out of the action box on 2026-09-21. **Rob decided with that
+   in hand: hide both.** So `End current game` has no route during a live match — a game plays to
+   completion and the controls return at status `finished`. If that is not wanted, `End current
+   game` needs a home outside `Game setup`; that is the one piece still to settle.
+   `game/tests/host-routing.test.mjs:38` also asserts the markup contains `Game setup`, so both stay
+   in the HTML and hide at runtime.
+3. **The cloud lobby's purpose. ANSWERED: a pointer — BUILT 2026-09-23.** It says "open the local
+   host to play" and does nothing else. **U-02, U-03 and U-04 are retired outright.** R1 is
+   satisfied by removal rather than by fixing its three items, and R3, R4 and R5 are not built — a
+   pointer cannot do Send Local.
+
+   `views.game` in `crankmagic-game.js` now returns `cloudPointer()` on its first line when
+   `isLocalBuild()` is false, before the catalog load and before any seat, so no lobby control can
+   exist to be wrong. The local lobby is the same code and is untouched; deck building is untouched
+   on both. Verified from a real non-loopback origin (a static server on the LAN address, which is
+   the only thing that decides cloud from local): pointer present, `.cm-lobby-table` absent,
+   `[data-action="lobby-start"]` absent, one host link.
+
+   `tests/wireframe-conformance.mjs` gained "the cloud build returns a pointer before it builds a
+   lobby", which asserts the early return and that the pointer carries no Start, no countdown copy,
+   no seats and exactly one host link.
+
+   One bug caught by rendering it rather than trusting it: the host address first used
+   `cm-table-host-link`, whose color belongs to the light "Table rules" panel, so it shipped
+   invisible on the pointer's dark panel. It has its own class now.
 
 ---
 

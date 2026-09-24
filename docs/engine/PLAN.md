@@ -523,8 +523,16 @@ The executing session works under these as settled. It does not reopen them.
    and pass rate are measured on a 200-card sample in PR 6.3 before any pool run, and the number is brought to Rob
    before it is spent.
 6. **What may sit at a table.** Measured play requires every card `verified`; casual play seats `compiled` cards
-   behind a visible per-card label; `unsupported` always blocks. Rob sets the `verified` share he wants before the
-   default flag flips at G4. (Recommended defaults, standing until Rob changes them.)
+   behind a visible per-card label; `unsupported` always blocks. **Revised 2026-09-23: there is no `verified`
+   share, because there is no threshold.** Rob's answer replaced the gate with a capability — *"any 100 cards
+   someone brings to the game to be playable, starting with my 7 decks... once B7 is in place we wouldn't need to
+   pass through the playability % of a deck, it will always be 100%."* The gap between a deck's hundred and what is
+   already defined is **compiled at deck load**, so nothing is ever seated below the line. Three consequences that
+   are not free: compilation runs just-in-time as well as as a batch pre-pass (§3.4); a definition cache is
+   mandatory rather than an optimization, or the same hundred costs money on every load; and a card the compiler
+   cannot define stops the load by name (principle 6), the way `engine-runtime.mjs` already refuses a pod. The
+   onboarding panel (B.7, `docs/plan-stage-b-board.md`) is this step's UI — the two work items are one. Record:
+   `docs/decisions-2026-09-23.md`.
 7. **The API key is in Windows Credential Manager.** Compilation runs on Personal-HP reading it through
    `read-windows-credential.ps1`; the refresh workflow on GitHub commits data and lists what needs compiling but
    never compiles. The credential's generic name is confirmed with Rob before the first call.
@@ -532,8 +540,9 @@ The executing session works under these as settled. It does not reopen them.
 Also decided: the finish line is any Commander-legal hundred (section 1); go-live on the top 40 primitives, the
 next 40 as enhancement 1, the remaining 112 as enhancement 2 (sections 2.3 and 6).
 
-Still open, small: the pooled commander damage house option from the 2026-09-15 plan is implemented as a labeled
-rules option in `commander.mjs` or dropped. Default: dropped until asked.
+**Closed 2026-09-23:** the pooled commander damage house option from the 2026-09-15 plan is **dropped**. Rob:
+*"Commander damage should be done in line with the game rules."* CR 903.10a is per commander, and `commander.mjs`
+carries no rules option for pooling. Nothing in §9 is open.
 
 ---
 

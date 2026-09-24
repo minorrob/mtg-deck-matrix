@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {existsSync,mkdirSync,readFileSync,renameSync,writeFileSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
-import {createTable} from '../contracts/table-lifecycle.mjs';
+import {createTable,unfilledHumanSeats} from '../contracts/table-lifecycle.mjs';
 import {canonical,sha256} from '../contracts/deck-snapshot.mjs';
 import {prepareGuestDeck,setupCatalog} from '../tools/setup-catalog.mjs';
 import {TableBroker} from './table-broker.mjs';
@@ -69,7 +69,12 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   }
   async function scheduleIfReady(){
     let current=broker.hostView();
-    if(current.phase==='selecting'&&current.seats.filter(s=>s.occupied).length>=2&&current.seats.filter(s=>s.occupied).every(s=>s.connected&&s.ready&&s.deckVersion))current=await runtime.start();
+    /* THE TABLE DOES NOT START ITSELF OVER A CHAIR NOBODY IS ACCOUNTED FOR (U-09, Rob 2026-09-23).
+       `runtime.start()` refuses an un-invited human seat and says how to fix it, but the refusal is
+       for the HOST, and this runs when any player presses Ready -- without this guard the person
+       who pressed Ready gets an error about somebody else's seat configuration. Not starting is
+       the right behavior anyway: the host presses Start and is told. */
+    if(current.phase==='selecting'&&unfilledHumanSeats(current).length===0&&current.seats.filter(s=>s.occupied).length>=2&&current.seats.filter(s=>s.occupied).every(s=>s.connected&&s.ready&&s.deckVersion))current=await runtime.start();
     return current;
   }
   const guest={

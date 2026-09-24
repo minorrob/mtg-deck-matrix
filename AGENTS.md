@@ -63,6 +63,40 @@ under `docs/design/` is the one exemption, as source material. `tests/feature-wi
 UK spellings across tracked files and the count only goes down; a commit that adds one fails.
 Rob set this on 2026-09-20 and it applies to every tool he works with, not only this repository.
 
+## Decisions inside the game belong to the players
+
+Rob, 2026-09-23: *"any decisions that takes place within the game the players should be given that
+option, and we should not make the decision in hardcoded here for them."*
+
+If a rule or a card offers a choice, the choice is put to whoever owns it — never resolved in code
+because one branch is easier or because the engine could infer what a player "probably" wants. The
+engine plan already says this for the rules layer (`docs/engine/PLAN.md` §3.2, *every decision is an
+offered choice*); the standing rule extends it to the whole product. Ordering triggers, ordering
+replacement effects, which mana to spend when more than one payment is legal, whether to take a
+"may" — all of them are asked. An automatic answer is only correct where the rules leave no choice
+at all, and where that is true the code says so and cites the rule.
+
+## Behavior that would break a game is refused, with instructions
+
+Rob, 2026-09-23: *"when there might be human behavior that would cause issues in the game ... then
+we don't allow the behavior, but we do provide the instructions for the user."*
+
+Not a warning that can be clicked past, and not a silent correction. The action is refused, and the
+refusal says what is wrong and what to do instead — in that order, naming the specific thing.
+
+The worked example is the un-invited seat (U-09). Pressing Start on a table with a seat marked
+human that nobody was invited to is refused with *"Sam's seat is marked as a human but nobody has
+been invited to it. Remove the seat assignment or change it to AI to start the game."*
+`unfilledHumanSeats` in `game/contracts/table-lifecycle.mjs` is the check, and two details there are
+the rule's shape rather than that feature's:
+
+- **It fires on the action, not continuously.** Written into `countdownBlockers` first — the list
+  read to describe the table at rest — it made a fresh four-seat table report an error for being a
+  fresh four-seat table. An instruction about one action belongs on that action.
+- **It distinguishes a mistake from normal play.** A seat emptied by somebody leaving, a reconnect
+  grace expiring, a rematch decline or a withdrawn invitation is `released`, and is never refused.
+  Only the chair nobody ever accounted for is.
+
 ## Things no agent does
 
 - Force-push or rewrite history on a branch someone else has pulled.

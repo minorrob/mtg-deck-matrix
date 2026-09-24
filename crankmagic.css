@@ -2388,10 +2388,21 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-new-deck-wizard{max-width:56ch;padding:6px 0}
 .cm-new-deck-wizard > p{margin:0 0 18px;font-size:14px;color:var(--v-muted)}
 .cm-wizard-paths{display:flex;flex-direction:column;gap:12px}
-.cm-wizard-path{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px 18px;
-  text-align:left;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);
-  min-height:80px;cursor:pointer;transition:background .12s ease,border-color .12s ease}
-.cm-wizard-path:hover{background:var(--v-panel);border-color:var(--v-line)}
+/* These are CONTROLS on a panel, so they take --v-raised. crankmagic-design.css line 38 states the
+   contract outright: "--v-raised  a CONTROL on that card -- lighter than the panel, always". They
+   were painted --v-panel, the same value as the surface beneath them, which is why they read as
+   three flat slabs; and :hover set --v-panel again, so the hover state was inert. */
+/* Shorter than they were: min-height:80px left the label floating in the middle of a slab, and
+   the first button crowded the line above it. The padding sets the height now.
+   The lede CARRIES THE ID, because `#matrix-v2 :is(h1,h2,h3,p){margin:0}` is an id rule and was
+   already flattening the 18px the wizard asked for -- which is why "Create" sat against the line
+   above it. Trap 1 in INDEX-where-things-live.md: carry the id, never !important. */
+#matrix-v2 .cm-new-deck-wizard>p{margin-bottom:18px}
+.cm-wizard-path{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 16px;
+  text-align:left;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);
+  cursor:pointer;transition:background .12s ease,border-color .12s ease}
+.cm-wizard-path:hover,.cm-wizard-path:focus-visible{
+  background:color-mix(in srgb,var(--v-accent) 12%,var(--v-raised));border-color:var(--v-accent)}
 .cm-wizard-path strong{display:block;font-size:15px;font-weight:600;color:var(--v-text)}
 .cm-wizard-path span{display:block;font-size:13px;color:var(--v-muted);line-height:1.4;margin-top:2px}
 @media(max-width:640px){
@@ -2612,3 +2623,76 @@ button.cm-building { pointer-events: none; }
 .cm-table-board-link a{color:var(--table-ink);font-weight:600}
 #matrix-v2 .cm-table-host-link{color:var(--table-ink);text-decoration:underline;text-underline-offset:2px}
 #matrix-v2 .cm-table-host-link:hover{color:var(--v-accent)}
+/* The pointer's host address. `--table-ink` is the ink of the light Table rules panel and is dark;
+   on the pointer's dark panel it rendered invisible. The accent reads on both. */
+.cm-pointer-host{color:var(--v-accent);text-decoration:underline;text-underline-offset:2px}
+
+/* LOAD: start a deck from one of your own (crankmagic-decks.js, wizard-load).
+   Two panes in one dialog, as Rob asked: the list on the left, and "to the right of this pop-up"
+   the deck it selects. Controls take --v-raised, which crankmagic-design.css defines as lighter
+   than the panel they sit on, always. */
+.cm-load-wizard{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);gap:16px;align-items:start}
+.cm-load-list{display:flex;flex-direction:column;gap:6px;max-height:58vh;overflow-y:auto;padding-right:4px;scrollbar-width:thin}
+.cm-load-item{text-align:left;padding:10px 12px;border-radius:var(--v-radius-control);border:1px solid var(--v-line);
+  background:var(--v-raised);color:var(--v-text);font-size:14px;cursor:pointer;transition:background .12s ease,border-color .12s ease}
+.cm-load-item:hover,.cm-load-item:focus-visible{background:color-mix(in srgb,var(--v-accent) 12%,var(--v-raised));border-color:var(--v-accent)}
+.cm-load-item.is-on{background:color-mix(in srgb,var(--v-accent) 20%,var(--v-raised));border-color:var(--v-accent);font-weight:600}
+.cm-load-detail{position:relative;min-width:0;display:flex;flex-direction:column;gap:12px}
+.cm-load-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cm-load-head h3{margin:0;font-size:17px}
+.cm-load-head p{margin:2px 0 0;font-size:13px}
+.cm-load-art{width:clamp(140px,38%,210px);height:auto;border-radius:var(--v-radius-card);align-self:flex-start;box-shadow:0 6px 18px rgb(0 0 0 / .35)}
+.cm-load-avg{margin:0;font-size:13px}
+.cm-load-avg strong{font-size:15px;font-variant-numeric:tabular-nums}
+.cm-load-cards{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;
+  border-top:1px solid var(--v-line);padding-top:8px}
+.cm-load-card{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  padding:5px 8px;border:0;border-radius:var(--v-radius-control);background:none;color:var(--v-text);font-size:13px;cursor:default}
+.cm-load-card:hover,.cm-load-card:focus-visible{background:var(--v-raised)}
+.cm-load-card b{font-variant-numeric:tabular-nums;color:var(--v-muted);font-weight:600}
+/* The hover preview sits over the pane and never takes the pointer, so moving across the list
+   cannot land on the preview and flicker. */
+.cm-load-preview{position:absolute;right:0;bottom:0;width:min(250px,60%);pointer-events:none;z-index:5}
+.cm-load-preview img{width:100%;height:auto;border-radius:var(--v-radius-card);box-shadow:0 10px 30px rgb(0 0 0 / .55)}
+@media(max-width:760px){.cm-load-wizard{grid-template-columns:minmax(0,1fr)}.cm-load-list{max-height:200px}.cm-load-preview{position:static;width:auto}}
+/* The deck file controls sit under both panes: a library lives in the browser that made it, and
+   the local host and the cloud copy are different browsers as far as IndexedDB is concerned. */
+.cm-load-foot{grid-column:1/-1;margin:4px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;
+  border-top:1px solid var(--v-line);padding-top:10px}
+
+/* THE COMMANDER PICKER SIZES ITSELF; ONLY ITS LIST SCROLLS. Rob, 2026-09-24: "The Create pop-up
+   shouldn't have to scroll the pop-up (the menu inside it yes). make it bigger."
+   #cm-dialog, NOT dialog.cm-picker-dialog: the base rule carries the id, and an id beats any
+   number of classes -- trap 1 in docs/INDEX-where-things-live.md, "Carry the id; never
+   !important". Written as a class this rule set the height and silently lost the width.
+   THE LIST WAS NOT IN FLOW, which is why nothing about the dialog's height helped. Line 2540,
+   `.cm-commander-results:not([hidden])`, makes it an absolutely positioned dropdown -- written for
+   the LOBBY, where `.cm-lobby-source-band label` is position:relative for it to hang from. Inside
+   this dialog there is no positioned ancestor, so it hung off the dialog itself, overlaid the note
+   beside it (visible in Rob's screenshot) and gave the dialog a scrollbar for an overlay that was
+   never part of its content. Here it goes back into flow and is capped against the viewport, so
+   the dialog grows to fit it and stops scrolling. */
+#cm-dialog.cm-picker-dialog{width:min(980px,calc(100vw - 24px))}
+#cm-dialog.cm-picker-dialog .cm-commander-results{position:static;width:auto;max-height:calc(100dvh - 360px);overflow:auto}
+
+/* THE LOCAL COPY: a game host, not the workshop. Rob, 2026-09-24: "don't show any of the left side
+   bar. It is completely not required in the local version for the user to see and try to use in
+   the localhost", and the brand moves to where the page title was, followed by "Online".
+   #matrix-v2 carries the flag because the shell's own layout rules carry the id, and an id beats
+   any number of classes -- trap 1 in docs/INDEX-where-things-live.md. */
+#matrix-v2.cm-local .cm-sidebar{display:none}
+#matrix-v2.cm-local .cm-layout{grid-template-columns:minmax(0,1fr);display:block}
+#matrix-v2.cm-local main{padding-inline:clamp(16px,3vw,34px)}
+/* The moved brand sits on the title's baseline. It came out of a vertical rail, so its own column
+   layout is turned back into a row here. */
+#matrix-v2.cm-local .cm-page-name{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#matrix-v2.cm-local .cm-page-brand{display:flex;align-items:center}
+#matrix-v2.cm-local .cm-page-brand .v-brand-block{display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;padding:0;border:0;background:none}
+#matrix-v2.cm-local .cm-page-brand .v-brand-copy{display:flex;align-items:center}
+#matrix-v2.cm-local .cm-page-brand .v-brand-logo{width:42px;height:42px}
+#matrix-v2.cm-local .cm-page-online{font-family:var(--v-display,inherit);font-size:clamp(22px,2.6vw,34px);line-height:1;color:var(--v-muted)}
+/* "Visit CrankMagic" sits under the two head buttons and reads as secondary: thinner, quieter. */
+#matrix-v2.cm-local .cm-page-head .cm-actions{flex-wrap:wrap;justify-content:flex-end}
+.cm-visit-crank{flex-basis:100%;text-align:center;padding:5px 12px;font-size:12px;font-weight:500;
+  background:none;border:1px solid var(--v-line);color:var(--v-muted);text-decoration:none;border-radius:var(--v-radius-control)}
+.cm-visit-crank:hover,.cm-visit-crank:focus-visible{color:var(--v-text);border-color:var(--v-accent)}

@@ -449,7 +449,12 @@ state holding printed values and derives current ones on demand, so an effect le
 nothing: it holds that layers are categories rather than priorities, that an effect setting power
 applies before one adding to it whichever was played first, that counters come after both, and that
 dependency beats timestamp. Combat, state-based actions and the projection all read through it, so
-an anthem, a counter and an animated land are the same creature to all three. `engine-commander`
+an anthem, a counter and an animated land are the same creature to all three. `engine-lki` holds CR
+113.7a, the last known information a dying permanent leaves behind: the snapshot runs the layers, so
+a 2/2 with two +1/+1 counters under an anthem is recorded as the 5/5 it died as, with its counters,
+its types and the controller it had rather than its owner. Without it "each opponent loses life
+equal to its power" compiles, runs and quietly produces zero, because there is nothing left to read
+a power from once CR 400.7 has made the card a new object. `engine-commander`
 holds CR 903: color identity reads the rules text as well as the mana cost and ignores reminder
 text, so a colorless artifact that makes black mana is a black card; the tax counts casts from the
 command zone rather than casts, and is part of the cost, so a commander a player cannot afford is
@@ -510,7 +515,13 @@ to be read while the land is still a card in a hand — every other replacement 
 found by scanning the battlefield and this one cannot be. It is also one event and not two: a
 permanent that enters tapped was never untapped, so nothing that watches for tapping sees anything,
 and a 0/0 that enters with counters is never a 0/0 on the battlefield to die to state-based
-actions.
+actions. `engine-runtime` is the piece that replaces
+Forge: the same seven exports `serve-review.mjs` imports from the launcher, compared function for
+function and arity for arity, because a runtime that is "mostly the same shape" fails on the call
+nobody exercised until a real game was in progress. Underneath there is no child process, no port
+and nothing to go stale; resume reads a checkpoint rather than hoping a JVM is still alive; and a
+pod containing cards the engine has no definition for is refused **before the game starts, with the
+cards named** — which is what makes the flag worth flipping today.
 
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
@@ -549,7 +560,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 100 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 102 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`

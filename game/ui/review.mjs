@@ -1,7 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority,maySkipToEndOfTurn,engineIsWorking,firstDrawSkipped} from '/action-policy.mjs';
-import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
+import {planZone,planTwoRows,planLandRow,orderGroups,GROUP_LABEL} from '/card-layout.mjs';
 import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart, and a hard import
 // of a 404 takes the whole board down with it. Same treatment as mana-status and play-guidance.
@@ -55,12 +55,11 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,aiPrompting=false,noticeUntil=0,lastDecision='';
-const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null,holdResponsesTurn=null;
+const pendingCasts=new Map(),handPositions=new Map(),zoneScroll=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null,holdResponsesTurn=null;
 let primarySeat=viewerSeatId,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 /* B.5a: the panel starts CLOSED. The frame's play surface is the whole window, and the panel
    slides over the mat when it is wanted rather than holding a column that is mostly idle. */
 let hideOpponents=false,hideInformation=true;
-let cardZoom=100;try{const saved=Number(localStorage.getItem('crankmagic-card-zoom'));if(saved>=32&&saved<=140)cardZoom=saved;}catch{}
 const acknowledgedDecisions=new Map();
 const zoneLayouts=new Map(),cardLayoutObserver=new ResizeObserver(entries=>{for(const {target}of entries)zoneLayouts.get(target)?.();});
 function releaseCardLayouts(root){for(const zone of root.querySelectorAll('.mat-zone')){cardLayoutObserver.unobserve(zone);zoneLayouts.delete(zone);}}
@@ -198,6 +197,34 @@ const noticeSeen=new Set(),noticeQueue=[],cardMemory=new Map();let noticePrimed=
    here -- otherwise the one notice that most needs a picture, "your creature died", has none. */
 function rememberCards(f){for(const p of f?.players||[])for(const z of Object.values(p.zones||{}))for(const c of z.cards||[])if(c?.cardId!=null&&!cardMemory.has(c.cardId))cardMemory.set(c.cardId,c);}
 function cardById(id){return id==null?null:cardMemory.get(id)||null;}
+
+/* THE BACK OF A SEAT'S DECK, IN ONE OF ITS COMMANDER'S COLORS.
+ *
+ * Rob, 2026-09-23: "The card background should be assigned per player when they've locked in their
+ * deck, and it should be chosen randomly from among the mana colors of their deck's commander."
+ *
+ * The color identity IS the deck locking in -- it comes from the commander on the validated deck,
+ * so there is nothing extra to store on the table and nothing to keep in step with it. The pick is
+ * random in the sense that matters (nobody chose it) but derived from the match and the seat rather
+ * than Math.random, so a seat keeps the same back for the whole game, across every re-render and a
+ * replay of the same match. A back that changed every frame would be a flicker, not a feature.
+ *
+ * A colorless commander has no color to draw from; it gets the cream one, which is the closest
+ * the five come to neutral. */
+const IDENTITY_BACK={W:'white',U:'blue',B:'black',R:'red',G:'green'};
+function commanderIdentityOf(p){
+  return p.commanderIdentity
+    ||(p.playerId===viewerSeatId?data.pod.seats[0]?.deck.commanders.flatMap(c=>c.colorIdentity||[])
+      :p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]))||[];
+}
+function cardBackFor(p){
+  const identity=[...new Set(commanderIdentityOf(p))].filter(c=>IDENTITY_BACK[c]);
+  if(!identity.length)return '/card-backs/card-back-white.webp';
+  const key=String(live?.matchId||data.pod?.podHash||'seat')+':'+p.playerId;
+  let h=2166136261;
+  for(let i=0;i<key.length;i+=1){h^=key.charCodeAt(i);h=Math.imul(h,16777619);}
+  return `/card-backs/card-back-${IDENTITY_BACK[identity[Math.abs(h)%identity.length]]}.webp`;
+}
 const noticeBox=el('div','table-notice');noticeBox.id='table-notice';noticeBox.hidden=true;noticeBox.setAttribute('role','alertdialog');noticeBox.setAttribute('aria-live','assertive');document.body.append(noticeBox);
 function showNextNotice(){
   const row=noticeQueue[0];
@@ -206,7 +233,21 @@ function showNextNotice(){
   const who=row.playerId===viewerSeatId?'You':(names[row.playerId]||'Another player');
   const delta=lifeDelta(row);
   const headline=delta!==null?`${who} ${delta<0?'lost':'gained'} ${Math.abs(delta)} life`:`${who} · ${row.name||'Table'}`;
-  noticeBox.append(el('strong','table-notice-who',headline));
+  /* ONE ROW, THEN THE CARD. Rob, 2026-09-24: "the pop-up should have nearly nothing around the card
+     other than the header (e.g. "You - Plains"), then in the same row justified to the right should
+     be the action that took place (e.g. "drew a card") and at to it's right a green check mark to
+     acknowledge and close the window (removing the huge "Ok" button)." The backlog that used to sit
+     beside OK rides the check as a badge, so a queue of notices still says it is a queue. */
+  const head=el('div','table-notice-head');
+  head.append(el('strong','table-notice-who',headline));
+  if(row.label)head.append(el('span','table-notice-what',row.label));
+  const waiting=noticeQueue.length-1;
+  const ack=button('\u2713',()=>{noticeQueue.shift();showNextNotice();},'table-notice-ack');
+  ack.setAttribute('aria-label',waiting?`Acknowledge \u2014 ${waiting} more waiting`:'Acknowledge and close');
+  ack.title=ack.getAttribute('aria-label');
+  if(waiting)ack.append(el('span','table-notice-more','+'+waiting));
+  head.append(ack);
+  noticeBox.append(head);
   const card=cardById(row.cardId);
   if(card?.art){
     const shot=el('button','table-notice-art');const img=el('img');img.src=card.art;img.alt=card.name||'Card';shot.append(img);
@@ -214,13 +255,7 @@ function showNextNotice(){
     shot.addEventListener('click',()=>inspect(card,1,true));
     noticeBox.append(shot);
   }
-  noticeBox.append(el('p','table-notice-what',row.label||''));
-  const row2=el('div','table-notice-actions');
-  const ok=button('OK',()=>{noticeQueue.shift();showNextNotice();},'primary-action');
-  row2.append(ok);
-  if(noticeQueue.length>1)row2.append(el('small','table-notice-more',`${noticeQueue.length-1} more`));
-  noticeBox.append(row2);
-  ok.focus({preventScroll:true});
+  ack.focus({preventScroll:true});
 }
 function pumpNotices(){
   if(!live?.telemetry)return;
@@ -406,6 +441,25 @@ function handCarousel(cards,id){
   const observer=new ResizeObserver(()=>{if(shell.isConnected)update();});observer.observe(track);shell.dispose=()=>observer.disconnect();
   return shell;
 }
+/* THE HAND'S OWN SIZE BAR (Rob, 2026-09-24: hand cards "should have their own card re-sizing slider
+   bar", twice the old size by default). 100% is that default, 136px; one value serves the table's
+   hand and Focus's, every bar showing it moves together, and it is remembered on this browser. */
+const HAND_CARD=136;
+let handSize=100;try{const saved=Number(localStorage.getItem('crankmagic-hand-size'));if(saved>=50&&saved<=250)handSize=saved;}catch{}
+function applyHandSize(){
+  document.body.style.setProperty('--hand-card-width',Math.round(HAND_CARD*handSize/100)+'px');
+  for(const bar of document.querySelectorAll('.hand-size input')){bar.value=handSize;bar.nextElementSibling.textContent=handSize+'%';}
+}
+function handSizeControl(){
+  const label=el('label','hand-size');label.title='Make the cards in your hand bigger or smaller. Double-click for 100%.';
+  const bar=el('input');bar.type='range';bar.min='50';bar.max='250';bar.step='5';bar.value=handSize;bar.setAttribute('aria-label','Hand card size');
+  const value=el('output','',handSize+'%');
+  const set=v=>{handSize=Math.max(50,Math.min(250,Math.round(Number(v)/5)*5||100));try{localStorage.setItem('crankmagic-hand-size',String(handSize));}catch{}applyHandSize();};
+  bar.addEventListener('input',()=>set(bar.value));bar.addEventListener('dblclick',()=>set(100));
+  label.append('Hand size',bar,value);return label;
+}
+applyHandSize();
+document.querySelector('.hand .hand-label')?.append(handSizeControl());
 function disposeCarousels(host){for(const shell of host.querySelectorAll('.hand-carousel'))shell.dispose?.();}
 let deckFacts;
 async function deckView(){
@@ -470,7 +524,7 @@ function pileButton(p,zone,label,cls){
   if(zone==='Command'&&p.playerId===viewerSeatId&&face&&live){enableHandDrag(pile,face);pile.addEventListener('dblclick',()=>{closeCardMenu();playCard(face);});pile.title='Drag your commander onto your mat to cast; mana and commander tax are paid automatically.';}
   if(zone==='Library'&&p.playerId===viewerSeatId){pile.addEventListener('dblclick',drawStepCard);if(live?.ui.choice?.mode==='draw')pile.classList.add('draw-ready');pile.title='Double-click to take your pending draw-step draw';}
   pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
-  if(zone==='Library'&&z.count){const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
+  if(zone==='Library'&&z.count){const back=el('img','library-back');back.draggable=false;back.src=cardBackFor(p);back.alt='';pile.append(back);}
   else if(face?.art){const art=el('img');art.draggable=false;art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}else pile.append(el('span','pile-empty',z.count?'◇':'—'));
   pile.append(el('span','pile-count',z.count),el('span','mat-zone-label',label));return pile;
 }
@@ -514,7 +568,19 @@ function enableHandDrag(node,card,battlefield=false){
       node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.removeEventListener('pointercancel',finish);
       draggingCard=null;
       if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');document.body.classList.remove('dragging-hand');const hit=document.elementFromPoint(event.clientX,event.clientY);target=hit?.closest('.player-mat[data-human-drop]');
-        if(event.type==='pointerup'&&battlefield){const onto=Number(hit?.closest('.card[data-card-id]')?.dataset.cardId),player=frame().players.find(p=>p.zones.Battlefield.cards.some(c=>c.cardId===card.cardId)),mat=hit?.closest('.player-mat');if(onto!==card.cardId&&player?.zones.Battlefield.cards.some(c=>c.cardId===onto)){const group=visualGroups.get(onto)||'group:'+onto;visualGroups.set(onto,group);visualGroups.set(card.cardId,group);freePositions.delete(onto);freePositions.delete(card.cardId);notifyAction('Cards grouped visually. Game state is unchanged.');}else if(mat&&Number(mat.dataset.seat)===player?.playerId){const r=mat.getBoundingClientRect();visualGroups.delete(card.cardId);freePositions.set(card.cardId,{x:Math.max(0,Math.min(.83,(event.clientX-r.left)/r.width-.065)),y:Math.max(0,Math.min(.64,(event.clientY-r.top)/r.height-.04))});}}
+        if(event.type==='pointerup'&&battlefield){const onto=Number(hit?.closest('.card[data-card-id]')?.dataset.cardId),player=frame().players.find(p=>p.zones.Battlefield.cards.some(c=>c.cardId===card.cardId)),mat=hit?.closest('.player-mat');if(onto!==card.cardId&&player?.zones.Battlefield.cards.some(c=>c.cardId===onto)){const group=visualGroups.get(onto)||'group:'+onto;visualGroups.set(onto,group);visualGroups.set(card.cardId,group);freePositions.delete(onto);freePositions.delete(card.cardId);notifyAction('Cards grouped visually. Game state is unchanged.');}else if(mat&&Number(mat.dataset.seat)===player?.playerId){
+          /* Dropped INTO a functional container, and stored against it (Rob, 2026-09-23). The zone
+             under the pointer wins; a drop on bare mat art falls back to the battlefield, which is
+             where the mat-relative version always put it. The clamps are now the container's own
+             edges less the card's footprint, rather than four fractions tuned against the mat. */
+          const zone=hit?.closest('.mat-zone')||mat.querySelector('.mat-battlefield');
+          const r=(zone||mat).getBoundingClientRect(),piece=mat.querySelector('.free-card');
+          const w=piece?piece.getBoundingClientRect().width/r.width:.17;
+          visualGroups.delete(card.cardId);
+          freePositions.set(card.cardId,{
+            zone:[...(zone?.classList||[])].find(c=>c.startsWith('mat-')&&c!=='mat-zone')||'mat-battlefield',
+            x:Math.max(0,Math.min(1-w,(event.clientX-r.left)/r.width-w/2)),
+            y:Math.max(0,Math.min(1-w*680/488*(r.width/r.height),(event.clientY-r.top)/r.height-.04))});}}
         else if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
     };
     node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});node.addEventListener('pointercancel',finish,{once:true});
@@ -571,8 +637,45 @@ function focusSteps(p){
  * a reason to argue with it.
  */
 let focusPaneClosed=false;
+/* THE PANE'S WIDTH IS THE PLAYER'S. Rob, 2026-09-24: "make the left side pane dynamically adjustable by
+   the end user adjusting the column width by adjusting the divider between their board and the side
+   pane, down to whatever is about 50% of the current size". It is kept as a share of the default --
+   the width at which three boards fill the pane at this window size (online.css) -- so it keeps its
+   meaning when the window changes. Remembered on this browser only. */
+const PANE_MIN_SHARE=.5;
+let paneShare=1;try{const saved=Number(localStorage.getItem('crankmagic-focus-pane'));if(saved>=PANE_MIN_SHARE&&saved<=1)paneShare=saved;}catch{}
+$('focus').style.setProperty('--focus-pane-share',paneShare);
+function paneDivider(pane){
+  const bar=el('div','focus-pane-divider');bar.tabIndex=0;
+  bar.setAttribute('role','separator');bar.setAttribute('aria-orientation','vertical');bar.setAttribute('aria-label','Width of the other boards');
+  bar.setAttribute('aria-valuemin',String(PANE_MIN_SHARE*100));bar.setAttribute('aria-valuemax','100');
+  bar.title='Drag to resize the other boards. Arrow keys adjust; double-click restores the full width.';
+  const set=share=>{
+    paneShare=Math.max(PANE_MIN_SHARE,Math.min(1,share));
+    $('focus').style.setProperty('--focus-pane-share',paneShare);bar.setAttribute('aria-valuenow',String(Math.round(paneShare*100)));
+    try{localStorage.setItem('crankmagic-focus-pane',String(paneShare));}catch{}
+  };
+  bar.setAttribute('aria-valuenow',String(Math.round(paneShare*100)));
+  bar.addEventListener('pointerdown',down=>{
+    if(down.button!==0)return;down.preventDefault();bar.setPointerCapture(down.pointerId);bar.classList.add('is-dragging');
+    const start=pane.getBoundingClientRect().width,full=start/paneShare,x=down.clientX;
+    const move=event=>set((start+event.clientX-x)/full);
+    const done=()=>{bar.classList.remove('is-dragging');bar.removeEventListener('pointermove',move);bar.removeEventListener('pointerup',done);bar.removeEventListener('pointercancel',done);};
+    bar.addEventListener('pointermove',move);bar.addEventListener('pointerup',done);bar.addEventListener('pointercancel',done);
+  });
+  bar.addEventListener('keydown',event=>{
+    const step={ArrowLeft:-.05,ArrowRight:.05}[event.key];
+    if(step){event.preventDefault();set(paneShare+step);}
+    else if(event.key==='Home'){event.preventDefault();set(PANE_MIN_SHARE);}
+    else if(event.key==='End'){event.preventDefault();set(1);}
+  });
+  bar.addEventListener('dblclick',()=>set(1));
+  return bar;
+}
 function focusPane(current){
-  const pane=el('aside','focus-pane');pane.setAttribute('aria-label','Other boards');
+  /* A div with the landmark role, not an <aside>: the page's own sidebar is styled as `aside`
+     (sticky, 85vh, its own scroll), and as one of those the pane clipped its divider. */
+  const pane=el('div','focus-pane');pane.setAttribute('role','complementary');pane.setAttribute('aria-label','Other boards');
   pane.classList.toggle('is-closed',focusPaneClosed);
   const bar=el('div','focus-pane-bar');
   const collapse=button(focusPaneClosed?'\u25b8':'\u25c2',()=>{focusPaneClosed=!focusPaneClosed;focusBoard(current);},'focus-pane-collapse');
@@ -582,11 +685,25 @@ function focusPane(current){
   if(focusPaneClosed)return pane;
   const others=(frame()?.players||[]).filter(x=>x.playerId!==current.playerId);
   for(const other of others){
-    const tile=button('',()=>focusBoard(other),'focus-tile tone-'+other.playerId);
+    /* A SMALL EXACT IMAGE OF THAT PLAYER'S BOARD, not a colored box. Rob, 2026-09-24: "I should
+       be seeing a small exact image of each player's board on the left side... not these colored
+       boxes", and 2f asks for "small aspect-locked tiles".
+       It is the real mat: matView() draws the same element the table does, and .player-mat is a
+       size container whose contents are all sized in cqw, so at tile width every zone, pile and
+       card scales down with it. Nothing is faked and nothing can drift from the board it shows.
+       A DIV, not a button: the mat contains buttons of its own, and a button inside a button is
+       invalid and swallows the click. The mat is made inert so the whole tile takes the press. */
+    const tile=el('div','focus-tile tone-'+other.playerId);
+    tile.setAttribute('role','button');tile.tabIndex=0;
     tile.append(el('strong','',names[other.playerId]));
     const commander=other.zones?.Command?.cards?.[0]?.name||other.commander||'';
     if(commander)tile.append(el('small','',commander));
+    const shot=el('div','focus-tile-board');shot.append(matView(other));
+    tile.append(shot);
     tile.title='Bring '+names[other.playerId]+"'s board into focus";
+    const open=()=>focusBoard(other);
+    tile.addEventListener('click',open);
+    tile.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
     pane.append(tile);
   }
   const mine=(frame()?.players||[]).find(x=>x.playerId===viewerSeatId);
@@ -596,6 +713,7 @@ function focusPane(current){
   }
   const table=button('Table view',()=>$('focus').close(),'focus-pane-table');
   table.title='Back to all four boards';pane.append(table);
+  pane.append(paneDivider(pane));
   return pane;
 }
 function focusBoard(p){
@@ -609,7 +727,7 @@ function focusBoard(p){
   const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);releaseCardLayouts(content);content.replaceChildren();
   content.append(focusPane(p));
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
-  if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
+  if(p.playerId===viewerSeatId){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'),handSizeControl());hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
   else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));
   if(!dialog.open)dialog.showModal();content.scrollTop=scrollTop;syncModalViewport();mountControls();
 }
@@ -627,20 +745,77 @@ function matView(p,focused=false){
     mat.addEventListener('dragleave',event=>{if(!mat.contains(event.relatedTarget))mat.classList.remove('drop-ready');});
     mat.addEventListener('drop',event=>{event.preventDefault();event.stopPropagation();mat.classList.remove('drop-ready');const raw=event.dataTransfer.getData('application/x-crankmagic-card');const id=/^\d+$/.test(raw)?Number(raw):draggingCard;const card=humanPlayer()?.zones.Hand.cards.find(c=>c.cardId===id);if(card)playCard(card);});
   }
+  const zoneBoxes=new Map();
   const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));
   const nonlands=p.zones.Battlefield.cards.filter(c=>!lands.includes(c));
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
-    const grouped=new Map(),capacity=name==='Lands'?6:3,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
-    for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
-    const large=focused||p.playerId===primarySeat;
-    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
-    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
-    else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
-    zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
+    const grouped=new Map();
+    for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const basic=name==='Lands'&&/\bBasic\b/.test(types);const label=name==='Lands'?(basic?card.name:'Lands'):card.token?(types.split('\u2014')[0].includes('Creature')?'Tokens':'Other tokens'):types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||(name==='Lands'?(basic?'basic:'+card.name:'land:'+card.cardId):label);if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),basic,label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
+    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));if(group.gridColumn){stack.style.gridColumn=group.gridColumn;stack.style.gridRow=group.gridRow;stack.classList.toggle('lane-second',group.gridRow==='2');}const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);if(group.pile)stack.classList.add('land-pile-group');const fan=el('div','card-fan'+(group.pile?' land-pile':stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
+    /* EVERY MAT, AT EVERY SIZE, LAYS OUT THE SAME WAY: the commander's card width (alignToPiles), and a
+       zone that never puts a card below its own bottom edge (card-layout.mjs, planZone). The small
+       four-up boards used to stack every group once a zone held more than three, and the large ones
+       grew their cards past the piles on a slider; Rob, 2026-09-24: "Every card on the play mat
+       should be exactly the same size, always." */
+    list.classList.add('zoom-card-grid');
+    const scrollKey=`${focused?'focus':'table'}:${p.playerId}:${name}`;
+    let layoutKey='';
+    const layout=()=>{
+      if(!zone.isConnected||draggingCard!==null)return;
+      const cardWidth=matCardWidth(mat);if(!cardWidth)return;
+      const s=getComputedStyle(list),pad=parseFloat(s.paddingTop)||0;
+      const box={width:zone.clientWidth-(parseFloat(s.paddingLeft)||0)-(parseFloat(s.paddingRight)||0),height:zone.clientHeight-pad*2,cardWidth,scrollbar:Math.max(0,scrollbarThickness()-pad)};
+      /* The battlefield's rules are in card-layout.mjs (planTwoRows): reading order, creatures first,
+         one card per cell, stack only as deep as you must, scroll only when the cards do not fit. A zone
+         too short for two rows keeps one, in the same order. Lands are one row, basics in piles. */
+      const all=orderGroups(name,[...grouped.values()]);
+      const plan=name==='Lands'?planLandRow({width:box.width,cardWidth,groups:all}):(planTwoRows({...box,groups:all})||planZone({...box,groups:all}));
+      list.style.setProperty('--card-columns',plan.columns);list.dataset.columns=plan.columns;list.dataset.rows=plan.twoRows?2:plan.rows;
+      if(plan.twoRows)list.style.setProperty('--lane-slot',plan.slot+'px');
+      list.classList.toggle('single-row',!!plan.singleRow);list.classList.toggle('two-rows',!!plan.twoRows);
+      const key=[cardWidth,plan.columns,plan.twoRows||name==='Lands'?plan.groups.map(g=>(g.gridColumn||'')+(g.gridRow||'')+g.cards.length).join():plan.capacity+':'+plan.maxStack,plan.singleRow].join(':');
+      if(key!==layoutKey){layoutKey=key;drawGroups(plan.groups);}
+      /* THE SCROLL BAR LIVES IN THE BOTTOM 10pt, not in a row's height: cards still stop 10pt inside
+         the outline (Rob, 2026-09-23) and the bar is the only mark the scrolling window makes. */
+      list.style.paddingBottom='';
+      const scrolls=plan.singleRow||plan.twoRows,bar=scrolls?list.offsetHeight-list.clientHeight:0;
+      if(bar)list.style.paddingBottom=Math.max(0,pad-bar)+'px';
+      if(scrolls)list.scrollLeft=zoneScroll.get(scrollKey)||0;
+    };
+    /* A live table redraws the board on every change, so the position a player scrolled to is kept
+       per seat and zone rather than snapping back to the first card each time. */
+    list.addEventListener('scroll',()=>zoneScroll.set(scrollKey,list.scrollLeft),{passive:true});
+    zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);
+    zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);zoneBoxes.set(cls,zone);
   }
-  for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){const position=freePositions.get(card.cardId),piece=el('div','free-card');piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';piece.append(cardButton(card));mat.append(piece);}
+  /* A DRAGGED CARD BELONGS TO ITS ZONE, NOT TO THE MAT. Rob, 2026-09-23: "put functional
+     boundaries around Battlefield and Lands outlines, then make the card positions relative to the
+     functional containers."
+     These used to be appended to the mat and positioned against the mat's own rectangle, clamped by
+     four magic fractions (.83, .64, -.065, -.04) that existed to keep a card roughly inside a zone
+     it had no relationship to. Dropped into its container instead, the percentages mean what they
+     say, the clamps are the container's edges, and a card cannot come to rest outside the outline
+     it is supposed to be in. Entries made before this carry no zone and default to the battlefield,
+     which is where every one of them was. */
+  for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){
+    const position=freePositions.get(card.cardId),piece=el('div','free-card');
+    piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';
+    piece.append(cardButton(card));
+    (zoneBoxes.get(position.zone)||zoneBoxes.get('mat-battlefield')||mat).append(piece);
+  }
+  let matBand=null;
+  if(focused){
+    const [preview,band]=historyBand();
+    matBand=band;mat.append(band);
+    /* The preview is a card, so it goes in a container and obeys that container's boundary. */
+    (zoneBoxes.get('mat-battlefield')||mat).append(preview);
+  }
+  /* EVERY mat, not just Focus: the battlefield's bottom border and the one card size are the mat's
+     geometry, and the four small boards need them as much as the big one. Only the band is
+     Focus-only, so it is passed as null elsewhere. */
+  requestAnimationFrame(()=>alignToPiles(mat,matBand));
   /* B.6a (2f): the printed turn-steps list and the life box are gone from the mat. B.1's step
      strip and B.3's center counter carry both now, and printing them again on each of four
      boards was four copies of one fact. The Focus view has neither, so it grows the ribbon
@@ -650,6 +825,186 @@ function matView(p,focused=false){
   if((p.playerId===primarySeat||focused)&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
   return mat;
 }
+/* B.6b — THE HISTORY BAND ON THE MAT (2f, Focus view).
+ *
+ * 2f draws the live log in a real row between the two pile pairs. That row does not exist: the mat
+ * places its zones absolutely, and measured in a live game the gap between the pairs is 4.8% of the
+ * mat -- about 25px -- against the ~15% a band needs. Rob chose option 2 on 2026-09-23: use the
+ * strip that is already empty. The old printed turn-guide and life-box rules survive in mats.css for that
+ * region but nothing in game/ui ever builds them (B.6a removed the last callers), so the band
+ * covers printed playmat artwork and no live element. No zone moves by a pixel.
+ *
+ * THE ROW IS TWO LINES, AND THAT IS ROB'S, 2026-09-23: "history rows should be smaller height (2
+ * rows not 3) and don't need to show card image at the surface but should show it on hover. History
+ * should include: user, card, action, target(s) and effects." At 32px a row against the feed's
+ * 154px, four and a half fit where the three-line version with thumbnails held three and a third.
+ *
+ * TARGETS AND EFFECTS ARE OPTIONAL, ON PURPOSE. The five-field contract belongs to CME
+ * (`docs/decisions-2026-09-23.md`): Forge is accepted as-is and `match-telemetry.mjs` is a lossy
+ * producer into it, filling user, card and its flattened `label` as the action. So the band reads
+ * `action`, `targets` and `effects` when an engine supplies them and degrades to the card name
+ * alone when it does not -- which is what the Forge host shows today. No parsing meaning back out
+ * of label strings; that was the bandaid Rob ruled out. */
+/* THE MAT'S RIGHT-HAND COLUMN LINES UP, ON EVERY PLAYMAT.
+ *
+ * Rob, 2026-09-23: the History box should align with the Command box below it, and the
+ * battlefield's bottom border should sit level with the bottom of Command and Exile.
+ *
+ * It cannot be written as fixed percentages because playmats carry layout variants (mats.css
+ * `[data-layout]`) that move the piles: Command sits at 73%/38% by default but at 70%/33% on gold,
+ * 34% on violet, 35% on moon and 18% on lotus, and the pile's HEIGHT is derived from its width
+ * through a 488:680 card ratio, so it depends on the mat's own aspect too. Measured on a live gold
+ * mat, a band written to the default numbers overhung the Command pile by three percent of the mat
+ * and sat two percent to its right.
+ *
+ * So the column is measured once the mat is laid out and everything is aligned to what is actually
+ * there. Any playmat added later is handled without another rule. */
+/* The mat's one card width, measured again whenever the mat has changed size since it was taken. */
+/* How thick the zones' thin horizontal scroll bar really is here, measured once rather than assumed. */
+let scrollbarSize=null;
+function scrollbarThickness(){
+  if(scrollbarSize===null){const probe=el('div');probe.style.cssText='position:absolute;visibility:hidden;width:60px;height:60px;overflow-x:scroll;scrollbar-width:thin';document.body.append(probe);scrollbarSize=probe.offsetHeight-probe.clientHeight;probe.remove();}
+  return scrollbarSize;
+}
+function matCardWidth(mat){
+  if(mat.dataset.measuredAt!==mat.clientWidth+'x'+mat.clientHeight)alignToPiles(mat);
+  return parseFloat(mat.style.getPropertyValue('--mat-card-width'))||0;
+}
+function alignToPiles(mat,band=mat?.querySelector(':scope > .mat-history')){
+  if(!mat)return;
+  const command=mat.querySelector('.mat-command'),exile=mat.querySelector('.mat-exile');
+  const field=mat.querySelector('.mat-battlefield');
+  const m=mat.getBoundingClientRect();
+  if(!m.width||!m.height||!command)return;
+  const c=command.getBoundingClientRect();
+  const left=(c.left-m.left)/m.width*100,top=(c.top-m.top)/m.height*100;
+  const bottom=(c.bottom-m.top)/m.height*100;
+
+  /* The battlefield's functional border ends level with the pile pair beside it. */
+  if(field){
+    const f=field.getBoundingClientRect(),fieldTop=(f.top-m.top)/m.height*100;
+    if(bottom>fieldTop)field.style.height=(bottom-fieldTop).toFixed(2)+'%';
+  }
+
+  /* ONE CARD SIZE FOR THE WHOLE MAT, ALWAYS, AND IT IS THE COMMANDER'S. Rob, 2026-09-24: "Every
+     card on the play mat should be exactly the same size, always. The size of the commander card
+     ... is correct proportions to mat size." It had been derived from two battlefield rows (Rob,
+     2026-09-23), and the large boards let cardGridMetrics grow theirs past the piles on a slider:
+     measured at 1920x1080 in Focus, battlefield cards 240px and 279px, lands 125-145px, beside a
+     188px commander. Now it is the card that fits the Command frame, and every card on the mat reads
+     it -- battlefield, lands, piles, free cards.
+
+     THE LANDS OUTLINE MAKES ROOM FOR ONE. At that width a card was taller than the outline (261px in
+     233), so its bottom now sits level with Library and Graveyard -- the same rule as the
+     battlefield ending level with Command and Exile -- and its top rises only as far as a card and
+     the 10pt inside the outline need, never into the room the Lands label takes above it. Where a
+     playmat's frames still cannot hold one, the card shrinks to fit rather than spill, and every
+     other card shrinks with it. */
+  const pad=parseFloat(getComputedStyle(mat.querySelector('.mat-cards')||mat).paddingTop)||0,ratio=680/488;
+  /* Where the scroll bar is thicker than the padding it sits in (small boards), a row loses the rest. */
+  const bar=Math.max(0,scrollbarThickness()-pad);
+  let width=Math.min(command.clientWidth,command.clientHeight/ratio);
+  /* A pixel short of exact: a percentage height lands on whole pixels, and a card 0.6px taller than its
+     zone is a scroll bar for nothing. */
+  if(field)width=Math.min(width,(field.clientHeight-pad*2-GROUP_LABEL-bar-1)/ratio);
+  const lands=mat.querySelector('.mat-lands');
+  if(lands&&field){
+    const l=lands.getBoundingClientRect(),lower=[...mat.querySelectorAll('.mat-library,.mat-graveyard')].map(n=>n.getBoundingClientRect().bottom);
+    /* Clear of the Lands label, which sits on top of the outline at its own height (online.css). */
+    const label=lands.querySelector(':scope > .mat-zone-label'),labelRoom=label?Math.max(0,-label.offsetTop)+2:20;
+    const floor=field.getBoundingClientRect().bottom-m.top+labelRoom,base=Math.min(m.height,Math.max(l.bottom,...lower)-m.top);
+    const frame=l.height-lands.clientHeight;
+    const landTop=Math.max(floor,Math.min(l.top-m.top,base-(width*ratio+pad*2+bar+frame)));
+    lands.style.top=(landTop/m.height*100).toFixed(3)+'%';lands.style.height=((base-landTop)/m.height*100).toFixed(3)+'%';
+    width=Math.min(width,(base-landTop-frame-pad*2-bar-1)/ratio);
+  }
+  width=Math.max(12,Math.floor(width*10)/10);
+  mat.style.setProperty('--mat-card-width',width+'px');mat.dataset.measuredAt=mat.clientWidth+'x'+mat.clientHeight;
+  /* The Focus hand lives outside the mat and reads the same width from the dialog. */
+  if(mat.closest('.focus-mat-stage'))mat.closest('.focus-dialog')?.style.setProperty('--mat-card-width',width+'px');
+  for(const zone of mat.querySelectorAll(':scope > .mat-zone'))zoneLayouts.get(zone)?.();
+
+  if(!band)return;
+  const right=exile?(exile.getBoundingClientRect().right-m.left)/m.width*100:left+25.5;
+  band.style.left=left.toFixed(2)+'%';
+  band.style.width=Math.max(0,right-left).toFixed(2)+'%';
+  /* Two percent of clear mat between the band and the pile it sits above. */
+  const bandTop=5.5,available=top-bandTop-2;
+  band.hidden=available<12;
+  if(!band.hidden)band.style.height=available.toFixed(2)+'%';
+}
+
+const HISTORY_PHASE_ONLY=/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/i;
+function historyBandRow(e){
+  const row=el('div','mh-row');
+  row.tabIndex=0;
+  if(e.cardId!=null)row.dataset.cardId=String(e.cardId);
+  const who=e.playerId!=null?names[e.playerId]:'';
+  const action=e.action||(/^(main1|main2)$/i.test(e.label||'')?phaseName(e.label):e.label)||'';
+  row.append(el('div','mh-l1',`T${e.turn??'?'}${who?' · '+who:''}${action?' · '+action:''}`));
+  const second=el('div','mh-l2');
+  second.append(el('span','',e.name||''));
+  /* Arrays only. A producer that has not got to these yet leaves them off entirely rather than
+     sending an empty string, so there is never a stray arrow or separator with nothing after it. */
+  const targets=Array.isArray(e.targets)?e.targets.filter(Boolean):[];
+  const effects=Array.isArray(e.effects)?e.effects.filter(Boolean):[];
+  if(targets.length)second.append(el('span','tgt',' → '+targets.join(', ')));
+  if(effects.length)second.append(el('span','eff',' · '+effects.join(', ')));
+  row.append(second);
+  return row;
+}
+function historyBand(){
+  const band=el('section','mat-history');band.setAttribute('aria-label','Game history');
+  /* The hover preview lives on the MAT, not inside the band: the feed clips its own overflow so it
+     can scroll, and a preview drawn inside it would be clipped with the rows. */
+  const preview=el('div','mat-history-card');preview.hidden=true;
+  const rows=historyRows().filter(e=>!HISTORY_PHASE_ONLY.test(e.label||''));
+  const head=el('div','mh-head');
+  head.append(el('b','','History'),el('span','',String(rows.length)+' events'));
+  const feed=el('div','mh-feed');
+  for(const e of rows.slice(0,14))feed.append(historyBandRow(e));
+  if(!rows.length)feed.append(el('p','mh-empty','Public activity appears here as the game goes on.'));
+  band.append(head,feed);
+
+  /* THE PREVIEW IS A CARD, SO IT OBEYS A CONTAINER LIKE EVERY OTHER CARD. Rob, 2026-09-23, on the
+     first version, which was positioned at a percentage of the MAT: "Your battlefield card is half
+     off the right side of the battlefield container... Where is the functional boundary on the mat
+     battlefield outline that the cards are placed relative to it's left inner side."
+     It lives inside the battlefield zone now and is placed against that zone's inner edge, inside
+     the same 10pt padding, so it cannot reach past the outline whatever the mat or the layout. The
+     only thing computed here is which row it lines up with, clamped to the zone. */
+  const show=row=>{
+    const card=cardById(Number(row.dataset.cardId));
+    const box=preview.parentElement;
+    if(!card?.art||!box){preview.hidden=true;return;}
+    preview.replaceChildren(Object.assign(el('img'),{src:card.art,alt:card.name||'Card'}));
+    const b=box.getBoundingClientRect();
+    if(b.height){
+      const top=(row.getBoundingClientRect().top-b.top)/b.height*100;
+      const room=100-preview.getBoundingClientRect().height/b.height*100;
+      preview.style.top=Math.min(Math.max(top,0),Math.max(0,room))+'%';
+    }
+    preview.hidden=false;
+  };
+  const hide=()=>{preview.hidden=true;};
+  feed.addEventListener('mouseover',event=>{const row=event.target.closest('.mh-row');if(row)show(row);});
+  feed.addEventListener('mouseleave',hide);
+  feed.addEventListener('focusin',event=>{const row=event.target.closest('.mh-row');if(row)show(row);});
+  feed.addEventListener('focusout',hide);
+  /* Scrolling moves a row out from under a still cursor and fires no mouseleave. */
+  feed.addEventListener('scroll',hide);
+
+  /* THE STRIP IS NOT THE SAME HEIGHT ON EVERY MAT, and a fixed 31% was wrong. Playmats carry
+     layout variants (mats.css `[data-layout]`) that move the pile pairs: the default puts Command
+     at 38%, but gold puts it at 33%, violet 34%, moon 35% and lotus 18%. Measured on a live gold
+     mat the band's bottom edge landed at 36.5% and ran straight through the Command pile.
+     So the height is taken from where the upper pair ACTUALLY starts, once the mat is laid out,
+     which also covers any playmat added later without another rule here. Below twelve percent
+     there is not room for two rows and a header, and a band that shows one row is not a band --
+     lotus is the case that hits this today. It is hidden rather than drawn as a sliver. */
+  return [preview,band];
+}
+
 function attachBoardResize(box){
   if(boardWidth)box.style.maxWidth=boardWidth+'px';else box.style.removeProperty('max-width');
   const handle=el('button','board-resize','⤡');handle.type='button';handle.setAttribute('aria-label','Resize your board');handle.title='Drag to resize your board. Arrow keys adjust size; double-click resets.';
@@ -764,7 +1119,18 @@ function historyRowNode(e){
  * extraction skill of docs/plan-board-information-layer.md, which emits CrankCardScript@1. When it
  * lands it replaces the body of the per-card step and nothing else here changes.
  */
-let onboarding=null;
+let onboarding=null,onboardBox=null;
+function onboardDialog(){
+  if(!onboardBox){
+    onboardBox=el('dialog','onboard-dialog');onboardBox.id='onboard-dialog';
+    onboardBox.setAttribute('aria-label','Onboarding cards');
+    document.body.append(onboardBox);
+  }
+  return onboardBox;
+}
+/* Closed when the run finishes, and whenever the choice goes away -- a pop-up left over from a
+   decision nobody is being asked any more is just a box on the screen. */
+function closeOnboarding(){if(onboardBox?.open)onboardBox.close();}
 function renderOnboarding(q){
   const queue=parseOnboardingChoice(q);
   const seats=(frame()?.players||[]).map(p=>({playerId:p.playerId,name:p.name,kind:data.pod?.seats?.[p.playerId]?.kind||'human'}));
@@ -772,7 +1138,15 @@ function renderOnboarding(q){
   const head=el('div','onboard');
   head.append(el('strong','onboard-title',onboardingHeadline(queue.deck,seat,viewerSeatId)));
   const count=el('span','onboard-count'),reel=el('div','onboard-reel'),note=el('p','onboard-note');
-  head.append(count,reel,note);options.append(head);
+  head.append(count,reel,note);
+  /* A POP-UP, NOT A PANEL IN THE PAGE. Rob, 2026-09-24: "The onboarding cards view shouldn't be in
+     line on the page, but should be a pop-up, that once the onboarding is done, the window
+     auto-closes." Inline it sat between the mats and the hand and took a block of the window --
+     height this view cannot spare, which is the same complaint as the mats being small.
+     NOT modal, deliberately: the note below is a property worth keeping -- "Continue stays live
+     throughout, so nobody is held at a progress bar" -- and a modal would hold them at one. */
+  onboardDialog().replaceChildren(head);
+  if(!onboardDialog().open)onboardDialog().show();
   const draw=()=>{
     const run=onboarding;
     count.textContent=`${run.done} / ${queue.total}`;
@@ -795,7 +1169,11 @@ function renderOnboarding(q){
         draw();
         await new Promise(r=>setTimeout(r,180));
       }
-      if(onboarding?.choiceId===q.id){onboarding.finished=true;draw();}
+      if(onboarding?.choiceId===q.id){
+        onboarding.finished=true;draw();
+        /* Long enough to read the last line, then it takes itself away. */
+        setTimeout(()=>{if(onboarding?.choiceId===q.id&&onboarding.finished)closeOnboarding();},1400);
+      }
     })();
   }else draw();
   buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]}),'primary-action'));
@@ -809,6 +1187,77 @@ function renderHistory(){if(document.activeElement?.matches('input[aria-label="S
 function openHistory(){showDialog('Game history',historyContent());$('detail').dataset.history='true';}
 const historyShortcut=button('History',openHistory);document.querySelector('header').append(historyShortcut);$('close-focus').before(button('History',openHistory));
 $('detail').addEventListener('close',()=>delete $('detail').dataset.history);
+
+/* END CURRENT GAME, IN THE HEADER — Rob, 2026-09-23.
+ *
+ * U-07 hides `Game setup` during a live match, and this control lived inside it (setup.mjs), so the
+ * only way out of a game in progress was about to disappear with it. It moves to the header rather
+ * than back into the action box, because Rob's 2026-09-21 objection still stands — "End game
+ * shouldn't be a permanent fixture in the top right action box. (Don't want accidental clicks of
+ * it)" — and a header button behind a modal answers that without sitting next to the controls a
+ * player presses every turn.
+ *
+ * THE TWO-CLICK CONFIRM BECOMES A POPUP. A button that relabels itself and waits for a second press
+ * is a confirm nobody reads; a modal can say what is lost and what is kept, which is the only thing
+ * a player needs to decide.
+ *
+ * IT IS NOT DRAWN WHEN IT WOULD NOT WORK. A resumed match was attached to rather than started, so
+ * this host cannot close it cleanly (`local-game-launcher.mjs:118`), and a guest never ends the
+ * host's game. Both are hidden rather than refused, per the standing rule that nothing is available
+ * before it works. */
+let endGameAllowed=false;
+const endGameButton=button('End game',openEndGame,'end-game');
+endGameButton.hidden=true;
+endGameButton.title='End this game and return to setup. The journal is kept.';
+document.querySelector('header').append(endGameButton);
+
+/* U-07, Rob 2026-09-23: "hide both". The live board carries gameplay and nothing else, so the two
+ * controls that leave it are hidden while a match is running and come back the moment it is over.
+ * 'finished' is deliberately NOT a live status here -- once the game has ended you want Game setup
+ * to start the next one, and End game to clear the table.
+ *
+ * GUEST MODE IS LEFT ALONE. There the same button reads 'Table lobby' and navigates to '/', which
+ * is a guest's only way out of a table. Hiding that would repeat exactly the mistake U-07 nearly
+ * made with End current game. */
+function syncAwayLinks(state){
+  const live=['starting','ready','playing'].includes(state?.status);
+  const workshop=document.querySelector('.workshop-link');
+  if(workshop)workshop.hidden=!guestMode&&live;
+  if($('setup'))$('setup').hidden=!guestMode&&live;
+}
+function syncEndGame(state){
+  syncAwayLinks(state);
+  /* 'starting' BELONGS IN THIS LIST. The setup dialog's version left it out, correctly for itself:
+     it opens after a game exists. The header is on screen from the moment the board loads, and the
+     launcher reports 'starting' until Forge writes live-status.json into the game directory
+     (local-game-launcher.mjs:76) -- which, measured with a pod, is most of a short game. Without it
+     the button never appeared once in three turns of real play. This is the same vocabulary the
+     board's own boot check uses. */
+  endGameAllowed=!guestMode&&['starting','ready','playing','finished'].includes(state?.status)&&!state?.resumed;
+  endGameButton.hidden=!endGameAllowed;
+}
+async function refreshEndGame(){
+  try{syncEndGame(await fetch('/api/live',{cache:'no-store'}).then(r=>r.json()));}catch{syncEndGame(null);}
+}
+function openEndGame(){
+  const body=el('div');
+  body.append(el('p','',`This game's journal is kept, so its record and match report survive. The live position is not — the game cannot be resumed once it ends.`));
+  const actions=el('div','end-game-actions');
+  const confirm=button('End game · keep journal',async()=>{
+    confirm.disabled=true;
+    try{
+      if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
+      const response=await fetch('/api/close-game',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:'{}'});
+      if(!response.ok)throw Error((await response.json().catch(()=>({}))).error||'The host could not end this game.');
+      $('detail').close();
+      window.dispatchEvent(new Event('crankmagic-game-closed'));
+      await openGameSetup();
+    }catch(error){confirm.disabled=false;body.append(el('p','fine',error.message));}
+  },'end-game-confirm');
+  actions.append(button('Keep playing',()=>$('detail').close()),confirm);
+  body.append(actions);
+  showDialog('End this game?',body);
+}
 function renderTracker(force=false){
   if(!frame())return;const t=live?.telemetry,key=JSON.stringify([trackerPlayer,t,frame().players]);if(!force&&key===trackerKey)return;trackerKey=key;tracker.replaceChildren();
   if(!trackerFacts){trackerFacts=new Map();fetch('/app/data/cards.json').then(r=>r.json()).then(d=>{for(const c of d.cards)trackerFacts.set(c.name,c);renderTracker(true);}).catch(()=>{});}
@@ -886,7 +1335,10 @@ $('view-deck').before(follow,myBoard,holdResponses,skipToEnd);
 const promptAi=button('Prompt AI',async()=>{const active=live?.seats?.find(seat=>seat.seatId===turnPlayer()?.playerId);if(!active||active.kind!=='ai'){notifyAction('No AI player currently has a decision to make.');return;}if(aiPrompting)return;aiPrompting=true;render();try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;const response=await fetch('/api/ai-pilots/prompt',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({seatId:active.seatId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to prompt the AI');notifyAction(result.waitingForForge?(active.name||'AI')+' is waiting for Forge to confirm its last action.':(active.name||'AI')+' is re-evaluating its next move.');setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),150);}catch(error){notifyAction(error.message);}finally{aiPrompting=false;render();}});promptAi.title='Ask the active AI to immediately re-evaluate its next legal Forge decision.';promptAi.id='prompt-ai-button';
 $('view-deck').before(promptAi);
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
-const zoomControl=el('label','card-zoom-control','Card size '),zoomSlider=el('input'),zoomOutput=el('output','',cardZoom+'%');zoomSlider.type='range';zoomSlider.min='32';zoomSlider.max='140';zoomSlider.step='1';zoomSlider.value=cardZoom;zoomSlider.setAttribute('aria-label','Board card size');zoomControl.append(zoomSlider,zoomOutput);const setCardZoom=value=>{cardZoom=Math.max(32,Math.min(140,Number(value)));zoomSlider.value=cardZoom;zoomOutput.textContent=cardZoom===32?'Compact · 6 × 3':cardZoom+'%';try{localStorage.setItem('crankmagic-card-zoom',cardZoom);}catch{}for(const layout of zoneLayouts.values())layout();};zoomSlider.addEventListener('input',()=>setCardZoom(zoomSlider.value));viewOptions.append(zoomControl,button('Compact cards · 6 × 3',()=>setCardZoom(32)),button('Reset card size',()=>setCardZoom(100)));
+/* No card-size slider: it existed to make the battlefield's cards a different size from the piles,
+   which is what Rob ruled out on 2026-09-24 ("every card on the play mat should be exactly the same
+   size, always"). A board is made bigger or smaller as a whole -- the resize handle on your board,
+   S / M / L in Focus -- and every card moves with it. */
 const hideOthers=button('Hide other boards',()=>{hideOpponents=!hideOpponents;document.body.classList.toggle('hide-opponents',hideOpponents);hideOthers.textContent=hideOpponents?'Show other boards':'Hide other boards';refreshBoards();});
 /* 2e names this control 'Panel ▸' and puts it in the top strip beside History and Tools, not
    inside View options: it is one of the three things a player reaches for constantly. */
@@ -903,15 +1355,23 @@ $('card-detail').addEventListener('click',()=>$('card-detail').close());
 $('close-focus').addEventListener('click',()=>$('focus').close());
 $('focus').addEventListener('close',mountControls);
 for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
-/* 2f asks for "the S · M · L card-size switch" rather than a percentage: three named sizes a
-   player picks once, not a number they tune. The values are the ends and middle of the slider
-   this replaces, so nothing about how the mat scales has changed. */
-for(const id of ['focus-size-s','focus-size-m','focus-size-l'])$(id).addEventListener('click',e=>{
-  const size=Number(e.currentTarget.dataset.size);
-  $('focus').style.setProperty('--focus-zoom',size+'%');$('focus').style.setProperty('--focus-scale',size/100);
-  for(const other of ['focus-size-s','focus-size-m','focus-size-l'])$(other).setAttribute('aria-pressed',String($(other)===e.currentTarget));
-});
-$('focus-size-s').setAttribute('aria-pressed','true');
+/* THE BOARD-SIZE BAR. Rob, 2026-09-24, of the S / M / L switch 2f had asked for: "not the gradient
+   size scale bar, which will give the end user greater control and optionality". Measured before it
+   went: S, M and L all drew the same 1411x833 board -- the stage's width was out-weighed by the grid's
+   placement rule and the mat's cap by the table's max-width:100%, so the switch never did anything.
+   The bar sets the focused mat's own width, and because every card on the mat is the commander's
+   size (alignToPiles), every card moves with it. 100% fills the width; past it the board scrolls.
+   Remembered on this browser only. */
+const focusSize=$('focus-size'),focusSizeValue=$('focus-size-value');
+function setFocusSize(value){
+  const size=Math.max(50,Math.min(200,Math.round(Number(value)/5)*5||100));
+  focusSize.value=size;focusSizeValue.textContent=size+'%';focusSize.setAttribute('aria-valuetext',size+' percent');
+  $('focus').style.setProperty('--focus-zoom',size/100);
+  try{localStorage.setItem('crankmagic-focus-size',String(size));}catch{}
+}
+focusSize.addEventListener('input',()=>setFocusSize(focusSize.value));
+focusSize.addEventListener('dblclick',()=>setFocusSize(100));
+{let saved=100;try{saved=Number(localStorage.getItem('crankmagic-focus-size'))||100;}catch{}setFocusSize(saved);}
 $('view-hand').addEventListener('click',()=>{
   const viewer=frame().players.find(p=>p.playerId===viewerSeatId);
   if(viewer)focusBoard(viewer);else notifyAction('Connect to a live table to view your hand.');
@@ -930,7 +1390,11 @@ const controls=el('section','live-controls');controls.hidden=true;controls.setAt
 const actionDock=el('div','action-dock');sidebar.prepend(actionDock);
 const prompt=el('p'),decisionArt=el('div','decision-art'),options=el('div','live-options'),buttons=el('div','live-buttons');controls.append(prompt,decisionArt,options,buttons);
 let completionReport=null,completionLoading=false,completionFeedbackSaved=false,completionStatus='';
-function mountControls(){const host=$('focus').open&&Number($('focus').dataset.seat)===viewerSeatId?$('focus-hand'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
+/* IN FOCUS THE ACTION MENU RIDES THE STEP ROW. Rob, 2026-09-24: "the 'Your action' menu at the
+   bottom should be on the right side in the subheader row with current turn steps. It should be
+   justified right." It was prepended to the hand, which put a block of chrome between the mat and
+   the cards -- the row that already carries the turn and the steps is where a decision belongs. */
+function mountControls(){const host=$('focus').open&&Number($('focus').dataset.seat)===viewerSeatId?$('focus-status'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.append(controls);}
 let decisionPointer=false,lastCombatInput='';for(const area of [controls,combatPane])area.addEventListener('pointerdown',()=>{decisionPointer=true;});window.addEventListener('pointerup',()=>{setTimeout(()=>decisionPointer=false,0);});window.addEventListener('pointercancel',()=>decisionPointer=false);
 window.addEventListener('resize',mountControls);
 /* SAY WHAT THE RULES DID, WHERE THE PLAYER WAS REFUSED. Rob clicked his library on turn one, was
@@ -1117,7 +1581,7 @@ function renderDecision(){
     else if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
     else if(q.mode==='text'){buttons.append(button('Submit',()=>gameAction({kind:'answer',choiceId:q.id,text:$('choice-text').value})));buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,cancel:true})));}
     else if(q.mode==='ack'&&parseOnboardingChoice(q))renderOnboarding(q);
-    else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
+    else if(q.mode==='ack'){closeOnboarding();buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));}
     else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
     else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
   }else{
@@ -1194,7 +1658,9 @@ function renderDecision(){
        the top right action box. (Don't want accidental clicks of it)... You also have 'End my
        turn' and 'Auto-pass turn' in the action box. Don't need both."
 
-       Neither is lost. "End current game" is in Game setup (setup.mjs), behind a two-click
+       Neither is lost. "End current game" is now the header's End game button, behind a modal
+       confirm -- it was in Game setup until 2026-09-23, when U-07 hid that dialog during a live
+       match and would have taken the only way out of a game with it. It was a two-click
        confirm, which is the safer of the two and was always the one to keep. "Auto-pass turn" was
        a hand-rolled loop that pressed OK up to fifty times and broke on anything it did not
        recognize; "Skip to end" in the header does the same job through maySkipToEndOfTurn, which
@@ -1272,8 +1738,8 @@ function applyLiveView(value){
       $('notice').textContent='The match is being set up. This will only take a moment.';
     }
 }
-window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
-window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
+window.addEventListener('crankmagic-game-ready',async()=>{await startLive();await refreshEndGame();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
+window.addEventListener('crankmagic-game-closed',()=>{syncEndGame(null);livePolling=false;livePoller.stop();audioSeen=new Set();audioPrimed=false;live=null;updateBed();gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
 if(guestMode)$('setup').textContent='Table lobby';
 if(!new URLSearchParams(location.search).has('replay')){
@@ -1288,7 +1754,7 @@ if(!new URLSearchParams(location.search).has('replay')){
        zero reads of the game view in forty seconds against a match whose status was 'playing'.
        Only the guest path ever called startLive(). Setup is the fallback now, not the default. */
     let playing=false;
-    try{const state=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());playing=['starting','ready','playing'].includes(state&&state.status);}catch(error){playing=false;}
+    try{const state=await fetch('/api/live',{cache:'no-store'}).then(r=>r.json());playing=['starting','ready','playing'].includes(state&&state.status);syncEndGame(state);}catch(error){playing=false;syncEndGame(null);}
     if(playing){
       document.body.classList.remove('setup-screen');
       try{await startLive();}

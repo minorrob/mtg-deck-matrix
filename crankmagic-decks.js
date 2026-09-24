@@ -432,7 +432,7 @@ actions.deck=el=>go('decks',{deck:el.dataset.deck});actions['deck-cards']=el=>go
    the deck: it names its own commander -- the one Commander-legal card in it -- and the deck
    is created attached to that group, so the thing it draws from is set from the first day. */
 function commanderDeck(groupId){
-  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true});
+  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck']()});
 }
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
 const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
@@ -473,14 +473,161 @@ actions['new-deck']=()=>{
       </button>
       <button type="button" class="cm-wizard-path" data-action="wizard-import">
         <strong>Import</strong>
-        <span>Upload or paste a decklist from Archidekt or any source</span>
+        <span>Upload or paste a decklist</span>
       </button>
-      <button type="button" class="cm-wizard-path" data-action="wizard-lab">
-        <strong>Lab</strong>
-        <span>Auto-build with constraints: budget, owned cards, play style</span>
+      <button type="button" class="cm-wizard-path" data-action="wizard-load">
+        <strong>Load</strong>
+        <span>Start from one of your own decks</span>
       </button>
     </div></div>`);
 };
+/* LOAD PATH: start from one of Rob's own decks.
+ *
+ * Rob, 2026-09-24: "Create and Lab should be the same thing... that should be 'Load' which provides
+ * the built-in options which are my decks." The Lab is still there -- it is a function inside a
+ * deck (the Overview offers "Auto-build in Lab"), which is what he means by the two being the same
+ * thing. It is just not one of three ways to START a deck, because it never was one.
+ *
+ * THE LABEL DROPS THE DECK NUMBER AND KEEPS THE ARCHETYPE. His decks are named "D5 Shadrix
+ * Aristocrats", so the number is filing, not a name. Stripping it leaves the commander and the
+ * archetype, and the commander's own first name is what separates them -- all seven parse:
+ *   D1 Quintorius Spirits   -> Quintorius - Spirits
+ *   D2 Chulane Value Loop   -> Chulane - Value Loop
+ *   D7 Maralen Exile Cast   -> Maralen - Exile Cast
+ * A deck that does not follow the pattern keeps its own name rather than being mangled into it. */
+const deckNumberOff=name=>String(name||'').replace(/^D\d+\s+/,'');
+function loadLabel(d){
+  const bare=deckNumberOff(d.name),lead=commander(d).split(/[,\s]/)[0];
+  if(lead&&bare.toLowerCase().startsWith(lead.toLowerCase())){
+    const rest=bare.slice(lead.length).trim();
+    if(rest)return `${lead} - ${rest}`;
+  }
+  return bare||d.name;
+}
+/* MOVING DECKS BETWEEN BROWSERS. Rob, 2026-09-24: "I should have a fast way of exporting my decks
+ * from CrankMagic, then using the import function to load them and then the 'Load' screen to
+ * choose one."
+ *
+ * The library is IndexedDB, which is per ORIGIN: the local host serves the app from
+ * 127.0.0.1:8768 and the cloud copy from github.io, and those are two different stores. Decks
+ * built in one are simply not present in the other, which is the likeliest reason Load opened
+ * empty on a machine that plainly has seven decks. A file is the way across.
+ *
+ * The file carries the decks AND the card records they name, because an import on the other side
+ * has to resolve every cardId without going to the network to do it. */
+const DECK_FILE='CrankMagicDecks@1';
+actions['export-decks']=()=>{
+  const mine=C.state.decks.filter(d=>!d.archived&&!M.isLobbyDeck(d));
+  if(!mine.length)return C.notice('There are no decks here to export.',true);
+  const ids=new Set();
+  for(const d of mine){for(const id of d.commanders||[])ids.add(id);for(const r of d.slots||[])ids.add(r.cardId);}
+  const cards=[...ids].map(id=>C.card(id)).filter(Boolean);
+  /* M.today(), not toISOString(): a file named from UTC is dated yesterday for half the evening,
+     and tests/feature-wiring.mjs holds the whole app to local dates for exactly that reason. */
+  C.download(`CrankMagic-decks-${M.today()}.json`,
+    JSON.stringify({schema:DECK_FILE,exportedAt:new Date().toISOString(),decks:mine,cards},null,1));
+  C.notice(`${mine.length} deck${mine.length===1?'':'s'} exported with ${cards.length} card records. Import the file in another browser, then open New deck · Load.`);
+};
+actions['import-decks']=()=>{
+  const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+  input.addEventListener('change',async()=>{
+    const file=input.files?.[0];if(!file)return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      if(parsed.schema!==DECK_FILE)throw Error(`That file is not a CrankMagic deck export. Expected ${DECK_FILE} and found ${parsed.schema||'no schema'}.`);
+      const decks=Array.isArray(parsed.decks)?parsed.decks:[];
+      if(!decks.length)throw Error('That export holds no decks.');
+      const have=new Set(C.state.decks.map(d=>d.id));
+      let added=0;
+      for(const d of decks){
+        /* A deck already here is left alone rather than duplicated -- importing the same file
+           twice should not double the shelf. */
+        if(have.has(d.id))continue;
+        await commit({type:'createDeck',deckId:d.id,name:d.name,commanders:[...(d.commanders||[])],
+          cards:(parsed.cards||[]).filter(c=>(d.commanders||[]).includes(c.id)||(d.slots||[]).some(r=>r.cardId===c.id)),
+          slots:(d.slots||[]).map(r=>({cardId:r.cardId,quantity:r.quantity,...(r.purpose?{purpose:r.purpose}:{})})),
+          definition:{...(d.definition||{})}});
+        added+=1;
+      }
+      C.notice(added?`${added} deck${added===1?'':'s'} imported. Open New deck · Load to start from one.`
+        :'Every deck in that file is already here.');
+      actions['wizard-load']();
+    }catch(error){C.notice(error.message,true);}
+  },{once:true});
+  input.click();
+};
+actions['wizard-load']=()=>{
+  const mine=C.state.decks.filter(d=>!d.archived&&!M.isLobbyDeck(d));
+  if(!mine.length)return modal('Load a deck',`<div class="cm-new-deck-wizard">
+    ${note('This browser has no decks to start from. A library lives in the browser that made it, and the local host and the cloud copy are different browsers as far as storage is concerned — decks built in one are not in the other.',true)}
+    <p class="cm-muted">Export them from the browser that has them, then bring the file here.</p>
+    <div class="cm-actions">${b('Import a deck file','import-decks',{},true)}${b('Create one instead','wizard-create')}</div></div>`,()=>actions['new-deck']());
+  const d0=modal('Load a deck',`<div class="cm-load-wizard">
+    <div class="cm-load-list" role="listbox" aria-label="Your decks">${mine.map((d,i)=>
+      `<button type="button" class="cm-load-item${i?'':' is-on'}" role="option" aria-selected="${i?'false':'true'}" data-action="load-pick" data-deck="${e(d.id)}">${e(loadLabel(d))}</button>`).join('')}</div>
+    <div class="cm-load-detail" id="cm-load-detail"></div>
+    <p class="cm-load-foot cm-muted">Decks live in the browser that made them. ${b('Export these decks','export-decks',{},false,{cls:'compact'})} ${b('Import a deck file','import-decks',{},false,{cls:'compact'})}</p>
+  </div>`,()=>actions['new-deck']());
+  /* Clicking the backdrop closes it. Rob asked for "click anywhere outside of the ... pane to
+     close"; a <dialog> does not do that on its own, and this is scoped to this dialog rather than
+     changed for every dialog in the app. */
+  d0.addEventListener('click',ev=>{if(ev.target===d0)actions.close();});
+  loadDetail(mine[0].id);
+};
+actions['load-pick']=el=>{
+  for(const b of document.querySelectorAll('.cm-load-item')){
+    const on=b===el;b.classList.toggle('is-on',on);b.setAttribute('aria-selected',String(on));
+  }
+  loadDetail(el.dataset.deck);
+};
+/* The right-hand pane: the commander, then what the deck is made of, then every card in it. The
+   curve and the type counts are compositionHTML -- the same drawing the deck page uses, so a deck
+   reads the same here as it does when it is open. */
+function loadDetail(deckId){
+  const host=document.getElementById('cm-load-detail');if(!host)return;
+  const d=M.deck(C.state,deckId);
+  const rows=(d.slots||[]).filter(r=>r.purpose!=='sideboard').map(r=>({c:C.card(r.cardId),q:r.quantity})).filter(x=>x.c);
+  const types=['Land','Creature','Artifact','Enchantment','Instant','Sorcery','Planeswalker'];
+  const curve=Array(8).fill(0);
+  for(const {c,q} of rows)if(!/Land/.test(c.typeLine))curve[Math.min(7,Number(c.manaValue)||0)]+=q;
+  const max=Math.max(1,...curve);
+  const spells=rows.filter(x=>!/Land/.test(x.c.typeLine));
+  const copies=spells.reduce((n,x)=>n+x.q,0);
+  const avg=copies?(spells.reduce((n,x)=>n+(Number(x.c.manaValue)||0)*x.q,0)/copies):0;
+  const face=C.card(d.commanders[0]);
+  host.innerHTML=`<div class="cm-load-head">
+      <div><h3>${e(loadLabel(d))}</h3><p class="cm-muted">${e(commander(d))}</p></div>
+      <button type="button" class="v-button primary" data-action="load-choose" data-deck="${e(d.id)}">Choose this Deck</button>
+    </div>
+    ${face?.image?`<img class="cm-load-art" src="${e(face.image)}" alt="${e(face.name)}" loading="lazy">`:''}
+    ${compositionHTML(rows,curve,max,types)}
+    <p class="cm-load-avg">Average mana value <strong>${avg?avg.toFixed(2):'-'}</strong> <span class="cm-muted">across ${copies} nonland card${copies===1?'':'s'}</span></p>
+    <div class="cm-load-cards">${rows.slice().sort((a,b)=>a.c.name.localeCompare(b.c.name)).map(x=>
+      `<button type="button" class="cm-load-card" data-card-image="${e(x.c.image||'')}" data-card-name="${e(x.c.name)}"><span>${e(x.c.name)}</span><b>${x.q}</b></button>`).join('')}</div>
+    <div class="cm-load-preview" hidden aria-hidden="true"></div>`;
+  /* HOVER SHOWS THE CARD, and it stays until the cursor leaves or the list scrolls -- a preview
+     that outlived a scroll would float over a row it no longer describes. */
+  const preview=host.querySelector('.cm-load-preview'),list=host.querySelector('.cm-load-cards');
+  const hide=()=>{preview.hidden=true;};
+  list.addEventListener('mouseover',ev=>{
+    const b=ev.target.closest('.cm-load-card');if(!b||!b.dataset.cardImage)return hide();
+    preview.innerHTML=`<img src="${e(b.dataset.cardImage)}" alt="${e(b.dataset.cardName)}">`;
+    preview.hidden=false;
+  });
+  list.addEventListener('mouseleave',hide);
+  list.addEventListener('scroll',hide);
+}
+actions['load-choose']=async el=>{
+  const source=M.deck(C.state,el.dataset.deck),id='deck:'+C.uid();
+  actions.close();
+  await commit({type:'createDeck',deckId:id,name:`${deckNumberOff(source.name)} copy`,
+    commanders:[...source.commanders],
+    cards:(source.slots||[]).map(r=>C.card(r.cardId)).filter(Boolean),
+    slots:(source.slots||[]).map(r=>({cardId:r.cardId,quantity:r.quantity,...(r.purpose?{purpose:r.purpose}:{})})),
+    definition:{...source.definition}});
+  go('decks',{deck:id});
+};
+
 /* CREATE PATH: commander picker and manual building */
 actions['wizard-create']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
@@ -515,7 +662,7 @@ actions['wizard-create']=()=>{
 actions['wizard-import']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   if(!C.importList)throw Error('The import module is not loaded. Reload the page.');
-  C.importList({name:'New deck list',after:gid=>{
+  C.importList({name:'New deck list',back:()=>actions['new-deck'](),after:gid=>{
     const g=C.state.groups.find(x=>x.id===gid);
     if(g){
       const rows=groupRows(g);
