@@ -622,11 +622,25 @@ function focusPane(current){
   if(focusPaneClosed)return pane;
   const others=(frame()?.players||[]).filter(x=>x.playerId!==current.playerId);
   for(const other of others){
-    const tile=button('',()=>focusBoard(other),'focus-tile tone-'+other.playerId);
+    /* A SMALL EXACT IMAGE OF THAT PLAYER'S BOARD, not a colored box. Rob, 2026-09-24: "I should
+       be seeing a small exact image of each player's board on the left side... not these colored
+       boxes", and 2f asks for "small aspect-locked tiles".
+       It is the real mat: matView() draws the same element the table does, and .player-mat is a
+       size container whose contents are all sized in cqw, so at tile width every zone, pile and
+       card scales down with it. Nothing is faked and nothing can drift from the board it shows.
+       A DIV, not a button: the mat contains buttons of its own, and a button inside a button is
+       invalid and swallows the click. The mat is made inert so the whole tile takes the press. */
+    const tile=el('div','focus-tile tone-'+other.playerId);
+    tile.setAttribute('role','button');tile.tabIndex=0;
     tile.append(el('strong','',names[other.playerId]));
     const commander=other.zones?.Command?.cards?.[0]?.name||other.commander||'';
     if(commander)tile.append(el('small','',commander));
+    const shot=el('div','focus-tile-board');shot.append(matView(other));
+    tile.append(shot);
     tile.title='Bring '+names[other.playerId]+"'s board into focus";
+    const open=()=>focusBoard(other);
+    tile.addEventListener('click',open);
+    tile.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});
     pane.append(tile);
   }
   const mine=(frame()?.players||[]).find(x=>x.playerId===viewerSeatId);

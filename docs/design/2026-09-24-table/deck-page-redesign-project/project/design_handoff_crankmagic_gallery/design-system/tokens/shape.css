@@ -1,0 +1,10 @@
+:root{
+  --radius-control:12px;
+  --radius-card:calc(12px * 1.5);
+  --radius-tile:calc(12px * 1.8);
+  --radius-pill:999px;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
+  --shadow-card:0 1px 0 rgba(255,255,255,.04) inset;
+  --motion-fast:250ms;
+  --motion-ease:ease;
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0;background:#0e0d0b;color:#f5f0e8;font-family:Satoshi,system-ui,sans-serif}a{color:#f0b35a}a:hover{color:#ffd28a}</style>
+</helmet>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:24px">
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a99e90;font-weight:700">Turn 4 · Palette applied · Library · Explore entry · Type</div><h1 style="margin:0;font-size:34px;letter-spacing:-.03em;line-height:1.1">Brass &amp; Slate dark, Felt &amp; Cream light</h1><p style="margin:0;color:#a99e90;font-size:15px;line-height:1.55">The chosen palettes are now on every Gallery screen (Turn 1 and 2 boards below re-render in them). <a href="#4a">4a Library</a>: the seven counts as clickable tiles, five filters in view with the active one tinted by the deck, 56px rows with the purpose chip under the name and one verb per row — every card carries its mana symbols, colorless included, and lands wear a land mark. <a href="#4b">4b Explore entry</a> replaces the three grey doors with three cards that each show what's behind them: your decks' gaps, your commanders, the graph. <a href="#4c">4c Type</a>: the display face is Young Serif — whiskey and leather — over Satoshi body.</p></div>
+  <div id="4c" style="display:flex;flex-direction:column;gap:14px"><div style="display:flex;align-items:center;gap:14px"><span style="display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f5f0e8;color:#1a1815;font-weight:700;font-size:16px">4c</span><h2 style="margin:0;font-size:22px;letter-spacing:-.02em">Display face — E Young Serif is applied; A–C are sans alternates, D–H the serifs</h2></div><dc-import name="Type Options" hint-size="3540px,420px"></dc-import></div>
+  <div id="4a" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f5f0e8;color:#1a1815;font-weight:700;font-size:16px">4a</span><h2 style="margin:0;font-size:22px;letter-spacing:-.02em">Library</h2></div>
+    <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Library · dark</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Library" theme="dark" hint-size="1280px,1100px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Library · light</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Library" theme="light" hint-size="1280px,1100px"></dc-import></div></div>
+    </div>
+  </div>
+  <div id="4b" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f5f0e8;color:#1a1815;font-weight:700;font-size:16px">4b</span><h2 style="margin:0;font-size:22px;letter-spacing:-.02em">Explore · entry</h2></div>
+    <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Explore entry · dark</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Explore Entry" theme="dark" hint-size="1280px,900px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Explore entry · light</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Explore Entry" theme="light" hint-size="1280px,900px"></dc-import></div></div>
+    </div>
+  </div>
+</section>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:24px">
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a99e90;font-weight:700">Turn 3 · Palette</div><h1 style="margin:0;font-size:34px;letter-spacing:-.03em;line-height:1.1">Five palettes, each a whole system</h1><p style="margin:0;color:#a99e90;font-size:15px;line-height:1.55">Every option carries surfaces, one action accent plus the aether accent, the mana identity tints, the five status hues, a display face paired with Satoshi, radius, panel treatment, and the rules for art, motion, mist and the other theme. <a href="#3a">3a Brass &amp; Slate</a> is the workshop (what Gallery wears now, sharpened). <a href="#3b">3b Aether &amp; Ember</a> is the spellbook. <a href="#3c">3c Felt &amp; Cream</a> is the table, light-first. Two heavier, more masculine cuts: <a href="#3d">3d Moss &amp; Iron</a> (green, condensed caps, tight radii) and <a href="#3e">3e Steel &amp; Cobalt</a> (blue kept but hardened). Decision: Brass &amp; Slate is dark mode, Felt &amp; Cream is light mode, Bricolage Grotesque throughout; 3a, 3c, 3d and 3e are saved as design systems (3d/3e under design-systems/).</p></div>
+  <div style="display:flex;gap:28px;align-items:flex-start"><a id="3a" style="display:block"></a><a id="3b" style="display:block"></a><a id="3c" style="display:block"></a><a id="3d" style="display:block"></a><a id="3e" style="display:block"></a><dc-import name="Palette Options" hint-size="3112px,1200px"></dc-import></div>
+</section>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:24px">
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a99e90;font-weight:700">Turn 2 · Explore</div><h1 style="margin:0;font-size:34px;letter-spacing:-.03em;line-height:1.1">Explore, in the Gallery system</h1><p style="margin:0;color:#a99e90;font-size:15px;line-height:1.55">The graph is the page: one search field and the connections switch in the head, filters folded behind one button with the active picks as removable chips, the tap mode and view controls floating on the canvas, depth and breadth in a corner. The right pane keeps Card · List · Trace with the picture, its standing in your decks, the terms it is joined by (gold ring on the Primary Purpose) and the loops it is in. Deck-tinted when a deck is picked under Yours. <a href="#2a">2a</a></p></div>
+  <div id="2a" style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f5f0e8;color:#1a1815;font-weight:700;font-size:16px">2a</span><div><h2 style="margin:0;font-size:22px;letter-spacing:-.02em">Explore · graph with Krenko in focus</h2><p style="margin:2px 0 0;color:#a99e90;font-size:14px">Loops only on, D6 picked under Yours. Green ring = a copy in the deck; dashed = not owned; gold lines = loop-backs.</p></div></div>
+    <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Explore · dark</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Explore" theme="dark" layout="desktop" hint-size="1280px,960px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Explore · light</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Explore" theme="light" layout="desktop" hint-size="1280px,960px"></dc-import></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Explore · phone</span><div style="border-radius:28px;overflow:hidden;box-shadow:0 30px 80px -30px #000;border:6px solid #2a2622"><dc-import name="Gallery Explore" theme="dark" layout="phone" hint-size="390px,1400px"></dc-import></div></div>
+    </div>
+  </div>
+</section>
+<section style="padding:48px;display:flex;flex-direction:column;gap:40px">
+  <div style="max-width:900px;display:flex;flex-direction:column;gap:8px"><div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a99e90;font-weight:700">Turn 1 · Deck page redesign</div><h1 style="margin:0;font-size:34px;letter-spacing:-.03em;line-height:1.1">Gallery — the chosen direction</h1><p style="margin:0;color:#a99e90;font-size:15px;line-height:1.55">Warm graphite / parchment instead of navy, each deck's mana identity tinting its surfaces, the commander's card where the eye lands. The aether mist now wraps the wordmark in the rail, as it did in the old header. <a href="#1a">1a Gallery</a> is the base for the page-by-page wireframes; 1b Bench is retired. Recreations of today's pages: <a href="Current Decks.dc.html">Decks</a> · <a href="Current Deck Overview.dc.html">Deck overview</a>.</p></div>
+  <div style="display:flex;flex-direction:column;gap:56px">
+    <div id="1a" style="display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:14px"><span style="display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f5f0e8;color:#1a1815;font-weight:700;font-size:16px">1a</span><div><h2 style="margin:0;font-size:22px;letter-spacing:-.02em">Gallery</h2><p style="margin:2px 0 0;color:#a99e90;font-size:14px">Posters of the commanders. Deck page opens on the physical card, tilted like it's on the table; the work is a bento under one Next card.</p></div></div>
+      <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Decks · dark</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Decks" theme="dark" hint-size="1280px,1240px"></dc-import></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Deck page · dark</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Deck Page" theme="dark" layout="desktop" hint-size="1280px,1240px"></dc-import></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Deck page · phone</span><div style="border-radius:28px;overflow:hidden;box-shadow:0 30px 80px -30px #000;border:6px solid #2a2622"><dc-import name="Gallery Deck Page" theme="dark" layout="phone" hint-size="390px,1240px"></dc-import></div></div>
+      </div>
+      <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Decks · light</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Decks" theme="light" hint-size="1280px,1240px"></dc-import></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Deck page · light</span><div style="border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -30px #000"><dc-import name="Gallery Deck Page" theme="light" layout="desktop" hint-size="1280px,1240px"></dc-import></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:12px;color:#a99e90;font-weight:600">Deck page · phone, light</span><div style="border-radius:28px;overflow:hidden;box-shadow:0 30px 80px -30px #000;border:6px solid #e9e2d6"><dc-import name="Gallery Deck Page" theme="light" layout="phone" hint-size="390px,1240px"></dc-import></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
