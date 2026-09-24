@@ -68,14 +68,26 @@ export const PROFILES = {
   },
 };
 
-/* Cloudflare serves the release as a Worker with static assets and no script, deployed by Workers
-   Builds from release/pages. The Worker in the dashboard must be named what `name` says. Cloudflare
-   builds from a clone, so .git is in the folder it uploads unless .assetsignore says otherwise. */
+/* Cloudflare serves the release as a Worker with static assets and no script, deployed with
+   `wrangler deploy` from the very folder the acceptance walk passed on (docs/release-pages.md).
+   ONE ADDRESS, ON PURPOSE: a library lives in the browser per origin, so every extra address a
+   Worker answers on -- www, the free *.workers.dev name, preview URLs -- is somewhere a player could
+   build a library that crankmagic.com cannot see. The Worker answers on crankmagic.com alone (a
+   custom domain, which also makes its DNS record and certificate); www should redirect, not serve.
+   .assetsignore keeps a clone's .git, wrangler's own .wrangler scratch folder (it writes one into the
+   folder it deploys from, and its debug log walks it with the assets) and the configuration off the site. */
 export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
 export const HOST_FILES = {
-  cloudflare: ({date}) => ({
-    "wrangler.jsonc": `{\n  "name": "crankmagic",\n  "compatibility_date": "${date}",\n  "assets": {"directory": "./"}\n}\n`,
-    ".assetsignore": ".git\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n",
+  cloudflare: ({date, origin}) => ({
+    "wrangler.jsonc": JSON.stringify({
+      name: "crankmagic",
+      compatibility_date: date,
+      assets: {directory: "./"},
+      routes: [{pattern: new URL(origin).host, custom_domain: true}],
+      workers_dev: false,
+      preview_urls: false,
+    }, null, 2) + "\n",
+    ".assetsignore": ".git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n",
   }),
 };
 
@@ -224,8 +236,12 @@ export function verify(built, profile) {
     let config = null;
     try {config = JSON.parse(built.get("wrangler.jsonc")?.toString("utf8") || "");} catch {}
     if (!config || config.name !== "crankmagic" || config.assets?.directory !== "./" || config.main) problems.push("wrangler.jsonc does not serve the release as static files from the Worker named crankmagic");
+    const host = profile.origin ? new URL(profile.origin).host : "";
+    const routes = config?.routes || [];
+    if (host && !(routes.length === 1 && routes[0].pattern === host && routes[0].custom_domain === true)) problems.push(`wrangler.jsonc does not answer on ${host} alone, as a custom domain`);
+    if (config && (config.workers_dev !== false || config.preview_urls !== false)) problems.push("wrangler.jsonc leaves a workers.dev or preview address open -- a second origin, with its own browser storage");
     const ignored = (built.get(".assetsignore")?.toString("utf8") || "").split("\n");
-    for (const must of [".git", "wrangler.jsonc"]) if (!ignored.includes(must)) problems.push(`.assetsignore does not keep ${must} off the site`);
+    for (const must of [".git", ".wrangler", "wrangler.jsonc"]) if (!ignored.includes(must)) problems.push(`.assetsignore does not keep ${must} off the site`);
   }
   if (profile.origin) for (const p of PAGES) {
     const text = built.get(p)?.toString("utf8") || "";
@@ -254,7 +270,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   }
   built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
-  if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date}))) built.set(f, Buffer.from(text));
+  if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date, origin: origin || FIRST_PUBLIC}))) built.set(f, Buffer.from(text));
   return {built, problems: verify(built, profile), version, mentions, reachedFrom};
 }
 

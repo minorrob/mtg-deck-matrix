@@ -43,7 +43,7 @@ any provider. Prices checked 2026-09-24.
 | Need | Cloudflare | Cost while not commercial |
 |---|---|---|
 | Domain + DNS | Registrar (at cost) | crankmagic.com **$10.46/yr** |
-| The web app | Workers static assets, deployed from `release/pages` | $0 (static requests are free; 25 MiB per file) |
+| The web app | The Worker `crankmagic`: static assets on crankmagic.com alone, deployed with `wrangler deploy`; `release/pages` records each deploy | $0 (static requests are free; 25 MiB per file) |
 | Sign-in | Access (Zero Trust), email one-time code or Google | $0 up to 50 users |
 | Accounts, library sync | Workers + D1 | $0 (100k requests/day; 5 GB) |
 | Backups, files | R2 | $0 to 10 GB |
@@ -51,20 +51,24 @@ any provider. Prices checked 2026-09-24.
 | AI gate | a Worker holding the key as an encrypted secret; allowlist in D1; optionally AI Gateway for rate limits and spend | $0 at Cloudflare; API usage billed by Anthropic, capped in its console |
 
 **What Rob does himself** (an agent never creates accounts, enters payment details, passwords or keys):
-create the Cloudflare account with two-factor; register crankmagic.com; later, authorize Cloudflare's GitHub
-app on this repository (so a push to `release/pages` deploys), add the Anthropic key as a Worker secret, and
-keep the AI allowlist. **What the session does**: the code, the configuration files, the deploy
-configuration, and the exact clicks for each of Rob's steps.
+created the Cloudflare account and registered crankmagic.com; **signed wrangler in on Personal-HP
+(2026-09-24)** — `C:\Users\robmi\CrankMagic\workbench\cloudflare`, OAuth, revocable with `wrangler logout` —
+which lets a session deploy Workers, attach custom domains and create D1 databases; later, any payment (Workers
+Paid), the Anthropic key (`wrangler secret put`, typed by him), the Zero Trust sign-in settings (outside
+wrangler's reach) and the AI allowlist. **What the session does**: the code, the configuration, the deploys,
+and the exact clicks for each of Rob's steps. The Cloudflare plugin for Claude Code (skills, and the
+`mcp.cloudflare.com` server, which asks Rob to approve it on first use) was installed the same day, from
+Cloudflare's own `developers.cloudflare.com/agent-setup/prompt.md` at Rob's request.
 
 ## Stage 1 — the production release (in progress)
 
 1. PR #360: the build switch, Coming Soon, the version mark, American English on screen, the acceptance walk.
 2. Build from `main`, walk it, commit and push `release/pages` (`docs/release-pages.md`).
-3. **Rob confirms**, then GitHub Pages publishes `release/pages` — the release is live at the github.io address.
-4. When crankmagic.com is registered: host `release/pages` on Cloudflare at crankmagic.com
-   (`--origin https://crankmagic.com/`), and turn the github.io address into a *CrankMagic has moved* page
-   that still opens the library saved there, so anyone who used it can save a backup and restore it on the
-   new address. The user base is small today, which is why the move is now rather than later.
+3. Rob registered crankmagic.com and asked to make the cloud move at once, so GitHub Pages was skipped: the
+   release is deployed to the Worker `crankmagic` on crankmagic.com (#361, and the custom domain after it).
+4. The github.io address still publishes `main`. Rob's call: turn it into a *CrankMagic has moved* page that
+   still opens the library saved there — so anyone who used it can save a backup and restore it on the new
+   address — or leave it.
 
 ## Stage 2 — Account Cloud (next)
 
