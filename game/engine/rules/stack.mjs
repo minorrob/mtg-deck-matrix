@@ -26,6 +26,7 @@
  */
 
 import {moveObject} from "../state/index.mjs";
+import {enteringModifications} from "./replacement.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -130,7 +131,21 @@ export function resolveTop(state, effect = null) {
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
     const to = entry.permanent ? "battlefield" : "graveyard";
-    moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
+       counters as ONE event, and the abilities that say so are on the spell, not on anything that
+       is on the battlefield yet. */
+    const object = state.objects[entry.objectId];
+    const entering = to === "battlefield"
+      ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
+        types: object.types, abilities: object.abilities})
+      : null;
+    const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    if (entering) {
+      if (entering.tapped) state.objects[arrived].tapped = true;
+      for (const [counter, count] of Object.entries(entering.counters)) {
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + count;
+      }
+    }
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
