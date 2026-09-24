@@ -1,0 +1,76 @@
+/* READY TO ADD (the pull sheet): one deck, grouped by where its cards are sitting right now.
+ *
+ * The deck page is organized by what the list asks for; the Collection by copy. Neither
+ * answers the question at the table, which is "go and get these": the ones on the bench,
+ * the ones in another deck's box, and the ones in this box that no longer belong. So this
+ * is the deck's reserved copies cut by location -- colour, then name inside each group,
+ * the way a binder is walked -- with a tick per row that records the walk as it happens.
+ *
+ * A tick is one `place`: the lot moves into the box, the model recomputes readiness, and
+ * the row stays where it was, greyed, so a reader looking down at the cards does not lose
+ * their place on the screen. Done rows are remembered only for this sitting; leave the
+ * page and the sheet is simply what is left. Print gets black on white with boxes to tick.
+ *
+ * SUBSTITUTES are the copies in this box that the list does not call for: they fill seats while
+ * the real cards are bought or on their way. They are listed, not marked for removal -- the
+ * first `remove` of them (a real copy is ready to take the seat, or the box holds more
+ * substitutes than empty seats) read "→ bench"; the rest read "stays for now". Any of them can
+ * be ticked out; the split only says which the library would choose.
+ *
+ * Reads readiness from collection-model.js (inBox, pullFromBench, pullFromOtherBox, standIns,
+ * remove) and commits through the same commands the Collection uses. */
+(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,note,commit,go,actions,views,$}=C;
+const PILE=['White','Blue','Black','Red','Green','Multiple','Colorless'],NAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green'};
+const pile=c=>{const ci=c.colorIdentity||[];return ci.length===0?'Colorless':ci.length>1?'Multiple':NAME[ci[0]]||'Colorless';};
+const order=(a,b)=>PILE.indexOf(pile(a.card))-PILE.indexOf(pile(b.card))||a.card.name.localeCompare(b.card.name);
+/* This sitting's ticks, per deck: lot id -> the row as it read when it was ticked. */
+let done={deckId:'',rows:new Map()};
+window.addEventListener('hashchange',()=>{if(C.route().view!=='pull')done={deckId:'',rows:new Map()};});
+function sheet(d){
+  const s=C.state,main=new Set(d.slots.filter(r=>r.purpose==='main').map(r=>r.id));
+  const reserved=s.lots.filter(l=>l.source==='owned'&&l.allocation?.deckId===d.id&&main.has(l.allocation.slotId));
+  const row=(l,group)=>({lotId:l.id,cardId:l.cardId,card:s.cards[l.cardId],quantity:l.quantity,group,box:l.location?.box||'',fromDeck:l.location?.kind==='deck'?M.deck(s,l.location.deckId):null});
+  const groups={bench:[],other:[],standin:[]};
+  for(const l of reserved){if(l.location?.kind==='deck'&&l.location.deckId===d.id)continue;if(l.location?.kind==='deck')groups.other.push(row(l,'other'));else groups.bench.push(row(l,'bench'));}
+  for(const l of s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id))groups.standin.push(row(l,'standin'));
+  /* Rows ticked this sitting stay in their group, greyed, at their old place in the order. */
+  if(done.deckId===d.id)for(const r of done.rows.values()){if(!groups[r.group].some(x=>x.lotId===r.lotId))groups[r.group].push({...r,done:true});}
+  for(const k of Object.keys(groups))groups[k].sort(order);
+  const ready=M.readiness(s,d);let out=ready.remove;for(const x of groups.standin){if(x.done)continue;x.stay=out<=0;out-=x.quantity;}
+  const waiting={ordered:s.lots.filter(l=>l.source==='ordered'&&l.allocation?.deckId===d.id&&main.has(l.allocation.slotId)).reduce((n,l)=>n+l.quantity,0),toBuy:M.readiness(s,d).toBuy};
+  return {groups,waiting,ready};
+}
+const GROUPS=[['bench','Add from the Bench',r=>C.pill(`Bench${r.box?' · '+e(r.box):''}`,'pull'),'Add','place'],['other','Move from another deck',r=>C.pill(`${e(r.fromDeck?r.fromDeck.name:'Another deck')}`,'pull'),'Move here','place'],['standin','Substitutes in this deck',r=>C.pill(r.stay?'Substitute · stays for now':'Substitute → Bench',r.stay?'standin':'remove'),'To bench','bench']];
+const live=rows=>rows.filter(r=>!r.done);
+function rowHTML(r,[,,where,label,op]){const n=live([r]).length?r.quantity:0;
+  return `<li class="cm-pull-row${r.done?' is-done':''}${r.stay?' is-stay':''}" data-lot="${e(r.lotId)}"><label class="cm-pull-tick"><input type="checkbox" data-pull-tick="${e(r.lotId)}" data-op="${op}" ${r.done?'checked disabled':''} aria-label="Found ${e(r.card.name)}"></label><span class="cm-pull-color">${C.colors(r.card.colorIdentity)}</span><button type="button" class="cm-card-name cm-pull-name" data-action="card" data-card="${e(r.cardId)}">${e(r.card.name)}${r.quantity>1?` <em>×${r.quantity}</em>`:''}</button><span class="cm-pull-where">${where(r)}</span>${r.done?'<span class="cm-pull-done">Done</span>':`<button type="button" class="v-button compact" data-action="pull-one" data-lot="${e(r.lotId)}" data-op="${op}">${label}</button>`}</li>`;}
+views.pull=async params=>{const d=M.deck(C.state,params.get('deck')||'');if(done.deckId!==d.id)done={deckId:d.id,rows:new Map()};
+  const {groups,waiting,ready:r}=sheet(d),left=Object.values(groups).reduce((n,g)=>n+live(g).reduce((k,x)=>k+x.quantity,0),0);
+  C.main.innerHTML=`<div class="cm-pull"><header class="cm-page-head cm-pull-head"><div><a class="cm-crumb" href="#decks">Decks</a><a class="cm-crumb" href="#decks?deck=${e(d.id)}">${e(d.name)}</a><h1>Ready to add</h1><p class="cm-pull-counts"><span>${r.sleeved} in the physical deck${r.standIns?` (${r.inBox} of the list)`:''}</span> · <span>${live(groups.bench).reduce((n,x)=>n+x.quantity,0)} from bench</span> · <span>${live(groups.other).reduce((n,x)=>n+x.quantity,0)} from other decks</span> · <span>${r.standIns} substitute${r.standIns===1?'':'s'}${r.remove?` (${r.remove} to take out now)`:''}</span> · <span>${waiting.ordered} ordered</span> · <span>${waiting.toBuy} to buy</span></p></div><div class="cm-actions">${b('Open deck','deck',{deck:d.id})}${b('Print','pull-print')}${b('Export','pull-export',{deck:d.id})}${left?b('Mark all added','pull-all',{deck:d.id},true):''}</div></header>`
+    +(left||Object.values(groups).some(g=>g.length)?'':note('Nothing to add: every owned copy reserved to this deck is already in it.'))
+    +GROUPS.map(g=>{const rows=groups[g[0]];if(!rows.length)return '';const n=live(rows).reduce((k,x)=>k+x.quantity,0);const why=g[0]==='standin'?`<p class="cm-pull-stay-note">${r.remove?`${r.remove} can come out now: ${r.swapReady?`${r.swapReady} real cop${r.swapReady===1?'y is':'ies are'} ready to go in`:''}${r.swapReady&&r.surplus?', ':''}${r.surplus?`${r.surplus} more than the list has seats for`:''}. `:''}${r.covered-r.swapReady>0?`${r.covered-r.swapReady} fill seats until their cards arrive.`:''}</p>`:'';const all=live(rows).filter(x=>!x.stay);return `<section class="cm-pull-group" data-group="${g[0]}"><h2>${e(g[1])} <span class="cm-pull-n">${n}</span>${all.length?`<button type="button" class="cm-text-button cm-pull-select-all" data-action="pull-group" data-group="${g[0]}" data-deck="${e(d.id)}" aria-label="Select all: ${e(g[1])}">Select all</button>`:''}</h2>${why}<ul class="cm-pull-list">${rows.map(x=>rowHTML(x,g)).join('')}</ul></section>`;}).join('')
+    +`<section class="cm-pull-group cm-pull-waiting"><h2>Waiting</h2><p>${waiting.ordered} ordered · ${waiting.toBuy} to buy. ${b('Buy list for this deck','deck-buy-list',{deck:d.id})}</p></section></div>`;
+  $('.cm-pull').addEventListener('change',ev=>{const tick=ev.target.closest('[data-pull-tick]');if(!tick||!tick.checked)return;tick.disabled=true;one(d,tick.dataset.pullTick,tick.dataset.op).catch(err=>{tick.checked=false;tick.disabled=false;C.notice(err.message,true);});});
+};
+/* One tick, one lot, one revision. The row is remembered before the commit so it can be
+   drawn greyed in its old place after the page re-renders. */
+async function one(d,lotId,op){const l=M.lot(C.state,lotId),{groups}=sheet(d),row=Object.values(groups).flat().find(x=>x.lotId===lotId);if(row)done.rows.set(lotId,{...row,done:false});
+  await commit(op==='bench'?{type:'place',lotId,quantity:l.quantity,confirmed:true}:{type:'place',lotId,deckId:d.id,quantity:l.quantity,confirmed:true});}
+actions['pull-one']=el=>{const d=M.deck(C.state,C.route().params.get('deck'));return one(d,el.dataset.lot,el.dataset.op);};
+/* SELECT ALL, ONE GROUP. The link beside a group's count ticks every remaining row in that
+   group in one revision: the bench's cards into the physical deck, another deck's cards
+   moved here, the substitutes that can come out to the bench. A substitute marked "stays
+   for now" is left alone, as Mark all added leaves it. One undo takes the whole group back. */
+actions['pull-group']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d),g=GROUPS.find(x=>x[0]===el.dataset.group),rows=g?live(groups[g[0]]).filter(x=>!x.stay):[];
+  if(!rows.length)throw Error('Nothing left to add in this group.');
+  for(const x of rows)done.rows.set(x.lotId,{...x,done:false});
+  const lotIds=rows.map(x=>x.lotId);return commit(g[4]==='bench'?{type:'bulk',op:'bench',lotIds,confirmed:true}:{type:'bulk',op:'place',deckId:d.id,lotIds,confirmed:true});};
+actions['pull-all']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d),into=[...live(groups.bench),...live(groups.other)].map(x=>x.lotId),out=live(groups.standin).filter(x=>!x.stay).map(x=>x.lotId);
+  if(!into.length&&!out.length)throw Error('Nothing left to add.');
+  const commands=[];if(into.length)commands.push({type:'bulk',op:'place',deckId:d.id,lotIds:into,confirmed:true});if(out.length)commands.push({type:'bulk',op:'bench',lotIds:out,confirmed:true});
+  for(const x of [...live(groups.bench),...live(groups.other),...live(groups.standin).filter(x=>!x.stay)])done.rows.set(x.lotId,{...x,done:false});
+  C.review(`Mark all found in ${d.name}’s physical deck`,note(`${into.length} record${into.length===1?'':'s'} go into the physical deck${out.length?` and ${out.length} come out to the bench`:''}. Reservations do not change; this records where the cards are.`),commands.length===1?commands[0]:{type:'batch',commands,summary:`Assembled ${d.name}: ${into.length} in, ${out.length} out`});};
+actions['pull-print']=()=>print();
+actions['pull-export']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d);const rows=GROUPS.flatMap(g=>live(groups[g[0]]).map(x=>({group:g[1],name:x.card.name,color:pile(x.card),quantity:x.quantity,from:g[0]==='standin'?'This deck':x.fromDeck?x.fromDeck.name:x.box?'Bench · '+x.box:'Bench',action:x.stay?'Keep for now':g[3]})));
+  C.download(d.name.replace(/[^\w-]+/g,'-')+'-ready-to-add.csv',C.E.csv(rows,[['group','Group'],['name','Card'],['color','Color'],['quantity','Copies'],['from','Where it is'],['action','Do']].map(([key,label])=>({key,label}))),'text/csv');};
+});

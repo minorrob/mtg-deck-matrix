@@ -1,0 +1,75 @@
+/* The simulator is deliberately NOT precached. sim-engine.js and its worker are ~120 KB
+ * that most sessions never run, and install does addAll -- so precaching them would make
+ * every first visit pay for a feature it may not use. They are not in FILES, so the fetch
+ * handler passes them straight to the network: available online, absent offline, which is
+ * the honest trade for a background measurement nobody can run offline anyway.
+ *
+ * Cache only public application resources. IndexedDB transactions remain the
+ * authority for user records; backups are user files, never service-worker data.
+ * A failed installation leaves the prior complete cache available.
+ *
+ * THE GRAPH IS NOT PRECACHED. data/graph.json (the cards, 16 MB) and data/graph-played.json
+ * (the co-play pairs, 21 MB) are in RUNTIME: served cache-first and kept in the data cache
+ * once a page has asked for them, but never fetched by install -- a first visit on a phone
+ * used to download 41 MB of data before Discover was ever opened. Only Discover asks for
+ * the pairs; the Lab and the facets ask for the cards.
+ *
+ * TWO CACHES, KEYED SEPARATELY, because one cache keyed on this file's own ?v= threw
+ * everything away on every change. The graph was the weight of it; a one-line CSS fix
+ * bumped the worker, invalidated the cache, and made the next visit re-download all of
+ * it. So the shell (pages, styles, modules, fonts, art) and the data files each get their
+ * own cache, and each is keyed on a hash of ITS OWN list rather than on the worker's
+ * version. Editing the CSS changes the shell key and leaves the data cache standing;
+ * refreshing the catalog changes the data key and leaves the shell standing. Neither key
+ * moves when the other list does, which is the whole point. */
+const SHELL = ['index.html', 'crankmagic.html', 'graph.html', 'crankmagic-route.js?v=1', 'crankmagic-design.css?v=16', 'crankmagic.css?v=202',
+ 'lineup-model.js?v=5', 'scryfall-client.js?v=10', 'card-link.js?v=1', 'deck-import.js?v=2', 'deck-sources.js?v=1', 'docx-writer.js?v=1', 'xlsx-writer.js?v=2', 'xlsx-reader.js?v=2', 'user-state.js?v=5',
+ 'crankmagic-assets.js?v=30', 'crankmagic-card-client.js?v=1', 'collection-model.js?v=40', 'collection-repository.js?v=4', 'collection-exchange.js?v=6', 'card-classify.js?v=10', 'graph-payload.js?v=3', 'card-catalog.js?v=22', 'draft-builder.js?v=8', 'crankmagic-glossary.js?v=2', 'guide-measured.js?v=1', 'crankmagic-graph.js?v=21', 'crankmagic-graph-scoped.js?v=1', 'crankmagic-rules.js?v=3', 'game-record.js?v=1', 'shop-export.js?v=1', 'crankmagic-decks.js?v=69', 'crankmagic-pull.js?v=11', 'crankmagic-sandbox.js?v=4', 'crankmagic-sea.js?v=2', 'crankmagic-change.js?v=3', 'crankmagic-change-ui.js?v=1', 'crankmagic-how.js?v=5', 'crankmagic-qr.js?v=1', 'crankmagic-groupings.js?v=1', 'crankmagic-collection.js?v=71', 'crankmagic-exchange-ui.js?v=11', 'crankmagic-orders.js?v=7', 'crankmagic-sim.js?v=21', 'crankmagic-lab.js?v=52', 'crankmagic-tour.js?v=17', 'crankmagic-facets.js?v=14', 'crankmagic-loops.js?v=4', 'crankmagic-lens.js?v=1', 'crankmagic-strategies.js?v=2', 'crankmagic-trace.js?v=3', 'crankmagic-tabletop.js?v=17', 'crankmagic-trade.js?v=2', 'crankmagic-discover.js?v=69', 'custom-model.js?v=3', 'crankmagic-advisor.js?v=10', 'collection-evidence.js?v=1', 'crankmagic-evidence.js?v=3', 'crankmagic-plan-editor.js?v=2', 'crankmagic-app.js?v=313', 'crankmagic-brand.js?v=4',
+ 'assets/mana/W.svg?v=1', 'assets/mana/U.svg?v=1', 'assets/mana/B.svg?v=1', 'assets/mana/R.svg?v=1', 'assets/mana/G.svg?v=1', 'assets/mana/2.svg?v=1', 'assets/mana/3.svg?v=1', 'assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2', 'assets/crankmagic/satoshi-400.woff2?v=1', 'assets/crankmagic/satoshi-500.woff2?v=1', 'assets/crankmagic/satoshi-700.woff2?v=1', 'assets/crankmagic/youngserif-400.woff2?v=1', 'assets/crankmagic/youngserif-400-ext.woff2?v=1',
+ 'assets/crankmagic/commander-atraxa.webp?v=1', 'assets/crankmagic/commander-krenko.webp?v=1', 'assets/crankmagic/commander-shadrix.webp?v=1', 'assets/crankmagic/commander-chulane.webp?v=1'];
+const DATA = ['data/commander-ranks.json?v=4', 'data/commander-glossary.json?v=2', 'data/commander-universe.json?v=4', 'data/flavor-names.json?v=4', 'data/cards.json?v=11', 'data/card-facts.json?v=8', 'data/deck-guides.json?v=4'];
+const RUNTIME = ['data/graph.json?v=21', 'data/graph-played.json?v=3', 'data/commander-strategies.json?v=4'];
+const FILES = SHELL.concat(DATA, RUNTIME);
+
+const PREFIX = 'crankmagic-public:' + new URL('./', self.location).pathname + ':';
+// FNV-1a over the list. Not a security hash: it only has to change when the list does,
+// and stay identical when it does not, without pulling in SubtleCrypto for a name.
+const keyFor = (name, list) => {
+  let h = 0x811c9dc5;
+  const text = list.join('\n');
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return PREFIX + name + ':' + h.toString(36);
+};
+const SHELL_CACHE = keyFor('shell', SHELL);
+const DATA_CACHE = keyFor('data', DATA.concat(RUNTIME));
+const CURRENT = [SHELL_CACHE, DATA_CACHE];
+const cacheFor = (relative) => (DATA.includes(relative) || RUNTIME.includes(relative) ? DATA_CACHE : SHELL_CACHE);
+
+/* Installed as two addAll calls rather than one, so a data file that 404s during a
+   deploy cannot cost the shell its cache -- and the other way round. Either failure
+   still rejects install, which leaves the previous complete caches serving. */
+self.addEventListener('install', event => event.waitUntil(Promise.all([
+  caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)),
+  caches.open(DATA_CACHE).then(c => c.addAll(DATA))
+])));
+self.addEventListener('activate', event => event.waitUntil(
+  caches.keys()
+    .then(keys => Promise.all(keys.filter(k => k.startsWith(PREFIX) && !CURRENT.includes(k)).map(k => caches.delete(k))))
+    .then(() => self.clients.claim())));
+self.addEventListener('fetch', event => {
+  const u = new URL(event.request.url);
+  if (event.request.method !== 'GET' || u.origin !== self.location.origin) return;
+  const relative = u.href.slice(new URL('./', self.location).href.length);
+  if (event.request.mode === 'navigate' && ['index.html', 'crankmagic.html', 'graph.html', 'crankmagic-route.js?v=1', 'index.html', 'graph.html'].includes(u.pathname.split('/').pop())) {
+    event.respondWith(fetch(event.request).catch(() => caches.open(SHELL_CACHE).then(c => c.match(u.pathname.endsWith('graph.html') ? 'graph.html' : 'index.html'))));
+    return;
+  }
+  if (!FILES.includes(relative)) return;
+  event.respondWith(caches.open(cacheFor(relative)).then(async c => (await c.match(event.request)) || fetch(event.request).then(response => {
+    if (response.ok) event.waitUntil(c.put(event.request, response.clone()));
+    return response;
+  })));
+});

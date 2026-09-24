@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" style="color-scheme:dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="crankmagic-play" content="coming-soon">
+  <meta name="crankmagic-version" content="29af00f · 2026-09-24">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10121b">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="CrankMagic — a private Commander deck workshop and card library. Plan, collect, assemble and explore your cards with local persistence.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://api.scryfall.com https://json.edhrec.com https://archidekt.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>CrankMagic · Commander workshop</title>
+  <link rel="canonical" href="https://minorrob.github.io/mtg-deck-matrix/">
+  <!-- ICONS, PNG ONLY. iOS builds a link preview by fetching the page's icon and image,
+       and an icon it cannot decode degrades the preview. Listing the PNG first fixed the
+       send -- Messages had been refusing to send at all rather than falling back to a
+       plain link -- but the WebP was still declared, and at 256x256 it was the LARGEST
+       icon on offer: a fetcher that picks the biggest icon rather than the first one it
+       understands still got the format that failed. There is nothing for a second icon
+       to add here, so there is no second icon. -->
+  <link rel="icon" type="image/png" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CrankMagic">
+  <meta property="og:title" content="CrankMagic">
+  <meta property="og:description" content="An intelligent MtG: Commander deck creator and card library. Plan, collect, assemble and explore your cards.">
+  <!-- og:url is this page, not the site root. A canonical that disagrees with the URL
+       being shared sends the preview fetcher somewhere else to try again. -->
+  <meta property="og:url" content="https://minorrob.github.io/mtg-deck-matrix/">
+  <!-- No ?v= on the preview assets: the version is for the app's own cache, and a query
+       string on an image is one more thing between a link previewer and a picture. -->
+  <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
+  <meta property="og:image:secure_url" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The CrankMagic wand logo over the name CrankMagic and its subtitle, wrapped in blue mist.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CrankMagic">
+  <meta name="twitter:description" content="An intelligent MtG: Commander deck creator and card library.">
+  <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
+  <link rel="stylesheet" href="crankmagic-design.css?v=16">
+  <link rel="stylesheet" href="crankmagic.css?v=202">
+  <script src="lineup-model.js?v=5" defer></script>
+  <script src="scryfall-client.js?v=10" defer></script>
+  <script src="card-link.js?v=1" defer></script>
+  <script src="deck-import.js?v=2" defer></script>
+  <script src="deck-sources.js?v=1" defer></script>
+  <script src="docx-writer.js?v=1" defer></script>
+  <script src="xlsx-writer.js?v=2" defer></script>
+  <script src="xlsx-reader.js?v=2" defer></script>
+  <script src="user-state.js?v=5" defer></script>
+  <script src="crankmagic-assets.js?v=30" defer></script>
+  <script src="crankmagic-card-client.js?v=1" defer></script>
+  <script src="collection-model.js?v=40" defer></script>
+  <script src="collection-repository.js?v=4" defer></script>
+  <script src="collection-exchange.js?v=6" defer></script>
+  <script src="card-classify.js?v=10" defer></script>
+  <script src="graph-payload.js?v=3" defer></script>
+  <script src="card-catalog.js?v=22" defer></script>
+  <script src="draft-builder.js?v=8" defer></script>
+  <script src="crankmagic-glossary.js?v=2" defer></script>
+  <script src="guide-measured.js?v=1" defer></script>
+  <script src="crankmagic-graph.js?v=21" defer></script>
+  <script src="crankmagic-graph-scoped.js?v=1" defer></script>
+  <script src="crankmagic-rules.js?v=3" defer></script>
+  <script src="game-record.js?v=1" defer></script>
+  <script src="shop-export.js?v=1" defer></script>
+  <script src="crankmagic-decks.js?v=69" defer></script>
+  <script src="crankmagic-pull.js?v=11" defer></script>
+  <script src="crankmagic-sandbox.js?v=4" defer></script>
+  <script src="crankmagic-sea.js?v=2" defer></script>
+  <script src="crankmagic-change.js?v=3" defer></script>
+  <script src="crankmagic-change-ui.js?v=1" defer></script>
+  <script src="crankmagic-how.js?v=5" defer></script>
+  <script src="crankmagic-qr.js?v=1" defer></script>
+  <script src="crankmagic-groupings.js?v=1"></script>
+<script src="crankmagic-collection.js?v=71" defer></script>
+  <script src="crankmagic-exchange-ui.js?v=11" defer></script>
+  <script src="crankmagic-orders.js?v=7" defer></script>
+  <script src="crankmagic-sim.js?v=21" defer></script>
+  <script src="crankmagic-lab.js?v=52" defer></script>
+  <script src="crankmagic-facets.js?v=14" defer></script>
+  <script src="crankmagic-loops.js?v=4" defer></script>
+  <script src="crankmagic-lens.js?v=1" defer></script>
+  <script src="crankmagic-strategies.js?v=2" defer></script>
+  <script src="crankmagic-trace.js?v=3" defer></script>
+  <script src="crankmagic-tabletop.js?v=17" defer></script>
+  <script src="crankmagic-trade.js?v=2" defer></script>
+  <script src="crankmagic-discover.js?v=69" defer></script>
+  <script src="custom-model.js?v=3" defer></script>
+  <script src="crankmagic-advisor.js?v=10" defer></script>
+  <script src="collection-evidence.js?v=1" defer></script>
+  <script src="crankmagic-evidence.js?v=3" defer></script>
+  <script src="crankmagic-plan-editor.js?v=2" defer></script>
+  <script src="crankmagic-tour.js?v=17" defer></script>
+<script src="crankmagic-app.js?v=313" defer></script>
+  <script src="crankmagic-brand.js?v=4" defer></script>
+</head>
+<body>
+<div id="matrix-v2" aria-label="CrankMagic">
+  <a class="cm-skip" href="#cm-main">Skip to content</a>
+  <div class="cm-layout"><aside class="cm-sidebar">
+    <div class="v-brand-block"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2" alt="" width="36" height="36"><div class="v-brand-copy"><div class="v-brand">CrankMagic</div><div class="v-aether-wrap"><canvas class="v-aether" width="190" height="56" aria-hidden="true"></canvas><canvas class="v-aether-front" width="190" height="56" aria-hidden="true"></canvas><button class="v-aether-toggle" type="button" aria-label="Pause aether animation" title="Pause aether animation">Ⅱ</button></div></div></div>
+    <div class="v-nav-track"><nav class="v-nav-links" aria-label="Main pages"><a href="#decks" data-nav="decks">Decks</a><a href="#cards" data-nav="cards">Library</a><a href="#discover" data-nav="discover">Explore</a><a href="#game" data-nav="game">Play</a></nav></div>
+    <div class="cm-nav-note"><strong>Your cards. Your library.</strong><p>Saved in this browser. Export a backup to keep a copy elsewhere.</p><p class="cm-data-age" id="cm-data-age" hidden></p><button class="cm-text-button" data-action="backup">Back up now ↗</button></div>
+    <div class="cm-rail-foot"><button class="v-button cm-rail-menu" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="Menu" title="Menu and user functions"><span class="cm-btn-icon" aria-hidden="true">☰</span><span class="cm-btn-label">Menu</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button><div id="cm-user-menu" class="cm-menu" popover><p id="cm-save-status">Opening local library…</p><div id="cm-data-dates" class="cm-data-dates"></div><p>This app</p><button data-action="tour"><span class="cm-btn-icon" aria-hidden="true">⚑</span>Take a Tour</button><button data-action="send-feedback"><span class="cm-btn-icon" aria-hidden="true">✉</span>Send Feedback</button><hr><p>Share CrankMagic</p><a id="cm-share-subscribe" href="#">Subscribe to updates</a><a id="cm-share-mail" href="#">Share by e-mail</a><button type="button" data-action="share-qr">Show a QR code</button><button type="button" data-action="share-trade">Publish your To Trade list</button><hr><p>Appearance</p><button data-action="toggle-theme">Switch light / dark theme</button><hr><p>Back up and restore</p><button data-action="backup">Save a backup file</button><button data-action="share-export">E-mail the export…</button><button data-action="mirror">Keep a file up to date automatically…</button><button data-action="restore">Restore from a backup file</button><button data-action="load-live">Load Live (from the repository)…</button><button data-action="export-excel">Export as Excel</button><hr><p>Undo</p><button data-action="undo" id="cm-undo">Undo last change</button><button data-action="history">See every change…</button><hr><p>Start over</p><button data-action="confirm-skips">Confirmations…</button><button data-action="reset-picks">Reset comparison picks</button><button data-action="clear" class="cm-danger">Clear all data</button></div></div>
+  </aside>
+    <main id="cm-main" tabindex="-1"><div class="v-panel cm-starting" role="status"><div class="v-eyebrow">Your Commander workshop</div><h1>Opening your library</h1><p>Loading local records and the public card catalog…</p></div></main>
+  </div>
+  <footer class="cm-legal" role="contentinfo"><p><strong>CrankMagic</strong> is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved or endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. &copy;Wizards of the Coast LLC.</p><p>Card data and images from Scryfall; commander ranks from EDHREC. Neither is affiliated with this project. Prices are dated snapshots, not offers. &copy; 2026 Rob Minor &mdash; all rights reserved.</p><p class="cm-legal-links"><a href="https://company.wizards.com/en/legal/fancontentpolicy" target="_blank" rel="noopener">Fan Content Policy</a><a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a><a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a><a href="LICENSE">License</a><a href="DISCLAIMER.md">Disclaimer</a><a href="THIRD-PARTY-NOTICES.md">Third-party notices</a></p></footer>
+  <div id="cm-notice" class="cm-toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="cm-dialog" class="v-dialog" aria-label="Review action"></dialog>
+  <div id="cm-tour-layer" class="cm-tour-layer" hidden>
+    <div class="cm-tour-scrim"></div>
+    <div id="cm-tour-spotlight" class="cm-tour-spotlight"></div>
+    <div id="cm-tour-popover" class="cm-tour-popover" popover="manual" role="dialog" aria-modal="false" aria-labelledby="cm-tour-title">
+      <p id="cm-tour-progress" class="cm-tour-progress"></p>
+      <h2 id="cm-tour-title"></h2>
+      <div id="cm-tour-copy" class="cm-tour-copy"></div>
+      <div class="cm-tour-acts">
+        <button type="button" class="v-button cm-tour-quiet" data-action="tour-close">Close</button>
+        <button type="button" class="v-button cm-tour-quiet" id="cm-tour-again" data-action="tour-again" hidden>Take another tour</button>
+        <span class="cm-tour-spacer"></span>
+        <button type="button" class="v-button" id="cm-tour-back" data-action="tour-back">Back</button>
+        <button type="button" class="v-button primary" id="cm-tour-next" data-action="tour-next">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="cm-glossary-tip" class="v-glossary-tip" role="tooltip" popover="manual"></div>
+</div>
+<noscript>CrankMagic needs JavaScript for local card management. Your existing browser data has not been changed.</noscript>
+</body>
+</html>
