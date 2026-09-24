@@ -60,15 +60,19 @@ and the exact clicks for each of Rob's steps. The Cloudflare plugin for Claude C
 `mcp.cloudflare.com` server, which asks Rob to approve it on first use) was installed the same day, from
 Cloudflare's own `developers.cloudflare.com/agent-setup/prompt.md` at Rob's request.
 
-## Stage 1 — the production release (in progress)
+## Stage 1 — the production release (shipped 2026-09-24)
 
-1. PR #360: the build switch, Coming Soon, the version mark, American English on screen, the acceptance walk.
-2. Build from `main`, walk it, commit and push `release/pages` (`docs/release-pages.md`).
-3. Rob registered crankmagic.com and asked to make the cloud move at once, so GitHub Pages was skipped: the
-   release is deployed to the Worker `crankmagic` on crankmagic.com (#361, and the custom domain after it).
-4. The github.io address still publishes `main`. Rob's call: turn it into a *CrankMagic has moved* page that
-   still opens the library saved there — so anyone who used it can save a backup and restore it on the new
-   address — or leave it.
+**Live at https://crankmagic.com** — `main` 38d1c71, `release/pages` 5325f67, Worker version `45386c3d`.
+
+1. #360: the build switch, Coming Soon, the version mark, American English on screen, the acceptance walk.
+2. Rob registered crankmagic.com and asked to make the cloud move at once, so GitHub Pages was skipped:
+   #361 (the Cloudflare build), #362 (crankmagic.com as the Worker's one address, deployed by wrangler),
+   #363 (Rob: *"I don't want plain HTTP and I do want the analytics"* — HSTS, and the Web Analytics beacon
+   allowed; Rob turned on Always Use HTTPS, so `http://` answers 301 to `https://`).
+3. Proven on the live site: `tests/uat/release-acceptance.mjs` 17/17; `.git`, the configuration, the tools and
+   Play all 404; the beacon loads and reports (`POST /cdn-cgi/rum` 204).
+4. Open, Rob's calls: the github.io address still publishes `main` — a *CrankMagic has moved* page that still
+   opens the library saved there, or leave it; `www.crankmagic.com` — a redirect to the root, or nothing.
 
 ## Stage 2 — Account Cloud (next)
 
