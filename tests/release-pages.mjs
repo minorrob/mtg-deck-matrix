@@ -8,7 +8,7 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
-import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES, FIRST_PUBLIC} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -51,6 +51,19 @@ ok(!listed.some((f) => profile.leaveOut.includes(f)), "and none of them is Play"
 const version = JSON.parse(built.get("version.json").toString("utf8"));
 ok(/^[0-9a-f]{40}$/.test(version.commit) && version.profile === "pages", "version.json names the commit and the profile");
 
+/* It lives at crankmagic.com, on Cloudflare (Rob, 2026-09-24: the domain is his, "make the cloud move now"). */
+for (const p of PAGES) {
+  const text = built.get(p).toString("utf8");
+  ok(text.includes('<link rel="canonical" href="https://crankmagic.com/'), `${p}'s canonical link is crankmagic.com, which the app reads its own address from`);
+  ok(!text.includes(FIRST_PUBLIC), `${p} no longer names the github.io address`);
+}
+eq(version.origin, "https://crankmagic.com/", "version.json says where it is published");
+const wrangler = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
+eq([wrangler.name, wrangler.assets, wrangler.main], ["crankmagic", {directory: "./"}, undefined], "wrangler.jsonc serves the release as static files, no script, from the Worker named crankmagic");
+const ignored = built.get(".assetsignore").toString("utf8").split("\n");
+ok([".git", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git and the configuration off the site");
+ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
+
 /* The checks fail when they should. */
 const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
 ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
@@ -59,6 +72,9 @@ ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().
 ok(broken((m) => m.set("tools/release-pages.mjs", Buffer.from(""))).some((p) => p.includes("never ships")), "a tool in the release is named");
 ok(broken((m) => m.set("crankmagic.html", Buffer.from(m.get("crankmagic.html").toString().replace("connect-src 'self'", "connect-src 'self' http://127.0.0.1:8768")))).some((p) => p.includes("127.0.0.1:8768")), "a page that can reach a game host again is named");
 assert.throws(() => transform("index.html", "<html><head></head></html>", {profile, version: "x", origin: ""}), /nothing to change/, "a page without <meta charset> is refused, not half-edited"); checks++;
+ok(broken((m) => m.set(".assetsignore", Buffer.from("wrangler.jsonc\n"))).some((p) => p.includes(".git")), "an .assetsignore that would publish .git is named");
+ok(broken((m) => m.set("data/huge.json", Buffer.alloc(25 * 1024 * 1024 + 1))).some((p) => p.includes("25 MiB")), "a file over Cloudflare's limit is named");
+ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('href="https://crankmagic.com/"', `href="${FIRST_PUBLIC}"`)))).some((p) => p.includes("canonical")), "a page whose canonical link is not crankmagic.com is named");
 
 /* The walk reads what the app would load, not what its comments talk about. */
 const have = new Set(["assets/mana/W.svg", "assets/mana/U.svg", "assets/mana/x.png", "docs/plan.md", "data/cards.json"]);

@@ -62,7 +62,21 @@ export const PROFILES = {
     play: "coming-soon",
     leaveOut: ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"],
     dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com"],
+    /* Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now. */
+    origin: "https://crankmagic.com/",
+    host: "cloudflare",
   },
+};
+
+/* Cloudflare serves the release as a Worker with static assets and no script, deployed by Workers
+   Builds from release/pages. The Worker in the dashboard must be named what `name` says. Cloudflare
+   builds from a clone, so .git is in the folder it uploads unless .assetsignore says otherwise. */
+export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
+export const HOST_FILES = {
+  cloudflare: ({date}) => ({
+    "wrangler.jsonc": `{\n  "name": "crankmagic",\n  "compatibility_date": "${date}",\n  "assets": {"directory": "./"}\n}\n`,
+    ".assetsignore": ".git\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n",
+  }),
 };
 
 const git = (...args) => execFileSync("git", ["-C", ROOT, ...args], {encoding: "utf8", maxBuffer: 1 << 28}).trim();
@@ -205,6 +219,19 @@ export function verify(built, profile) {
     if (!/<meta name="crankmagic-version" content="[^"]+">/.test(text)) problems.push(`${p} does not say which version it is`);
     for (const src of profile.dropConnect) if (text.includes(src)) problems.push(`${p} still allows ${src}`);
   }
+  if (profile.host === "cloudflare") {
+    for (const [f, body] of built) if (body.length > CLOUDFLARE_MAX_FILE) problems.push(`${f} is ${(body.length / 1048576).toFixed(1)} MB, over Cloudflare's 25 MiB per file`);
+    let config = null;
+    try {config = JSON.parse(built.get("wrangler.jsonc")?.toString("utf8") || "");} catch {}
+    if (!config || config.name !== "crankmagic" || config.assets?.directory !== "./" || config.main) problems.push("wrangler.jsonc does not serve the release as static files from the Worker named crankmagic");
+    const ignored = (built.get(".assetsignore")?.toString("utf8") || "").split("\n");
+    for (const must of [".git", "wrangler.jsonc"]) if (!ignored.includes(must)) problems.push(`.assetsignore does not keep ${must} off the site`);
+  }
+  if (profile.origin) for (const p of PAGES) {
+    const text = built.get(p)?.toString("utf8") || "";
+    if (!text.includes(`<link rel="canonical" href="${profile.origin}`)) problems.push(`${p}'s canonical link is not ${profile.origin}`);
+    if (text.includes(FIRST_PUBLIC)) problems.push(`${p} still names ${FIRST_PUBLIC}`);
+  }
   /* The service worker's lists are the app's own statement of what it fetches: all must be here. */
   const sw = built.get("crankmagic-sw.js")?.toString("utf8") || "";
   for (const m of sw.matchAll(/'([^'\s]+?)(?:\?v=\d+)?'/g)) if (/\.[a-z0-9]+$/i.test(m[1]) && !files.has(m[1]) && !/^https?:/.test(m[1])) problems.push(`crankmagic-sw.js lists ${m[1]}, which the release does not have`);
@@ -218,6 +245,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   const {files, problems, mentions, reachedFrom} = walk(source, profile);
   if (problems.length) return {problems};
   const short = source.commit.slice(0, 7), version = `${short} · ${source.date}`;
+  origin ||= profile.origin || "";
   const built = new Map();
   source.readMany(files);
   for (const f of files) {
@@ -226,6 +254,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   }
   built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
+  if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date}))) built.set(f, Buffer.from(text));
   return {built, problems: verify(built, profile), version, mentions, reachedFrom};
 }
 

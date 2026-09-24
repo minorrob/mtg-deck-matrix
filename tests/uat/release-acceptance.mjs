@@ -60,10 +60,13 @@ try {
   ok((await library()).decks.length === 0, "the release opens on a fresh, empty library");
 
   if (RELEASE) {
-    /* The release names itself. */
+    /* The release names itself, and shares the address it is published at -- the canonical link --
+       not whatever address this copy happens to be open on. */
     await click("Menu");
     const version = (await page.locator("#cm-user-menu .cm-version").innerText()).replace(/\s+/g, " ").trim();
     ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `the Menu names this release: ${version}`);
+    const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
+    ok((await page.locator("#cm-share-mail").getAttribute("href")).includes(encodeURIComponent(home)), `the share link carries the published address, ${home}`);
     await shot("01-menu-version");
     await page.keyboard.press("Escape");
 

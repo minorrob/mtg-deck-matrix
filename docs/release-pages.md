@@ -1,8 +1,10 @@
 # The production release
 
 **What it is.** The web app and nothing else — no game host, no Forge, no engine, no tools, tests or
-documents — built from one commit of `main` by `tools/release-pages.mjs` and published from the
-`release/pages` branch. Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
+documents — built from one commit of `main` by `tools/release-pages.mjs`, committed to the `release/pages`
+branch, and served by **Cloudflare at https://crankmagic.com/**: a Worker with static assets and no script,
+which Workers Builds deploys on every push to `release/pages` (production branch `release/pages`, preview
+builds off). Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
 Play option (on that tab it should say 'Coming Soon'). I want to use everything else that exists in
 CrankMagic today as a production release."*
 
@@ -38,8 +40,8 @@ UAT_BASE=http://crankmagic.localhost:8790 UAT_LIVE_NETWORK=1 UAT_SHOTS=<folder> 
 node tools/release-pages.mjs --commit
 git push origin release/pages
 
-# 5. walk the live site
-UAT_BASE=<the public address> UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
+# 5. Cloudflare deploys the push; walk the live site
+UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
 ```
 
 `tests/uat/release-acceptance.mjs` is Rob's confirmation, as he worded it: *"testing the full deck creation,
@@ -59,7 +61,8 @@ read.
 | Marks | `<meta name="crankmagic-play" content="coming-soon">` (the app answers with the Coming Soon tab) and `<meta name="crankmagic-version">` (the Menu shows it); `version.json` at the root |
 | Tightens | the security policy's `connect-src` loses `http://127.0.0.1:8768` and `https://*.trycloudflare.com` |
 | Never ships | `game/ tools/ tests/ docs/ design/ prototype/ graph/ payload*/ schema/ .github/ .claude/ data/engine/ data/source/ data/archive/ data/game-logs/` |
-| Moves the address | `--origin https://crankmagic.com/` rewrites the canonical and social links; the app reads its own address from the canonical link |
+| Moves the address | the profile's `origin`, `https://crankmagic.com/`, replaces the github.io address in the canonical and social links (`--origin` overrides it); the app reads its own address from the canonical link |
+| Hosts | `wrangler.jsonc` (the Worker `crankmagic`, static assets from `./`, no script) and `.assetsignore` (keeps the clone's `.git` and the configuration off the site); every file must fit Cloudflare's 25 MiB |
 
 ## Known limits
 
