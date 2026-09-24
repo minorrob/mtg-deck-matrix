@@ -2,11 +2,11 @@
 
 | | |
 | --- | --- |
-| **Holder** | Claude Code on Personal-HP |
-| **Branch** | `claude/engine-hosting`, draft PR #359. **8768 is not running** (nothing listening, checked 2026-09-24); the next start picks up the new logo. |
+| **Holder** | Free — `claude/engine-hosting` is draft PR #359, pushed, clean, ready for review |
+| **Branch** | `claude/engine-hosting` (#359). **8768 is not running**; the next start picks up the new logo. The spare host this session used on 8778 is stopped. |
 | **Since** | 2026-09-24 |
-| **Doing** | Picking up `docs/handoff-2026-09-24.md`. First act: the two browser suites were red at `ad65ad7` with the `*_REQUIRED` flags set (the rail is hidden on 127.0.0.1 and the harness served from there). Fixed in the harness at `0ac77f8`; the full gate passes, 137 suites. |
-| **Next for whoever picks this up** | The handoff's outstanding list: the new table design (`docs/design/2026-09-24-table/`) is not built; **the local host is not the app's lobby** (`docs/plan-web-to-local-table-2026-09-21.md`, five pieces, none started); horizontal scroll for zones that outgrow two rows; the Load pane's empty list is unproven. |
+| **Doing** | Nothing. The second session of 2026-09-24 reworked the board with Rob screenshot by screenshot: one card size (the commander's) on every mat, the battlefield's reading-order rules with creatures first, basic-land piles, a working board-size bar and pane divider, a hand with its own size, a one-row table notice — and found the four-up had been blank since `c115df4`, which it is not now. **`docs/decisions-2026-09-24.md` is the record; the second half of `docs/handoff-2026-09-24.md` is what is proven, how, and what is left.** |
+| **Next for whoever picks this up** | **The local host is still not the app's lobby** (`docs/plan-web-to-local-table-2026-09-21.md`, five pieces, none started) — Rob believes it is. Then the Load pane's empty list (unproven cause). To see the board with a developed battlefield without Forge: `node game/tools/board-shots.mjs` against a spare host; it fails on an off-size card or one below an edge. |
 
 ## The engine has started — phase 0 done, phase 1 next
 
