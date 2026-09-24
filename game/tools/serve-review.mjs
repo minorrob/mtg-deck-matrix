@@ -59,7 +59,12 @@ files.set('/unresolved.mjs',['game/ui/unresolved.mjs','text/javascript']);
 files.set('/setup.css',['game/ui/setup.css','text/css']);
 files.set('/online.css',['game/ui/online.css','text/css']);
 files.set('/handoff.mjs',['game/ui/handoff.mjs','text/javascript']);
-files.set('/crankmagic-logo.webp',['assets/crankmagic/crankmagic-logo-wand-v3-256.webp','image/webp']);
+files.set('/crankmagic-logo.webp',['assets/crankmagic/crankmagic-logo-gear-v4-256.webp','image/webp']);
+/* The five card backs, one per mana color. A seat is given one when its deck locks in, drawn
+   from its commander's color identity, so the library pile shows the back of a real card rather
+   than a CSS hatch. `tan` in the source art is the white one -- the art is cream, not white. */
+for(const color of ['white','blue','black','red','green'])
+  files.set(`/card-backs/card-back-${color}.webp`,[`game/ui/assets/card-backs/card-back-${color}.webp`,'image/webp']);
 files.set('/crankmagic-online-overview.html',['game/docs/crankmagic-online-overview.html','text/html']);
 files.set('/ui/assets/playmats/mountain-horizon.png',['game/ui/assets/playmats/mountain-horizon.png','image/png']);
 for(const name of ['commander-chulane','commander-atraxa','commander-krenko'])files.set('/assets/crankmagic/'+name+'.webp',['assets/crankmagic/'+name+'.webp','image/webp']);
@@ -70,7 +75,7 @@ for(const path of publicPaths)files.set('/app/'+path,[path,mime[path.split('.').
 files.set('/app/',['index.html','text/html']);
 const guestAssets=new Map([
   ...['guest.html','guest.mjs','guest.css','connection.mjs','unresolved.mjs','review.html','guest-play-boot.js','play-entry.mjs','guest-live.mjs','review.mjs','review.css','setup.mjs','setup.css','online.css','mats.css','playmats.mjs','mana-status.mjs','play-guidance.mjs','live-poll.mjs','action-policy.mjs','table-notices.mjs','card-onboarding.mjs','play-audio-rules.mjs','play-audio.mjs','play-audio-events.mjs','card-layout.mjs','handoff.mjs'].map(name=>[name,`game/ui/${name}`]),
-  ['crankmagic-design.css','crankmagic-design.css'],['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-wand-v3-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
+  ['crankmagic-design.css','crankmagic-design.css'],['crankmagic-logo.webp','assets/crankmagic/crankmagic-logo-gear-v4-256.webp'],['rob-playmat.png','game/ui/assets/rob-playmat.png'],
   ['card-classify.js','card-classify.js'],['crankmagic-facets.js','crankmagic-facets.js'],['crankmagic-qr.js','crankmagic-qr.js'],['cards.json','data/cards.json'],['graph.json','data/graph.json'],
   ...['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'].map(name=>[`playmat:${name}`,`game/ui/assets/playmats/${name}.png`])
 ]);

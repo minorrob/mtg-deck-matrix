@@ -861,7 +861,7 @@
       : hostReachable === false ? 'Every seat is ready. Open the local host to play.'
       : 'Every seat is ready. Starting…';
     return `<section class="cm-table-center" aria-label="Table rules">
-      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" aria-hidden="true">
+      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
       <div class="cm-table-head"><h2>Table rules</h2><p class="cm-table-setby-top">set by the host</p></div>
       <dl class="cm-table-rules">
         <div><dt>Bracket</dt><dd>${e(String(lobby.bracket || 3))}</dd></div>

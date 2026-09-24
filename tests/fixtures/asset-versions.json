@@ -17,9 +17,9 @@
       "version": 1,
       "sha": "ace1b51076ede727"
     },
-    "assets/crankmagic/crankmagic-logo-wand-v3-256.webp": {
+    "assets/crankmagic/crankmagic-logo-gear-v4-256.webp": {
       "version": 1,
-      "sha": "06ab25dd3f2bc561"
+      "sha": "ba3b284d40b6dc58"
     },
     "assets/crankmagic/satoshi-400.woff2": {
       "version": 1,
@@ -110,8 +110,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 301,
-      "sha": "f6b07a6f419dfb27"
+      "version": 302,
+      "sha": "fff959899d9d2b8c"
     },
     "crankmagic-assets.js": {
       "version": 30,
@@ -162,8 +162,8 @@
       "sha": "4435ee146e381a16"
     },
     "crankmagic-game.js": {
-      "version": 73,
-      "sha": "e7d3b6875a36043e"
+      "version": 74,
+      "sha": "c62c0943b29ea418"
     },
     "crankmagic-glossary.js": {
       "version": 2,
@@ -250,8 +250,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 301,
-      "sha": "6ff410a507719784"
+      "version": 302,
+      "sha": "ace85bff82775685"
     },
     "crankmagic-tabletop.js": {
       "version": 17,

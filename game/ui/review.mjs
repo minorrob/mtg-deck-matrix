@@ -198,6 +198,34 @@ const noticeSeen=new Set(),noticeQueue=[],cardMemory=new Map();let noticePrimed=
    here -- otherwise the one notice that most needs a picture, "your creature died", has none. */
 function rememberCards(f){for(const p of f?.players||[])for(const z of Object.values(p.zones||{}))for(const c of z.cards||[])if(c?.cardId!=null&&!cardMemory.has(c.cardId))cardMemory.set(c.cardId,c);}
 function cardById(id){return id==null?null:cardMemory.get(id)||null;}
+
+/* THE BACK OF A SEAT'S DECK, IN ONE OF ITS COMMANDER'S COLORS.
+ *
+ * Rob, 2026-09-23: "The card background should be assigned per player when they've locked in their
+ * deck, and it should be chosen randomly from among the mana colors of their deck's commander."
+ *
+ * The color identity IS the deck locking in -- it comes from the commander on the validated deck,
+ * so there is nothing extra to store on the table and nothing to keep in step with it. The pick is
+ * random in the sense that matters (nobody chose it) but derived from the match and the seat rather
+ * than Math.random, so a seat keeps the same back for the whole game, across every re-render and a
+ * replay of the same match. A back that changed every frame would be a flicker, not a feature.
+ *
+ * A colorless commander has no color to draw from; it gets the cream one, which is the closest
+ * the five come to neutral. */
+const IDENTITY_BACK={W:'white',U:'blue',B:'black',R:'red',G:'green'};
+function commanderIdentityOf(p){
+  return p.commanderIdentity
+    ||(p.playerId===viewerSeatId?data.pod.seats[0]?.deck.commanders.flatMap(c=>c.colorIdentity||[])
+      :p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]))||[];
+}
+function cardBackFor(p){
+  const identity=[...new Set(commanderIdentityOf(p))].filter(c=>IDENTITY_BACK[c]);
+  if(!identity.length)return '/card-backs/card-back-white.webp';
+  const key=String(live?.matchId||data.pod?.podHash||'seat')+':'+p.playerId;
+  let h=2166136261;
+  for(let i=0;i<key.length;i+=1){h^=key.charCodeAt(i);h=Math.imul(h,16777619);}
+  return `/card-backs/card-back-${IDENTITY_BACK[identity[Math.abs(h)%identity.length]]}.webp`;
+}
 const noticeBox=el('div','table-notice');noticeBox.id='table-notice';noticeBox.hidden=true;noticeBox.setAttribute('role','alertdialog');noticeBox.setAttribute('aria-live','assertive');document.body.append(noticeBox);
 function showNextNotice(){
   const row=noticeQueue[0];
@@ -470,7 +498,7 @@ function pileButton(p,zone,label,cls){
   if(zone==='Command'&&p.playerId===viewerSeatId&&face&&live){enableHandDrag(pile,face);pile.addEventListener('dblclick',()=>{closeCardMenu();playCard(face);});pile.title='Drag your commander onto your mat to cast; mana and commander tax are paid automatically.';}
   if(zone==='Library'&&p.playerId===viewerSeatId){pile.addEventListener('dblclick',drawStepCard);if(live?.ui.choice?.mode==='draw')pile.classList.add('draw-ready');pile.title='Double-click to take your pending draw-step draw';}
   pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
-  if(zone==='Library'&&z.count){const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
+  if(zone==='Library'&&z.count){const back=el('img','library-back');back.draggable=false;back.src=cardBackFor(p);back.alt='';pile.append(back);}
   else if(face?.art){const art=el('img');art.draggable=false;art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}else pile.append(el('span','pile-empty',z.count?'◇':'—'));
   pile.append(el('span','pile-count',z.count),el('span','mat-zone-label',label));return pile;
 }
