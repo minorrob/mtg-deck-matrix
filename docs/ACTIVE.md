@@ -2,11 +2,11 @@
 
 | | |
 | --- | --- |
-| **Holder** | Free — `claude/engine-hosting` is draft PR #359, pushed, clean, ready for review |
-| **Branch** | `claude/engine-hosting` (#359). **8768 is not running**; the next start picks up the new logo. The spare host this session used on 8778 is stopped. |
+| **Holder** | **Claude Code on Personal-HP** — Rob's three-stage program, Stage 1 |
+| **Branch** | `claude/engine-hosting` (#359), being merged to `main`; then the Pages release branch |
 | **Since** | 2026-09-24 |
-| **Doing** | Nothing. The second session of 2026-09-24 reworked the board with Rob screenshot by screenshot: one card size (the commander's) on every mat, the battlefield's reading-order rules with creatures first, basic-land piles, a working board-size bar and pane divider, a hand with its own size, a one-row table notice — and found the four-up had been blank since `c115df4`, which it is not now. **`docs/decisions-2026-09-24.md` is the record; the second half of `docs/handoff-2026-09-24.md` is what is proven, how, and what is left.** |
-| **Next for whoever picks this up** | **Two plans, in this order, neither started.** `docs/plan-one-source-2026-09-24.md` — make github.io and the local host run the same `main` (Phase 0 merges #358 and #359; needs Rob's go). Then **`docs/handoff-2026-09-24-direction.md`.** Rob's direction (2026-09-24): github.io does everything but play; the local host shows only a rules-only pre-lobby, "Enter Lobby", the lobby, loading a deck backup, exporting game results, and the game. It lists what exists against that (measured), three decisions to put to Rob before building, and the work in order. First: those three decisions, then piece 1 — one pre-game flow. |
+| **Doing** | **Rob, 2026-09-24: "Ok, I'm done with Forge."** Three stages: (1) github.io becomes a production release of the web app minus Play, whose tab says "Coming Soon", published from a release branch that holds only the web app, after the deck creation, testing, exploring and acquiring journeys are tested; (2) *Account Cloud CrankMagic minus Play* — accounts, persistence, cloud storage, runtime — on its own branch, with Rob buying the cloud infrastructure on this session's guidance; (3) *Play with CrankMagic*, branched from (2): gameplay on the own engine, AI API calls behind an allowlist Rob controls, AI card reconciliation, pushed to production on that infrastructure. Nothing from (2) or (3) merges to `main` until the end of (3). Rob chose (AskUserQuestion): the release holds **only the web app**; the session switches the Pages source **after the tests, confirming first**; `main` is brought up to date by **merging the PRs and auditing every branch**. Progress: #358 merged (`fdc85d5`); #359 next. |
+| **Next for whoever picks this up** | Ask the holder. Superseded by Rob's pivot: `docs/plan-one-source-2026-09-24.md` Phases 1–2 (the local host playing `main`) and the local-host half of `docs/handoff-2026-09-24-direction.md`; both stay as the record of what was measured. |
 
 ## The engine has started — phase 0 done, phase 1 next
 
