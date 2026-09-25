@@ -277,7 +277,7 @@ That is the M11 page's missing half: **the facts behind the drawings, and the cu
 5. **Privacy.** An `.engramclassify` file marks what must not reach a shared page (the person-level data, the secret names) as confidential.
 
 **What it needs:**
-- **Rob installs it**, or approves the install: `/plugin marketplace add <path to a clone of minorrob/engram>`, then `/plugin install engram@engram`. It is his repository, and installing a plugin changes the machine's Claude Code configuration.
+- **Installing it is approved (Rob, 2026-09-25), and it runs in a cloud session, never on the laptop.** The steps are `docs/handoff-2026-09-25.md` §10: clone `minorrob/engram` beside this repository, then `/plugin marketplace add <absolute path>` and `/plugin install engram@engram`.
 - Run `vendor_deps` once for the TS/JS extractor, since this app is JavaScript.
 - A small `.kg/schema-ext.yaml` for the kinds this system has and the base schema lacks: D1 tables and fields, Worker routes, R2 objects, Durable Object rooms, and outside data sources. The data schema view and the color-coding of outside sources hang on those kinds.
 - The generated `.kg/` is committed under `docs/architecture/`, so the page and its facts travel with the repository.
@@ -314,7 +314,7 @@ That is the M11 page's missing half: **the facts behind the drawings, and the cu
 | --- | --- |
 | Now (M1) | The r3 type (satoshi-900) · the landing page's audience (invite-only or open) · "Get notified" · where the undrawn Menu entries go · EUR and Delete account · Merge on restore · the land icon |
 | Now (M2) | Turn on R2 · the token · the schedule |
-| Now (M11) | Install engram, Rob's own (`minorrob/engram`), for the architecture page's facts |
+| Now (M11) | The page's go. Engram is approved (2026-09-25), to run in a cloud session |
 | Now (M4) | Forge's role (drop phase 5?) · unsupported cards in Play v1 |
 | Soon (M3) | The alert e-mail · the workbook's path into his library |
 | M5 | Who plays v1 · Workers Paid · the guest and host journeys · End current game |
