@@ -71,9 +71,9 @@ test('combat recap retains assignments and actual damage types after combat ends
   assert.equal(result.combats[0].attacks[0].blockers[0].name,'Blocker');assert.match(result.recent[0].label,/2 combat infect damage to Krenko.*commander/);assert.equal(result.recent[0].phase,'COMBAT_DAMAGE');
 });
 
-test('cancelled unaffordable casts remain visible as failed attempts',()=>{
+test('canceled unaffordable casts remain visible as failed attempts',()=>{
   const result=summarizeEvents([{kind:'browser-cast-cancelled',eventId:'cancel:1',data:{turn:2,phase:'MAIN1',playerId:0,card:{cardId:1,name:'Public permanent',faceDown:false},cost:'{U}{G}'}}],visible);
-  assert.equal(result.counts.cancelledCasts,1);assert.equal(result.cards[0].cancelledCasts,1);assert.match(result.recent[0].label,/Cast cancelled.*required \{U\}\{G\}/);
+  assert.equal(result.counts.cancelledCasts,1);assert.equal(result.cards[0].cancelledCasts,1);assert.match(result.recent[0].label,/Cast canceled.*required \{U\}\{G\}/);
 });
 
 test('cast chains retain exact resolution links and repeated activity is evidence, not an invented infinite loop',()=>{

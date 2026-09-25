@@ -3,7 +3,7 @@
  * The Cards page has a list and a sheet; this is the view where the cards are cards. Every
  * pile is a query the model already answers: the status piles down front are the model's
  * own status vocabulary (M.STATUS) in its order, the Bench is the rail along the back, and
- * the group piles behind the status piles are one grouping at a time -- type, colour, deck,
+ * the group piles behind the status piles are one grouping at a time -- type, color, deck,
  * collection group, mechanic, role, Primary Purpose, mana value, price band -- the same
  * readers the list groups by (crankmagic-groupings.js) plus four the table adds.
  *
@@ -13,7 +13,7 @@
  * `mount(host, model, hooks, ui)` draws the mat: the slate, the dot grid, the ledge, the slots,
  * the placards -- the agreed mock-up (docs/mockups/tabletop-piles.html) -- and, from TB2, a
  * pile laid out in rows and columns with pages and a card size, ticks and a selection that
- * stands on the centre of the mat once the rest recombine (`pileOrder`, `layout` are pure);
+ * stands on the center of the mat once the rest recombine (`pileOrder`, `layout` are pure);
  * from TB3 the selection drags onto a pile under the drop-target contract (`accepts`, pure),
  * and the Move to… button lists the piles for a phone; TB4 adds the keyboard (arrows among
  * the piles and the cards, Space ticks, Enter chooses, PageUp and PageDown turn), the status
@@ -76,7 +76,7 @@
     return value(r, key);
   }
   /* A sort key for the band, so piles come out in a reader's order: statuses in the model's
-     order, colours in WUBRG, mana values numerically, price bands cheapest first, the rest by
+     order, colors in WUBRG, mana values numerically, price bands cheapest first, the rest by
      name with "No …" last. */
   function bandOrder(key, band, statusOrder) {
     const g = G();
@@ -496,7 +496,7 @@
      read from `ui`: at rest (TB1: the ledge, the arches, the status row); a pile OPEN (its
      cards in rows and columns on the stage with a page strip, the other group piles as a shelf
      of placards along the back, the status piles still down front); a SELECTION (the chosen
-     cards on the centre of the stage, large, with their facts beneath). Clicks reach the
+     cards on the center of the stage, large, with their facts beneath). Clicks reach the
      caller through hooks: onOpen(pileId|null), onPage(n), onSize(S|M|L), onTick(recordId),
      onSelect([recordId]), onClear(), onMenu(recordId, element), onGroupBy(key),
      onDrop(pileId, [recordId]) when the selection is dropped on an accepting pile,
@@ -691,7 +691,7 @@
 
        The scoreboard is the caller's -- the same `readiness` the deck page reads, computed on the
        sandbox's preview, so it shows where the reader WILL be if they confirm rather than where
-       they are (§2.14). This module lays it out and colours it; it does not do the arithmetic. */
+       they are (§2.14). This module lays it out and colors it; it does not do the arithmetic. */
     const PLAY = {drawW: 96, drawH: 134, trayW: 78, trayH: 110, gap: 12};
     const score = Array.isArray(ui.score) ? ui.score : [];
     function playHTML(x, y, w) {
@@ -775,7 +775,7 @@
            destinations in their own band at the foot. Sources, workspace, destinations: three
            surfaces, three roles, legible before a word is read. */
         pickTop = railH + 28;
-        /* The pick row's three labelled selects come to about 740px; where the mat is narrower
+        /* The pick row's three labeled selects come to about 740px; where the mat is narrower
            than that they wrap, and the shelves and the play space have to start below however
            many lines that takes -- the same measured-not-assumed rule the readings line follows. */
         const pickLines = Math.max(1, Math.ceil(740 / Math.max(280, width - 32)));
@@ -838,7 +838,7 @@
         stageH = (side ? h : h + 12 + panelH) + 24 + actH;
         stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${isCatalog(r) ? "" : `<button type="button" data-tt="status" data-record="${esc(r.recordId)}">Status…</button>`}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
       } else {
-        /* The selection (plan §2.2): on the centre of the mat, fanned if more than one, large,
+        /* The selection (plan §2.2): on the center of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
         const L = SIZES.L, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
         const fanW = L.w + step * (n - 1), x0 = Math.max(16, (width - fanW) / 2);

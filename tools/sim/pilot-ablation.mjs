@@ -48,7 +48,7 @@ const seedCount = Number(flag("seeds", 3));
 const games = Number(flag("games", 8000));
 const only = flag("deck", null);
 // Which combat step to measure under. Some decisions -- blocking above all --
-// mean nothing to an engine that has no blocks, and are labelled rather than
+// mean nothing to an engine that has no blocks, and are labeled rather than
 // silently reported as zero.
 const combatMode = flag("combat", "estimate");
 const decks = only ? master.decks.filter((d) => d.id === only) : master.decks;
@@ -165,7 +165,7 @@ function runLens() {
       + `   win ${(lens.casual.winRate * 100).toFixed(1)}% -> ${(lens.competitive.winRate * 100).toFixed(1)}%`);
     lens.credits.slice().sort((a, b) => b.points - a.points).forEach((credit) => {
       const entry = Policy.ABLATIONS.find((item) => item.key === credit.key);
-      // A decision the running engine cannot see is labelled, not left as a zero.
+      // A decision the running engine cannot see is labeled, not left as a zero.
       const inert = entry.needs && entry.needs !== combatMode ? `  (needs --combat ${entry.needs})` : "";
       console.log(`    ${signed(credit.points).padStart(7)}  ${entry.decision.padEnd(30)} ${entry.doing}${inert}`);
     });

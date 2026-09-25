@@ -7,7 +7,7 @@ purpose better."*
 
 ## 1. What was missing, and where it came from
 
-56 Master rows carried no Bracket, which is how a new row shows. They had a name, a colour, a
+56 Master rows carried no Bracket, which is how a new row shows. They had a name, a color, a
 type, an MV, a price and a count — and nothing else: no set, no collector number, no rules text,
 and so no place in the graph, the Discover pane or any pop-up.
 
@@ -27,14 +27,14 @@ the graph's card block. The 56th, *Iron Hills*, was already there.
 
 | Deck | Buy this | Own this instead | Saving | Why |
 | --- | --- | --- | --- | --- |
-| D4 Felothar Walls | Saruli Caretaker `{G}` 0/3 | **Great Forest Druid** `{1}{G}` 0/4 | $0.27 | Felothar makes every creature assign damage equal to its **toughness**, so 0/4 hits for 4 where 0/3 hits for 3. It also taps for any colour on its own; Saruli has to tap a second creature to do it. One more mana is the whole cost. |
+| D4 Felothar Walls | Saruli Caretaker `{G}` 0/3 | **Great Forest Druid** `{1}{G}` 0/4 | $0.27 | Felothar makes every creature assign damage equal to its **toughness**, so 0/4 hits for 4 where 0/3 hits for 3. It also taps for any color on its own; Saruli has to tap a second creature to do it. One more mana is the whole cost. |
 
 **Three are real trades, with the loss named. Rob's call, not mine.**
 
 | Deck | Buy this | Own this instead | Saving | What you give up |
 | --- | --- | --- | --- | --- |
 | D1 Quintorius Spirits | Warleader's Call | **Kinbinding** `{3}{W}{W}` | **$7.12** | Both are anthems that pay off creatures entering, and D1 floods 3/2 Spirits. Kinbinding scales with the flood *and* adds a 1/1 Kithkin each combat. You lose the 1 damage to each opponent per ETB — real reach in a deck that wants to close — and it costs 5 rather than 4. This is the largest single line on the buy list. |
-| D4 Felothar Walls | Beast Within `{2}{G}` | **Chelonian Tackle** `{2}{G}` | $0.73 | Same cost, same colour. In a deck where damage equals toughness, "+0/+10, then fight" is a one-sided kill on almost anything and leaves **no 3/3 behind**, which Beast Within always does. You lose instant speed and the ability to hit a non-creature. |
+| D4 Felothar Walls | Beast Within `{2}{G}` | **Chelonian Tackle** `{2}{G}` | $0.73 | Same cost, same color. In a deck where damage equals toughness, "+0/+10, then fight" is a one-sided kill on almost anything and leaves **no 3/3 behind**, which Beast Within always does. You lose instant speed and the ability to hit a non-creature. |
 | D5 Shadrix Aristocrats | Anguished Unmaking `{1}{W}{B}` | **Wander Off** `{3}{B}`, or **Bogslither's Embrace** `{1}{B}` | $1.40 | Bogslither's Embrace is 2-mana unconditional exile whose extra cost — a −1/−1 counter on one of your own creatures — is close to free in an Aristocrats deck that wants its creatures to die. Wander Off is the instant-speed version at 4. Neither touches a non-creature permanent, which is the whole point of Anguished Unmaking. |
 
 **Everything else: no.** Said plainly, because a near-miss offered as a swap costs more than it saves.

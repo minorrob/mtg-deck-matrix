@@ -344,7 +344,7 @@ export function verify(built, profile) {
     const csp = (/connect-src([^;"]*)/.exec(text) || [])[1] || "";
     if (csp.trim() !== "'self' https://api.scryfall.com") problems.push(`${p}'s security policy lets the browser connect to more than this site and Scryfall's API (${csp.trim()}); plan-data-sync §0`);
   }
-  /* ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail." Nothing
+  /* ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal email." Nothing
      released may name an email address but the public contact (which forwards to him); the problem masks
      what it found, so the refusal itself never prints someone's address. */
   for (const [f, body] of built) {

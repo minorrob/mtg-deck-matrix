@@ -96,7 +96,7 @@ for (const [key, rec] of Object.entries(owned)) {
  * DENIALS ARE DROPPED, and this is the part that decides whether the Shop tells the
  * truth. A hold of {inHand: 0, ordered: 0} is not an absence, it is an assertion --
  * "this box was counted and holds none of the copies that exist" -- and allocateCopies
- * honours it by never serving that deck, whatever is on the shelf. Those assertions came
+ * honors it by never serving that deck, whatever is on the shelf. Those assertions came
  * from an audit with a deck column against a collection that has since grown: 247 of the
  * 263 of them name a card this sheet says is now in hand or in the post, and each one was
  * showing up in the Shop as a card still to buy. This sheet has no deck column, so it

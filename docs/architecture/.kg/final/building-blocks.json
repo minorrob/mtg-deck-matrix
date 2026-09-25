@@ -8471,7 +8471,7 @@
   {
    "id": "req:M5-lobby",
    "req_id": "M5-lobby",
-   "text": "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human seat.",
+   "text": "The lobby per r3's 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human seat.",
    "kind": "functional",
    "priority": "must",
    "ontology": {},

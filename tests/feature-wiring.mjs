@@ -268,9 +268,13 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
 {
   const {execFileSync} = await import("node:child_process");
   const UK = /\b(colour|colours|coloured|centre|centred|recognise|recognised|recognises|normalise|normalised|honour|honours|favour|favourite|grey|licence|organise|organised|analyse|cancelled|behaviour|catalogue|towards|defence|programme|artefact|artefacts|initialise|serialise|customise|minimise|optimise|summarise|visualise|prioritise|realise|utilise|authorise|neighbour|flavour|labour|humour|theatre|metre|litre|manoeuvre|jewellery|travelling|modelling|labelled|signalling|fulfil|enrol|instalment|skilful|ageing|judgement|acknowledgement|amongst|whilst)\b/gi;
-  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
+  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */ && f !== "docs/design/BRIEF.md" /* and the designers' "never write" column */);
   let total = 0; const byFile = [];
-  for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
+  /* Two event names the Java engine adapter emits (ForgeBrowserBridge.java) keep their spelling: they are
+     protocol, not prose, and a journal written before today carries them. Nothing else is exempt. */
+  const PROTOCOL = /browser-cast-cancelled|cancelled-model-request/g;
+  const EMAIL = /\be-mails?\b|\be-mailed\b/gi;   // US usage is "email"
+  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
      prose to take twenty-three with it; 530 after the pass before the first production release
      (2026-09-24), which took every UK spelling in the app's own on-screen words away -- "Colour
@@ -282,7 +286,10 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   /* An archived UAT run under docs/uat/<run>/ is someone else's record, kept verbatim like a designer's
      handoff (design_handoff_ above): Grok Bot's harness carries a UK-word list because it checks the app
      for them. Our own prose, docs/uat/*.md included, still counts. */
-  const CEILING = 530;
+  /* 2026-09-25, Rob: "Stop defaulting to Europe stuff." Every one of them went: 530 UK spellings (and 58 "e-mail"s)
+     rewritten the US way across the repository's own files, card names protected by their printed
+     spelling. It is a hard zero now, not a ceiling. */
+  const CEILING = 0;
   ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
   /* and nothing written today carries one */
   for (const f of ["docs/design-intake-2026-09-20.md", "docs/handoff-fable-2026-09-20.md", "docs/design/2026-09-20-deck-page/INTAKE.md", "tests/design-tokens.mjs", "crankmagic-design.css"]) {

@@ -74,8 +74,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 23,
-      "sha": "d6fc513df1b325f8"
+      "version": 24,
+      "sha": "43ef7ac9bd0e5943"
     },
     "card-classify.js": {
       "version": 10,
@@ -94,16 +94,16 @@
       "sha": "69c6c3344328f132"
     },
     "collection-exchange.js": {
-      "version": 6,
-      "sha": "cb61bc0fb5083d16"
+      "version": 7,
+      "sha": "e582263b86c00ad0"
     },
     "collection-lobby-draft.js": {
       "version": 3,
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 40,
-      "sha": "e864335b0b434673"
+      "version": 41,
+      "sha": "e08e1769a0885732"
     },
     "collection-repository.js": {
       "version": 4,
@@ -114,16 +114,16 @@
       "sha": "218a98465449d00c"
     },
     "crankmagic-account.js": {
-      "version": 6,
-      "sha": "72b63b785a873f57"
+      "version": 7,
+      "sha": "1986744dba88fc15"
     },
     "crankmagic-advisor.js": {
       "version": 10,
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 331,
-      "sha": "566b8b8d4f9bf653"
+      "version": 333,
+      "sha": "fdaff6451a0aff47"
     },
     "crankmagic-assets.js": {
       "version": 31,
@@ -138,28 +138,28 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-change-ui.js": {
-      "version": 1,
-      "sha": "50b1441d682dc57e"
+      "version": 2,
+      "sha": "74fbe59034c10f8b"
     },
     "crankmagic-change.js": {
       "version": 3,
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 74,
-      "sha": "c598700ffe98c3db"
+      "version": 75,
+      "sha": "e3458df34448e021"
     },
     "crankmagic-decks.js": {
-      "version": 74,
-      "sha": "a694d9e854374fa3"
+      "version": 75,
+      "sha": "b625e4037ed36a0d"
     },
     "crankmagic-design.css": {
       "version": 18,
       "sha": "4e47247fb0d10704"
     },
     "crankmagic-discover.js": {
-      "version": 71,
-      "sha": "5f360095f49e4bc7"
+      "version": 72,
+      "sha": "a24c0e2796f6ede6"
     },
     "crankmagic-evidence.js": {
       "version": 4,
@@ -170,8 +170,8 @@
       "sha": "d5842eb8f4a2799d"
     },
     "crankmagic-facets.js": {
-      "version": 14,
-      "sha": "4435ee146e381a16"
+      "version": 15,
+      "sha": "7acbff56e4c98939"
     },
     "crankmagic-game.js": {
       "version": 77,
@@ -186,28 +186,28 @@
       "sha": "d77245bd485ce9b7"
     },
     "crankmagic-graph.js": {
-      "version": 22,
-      "sha": "8ab411214cce9660"
+      "version": 23,
+      "sha": "a5306f26922493ca"
     },
     "crankmagic-groupings.js": {
-      "version": 1,
-      "sha": "2674cb1e7b895062"
+      "version": 2,
+      "sha": "3dc096731746b0f8"
     },
     "crankmagic-how.js": {
       "version": 5,
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 54,
-      "sha": "e3822f4f2f876793"
+      "version": 55,
+      "sha": "f58e2b2086374a0b"
     },
     "crankmagic-lens.js": {
-      "version": 1,
-      "sha": "5de2d4a9a4e4577a"
+      "version": 2,
+      "sha": "ee3aa679c8a3924d"
     },
     "crankmagic-lobby.js": {
-      "version": 5,
-      "sha": "ecbc7b30ef555bcc"
+      "version": 6,
+      "sha": "c2e37837f59c1165"
     },
     "crankmagic-loops.js": {
       "version": 4,
@@ -222,16 +222,16 @@
       "sha": "34b59583481a26bb"
     },
     "crankmagic-orders.js": {
-      "version": 8,
-      "sha": "1e9e5e046e7b8fb1"
+      "version": 9,
+      "sha": "058d624e5c51f404"
     },
     "crankmagic-plan-editor.js": {
       "version": 2,
       "sha": "4eb23f2843c5410f"
     },
     "crankmagic-pull.js": {
-      "version": 11,
-      "sha": "ceaea4c2c1884f29"
+      "version": 12,
+      "sha": "16480a548c8d7ed1"
     },
     "crankmagic-qr.js": {
       "version": 1,
@@ -246,44 +246,44 @@
       "sha": "e7ec63cf02b363da"
     },
     "crankmagic-sandbox.js": {
-      "version": 4,
-      "sha": "1b6ab205430f283b"
+      "version": 5,
+      "sha": "5bfacc7476cbb5e3"
     },
     "crankmagic-sea.js": {
       "version": 3,
       "sha": "2a276b9b826ef07c"
     },
     "crankmagic-settings.js": {
-      "version": 3,
-      "sha": "cb6e850c0fa4823e"
+      "version": 4,
+      "sha": "5d1ddeb5bce1e10c"
     },
     "crankmagic-sim.js": {
-      "version": 21,
-      "sha": "bc408814790fb9fa"
+      "version": 22,
+      "sha": "4a3ca1011a732019"
     },
     "crankmagic-strategies.js": {
       "version": 2,
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 330,
-      "sha": "f9d7e8975fe0e868"
+      "version": 331,
+      "sha": "0ea47b5304ead6f7"
     },
     "crankmagic-tabletop.js": {
-      "version": 20,
-      "sha": "f8535cffc6cbf768"
+      "version": 21,
+      "sha": "a7eab64e5ade429a"
     },
     "crankmagic-tour.js": {
-      "version": 19,
-      "sha": "3f8a8d88f0143f89"
+      "version": 20,
+      "sha": "4fc8270ad12f86b0"
     },
     "crankmagic-trace.js": {
-      "version": 3,
-      "sha": "aacb53a680b6bdd3"
+      "version": 4,
+      "sha": "45714f8af06dd7b0"
     },
     "crankmagic-trade.js": {
-      "version": 4,
-      "sha": "334a7190e620c1b1"
+      "version": 5,
+      "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
       "version": 210,
@@ -334,28 +334,28 @@
       "sha": "74d772160071c3c8"
     },
     "deck-import.js": {
-      "version": 2,
-      "sha": "ea1dd37c6ce291cf"
+      "version": 3,
+      "sha": "b67d05b8cebb25a9"
     },
     "deck-measure.js": {
-      "version": 9,
-      "sha": "8fe4b98dae79727f"
+      "version": 10,
+      "sha": "7a86cc643ecee81d"
     },
     "deck-sources.js": {
-      "version": 1,
-      "sha": "ef5fc76341934d92"
+      "version": 2,
+      "sha": "51839de223758140"
     },
     "docx-writer.js": {
       "version": 1,
       "sha": "b6aff451bbef0894"
     },
     "draft-builder.js": {
-      "version": 8,
-      "sha": "8d82b581f51f7cc0"
+      "version": 9,
+      "sha": "2ea37a108afaeb50"
     },
     "game-record.js": {
-      "version": 1,
-      "sha": "64ca6d7289743a4f"
+      "version": 2,
+      "sha": "fc79910214a4214a"
     },
     "graph-payload.js": {
       "version": 3,
@@ -370,20 +370,20 @@
       "sha": "b076eb50c7ab1bb0"
     },
     "pilot-policy.js": {
-      "version": 3,
-      "sha": "e0645dacaa692f32"
+      "version": 4,
+      "sha": "cd1057e88664be7c"
     },
     "scryfall-client.js": {
-      "version": 10,
-      "sha": "c46c73960d22eb44"
+      "version": 11,
+      "sha": "9b29d6936fdd0aca"
     },
     "shop-export.js": {
       "version": 1,
       "sha": "70a6f03ab9f97b78"
     },
     "sim-engine.js": {
-      "version": 12,
-      "sha": "c44d69e68609103b"
+      "version": 13,
+      "sha": "4bbbcfdc6cb07c1d"
     },
     "sim-worker.js": {
       "version": 1,

@@ -260,10 +260,10 @@
         if (MANA_COLORS.includes(color)) produced.add(color);
       });
     });
-    /* {C} is COLOURLESS and cannot pay a coloured pip -- see the same note in
+    /* {C} is COLOURLESS and cannot pay a colored pip -- see the same note in
        sim-engine.js, which this has to agree with card for card or tests/slot-model.mjs
-       fails. Reading "Add {C}{C}" as "any colour" gave Sol Ring, Ashnod's Altar, Basalt
-       Monolith and ten more a five-colour manabase they do not have. */
+       fails. Reading "Add {C}{C}" as "any color" gave Sol Ring, Ashnod's Altar, Basalt
+       Monolith and ten more a five-color manabase they do not have. */
     if (/add one mana of any color|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
     // A land that goes and gets a basic makes what that basic makes. These carry
     // an empty color identity, so the fallback below left Evolving Wilds and the
@@ -798,7 +798,7 @@
    * its sixty-eight cards are named by none of the picked decks -- they are cards somebody
    * decided to buy, for builds this app is not tracking -- so no arithmetic over the
    * current selections produces them. They are carried as what they are: a written list,
-   * with a per-copy ceiling, standing beside the derived rows and labelled `onPullList` so
+   * with a per-copy ceiling, standing beside the derived rows and labeled `onPullList` so
    * the page can say which is which.
    *
    * THE THREE RULES.

@@ -1,7 +1,7 @@
 // The Play lobby against wireframe 2b — structure and content, not pixels.
 //
 // The handoff README is explicit about what each source is worth: `screens/*.dc.html` are
-// "High-fidelity. Colours, type, spacing, radii and copy are final. Recreate pixel-close" --
+// "High-fidelity. Colors, type, spacing, radii and copy are final. Recreate pixel-close" --
 // those are measured by tools/compare-to-screen.mjs in pixels. The wireframes are the other
 // kind: "They are **low-fidelity**: follow their structure and content order, style them with
 // the tokens below and the patterns of the five hi-fi screens." They are drawn at roughly half
@@ -539,8 +539,8 @@ check("every route a lobby control navigates to exists", () => {
 // status box in the middle (instead of the error) a statement indicating an error and if they
 // want to send the error report to me. (e.g. Error: Send error report?) Then the Start/Stop
 // button should have a 3rd option that only appears when that text shows error, which should be
-// 'Send Log' ... opens default e-mail client and pastes the error into the text with
-// pre-populating my e-mail [my personal address, removed 2026-09-24] as the To field."
+// 'Send Log' ... opens default email client and pastes the error into the text with
+// pre-populating my email [my personal address, removed 2026-09-24] as the To field."
 //
 // The restart was mine: lobby-start's catch sets startInFlight = false and redraws, the redraw
 // asks syncCountdown, the table is still ready, and it counts down into the same failure again,

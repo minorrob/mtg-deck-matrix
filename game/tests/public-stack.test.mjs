@@ -12,7 +12,7 @@ test('a card stays visible from announcement through casting and leaves on resol
   events.push(event('GameEventSpellResolved',{spell:{host:card,abilityId:8}},4));
   assert.deepEqual(publicStack(events),[]);
 });
-test('cancelled casts and countered abilities do not remain as phantom cards',()=>{
+test('canceled casts and countered abilities do not remain as phantom cards',()=>{
   assert.deepEqual(publicStack([event('GameEventZone',{zoneType:'Stack',mode:'Added',card}),event('GameEventZone',{zoneType:'Stack',mode:'Removed',card})]),[]);
   assert.deepEqual(publicStack([event('GameEventSpellAbilityCast',{sa:{host:card,isSpell:false,abilityId:8},si:{stackId:2,isTrigger:true}}),event('GameEventSpellRemovedFromStack',{sa:{abilityId:8}})]),[]);
 });

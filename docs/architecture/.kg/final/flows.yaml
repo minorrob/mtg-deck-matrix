@@ -122,7 +122,7 @@ nodes:
   status: intent
 - id: flow:crankmagic/m5-lobby
   kind: Flow
-  name: 'The lobby per r3''s 2b design: invites by e-mail, link and QR, table rules, and a'
+  name: 'The lobby per r3''s 2b design: invites by email, link and QR, table rules, and au'
   entry: M5-lobby
   status: intent
 - id: flow:crankmagic/m5-reconnect

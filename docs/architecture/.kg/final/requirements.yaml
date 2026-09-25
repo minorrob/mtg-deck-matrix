@@ -499,11 +499,11 @@ nodes:
   status: intent
 - id: req:M5-lobby
   kind: Requirement
-  name: 'The lobby per r3''s 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every
-    human se'
+  name: 'The lobby per r3''s 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human
+    sea'
   req_id: M5-lobby
-  text: 'The lobby per r3''s 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every
-    human seat.'
+  text: 'The lobby per r3''s 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human
+    seat.'
   req_kind: functional
   priority: must
   attributes:

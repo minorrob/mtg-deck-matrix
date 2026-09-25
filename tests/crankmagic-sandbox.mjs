@@ -217,7 +217,7 @@ const moveFor = (r, extra) => Object.assign({
   const offList = rows.find((r) => r.kind === "lot" && r.source === "owned" && !r.allocation && r.placement === "Bench"
     && !deck.slots.some((x) => x.cardId === r.cardId)
     && !(live.cards[r.cardId].colorIdentity || []).some((c) => !new Set(deck.commanders.flatMap((id) => live.cards[id].colorIdentity || [])).has(c)));
-  ok(offList, `a bench copy in colour that ${deck.name}'s list does not name (${offList && name(offList.cardId)})`);
+  ok(offList, `a bench copy in color that ${deck.name}'s list does not name (${offList && name(offList.cardId)})`);
   const tray = make();
   tray.stage(moveFor(offList, {action: "tray", tray: 2, deckId: deck.id, deckName: deck.name, to: "Tray 2", toStatus: "Reserved"}));
   const built = tray.build(live);

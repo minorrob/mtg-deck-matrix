@@ -1276,7 +1276,7 @@ journeys:
     final: [M5-front-door, M5-lobby, M5-transport]
     steps:
       - { text: "The host creates a table and picks a mat.", touches: ["route:POST:/api/tables", d1:tables, do:game-room], flows: [], final: [M5-front-door] }
-      - { text: "Invites a guest by e-mail, link or QR.", touches: [d1:seats], flows: [], final: [M5-lobby] }
+      - { text: "Invites a guest by email, link or QR.", touches: [d1:seats], flows: [], final: [M5-lobby] }
       - { text: "The guest signs in and takes the seat.", touches: [net:access, "route:POST:/api/tables/:id/seats"], flows: [], final: [M5-front-door] }
       - { text: "Every human seat ready: a ten-second countdown, then the game starts.", touches: [do:game-room], flows: [dflow:game], final: [M5-lobby] }
       - { text: "They play over the table's WebSocket; a dropped phone reconnects to a fresh view.", touches: ["route:GET:/api/tables/:id/socket", rec:room.seats], flows: [dflow:game], final: [M5-reconnect] }
@@ -1297,7 +1297,7 @@ journeys:
     final: [M3-invite, S1-release]
     current: { file: docs/handoff-2026-09-25.md, match: 'Invited' }
     steps:
-      - { text: "Invites a person by adding their e-mail to the Access Invited list.", touches: [net:cf-dashboard, net:access], flows: [], final: [M3-invite], current: { file: docs/handoff-2026-09-25.md, match: 'Invited' } }
+      - { text: "Invites a person by adding their email to the Access Invited list.", touches: [net:cf-dashboard, net:access], flows: [], final: [M3-invite], current: { file: docs/handoff-2026-09-25.md, match: 'Invited' } }
       - { text: "Enters secrets himself: the data job's token in GitHub, the AI key as a Worker secret.", touches: [secret:r2-token, secret:anthropic-key], flows: [], final: [M2-schedule, M6-door] }
       - { text: "Approves a plan; a cloud session builds, walks and deploys it to staging.", touches: [net:cloud-session, net:worker], flows: [dflow:release], final: [S1-release], current: { file: docs/handoff-2026-09-25.md, match: 'Working from a cloud session' } }
       - { text: "Says go; production deploys.", touches: [net:assets], flows: [dflow:release], final: [S1-release], current: { file: AGENTS.md, match: 'release-acceptance' } }

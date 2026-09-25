@@ -5,7 +5,7 @@
  *
  *   Archidekt  GET https://archidekt.com/api/decks/<id>/ answers 200 with the
  *              full deck, and every card carries its own `oracleCard` -- name,
- *              mana cost, colour identity, rules text, keywords, types, prices.
+ *              mana cost, color identity, rules text, keywords, types, prices.
  *              A deck loaded this way needs nothing else: it is resolved on
  *              arrival, with no name matching and no second round trip.
  *
@@ -13,7 +13,7 @@
  *              of an origin header: it is refused outright, to a server and to
  *              a browser alike. So there is no URL path for Moxfield and this
  *              file does not pretend there is one. A Moxfield link is
- *              recognised, and answered with the thing that does work -- open
+ *              recognized, and answered with the thing that does work -- open
  *              the deck, More ▾, Export, and paste it in. The paste path is
  *              exact and needs no permission from anybody.
  *
@@ -29,7 +29,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  /* Archidekt writes colour identity out in full -- ["Green"], not ["G"] --
+  /* Archidekt writes color identity out in full -- ["Green"], not ["G"] --
      and everything downstream indexes single letters. */
   const COLOR_LETTER = {White: "W", Blue: "U", Black: "B", Red: "R", Green: "G"};
 

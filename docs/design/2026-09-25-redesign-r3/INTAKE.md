@@ -20,7 +20,7 @@ disagrees with the rest (§2.1).
 
 **Not committed:**
 
-- **The designer's copies of our own code and data** (`crankmagic-*.js`, `crankmagic*.css`, `data/live-load.json`, `data/deck-guides.json`). They are a stale snapshot of this repository. One of them still carries a personal e-mail address that was scrubbed from the repository on 2026-09-24. `data/live-load.json` is Rob's collection.
+- **The designer's copies of our own code and data** (`crankmagic-*.js`, `crankmagic*.css`, `data/live-load.json`, `data/deck-guides.json`). They are a stale snapshot of this repository. One of them still carries a personal email address that was scrubbed from the repository on 2026-09-24. `data/live-load.json` is Rob's collection.
 - **`uploads/`**: 12 MB of screenshots of the app from 2026-09-14, plus our own wireframe index. It was the designer's input, and it is superseded.
 - **Copies of our own assets at the project root** (`assets/`): the handoff folder keeps its own copies, as r2's did.
 
@@ -57,9 +57,9 @@ Rob confirms this in §4.
 | Sign in / create account (`account-signin`) | live | Cloudflare Access's hosted page: Google, plus an emailed code | The design draws our own page with email, Google and **Apple**, and marks the providers "an assumption". Access hosts the login, so the app can only brand it and hand off to it. Apple is not configured. |
 | Opening your library (`loading`) | live | Built | Restyle only. |
 | App shell, dark and light (`shell-dark`, `shell-light`) | live | Built, except the rail's foot | **The rail's foot becomes an account chip**: avatar · name · "Synced · just now" ▾, which opens the Global menu. Signed out, it is a Sign in chip. The "saved in this browser" note went on 2026-09-24; the chip replaces the Menu button. |
-| Global menu (`global-menu`) | live | Built, with more in it | Account (name, e-mail, sync state) · Theme **Dark / Light / Match system** (today it is one toggle) · Settings · Back up library… · Restore backup… · Help & glossary · Take a tour · Send feedback · Sign out. **Not drawn:** Share by e-mail, QR code, Publish To Trade, E-mail the export, Export as Excel, Undo / See every change, Confirmations…, Reset comparison picks, Clear all data, card data ages and version. Where each goes is decision §4.7. |
+| Global menu (`global-menu`) | live | Built, with more in it | Account (name, email, sync state) · Theme **Dark / Light / Match system** (today it is one toggle) · Settings · Back up library… · Restore backup… · Help & glossary · Take a tour · Send feedback · Sign out. **Not drawn:** Share by email, QR code, Publish To Trade, Email the export, Export as Excel, Undo / See every change, Confirmations…, Reset comparison picks, Clear all data, card data ages and version. Where each goes is decision §4.7. |
 | Help ? panel (`help-panel`) | live | A dialog | A right slide-over, scoped to the page. |
-| Settings (`settings`) | "live" | **Does not exist** | A page with four cards. **Account:** name, e-mail, Sign out. **Appearance:** Dark / Light / System · Card size · Reduce motion. **Prices:** ~~USD / EUR~~ US dollars only (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always") · default budget cap. **Data:** Back up · Restore · **Delete account…**. Delete account is a new feature (§4.8); EUR is dropped. |
+| Settings (`settings`) | "live" | **Does not exist** | A page with four cards. **Account:** name, email, Sign out. **Appearance:** Dark / Light / System · Card size · Reduce motion. **Prices:** ~~USD / EUR~~ US dollars only (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always") · default budget cap. **Data:** Back up · Restore · **Delete account…**. Delete account is a new feature (§4.8); EUR is dropped. |
 | Mobile: Decks, Library, Explore | live | Built | Restyle. The rail becomes a top row; tiles and doors stack. |
 | Mobile: Deck detail | planned | Built; the bar was fixed 2026-09-24 | The sticky action row as **one row that scrolls sideways**, in place of three equal buttons. |
 
@@ -90,7 +90,7 @@ Rob confirms this in §4.
 | Screen (wireframe id) | Tag | Status today | The gap |
 | --- | --- | --- | --- |
 | Play: coming soon | live | Built | Restyle. |
-| **Play: 16 planned screens.** Lobby (2b quadrants, the color-identity fan, auto-launch), Change deck, **Choose mat**, Invite (e-mail, link, QR), Countdown, **three views** (Table · Focus · Full screen), Table vitals, Tools (card-size slider 60–160%), Show hand (contemplate, then held), Coach (a chat shell with stub replies), Card zoom, History drop-down, Game history, and Play on phones (landscape only, Focus only). | planned | The Forge-hosted board on the frozen local host carries Focus and Table as decided on 2026-09-24. Nothing runs in the cloud. | All of it is Stage 3. It is built on the cloud table (Durable Objects and CME, `docs/plan-to-100.md` M5), not on the local host. The design moves past what the 2026-09-24 board shipped: **vitals** in each board header replace the center life counter, the **card-size slider** replaces the S/M/L chips, a **Full screen** view, a **5:7 card ratio everywhere**, and **Show hand**. Build these when the cloud board is built. |
+| **Play: 16 planned screens.** Lobby (2b quadrants, the color-identity fan, auto-launch), Change deck, **Choose mat**, Invite (email, link, QR), Countdown, **three views** (Table · Focus · Full screen), Table vitals, Tools (card-size slider 60–160%), Show hand (contemplate, then held), Coach (a chat shell with stub replies), Card zoom, History drop-down, Game history, and Play on phones (landscape only, Focus only). | planned | The Forge-hosted board on the frozen local host carries Focus and Table as decided on 2026-09-24. Nothing runs in the cloud. | All of it is Stage 3. It is built on the cloud table (Durable Objects and CME, `docs/plan-to-100.md` M5), not on the local host. The design moves past what the 2026-09-24 board shipped: **vitals** in each board header replace the center life counter, the **card-size slider** replaces the S/M/L chips, a **Full screen** view, a **5:7 card ratio everywhere**, and **Show hand**. Build these when the cloud board is built. |
 
 **Accounts and system**
 
@@ -144,17 +144,17 @@ The design redraws surfaces. It does not list everything they do. Each item belo
    - *Recommended: the switch.*
 6. **Sign in.** The in-app Sign in panel shows the brand and hands off to Access. The providers are the ones live: Google, and the emailed code (library only, never AI). **Apple is not added** unless Rob asks. *Recommended as stated.*
 7. **The Menu entries the design does not draw.**
-   - **Settings › Data:** Export as Excel, E-mail the export, Clear all data (in a danger zone).
+   - **Settings › Data:** Export as Excel, Email the export, Clear all data (in a danger zone).
    - **Settings › History:** See every change and Undo. A success toast carries Undo too.
    - **Library › More:** Publish your To Trade list.
-   - **The Menu, under Help:** Share by e-mail and the QR code.
+   - **The Menu, under Help:** Share by email and the QR code.
    - **Settings › Appearance:** Confirmations….
    - **Removed:** Reset comparison picks, because the Decks page clears its picks.
    - **Settings › About:** the card data ages and the version.
    - This also answers the open "which backup/share entries stay" question from 2026-09-24. *Recommended as listed.*
 8. **Two new features on Settings.**
    - ~~**EUR prices.** The card data carries USD only. The data sync (M2) would add Scryfall's EUR.~~ **Dropped** (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always").
-   - **Delete account.** A self-service delete route in the Worker, plus the Access e-mail removal, which stays a dashboard step for Rob. It fulfills the promise on the privacy page.
+   - **Delete account.** A self-service delete route in the Worker, plus the Access email removal, which stays a dashboard step for Rob. It fulfills the promise on the privacy page.
    - *Recommended:* ~~both, EUR after M2~~ Delete account only; built in R3.3b (#384).
 9. **Merge on restore.** Merging a backup into a library is new model work (duplicate copies, conflicting states, receipts). *Recommended:* Replace only in this pass; Merge later with its own tests.
 10. **The land icon.** The design asks Rob for one.
@@ -168,7 +168,7 @@ Each step is one PR. Each renders the real pages before and after at 390, 1136 a
 | **R3.0 Intake** (this file) | Land the handoff. Point `tests/design-tokens.mjs` at r3's **project** tokens, the final ones, with the handoff folder's stale `typography.css` noted as superseded. Baseline renders. | `design-tokens` held to r3 |
 | **R3.1 Type** | `satoshi-900.woff2` and Young Serif self-hosted. `--display-weight: 900`, `--display-tracking: -.035em`, `--font-hero` for hero titles 48px and up (the deck title, the landing hero and its closing call to action). The THIRD-PARTY-NOTICES font rows. | Tokens test; a check that a heading is Satoshi 900 and the deck title is Young Serif |
 | **R3.2 Shell and account** | The account chip at the rail's foot (signed in and signed out). The Global menu restructured (§4.7). Theme Dark / Light / **Match system**. Help as a right slide-over. Toasts with Undo and Retry. Type-to-confirm delete. | Feature wiring; the release walk opens the menu; cloud e2e checks the chip's sync state |
-| **R3.3 Settings** | `#settings`: Account, Appearance (theme, card size, **reduce motion** as a stored preference), Prices (USD; the **default budget cap** a new deck takes), Data (backup, restore, Excel, e-mail export, history, danger zone), About (data ages, version). **Delete account**: a Worker route that removes the person's snapshots, head and user row. Access removal stays a runbook step for Rob. | `cloud-worker` delete tests; the release walk visits Settings |
+| **R3.3 Settings** | `#settings`: Account, Appearance (theme, card size, **reduce motion** as a stored preference), Prices (USD; the **default budget cap** a new deck takes), Data (backup, restore, Excel, email export, history, danger zone), About (data ages, version). **Delete account**: a Worker route that removes the person's snapshots, head and user row. Access removal stays a runbook step for Rob. | `cloud-worker` delete tests; the release walk visits Settings |
 | **R3.4 Decks hub** | Filter chips, sort (closest to finished · name · recently changed), Compare and Show archived in the head. The empty state. | A Decks suite for filters and sort |
 | **R3.5 Deck page** | The hero title. **Guide & SWOT as a dialog**, which the "Full guide and SWOT" link opens. The **Measure report** view with its fidelity notice above the score. The More menu's order. The phone's **one-row sideways-scrolling action bar**. | Geometry at 390; the release walk opens the guide and a report |
 | **R3.6 Library** | Restyle to r3. The filters dialog (MV, price), the columns dialog (reorder; Card and Status locked), Add cards landing on the Bench. Every item in the §3 list checked. | Wireframe conformance |

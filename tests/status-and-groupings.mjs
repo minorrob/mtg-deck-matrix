@@ -37,7 +37,7 @@ const value = (r, key) => ({status: r.status, deck: r.deck, type: r.type})[key];
 eq(G.CHOICES.map((c) => c[0]), ["", "deck", "status", "vendor", "type", "color", "groups"], "the seven choices");
 eq(G.label({card: {colorIdentity: ["W", "U"]}}, "color", value), "Multiple"); eq(G.label({card: {colorIdentity: []}}, "color", value), "Colorless"); eq(G.label({card: {colorIdentity: ["G"]}}, "color", value), "Green");
 eq(G.label({status: "To buy"}, "status", value), "To buy", "any other key reads the caller's column");
-ok(G.order({card: {colorIdentity: ["W"]}}, "color", value) < G.order({card: {colorIdentity: ["W", "B"]}}, "color", value) && G.order({card: {colorIdentity: ["W", "B"]}}, "color", value) < G.order({card: {colorIdentity: []}}, "color", value), "colours sort the five, then gold, then colourless");
+ok(G.order({card: {colorIdentity: ["W"]}}, "color", value) < G.order({card: {colorIdentity: ["W", "B"]}}, "color", value) && G.order({card: {colorIdentity: ["W", "B"]}}, "color", value) < G.order({card: {colorIdentity: []}}, "color", value), "colors sort the five, then gold, then colourless");
 ok(G.order({status: "Physical deck"}, "status", value, M.statusOrder) < G.order({status: "To buy"}, "status", value, M.statusOrder), "statuses sort in the vocabulary's order");
 eq(G.order({deck: ""}, "deck", value), "￿", "a row with no value goes last");
 

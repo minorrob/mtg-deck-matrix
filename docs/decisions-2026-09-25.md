@@ -44,7 +44,7 @@ a secret, a purchase, an invitation, a file only he has) stay his, and the table
 | M2 | Turn on R2 | **Yes, the free plan** | **Rob**, in the dashboard |
 | M2 | The R2 token | *R2 Storage: Edit*, into the GitHub secret `CLOUDFLARE_R2_TOKEN` | **Rob** enters it |
 | M2 | The schedule | **Prices and records daily; the graph and EDHREC weekly** | — |
-| M3 | The alert e-mail; how the workbook reaches Rob's library | Open | **Rob** |
+| M3 | The alert email; how the workbook reaches Rob's library | Open | **Rob** |
 | M4 | Forge's role | **PLAN phase 5, the Forge comparison, is dropped**; CR adjudication and the M8 playtests replace it | — |
 | M4 | A deck with unsupported cards in Play v1 | **Refused by name; compiled once M7 lands** | — |
 | M4 | The storage adapter and house pilot before phase 3 | **Yes** | — |

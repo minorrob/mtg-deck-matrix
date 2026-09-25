@@ -167,7 +167,7 @@
     const email = who.email;
     if (!email) throw Error("Sign in first: there is no cloud account on this device to delete.");
     C.form("Delete your account",
-      `<div class="cm-full">${C.note(`This erases your cloud library — the current version and every earlier one, from every device — and your account record. It cannot be undone. This device's own library stays; Clear all data removes that. To have your sign-in removed too, e-mail admin@crankmagic.com.`, true)}</div>`
+      `<div class="cm-full">${C.note(`This erases your cloud library — the current version and every earlier one, from every device — and your account record. It cannot be undone. This device's own library stays; Clear all data removes that. To have your sign-in removed too, email admin@crankmagic.com.`, true)}</div>`
       + C.field("Type your address to confirm", "confirm", "", `required autocomplete="off" placeholder="${e(email)}"`),
       async (v) => {
         if (String(v.confirm || "").trim().toLowerCase() !== email) throw Error(`Type the address exactly: ${email}`);

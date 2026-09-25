@@ -21,13 +21,13 @@
  * THE PICKER REACHES EVERY LEGAL COMMANDER. The catalog registers 3,411 of them; the old
  * pane showed the 45 most popular and nothing said so, which read as "only the commanders
  * we already worked with". Now it says how many match, pages through them, filters by
- * colour identity as well as name, play style and rank, and inspects any of them. */
+ * color identity as well as name, play style and rank, and inspects any of them. */
 (globalThis.CrankFeatures ||= []).push(function(C){
 const {M,esc:e,button:b,field:f,select:s,note,form,modal,actions,views,$}=C;
 let leader=null,partner=null,mode='commander',groupId='',deckId='',draftName='',definition=M.defaultDefinition(),pool='all',includeInDeck=false,includeReserved=false;let seedFromTrace=true;
 let preview=null;          // the drafted list that is not yet a deck
 let shownLimit=45;         // how many picker rows are drawn before "Show more"
-let pickerColors=[];       // the picker's colour-identity filter
+let pickerColors=[];       // the picker's color-identity filter
 let runner=null;
 const choices=CrankCatalog.MECHANICS.map(([label])=>label);
 const STEPS=['User Input Captured','Initial 99 Cards Chosen','Measure & 99 Refined','Measure loops complete','Measurement Report','Completed Deck'];
@@ -548,7 +548,7 @@ views.lab=async()=>{
         await C.catalog.loadGraph();
         const available={};for(const l of C.state.lots)if(M.eligibility(C.state,l,{includeInDeck,includeReserved,includeSellTrade:!!v.sellTrade}).eligible)available[l.cardId]=(available[l.cardId]||0)+l.quantity;
         /* THE TRACE SEED: a pool trace from the commander over the legal catalog inside the
-           definition (colour identity, per-card cap, legality), beamed so ring 2 stays quick,
+           definition (color identity, per-card cap, legality), beamed so ring 2 stays quick,
            handed to the builder as a bonus per card. Off when the modules are not loaded or
            the reader unticked it; the builder then drafts as before. */
         let seed=null;
@@ -724,7 +724,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
      instead: a round is thirty seconds of measured search, and it uses them. */
   const REFINE_MS=30000, LOOP_MS=150000, MAX_ROUNDS=5;
   /* Which exact hundred the reader has already been warned about. Keyed on the list, so
-     changing a card asks again rather than inheriting a stale acknowledgement. */
+     changing a card asks again rather than inheriting a stale acknowledgment. */
   let blindOk=null;
   const signatureOf=slots=>slots.map(r=>r.cardId).sort().join('|');
   const PER_SLOT=14;      // candidates screened against one weak slot before moving on
@@ -748,7 +748,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     return runner.measure({protocol:protocol||'refine',lineup,config,opponents,table:config.table,onProgress});
   }
 
-  /* Worth trying: legal in the commander's colours, not already in the list, not a basic,
+  /* Worth trying: legal in the commander's colors, not already in the list, not a basic,
      and joined to the commander on the graph's own relations. Ordered by the strength of
      that join, then by how much the format plays the card. */
   function candidatesFor(leaders,slots,limit){
@@ -772,7 +772,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
    * model runs long enough that essentially every drawn spell is eventually cast, so the
    * whole nonland list sits at 99-100% cast and 0% dead, and the ranking was noise wearing
    * a formula. What varies is being STRANDED -- drawn, and still uncastable in hand on
-   * turn eight -- which is exactly "too expensive, or off-colour for these sources", and
+   * turn eight -- which is exactly "too expensive, or off-color for these sources", and
    * how the deck's own win rate moves in the games a card was cast in. A card with no
    * measured row is treated as average: absence of evidence is not evidence of weakness.
    * Lands, the commander and pinned slots are never dropped. */

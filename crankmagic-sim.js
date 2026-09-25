@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=12",
+    "sim-engine.js?v=13",
     "combat.js?v=2",
-    "pilot-policy.js?v=3",
-    "deck-measure.js?v=9"
+    "pilot-policy.js?v=4",
+    "deck-measure.js?v=10"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -120,7 +120,7 @@
           isCommander: commanders.has(card.id),
           /* deck-measure's hydrate() reads `entry.card` when no facts table is supplied,
              and CrankMagic's catalog rows already carry the printed body, mana cost,
-             oracle text, keywords and colour identity it wants. So the catalog IS the
+             oracle text, keywords and color identity it wants. So the catalog IS the
              facts table; there is no second copy to drift. */
           card: card
         };

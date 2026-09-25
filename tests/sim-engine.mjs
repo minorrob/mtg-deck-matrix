@@ -500,16 +500,16 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
     ...(overrides || {})
   });
 
-  // A LAND THAT GOES AND GETS A BASIC IS A COLOUR NEXT TURN, NOT THIS ONE.
+  // A LAND THAT GOES AND GETS A BASIC IS A COLOR NEXT TURN, NOT THIS ONE.
   // entersTapped was read off the fetch's own text, and a fetch does not print
   // "enters tapped" because the fetch is not the land that does. So Evolving
-  // Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOUR LANDS,
+  // Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOR LANDS,
   // available the turn they were played -- strictly better than any land in Magic.
   for (const name of ["Evolving Wilds", "Terramorphic Expanse", "Fabled Passage", "Naya Panorama", "Bant Panorama"]) {
     const land = read(name);
     assert.equal(land.isLand, true, `${name} should be a land`);
-    assert.equal(land.entersTapped, true, `${name} must not be an untapped source of the colour it fetches`);
-    assert.ok(land.produces.length >= 3, `${name} keeps the colours it can go and get`);
+    assert.equal(land.entersTapped, true, `${name} must not be an untapped source of the color it fetches`);
+    assert.ok(land.produces.length >= 3, `${name} keeps the colors it can go and get`);
   }
   // ...and the ones that DO print the words still agree.
   assert.equal(read("Myriad Landscape").entersTapped, true);
@@ -518,7 +518,7 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   // A real untapped land is untouched by any of that.
   for (const name of ["Command Tower", "Exotic Orchard"]) {
     assert.equal(read(name).entersTapped, false, `${name} is untapped and must stay untapped`);
-    assert.equal(read(name).produces.length, 5, `${name} makes every colour`);
+    assert.equal(read(name).produces.length, 5, `${name} makes every color`);
   }
 
   // A TRUE DUAL PRINTS ITS MANA ABILITY AS REMINDER TEXT, because the ability
@@ -528,7 +528,7 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   // has no mana ability of its own, which makes every dual a fetch.
   const tundra = Engine.classifyCard({name: "Tundra", typeLine: "Land — Plains Island",
     oracleText: "({T}: Add {W} or {U}.)"});
-  assert.deepEqual(tundra.produces.slice().sort(), ["U", "W"], "a dual keeps its colours with no colour identity to fall back on");
+  assert.deepEqual(tundra.produces.slice().sort(), ["U", "W"], "a dual keeps its colors with no color identity to fall back on");
   assert.equal(tundra.entersTapped, false, "a dual is not a fetch");
   const shock = Engine.classifyCard({name: "Sacred Foundry", typeLine: "Land — Mountain Plains",
     oracleText: "({T}: Add {R} or {W}.)\nAs this land enters, you may pay 2 life. If you don't, it enters tapped."});
@@ -538,13 +538,13 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   // is asked of the raw one: a land with a basic land type -- so its mana ability
   // is printed as reminder text -- that ALSO goes and gets a basic. Read the
   // stripped text and it has no mana ability of its own, which makes it a fetch and
-  // takes its untapped colours away. No printed card is this today; a pasted deck
+  // takes its untapped colors away. No printed card is this today; a pasted deck
   // is not limited to printed cards this catalog happens to carry.
   const both = Engine.classifyCard({name: "Fixture Verge", typeLine: "Land — Plains Island",
     oracleText: "({T}: Add {W} or {U}.)\n{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."});
-  assert.deepEqual(both.produces.slice().sort(), ["U", "W"], "it makes its own colours");
+  assert.deepEqual(both.produces.slice().sort(), ["U", "W"], "it makes its own colors");
   assert.equal(both.entersTapped, false,
-    "a land that makes its own colour is not a fetch, however much else it also does");
+    "a land that makes its own color is not a fetch, however much else it also does");
 
   // WHERE A KEYWORD STATES ITS EFFECT ONLY IN REMINDER TEXT, the card is credited
   // with nothing -- deliberately, because reminder text is stripped before a card

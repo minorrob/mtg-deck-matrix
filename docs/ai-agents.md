@@ -108,7 +108,7 @@ That is a better prompt than "advise me about this deck" by some distance, becau
 is checkable against a number rather than against taste. See `docs/prd.md` §11 — the pilot
 policy has to exist in `sim-engine.js` first.
 
-**Status.** Not built, and now blocked on something specific rather than on judgement: the
+**Status.** Not built, and now blocked on something specific rather than on judgment: the
 engine has one pilot policy, so there is no second run to difference against.
 
 ---

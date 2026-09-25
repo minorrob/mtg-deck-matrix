@@ -330,7 +330,7 @@ M.validate(s);checks++;
   expectFailure('assign',{deckId:'C',cardId:'land',assigned:1,confirmed:true},/Finalize/);
   expectFailure('assign',{deckId:'A',cardId:'red',assigned:1,confirmed:true},/not in Deck A's list/);
   assert.equal(M.plan(s,{cardId:'land',column:'a',deckId:'C',value:1}).refused,'Draft C is a draft; finalize it, or set its target.');checks++;
-  // TARGET: the copies rule, the colour identity and the commander are the limits; 100 is not.
+  // TARGET: the copies rule, the color identity and the commander are the limits; 100 is not.
   expectFailure('target',{deckId:'A',cardId:'ring',quantity:2,confirmed:true},/one copy/);
   expectFailure('target',{deckId:'A',cardId:'red',quantity:1,confirmed:true},/color identity/);
   expectFailure('target',{deckId:'A',cardId:'leader',quantity:0,confirmed:true},/commander/);
@@ -614,7 +614,7 @@ assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);
   assert.equal(report.deckFingerprint,M.fingerprint(d,s),'a report filed by the sim matches the deck it measured');checks++;
 }
 /* A LOBBY DECK (UAT M-15, Rob's call): created with kind 'lobby', hidden by the pages until Save
-   to Decks promotes it; the predicate also recognises the id the lobby has always minted. */
+   to Decks promotes it; the predicate also recognizes the id the lobby has always minted. */
 {
   run('createDeck',{deckId:'deck:lobby:t1',name:'Lobby Krenko',commanders:['leader'],slots:[{id:'lc',cardId:'leader',quantity:1}],kind:'lobby'});
   const lobby=s.decks.find(d=>d.id==='deck:lobby:t1');assert.equal(lobby.kind,'lobby');assert.equal(M.isLobbyDeck(lobby),true);checks++;

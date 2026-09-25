@@ -82,7 +82,7 @@
   const lot=(s,id)=>{const r=s.lots.find(r=>r.id===id);ensure(r,'That card record no longer exists.');return r;};
   const group=(s,id)=>{const g=s.groups.find(g=>g.id===id);ensure(g,'Collection group not found.');return g;};
   /* THE RECORD SOURCE. A shipped card is a reference in the library (schema 3); its facts --
-     type line, colour identity, legality, price -- live on the Card record. The host installs
+     type line, color identity, legality, price -- live on the Card record. The host installs
      the record source once (the app: the catalog; the live-state builder: the bundled records)
      and every rule here reads a card through it. The model never stores those facts again. */
   let recordSource=null;
@@ -228,7 +228,7 @@
   }
   /* A TYPED NUMBER, TURNED INTO COMMANDS. The spreadsheet asks for a row, a column and the
      new value; this says what the library would have to do, without doing it: which
-     copies leave when Own falls, which orders are cancelled when Ordered falls, and the
+     copies leave when Own falls, which orders are canceled when Ordered falls, and the
      target and assign commands a deck cell needs, chained when the target must rise first.
      `review` says the change takes something from somewhere -- a copy out of a box or a
      reservation, a purchase recorded from thin air -- so the view asks before committing. */
@@ -412,7 +412,7 @@
       case 'verifyIdentity':{const old=card(s,c.cardId);ensure(c.confirmed===true,'Review the exact identity correction first.');ensure(c.card&&c.card.verified&&c.card.legalities?.commander==='legal','Choose a verified Commander-legal catalog identity.');const next=addCard(c.card);for(const d of s.decks){if(!d.slots.some(r=>r.cardId===old.id)&&!d.commanders.includes(old.id))continue;version(d);for(const r of d.slots)if(r.cardId===old.id)r.cardId=next.id;d.commanders=d.commanders.map(id=>id===old.id?next.id:id);if(d.status==='final'){const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));}}for(const l of s.lots)if(l.cardId===old.id)l.cardId=next.id;for(const g of s.groups)for(const r of g.entries)if(r.cardId===old.id)r.cardId=next.id;summary=`Verified ${old.name} as ${next.name}; quantities and exact printings preserved`;break;}
       /* THE SPREADSHEET'S TWO COMMANDS. target sets how many of a card a deck LISTS, on a draft
          or a finalized deck: a finalized list may leave 100 for a while (the deck reads In
-         progress until it is back), but never breaks the copies rule or the colour identity,
+         progress until it is back), but never breaks the copies rule or the color identity,
          and never loses its commander. assign sets how many copies are RESERVED to that slot
          and how many of those sit in the physical deck: it takes free copies first, then copies from
          other decks (which stay where they physically are until pulled), then records a new
@@ -594,7 +594,7 @@
          chosen slot gets one copy record at the given status, filed under the deck's group so
          the Collection shows it with the deck; on a finalized deck the copies are reserved to
          their slots as well, at the shortfall and no more. Copies already filed under the group
-         for the same card count towards a draft's slot, so saying it twice does not double the
+         for the same card count toward a draft's slot, so saying it twice does not double the
          library. `quantities` names a count per slot for the one-card case. */
       case 'acquireSlots':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the archived deck first.');ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Watched.');const chosen=d.slots.filter(r=>r.committed&&(!c.slotIds||c.slotIds.includes(r.id)));ensure(chosen.length,'Choose at least one card in the list.');let made=0;
         for(const r of chosen){const filed=d.groupId?s.lots.filter(l=>l.cardId===r.cardId&&!l.allocation&&l.groupIds.includes(d.groupId)).reduce((n,l)=>n+l.quantity,0):0;

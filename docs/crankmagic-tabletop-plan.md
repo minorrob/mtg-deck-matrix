@@ -27,13 +27,13 @@ A tabletop that holds **every card the library knows about, as cards**:
 - every owned copy (a real card),
 - a **ghost card** for every ordered copy, and — with a deck selected — a ghost for every
   card that is legal for that deck and not owned (the graph's Commander-legal cards inside
-  the deck's colour identity and bracket ceiling; ghosts are outlines, never counted as held).
+  the deck's color identity and bracket ceiling; ghosts are outlines, never counted as held).
 
 **Down front: the status piles**, in the order the work happens — *Physical deck · Reserved ·
 Ready to add · Ordered · To buy · Substitute*, each a stack whose height is its count and
 whose top card is its most recent change. **Along the top edge: the Bench**, a long rail of
 the copies that belong to no deck, fanned so their edges show. **Behind the status piles, in a
-semicircle: the group piles**, whose grouping is a dropdown — card type, colour, mechanic
+semicircle: the group piles**, whose grouping is a dropdown — card type, color, mechanic
 (with sub-groups where a mechanic family splits: sacrifice → outlets / fodder / payoffs),
 role, Primary Purpose, mana value, price band, collection group, deck. Each pile carries its
 label and count on a small placard.
@@ -61,7 +61,7 @@ CrankMagic already uses, so the Tabletop reads as a view of the app and not a di
 2. **Click a card to select it**; shift-click or a tick in the corner extends to
    **multi-select**. On the first selection the other cards **recombine into their pile** —
    a short animation, each card sliding back to the stack — and the **selection stays on the
-   centre of the mat**, fanned if more than one, face up, at large size, with the card's
+   center of the mat**, fanned if more than one, face up, at large size, with the card's
    name, status pill, price and deck beneath.
 3. **Drag the selection onto any pile.** A status pile = the status change the Status
    fly-out performs today (*Physical deck*, *Bench*, *Ordered*, *Wanted*, …) — the same
@@ -69,7 +69,7 @@ CrankMagic already uses, so the Tabletop reads as a view of the app and not a di
    that changes money or a deck, no dialog for a bench ↔ box move). A group pile = the
    grouping's action where one exists (a collection group pile files the copy into that
    group; a deck pile reserves the copy for that deck or, for a ghost, adds a To buy row;
-   a card-type or colour pile is not a target and says so on hover). Drop outside a pile =
+   a card-type or color pile is not a target and says so on hover). Drop outside a pile =
    the selection returns to where it came from.
 4. **Right-click or long-press** a selected card → the row's ⋯ menu from the list (Inspect,
    Replacements & options, Flag as option, Pin, Delete).
@@ -94,7 +94,7 @@ status strip.
 Already there: every pile is a query the model answers today — `projection()` rows carry
 `placement` (Physical deck · Reserved · Substitute · Bench · Unassigned), `source` (owned ·
 ordered · watching), `kind` (lot · need · draft · option · entry), deck and group ids;
-`readiness()` gives the counts the placards show; the classifier gives type, colour, role,
+`readiness()` gives the counts the placards show; the classifier gives type, color, role,
 Primary Purpose and mechanics for every card; the Status fly-out's commands are the drop
 targets.
 
@@ -105,7 +105,7 @@ Needs, all small and all worth settling in the data-model evaluation first:
   re-render).
 - **One status vocabulary in one place.** The list's `statusOf`, the pill kinds in the app
   shell and the readiness bar's segments each name the statuses; the tabletop is a fourth
-  consumer. Move the vocabulary (id, label, colour token, order) into the model so all four
+  consumer. Move the vocabulary (id, label, color token, order) into the model so all four
   read it.
 - **Grouping as data.** The sheet's *Group rows by* choices and the tabletop's grouping
   dropdown must be the same list, with each grouping's key function and sub-group rule in
@@ -133,7 +133,7 @@ Needs, all small and all worth settling in the data-model evaluation first:
   which answers TB0's vocabulary question without a new module: the list, the pills, the
   readiness bar and the tabletop all read the same list. Ghosts are the copies the library
   knows about but does not hold — Ordered, Watched, To buy, Draft list, Suggestion, Planned —
-  and no more: the deck-legal catalogue ghosts of §1 wait for TB3, where a ghost first becomes
+  and no more: the deck-legal catalog ghosts of §1 wait for TB3, where a ghost first becomes
   an order. The grouping list is the tabletop's own `GROUPINGS` for now; folding the sheet's
   *Group rows by* into it is the `crankmagic-groupings.js` item in §4, still open. A tap on
   a pile names its top six cards; laying it out is TB2.
@@ -166,7 +166,7 @@ Needs, all small and all worth settling in the data-model evaluation first:
   changes a deck or money (question 3 answered: a copy dragged out of a physical deck asks), a
   plain save for filing into a group. Ghosts: a To buy requirement or a draft-list row dropped
   on Ordered or the Bench becomes a copy filed with its deck, as *Set status* does; the deck-legal
-  catalogue ghosts of §1 are still not drawn (question 1 stands: a deck first, and that is TB4
+  catalog ghosts of §1 are still not drawn (question 1 stands: a deck first, and that is TB4
   or later). A suggestion or a planned group entry is never a copy here; its row menu sets its
   status. The drag is pointer events (mouse, pen, finger) on the stage's fan with an eight-pixel
   slop, a badge with the count and the contract's words, green for a target and red for a
@@ -183,7 +183,7 @@ Needs, all small and all worth settling in the data-model evaluation first:
   with Home, End, PageUp and PageDown, Space ticking and Enter choosing; *Print* puts the whole
   pile on paper as a numbered list with type, mana value, status, price, deck and copies
   (`printSheet`, pure). The plan is complete. Still open after TB4, in the order they would
-  matter: the deck-legal catalogue ghosts of §1 (question 1: a deck first); long-press on a
+  matter: the deck-legal catalog ghosts of §1 (question 1: a deck first); long-press on a
   phone for the row menu (*Move to…* covers the move); the phone's page strip pinned rather
   than repeated; and folding the sheet's *Group rows by* and the tabletop's groupings into one
   module (§4).
@@ -205,7 +205,7 @@ TB3 two, TB4 one.
 ## 6. Open questions for Rob
 
 1. Should a deck be *required* before ghosts for legal-but-unowned cards appear (the whole
-   legal catalogue is 31,830 cards; with a deck it is a few thousand)? **Recommended: yes,
+   legal catalog is 31,830 cards; with a deck it is a few thousand)? **Recommended: yes,
    ghosts only with a deck selected; without one, only ordered ghosts.**
 2. Is the Bench rail the bench in the model's sense (owned, in no deck) or "everything not in
    a physical deck"? **Recommended: the model's Bench, so the rail agrees with the Bench

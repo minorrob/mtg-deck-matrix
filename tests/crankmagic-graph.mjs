@@ -374,7 +374,7 @@ ok("loop mode's rule: events, engines and repeatable feeds continue a loop; trib
   const anthem = relate("Krenko, Mob Boss", "Coat of Arms");
   assert.ok(!Graph.isLoopLink(anthem), `an anthem is a payoff for width, not a loop step: ${anthem && anthem.kind}`);
   /* A lord wants bodies and Krenko makes them repeatably, so that pair IS a loop feed -- the
-     width payoff the catalogue files at depth 3 -- even though the edge's leading sentence is
+     width payoff the catalog files at depth 3 -- even though the edge's leading sentence is
      the tribal one. Two cards that merely share a word (both Equipment) are not. */
   const lord = relate("Krenko, Mob Boss", "Goblin Chieftain");
   assert.ok(lord && lord.loopFeeds.includes("creatures") && Graph.isLoopLink(lord), `a lord fed by a token maker is a loop payoff: ${lord && lord.kind}`);

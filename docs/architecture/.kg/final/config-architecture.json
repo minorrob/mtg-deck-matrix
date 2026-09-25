@@ -3766,7 +3766,7 @@
   {
    "id": "jstep:table.2",
    "kind": "JourneyStep",
-   "name": "Invites a guest by e-mail, link or QR.",
+   "name": "Invites a guest by email, link or QR.",
    "journey": "journey:table",
    "order": 2,
    "status": "intent"
@@ -3852,7 +3852,7 @@
   {
    "id": "jstep:operator.1",
    "kind": "JourneyStep",
-   "name": "Invites a person by adding their e-mail to the Access Invited list.",
+   "name": "Invites a person by adding their email to the Access Invited list.",
    "journey": "journey:operator",
    "order": 1,
    "status": "intent"

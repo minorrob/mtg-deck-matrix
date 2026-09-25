@@ -1,6 +1,6 @@
-# Loop patterns CrankMagic should recognise
+# Loop patterns CrankMagic should recognize
 
-The catalogue behind the Discover / loop plan (`docs/crankmagic-discover-loop-plan.md`). Each
+The catalog behind the Discover / loop plan (`docs/crankmagic-discover-loop-plan.md`). Each
 pattern is written three ways: what it looks like at the table, the **general characteristic**
 (the shape that makes it a loop rather than a pile of good cards), and the **signature** in the
 classifier's own vocabulary — the fields `card-classify.js` already writes on every card in

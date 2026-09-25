@@ -2,7 +2,7 @@
  *
  * data/cards.json is the Card record set: every card the library, the six decks, the ladders,
  * the guides and the pop-ups name -- identity (oracleId, name), the printed facts (type line,
- * rules text, cost, colours, keywords, power and toughness, rarity, legalities), the printing
+ * rules text, cost, colors, keywords, power and toughness, rarity, legalities), the printing
  * the app shows (set, images, the TCGplayer link), one price with its date, the graph's rank
  * and commander flag, and the classifier's terms (roles, causes, triggers, produces, …)
  * derived here, once, with the same card-classify.js call the graph bake makes. Two lens

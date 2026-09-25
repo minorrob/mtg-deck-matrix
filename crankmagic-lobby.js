@@ -2,7 +2,7 @@
  * your deck, one to three opponents, and one set of rules every seat at the table obeys.
  *
  * WHY THIS IS A MODULE AND NOT A SCREEN. Everything the lobby decides is arithmetic over card
- * lists — is this a hundred, is it inside its commander's colours, how many Game Changers does
+ * lists — is this a hundred, is it inside its commander's colors, how many Game Changers does
  * it carry against the bracket's cap, which seat goes first, and is the pod fair. None of that
  * needs a browser, and all of it needs to be right, so it lives here where a Node suite can hold
  * it to the committed decks. The screen in crankmagic-game.js draws what this returns and spells
@@ -67,7 +67,7 @@
   };
 
   /* ------------------------------------------------------------------ a seat, from anywhere */
-  /* `cards` is the 99: the commanders are named separately, because the colour-identity check and
+  /* `cards` is the 99: the commanders are named separately, because the color-identity check and
      the size check both need to know which is which. A caller that hands the whole hundred in
      `cards` with the commanders among them is handled — they are lifted out by name. */
   function seat(raw) {
@@ -99,7 +99,7 @@
 
   /* ------------------------------------------------------------------ is this deck seatable */
   /* Every issue names the cards it is about, so the lobby can say "this deck carries 5 Game
-     Changers; bracket 3 allows 3" AND list which five. A colour-identity check is skipped where
+     Changers; bracket 3 allows 3" AND list which five. A color-identity check is skipped where
      the list carries no identities at all — an unresolved paste knows names and nothing else, and
      a check that cannot see is worse than no check because it reads as a clean bill. */
   function validate(raw, options) {
@@ -139,7 +139,7 @@
   /* ------------------------------------------------------------------ trim to the bracket */
   /* THE EXCESS GOES, AND A BASIC TAKES THE SEAT. Dropping a card out of a hundred leaves
      ninety-nine, which is not a legal deck — so the cut is a swap, and the replacement is a basic
-     land in a colour the deck already wants most. That is honest about what it is: a basic keeps
+     land in a color the deck already wants most. That is honest about what it is: a basic keeps
      the list legal and playable, and it is plainly worse than what it replaced, which is the
      reader's cue to put something real there before a game that matters.
      The order is the measured one where a measurement exists (a library deck's upgrade options
@@ -171,7 +171,7 @@
     let taken = 0;
     for (const c of sorted) { if (taken >= want) break; drop.push(c); taken += c.quantity; }
     const dropNames = new Set(drop.map((c) => c.name));
-    /* The colour the deck leans on hardest, by how many of its cards carry that colour. */
+    /* The color the deck leans on hardest, by how many of its cards carry that color. */
     const colors = [...identity(s)].filter((x) => x !== "C");
     const weight = new Map(colors.map((x) => [x, s.cards.filter((c) => c.colorIdentity.includes(x)).reduce((n, c) => n + c.quantity, 0)]));
     const heaviest = colors.slice().sort((a, b) => (weight.get(b) || 0) - (weight.get(a) || 0) || a.localeCompare(b))[0] || "C";
@@ -309,7 +309,7 @@
 
   /* A host catalog entry (what /api/setup lists): the commander by name through `exact`, and
      either the rows the host sent or, when it sent none, ninety-nine basics split across the
-     commander's colours so the seat is at least a legal placeholder. */
+     commander's colors so the seat is at least a legal placeholder. */
   function catalogMetaSeat(meta, options) {
     const o = options || {}, look = lookupsOf(o);
     const commanderName = String(meta.commander || "").trim();
@@ -373,8 +373,8 @@
   /* ------------------------------------------------------------------ make it seatable */
   /* THE STRIP AND BACKFILL (self-test #7). A built or pasted list that the table refuses is not
      handed back as a refusal: Game Changers over the cap go (trim first, then by name), cards
-     outside the colour identity go, duplicates of non-basics drop to one, anything over a hundred
-     is cut from the end, and anything under is filled with the commander's first-colour basic.
+     outside the color identity go, duplicates of non-basics drop to one, anything over a hundred
+     is cut from the end, and anything under is filled with the commander's first-color basic.
      Twelve passes, then a last resort that strips every Game Changer. The seat object is worked
      on in place, as the screen always did. `says` is the notice the screen shows, `adjusted`
      whether it changed anything, `lastResort` whether the twelve passes were not enough. */
@@ -478,7 +478,7 @@
     return {ok: true, why: "", unknown: []};
   }
 
-  /* The type bar: [label, count, colour] for every bucket with a card in it. Fills typeLine and
+  /* The type bar: [label, count, color] for every bucket with a card in it. Fills typeLine and
      cardId in place where the catalog can answer, as enrich does. */
   const TYPE_BUCKETS = [["Creature", "#6dbf6d"], ["Instant", "#6aa8ff"], ["Sorcery", "#ff8a5c"], ["Artifact", "#c0c0c0"],
     ["Enchantment", "#e0a0ff"], ["Planeswalker", "#ff6ad5"], ["Land", "#c4a35a"], ["Other", "#8899aa"]];

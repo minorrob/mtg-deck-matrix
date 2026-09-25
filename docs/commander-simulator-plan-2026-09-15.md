@@ -271,7 +271,7 @@ Reuse CrankMagic's navy/blue design, art treatment, card resolver, glossary, and
 - Keep ordinary animation short and interruptible. No AI decision or rules transition waits for decorative animation. Include reduced motion, keyboard operation, contrast, and optional sound.
 - Warm the pod's image cache before play, load larger art on inspection, reserve image dimensions, and keep cached art usable offline. Missing images have a clear labeled fallback and retry; supported image coverage is part of the release gate.
 
-**Performance targets, to measure on this computer:** local input acknowledgement p95 below 100 ms; healthy 60 fps dragging/inspection on normal boards; responsiveness with 200 permanents and 1,000 equivalent tokens; no token-ID collapse in rules or telemetry. Virtualize logs and off-screen galleries. The first release targets desktop; phone editing/history continue through the existing app.
+**Performance targets, to measure on this computer:** local input acknowledgment p95 below 100 ms; healthy 60 fps dragging/inspection on normal boards; responsiveness with 200 permanents and 1,000 equivalent tokens; no token-ID collapse in rules or telemetry. Virtualize logs and off-screen galleries. The first release targets desktop; phone editing/history continue through the existing app.
 
 ## 8. Telemetry: record the causes, not just a transcript
 

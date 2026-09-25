@@ -3,7 +3,7 @@
 // These are print and paste targets, so the assertions are about the things that
 // go wrong on paper and in somebody else's text box: a card that falls between
 // two price bands and off the sheet, a heading with nothing under it, a name a
-// vendor's matcher will not recognise.
+// vendor's matcher will not recognize.
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 

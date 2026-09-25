@@ -111,11 +111,11 @@ instants and sorceries outnumber its creatures three to one is the cheap detecto
 
 **DONE in v2.7.** Typed, exclusive payment landed: a pool of typed mana, each source
 contributing once, each pip paid from it and removed. `{C}` is colourless again rather
-than every colour. `tests/slot-model.mjs` compares the page's copy of the rules against
+than every color. `tests/slot-model.mjs` compares the page's copy of the rules against
 the engine's over the whole catalog.
 
-**The symptom.** `add {C}{C}` is treated as every colour; castability checks each
-colour pip independently against a source count. Sol Ring can pay a coloured pip. One
+**The symptom.** `add {C}{C}` is treated as every color; castability checks each
+color pip independently against a source count. Sol Ring can pay a colored pip. One
 multicolour source can appear to cover two incompatible simultaneous requirements.
 
 **Why it matters.** Every mana-base recommendation the Lab makes rests on this, and
@@ -153,7 +153,7 @@ taken from the same typed mana the turn had, so two answers cannot be counted ag
 untapped land and a tapped-out pilot receives no protection credit.
 
 The lens policies now remove the card, which fixed repeated reuse across turns. What
-still does not happen: the mana is not debited, the coloured payment is not checked,
+still does not happen: the mana is not debited, the colored payment is not checked,
 and no legal target is required. So multiple available answers can be counted against
 the same resources, and a tapped-out pilot can receive protection credit.
 

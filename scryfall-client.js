@@ -243,10 +243,10 @@
           else init.signal.addEventListener("abort", relay, {once: true});
         }
         /* The deadline is RACED, not merely signalled. Aborting only works if the fetch
-           implementation honours the signal, and the guarantee "this call returns within
+           implementation honors the signal, and the guarantee "this call returns within
            timeoutMs" must not depend on that cooperation -- a fetch that ignores its signal
            would otherwise hang the caller exactly as before. The abort is still sent, so the
-           real request is genuinely cancelled rather than left in flight; the race is what
+           real request is genuinely canceled rather than left in flight; the race is what
            makes the caller's await end either way. */
         /* The caller's cancellation is raced for the same reason as the deadline, and keeps
            its AbortError name so the loop below can tell "the caller changed their mind"

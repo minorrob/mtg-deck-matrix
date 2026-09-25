@@ -140,7 +140,7 @@ are correct and that I had not made myself:
   own internal schedule, not something a player could observe. Its +10.93 therefore cannot
   support coaching advice as it stands. Relabel it a benchmark and build an
   observation-limited policy to compare against.
-- **`answerIsSpent` removes a card but never debits its mana**, checks colour, or requires a
+- **`answerIsSpent` removes a card but never debits its mana**, checks color, or requires a
   legal target. Multiple answers are counted against the same resources.
 - **The published and lens protocols differ** and should carry different protocol
   identifiers rather than being reconciled by prose.

@@ -2,7 +2,7 @@
  "meta": {
   "repo": "crankmagic",
   "repo_id": "repo:crankmagic",
-  "generatedAt": "2026-09-25T18:34:32.040592Z",
+  "generatedAt": "2026-09-25T19:10:56.248969Z",
   "schema": "engram-schema.yaml@0.3.0",
   "stages_present": [
    "survey",
@@ -4361,7 +4361,7 @@
   {
    "id": "jstep:table.2",
    "kind": "JourneyStep",
-   "name": "Invites a guest by e-mail, link or QR.",
+   "name": "Invites a guest by email, link or QR.",
    "journey": "journey:table",
    "order": 2,
    "status": "intent",
@@ -4469,7 +4469,7 @@
   {
    "id": "jstep:operator.1",
    "kind": "JourneyStep",
-   "name": "Invites a person by adding their e-mail to the Access Invited list.",
+   "name": "Invites a person by adding their email to the Access Invited list.",
    "journey": "journey:operator",
    "order": 1,
    "status": "intent",
@@ -5177,9 +5177,9 @@
   {
    "id": "req:M5-lobby",
    "kind": "Requirement",
-   "name": "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human se",
+   "name": "The lobby per r3's 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human sea",
    "req_id": "M5-lobby",
-   "text": "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human seat.",
+   "text": "The lobby per r3's 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human seat.",
    "req_kind": "functional",
    "priority": "must",
    "attributes": {
@@ -5660,7 +5660,7 @@
   {
    "id": "flow:crankmagic/m5-lobby",
    "kind": "Flow",
-   "name": "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and a",
+   "name": "The lobby per r3's 2b design: invites by email, link and QR, table rules, and au",
    "entry": "M5-lobby",
    "status": "intent",
    "stage": "behavior",

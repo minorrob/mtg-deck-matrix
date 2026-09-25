@@ -80,7 +80,7 @@
     }));
   }
 
-  /* The engine wants printed facts, not catalogue rows. Sources are tried in the
+  /* The engine wants printed facts, not catalog rows. Sources are tried in the
      order that keeps a browser run identical to the Node one: the card-facts
      file first, then whatever the caller attached to the entry.
 
@@ -88,10 +88,10 @@
      estimates a creature's power from its mana value -- here exactly as in the
      sweep and the ladders. Feeding it the printed figures would measure this
      deck on a footing no other published number shares. */
-  /* Colour identity arrives in two shapes. card-facts.json and Scryfall give an
+  /* Color identity arrives in two shapes. card-facts.json and Scryfall give an
      array, ["W","B"]; graph.json packs it into a string, "WB", because that is
      how the export writes it. The engine indexes it, so a string silently
-     becomes a list of characters in some places and throws in others. Normalise
+     becomes a list of characters in some places and throws in others. Normalize
      once, here, rather than at every call site. */
   function colorsOf(value) {
     if (Array.isArray(value)) return value;

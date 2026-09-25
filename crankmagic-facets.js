@@ -12,7 +12,7 @@
  *
  * TWO KINDS OF FACET, and the difference matters.
  *
- *   Thirteen of them describe Magic -- role, colour, type, mechanics, and the four
+ *   Thirteen of them describe Magic -- role, color, type, mechanics, and the four
  *   directed relations a chain is built out of: what a card triggers on and what causes
  *   that event, what it produces and what requires it, what it multiplies, what quality
  *   it grants and what extends one. They come from data/graph.json, which is public card
@@ -46,7 +46,7 @@
 
   /* `mine: true` marks a facet that describes the reader rather than the card, so it can
      be dropped whole on an empty library. `match` overrides the default "card has every
-     picked value"; only colour needs one. */
+     picked value"; only color needs one. */
   const LANDS_ONLY = "lands only";
   const ENTRY = {"enters-untapped": "untapped", "enters-tapped": "tapped", "enters-tapped-unless": "tapped unless"};
   const isLand = (c) => c.isLand === true || /\bLand\b/.test(String(c.type || ""));
@@ -69,8 +69,8 @@
   const FACETS = [
     {key: "roles", label: "Role", from: (c) => c.roles || []},
 
-    /* Colour, with the semantics a deckbuilder wants: "legal in a deck of these colours",
-       not "printed in these colours". A colourless card is legal in every deck, so it
+    /* Color, with the semantics a deckbuilder wants: "legal in a deck of these colors",
+       not "printed in these colors". A colourless card is legal in every deck, so it
        passes any selection -- which makes ticking C on its own the only way to isolate
        colourless cards, and that is deliberate. */
     {key: "colors", label: "Color", from: (c) => (c.ci ? String(c.ci).split("") : ["C"]),
@@ -87,7 +87,7 @@
        whatever the all/any rule says -- "two or three" cannot mean both at once. */
     {key: "mv", label: "Mana value", from: (c) => (c.mv === null || c.mv === undefined || !Number.isFinite(Number(c.mv)) ? [] : [Number(c.mv) >= 7 ? "7+" : String(Number(c.mv))]), match: anyOf},
     {key: "manaKind", label: "Mana", from: (c) => manaKinds(c), match: anyOf},
-    /* LANDS ARE A MODE, NOT A NODE. A mana base is chosen by colour and by how a land
+    /* LANDS ARE A MODE, NOT A NODE. A mana base is chosen by color and by how a land
        enters, not by what it is joined to, so lands stay off the graph and "Lands only"
        turns Discover into a sortable list of them. "Enters" is the entry reading the
        classifier files on every land (see card-classify.js landEntry), offered here as
@@ -283,7 +283,7 @@
       const {yes, no} = split(picked);
       if (no.some((v) => have.includes(v))) return false;
       if (!yes.length) continue;
-      /* Colour keeps its own rule in either mode: "legal in a deck of these colours" is
+      /* Color keeps its own rule in either mode: "legal in a deck of these colors" is
          not a list of alternatives, it is one question about the whole identity. */
       const ok = facet.match ? facet.match(have, yes)
         : any ? yes.some((v) => have.includes(v))
@@ -325,7 +325,7 @@
 
   /* The cards the picks leave, as a mask over the list, by the rules matches() states:
      exclusions first and absolute; then each facet's includes -- an intersection in "all", a
-     union in "any" or where the facet says its picks are alternatives, and colour's own rule
+     union in "any" or where the facet says its picks are alternatives, and color's own rule
      (every letter of the identity among the picks, colourless always in, unless C alone is
      picked, which is the colourless cards and nothing else). The personal facets are matched
      card by card over what is left. tests/crankmagic-facets.mjs holds this to matches(). */

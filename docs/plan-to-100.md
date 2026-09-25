@@ -59,9 +59,9 @@ The machinery that keeps the stores fresh:
 
 ## M3 — Accounts and operations, hardened · M
 
-- [x] **Self-service account deletion.** A Worker route that removes the person's data, a type-to-confirm dialog in Settings (R3.3), and the Access e-mail removal as Rob's runbook step. The privacy page already promises this. *Done in R3.3b: `DELETE /api/account`, Settings › Delete account…, the runbook in `docs/plan-account-cloud.md`; proven by `tests/cloud-worker.mjs`, `tests/settings-r3.mjs` and the real-Worker `tests/uat/cloud-e2e.mjs`. Not live until the next production deploy, on Rob's go.*
+- [x] **Self-service account deletion.** A Worker route that removes the person's data, a type-to-confirm dialog in Settings (R3.3), and the Access email removal as Rob's runbook step. The privacy page already promises this. *Done in R3.3b: `DELETE /api/account`, Settings › Delete account…, the runbook in `docs/plan-account-cloud.md`; proven by `tests/cloud-worker.mjs`, `tests/settings-r3.mjs` and the real-Worker `tests/uat/cloud-e2e.mjs`. Not live until the next production deploy, on Rob's go.*
 - [x] **Rate limits on `/api/*`**, per identity and per IP. *Done 2026-09-25: Cloudflare's Rate Limiting bindings, 240 a minute per IP (checked before the token) and 120 per person, in each profile's own namespaces; `tools/release-pages.mjs` refuses a cloud release without them, and a refusal says what to do. It reaches crankmagic.com with the next release, on Rob's go.*
-- [ ] **Monitoring:** Workers observability logs, an alert on 5xx and on sync conflicts, and a weekly check. **Rob:** set the alert e-mail.
+- [ ] **Monitoring:** Workers observability logs, an alert on 5xx and on sync conflicts, and a weekly check. **Rob:** set the alert email.
 - [ ] **Backups:** confirm D1 Time Travel's window, and export a nightly copy to R2 once M2 turns it on.
 - [ ] **Rob, ongoing:** invite people through the Access "Invited" policy. The free plan's cap is 50 people; past it, the program's swap point applies.
 - [ ] **Rob:** how his workbook reaches his library now that Load Live is gone. Push it into his account through the API, or make the app the source of truth.
@@ -101,7 +101,7 @@ The program's Stage 3 table, built to the r3 Play design.
 - [ ] **The lobby, per r3's 2b design:**
   - four status quadrants, each with the color-identity fan;
   - Change deck and **Choose mat**;
-  - Invite by e-mail, link and QR;
+  - Invite by email, link and QR;
   - the table rules and Host tools;
   - auto-launch with the 10-second countdown, which waits for every human seat.
 - [ ] Port the seat and table lifecycle from `table-lifecycle.mjs`, `seat-access.mjs` and `table-broker.mjs`: two to four mixed seats, readiness, rematch, and refusing with instructions.
@@ -316,7 +316,7 @@ That is the M11 page's missing half: **the facts behind the drawings, and the cu
 | Now (M2) | Turn on R2 · the token · the schedule |
 | Now (M11) | The page's go. Engram is approved (2026-09-25), to run in a cloud session |
 | Now (M4) | Forge's role (drop phase 5?) · unsupported cards in Play v1 |
-| Soon (M3) | The alert e-mail · the workbook's path into his library |
+| Soon (M3) | The alert email · the workbook's path into his library |
 | M5 | Who plays v1 · Workers Paid · the guest and host journeys · End current game |
 | M6 | The AI allowlist · the key · spend caps · the privacy wording |
 | M7 | The 200-card sample's spend and terms |

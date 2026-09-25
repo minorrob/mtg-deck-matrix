@@ -10,12 +10,12 @@
  * why a card is on it.
  *
  * So it is carried as what it is: a list somebody wrote, with a per-copy price ceiling
- * they are willing to pay, merged into the Shop beside the derived rows and labelled.
+ * they are willing to pay, merged into the Shop beside the derived rows and labeled.
  *
  * WHAT SCRYFALL ADDS. The document gives a name, a count, a rough type and a price
  * ceiling -- enough to shop from, not enough to render. Fifty-five of these cards are in
  * no deck the app tracks, so nothing in the catalog knows their art, set, rarity or color
- * identity, and without those the Gallery would show fifty-five grey rectangles and every
+ * identity, and without those the Gallery would show fifty-five gray rectangles and every
  * color and rarity filter would call them colorless commons. So each name is looked up
  * once, at import, and the facts are written into the file beside the price. Offline, or
  * if Scryfall is unreachable, whatever the last run wrote is kept rather than blanked.
@@ -83,7 +83,7 @@ cards.sort((a, b) => a.name.localeCompare(b.name));
 
 /* What a previous run already learned. Read before the lookup, not after: a card that
    drops out of Scryfall's index, or a run made on a train, keeps the art it had rather
-   than reverting to a grey rectangle. */
+   than reverting to a gray rectangle. */
 const before = new Map();
 try {
   for (const card of JSON.parse(fs.readFileSync(OUT, "utf8")).cards || []) {

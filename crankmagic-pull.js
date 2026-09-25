@@ -3,7 +3,7 @@
  * The deck page is organized by what the list asks for; the Collection by copy. Neither
  * answers the question at the table, which is "go and get these": the ones on the bench,
  * the ones in another deck's box, and the ones in this box that no longer belong. So this
- * is the deck's reserved copies cut by location -- colour, then name inside each group,
+ * is the deck's reserved copies cut by location -- color, then name inside each group,
  * the way a binder is walked -- with a tick per row that records the walk as it happens.
  *
  * A tick is one `place`: the lot moves into the box, the model recomputes readiness, and

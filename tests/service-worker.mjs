@@ -140,7 +140,7 @@ await ok("the worker's own ?v= no longer decides either key", async () => {
   await world.listeners.get("install")({waitUntil: (p) => waits.push(p)});
   await Promise.all(waits);
   assert.deepEqual([...world.caches.keys()].sort(), [dataName, shellName].sort(),
-    "the cache names moved with the worker's version, which is the behaviour that threw 7.1 MB away on every CSS fix");
+    "the cache names moved with the worker's version, which is the behavior that threw 7.1 MB away on every CSS fix");
 });
 
 await ok("activate deletes stale caches under this prefix and keeps both current ones", async () => {

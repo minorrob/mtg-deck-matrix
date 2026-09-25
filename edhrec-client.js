@@ -16,7 +16,7 @@
  *   synergy     that inclusion MINUS the rate across all decks in the same
  *               colors. Sol Ring is about zero: everyone plays it, so playing it
  *               says nothing about your commander. A card at +0.40 is played
- *               forty points more often here than in colour-matched decks
+ *               forty points more often here than in color-matched decks
  *               generally, which is as close to "this card is here because of
  *               your commander" as a dataset can get.
  *
@@ -30,7 +30,7 @@
  * worth surfacing: it means this signal is unavailable for this deck, and the
  * generator has ranked cards without it since the day it was written. `load`
  * returns null, `scoreFor` returns null for every card, and the caller falls
- * back to exactly the behaviour it had before this file existed.
+ * back to exactly the behavior it had before this file existed.
  */
 (function (root, factory) {
   "use strict";
@@ -111,7 +111,7 @@
           inclusion: potential > 0 ? Number(view.num_decks || 0) / potential : null,
           // Already a difference of two shares, so it is signed and small.
           // Clamped only at the bottom: a negative synergy means the card is
-          // played LESS here than in colour-matched decks generally, which is
+          // played LESS here than in color-matched decks generally, which is
           // information, but not information worth ranking below cards nobody
           // has an opinion about at all.
           synergy: typeof view.synergy === "number" ? view.synergy : null,

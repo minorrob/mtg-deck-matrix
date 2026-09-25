@@ -3,7 +3,7 @@
  * In a real page with the committed library restored:
  *
  *   1. The Menu holds what §4.7 lists (the theme, Settings, backup and restore, help, the tour,
- *      feedback, sharing) and none of what moved: Excel, the e-mailed export, history and Undo,
+ *      feedback, sharing) and none of what moved: Excel, the emailed export, history and Undo,
  *      Confirmations, Clear all data, the card data ages. Reset comparison picks is gone.
  *   2. Menu → Settings opens #settings, with the design's sections: Account, Appearance, Prices, Data,
  *      About. Every entry that left the Menu is there, and Publish your To Trade list is in the
@@ -40,8 +40,8 @@ try {
   /* 1. The Menu, slimmed. */
   await openMenu(page);
   eq(await entries(page), ["Dark · Brass & Slate", "Light · Felt & Cream", "Match system", "Settings", "Save a backup file", "Restore from a backup file",
-    "Help & glossary", "Take a Tour", "Send Feedback", "Share CrankMagic by e-mail", "Show a QR code"], "the Menu holds what INTAKE §4.7 lists, in order");
-  for (const moved of ["Export as Excel", "E-mail the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
+    "Help & glossary", "Take a Tour", "Send Feedback", "Share CrankMagic by email", "Show a QR code"], "the Menu holds what INTAKE §4.7 lists, in order");
+  for (const moved of ["Export as Excel", "Email the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
     ok(!(await entries(page)).includes(moved), `${moved} has left the Menu`);
   ok(!(await page.$("#cm-user-menu #cm-data-dates")), "and so have the card data ages");
   await page.keyboard.press("Escape");
@@ -50,7 +50,7 @@ try {
   await toSettings(page);
   ok(page.url().endsWith("#settings"), `Menu → Settings opens #settings (${page.url()})`);
   eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Prices", "Data", "About"], "Settings has the design's five sections");
-  for (const [section, labels] of [["Data", ["Save a backup file", "Restore from a backup file", "Export as Excel", "E-mail the export…", "See every change…", "Undo last change", "Clear all data"]], ["Appearance", ["Confirmations…"]]]) {
+  for (const [section, labels] of [["Data", ["Save a backup file", "Restore from a backup file", "Export as Excel", "Email the export…", "See every change…", "Undo last change", "Clear all data"]], ["Appearance", ["Confirmations…"]]]) {
     const inside = await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: section})}).locator("button").allTextContents();
     for (const label of labels) ok(inside.includes(label), `Settings › ${section} has ${label}`);
   }

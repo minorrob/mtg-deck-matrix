@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-25T14:55:15.811Z",
+ "generatedAt": "2026-09-25T19:11:13.231Z",
  "generator": "tools/data-manifest.mjs",
  "count": 21,
  "files": [
@@ -141,8 +141,8 @@
    "schema": "simulation-summary@3",
    "stamp": "2026-09-08T16:42:22.145Z",
    "generator": "tools/sim/rate-decks.mjs",
-   "bytes": 175079,
-   "sha256": "237c18e86263f0513ebfed5298488f2416bdc808a3341fa5db4daa12622b253b",
+   "bytes": 175068,
+   "sha256": "168b3e9099ac090f002ef9ae771a34a7347bccf68a107b82557397a4e1fc28c4",
    "version": null,
    "served": false,
    "cache": "not served"

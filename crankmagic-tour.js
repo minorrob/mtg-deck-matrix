@@ -114,7 +114,7 @@ const TOURS=[
    have:'Cards in your deck that you found by how they interact rather than by recalling them — and a recorded reason each one is in there.',
    steps:[
     /* The bare input collapses to nothing while the graph is still loading, so the step points at
-       the labelled search box around it — found in the sweep, PR 6. */
+       the labeled search box around it — found in the sweep, PR 6. */
     {view:'discover',selectors:['.cm-toolbar .cm-search','#cm-graph-query','.cm-toolbar'],
      title:'Start from a card you already play',
      copy:'Every Commander-legal card is in here, including printings that carry a different name on the front.'},
@@ -253,7 +253,7 @@ const TOURS=[
      copy:'Your whole library — decks, collection, groups, prices, every status. The file is the copy that outlives the browser.'},
     {view:'settings',selectors:['[data-action=share-export]'],
      title:'Desktop to phone',
-     copy:'E-mail that file to yourself, open the mail on the phone, and restore from the attachment. That is the whole trip out.'},
+     copy:'Email that file to yourself, open the mail on the phone, and restore from the attachment. That is the whole trip out.'},
     {view:'decks',selectors:['[data-action=restore]'],act:'openMenu',
      title:'Restoring replaces',
      copy:'This device’s library becomes the file’s. Do it on the phone before you leave, not after you have marked anything.'},

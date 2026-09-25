@@ -210,7 +210,7 @@ plus six source workbooks. Counts below were computed, not estimated.
 |---|---|---|---|---|
 | `data/buy-plans.json` | 8.1 MB | The 50 purchase plans — starting shell plus twelve ladder arrays each — with the card audit, salvage, 99 owned extras and price-bound audit. The largest file in the repo | `tools/extract_data.py`, then patched by `tools/import_budget_plan.py`, `tools/sim/bake-ladders.mjs`, `tools/sim/build-base.mjs`, `tools/sim/promote-tier3.mjs`, `tools/sim/reprice.mjs` | `app.js` |
 | `data/graph.json` | 7.1 MB | 7,764 cards with rules-derived edges, EDHREC co-play (10,315 `playedWith` pairs), prices, ownership, facets, and the 6 deck overlays. `multiplies`/`grants`/`extends` are added on top of the Neo4j export | `graph/ingest/07-export-app.mjs --commanders`, then `tools/graph-amplifiers.mjs` | `graph-page.js`, `crankmagic-graph.js` |
-| `data/cards.json` | 2.9 MB | 1,972 audited cards from Scryfall's collection API — name, mana cost, type line, oracle text, keywords, colour identity, legalities, rarity, set, image, price, TCGplayer URL. 0 missing | `tools/audit-cards.mjs` → `tools/apply-card-audit.mjs`; Game Changer flags by `tools/sim/sync-game-changers.mjs` | `app.js` |
+| `data/cards.json` | 2.9 MB | 1,972 audited cards from Scryfall's collection API — name, mana cost, type line, oracle text, keywords, color identity, legalities, rarity, set, image, price, TCGplayer URL. 0 missing | `tools/audit-cards.mjs` → `tools/apply-card-audit.mjs`; Game Changer flags by `tools/sim/sync-game-changers.mjs` | `app.js` |
 | `data/commander-universe.json` | 1.6 MB | 31,830 Commander-legal cards, 3,411 of them legal commanders. Seven flat fields each (name, ci, rarity, mv, type, rank, commander) — the registry, not the corpus | `tools/commander-universe.mjs` | `graph-page.js`, `viewer.js` |
 | `data/variants.json` | 1.2 MB | 10 deck slots, 50 variants: commander, tags, summaries, stage notes, costs, brackets, ranks, facts, rarity, 12 scores, mechanics, pre-rendered detail HTML | `tools/extract_data.py`; kept in sync by `tools/sim/reprice.mjs` and `tools/sim/resync-compare.mjs` | `app.js` |
 | `data/rung-lists.json` | 1.2 MB | The exact hundred measured for each of 50 variants × 4 rungs (Base, Tuned, Pod Fun, Max), as name+quantity entries summing to 100 | `tools/sim/bake-ladders.mjs`, `promote-tier3.mjs`, `repair-tier2.mjs` | tests only (`data-integrity`, `lineup-compliance`, `slot-model`, `measure-report`) |
@@ -479,7 +479,7 @@ writes a committed data file** — run it deliberately, review the diff, and re-
 | ⚠ `fix_ambiguous_replaces.mjs` | Neutralizes a `replaces` name that is ambiguous across categories | After an `import_budget_plan` run |
 | ⚠ `normalize-price-bounds.mjs` | Fixes a ceiling price that landed below its floor | Rarely |
 | ⚠ `resolve-flexible-shells.mjs` | Resolves flexible shell entries in `buy-plans.json` | Historical |
-| ⚠ `add-salvage-cards.mjs` | Adds newly acquired cards to the Salvage yard and offers them on slots where they'd do a job (gated on colour identity, not-in-hand, `Slot.slotFit`, shared role) | On acquiring cards |
+| ⚠ `add-salvage-cards.mjs` | Adds newly acquired cards to the Salvage yard and offers them on slots where they'd do a job (gated on color identity, not-in-hand, `Slot.slotFit`, shared role) | On acquiring cards |
 | ⚠ `reshell-basic-swap.mjs` | Trades one basic land in a variant's starting shell for a real card | When a handoff asks for it |
 | ⚠ `seed-manual-rung.py` | Seeds `active-state.json`'s `manualCards`. Needs network | Historical one-off |
 | `read-sheet-rows.py` | Dumps one worksheet as JSON rows so a Node tool can read a workbook | As a helper inside other flows |
@@ -574,7 +574,7 @@ page and then hardened them.
 | # | Title | What changed |
 |---|---|---|
 | **#67** | Add the copilot layer: findings that hand you a filter | The graph stopped being a browser and started making recommendations — lenses over the graph plus deltas read off `deck-ratings.json`. |
-| **#68** | Fix three extraction gaps, and the colour filter that hid every artifact | Follow-up bug fixes to the graph's own extraction; a colour filter was excluding every colourless card. |
+| **#68** | Fix three extraction gaps, and the color filter that hid every artifact | Follow-up bug fixes to the graph's own extraction; a color filter was excluding every colourless card. |
 | **#69** | Guard master-v2.json as a build artifact | Two sessions were editing this repo and a patch crossing between them changed 23,203 lines of generated JSON around 96 lines of decisions. The rule became: exchange the workbook and the code, never the generated JSON — enforced by `tests/master-regenerates.mjs`. |
 | **#70** | Build decks from nothing, and hold up on the first visit, at collection scale, and on the way out | The generator, dead since the Choose tab was retired, was wired back in behind a Build panel. In the same PR the browser journey harness arrived, and with it the first-visit and 3,200-card personas that exposed the dead ends the UAT README lists. |
 | **#71** | Reconcile the collection, scope the Shop to what is owed, and put the pull list in it | Ownership allocation copy-by-copy, the Shop scoped to shortfall rather than to everything, and the written pull list carried as its own kind of thing rather than pretended to be derived. |
@@ -636,7 +636,7 @@ consequence of the architecture, not an oversight.
 `https://json.edhrec.com/pages/commanders/{slug}.json` — per-commander inclusion and synergy
 numbers. Used by `edhrec-client.js` (browser, for the generator) and
 `graph/ingest/04-fetch-edhrec.mjs` (bake). A commander with no page 404s, which is treated as
-"this signal is unavailable", not an error. `edhrec.com/cards/{slug}` is recognised by
+"this signal is unavailable", not an error. `edhrec.com/cards/{slug}` is recognized by
 `card-link.js` as a slug source.
 
 ### Deck sites — measured, not assumed
@@ -644,10 +644,10 @@ numbers. Used by `edhrec-client.js` (browser, for the generator) and
 | Site | Fetchable | Detail |
 |---|---|---|
 | **Archidekt** | **Yes** | `GET https://archidekt.com/api/decks/{id}/` answers 200 with the full deck, every card carrying its own `oracleCard`. A deck loaded this way needs no name matching and no second round trip. |
-| **Moxfield** | **No** | The same request answers 403 — to a server and to a browser alike, not an origin-header problem. There is no URL path; the app recognises the link and gives the export-and-paste instructions instead. |
+| **Moxfield** | **No** | The same request answers 403 — to a server and to a browser alike, not an origin-header problem. There is no URL path; the app recognizes the link and gives the export-and-paste instructions instead. |
 | **Deckstats** | **No** | No open deck endpoint. Export → Plain text and paste. |
 
-`card-link.js` additionally *recognises* URLs from Card Kingdom, Cardmarket, Moxfield,
+`card-link.js` additionally *recognizes* URLs from Card Kingdom, Cardmarket, Moxfield,
 CoolStuffInc and EDHREC — for the name in the slug only. It never fetches them.
 
 ### GitHub
@@ -801,10 +801,10 @@ is struck through as shipped.
    meantime: a one-shot undo for a load, and a header chip saying how long since the last
    export.
 2. ~~**"Three cards you own could fill this slot"**~~ — **shipped.** `Slot.slotFit` ranks a
-   candidate on type, then what the card is FOR, then cost, with colour identity as a gate
+   candidate on type, then what the card is FOR, then cost, with color identity as a gate
    rather than a score. Still open inside it: it ranks against the loose pool only, and does
-   not consider what removing a card does to the curve or the colour sources (see item 5).
-3. **A pull sheet for building at the table.** The Deck page is organised by the deck's
+   not consider what removing a card does to the curve or the color sources (see item 5).
+3. **A pull sheet for building at the table.** The Deck page is organized by the deck's
    structure; physically pulling a hundred cards wants them ordered the way they are sitting
    in boxes. Needs a new view with print styles and a second way of ticking that agrees with
    the first.

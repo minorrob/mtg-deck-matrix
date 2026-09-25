@@ -108,8 +108,8 @@
      refused. Nothing else about a card is ever guessed. */
   function completeBasic(c){
     if(!(c.name in BASICS)||/\bBasic\b/.test(c.typeLine||''))return c;
-    const colour=BASICS[c.name];
-    return {...c,typeLine:`Basic Land — ${c.name}`,oracleText:c.oracleText||(colour?`({T}: Add {${colour}}.)`:'({T}: Add {C}.)'),colorIdentity:c.colorIdentity&&c.colorIdentity.length?c.colorIdentity:(colour?[colour]:[])};
+    const color=BASICS[c.name];
+    return {...c,typeLine:`Basic Land — ${c.name}`,oracleText:c.oracleText||(color?`({T}: Add {${color}}.)`:'({T}: Add {C}.)'),colorIdentity:c.colorIdentity&&c.colorIdentity.length?c.colorIdentity:(color?[color]:[])};
   }
 
   /* Build a complete collection state from the document.

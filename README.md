@@ -61,14 +61,14 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   **Status** is one column — *Physical deck · Substitute · Reserved · Bench* for owned copies,
   *Ordered*, *Watched*, *To buy*, *Draft list · Suggestion · Planned* for rows that are not
   copies yet — where Source and Allocation were two (both stay in the Columns dialog); the
-  colour is the state. Each row carries the one verb its status calls for (Bought, Arrived,
+  color is the state. Each row carries the one verb its status calls for (Bought, Arrived,
   Put in, To bench, Reserve…) and ⋯ for the rest. Purpose and physical location are separate. The counts row reads, in the order
-  a deck is built and each under its state's colour, *Reserved · Owned · Substitutes ·
+  a deck is built and each under its state's color, *Reserved · Owned · Substitutes ·
   Physical Deck · Ordered · To Buy · Watched*; on every deck Reserved = Owned + Ordered + To
   Buy, Owned counts reserved copies, the Bench (owned copies no deck has reserved) is the
   table itself and the caption under the row, and Sell / Trade is a Bench flag, never a
   count held against a deck (the equation itself is behind the page's **?**). Five filters
-  are in view — type, mana, colour, status, deck — with search and group beside them, and **More filters** folds
+  are in view — type, mana, color, status, deck — with search and group beside them, and **More filters** folds
   subtype, mechanic, flags, offers, mana value and price, opening itself whenever one of
   them is set. Clear filters leaves the deck
   flow and shows all collection records. Every row's **Actions → Status** fly-out carries
@@ -110,10 +110,10 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   CSV* writes the rows in the Master's column order, *A* being what is physically in the box,
   substitutes included, like the Master's Actual.
 - **Cards → Library or To buy → Table** (`#cards?view=tabletop`, `#cards?view=tabletop&tab=buy`): the same rows, under the same search and
-  Status · Card type · Colour · Deck filters, as piles on a slate sorting mat: the status piles
+  Status · Card type · Color · Deck filters, as piles on a slate sorting mat: the status piles
   down front in the model's order (`M.STATUS`, Bench excepted), the Bench fanned along a raised
   ledge at the back, and behind the status piles a semicircle of group piles under one grouping
-  (card type, colour, deck, collection group, mechanic, role, Primary Purpose, mana value, price
+  (card type, color, deck, collection group, mechanic, role, Primary Purpose, mana value, price
   band; the choice is remembered). Every pile is a stack whose height is its count, with its
   label and count on a paper placard; a slot stays where an emptied pile lived; every card
   shows its whole picture; ordered, watched, to-buy, draft and suggested copies are ghosts —
@@ -129,13 +129,13 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   Large · Full, Scryfall's full print, remembered on the device) with its facts beside it from
   the same record the inspector reads — mana, type line, rules text, price — *Inspect card* and
   *Explore connections*, and *Previous* / *Next* (or the arrow keys) through the pile it came
-  from: pick a deck, pick a card, read it, file it, next. Several chosen cards fan on the centre
+  from: pick a deck, pick a card, read it, file it, next. Several chosen cards fan on the center
   of the mat with name, status, price and deck beneath (shift-click or the ticks choose
   several); right-click a card for the list's row menu; Escape or a click on the mat puts the
   table back at rest. **Drag the selection onto a pile** and the pile says
   what the drop would do before you let go — a status pile is the Status fly-out's change (Bench
   ↔ Physical deck, Ordered, Watched, Reserved, Substitute, a reservation released to To buy), a
-  collection group pile files the copies, a deck pile reserves them, and a card type, colour or
+  collection group pile files the copies, a deck pile reserves them, and a card type, color or
   mechanic pile says it is a reading of the card, not a place; every drop that changes a deck or
   money goes through the same receipt the fly-out shows. A ghost dropped on Ordered becomes an
   ordered copy, on the Bench an owned one. *Move to…* lists the piles with the same answers for
@@ -206,7 +206,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
 - **Ready to add** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
-  pull from bench, move from another deck — plus the **substitutes** in this deck, colour then
+  pull from bench, move from another deck — plus the **substitutes** in this deck, color then
   name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
   the walk as it happens, *Select all* beside a group's count (the whole group in one
   revision), *Mark all added*, Print (black on white, boxes to tick) and
@@ -270,7 +270,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   makes that hundred a finalized deck of its own with the same commander, the report copied
   with it; the original deck is untouched.
 - **Share** (beside Take a Tour): *Subscribe to updates* opens a mail draft to the maintainer
-  asking to be added to the update list, *Share by e-mail* opens a draft with the subject and
+  asking to be added to the update list, *Share by email* opens a draft with the subject and
   body written and the To line left blank, and *Show a QR code* draws the app link as a QR
   code in the page (`crankmagic-qr.js`, no network, checked module for module against segno
   in `tests/qr.mjs`) for a phone to scan at the table. **Publish your To Trade list** (the same
@@ -297,7 +297,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   hundred cannot be played), *Loop length* (two to six cards, four by default: a two-card
   engine wins games and a four-card loop is the longest a table follows) and *Chain depth*
   (one to three rings) — with no card drawing more than four loop-backs, a tick on
-  every row that files the ticked cards in a Collection group, a cohesion score labelled a
+  every row that files the ticked cards in a Collection group, a cohesion score labeled a
   heuristic beside the measured score, and a second world — what the deck could be — over the
   library and the commander's co-play neighbours inside the definition
   (`crankmagic-trace.js`, `tests/crankmagic-trace.mjs`, `tests/commander-strategies.mjs`).
@@ -653,7 +653,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - [Original game plan](docs/crankmagic-game-plan.md) — historical G0 lobby design and earlier engine proposals. The accepted Commander companion plan above supersedes its referee, API-cost assumptions, and remaining build sequence. The implemented lobby still supplies library, Archidekt, pasted, and generated deck sources.
 - [The persistent-app plan](docs/crankmagic-persistent-plan.md) — accounts, per-user sync and crankmagic.com on a hosted runtime; plan only, not started
 - [The Discover / loop plan](docs/crankmagic-discover-loop-plan.md) — Primary Purpose, loop vocabulary, loop edges and loop-mode depth, the role lens; PR A and B shipped, C–D planned
-- [Loop patterns](docs/crankmagic-loop-patterns.md) — the combo, loop, stacking and blink shapes the graph should recognise, in the classifier's vocabulary
+- [Loop patterns](docs/crankmagic-loop-patterns.md) — the combo, loop, stacking and blink shapes the graph should recognize, in the classifier's vocabulary
 - [Architecture](docs/crankmagic-architecture.md)
 - [Keeping the catalog current](docs/crankmagic-refresh.md) — what a periodic refresh regenerates, in what order, and what it must never do
 - [Approved plan and standalone mock](design/crankmagic/README.md)

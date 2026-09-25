@@ -28,7 +28,7 @@ const seats = Measure.buildSeats(opponents, config.table);
 check("the seat table matches what the Node tool builds", () => {
   assert.equal(seats.length > 0, true);
   const total = seats.reduce((n, s) => n + s.weight, 0);
-  assert.ok(Math.abs(total - 1) < 1e-9, "seat weights normalise to 1");
+  assert.ok(Math.abs(total - 1) < 1e-9, "seat weights normalize to 1");
 });
 
 /* ---------------- parity with the published run ---------------- */

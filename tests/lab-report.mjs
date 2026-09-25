@@ -129,7 +129,7 @@ ok("a win the engine cannot watch is said ABOVE the score, not below it", () => 
   assert.doesNotMatch(reportHTML(BASE), /you win the game/, "a list with none says nothing");
 });
 
-ok("what ended the games this deck lost is labelled, not printed raw", () => {
+ok("what ended the games this deck lost is labeled, not printed raw", () => {
   const html = reportHTML({...BASE, lossCauses: [{cause: "combo", rate: 0.173}, {cause: "damage", rate: 0.049}]});
   assert.match(html, /What ended the games this deck lost/);
   assert.match(html, /Combo <strong>17\.3% of games/);

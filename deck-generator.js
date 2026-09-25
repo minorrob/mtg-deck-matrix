@@ -896,7 +896,7 @@
     };
     /* One request, in parallel with nothing -- it is fast and the pool fetch that
        follows is twenty. A commander with no EDHREC page resolves to null and
-       every scoring call falls back, which is the behaviour the generator had
+       every scoring call falls back, which is the behavior the generator had
        before this signal existed. */
     onProgress({phase: "edhrec", message: `Reading what people play with ${commander.name.split(",")[0]}…`});
     context.edhrec = Edhrec

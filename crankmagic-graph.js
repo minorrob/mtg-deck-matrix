@@ -323,7 +323,7 @@
          makes the browser refuse any copy the CDN serves without the CORS header -- and a
          CDN edge that cached the same picture for an ordinary <img> earlier (the Card Info
          pane, a Cards row) hands back exactly that copy. On the live site that left most
-         nodes as their colour letters while one or two drew. Nothing here reads the canvas
+         nodes as their color letters while one or two drew. Nothing here reads the canvas
          back, so a plain image is all the disc needs; a load that still fails is retried
          once after a pause rather than written off for the session. */
       const images = new Map();
@@ -451,7 +451,7 @@
           || a.card.name.localeCompare(b.card.name));
         if (out.length <= limit) return out;
         /* ONE RING, MORE THAN ONE SENTENCE. Score alone gave Purphoros fourteen neighbours
-           all labelled "Triggers on ← caused by · a creature entering": true, and useless
+           all labeled "Triggers on ← caused by · a creature entering": true, and useless
            to read, because the picture then says one thing fourteen times. So a single
            kind may take at most three fifths of the fan and the rest is filled from what
            is left, still in score order. The strongest relation still leads; it just does
@@ -591,7 +591,7 @@
       }
       /* ------------------------------------------------------------- the trace mode
          (docs/crankmagic-strategy-trace-plan.md T2). A trace result from CrankTrace replaces
-         the breadth walk: the commander at the centre, the lit cards on their rings in the
+         the breadth walk: the commander at the center, the lit cards on their rings in the
          order the walk placed them, each ring-2 or ring-3 card inside its parent's sector, the
          cards the trace never touched ghosted on an outer band. The animation plays the list
          in order -- a beam leaves the parent, reaches the child, then a rim runs round the
@@ -726,7 +726,7 @@
          the deck tiles read their mana pips; the switch to Felt and Cream re-reads them by
          itself. mix() composes through color-mix, which the browser resolves because the probe
          is a real element in the document, so a tint stays a tint in both themes.
-         The roles below are roles, not nearest colours: a ground stays a ground and a label
+         The roles below are roles, not nearest colors: a ground stays a ground and a label
          stays a label, so the picture keeps its depth when the theme flips. */
       let PAL = null, PAL_THEME = null;
       function palette() {
@@ -1038,7 +1038,7 @@
         if (pointers.has(e.pointerId)) pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
         if (pinch && pointers.size === 2) {
           /* Zoom about the point BETWEEN the fingers, so the card you pinched over stays
-             under them; anchoring at the canvas centre is what makes a pinch fight you. */
+             under them; anchoring at the canvas center is what makes a pinch fight you. */
           const now = span(), r = canvas.getBoundingClientRect();
           const cx = now.x - r.left - width / 2, cy = now.y - r.top - height / 2;
           touched = true; scale = clampScale(pinch.scale * (now.d / pinch.d));

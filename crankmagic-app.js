@@ -9,8 +9,8 @@ const main=$('#cm-main'),dialog=$('#cm-dialog'),actions={},views={};let state=M.
    cannot be "independently manipulated out of sync with one another". */
 const sandbox=globalThis.CrankSandbox?globalThis.CrankSandbox.create({model:M}):null;
 const uid=()=>crypto.randomUUID(),money=n=>n===null||n===undefined?'Unknown':'$'+Number(n).toFixed(2),source=s=>({owned:'Owned',ordered:'Ordered',watching:'Watched',trade:'Ordered · trade',"to-buy":'To buy',draft:'Draft list'}[s]||s);
-/* Colour identity as the game draws it -- the mana symbols -- rather than five coloured
-   dots. A colourless identity keeps a single grey pip so the cell is never empty. */
+/* Color identity as the game draws it -- the mana symbols -- rather than five colored
+   dots. A colourless identity keeps a single gray pip so the cell is never empty. */
 function colors(ci){const list=ci||[];return `<span class="cm-colors" aria-label="${esc(list.join(', ')||'Colorless')}">${list.map(x=>/^[WUBRG]$/.test(x)?`<img class="cm-pip" src="assets/mana/${x}.svg?v=1" alt="" title="${esc({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green'}[x])}">`:`<i class="cm-color ${esc(x)}" title="${esc(x)}"></i>`).join('')||'<i class="cm-color C" title="Colorless"></i>'}</span>`;}
 /* The printed cost only: a card with a second face shows the cost in its top-right corner, not
    the adventure's or the back's too (CrankCatalog.frontCost). Pass the type line so a split card
@@ -24,8 +24,8 @@ function caret(dir='down'){return `<svg class="cm-caret${dir==='left'?' cm-caret
 function button(label,action,data={},primary=false,{caret:dir='',cls=''}={}){return `<button type="button" class="v-button${primary?' primary':''}${cls?' '+cls:''}" data-action="${esc(action)}" ${Object.entries(data).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ')}>${esc(label)}${dir?caret(dir):''}</button>`;}
 /* ONE PILL PER RUNG. Every place that names a status -- the roster's Source and Allocation
    cells, the card pop-up, the deck page, the Ready to add list -- draws it through here, so the
-   colour for "in the box" is the same colour everywhere. `pillKind` is the mapping from the
-   model's words to the seven tokens; a word it does not know wears the draft grey. */
+   color for "in the box" is the same color everywhere. `pillKind` is the mapping from the
+   model's words to the seven tokens; a word it does not know wears the draft gray. */
 const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),Owned:'pull',owned:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
 function pillKind(key,placement){if((key==='owned'||key==='Owned')&&placement==='Physical deck')return 'inbox';return PILL_KIND[key]||'draft';}
 function pill(text,kind,attrs=''){return `<span class="cm-pill ${esc(kind)}" ${attrs}>${text}</span>`;}
@@ -47,7 +47,7 @@ function options(items,value){return items.map(x=>{const [v,l]=Array.isArray(x)?
 /* A REQUIRED FIELD WEARS A MOUNTAIN. The red asterisk of every form on the web, except it
    is the red asterisk every form on the web uses, because that is the one mark a reader
    already knows without being taught it. It briefly wore the Mountain pip instead -- red is
-   the game's own colour for "not optional" -- but a symbol a reader has to decode is a worse
+   the game's own color for "not optional" -- but a symbol a reader has to decode is a worse
    asterisk than an asterisk, however apt.
 
    It is driven by the field's OWN `required`, so the mark and the constraint cannot drift
@@ -60,9 +60,9 @@ const requires=attrs=>/(^|\s)(required|data-required)(\s|=|$)/.test(attrs);
 /* The mark is wrapped WITH its label text in one span: `label` is display:grid in this
    stylesheet, so a bare glyph beside a bare text node is a second grid ROW, and the mark
    landed on a line of its own under the words it belongs to. */
-const labelled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
-function field(label,name,value='',attrs=''){return `<label>${labelled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
-function select(label,name,items,value,attrs=''){return `<label>${labelled(label,attrs)}<select name="${esc(name)}" aria-label="${esc(label)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}>${options(items,value)}</select></label>`;}
+const labeled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
+function field(label,name,value='',attrs=''){return `<label>${labeled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
+function select(label,name,items,value,attrs=''){return `<label>${labeled(label,attrs)}<select name="${esc(name)}" aria-label="${esc(label)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}>${options(items,value)}</select></label>`;}
 /* This app's public address: the directory of the page's canonical link. tools/release-pages.mjs
    rewrites that link to wherever a release is published; a page without one falls back to the
    address the app was first published at. */
@@ -303,7 +303,7 @@ function compareCards(out,into,{outLabel='Replacing',intoLabel='With'}={}){
   const diff=a>0&&b>0?`<p class="cm-muted">${b>a?'Costs '+money(b-a)+' more':b<a?'Saves '+money(a-b):'The same price'} than the card it replaces.</p>`:'<p class="cm-muted">One of these has no recorded price, so the cost of the swap is unknown.</p>';
   return `<div class="cm-swap-compare">${side(out,outLabel)}<div class="cm-swap-arrow" aria-hidden="true">→</div>${side(into,intoLabel)}</div>${diff}`;
 }
-/* `colors` arrives renamed: the option names the deck's colour identity and the module
+/* `colors` arrives renamed: the option names the deck's color identity and the module
    already has a colors() that draws mana pips, and shadowing it emptied the picker. */
 async function cardPicker(title,onPick,{commander=false,like=null,colors:identity=null,back=null}={}){const d=modal(title,`<label>Card name or a Scryfall link<input id="cm-card-query" autocomplete="off" placeholder="The name on the card, or the one the rules use"></label><div class="cm-commander-results" id="cm-card-results"></div><div class="cm-actions">${button('Search exact name / link','picker-resolve')}${button('Record an unlisted card','picker-manual')}</div><p class="cm-muted">Suggestions never change ownership. The name printed on a Secret Lair or a Universes Beyond card works too. If the exact name cannot be found, provide the card’s Scryfall link.</p><p class="cm-error" hidden></p>`,back);d.classList.add('cm-picker-dialog');const input=$('#cm-card-query',d),results=$('#cm-card-results',d);const choose=async c=>{if(commander&&!c.commander)throw Error('That card is not a verified commander.');await onPick(c);};/* With a card to match, the list is ranked by likeness to it and each row says why it is
      there. Without one it is the old name search. */
@@ -327,7 +327,7 @@ function manualCard(query,onPick){const url=/^https:\/\//i.test(query)?query:'';
    and tools/check-glossary.mjs enforces it. "Reserved", "Substitute" and "Primary Purpose" are
    CrankMagic's words, not the game's, so they would have no citation to give. They join the
    glossary at the moment it is created instead, which gives them the same hover, the same
-   keyboard behaviour and the same "Show term definitions" switch, and leaves the rules file a
+   keyboard behavior and the same "Show term definitions" switch, and leaves the rules file a
    rules file. Every definition is one sentence, in the app's own terms, saying what the word
    means HERE. */
 const COLLECTION_TERMS=[
@@ -367,8 +367,8 @@ function playsAs(c){const out=[];const styles=CrankCatalog.playStyles(c);if(styl
    substitute, reserved and waiting, or on the Bench; then Ordered, Watched, what finalized
    decks still need to buy, and a draft deck's or a group's plans, because those are rows the
    Collection shows. Assignment is the decks: one chip per deck the card is reserved to,
-   physically in, or wanted by, coloured by that state on the same scale the counts row and
-   the tables use, so a chip's colour reads as its state wherever it appears. */
+   physically in, or wanted by, colored by that state on the same scale the counts row and
+   the tables use, so a chip's color reads as its state wherever it appears. */
 function standing(id){
   const rows=M.projection(state).filter(r=>r.cardId===id);
   const by=pred=>rows.filter(pred).reduce((n,r)=>n+r.quantity,0);
@@ -433,20 +433,20 @@ dialog.addEventListener('cancel',event=>{if(modalBack){event.preventDefault();ac
 const THEME_SAID={dark:'Dark theme (Brass and Slate).',light:'Light theme (Felt and Cream).',system:'The theme now follows this device’s light or dark setting.'};
 actions['set-theme']=async el=>{const choice=el.dataset.themeChoice;if(!THEME_SAID[choice]||choice===themeChoice())return;await commit({type:'preferences',values:{theme:choice}});notice(THEME_SAID[choice]);};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
-/* E-MAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
+/* EMAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
    are bought, then the library sent home. No browser can attach a file to a mailto: draft,
    so on a phone this opens the share sheet with the export attached -- Mail, Messages,
-   Drive, AirDrop -- which is the honest version of "e-mail it". Where the share sheet
+   Drive, AirDrop -- which is the honest version of "email it". Where the share sheet
    cannot take files, the export is downloaded and a pre-addressed draft opens telling the
    reader to attach it. The file is prepared when the menu opens so the share call still
    sits inside the tap that asked for it, which Safari requires. */
 let shareFile=null;
 async function exportFile(){const data=await E.backup(await backupData());return new File([JSON.stringify(data,null,2)],'CrankMagic-export-'+M.today()+'.json',{type:'application/json'});}
-/* THE ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail."
+/* THE ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal email."
    admin@crankmagic.com forwards to him (Cloudflare Email Routing); nothing the app shows names any
    other address, and tools/release-pages.mjs refuses a release that does. */
 const CONTACT='admin@crankmagic.com';
-/* SEND FEEDBACK. A mailto, opened the same way the export's e-mail is: no form to fill in
+/* SEND FEEDBACK. A mailto, opened the same way the export's email is: no form to fill in
    here, no message stored anywhere, and it works from a phone and a desktop alike because
    the mail client is the one the reader already uses. */
 function feedbackLink(){
@@ -459,7 +459,7 @@ function feedbackLink(){
 actions['send-feedback']=()=>{const a=document.createElement('a');a.href=feedbackLink();a.rel='noopener';document.body.appendChild(a);a.click();a.remove();};
 actions['share-export']=async()=>{const file=shareFile||await exportFile();shareFile=null;const when=M.today();const body=`CrankMagic library export ${when}. On your computer, open CrankMagic → User Functions → Restore from a backup file and choose ${file.name}.`;
 if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'CrankMagic export '+when,text:body});notice('Export handed to your share sheet.');return;}catch(err){if(err.name==='AbortError')return;}}
-download(file.name,await file.text());location.href='mailto:?subject='+encodeURIComponent('CrankMagic export '+when)+'&body='+encodeURIComponent('The export file '+file.name+' was just downloaded. Attach it to this e-mail. '+body);notice('This browser cannot attach a file to an e-mail by itself: the export was downloaded and an e-mail draft opened — attach the file to it.',true);};
+download(file.name,await file.text());location.href='mailto:?subject='+encodeURIComponent('CrankMagic export '+when)+'&body='+encodeURIComponent('The export file '+file.name+' was just downloaded. Attach it to this email. '+body);notice('This browser cannot attach a file to an email by itself: the export was downloaded and an email draft opened — attach the file to it.',true);};
 /* Undo holds the same guard a save does. The repository announces the new revision to this tab's own
    listeners before undo() returns, while `state` still holds the old one, and the listener took that for
    another tab's change: it refreshed and said so, on top of "Last change undone", in whichever order
@@ -545,7 +545,7 @@ if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soo
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=330',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=331',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

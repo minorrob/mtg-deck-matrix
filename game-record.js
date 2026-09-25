@@ -55,11 +55,11 @@
     const zz = (z || Z);
     const p = Math.max(0, Math.min(1, Number(wins) / n));
     const denom = 1 + (zz * zz) / n;
-    const centre = (p + (zz * zz) / (2 * n)) / denom;
+    const center = (p + (zz * zz) / (2 * n)) / denom;
     const half = (zz / denom) * Math.sqrt((p * (1 - p)) / n + (zz * zz) / (4 * n * n));
     return {
-      low: Math.max(0, centre - half),
-      high: Math.min(1, centre + half),
+      low: Math.max(0, center - half),
+      high: Math.min(1, center + half),
       point: p,
       n
     };
