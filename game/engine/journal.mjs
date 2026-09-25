@@ -66,11 +66,18 @@ export function hashState(state) {
  * A journal for one match.
  *
  * @param {{matchId: string, seed: string}} match
+ * @param {?{sequence: number}} resume  a checkpoint (or anything carrying its `sequence`) to continue after:
+ *   the events before it are already kept by the match store (`storage.mjs`), and the ones written here
+ *   carry the numbers and ids they would have had in an uninterrupted game (§3.8, 4.1b).
  */
-export function createJournal({matchId, seed}) {
+export function createJournal({matchId, seed}, resume = null) {
   if (!matchId) throw new Error("A journal needs the match it belongs to");
   const events = [];
   let sequence = 0;
+  if (resume) {
+    if (!Number.isInteger(resume.sequence) || resume.sequence < 0) throw new Error("A journal resumes from a checkpoint's sequence number");
+    sequence = resume.sequence;
+  }
 
   return {
     matchId,

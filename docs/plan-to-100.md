@@ -78,7 +78,7 @@ This is `docs/engine/PLAN.md` phases 2 and 3, re-read for the cloud.
 - [ ] 2.4 remainders: the **scenario runner** suite, and `cards/index.mjs` (resolve and suggest).
 - [ ] **Phase 3, tier 0:** hand-author the 477 cards of the seven decks in batches of 40–60, each card with a scenario test.
 - [ ] **4.2, the house pilot:** the engine's own opponent, which sees only its seat and costs nothing per game.
-- [ ] **4.1b, a storage adapter** (PLAN §3.8): the runtime writes its journal and checkpoints through an interface, not Node's `fs`, so a Durable Object can host it. It needs a test that a checkpoint resumes identically in another process.
+- [x] **4.1b, a storage adapter** (PLAN §3.8): the runtime writes its journal and checkpoints through an interface, not Node's `fs`, so a Durable Object can host it. It needs a test that a checkpoint resumes identically in another process. *Done 2026-09-25: `game/engine/storage.mjs` (the contract, memory, and the match store), `game/server/storage-fs.mjs` (files), and `tests/engine-storage.mjs`, whose second Node process resumes a checkpoint to the same state, randomness and byte-identical journal.*
 - [ ] The engine suites PLAN §5 and §7 ask for:
   - performance budgets: boot under 200 ms, a view under 2 ms, a random four-player game under 3 s;
   - card scenarios;
