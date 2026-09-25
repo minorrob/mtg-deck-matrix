@@ -13,10 +13,10 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artefacts | 42 (33 JSON, 9 workbooks and documents) · 76.8 MB |
+| Artefacts | 43 (33 JSON, 10 workbooks and documents) · 77.2 MB |
 | Served to the app | 15 · 44.6 MB (6.9 MB precached by the worker, 37.0 MB cached on demand) |
 | Tool inputs | 7 |
-| Source workbooks and documents | 9 |
+| Source workbooks and documents | 10 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
@@ -64,6 +64,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/source/MtG_Deck_Master_v2.xlsx` | 239 KB | workbook | — | — | — | — |  | — | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Robs_MtG_Current_State.xlsx` | 40 KB | workbook | — | — | — | — |  | apply-current-state.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Treys_MtG_Master_-_v22_-_For_Live_Load.xlsx` | 463 KB | workbook | — | — | — | — |  | build-live-load.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
+| `data/source/Treys_MtG_Master_-_v25.xlsx` | 435 KB | workbook | — | — | — | — |  | — | live-load.mjs | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Treys_MtG_Master_v13.xlsx` | 311 KB | workbook | — | — | — | — |  | build-live-load.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Treys_MtG_Master_v3.xlsx` | 292 KB | workbook | — | — | — | — |  | import_master_v2.py | master-regenerates.mjs | — | **source** | workbook or document the builders read; never fetched by a page |
 | `sim/config.json` | 2 KB | {schema, generator, schemaVersion, gamesPerIteration, batchSize, maxIterations, …} | schemaVersion 2, schema sim-config@2 | — | (hand-maintained placeholder) | crankmagic-assets.js, crankmagic-lab.js |  | lib.mjs, pilot-ablation.mjs, rate-decks.mjs +2 | combat.mjs, crankmagic-sim.mjs, deck-measure.mjs +3 | — | **serve** |  |
