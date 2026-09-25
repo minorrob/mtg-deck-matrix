@@ -562,7 +562,7 @@ check("the launch box carries the error, and offers to send it", () => {
 check("Send Log opens a mail client addressed to Rob, carrying the error", () => {
   const act = /actions\["lobby-send-log"\][\s\S]*?\n  \};/.exec(game);
   assert.ok(act, "the send-log action not found");
-  assert.match(act[0], /minor\.rob@gmail\.com/, "his address, as he gave it");
+  assert.match(act[0], /mailto:admin@crankmagic\.com/, "the public contact, which forwards to him (Rob, 2026-09-24: not his personal address)");
   assert.match(act[0], /mailto:/, "the default mail client");
   assert.match(act[0], /launchError/, "with the error in the body, not a blank message");
 });
