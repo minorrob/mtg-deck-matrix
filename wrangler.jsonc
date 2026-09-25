@@ -1,8 +1,13 @@
 {
   "name": "crankmagic",
+  "main": "cloud/worker.mjs",
   "compatibility_date": "2026-09-24",
   "assets": {
-    "directory": "./"
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "routes": [
     {
@@ -11,5 +16,17 @@
     }
   ],
   "workers_dev": false,
-  "preview_urls": false
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crankmagic",
+      "database_id": "131b2c74-70a0-471e-8474-b8d079b0d322",
+      "migrations_dir": "cloud/migrations"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
+    "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"
+  }
 }

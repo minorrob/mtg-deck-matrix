@@ -1,0 +1,144 @@
+/* YOUR LIBRARY IN THE CLOUD (Stage 2; docs/plan-account-cloud.md). Signing in is optional: signed out, the
+ * workshop is exactly what it was, a library in this browser. Signed in, the library also saves itself to
+ * the cloud a few seconds after each change and comes back on any device the person signs in on.
+ *
+ * INERT UNLESS ASKED FOR. Nothing here runs unless the page is marked
+ * <meta name="crankmagic-accounts" content="on">, which only tools/release-pages.mjs writes, and only for a
+ * profile that has a cloud behind it -- so main's own pages and the production release are untouched until
+ * Rob says (merge as we go, behind the switch; Rob, 2026-09-24).
+ *
+ * What travels is the app's own backup -- checksummed, and verified on the way back exactly as Restore
+ * verifies a file -- gzipped by the browser. Which way it travels is cloud-sync.js's decision; this file
+ * carries it out, and when both sides changed it asks, and keeps the side not chosen in the cloud.
+ */
+(globalThis.CrankFeatures ||= []).push(function (C) {
+  if (document.querySelector('meta[name="crankmagic-accounts"]')?.content !== "on") return;
+  const S = globalThis.CrankCloudSync, {esc: e, notice, actions, button} = C;
+  if (!S) return;
+  const META = "cloud-sync", device = S.deviceLabel(navigator.userAgent);
+  let who = {checked: false, email: null}, running = false, again = false, timer = null, status = "";
+
+  /* The API. A person who is not signed in meets Access's redirect to its sign-in page, which a fetch must not
+     follow; `manual` turns it into an opaque answer that reads as "signed out". */
+  async function api(method, path, body) {
+    const response = await fetch(path, {method, credentials: "same-origin", redirect: "manual", cache: "no-store",
+      headers: body === undefined ? {} : {"content-type": "application/json", "x-crankmagic": "sync"},
+      body: body === undefined ? undefined : JSON.stringify(body)});
+    if (response.type === "opaqueredirect" || response.status === 401 || response.status === 403) {
+      const error = Error("You are signed out of your cloud library."); error.signedOut = true; throw error;
+    }
+    const value = await response.json().catch(() => ({}));
+    if (response.status === 409) {const error = Error(value.error || "The cloud library changed."); error.conflict = true; error.head = value.head; throw error;}
+    if (!response.ok) throw Error(value.error || `The cloud library answered ${response.status}.`);
+    return value;
+  }
+
+  async function packed() {
+    const data = await C.repo.exportData(), copy = await C.E.backup(data);
+    return {revision: data.state.revision, checksum: copy.checksum, device, body: S.toBase64(await S.gzip(JSON.stringify(copy)))};
+  }
+  async function unpacked(id) {
+    const {version} = await api("GET", `/api/library/versions/${id}`);
+    return {version, payload: await C.E.readBackup(await S.gunzip(S.fromBase64(version.body)))};
+  }
+  const remember = (headId, syncedRevision) => C.repo.writeMeta(META, {email: who.email, headId, syncedRevision, at: new Date().toISOString()});
+
+  async function save(parent, {force = false} = {}) {
+    const upload = await packed();
+    const {head} = await api("PUT", "/api/library", {...upload, parent, force});
+    await remember(head.id, upload.revision);
+    status = `Saved to your cloud library ${S.ago(head.savedAt)}.`;
+  }
+  /* The stored library, never the page's copy of it: another tab may have changed it a moment ago, and a
+     decision or a save made from a stale copy is exactly how a library gets overwritten. */
+  const stored = () => C.repo.getState();
+  async function bringIn(head, summary) {
+    const {payload} = await unpacked(head.id);
+    const replaced = await C.repo.replace(payload, (await stored()).revision, {id: `cloud:${head.id}`, type: "cloud", summary});
+    await C.refresh();
+    await remember(head.id, replaced.revision);
+    status = `Up to date with your cloud library (saved on ${head.device}, ${S.ago(head.savedAt)}).`;
+  }
+
+  /* One pass: ask the cloud for its head, decide, act. A change made while a pass is running runs another. */
+  async function sync(reason) {
+    if (!who.email) return;
+    if (running) {again = true; return;}
+    running = true;
+    try {
+      const {head} = await api("GET", "/api/library");
+      const record = await C.repo.meta(META);
+      const next = S.decide({head, sync: record, email: who.email, state: await stored()});
+      if (next.action === "save") await save(next.parent);
+      else if (next.action === "pull") {await bringIn(head, `Brought in your library from the cloud (saved on ${head.device})`); notice("Your library was brought up to date from the cloud.");}
+      else if (next.action === "ask") await ask(head);
+      else status = head ? `Up to date with your cloud library (saved ${S.ago(head.savedAt)}).` : "Nothing saved to the cloud yet.";
+    } catch (error) {
+      if (error.signedOut) {who = {checked: true, email: null}; status = "";}
+      else if (error.conflict) {again = true;}
+      else {status = `Not saved to the cloud: ${error.message}`; if (reason === "manual") notice(status, true);}
+    } finally {
+      running = false; draw();
+      if (again) {again = false; setTimeout(() => sync("again"), 500);}
+    }
+  }
+  const soon = () => {clearTimeout(timer); timer = setTimeout(() => sync("change"), 3000);};
+
+  /* BOTH SIDES CHANGED. The person chooses; the side not chosen is kept in the cloud for thirty days. */
+  async function ask(head) {
+    const cloud = await unpacked(head.id), mine = await stored(), here = C.M.counters(mine), there = C.M.counters(cloud.payload.state);
+    /* Counts alone can match when each side added a different deck, so the decks only one side has are named. */
+    const names = (state) => new Set(state.decks.filter((d) => !d.archived).map((d) => d.name));
+    const mineNames = names(mine), cloudNames = names(cloud.payload.state);
+    const only = (a, b) => [...a].filter((n) => !b.has(n)).slice(0, 5);
+    const line = (label, state, counts, when, alone) => `<li><strong>${e(label)}</strong> — ${state.decks.length} deck${state.decks.length === 1 ? "" : "s"} · ${counts.owned} owned · ${counts.toBuy} to buy · changed ${e(when)}${alone.length ? `<br><span class="cm-muted">Only here: ${alone.map(e).join(", ")}</span>` : ""}</li>`;
+    C.modal("Which library do you want to keep?",
+      `<p>Your library changed on this device and on another since they last matched.</p><ul class="cm-account-choices">`
+      + line(`This device (${device})`, mine, here, S.ago(mine.updatedAt), only(mineNames, cloudNames))
+      + line(`The cloud (saved on ${head.device})`, cloud.payload.state, there, S.ago(head.savedAt), only(cloudNames, mineNames))
+      + `</ul><p class="cm-muted">The one you do not keep stays in your cloud library for 30 days.</p>`
+      + `<div class="cm-form-footer">${button("Use the cloud's", "account-keep-cloud", {head: head.id})}${button("Keep this device's", "account-keep-here", {head: head.id}, true)}</div>`);
+    status = "Waiting for you to choose which library to keep.";
+  }
+  actions["account-keep-here"] = async (el) => {
+    C.$("#cm-dialog").close();
+    await save(el.dataset.head, {force: true});
+    notice("Kept this device's library. The cloud's previous version is held for 30 days.");
+    draw();
+  };
+  actions["account-keep-cloud"] = async (el) => {
+    C.$("#cm-dialog").close();
+    const {head} = await api("GET", "/api/library");
+    await api("POST", "/api/library/kept", {...await packed(), parent: head.id});
+    await bringIn(head, `Took the cloud's library (saved on ${head.device}); this device's is kept in the cloud for 30 days`);
+    notice("Took the cloud's library. This device's version is held in the cloud for 30 days.");
+    draw();
+  };
+
+  actions["account-sign-in"] = () => {location.href = `/api/auth/login?to=${encodeURIComponent(location.hash || "#decks")}`;};
+  actions["account-sign-out"] = () => {location.href = "/cdn-cgi/access/logout";};
+  actions["account-sync"] = () => sync("manual");
+
+  /* The Menu's first section. */
+  function draw() {
+    const menu = C.$("#cm-user-menu");
+    if (!menu) return;
+    let box = C.$("#cm-account");
+    if (!box) {box = document.createElement("div"); box.id = "cm-account"; box.className = "cm-account"; menu.prepend(box);}
+    box.innerHTML = who.email
+      ? `<p>Cloud library</p><p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
+        + `<button type="button" data-action="account-sync">Sync now</button><button type="button" data-action="account-sign-out">Sign out</button><hr>`
+      : `<p>Cloud library</p><button type="button" data-action="account-sign-in">Sign in to keep your library in the cloud</button><hr>`;
+  }
+
+  (async () => {
+    try {const me = await api("GET", "/api/me"); who = {checked: true, email: me.email};}
+    catch {who = {checked: true, email: null};}
+    draw();
+    if (!who.email) return;
+    C.repo.subscribe((message) => {if (message && message.revision && !running) soon();});
+    document.addEventListener("visibilitychange", () => {if (document.visibilityState === "visible") sync("focus");});
+    addEventListener("online", () => sync("online"));
+    sync("open");
+  })();
+});
