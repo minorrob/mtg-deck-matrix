@@ -49,8 +49,12 @@ import {fileURLToPath} from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const RELEASE_BRANCH = "release/pages";
-/* The address the app was first published at; absolute links to it are the app's own files. */
-export const FIRST_PUBLIC = "https://minorrob.github.io/mtg-deck-matrix/";
+/* The address the pages name as their own, in their canonical and share tags; absolute links to it are the
+   app's own files, and a profile with another origin (staging) has it rewritten. It was github.io until
+   GitHub Pages went off on 2026-09-25; the pages name crankmagic.com since then (docs/decisions-2026-09-25.md). */
+export const FIRST_PUBLIC = "https://crankmagic.com/";
+/* The retired address. Nothing released may name it: it answers 404, and a library saved there is stranded. */
+export const RETIRED_PUBLIC = "https://minorrob.github.io/mtg-deck-matrix/";
 export const PAGES = ["index.html", "crankmagic.html"];
 export const PUBLIC_CONTACT = "admin@crankmagic.com";
 export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", ".nojekyll"];
@@ -66,7 +70,10 @@ const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {
   play: "coming-soon",
-  dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com"],
+  /* The browser reaches outside data only where plan-data-sync §0 allows it: Scryfall's API, and nothing else.
+     Archidekt is left out of every release: its only caller is Play's deck import, which no release carries,
+     and R3.10 brings Archidekt links back through a Worker route. The frozen local host keeps it until M9. */
+  dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com", "https://archidekt.com"],
   host: "cloudflare",
   /* Rob, 2026-09-24: "I do want the analytics." Cloudflare Web Analytics' automatic setup injects its
      beacon into every page; the policy allowed only this site's own scripts and refused it. The beacon
@@ -178,7 +185,7 @@ export function referencesOf(file, text, files) {
   const found = new Set(), dir = path.posix.dirname(file);
   const add = (raw) => {
     let s = String(raw).trim();
-    if (s.startsWith(FIRST_PUBLIC)) s = s.slice(FIRST_PUBLIC.length);
+    for (const own of [FIRST_PUBLIC, RETIRED_PUBLIC]) if (s.startsWith(own)) s = s.slice(own.length);
     if (!s || s.startsWith("#") || s.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(s)) return;
     s = s.split("#")[0].split("?")[0].replace(/^\.\//, "");
     if (!s) return;
@@ -242,7 +249,8 @@ export function transform(file, text, {profile, version, origin}) {
     }
     const accounts = profile.accounts === "on" ? `  <meta name="crankmagic-accounts" content="on">\n` : "";
     out = must(out, out.replace(/(<meta charset="utf-8">\r?\n?)/i, `$1  <meta name="crankmagic-play" content="${profile.play}">\n  <meta name="crankmagic-version" content="${version}">\n${accounts}`), "insert the play and version marks after <meta charset>");
-    out = out.replace(/(connect-src[^;"]*)/, (csp) => profile.dropConnect.reduce((s, src) => s.replace(new RegExp(`\\s+${escape(src)}(?=[\\s;"])`, "g"), ""), csp));
+    /* The policy text is cut at its ';', so the last source is followed by nothing: hence the |$. */
+    out = out.replace(/(connect-src[^;"]*)/, (csp) => profile.dropConnect.reduce((s, src) => s.replace(new RegExp(`\\s+${escape(src)}(?=[\\s;"]|$)`, "g"), ""), csp));
     if (profile.scriptSources?.length) out = must(out, out.replace(/script-src 'self'(?=[;"])/, `script-src 'self' ${profile.scriptSources.join(" ")}`), "add the profile's script sources to a script-src of 'self' alone");
     if (origin && origin !== FIRST_PUBLIC) out = out.split(FIRST_PUBLIC).join(origin);
   }
@@ -313,7 +321,10 @@ export function verify(built, profile) {
   if (profile.origin) for (const p of PAGES) {
     const text = built.get(p)?.toString("utf8") || "";
     if (!text.includes(`<link rel="canonical" href="${profile.origin}`)) problems.push(`${p}'s canonical link is not ${profile.origin}`);
-    if (text.includes(FIRST_PUBLIC)) problems.push(`${p} still names ${FIRST_PUBLIC}`);
+    if (profile.origin !== FIRST_PUBLIC && text.includes(FIRST_PUBLIC)) problems.push(`${p} still names ${FIRST_PUBLIC}, not its own origin`);
+    if (text.includes(RETIRED_PUBLIC)) problems.push(`${p} still names the retired ${RETIRED_PUBLIC}`);
+    const csp = (/connect-src([^;"]*)/.exec(text) || [])[1] || "";
+    if (csp.trim() !== "'self' https://api.scryfall.com") problems.push(`${p}'s security policy lets the browser connect to more than this site and Scryfall's API (${csp.trim()}); plan-data-sync §0`);
   }
   /* ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail." Nothing
      released may name an email address but the public contact (which forwards to him); the problem masks

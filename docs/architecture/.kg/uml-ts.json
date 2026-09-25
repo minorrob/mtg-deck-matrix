@@ -1,10 +1,10 @@
 {
  "meta": {
   "repo": "mtg-deck-matrix",
-  "generatedAt": "2026-09-25T07:31:05.745Z",
+  "generatedAt": "2026-09-25T13:06:03.120Z",
   "filesParsed": 128,
   "resolvedCalls": 1999,
-  "unresolvedCalls": 13743,
+  "unresolvedCalls": 13749,
   "globalsIndexed": 67,
   "globalImports": 65,
   "globalCalls": 66,
@@ -9897,14 +9897,14 @@
    "kind": "CodeModule",
    "name": "tools/release-pages.mjs",
    "file": "tools/release-pages.mjs",
-   "loc": 417
+   "loc": 428
   },
   {
    "id": "fn:tools/release-pages.mjs#commitSource",
    "kind": "CodeFunction",
    "name": "commitSource",
    "file": "tools/release-pages.mjs",
-   "line": 136,
+   "line": 143,
    "exported": true,
    "test": false
   },
@@ -9913,7 +9913,7 @@
    "kind": "CodeFunction",
    "name": "worktreeSource",
    "file": "tools/release-pages.mjs",
-   "line": 160,
+   "line": 167,
    "exported": true,
    "test": false
   },
@@ -9922,7 +9922,7 @@
    "kind": "CodeFunction",
    "name": "stripComments",
    "file": "tools/release-pages.mjs",
-   "line": 169,
+   "line": 176,
    "exported": false,
    "test": false
   },
@@ -9931,7 +9931,7 @@
    "kind": "CodeFunction",
    "name": "referencesOf",
    "file": "tools/release-pages.mjs",
-   "line": 177,
+   "line": 184,
    "exported": true,
    "test": false
   },
@@ -9940,7 +9940,7 @@
    "kind": "CodeFunction",
    "name": "walk",
    "file": "tools/release-pages.mjs",
-   "line": 214,
+   "line": 221,
    "exported": true,
    "test": false
   },
@@ -9949,7 +9949,7 @@
    "kind": "CodeFunction",
    "name": "transform",
    "file": "tools/release-pages.mjs",
-   "line": 235,
+   "line": 242,
    "exported": true,
    "test": false
   },
@@ -9958,7 +9958,7 @@
    "kind": "CodeFunction",
    "name": "verify",
    "file": "tools/release-pages.mjs",
-   "line": 260,
+   "line": 268,
    "exported": true,
    "test": false
   },
@@ -9967,7 +9967,7 @@
    "kind": "CodeFunction",
    "name": "build",
    "file": "tools/release-pages.mjs",
-   "line": 333,
+   "line": 344,
    "exported": true,
    "test": false
   },
@@ -9976,7 +9976,7 @@
    "kind": "CodeFunction",
    "name": "commitRelease",
    "file": "tools/release-pages.mjs",
-   "line": 361,
+   "line": 372,
    "exported": true,
    "test": false
   },
@@ -9985,7 +9985,7 @@
    "kind": "CodeFunction",
    "name": "writeOut",
    "file": "tools/release-pages.mjs",
-   "line": 385,
+   "line": 396,
    "exported": false,
    "test": false
   },
@@ -9994,7 +9994,7 @@
    "kind": "CodeFunction",
    "name": "git",
    "file": "tools/release-pages.mjs",
-   "line": 133,
+   "line": 140,
    "exported": false,
    "arrow": true,
    "test": false
@@ -10004,7 +10004,7 @@
    "kind": "CodeFunction",
    "name": "escape",
    "file": "tools/release-pages.mjs",
-   "line": 232,
+   "line": 239,
    "exported": false,
    "arrow": true,
    "test": false
@@ -10014,7 +10014,7 @@
    "kind": "CodeFunction",
    "name": "releaseBranch",
    "file": "tools/release-pages.mjs",
-   "line": 360,
+   "line": 371,
    "exported": true,
    "arrow": true,
    "test": false

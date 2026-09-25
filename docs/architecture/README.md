@@ -40,24 +40,27 @@ node tests/architecture-page.mjs                               # the page's rule
 When a milestone lands, its probes start to match and the next run moves its pieces from planned to
 in place. When the plan changes, edit `model/intent.yaml` and `model/pieces.yaml`, not the drawings.
 
-## What the map found (2026-09-25)
+## What the map found (2026-09-25, re-run after the M2 first step)
 
 | | Count |
 | --- | ---: |
 | Pieces in place today and in the final state | 176 |
 | Planned, not built yet | 127 |
-| Retiring: exist today, no place in the final state | 16 |
+| Retiring: exist today, no place in the final state | 15 |
 
 - **Stages 1 and 2 are complete.** Every piece traced to the release and to accounts is in place.
 - **R2 is the most-shared missing piece.** M2's refresh, M3's nightly backup, M5's card definitions and
   M7's compiled cards all land in the one bucket. engram's plan orders R2 before the game rooms for the
   same reason.
-- **The browser still reaches EDHREC and Archidekt directly.** crankmagic.com's security policy allows
-  `json.edhrec.com` and `archidekt.com` (checked live on 2026-09-25). `plan-data-sync.md` §0 says only
-  the scheduled job reads EDHREC and only the Worker reads Archidekt.
+- **The browser reached EDHREC and Archidekt directly**; crankmagic.com's security policy allowed both
+  (checked live, 2026-09-25). Fixed in the M2 first step: the pages no longer allow EDHREC (no page ever
+  loaded its client), and every release drops Archidekt, whose only caller is Play's import, which no
+  release carries. `tools/release-pages.mjs` now refuses a release whose policy allows anything but this
+  site and Scryfall's API. The frozen local host keeps Archidekt until R3.10 moves it behind the Worker.
 - **Scryfall lookups are cached in session storage for 24 hours**, so they are gone when the tab closes.
   §0's final state is IndexedDB, 7 days for a record and 24 hours for a price.
 - **CME already has the game's state, journal, checkpoints and seat projections.** What the room needs
   from M4 is the storage adapter and the house pilot.
-- **Retiring:** the local game host, Forge, the trycloudflare tunnel, Rob's laptop as a build machine,
-  github.io, the Load Live workflow, the session-storage lookups, and the `?v=`-pinned data files.
+- **Retiring:** the local game host, Forge, the trycloudflare tunnel, Rob's laptop as a build machine, the
+  Load Live workflow, the session-storage lookups, and the `?v=`-pinned data files. github.io left the
+  served app in the M2 first step (the pages and the app's fallbacks name crankmagic.com).

@@ -25,7 +25,7 @@
      where a release is published; outside a page (the suite) it is the first public address. */
   const VERSION = 1, APP_URL = (() => {
     try { return new URL("./", document.querySelector('link[rel="canonical"]').href).href; }
-    catch { return "https://minorrob.github.io/mtg-deck-matrix/"; }
+    catch { return "https://crankmagic.com/"; }
   })();
   const fold = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   const isTradeGroup = (g) => g && (g.id === "group:to-trade" || fold(g.name) === "to trade");

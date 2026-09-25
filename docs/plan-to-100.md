@@ -289,7 +289,7 @@ That is the M11 page's missing half: **the facts behind the drawings, and the cu
   - CI and the scheduled data job count against 2,000 free Actions minutes a month;
   - Claude Design and any bot reading the repository need access granted;
   - GitHub's secret scanning and branch protection for a private repository are paid features.
-- [ ] **Retire github.io from `main`.** The release builder already rewrites these to crankmagic.com, so production is unaffected. What still names github.io:
+- [ ] **Retire github.io from `main`.** *The served app is done (2026-09-25, the M2 first step): the pages' canonical and share tags, and the fallbacks in `crankmagic-app.js`, `crankmagic-trade.js` and `crankmagic-game.js`, name crankmagic.com, and the release builder refuses any release that names github.io. What is left belongs to the frozen local host and goes with it in M9.* What named github.io:
   - the canonical and share tags in `index.html` and `crankmagic.html` (the builder's `FIRST_PUBLIC` rewrite becomes a no-op);
   - the fallback addresses in `crankmagic-app.js` (`canonicalBase`) and `crankmagic-trade.js`;
   - the local host's "visit CrankMagic" link in `crankmagic-game.js`;

@@ -310,13 +310,13 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
  "graphs": {
   "current": {
    "path": "docs/architecture/.kg/graph.json",
-   "generatedAt": "2026-09-25T07:31:06.449649Z",
-   "nodes": 1635,
-   "edges": 3608
+   "generatedAt": "2026-09-25T13:06:03.895597Z",
+   "nodes": 1634,
+   "edges": 3605
   },
   "final": {
    "path": "docs/architecture/.kg/final/graph.json",
-   "generatedAt": "2026-09-25T07:31:08.230418Z",
+   "generatedAt": "2026-09-25T13:06:05.699630Z",
    "nodes": 494,
    "edges": 2367
   }
@@ -2482,7 +2482,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 74
+    "line": 81
    },
    "traces": [
     "req:M3-monitoring"
@@ -2510,7 +2510,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 116
+    "line": 123
    },
    "traces": [
     "req:M1-design",
@@ -2617,7 +2617,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 128
    },
    "traces": [
     "req:M5-front-door",
@@ -2645,7 +2645,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 55
+    "line": 59
    },
    "traces": [
     "req:S1-one-address"
@@ -2720,27 +2720,6 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    "traces": [
     "req:S1-release"
    ]
-  },
-  "net:github-pages": {
-   "id": "net:github-pages",
-   "kind": "NetworkNode",
-   "name": "github.io",
-   "status": "current",
-   "classification": "internal",
-   "place": {
-    "network": {
-     "lane": "retired",
-     "order": 5
-    }
-   },
-   "detail": {
-    "what": "The app's first address. GitHub Pages was turned off on 2026-09-25; main still names the address in a few places.",
-    "plan": "Housekeeping: retire github.io from main"
-   },
-   "evidence": {
-    "file": "tools/release-pages.mjs",
-    "line": 53
-   }
   },
   "net:indexeddb": {
    "id": "net:indexeddb",
@@ -2933,7 +2912,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 114
+    "line": 121
    },
    "traces": [
     "req:M2-serve",
@@ -7372,7 +7351,7 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    "auth": "None",
    "policy": "script-src static.cloudflareinsights.com",
    "description": "Anonymous page counts.",
-   "evidence": "tools/release-pages.mjs:74"
+   "evidence": "tools/release-pages.mjs:81"
   },
   {
    "from": "net:browser",
@@ -7446,16 +7425,6 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    "auth": "None",
    "policy": "connect-src archidekt.com",
    "description": "Today the browser may reach Archidekt directly. In the final state the Worker does.",
-   "evidence": "index.html:9"
-  },
-  {
-   "from": "net:browser",
-   "to": "src:edhrec",
-   "status": "current",
-   "protocol": "HTTPS (CORS)",
-   "auth": "None",
-   "policy": "connect-src json.edhrec.com",
-   "description": "Today the browser asks EDHREC directly. In the final state only the scheduled job does.",
    "evidence": "index.html:9"
   },
   {
@@ -7540,15 +7509,6 @@ dl.facts dd{margin:0;overflow-wrap:anywhere}
    "auth": "None",
    "description": "Today the refresh runs by hand on a machine, and someone commits the result.",
    "evidence": "tools/refresh.mjs:40"
-  },
-  {
-   "from": "net:load-live",
-   "to": "net:github-pages",
-   "status": "current",
-   "protocol": "Git push",
-   "auth": "GitHub",
-   "description": "Load Live published Rob's library files for the site to fetch. Both ends are off.",
-   "evidence": ".github/workflows/live-load.yml:5"
   },
   {
    "from": "net:local-host",
