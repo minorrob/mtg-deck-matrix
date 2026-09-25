@@ -75,9 +75,15 @@ const RELEASE = {
 export const PENDING = "pending";
 
 export const PROFILES = {
-  /* Production. Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now.
-     Accounts stay out of it until Rob approves them on staging (merge as we go, behind the switch). */
-  pages: {...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: [...PLAY, ...ACCOUNTS]},
+  /* Production. Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now;
+     he approved accounts on staging the same day ("Everything looks good!"). The pages stay public and
+     signing in stays optional: only /api/* is behind the "CrankMagic accounts" Access application, whose
+     policy is the invite list. */
+  pages: {
+    ...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: PLAY, accounts: "on",
+    cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"},
+      access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
+  },
   /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). */
   "cloud-staging": {
     ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: PLAY, accounts: "on",

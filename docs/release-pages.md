@@ -2,8 +2,8 @@
 
 **What it is.** The web app and nothing else — no game host, no Forge, no engine, no tools, tests or
 documents — built from one commit of `main` by `tools/release-pages.mjs`, committed to the `release/pages`
-branch, and served by **Cloudflare at https://crankmagic.com/**: the Worker `crankmagic`, static assets and
-no script, answering on crankmagic.com alone. It is deployed with `wrangler deploy` from the very folder the
+branch, and served by **Cloudflare at https://crankmagic.com/**: the Worker `crankmagic`, every page served as a
+file and its script run for `/api/*` only (the account cloud, `docs/plan-account-cloud.md`), answering on crankmagic.com alone. It is deployed with `wrangler deploy` from the very folder the
 acceptance walk passed on — wrangler lives in `C:\Users\robmi\CrankMagic\workbench\cloudflare` (outside the
 repo, which has no dependencies) and was signed in to Rob's Cloudflare account by Rob on 2026-09-24.
 Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
@@ -68,7 +68,7 @@ read.
 | No plain HTTP | `_headers` (parsed by Cloudflare, never served): `Strict-Transport-Security: max-age=31536000` and `X-Content-Type-Options: nosniff` on every path. A first visit's http→https redirect is the zone's **Always Use HTTPS** setting, which the wrangler sign-in cannot change — Rob's |
 | Never ships | `game/ tools/ tests/ docs/ design/ prototype/ graph/ payload*/ schema/ .github/ .claude/ data/engine/ data/source/ data/archive/ data/game-logs/` |
 | Moves the address | the profile's `origin`, `https://crankmagic.com/`, replaces the github.io address in the canonical and social links (`--origin` overrides it); the app reads its own address from the canonical link |
-| Hosts | `wrangler.jsonc` — the Worker `crankmagic`, static assets from `./`, no script, **crankmagic.com as its only address** (a custom domain; `workers_dev` and `preview_urls` off, because every extra address is another origin with its own browser library) — and `.assetsignore`, which keeps `.git`, wrangler's `.wrangler` scratch folder (it writes one into the folder it deploys from) and the configuration off the site. Every file must fit Cloudflare's 25 MiB |
+| Hosts | `wrangler.jsonc` — the Worker `crankmagic`, static assets from `./`, the API script (`cloud/worker.mjs`) for `/api/*` only with its D1 database and Access settings, **crankmagic.com as its only address** (a custom domain; `workers_dev` and `preview_urls` off, because every extra address is another origin with its own browser library) — and `.assetsignore`, which keeps `.git`, wrangler's `.wrangler` scratch folder (it writes one into the folder it deploys from) and the configuration off the site. Every file must fit Cloudflare's 25 MiB |
 
 ## Known limits
 

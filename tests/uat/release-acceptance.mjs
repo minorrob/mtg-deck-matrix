@@ -37,7 +37,10 @@ const origin = new URL(BASE).origin;
 const thrown = [], missing = [], hostCalls = [], refused = [];
 page.on("pageerror", (e) => thrown.push(e.message));
 page.on("console", (m) => {if (m.type() === "error" && /Content Security Policy|Refused to (connect|load)/i.test(m.text())) refused.push(m.text());});
-page.on("response", (r) => {const u = new URL(r.url()); if (u.origin === origin && r.status() === 404) missing.push(u.pathname);});
+/* UAT_STATIC=1: the release is served as plain files, with no Worker behind /api/*, so the account
+   module's /api/me meets a 404 there; on Cloudflare it meets Access instead. Only then is that allowed. */
+const STATIC = process.env.UAT_STATIC === "1";
+page.on("response", (r) => {const u = new URL(r.url()); if (u.origin === origin && r.status() === 404 && !(STATIC && u.pathname.startsWith("/api/"))) missing.push(u.pathname);});
 page.on("request", (r) => {if (/(127\.0\.0\.1|localhost):8768|trycloudflare\.com/.test(r.url())) hostCalls.push(r.url());});
 /* The simulator runs in a worker, whose errors never reach the page's own listeners. */
 const workerTrouble = [];
@@ -65,6 +68,11 @@ try {
     await click("Menu");
     const version = (await page.locator("#cm-user-menu .cm-version").innerText()).replace(/\s+/g, " ").trim();
     ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `the Menu names this release: ${version}`);
+    /* A release with accounts offers sign-in to a person who is not signed in -- and nothing else changes. */
+    if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
+      await page.locator("#cm-account").waitFor({timeout: 15000});
+      ok(/Sign in to keep your library in the cloud/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
+    }
     const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
     ok((await page.locator("#cm-share-mail").getAttribute("href")).includes(encodeURIComponent(home)), `the share link carries the published address, ${home}`);
     await shot("01-menu-version");
