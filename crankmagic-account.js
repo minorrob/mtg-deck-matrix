@@ -141,6 +141,7 @@
     if (!who.email && out) out.remove();
     chip();
     settings();
+    danger();
   }
   /* Settings › Account (r3, 70-settings) says the same in full, with Sign out beside it. */
   function settings() {
@@ -152,7 +153,33 @@
         + `<div class="cm-settings-row">${button("Sync now", "account-sync")}${button("Sign out", "account-sign-out")}</div>`
       : `<p>Signed out. Sign in and the library saves itself to the cloud and follows you to any device you sign in on.</p><div class="cm-settings-row">${button("Sign in", "account-sign-in", {}, true)}</div>`;
   }
-  C.drawAccount = settings;
+  C.drawAccount = () => {settings(); danger();};
+
+  /* DELETE ACCOUNT (R3.3b; r3, 74-confirm-delete). The person types the address they are signed in as, the
+     Worker checks it again, and everything the cloud holds for them goes in one step. This device's library
+     is theirs and stays; the sign-in is Access's, removed by Rob on request, which the dialog says. Syncing
+     stops before the request, and the page signs out after it, so nothing uploads the library straight back. */
+  function danger() {
+    const box = C.$("#cm-settings-delete");
+    if (box) box.innerHTML = who.email ? button("Delete account…", "account-delete", {}, false, {cls: "cm-danger"}) : "";
+  }
+  actions["account-delete"] = () => {
+    const email = who.email;
+    if (!email) throw Error("Sign in first: there is no cloud account on this device to delete.");
+    C.form("Delete your account",
+      `<div class="cm-full">${C.note(`This erases your cloud library — the current version and every earlier one, from every device — and your account record. It cannot be undone. This device's own library stays; Clear all data removes that. To have your sign-in removed too, e-mail admin@crankmagic.com.`, true)}</div>`
+      + C.field("Type your address to confirm", "confirm", "", `required autocomplete="off" placeholder="${e(email)}"`),
+      async (v) => {
+        if (String(v.confirm || "").trim().toLowerCase() !== email) throw Error(`Type the address exactly: ${email}`);
+        clearTimeout(timer);
+        const {deleted} = await api("DELETE", "/api/account", {confirm: v.confirm});
+        who = {checked: true, email: null}; status = ""; syncedAt = null; trouble = "";
+        await C.repo.writeMeta(META, {email: null, headId: null, syncedRevision: null, at: new Date().toISOString()});
+        draw();
+        notice(`Deleted your account and ${deleted.versions} saved version${deleted.versions === 1 ? "" : "s"} from the cloud. Signing you out…`);
+        setTimeout(() => {location.href = "/cdn-cgi/access/logout";}, 2500);
+      }, "Delete account").classList.add("cm-destructive");
+  };
   function chip() {
     const button = C.$("#cm-user-functions");
     if (!button) return;

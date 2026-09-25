@@ -155,6 +155,7 @@ try {
   const field = page.getByLabel("Type the deck name to confirm");
   await field.waitFor();
   const wanted = await field.getAttribute("placeholder");
+  ok(await page.evaluate(() => { const b = document.querySelector("#cm-dialog form.cm-destructive [type=submit]"); if (!b) return false; const probe = document.createElement("span"); probe.style.color = "var(--st-remove)"; document.getElementById("matrix-v2").append(probe); const want = getComputedStyle(probe).color; probe.remove(); return getComputedStyle(b).backgroundColor === want; }), "the delete button is red, as a delete should be (74-confirm-delete)");
   ok(wanted && wanted !== "DELETE" && (await page.locator("#cm-dialog-title").textContent()).includes(wanted), `the field asks for the deck's own name, the one in the title (${wanted})`);
   await field.fill("DELETE");
   await page.locator("#cm-dialog [type=submit]").click();

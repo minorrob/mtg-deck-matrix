@@ -73,6 +73,19 @@ One-time PIN; the staging Access application. Its team domain and Audience tag g
 `PROFILES["cloud-staging"].cloud.access` in `tools/release-pages.mjs`; until then the staging build names them
 as pending and refuses to be written out.
 
+## Deleting an account (R3.3b)
+
+**The person does it:** Settings › Data › Delete account…. They type the address they are signed in as, and
+`DELETE /api/account` removes their head, every saved version of every kind and their user row, in one D1 batch.
+The Worker checks the address again and deletes nothing without it; the page stops syncing first and signs out
+after, so the library is not uploaded straight back. Their device's own library stays theirs.
+
+**Rob's step, only when asked** (the dialog and the privacy page tell people to e-mail admin@crankmagic.com):
+remove their address from the **Invited** policy of the "CrankMagic accounts" Access application, and revoke
+their session under Zero Trust → My Team → Users. Until then they can still sign in, and signing in again
+starts an empty account. When the request comes by e-mail instead, do the same, and ask them to use Delete
+account in Settings first; if they cannot, delete their rows by e-mail address in the D1 console.
+
 ## Next
 
 1. Rob's Access values → deploy staging (`wrangler d1 migrations apply crankmagic-staging --remote`, then

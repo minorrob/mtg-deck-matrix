@@ -55,6 +55,7 @@ try {
     for (const label of labels) ok(inside.includes(label), `Settings › ${section} has ${label}`);
   }
   ok(/Signing in is not offered on this copy/.test(await page.locator("#cm-settings-account").innerText()), "without accounts, Account says so rather than offering a sign-in that cannot work");
+  eq(await page.locator(".cm-settings").getByRole("button", {name: "Delete account…"}).count(), 0, "and there is no Delete account to offer");
   await page.goto(`${base}/index.html#cards`);
   await page.locator("[data-action=roster-more]").first().click();
   ok(await page.getByRole("button", {name: "Publish your To Trade list"}).isVisible(), "Publish your To Trade list is in the Library's More menu");
@@ -132,6 +133,33 @@ try {
   await p.goto(`${base}/index.html#settings`);
   await p.waitForFunction(() => /Signed in as reader@example\.test/.test(document.getElementById("cm-settings-account")?.textContent || ""), null, {timeout: 30000});
   eq(await p.locator("#cm-settings-account").getByRole("button").allTextContents(), ["Sync now", "Sign out"], "signed in, Settings › Account says who, with Sync now and Sign out");
+
+  /* R3.3b: Delete account, in the danger zone, only when signed in. */
+  let sent = null, signedOut = false;
+  await p.route(`${base}/api/account`, (route) => { sent = {method: route.request().method(), body: route.request().postDataJSON(), header: route.request().headers()["x-crankmagic"]}; return route.fulfill({json: {deleted: {email: "reader@example.test", versions: 3}}}); });
+  await p.route(`${base}/cdn-cgi/access/logout`, (route) => { signedOut = true; return route.fulfill({contentType: "text/html", body: "<p>signed out</p>"}); });
+  /* Opened after the account is already known (the everyday path), not only while it is being checked. */
+  await p.evaluate(() => { location.hash = "#decks"; });
+  await p.locator(".cm-settings").waitFor({state: "detached"});
+  await p.evaluate(() => { location.hash = "#settings"; });
+  await p.locator(".cm-settings").waitFor();
+  const dangerZone = p.locator(".cm-settings-danger");
+  ok(await dangerZone.getByRole("button", {name: "Delete account…"}).isVisible(), "signed in, the danger zone offers Delete account… when Settings is opened later too");
+  await dangerZone.getByRole("button", {name: "Delete account…"}).click();
+  const confirm = p.getByLabel("Type your address to confirm");
+  await confirm.waitFor();
+  ok(/every earlier one/.test(await p.locator("#cm-dialog").innerText()) && /stays/.test(await p.locator("#cm-dialog").innerText()), "the dialog says what goes (every version) and what stays (this device's library)");
+  ok(await p.evaluate(() => { const b = document.querySelector("#cm-dialog form.cm-destructive [type=submit]"); if (!b) return false; const probe = document.createElement("span"); probe.style.color = "var(--st-remove)"; document.getElementById("matrix-v2").append(probe); const want = getComputedStyle(probe).color; probe.remove(); return getComputedStyle(b).backgroundColor === want; }), "and its Delete account button is red, as a delete should be");
+  await confirm.fill("someone@else.test");
+  await p.locator("#cm-dialog [type=submit]").click();
+  await p.locator("#cm-dialog .cm-error:not([hidden])").waitFor();
+  ok(/Type the address exactly/.test(await p.locator("#cm-dialog .cm-error").innerText()) && sent === null, "another address is refused in the page, and nothing is sent");
+  await confirm.fill("Reader@Example.test");
+  await p.locator("#cm-dialog [type=submit]").click();
+  await p.waitForFunction(() => /Deleted your account and 3 saved versions/.test(document.getElementById("cm-notice").textContent));
+  eq(sent, {method: "DELETE", body: {confirm: "Reader@Example.test"}, header: "sync"}, "the address, typed in any case, is sent to DELETE /api/account from the app");
+  await p.waitForURL(/cdn-cgi\/access\/logout/, {timeout: 10000});
+  ok(signedOut, "and the page signs out, so nothing uploads the library straight back");
   await signed.close();
 
   const phone = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true, serviceWorkers: "block"});

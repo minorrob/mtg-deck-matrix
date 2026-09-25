@@ -6,7 +6,7 @@
 
    Three things the design draws are not here yet, on purpose, because nothing ships before it works:
    EUR prices wait for the price sync (M2), Card size waits for R3.9's pass over every card surface,
-   and Delete account arrives with the Worker route that does it (R3.3b). */
+   and Delete account is drawn by crankmagic-account.js, which alone knows whether anyone is signed in. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {esc:e,button:b,actions,views,notice,commit}=C;
 const money=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const card=(id,title,body,cls='')=>`<section class="cm-settings-card${cls?' '+cls:''}" aria-labelledby="cm-settings-h-${id}"><h2 id="cm-settings-h-${id}">${e(title)}</h2>${body}</section>`;
@@ -32,7 +32,7 @@ views.settings=async()=>{
    +card('data','Data',
       `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('E-mail the export…','share-export')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
-      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
+      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`
       +`<p class="cm-settings-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="THIRD-PARTY-NOTICES.md">Third-party notices</a><a href="LICENSE">License</a></p>`)
    +`</div>`;

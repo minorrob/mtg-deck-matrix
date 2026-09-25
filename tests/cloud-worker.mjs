@@ -196,6 +196,38 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq(keyFetches, 0, "and turned away before the token is even checked, so a flood costs no work");
 }
 
+/* DELETE ACCOUNT (R3.3b): all of one person's cloud, and nothing of anyone else's. */
+{
+  const rows = (email) => {
+    const u = DB.raw.prepare("SELECT id FROM users WHERE email = ?").get(email);
+    if (!u) return {user: 0, versions: 0, head: 0};
+    return {user: 1, versions: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM snapshots WHERE user_id = ?").get(u.id).n), head: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM heads WHERE user_id = ?").get(u.id).n)};
+  };
+  clock += 120_000;
+  const other = await call("PUT", "/api/library", {as: "someone@example.com", body: {...library(7), parent: null}});
+  eq(other.status, 200, "another person has a library of their own");
+  const robHead = (await call("GET", "/api/library")).json.head;
+  const before = rows("rob@example.com");
+  ok(before.user === 1 && before.versions > 1 && before.head === 1, `rob has an account, versions and a head to delete: ${JSON.stringify(before)}`);
+
+  eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {"x-crankmagic": ""}})).status, 403, "a delete without the app's header: 403");
+  eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {origin: "https://evil.example"}})).status, 403, "a delete from another site's page: 403");
+  const wrong = await call("DELETE", "/api/account", {body: {confirm: "someone@example.com"}});
+  eq([wrong.status, /Nothing was deleted/.test(wrong.json.error)], [400, true], "a delete that names another address: 400, and it says nothing was deleted");
+  eq((await call("DELETE", "/api/account", {body: {}})).status, 400, "and one that names no address: 400");
+  eq(rows("rob@example.com"), before, "after those refusals, every row is still there");
+
+  const gone = await call("DELETE", "/api/account", {body: {confirm: "  ROB@Example.com "}});
+  eq([gone.status, gone.json.deleted], [200, {email: "rob@example.com", versions: before.versions}], "the address typed in any case deletes the account, and says how many versions went");
+  eq(rows("rob@example.com"), {user: 0, versions: 0, head: 0}, "the user row, the head and every version are gone from the database");
+  eq((await call("GET", `/api/library/versions/${robHead.id}`, {as: "someone@example.com"})).status, 404, "an old version is not reachable by anyone");
+  const theirs = await call("GET", "/api/library", {as: "someone@example.com"});
+  eq([theirs.status, theirs.json.head.id], [200, other.json.head.id], "the other person's library is untouched");
+  eq(rows("someone@example.com").versions, 1, "down to its last version");
+  const again = await call("GET", "/api/library");
+  eq([again.status, again.json.head], [200, null], "signed in again, rob starts an empty account: the sign-in is Access's to remove");
+}
+
 /* A path that is not the API goes back to the files: an honest 404 for a mistyped address, never "sign in". */
 {
   const {default: worker} = await import("../cloud/worker.mjs");

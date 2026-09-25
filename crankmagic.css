@@ -2774,3 +2774,6 @@ button.cm-building { pointer-events: none; }
 /* REDUCE MOTION, the reader's own switch (Settings › Appearance). crankmagic-app.js writes it on <html>;
    the scripts that animate ask CrankMotion. This stills every transition and animation at once. */
 html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=reduce] *::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}
+/* A form that deletes says so in its button (r3, 74-confirm-delete): red, not the everyday brass. */
+#cm-dialog .cm-form.cm-destructive [type=submit]{background:var(--st-remove);border-color:var(--st-remove);color:var(--v-on)}
+#cm-dialog .cm-form.cm-destructive [type=submit]:hover{background:color-mix(in oklab,var(--st-remove) 85%,var(--v-ink))}
