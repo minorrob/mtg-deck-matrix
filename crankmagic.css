@@ -2800,3 +2800,18 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #cm-dialog.cm-guide-modal .cm-swot>div{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:12px 14px}
 #cm-dialog.cm-guide-modal .cm-swot>div h3{margin:0 0 6px;font-size:15px}
 @media(max-width:560px){#cm-dialog.cm-guide-modal .cm-swot{grid-template-columns:1fr}}
+/* THE MEASURE REPORT (r3, 30-measure-report): the fidelity notice above the score, tinted by its level; then
+   the score and what made it, side by side, stacked on a phone. */
+#matrix-v2 .cm-fidelity{border:1px solid var(--v-line);border-left:4px solid var(--fid,var(--st-inbox));border-radius:var(--v-radius-card);background:color-mix(in oklab,var(--fid,var(--st-inbox)) 10%,var(--v-panel));padding:14px 18px;margin:4px 0 16px}
+#matrix-v2 .cm-fidelity-medium{--fid:var(--st-buy)}
+#matrix-v2 .cm-fidelity-low{--fid:var(--st-remove)}
+#matrix-v2 .cm-fidelity h2{margin:0 0 6px;font-size:16px}
+#matrix-v2 .cm-fidelity ul{margin:0 0 6px;padding-left:18px}
+#matrix-v2 .cm-fidelity details{margin-top:6px;font-size:13px;color:var(--v-muted)}
+#matrix-v2 .cm-report-grid{display:grid;grid-template-columns:minmax(200px,260px) 1fr;gap:16px;align-items:start}
+#matrix-v2 .cm-report-score{text-align:center}
+#matrix-v2 .cm-report-number{font-size:64px;font-weight:900;line-height:1;margin:8px 0 0}
+#matrix-v2 .cm-report-checks table{width:100%;border-collapse:collapse;font-size:14px}
+#matrix-v2 .cm-report-checks th,#matrix-v2 .cm-report-checks td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--v-line);vertical-align:top}
+#matrix-v2 .cm-report-checks td:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:760px){#matrix-v2 .cm-report-grid{grid-template-columns:1fr}#matrix-v2 .cm-report-checks{overflow-x:auto}}
