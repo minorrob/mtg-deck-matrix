@@ -19,9 +19,9 @@
 .cm-kpi-caption{margin:0 0 16px;font-size:12px;color:var(--v-muted);line-height:1.5}
 .cm-cards-summary{margin:8px 0 0;color:var(--v-muted);font-size:15px;max-width:70ch}
 /* The row mark, the purpose chip and the tinted band (Track V.4f). */
-#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-right:7px}
+#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:7px}
 #cm-roster-table .cm-row-mana img{width:16px;height:16px}
-#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
+#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
 #cm-roster-table .cm-purpose-chip{display:inline-block;padding:2px 7px;border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:11px;font-weight:600}
 #cm-roster-table .cm-group-row td{background:color-mix(in oklab,var(--band,var(--v-raised)) 10%,var(--v-panel))}
 #cm-roster-table .cm-group-row .cm-group-toggle:before{content:'';display:inline-block;width:8px;height:8px;border-radius:var(--radius-pill);background:var(--band,var(--v-line));margin-right:8px;vertical-align:middle}
@@ -2847,3 +2847,8 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-col-move{display:flex;gap:4px}
 #matrix-v2 .cm-col-move .cm-icon-button{width:30px;height:30px;min-height:30px}
 #matrix-v2 .cm-col-options{margin-top:4px}
+/* THE NAME TRUNCATES ITSELF (R3.6, with the name first and the mana after it). A cell that ellipsizes swaps an
+   inline box that does not fit for a bare "…", so a long name went missing whole on a phone. Held to the
+   cell's width, the name keeps every letter that fits and ends in its own ellipsis. */
+#cm-roster-table td.cm-col-name .cm-card-name{max-width:100%;vertical-align:middle}
+#cm-roster-table td.cm-col-name .cm-card-name>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

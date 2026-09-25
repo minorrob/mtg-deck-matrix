@@ -20,6 +20,7 @@
  *   7. Each count card filters the table to exactly what it counts: the copies under it add up to its
  *      figure, the other cards keep theirs, and a second click lets every row back. On a phone the
  *      page brings the table up below the top bar, since the table sits a screen below the cards.
+ *   8. A row shows the card's name first and its mana after; on a phone the name keeps its room.
  *   6. INTAKE §3's Library items still stand: the ticked-rows bar, group bands, collection groups, the
  *      Sheet's editable cells and the Table view's piles.
  *
@@ -78,6 +79,10 @@ try {
     eq(cardsBefore[1].n, sum((l) => l.source === "owned" && !!l.allocation), "Owned is the owned copies a deck has reserved");
     eq(cardsBefore[4].n, sum((l) => l.source === "ordered"), "Ordered is the copies on order");
   }
+
+  /* 8. The name first, then its mana (Rob, 2026-09-25: "Put the card name first then mana symbols"). */
+  const nameFirst = await page.$$eval("#cm-roster-table tr[data-card] td.cm-col-name", (tds) => tds.map((td) => { const n = td.querySelector(".cm-card-name"), m = td.querySelector(".cm-row-mana, .cm-row-land"); return !m || !!(n.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING); }));
+  ok(nameFirst.length > 20 && nameFirst.every(Boolean), `in every row the card's name comes before its mana (${nameFirst.filter(Boolean).length} of ${nameFirst.length})`);
 
   /* 1. Filters. */
   const all = await records(page);
@@ -273,6 +278,9 @@ try {
   await loadLiveState(small, base);
   await small.goto(LIB);
   await settle(small);
+  /* A cell that ellipsizes replaces an inline box that runs past its edge with a bare "…", so the name's box has to end inside the cell. */
+  const names = await small.$$eval("#cm-roster-table tr[data-card] td.cm-col-name", (tds) => tds.map((td) => { const b = td.querySelector(".cm-card-name").getBoundingClientRect(), c = td.getBoundingClientRect(), pr = parseFloat(getComputedStyle(td).paddingRight); return {name: td.querySelector(".cm-card-name").textContent, fits: b.right <= c.right - pr + 1 && b.width > 20}; }));
+  ok(names.length > 20 && names.every((n) => n.fits), `8. on a phone every name is shown, never swapped for a bare ellipsis: ${JSON.stringify(names.filter((n) => !n.fits).slice(0, 4).map((n) => n.name))}`);
   /* The figure's own text box, measured with a Range, has to sit inside the card's padding: a clipped or
      overflowing figure is wider than the room the card gives it. */
   const kpis = await small.$$eval(".cm-kpi", (ks) => ks.map((k) => { const s = k.querySelector("strong"), r = k.getBoundingClientRect(), cs = getComputedStyle(k), range = document.createRange(); range.selectNodeContents(s); const t = range.getBoundingClientRect();
