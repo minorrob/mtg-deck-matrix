@@ -19,9 +19,9 @@
 .cm-kpi-caption{margin:0 0 16px;font-size:12px;color:var(--v-muted);line-height:1.5}
 .cm-cards-summary{margin:8px 0 0;color:var(--v-muted);font-size:15px;max-width:70ch}
 /* The row mark, the purpose chip and the tinted band (Track V.4f). */
-#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-right:7px}
+#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:7px}
 #cm-roster-table .cm-row-mana img{width:16px;height:16px}
-#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
+#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
 #cm-roster-table .cm-purpose-chip{display:inline-block;padding:2px 7px;border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:11px;font-weight:600}
 #cm-roster-table .cm-group-row td{background:color-mix(in oklab,var(--band,var(--v-raised)) 10%,var(--v-panel))}
 #cm-roster-table .cm-group-row .cm-group-toggle:before{content:'';display:inline-block;width:8px;height:8px;border-radius:var(--radius-pill);background:var(--band,var(--v-line));margin-right:8px;vertical-align:middle}
@@ -1772,7 +1772,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
    tile, on the Collection's Allocation pill and on the card pop-up's deck chips alike. */
 .cm-pill.reserved{--st:var(--st-reserved)}
 /* The dialog's title row and its close button stay put while the rest scrolls. */
-#matrix-v2 .cm-dialog-head{position:sticky;top:0;z-index:3;background:var(--color-panel);margin:-25px -25px 20px;padding:25px 25px 12px}
+/* top:-25px, not 0: a sticky box stops at the scroll box's padding edge, so top:0 held the head 25px below where its
+   -25px margin puts it, over the first 5px of every dialog's first line (seen in R3.6's Filters and Add copies). */
+#matrix-v2 .cm-dialog-head{position:sticky;top:-25px;z-index:3;background:var(--color-panel);margin:-25px -25px 20px;padding:25px 25px 12px}
 /* THE PAGE NAME IS THE HEADING: one row, the name and its "?" on the left, the actions on the
    right; a crumb above a page that belongs to another (a deck, its Ready to add list). */
 .cm-page-title{display:grid;gap:0;min-width:0}
@@ -2815,3 +2817,38 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-report-checks th,#matrix-v2 .cm-report-checks td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--v-line);vertical-align:top}
 #matrix-v2 .cm-report-checks td:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 @media(max-width:760px){#matrix-v2 .cm-report-grid{grid-template-columns:1fr}#matrix-v2 .cm-report-checks{overflow-x:auto}}
+/* THE LIBRARY (r3, R3.6). The count cards wrap on narrower screens instead of clipping their figures
+   (700 read as "70" at 390px); the Filters dialog is chips in labeled rows with two ranges under them;
+   the Columns dialog is one list of rows, each with a grip, its box and two arrows. */
+@media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:640px){.cm-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.cm-kpi{min-height:0;padding:14px 12px 10px}.cm-kpi strong{font-size:24px}}
+#cm-dialog.cm-filters-dialog{width:min(640px,calc(100vw - 32px))}
+#matrix-v2 .cm-filters-form{display:grid;gap:14px}
+#matrix-v2 .cm-fd-group,#matrix-v2 .cm-fd-range{border:0;margin:0;padding:0;min-width:0}
+#matrix-v2 .cm-fd-group legend,#matrix-v2 .cm-fd-range legend{padding:0;margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-fd-chips{display:flex;flex-wrap:wrap;gap:8px}
+#matrix-v2 .cm-fd-chips .v-button{min-height:34px;padding:0 14px;border-radius:var(--radius-pill)}
+#matrix-v2 .cm-fd-ranges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#matrix-v2 .cm-fd-range{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+#matrix-v2 .cm-fd-range legend{width:100%}
+#matrix-v2 .cm-fd-range label{display:grid;gap:4px;flex:1 1 0;min-width:0;font-size:12px;color:var(--v-muted)}
+#matrix-v2 .cm-fd-range input{width:100%;min-width:0}
+#matrix-v2 .cm-fd-range>span{padding-bottom:10px;color:var(--v-muted)}
+#matrix-v2 .cm-filters-form .cm-form-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:12px;border-top:1px solid var(--v-line)}
+@media(max-width:560px){#matrix-v2 .cm-fd-ranges{grid-template-columns:1fr}}
+#cm-dialog.cm-columns-dialog{width:min(520px,calc(100vw - 32px))}
+#matrix-v2 .cm-col-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(52vh,560px);overflow:auto}
+#matrix-v2 .cm-col-row{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 10px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel)}
+#matrix-v2 .cm-col-row.is-dragging{border-color:var(--v-accent);background:var(--v-raised)}
+#matrix-v2 .cm-col-row .cm-checkbox{flex:1 1 auto;min-width:0}
+#matrix-v2 .cm-col-row small{color:var(--v-muted)}
+#matrix-v2 .cm-col-grip{flex:0 0 16px;color:var(--v-muted);cursor:grab;touch-action:none;user-select:none;letter-spacing:-2px}
+#matrix-v2 .cm-col-row.is-dragging .cm-col-grip{cursor:grabbing}
+#matrix-v2 .cm-col-move{display:flex;gap:4px}
+#matrix-v2 .cm-col-move .cm-icon-button{width:30px;height:30px;min-height:30px}
+#matrix-v2 .cm-col-options{margin-top:4px}
+/* THE NAME TRUNCATES ITSELF (R3.6, with the name first and the mana after it). A cell that ellipsizes swaps an
+   inline box that does not fit for a bare "…", so a long name went missing whole on a phone. Held to the
+   cell's width, the name keeps every letter that fits and ends in its own ellipsis. */
+#cm-roster-table td.cm-col-name .cm-card-name{max-width:100%;vertical-align:middle}
+#cm-roster-table td.cm-col-name .cm-card-name>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

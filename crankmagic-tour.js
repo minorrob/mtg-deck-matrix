@@ -157,7 +157,7 @@ const TOURS=[
     {view:'cards',selectors:['#cm-roster-table'],
      title:'One row per card',
      copy:'What it is, what it costs, and where it lives. Click a row to see the card itself.'},
-    {view:'cards',selectors:['[data-action=roster-filters]'],act:'openFilters',
+    {view:'cards',selectors:['[data-action=roster-filters]'],
      title:'Filter and group',
      copy:'By deck, status, type or color. Grouping is how you find the eleven copies of the same land spread across four decks.'},
     {view:'cards',selectors:['[data-action=new-group]'],
@@ -221,7 +221,7 @@ const TOURS=[
     {view:'cards',params:{tab:'buy'},selectors:['.cm-tabs'],
      title:'Three tabs, one page',
      copy:'Library is everything you own or want; To buy is what your decks still need; Orders is what is on its way. Ready to add — what goes into each deck once it has arrived — is under More.'},
-    {view:'cards',params:{tab:'buy'},selectors:['[data-action=roster-filters]'],act:'openFilters',
+    {view:'cards',params:{tab:'buy'},selectors:['[data-action=roster-filters]'],
      title:'Filter to today',
      copy:'At a booth you want the red cards under five dollars, not the whole list.'},
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=shop-buy]','.cm-row-actions','#cm-roster-table'],
@@ -290,7 +290,6 @@ const has={
 const ACTS={
   openCommander(){const d=$('#cm-lab-commander');if(d&&!d.hidden)d.open=true;},
   openDefinition(){const d=$('#cm-lab-definition');if(d)d.open=true;},
-  openFilters(){const p=$('#cm-filter-host');if(p&&!p.children.length)$('[data-action=roster-filters]')?.click();},
   /* Export and the other page tools moved behind the Library page's More menu, so a step about
      one has to open it first (sweep, PR 6). Opening an open menu is a no-op. */
   openMore(){if(!$('[data-action=export-view]'))$('[data-action=roster-more]')?.click();raise();},
