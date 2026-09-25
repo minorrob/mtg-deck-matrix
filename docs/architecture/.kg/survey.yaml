@@ -47,7 +47,7 @@ exclusions:
 - vendor
 - venv
 files_ingested: 156
-files_dropped: 1357
+files_dropped: 1393
 notes:
 - 'Scoped to the code that carries the architecture: the served app, the account Worker (cloud/), the engine and the frozen
   local game host, the release builder and data tools, the CI workflows, and the plans that define the final state.'

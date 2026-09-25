@@ -8,7 +8,7 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
-import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES, FIRST_PUBLIC} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -36,7 +36,8 @@ for (const p of PAGES) {
   ok(/<meta name="crankmagic-version" content="[0-9a-f]{7} · \d{4}-\d{2}-\d{2}">/.test(text), `${p} says which commit it is`);
   ok(!/crankmagic-(game|lobby|online)\.(js|css)|collection-lobby-draft\.js/.test(text), `${p} loads no Play module`);
   ok(!text.includes("127.0.0.1:8768") && !text.includes("trycloudflare.com"), `${p}'s security policy allows no connection to a game host or a tunnel`);
-  ok(/connect-src 'self' https:\/\/api\.scryfall\.com/.test(text), `${p} still reaches Scryfall`);
+  ok(/connect-src 'self' https:\/\/api\.scryfall\.com[;"]/.test(text), `${p} reaches this site and Scryfall's API, and nothing else (plan-data-sync §0): ${(/connect-src[^;"]*/.exec(text) || [""])[0]}`);
+  ok(!/edhrec|archidekt/i.test((/connect-src[^;"]*/.exec(text) || [""])[0]), `${p} lets the browser reach neither EDHREC nor Archidekt`);
 }
 const app = built.get("crankmagic-app.js").toString("utf8");
 ok(/meta\[name="crankmagic-play"\]'\)\?\.content==='coming-soon'\)views\.game=views\.online=/.test(app), "the app answers the mark with the Coming Soon view, on #game and #online");
@@ -57,7 +58,7 @@ ok(/^[0-9a-f]{40}$/.test(version.commit) && version.profile === "pages", "versio
 for (const p of PAGES) {
   const text = built.get(p).toString("utf8");
   ok(text.includes('<link rel="canonical" href="https://crankmagic.com/'), `${p}'s canonical link is crankmagic.com, which the app reads its own address from`);
-  ok(!text.includes(FIRST_PUBLIC), `${p} no longer names the github.io address`);
+  ok(!text.includes("github.io"), `${p} no longer names the github.io address`);
 }
 eq(version.origin, "https://crankmagic.com/", "version.json says where it is published");
 const wrangler = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
@@ -83,6 +84,7 @@ ok(broken((m) => m.set("crankmagic-game.js", Buffer.from(""))).some((p) => p.inc
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('content="coming-soon"', 'content="live"')))).some((p) => p.includes("not marked")), "a page that does not say Coming Soon is named");
 ok(broken((m) => m.set("tools/release-pages.mjs", Buffer.from(""))).some((p) => p.includes("never ships")), "a tool in the release is named");
 ok(broken((m) => m.set("crankmagic.html", Buffer.from(m.get("crankmagic.html").toString().replace("connect-src 'self'", "connect-src 'self' http://127.0.0.1:8768")))).some((p) => p.includes("127.0.0.1:8768")), "a page that can reach a game host again is named");
+ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace("connect-src 'self'", "connect-src 'self' https://json.edhrec.com")))).some((p) => p.includes("plan-data-sync")), "a page that lets the browser reach EDHREC again is named (plan-data-sync §0)");
 assert.throws(() => transform("index.html", "<html><head></head></html>", {profile, version: "x", origin: ""}), /nothing to change/, "a page without <meta charset> is refused, not half-edited"); checks++;
 ok(broken((m) => m.set(".assetsignore", Buffer.from("wrangler.jsonc\n"))).some((p) => p.includes(".git")), "an .assetsignore that would publish .git is named");
 ok(broken((m) => m.set("data/huge.json", Buffer.alloc(25 * 1024 * 1024 + 1))).some((p) => p.includes("25 MiB")), "a file over Cloudflare's limit is named");
@@ -91,7 +93,7 @@ ok(withConfig((c) => {c.workers_dev = true;}).some((p) => p.includes("second ori
 ok(withConfig((c) => {c.routes.push({pattern: "www.crankmagic.com", custom_domain: true});}).some((p) => p.includes("alone")), "a second custom domain is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace("script-src 'self' https://static.cloudflareinsights.com", "script-src 'self' https://static.cloudflareinsights.com https://cdn.example")))).some((p) => p.includes("script-src")), "a page that would run scripts from anywhere else is named");
 ok(broken((m) => m.set("_headers", Buffer.from("/*\n  X-Content-Type-Options: nosniff\n"))).some((p) => p.includes("Strict-Transport-Security")), "a release without HSTS is named");
-ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('href="https://crankmagic.com/"', `href="${FIRST_PUBLIC}"`)))).some((p) => p.includes("canonical")), "a page whose canonical link is not crankmagic.com is named");
+ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('href="https://crankmagic.com/"', `href="${RETIRED_PUBLIC}"`)))).some((p) => p.includes("canonical")), "a page whose canonical link is not crankmagic.com is named");
 
 /* The walk reads what the app would load, not what its comments talk about. */
 const have = new Set(["assets/mana/W.svg", "assets/mana/U.svg", "assets/mana/x.png", "docs/plan.md", "data/cards.json"]);

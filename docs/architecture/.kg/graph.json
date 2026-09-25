@@ -2,7 +2,7 @@
  "meta": {
   "repo": "crankmagic",
   "repo_id": "repo:crankmagic",
-  "generatedAt": "2026-09-25T07:31:06.449649Z",
+  "generatedAt": "2026-09-25T13:06:03.895597Z",
   "schema": "engram-schema.yaml@0.3.0",
   "stages_present": [
    "survey",
@@ -11,8 +11,8 @@
    "docs"
   ],
   "counts": {
-   "nodes": 1635,
-   "edges": 3608
+   "nodes": 1634,
+   "edges": 3605
   },
   "redact_policy": "name-kind-only"
  },
@@ -11957,7 +11957,7 @@
    "kind": "CodeModule",
    "name": "tools/release-pages.mjs",
    "file": "tools/release-pages.mjs",
-   "loc": 417,
+   "loc": 428,
    "stage": "structure",
    "classification": "internal"
   },
@@ -11966,7 +11966,7 @@
    "kind": "CodeFunction",
    "name": "commitSource",
    "file": "tools/release-pages.mjs",
-   "line": 136,
+   "line": 143,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -11977,7 +11977,7 @@
    "kind": "CodeFunction",
    "name": "worktreeSource",
    "file": "tools/release-pages.mjs",
-   "line": 160,
+   "line": 167,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -11988,7 +11988,7 @@
    "kind": "CodeFunction",
    "name": "stripComments",
    "file": "tools/release-pages.mjs",
-   "line": 169,
+   "line": 176,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -11999,7 +11999,7 @@
    "kind": "CodeFunction",
    "name": "referencesOf",
    "file": "tools/release-pages.mjs",
-   "line": 177,
+   "line": 184,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12010,7 +12010,7 @@
    "kind": "CodeFunction",
    "name": "walk",
    "file": "tools/release-pages.mjs",
-   "line": 214,
+   "line": 221,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12021,7 +12021,7 @@
    "kind": "CodeFunction",
    "name": "transform",
    "file": "tools/release-pages.mjs",
-   "line": 235,
+   "line": 242,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12032,7 +12032,7 @@
    "kind": "CodeFunction",
    "name": "verify",
    "file": "tools/release-pages.mjs",
-   "line": 260,
+   "line": 268,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12043,7 +12043,7 @@
    "kind": "CodeFunction",
    "name": "build",
    "file": "tools/release-pages.mjs",
-   "line": 333,
+   "line": 344,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12054,7 +12054,7 @@
    "kind": "CodeFunction",
    "name": "commitRelease",
    "file": "tools/release-pages.mjs",
-   "line": 361,
+   "line": 372,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12065,7 +12065,7 @@
    "kind": "CodeFunction",
    "name": "writeOut",
    "file": "tools/release-pages.mjs",
-   "line": 385,
+   "line": 396,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -12076,7 +12076,7 @@
    "kind": "CodeFunction",
    "name": "git",
    "file": "tools/release-pages.mjs",
-   "line": 133,
+   "line": 140,
    "exported": false,
    "arrow": true,
    "test": false,
@@ -12088,7 +12088,7 @@
    "kind": "CodeFunction",
    "name": "escape",
    "file": "tools/release-pages.mjs",
-   "line": 232,
+   "line": 239,
    "exported": false,
    "arrow": true,
    "test": false,
@@ -12100,7 +12100,7 @@
    "kind": "CodeFunction",
    "name": "releaseBranch",
    "file": "tools/release-pages.mjs",
-   "line": 360,
+   "line": 371,
    "exported": true,
    "arrow": true,
    "test": false,
@@ -16943,10 +16943,10 @@
     "plan": "M2 adds /data/*, M3 rate limits and delete, M5 tables, M6 the AI door"
    },
    "file": "tools/release-pages.mjs",
-   "line": 114,
+   "line": 121,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 114
+    "line": 121
    },
    "stage": "structure",
    "classification": "internal"
@@ -16967,10 +16967,10 @@
     "plan": "Built from one commit of main by tools/release-pages.mjs"
    },
    "file": "tools/release-pages.mjs",
-   "line": 116,
+   "line": 123,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 116
+    "line": 123
    },
    "stage": "structure",
    "classification": "internal"
@@ -16990,10 +16990,10 @@
     "owner": "Rob asked for it on 2026-09-24"
    },
    "file": "tools/release-pages.mjs",
-   "line": 74,
+   "line": 81,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 74
+    "line": 81
    },
    "stage": "structure",
    "classification": "internal"
@@ -17015,10 +17015,10 @@
     "plan": "M5 adds tables and seats, M6 the AI allowlist and call log"
    },
    "file": "tools/release-pages.mjs",
-   "line": 121,
+   "line": 128,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 128
    },
    "stage": "structure",
    "classification": "internal"
@@ -17128,10 +17128,10 @@
     "what": "The only public address. Cloudflare Email Routing forwards it to Rob; where it forwards is set in the dashboard and kept out of the repository."
    },
    "file": "tools/release-pages.mjs",
-   "line": 55,
+   "line": 59,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 55
+    "line": 59
    },
    "stage": "structure",
    "classification": "internal"
@@ -17225,29 +17225,6 @@
    "evidence": {
     "file": "index.html",
     "line": 9
-   },
-   "stage": "structure",
-   "classification": "internal"
-  },
-  {
-   "id": "net:github-pages",
-   "kind": "NetworkNode",
-   "name": "github.io",
-   "place": {
-    "network": {
-     "lane": "retired",
-     "order": 5
-    }
-   },
-   "detail": {
-    "what": "The app's first address. GitHub Pages was turned off on 2026-09-25; main still names the address in a few places.",
-    "plan": "Housekeeping: retire github.io from main"
-   },
-   "file": "tools/release-pages.mjs",
-   "line": 53,
-   "evidence": {
-    "file": "tools/release-pages.mjs",
-    "line": 53
    },
    "stage": "structure",
    "classification": "internal"
@@ -44683,7 +44660,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 114,
+   "line": 121,
    "stage": "structure"
   },
   {
@@ -44691,7 +44668,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 116,
+   "line": 123,
    "stage": "structure"
   },
   {
@@ -44699,7 +44676,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 74,
+   "line": 81,
    "stage": "structure"
   },
   {
@@ -44707,7 +44684,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 121,
+   "line": 128,
    "stage": "structure"
   },
   {
@@ -44747,7 +44724,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 55,
+   "line": 59,
    "stage": "structure"
   },
   {
@@ -44780,14 +44757,6 @@
    "kind": "evidenced-by",
    "source": "parser",
    "line": 9,
-   "stage": "structure"
-  },
-  {
-   "from": "net:github-pages",
-   "to": "mod:tools/release-pages.mjs",
-   "kind": "evidenced-by",
-   "source": "parser",
-   "line": 53,
    "stage": "structure"
   },
   {
@@ -46811,19 +46780,7 @@
    "auth": "None",
    "policy": "script-src static.cloudflareinsights.com",
    "description": "Anonymous page counts.",
-   "evidence": "tools/release-pages.mjs:74",
-   "stage": "structure"
-  },
-  {
-   "from": "net:browser",
-   "to": "src:edhrec",
-   "kind": "connects-to",
-   "source": "parser",
-   "protocol": "HTTPS (CORS)",
-   "auth": "None",
-   "policy": "connect-src json.edhrec.com",
-   "description": "Today the browser asks EDHREC directly. In the final state only the scheduled job does.",
-   "evidence": "index.html:9",
+   "evidence": "tools/release-pages.mjs:81",
    "stage": "structure"
   },
   {
@@ -46902,17 +46859,6 @@
    "auth": "Wrangler's OAuth token on the laptop",
    "description": "How deploys ran before the cloud session held a credential.",
    "evidence": "docs/handoff-2026-09-25.md:75",
-   "stage": "structure"
-  },
-  {
-   "from": "net:load-live",
-   "to": "net:github-pages",
-   "kind": "connects-to",
-   "source": "parser",
-   "protocol": "Git push",
-   "auth": "GitHub",
-   "description": "Load Live published Rob's library files for the site to fetch. Both ends are off.",
-   "evidence": ".github/workflows/live-load.yml:5",
    "stage": "structure"
   },
   {

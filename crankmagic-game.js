@@ -1325,7 +1325,7 @@
       /* The way back to the workshop, because this copy no longer carries one. The wording names
          the controls that actually exist: the Menu's "Save a backup file" and "Restore from a
          backup file". */
-      + (local ? `<a class="v-button cm-visit-crank" href="https://minorrob.github.io/mtg-deck-matrix/" target="_blank" rel="noopener"
+      + (local ? `<a class="v-button cm-visit-crank" href="https://crankmagic.com/" target="_blank" rel="noopener"
            title="Create a deck in CrankMagic, then Menu &rsaquo; Save a backup file. Here, Menu &rsaquo; Restore from a backup file brings your decks into CrankMagic Online.">Visit CrankMagic &#8599;</a>` : ""),
       "game")
       + `<p class="cm-lobby-lede">The four seats laid out as they will sit; the table is the form and the status board.</p>`;

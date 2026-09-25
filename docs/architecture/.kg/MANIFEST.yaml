@@ -1,4 +1,4 @@
-generatedAt: '2026-09-25T07:31:06.449649Z'
+generatedAt: '2026-09-25T13:06:03.895597Z'
 repo: crankmagic
 stages_present:
 - survey
@@ -6,8 +6,8 @@ stages_present:
 - config
 - docs
 counts:
-  nodes: 1635
-  edges: 3608
+  nodes: 1634
+  edges: 3605
 source_hashes:
   card-catalog.js: d6fc513df1b325f8
   card-classify.js: ddfda996d17e5eee
@@ -23,7 +23,7 @@ source_hashes:
   compliance-model.js: 5843be95892058c1
   crankmagic-account.js: 36bed9d85c35ee1e
   crankmagic-advisor.js: 7416b6a23fc3baac
-  crankmagic-app.js: 1b49c38e7e809a1e
+  crankmagic-app.js: b1250f726aad5b77
   crankmagic-assets.js: 19b7e415ab88dd5f
   crankmagic-brand.js: 3d83643a63f3b69d
   crankmagic-card-client.js: 4c937886d914b612
@@ -35,7 +35,7 @@ source_hashes:
   crankmagic-evidence.js: 38218165c8fe8536
   crankmagic-exchange-ui.js: d5842eb8f4a2799d
   crankmagic-facets.js: 4435ee146e381a16
-  crankmagic-game.js: 390158c219adc5bc
+  crankmagic-game.js: 7d6a2d366aa28680
   crankmagic-glossary.js: 0c33bfa5350ffa0d
   crankmagic-graph-scoped.js: d77245bd485ce9b7
   crankmagic-graph.js: 18d53f8ed2da8a74
@@ -56,11 +56,11 @@ source_hashes:
   crankmagic-sea.js: d7f9fd867c8577ad
   crankmagic-sim.js: bc408814790fb9fa
   crankmagic-strategies.js: 9f7f7f7b84fc59c0
-  crankmagic-sw.js: 57468b9d3cabc0ef
+  crankmagic-sw.js: c5b8ee8e94ca625e
   crankmagic-tabletop.js: 72ceff9707a1e4ac
   crankmagic-tour.js: dc33ac850e7ac05e
   crankmagic-trace.js: aacb53a680b6bdd3
-  crankmagic-trade.js: 085f4c39561b15bc
+  crankmagic-trade.js: 39a30baf0036b25f
   custom-model.js: 4c2b2793f05a10be
   deck-generator.js: d91fd61911ff9b9b
   deck-import.js: ea1dd37c6ce291cf
@@ -91,7 +91,7 @@ source_hashes:
   tools/build-engine-cards.mjs: 55891fb80eac2215
   tools/data-manifest.mjs: 348d049159a09efb
   tools/refresh.mjs: 00f353d49fa40568
-  tools/release-pages.mjs: dc01c62312e7a2db
+  tools/release-pages.mjs: 649561354bef37d5
   game/contracts/deck-list-import.mjs: 7d3d678c61274b25
   game/contracts/deck-snapshot.mjs: c84406e521169aaf
   game/contracts/forge-card-index.mjs: 313c581346cffca3
@@ -137,9 +137,9 @@ source_hashes:
   game/engine/script/effects/permanents.mjs: 8a6e20892d20ff12
   game/engine/script/effects/resources.mjs: 7d0c1a43d5d3d884
   game/engine/script/effects/zones.mjs: ac35b40a41dbc768
-  crankmagic.html: 6d1eefcd9b0a08bb
+  crankmagic.html: cd889cbd54e8701a
   graph.html: de97e0bab2daeda8
-  index.html: 4922b4e7e113535d
+  index.html: 41e661b3b8eca3f7
   cloud/migrations/0001_accounts.sql: fffd390f0b75d663
   AGENTS.md: ccb9d0bdf4952bf1
   .github/workflows/tests.yml: abdf10934b872bc6

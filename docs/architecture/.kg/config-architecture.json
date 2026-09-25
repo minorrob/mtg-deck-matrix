@@ -572,10 +572,10 @@
     "plan": "M2 adds /data/*, M3 rate limits and delete, M5 tables, M6 the AI door"
    },
    "file": "tools/release-pages.mjs",
-   "line": 114,
+   "line": 121,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 114
+    "line": 121
    }
   },
   {
@@ -594,10 +594,10 @@
     "plan": "Built from one commit of main by tools/release-pages.mjs"
    },
    "file": "tools/release-pages.mjs",
-   "line": 116,
+   "line": 123,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 116
+    "line": 123
    }
   },
   {
@@ -615,10 +615,10 @@
     "owner": "Rob asked for it on 2026-09-24"
    },
    "file": "tools/release-pages.mjs",
-   "line": 74,
+   "line": 81,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 74
+    "line": 81
    }
   },
   {
@@ -638,10 +638,10 @@
     "plan": "M5 adds tables and seats, M6 the AI allowlist and call log"
    },
    "file": "tools/release-pages.mjs",
-   "line": 121,
+   "line": 128,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 128
    }
   },
   {
@@ -741,10 +741,10 @@
     "what": "The only public address. Cloudflare Email Routing forwards it to Rob; where it forwards is set in the dashboard and kept out of the repository."
    },
    "file": "tools/release-pages.mjs",
-   "line": 55,
+   "line": 59,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 55
+    "line": 59
    }
   },
   {
@@ -830,27 +830,6 @@
    "evidence": {
     "file": "index.html",
     "line": 9
-   }
-  },
-  {
-   "id": "net:github-pages",
-   "kind": "NetworkNode",
-   "name": "github.io",
-   "place": {
-    "network": {
-     "lane": "retired",
-     "order": 5
-    }
-   },
-   "detail": {
-    "what": "The app's first address. GitHub Pages was turned off on 2026-09-25; main still names the address in a few places.",
-    "plan": "Housekeeping: retire github.io from main"
-   },
-   "file": "tools/release-pages.mjs",
-   "line": 53,
-   "evidence": {
-    "file": "tools/release-pages.mjs",
-    "line": 53
    }
   },
   {
@@ -3946,28 +3925,28 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 114
+   "line": 121
   },
   {
    "from": "net:assets",
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 116
+   "line": 123
   },
   {
    "from": "net:analytics",
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 74
+   "line": 81
   },
   {
    "from": "net:d1",
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 121
+   "line": 128
   },
   {
    "from": "net:github",
@@ -4002,7 +3981,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 55
+   "line": 59
   },
   {
    "from": "net:laptop",
@@ -4031,13 +4010,6 @@
    "kind": "evidenced-by",
    "source": "parser",
    "line": 9
-  },
-  {
-   "from": "net:github-pages",
-   "to": "mod:tools/release-pages.mjs",
-   "kind": "evidenced-by",
-   "source": "parser",
-   "line": 53
   },
   {
    "from": "net:load-live",
@@ -5801,18 +5773,7 @@
    "auth": "None",
    "policy": "script-src static.cloudflareinsights.com",
    "description": "Anonymous page counts.",
-   "evidence": "tools/release-pages.mjs:74"
-  },
-  {
-   "from": "net:browser",
-   "to": "src:edhrec",
-   "kind": "connects-to",
-   "source": "parser",
-   "protocol": "HTTPS (CORS)",
-   "auth": "None",
-   "policy": "connect-src json.edhrec.com",
-   "description": "Today the browser asks EDHREC directly. In the final state only the scheduled job does.",
-   "evidence": "index.html:9"
+   "evidence": "tools/release-pages.mjs:81"
   },
   {
    "from": "net:browser",
@@ -5884,16 +5845,6 @@
    "auth": "Wrangler's OAuth token on the laptop",
    "description": "How deploys ran before the cloud session held a credential.",
    "evidence": "docs/handoff-2026-09-25.md:75"
-  },
-  {
-   "from": "net:load-live",
-   "to": "net:github-pages",
-   "kind": "connects-to",
-   "source": "parser",
-   "protocol": "Git push",
-   "auth": "GitHub",
-   "description": "Load Live published Rob's library files for the site to fetch. Both ends are off.",
-   "evidence": ".github/workflows/live-load.yml:5"
   },
   {
    "from": "dflow:library-sync",

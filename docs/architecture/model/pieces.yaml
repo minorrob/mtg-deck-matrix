@@ -260,7 +260,7 @@ nodes:
   - id: net:github-pages
     kind: NetworkNode
     name: github.io
-    current: { file: tools/release-pages.mjs, match: 'minorrob\.github\.io' }
+    current: { file: index.html, match: 'github\.io' }
     place: { network: { lane: retired, order: 5 } }
     detail:
       what: "The app's first address. GitHub Pages was turned off on 2026-09-25; main still names the address in a few places."
