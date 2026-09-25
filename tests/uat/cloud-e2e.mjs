@@ -178,6 +178,21 @@ try {
   });
   ok(carried.games.length === 1 && carried.reports.length === 1, "a logged game and a measured report are in the account's copy of the library");
 
+  /* 6. Delete account (R3.3b), through Settings, against the real Worker and D1: the cloud keeps nothing,
+        not the head and not an old version, and A's own library stays on A. */
+  const lastHead = (await cloud(b, "/api/library")).head.id, aDecksBefore = await decks(a);
+  await a.route("**/cdn-cgi/access/logout", (route) => route.fulfill({contentType: "text/html", body: "<p>signed out</p>"}));
+  await a.evaluate(() => { location.hash = "#settings"; });
+  await a.locator(".cm-settings-danger").getByRole("button", {name: "Delete account…"}).click();
+  await a.getByLabel("Type your address to confirm").fill("rob@e2e.test");
+  await a.locator("#cm-dialog [type=submit]").click();
+  await a.waitForURL(/cdn-cgi\/access\/logout/, {timeout: 20000});
+  const after = await cloud(b, "/api/library");
+  ok(after.head === null, "after Delete account the cloud has no library for the person");
+  ok((await b.evaluate(async (id) => (await fetch(`/api/library/versions/${id}`, {cache: "no-store"})).status, lastHead)) === 404, "and the last version is gone, not just unlinked");
+  await open(a);
+  ok(JSON.stringify(await decks(a)) === JSON.stringify(aDecksBefore), "the device's own library is still on the device");
+
   ok(errors.length === 0, `no page errors${errors.length ? ": " + errors.join(" | ") : ""}`);
   console.log(`cloud-e2e: ${checks} checks passed -- two devices, one library, through the real Worker and a local D1.`);
 } catch (error) {

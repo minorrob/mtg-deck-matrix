@@ -85,6 +85,14 @@ export async function handle(request, env, deps = {}) {
     }
     if (method === "POST" && path === "/api/library/kept") return reply(201, {kept: await library.keep(person.id, await body(request))});
     if (method === "GET" && path === "/api/library/history") return reply(200, {versions: await library.history(person.id, Number(url.searchParams.get("limit")) || 30)});
+    /* DELETE ACCOUNT. The body repeats the address the person is signed in as: the dialog asks them to type
+       it, and a request that does not carry it -- a replayed or mistaken one -- deletes nothing. Signing in
+       again later starts an empty account; removing the sign-in itself is Access's, and Rob's runbook step. */
+    if (method === "DELETE" && path === "/api/account") {
+      const input = await body(request);
+      if (String(input.confirm || "").trim().toLowerCase() !== person.email) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
+      return reply(200, {deleted: {email: person.email, ...await library.forget(person.id)}});
+    }
     const version = /^\/api\/library\/versions\/([0-9a-f-]{36})$/.exec(path);
     if (method === "GET" && version) {
       const found = await library.version(person.id, version[1]);
