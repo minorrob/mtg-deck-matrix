@@ -60,7 +60,7 @@ The machinery that keeps the stores fresh:
 ## M3 — Accounts and operations, hardened · M
 
 - [ ] **Self-service account deletion.** A Worker route that removes the person's data, a type-to-confirm dialog in Settings (R3.3), and the Access e-mail removal as Rob's runbook step. The privacy page already promises this.
-- [ ] **Rate limits on `/api/*`**, per identity and per IP.
+- [x] **Rate limits on `/api/*`**, per identity and per IP. *Done 2026-09-25: Cloudflare's Rate Limiting bindings, 240 a minute per IP (checked before the token) and 120 per person, in each profile's own namespaces; `tools/release-pages.mjs` refuses a cloud release without them, and a refusal says what to do. It reaches crankmagic.com with the next release, on Rob's go.*
 - [ ] **Monitoring:** Workers observability logs, an alert on 5xx and on sync conflicts, and a weekly check. **Rob:** set the alert e-mail.
 - [ ] **Backups:** confirm D1 Time Travel's window, and export a nightly copy to R2 once M2 turns it on.
 - [ ] **Rob, ongoing:** invite people through the Access "Invited" policy. The free plan's cap is 50 people; past it, the program's swap point applies.

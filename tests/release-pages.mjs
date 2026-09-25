@@ -65,6 +65,10 @@ const wrangler = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 eq([wrangler.name, wrangler.assets, wrangler.main], ["crankmagic", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, "cloud/worker.mjs"], "wrangler.jsonc serves every page as a file from the Worker named crankmagic, running its script for /api/* only");
 eq([wrangler.routes, wrangler.workers_dev, wrangler.preview_urls], [[{pattern: "crankmagic.com", custom_domain: true}], false, false],
   "on crankmagic.com alone: no workers.dev or preview address, each of which would be another origin with its own browser library");
+eq(wrangler.ratelimits, [
+  {name: "LIMIT_IP", namespace_id: "1001", simple: {limit: 240, period: 60}},
+  {name: "LIMIT_PERSON", namespace_id: "1002", simple: {limit: 120, period: 60}},
+], "/api/* is rate-limited per IP and per person (M3)");
 const ignored = built.get(".assetsignore").toString("utf8").split("\n");
 ok([".git", ".wrangler", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git, wrangler's scratch folder and the configuration off the site");
 ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
@@ -79,6 +83,8 @@ ok(!ignored.includes("_headers"), "and _headers is uploaded, since Cloudflare re
 
 /* The checks fail when they should. */
 const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
+ok(!broken((m) => m).some((p) => p.includes("rate-limit")), "the builder accepts the rate limits it wrote (M3)");
+ok(broken((m) => { const w = JSON.parse(m.get("wrangler.jsonc").toString()); delete w.ratelimits; m.set("wrangler.jsonc", Buffer.from(JSON.stringify(w))); }).some((p) => p.includes("LIMIT_IP")), "and a release without the limits is named");
 ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
 ok(broken((m) => m.set("crankmagic-game.js", Buffer.from(""))).some((p) => p.includes("crankmagic-game.js")), "a Play module in the release is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('content="coming-soon"', 'content="live"')))).some((p) => p.includes("not marked")), "a page that does not say Coming Soon is named");

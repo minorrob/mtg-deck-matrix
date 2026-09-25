@@ -91,13 +91,13 @@ export const PROFILES = {
      policy is the invite list. */
   pages: {
     ...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: PLAY, accounts: "on",
-    cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"},
+    cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
       access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
   },
   /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). */
   "cloud-staging": {
     ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: PLAY, accounts: "on",
-    cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
+    cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
 
@@ -110,6 +110,12 @@ export const PROFILES = {
    .assetsignore keeps a clone's .git, wrangler's own .wrangler scratch folder (it writes one into the
    folder it deploys from, and its debug log walks it with the assets) and the configuration off the site. */
 export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
+/* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
+   which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
+   work; per person once Access has named them. The app saves a few seconds after a change, about twenty
+   times a minute at the busiest, and a household can share one address. Each profile counts in its own
+   namespaces, so staging never spends production's allowance. */
+export const LIMITS_PER_MINUTE = Object.freeze({ip: 240, person: 120});
 /* A profile with a cloud gets the API Worker (cloud/worker.mjs) in front of /api/* only -- every other path
    is still served straight from the assets, uninvoiced -- with its D1 database and its Access settings.
    The Worker's source ships in the release tree for wrangler to bundle, and .assetsignore keeps it (and the
@@ -127,6 +133,10 @@ export const HOST_FILES = {
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
         vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud},
+        ratelimits: [
+          {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
+          {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
+        ],
       } : {}),
     }, null, 2) + "\n",
     ".assetsignore": `.git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n${profile.cloud ? "cloud/\n" : ""}`,
@@ -298,6 +308,14 @@ export function verify(built, profile) {
       if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
       for (const [name, value] of Object.entries(config?.vars || {})) if (value === PENDING) problems.push(`${name} is pending: create the Access application for ${profile.origin} and put its value in PROFILES["${Object.keys(PROFILES).find((k) => PROFILES[k] === profile)}"]`);
       if (!config?.vars?.ACCESS_TEAM_DOMAIN || !config?.vars?.ACCESS_AUD) problems.push("wrangler.jsonc does not tell the Worker which Access application to trust");
+      /* M3: every /api/* request is counted per IP and per person before it does any work. */
+      for (const [name, limit] of [["LIMIT_IP", LIMITS_PER_MINUTE.ip], ["LIMIT_PERSON", LIMITS_PER_MINUTE.person]]) {
+        const binding = (config?.ratelimits || []).find((r) => r.name === name);
+        if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.simple?.limit !== limit || binding.simple?.period !== 60)
+          problems.push(`wrangler.jsonc does not rate-limit /api/* with ${name} at ${limit} a minute`);
+      }
+      const namespaces = (config?.ratelimits || []).map((r) => r.namespace_id);
+      if (new Set(namespaces).size !== namespaces.length) problems.push("wrangler.jsonc counts two rate limits in one namespace");
       if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");

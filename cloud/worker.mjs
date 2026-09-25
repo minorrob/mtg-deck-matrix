@@ -25,6 +25,19 @@ const HEADERS = {
 };
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
 
+/* RATE LIMITS (M3, docs/plan-to-100.md): per IP before anything else is done, and per person once Access has
+   said who they are. Cloudflare's Rate Limiting bindings count at the edge; tools/release-pages.mjs configures
+   both (LIMITS_PER_MINUTE there) and refuses a cloud release without them. The app saves a few seconds after
+   a change, about twenty times a minute at the busiest, so a person meeting the limit is not using the app.
+   A refusal says what happened and what to do, as the repository's rule asks. */
+async function overLimit(binding, key) {
+  if (!binding || !key) return false;
+  const {success} = await binding.limit({key});
+  return !success;
+}
+const tooMany = (who) => new Response(JSON.stringify({error: `Too many requests from ${who}. Nothing was changed. Wait a minute, then try again.`, retryAfterSeconds: 60}),
+  {status: 429, headers: {...HEADERS, "retry-after": "60"}});
+
 /* A write must come from the app itself. The Access cookie rides along on any request to this site, so a
    page elsewhere could otherwise post to it; a custom header cannot be sent cross-site without a CORS
    preflight this Worker never answers, and the Origin, when the browser sends one, must be this site. */
@@ -45,12 +58,14 @@ async function body(request) {
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url), path = url.pathname, method = request.method;
   const ms = () => deps.now ?? Date.now();
+  if (await overLimit(env.LIMIT_IP, request.headers.get("cf-connecting-ip"))) return tooMany("this network");
   let who;
   try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
   catch (error) {
     if (error instanceof Unauthorized) return reply(401, {error: "Sign in to use your cloud library.", why: error.message});
     throw error;
   }
+  if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
