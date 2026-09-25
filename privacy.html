@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en" style="color-scheme:dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="How CrankMagic handles your information: your library stays in your browser unless you choose the cloud library.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Privacy · CrankMagic</title>
+  <link rel="canonical" href="https://crankmagic.com/privacy.html">
+  <link rel="icon" type="image/png" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
+  <style>
+    @font-face{font-family:Satoshi;font-weight:400;font-display:swap;src:url("assets/crankmagic/satoshi-400.woff2?v=1") format("woff2")}
+    @font-face{font-family:Satoshi;font-weight:700;font-display:swap;src:url("assets/crankmagic/satoshi-700.woff2?v=1") format("woff2")}
+    @font-face{font-family:"Young Serif";font-weight:400;font-display:swap;src:url("assets/crankmagic/youngserif-400.woff2?v=1") format("woff2")}
+    :root{--bg:#1a1815;--panel:#231f1b;--line:#3a342c;--ink:#f5f0e8;--muted:#a99e90;--accent:#d9a441}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Satoshi,system-ui,sans-serif}
+    main{max-width:760px;margin:0 auto;padding:40px 20px 64px}
+    a{color:var(--accent)}
+    .back{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
+    .back img{width:32px;height:32px}
+    h1,h2{font-family:"Young Serif",Georgia,serif;font-weight:400;line-height:1.2}
+    h1{font-size:40px;margin:28px 0 6px}
+    h2{font-size:22px;margin:36px 0 8px}
+    .date{color:var(--muted);margin:0 0 24px}
+    .short{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px}
+    ul{padding-left:22px}
+    li{margin:6px 0}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="./"><img src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2" alt="">CrankMagic</a>
+  <h1>Privacy</h1>
+  <p class="date">Last updated September 24, 2026</p>
+
+  <p class="short"><strong>The short version.</strong> Your library lives in your browser. Nothing about it leaves your
+  device unless you sign in to the cloud library or send it somewhere yourself. CrankMagic has no ads, sells no
+  data, and uses no tracking cookies.</p>
+
+  <h2>Who runs CrankMagic</h2>
+  <p>CrankMagic is a free, unofficial fan project run by Rob Minor. Questions about this page go to
+  <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a>.</p>
+
+  <h2>What stays on your device</h2>
+  <ul>
+    <li>Your decks, cards, collection records, notes and history are saved in this browser's own storage, on this device.</li>
+    <li>CrankMagic keeps a copy of its own files in the browser so it can open offline.</li>
+    <li>You can save a backup file at any time (Menu → Save a backup file) and erase everything (Menu → Clear all data).</li>
+  </ul>
+
+  <h2>If you sign in to the cloud library</h2>
+  <p>The cloud library is optional and invitation-only. When you use it:</p>
+  <ul>
+    <li><strong>Signing in</strong> is handled by Cloudflare Access, with your Google account or a one-time code sent to
+    your email. CrankMagic receives your email address, and Google may share your name. CrankMagic never sees your password.</li>
+    <li>Signing in sets a <strong>session cookie</strong>, used only to keep you signed in.</li>
+    <li><strong>What is stored:</strong> your library (as a compressed backup of it), when each copy was saved, and a device
+    label such as "Chrome on Windows". The latest copy is kept, along with the 20 most recent saves; a copy set aside
+    when two of your devices disagreed is kept for 30 days.</li>
+    <li><strong>Where:</strong> in a database run by Cloudflare, in North America.</li>
+    <li><strong>Who can see it:</strong> only you, through CrankMagic. The operator can reach the database only to keep
+    the service running, and does not browse libraries.</li>
+    <li><strong>Deleting it:</strong> email <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a> and your cloud
+    library and account are erased. Your device's own copy is yours to keep or clear.</li>
+  </ul>
+
+  <h2>Visit counts</h2>
+  <p>CrankMagic uses Cloudflare Web Analytics to count page views and measure how fast pages load. It sets no cookies,
+  does not fingerprint your device, and does not follow you to other sites.</p>
+
+  <h2>Services your browser contacts</h2>
+  <ul>
+    <li><strong>Scryfall</strong> for card data and card images, <strong>EDHREC</strong> for commander popularity, and
+    <strong>Archidekt</strong> only when you import a deck from it. Your browser asks them directly, so they see your IP
+    address as any website you visit would. CrankMagic does not send them your library.</li>
+    <li><strong>Cloudflare</strong> hosts and protects the site; it processes requests, including IP addresses, to deliver
+    pages and block abuse.</li>
+  </ul>
+
+  <h2>Email</h2>
+  <p>Mail sent to <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a> is forwarded to the operator and used only
+  to reply to you. "Send Feedback" in the Menu opens your own mail app with the page you were on and your screen size
+  filled in; you can change or remove them before sending.</p>
+
+  <h2>AI features</h2>
+  <p>CrankMagic has none switched on today. Before any is, this page will say what it sends, to whom, and who can use it.</p>
+
+  <h2>Children</h2>
+  <p>CrankMagic is not directed to children under 13 and does not knowingly collect their information.</p>
+
+  <h2>Changes</h2>
+  <p>If anything here changes, this page and the date at the top change with it.</p>
+
+  <footer><a href="./">Back to CrankMagic</a> · <a href="terms.html">Terms of use</a> · <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a></footer>
+</main>
+</body>
+</html>

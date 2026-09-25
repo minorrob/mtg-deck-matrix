@@ -74,7 +74,7 @@ merge flow (`POST /pulls` as a draft, `POST /pulls/{n}/ccr/ready_for_review`, `P
 git checkout -B <branch> origin/main && git push --force-with-lease`). It is stored nowhere in
 the repository or on disk and must stay that way; ask Rob for it again. The GitHub MCP tools work
 without it at a lower rate. The Master workbook is never written; `treycmload1` (Load Live) is
-public client JavaScript; `minor.rob@gmail.com` is the Subscribe address Rob asked for.
+public client JavaScript; `admin@crankmagic.com (then a personal address, since removed)` is the Subscribe address Rob asked for.
 
 **Versions at head:** app and worker 174, css 103, decks 48, collection 49, discover 53,
 trace 3, loops 4, change 1, change-ui 1, tabletop 5, strategies 2, xlsx-writer 2 —

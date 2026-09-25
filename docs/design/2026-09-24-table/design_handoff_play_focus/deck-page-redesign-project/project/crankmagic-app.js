@@ -339,7 +339,7 @@ async function exportFile(){const data=await E.backup(await backupData());return
 function feedbackLink(){
   const where=location.hash?location.hash.replace('#',''):'decks';
   const body=`\n\n---\nWhere I was: ${where}\nScreen: ${innerWidth}x${innerHeight}\n`;
-  return 'mailto:minor.rob@gmail.com?subject='+encodeURIComponent('CrankMagic Feedback')+'&body='+encodeURIComponent(body);
+  return 'mailto:admin@crankmagic.com?subject='+encodeURIComponent('CrankMagic Feedback')+'&body='+encodeURIComponent(body);
 }
 /* A clicked anchor rather than location.href: iOS Safari refuses some scripted navigations
    to a mailto and does nothing at all, which reads as a dead button. */
@@ -358,7 +358,7 @@ document.addEventListener('click',async e=>{const el=e.target.closest('[data-act
    pre-written draft with the To line left for them, and the QR code is drawn in the page
    (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
    whatever address this copy happens to be open on. */
-const APP_URL='https://minorrob.github.io/mtg-deck-matrix/',SUBSCRIBE_TO='minor.rob@gmail.com';
+const APP_URL='https://minorrob.github.io/mtg-deck-matrix/',SUBSCRIBE_TO='admin@crankmagic.com';
 function shareLinks(){const sub=$('#cm-share-subscribe'),mail=$('#cm-share-mail');if(!sub||!mail)return;
   sub.href='mailto:'+SUBSCRIBE_TO+'?subject='+encodeURIComponent('Subscribe me to CrankMagic updates')+'&body='+encodeURIComponent('Please add this address to the CrankMagic update list.\n\nName: \n\n(Sent from '+APP_URL+')');
   mail.href='mailto:?subject='+encodeURIComponent('CrankMagic: an intelligent Commander deck creator and card library')+'&body='+encodeURIComponent('Have a look at CrankMagic: '+APP_URL+'\n\nIt builds and measures Commander decks, keeps your card library, and works on a phone at the table.');}

@@ -2373,7 +2373,7 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
     if (!launchError) return;
     const subject = encodeURIComponent('CrankMagic: the table failed to start');
     const body = encodeURIComponent(`This is the error CrankMagic reported when the countdown finished.\n\n${launchError}\n`);
-    window.location.href = `mailto:minor.rob@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:admin@crankmagic.com?subject=${subject}&body=${body}`;
   };
 
 

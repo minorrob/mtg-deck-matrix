@@ -540,7 +540,7 @@ check("every route a lobby control navigates to exists", () => {
 // want to send the error report to me. (e.g. Error: Send error report?) Then the Start/Stop
 // button should have a 3rd option that only appears when that text shows error, which should be
 // 'Send Log' ... opens default e-mail client and pastes the error into the text with
-// pre-populating my e-mail minor.rob@gmail.com as the To field."
+// pre-populating my e-mail [my personal address, removed 2026-09-24] as the To field."
 //
 // The restart was mine: lobby-start's catch sets startInFlight = false and redraws, the redraw
 // asks syncCountdown, the table is still ready, and it counts down into the same failure again,
@@ -562,7 +562,7 @@ check("the launch box carries the error, and offers to send it", () => {
 check("Send Log opens a mail client addressed to Rob, carrying the error", () => {
   const act = /actions\["lobby-send-log"\][\s\S]*?\n  \};/.exec(game);
   assert.ok(act, "the send-log action not found");
-  assert.match(act[0], /minor\.rob@gmail\.com/, "his address, as he gave it");
+  assert.match(act[0], /mailto:admin@crankmagic\.com/, "the public contact, which forwards to him (Rob, 2026-09-24: not his personal address)");
   assert.match(act[0], /mailto:/, "the default mail client");
   assert.match(act[0], /launchError/, "with the error in the body, not a blank message");
 });
