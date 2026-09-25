@@ -255,17 +255,32 @@ Rob, 2026-09-25, in five notes:
 
 **Where it goes.** `docs/architecture/index.html` with its data file, committed and self-contained. It is also published as a private page Rob can share.
 
-**The engram plugin (Rob: "you'll find engram as a repo in github. It's a claude plug-in").** Several GitHub projects carry the name:
-- The one that fits this purpose is **[nagisanzenin/engram](https://github.com/nagisanzenin/engram)**: MIT-licensed and actively maintained (v1.15.1).
-  - It installs with `claude plugin marketplace add nagisanzenin/engram` and offers `/learn`, `/review` and `/coach`.
-  - It is a learning engine. It builds first-principles lessons and **"explorables"** (interactive HTML with prediction gates and manipulable models), grades recall blindly, and schedules reviews.
-  - It keeps its state in the user's `~/.claude/learning/`, and its engine has no network code.
-- The others named engram (rawcontext, bencrooks-dev, NickCirv, chadhietala, toejough) give an agent memory across sessions. This repository's documents already do that: the baton, the plans and the hand-offs.
+**The engram plugin is Rob's own** ([minorrob/engram](https://github.com/minorrob/engram): private, MIT, Python, a Claude Code plugin).
 
-**Recommendation:**
-- Build the page itself with the Artifact tool, to the brief above. engram draws lessons, not architecture diagrams.
-- Then, if the director wants to *learn* the terms rather than look them up, point engram's `/learn` at the page and `docs/` to make a short curriculum on this architecture.
-- **Rob:** installing a third-party plugin runs its code, so he approves it after reading its repository. It stays optional.
+What it does:
+- It maps a repository into a knowledge graph with full lineage, from code to UML to SysML v2, with OPM/OPL process binding.
+- Deterministic parsers produce the facts (Python, TS/JS through ts-morph, YAML, markdown). LLM subagents only lift meaning, and every element must trace to a parsed fact or validation fails.
+- It renders **C4 architecture**: Structurizr DSL, Mermaid C1–C4, and a self-contained `c4/index.html` viewer.
+- Its **forward modeling** designs a system from requirements, with every element marked `status: intent` and traced to them.
+- It classifies nodes as public, internal or confidential, and every export redacts through one path.
+
+That is the M11 page's missing half: **the facts behind the drawings, and the current/final split built in.**
+
+1. **The current state:** run `map-codebase` on this repository. The Worker, the app's modules, the engine, the data files and the release builder become a validated graph in which every node traces to code.
+2. **The final state:** `intent_from_kg.py` plus `forward-model`, fed with M1–M11 of this plan, r3's INTAKE and `plan-data-sync.md` §0. This yields the target system as `status: intent` elements traced to those requirements.
+3. **The page reads both.**
+   - It draws the final state.
+   - "Show current state" highlights the nodes the code map holds.
+   - A node the code map holds that has no place in the intent graph is drawn at 85% transparency.
+   - The tap-in detail is the graph's own node, with its lineage.
+4. **It stays true as work lands.** `kg_diff.py` between runs becomes the page's changelog, and `kg-stage` re-runs one stage after a change.
+5. **Privacy.** An `.engramclassify` file marks what must not reach a shared page (the person-level data, the secret names) as confidential.
+
+**What it needs:**
+- **Rob installs it**, or approves the install: `/plugin marketplace add <path to a clone of minorrob/engram>`, then `/plugin install engram@engram`. It is his repository, and installing a plugin changes the machine's Claude Code configuration.
+- Run `vendor_deps` once for the TS/JS extractor, since this app is JavaScript.
+- A small `.kg/schema-ext.yaml` for the kinds this system has and the base schema lacks: D1 tables and fields, Worker routes, R2 objects, Durable Object rooms, and outside data sources. The data schema view and the color-coding of outside sources hang on those kinds.
+- The generated `.kg/` is committed under `docs/architecture/`, so the page and its facts travel with the repository.
 
 ## Housekeeping and open calls
 
@@ -299,7 +314,7 @@ Rob, 2026-09-25, in five notes:
 | --- | --- |
 | Now (M1) | The r3 type (satoshi-900) · the landing page's audience (invite-only or open) · "Get notified" · where the undrawn Menu entries go · EUR and Delete account · Merge on restore · the land icon |
 | Now (M2) | Turn on R2 · the token · the schedule |
-| Now (M11) | Whether to add nagisanzenin/engram as the director's learning track (optional) |
+| Now (M11) | Install engram, Rob's own (`minorrob/engram`), for the architecture page's facts |
 | Now (M4) | Forge's role (drop phase 5?) · unsupported cards in Play v1 |
 | Soon (M3) | The alert e-mail · the workbook's path into his library |
 | M5 | Who plays v1 · Workers Paid · the guest and host journeys · End current game |
