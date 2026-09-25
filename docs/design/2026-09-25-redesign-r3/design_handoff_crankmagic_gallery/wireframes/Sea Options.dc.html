@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>a{color:inherit}a:hover{color:inherit}</style></helmet>
+<div style="display:grid;grid-template-columns:repeat(3,320px);gap:20px;padding:24px;width:max-content;color:#f5f0e8;background:#1a1815;border-radius:8px;font-family:Satoshi,system-ui,sans-serif">
+  <sc-for list="{{ seas }}" as="s" hint-placeholder-count="6">
+    <figure data-screen-label="Sea · {{ s.name }}" style="margin:0;display:flex;flex-direction:column;gap:8px"><div style="position:relative;width:320px;height:320px;border-radius:16px;overflow:hidden;border:1px solid #3a342c">{{ s.canvas }}<div style="position:absolute;left:12px;top:12px;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.45);color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">{{ s.name }}</div></div><figcaption style="font-size:13px;color:#a99e90">{{ s.note }}</figcaption></figure>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1070,&quot;height&quot;:760}}">
+class Component extends DCLogic {
+  refs = ['mist','ocean','leaves','fire','wheat','bog'].map(() => React.createRef());
+  componentDidMount() { import('./table-sea.js').then(m => { this.stops = this.refs.map((r,i) => r.current ? m.startSea(r.current, {width:320,height:320,opacity:1,cycleSeconds:1e9,order:[['mist','ocean','leaves','fire','wheat','bog'][i]]}) : null); }); }
+  componentWillUnmount() { (this.stops||[]).forEach(f => f && f()); }
+  renderVals() {
+    const notes = {mist:'Cool gray, slow, low contrast — the quietest; the aether blue reads on it.',ocean:'Deep teal swells; slow and heavy. Reads as a real sea from above.',leaves:'Green canopy stirring — dappled light through moving leaves.',fire:'Ember to amber, warping; the most dramatic — matches the brass.',wheat:'Gold field, long streaks bending; warm and calm.',bog:'Dark moss, near-still; sits closest to the Brass & Slate ground.'};
+    const seas = ['mist','ocean','leaves','fire','wheat','bog'].map((name,i) => ({name, note: notes[name], canvas: React.createElement('canvas',{ref:this.refs[i],'aria-label':name+' animation',style:{display:'block',width:320,height:320}})}));
+    return {seas};
+  }
+}
+</script>
+</body>
+</html>

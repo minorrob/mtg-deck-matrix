@@ -1,0 +1,67 @@
+/* Felt & Cream — light is the default; [data-theme="dark"] flips it. */
+:root{
+  color-scheme:light;
+  --color-bg:#f5f0e6;
+  --color-panel:#fffdf8;
+  --color-raised:#ece5d7;
+  --color-line:#d9d0bf;
+  --color-ink:#1f1c18;
+  --color-muted:#6e665a;
+  --color-accent:#2f8f5b;
+  --color-on-accent:#f7fbf6;
+  --color-aether:#4aa6d8;
+  --color-money:#d0603c;
+  --mana-W:#c9a52e;
+  --mana-U:#2b7fd8;
+  --mana-B:#6f5c8e;
+  --mana-R:#d0603c;
+  --mana-G:#2f8f5b;
+  --st-inbox:#2f8f5b;
+  --st-pull:#1f9e9c;
+  --st-ordered:#2f6fcc;
+  --st-buy:#d0893a;
+  --st-standin:#8a5be0;
+  --st-remove:#c0392f;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --color-bg:#17201b;
+  --color-panel:#1f2a24;
+  --color-raised:#293630;
+  --color-line:#3a4a41;
+  --color-ink:#f5f0e6;
+  --color-muted:#a3b0a7;
+  --color-accent:#5fbf86;
+  --color-on-accent:#0f1a14;
+  --color-aether:#6fc0e8;
+  --color-money:#e8865f;
+  --mana-W:#e3d296;
+  --mana-U:#6fb0f0;
+  --mana-B:#a496bd;
+  --mana-R:#e8865f;
+  --mana-G:#5fbf86;
+  --st-inbox:#5fbf86;
+  --st-pull:#4fc2c0;
+  --st-ordered:#5f93e0;
+  --st-buy:#e6a546;
+  --st-standin:#b993f0;
+  --st-remove:#ef6b60;
+  /* semantic aliases */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-panel);
+  --surface-control:var(--color-raised);
+  --border-default:var(--color-line);
+  --text-body:var(--color-ink);
+  --text-muted:var(--color-muted);
+  --action-primary:var(--color-accent);
+  --action-primary-text:var(--color-on-accent);
+}

@@ -1,0 +1,5 @@
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Young+Serif&display=swap");
+@font-face{font-family:Satoshi;font-weight:400;font-display:swap;src:url("../../assets/crankmagic/satoshi-400.woff2") format("woff2")}
+@font-face{font-family:Satoshi;font-weight:500;font-display:swap;src:url("../../assets/crankmagic/satoshi-500.woff2") format("woff2")}
+@font-face{font-family:Satoshi;font-weight:700;font-display:swap;src:url("../../assets/crankmagic/satoshi-700.woff2") format("woff2")}

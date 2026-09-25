@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e9e6df;font-family:Satoshi,system-ui,sans-serif;color:#222}a{color:#8a6414}a:hover{color:#5a410c}button{font-family:inherit}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:268px minmax(0,1fr);min-height:100vh">
+  <aside style="position:sticky;top:0;height:100vh;overflow:auto;box-sizing:border-box;padding:16px 12px 24px;background:#1a1815;color:#f5f0e8;display:flex;flex-direction:column;gap:2px">
+    <div style="display:flex;flex-direction:column;gap:2px;padding:0 6px 12px"><strong style="font-size:17px;font-weight:900;letter-spacing:-.02em">CrankMagic wireframes v2</strong><span style="font-size:11px;color:#a99e90">{{ count }} screens · designer tool, not app UI</span></div>
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="20">
+      <sc-if value="{{ n.isGroup }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 8px 4px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a99e90">{{ n.label }}</div></sc-if>
+      <sc-if value="{{ n.isScreen }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ n.open }}" style="font:inherit;text-align:left;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:0;background:{{ n.bg }};color:{{ n.color }};font-size:12.5px;font-weight:{{ n.weight }};cursor:pointer" style-hover="background:#2d2823"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.label }}</span><span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:99px;background:{{ n.tagBg }};color:#1a1815">{{ n.tag }}</span></button></sc-if>
+    </sc-for>
+  </aside>
+  <main style="min-width:0;overflow-x:auto;padding:22px 28px 60px;display:flex;flex-direction:column;gap:14px">
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;max-width:820px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b665e"><span>{{ cur.group }}</span><span>·</span><code style="padding:1px 6px;border-radius:5px;background:#fff">{{ cur.route }}</code><span style="padding:1px 8px;border-radius:99px;background:{{ cur.tagBg }};color:#1a1815;font-weight:800">{{ cur.tags }}</span><span>#{{ cur.id }}</span></div>
+        <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:-.03em">{{ cur.title }}</h1>
+        <p style="margin:0;color:#6b665e;font-size:14px;line-height:1.5;text-wrap:pretty">{{ cur.notes }}</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <sc-if value="{{ cur.hasHifi }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:#fff;border:1px solid #d6d1c7"><button type="button" onClick="{{ showWire }}" style="font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:0;background:{{ wireBg }};cursor:pointer">Wireframe</button><button type="button" onClick="{{ showHifi }}" style="font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:0;background:{{ hifiBg }};cursor:pointer">Hi-fi mock-up</button></div></sc-if>
+        <button type="button" onClick="{{ prev }}" style="font:inherit;font-weight:700;height:34px;padding:0 12px;border-radius:10px;border:1px solid #bdb7ab;background:#fff;cursor:pointer;white-space:nowrap">‹ Prev</button>
+        <button type="button" onClick="{{ next }}" style="font:inherit;font-weight:700;height:34px;padding:0 12px;border-radius:10px;border:1px solid #bdb7ab;background:#fff;cursor:pointer;white-space:nowrap">Next ›</button>
+      </div>
+    </header>
+    <div style="font-size:12px;color:#6b665e">Buttons with a raised bottom edge and brass-edged tabs are live links between screens.</div>
+    <div data-screen-label="{{ cur.title }}" style="width:1280px;max-width:none;border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(0,0,0,.45);background:#fff">
+      <sc-if value="{{ wireOn }}" hint-placeholder-val="{{ true }}">{{ screen }}</sc-if>
+      <sc-if value="{{ h.landing }}" hint-placeholder-val="{{ false }}"><dc-import name="Landing Page" theme="dark" hint-size="1280px,1600px"></dc-import></sc-if>
+      <sc-if value="{{ h.decksDark }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Decks" theme="dark" hint-size="1280px,1240px"></dc-import></sc-if>
+      <sc-if value="{{ h.decksLight }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Decks" theme="light" hint-size="1280px,1240px"></dc-import></sc-if>
+      <sc-if value="{{ h.deck }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Deck Page" theme="dark" layout="desktop" hint-size="1280px,1400px"></dc-import></sc-if>
+      <sc-if value="{{ h.library }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Library" theme="dark" hint-size="1280px,1100px"></dc-import></sc-if>
+      <sc-if value="{{ h.exploreEntry }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Explore Entry" theme="dark" hint-size="1280px,900px"></dc-import></sc-if>
+      <sc-if value="{{ h.explore }}" hint-placeholder-val="{{ false }}"><dc-import name="Gallery Explore" theme="dark" hint-size="1280px,1000px"></dc-import></sc-if>
+      <sc-if value="{{ h.play }}" hint-placeholder-val="{{ false }}"><div style="width:1280px;height:720px;overflow:hidden"><div style="transform:scale(.6667);transform-origin:0 0;width:1920px"><dc-import name="Play Focus Mock" hint-size="1920px,1080px"></dc-import></div></div></sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { id: (location.hash || '').slice(1) || 'landing', hifi: false, G: null };
+  componentDidMount() {
+    import('./wf2-screens.js').then(m => this.setState({ G: m.build(React.createElement, React.Fragment, id => this.go(id)) }));
+    this.onHash = () => { const id = location.hash.slice(1); if (id && id !== this.state.id) this.setState({ id }); };
+    window.addEventListener('hashchange', this.onHash);
+  }
+  componentWillUnmount() { window.removeEventListener('hashchange', this.onHash); }
+  go(id) { if (!this.state.G || !this.state.G.find(g => g.id === id)) return; history.replaceState(null, '', '#' + id); this.setState({ id }); const m = document.querySelector('main'); window.scrollTo(0, 0); if (m) m.scrollTop = 0; }
+  renderVals() {
+    const TAG = { live: '#5cc98a', planned: '#f0b35a', new: '#7cc4ff' };
+    const G = this.state.G || [];
+    const i = Math.max(0, G.findIndex(g => g.id === this.state.id));
+    const c = G[i] || { group: '', id: '', title: 'Loading…', route: '', tags: '', notes: '', render: () => null };
+    const nav = []; let last = null;
+    G.forEach(g => { if (g.group !== last) { nav.push({ isGroup: true, isScreen: false, label: g.group }); last = g.group; }
+      const on = g.id === c.id;
+      nav.push({ isGroup: false, isScreen: true, label: g.title, tag: g.tags, tagBg: TAG[g.tags] || '#ccc', open: () => this.go(g.id), bg: on ? '#d9a441' : 'transparent', color: on ? '#1a1815' : '#e6dfd3', weight: on ? 800 : 500 }); });
+    const hifi = this.state.hifi && !!c.hifi;
+    const map = { landing: 'landing', 'decks-dark': 'decksDark', 'decks-light': 'decksLight', deck: 'deck', library: 'library', 'explore-entry': 'exploreEntry', explore: 'explore', play: 'play' };
+    const h = {}; Object.values(map).forEach(k => h[k] = false); if (hifi) h[map[c.hifi]] = true;
+    let screen = null; try { screen = c.render(); } catch (e) { screen = React.createElement('pre', { style: { padding: 20, color: '#b3261e' } }, String(e)); }
+    return {
+      count: G.length, nav, h, screen, wireOn: !hifi,
+      cur: { ...c, hasHifi: !!c.hifi, tagBg: TAG[c.tags] || '#ccc' },
+      wireBg: hifi ? 'transparent' : '#ece8e0', hifiBg: hifi ? '#d9a441' : 'transparent',
+      showWire: () => this.setState({ hifi: false }), showHifi: () => this.setState({ hifi: true }),
+      prev: () => G.length && this.go(G[(i - 1 + G.length) % G.length].id), next: () => G.length && this.go(G[(i + 1) % G.length].id)
+    };
+  }
+}
+</script>
+</body>
+</html>

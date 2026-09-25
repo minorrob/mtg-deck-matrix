@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:500;src:url("assets/crankmagic/satoshi-500.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0}a{color:inherit;text-decoration:none}a:hover{color:inherit}</style>
+</helmet>
+<div data-screen-label="Gallery · Deck page" style="--display:Satoshi,system-ui,sans-serif;--bg:{{ t.bg }};--panel:{{ t.panel }};--raised:{{ t.raised }};--line:{{ t.line }};--ink:{{ t.ink }};--muted:{{ t.muted }};--pbg:{{ t.primaryBg }};--pink:{{ t.primaryInk }};--tint:{{ t.tintR }};--inbox:{{ t.inbox }};--ordered:{{ t.ordered }};--buy:{{ t.buy }};--standin:{{ t.standin }};--cols:{{ L.cols }};--hero:{{ L.hero }};--bento:{{ L.bento }};--s2:{{ L.s2 }};--s3:{{ L.s3 }};--s4:{{ L.s4 }};--bento2:{{ L.bento2 }};--pad:{{ L.pad }};--h1:{{ L.h1 }};width:{{ L.width }};min-height:900px;background:var(--bg,#1a1815);color:var(--ink,#f5f0e8);font-family:Satoshi,system-ui,sans-serif;font-size:14px;line-height:1.5;display:grid;grid-template-columns:var(--cols,216px minmax(0,1fr));position:relative;overflow:hidden">
+  <div style="position:absolute;left:216px;top:-160px;width:900px;height:520px;background:radial-gradient(ellipse at 40% 40%,color-mix(in oklab,var(--tint,#f0805f) 28%,transparent),transparent 70%);pointer-events:none"></div>
+  <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+  <aside style="border-right:1px solid var(--line,#3a342c);padding:22px 18px;display:flex;flex-direction:column;gap:28px;position:relative">
+    <div style="position:relative;display:flex;align-items:center;gap:10px;height:44px">{{ aether }}<img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="position:relative;z-index:1;width:36px;height:36px;object-fit:contain"><div style="position:relative;z-index:1;font-weight:700;font-size:19px;letter-spacing:-.02em">CrankMagic</div></div>
+    <nav style="display:flex;flex-direction:column;gap:4px">
+      <a href="#decks" style="padding:10px 12px;border-radius:10px;font-weight:700;background:var(--raised,#2d2823);color:var(--ink,#f5f0e8)">Decks</a>
+      <div style="display:flex;flex-direction:column;gap:2px;margin:4px 0 6px 12px;padding-left:10px;border-left:2px solid var(--line,#3a342c)">
+        <sc-for list="{{ decks }}" as="d" hint-placeholder-count="7"><a href="#decks" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:{{ d.color }};font-weight:{{ d.weight }};background:{{ d.bg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i style="width:8px;height:8px;border-radius:50%;background:{{ d.tint }};flex:0 0 8px"></i><span style="overflow:hidden;text-overflow:ellipsis">{{ d.short }}</span></a></sc-for>
+      </div>
+      <a href="#cards" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)">Library</a>
+      <a href="#discover" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)">Explore</a>
+      <a href="#game" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)">Play</a>
+    </nav>
+  </aside>
+  </sc-if>
+  <main style="padding:var(--pad,28px 36px 48px);min-width:0;position:relative">
+    <sc-if value="{{ phone }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><a href="#decks" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted,#a99e90)">‹ Decks</a><img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="width:30px;height:30px"></div></sc-if>
+    <section style="display:grid;grid-template-columns:var(--hero,280px minmax(0,1fr));gap:36px;align-items:center;margin-bottom:28px">
+      <div style="position:relative;justify-self:center"><img src="assets/crankmagic/commander-krenko.webp" alt="Krenko, Mob Boss" style="display:block;width:100%;max-width:280px;aspect-ratio:5/7;object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -20px color-mix(in oklab,var(--tint,#f0805f) 60%,#000),0 0 0 1px rgba(255,255,255,.08);transform:rotate(-3deg);transition:transform .4s ease" style-hover="transform:rotate(0deg) scale(1.03)"></div>
+      <div style="min-width:0">
+        <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}"><a href="#decks" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)">Decks ›</a></sc-if>
+        <h1 style="font-family:'Young Serif',Georgia,serif;margin:6px 0 10px;font-size:var(--h1,56px);line-height:1;letter-spacing:-.015em;font-weight:400">Krenko Goblins</h1>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:15px"><span style="display:inline-flex;align-items:center;gap:6px;font-weight:600">Krenko, Mob Boss <img src="assets/mana/R.svg" alt="R" style="width:18px;height:18px;border-radius:50%"></span><span style="color:var(--muted,#a99e90)">·</span><span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted,#a99e90)"><i style="width:8px;height:8px;border-radius:50%;background:var(--standin,#c39bff)"></i>Playable</span><span style="color:var(--muted,#a99e90)">·</span><span style="color:var(--muted,#a99e90)">Bracket 3</span><span style="color:var(--muted,#a99e90)">·</span><span style="color:var(--muted,#a99e90)">D6</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 16px"><span style="padding:5px 11px;border-radius:999px;background:color-mix(in oklab,var(--tint,#f0805f) 18%,var(--panel,#231f1b));color:var(--ink,#f5f0e8);font-size:12px;font-weight:600">Goblin tribal</span><span style="padding:5px 11px;border-radius:999px;background:color-mix(in oklab,var(--tint,#f0805f) 18%,var(--panel,#231f1b));color:var(--ink,#f5f0e8);font-size:12px;font-weight:600">Tokens</span><span style="padding:5px 11px;border-radius:999px;background:color-mix(in oklab,var(--tint,#f0805f) 18%,var(--panel,#231f1b));color:var(--ink,#f5f0e8);font-size:12px;font-weight:600">ETB triggers</span></div>
+        <p style="margin:0 0 20px;font-size:16px;line-height:1.5;max-width:560px;color:var(--ink,#f5f0e8);text-wrap:pretty">Goblin go-wide. Krenko doubles the board every activation, then a damage payoff converts bodies into a win without needing combat to connect. <span style="color:var(--muted,#a99e90)">The fastest clock in the pod.</span></p>
+        <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button type="button" style="font:inherit;font-weight:700;padding:0 18px;height:42px;border-radius:12px;border:0;background:var(--pbg,#f5f0e8);color:var(--pink,#1a1815);cursor:pointer" style-hover="transform:translateY(-1px)">Buy list · 13</button>
+          <button type="button" style="font:inherit;font-weight:600;padding:0 16px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">Log a game</button>
+          <button type="button" style="font:inherit;font-weight:600;padding:0 16px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">Make the change</button>
+          <button type="button" style="font:inherit;font-weight:600;padding:0 16px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">Measure</button>
+          <button type="button" style="font:inherit;font-weight:600;padding:0 14px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--muted,#a99e90);cursor:pointer" style-hover="background:var(--raised)">More ▾</button>
+        </div>
+        </sc-if>
+      </div>
+    </section>
+    <div style="display:flex;gap:2px;padding:4px;border-radius:14px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);margin-bottom:20px;width:max-content;max-width:100%;overflow-x:auto;scrollbar-width:none">
+      <span style="padding:8px 16px;border-radius:10px;background:var(--raised,#2d2823);font-weight:700;white-space:nowrap">Overview</span>
+      <span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600;white-space:nowrap">The hundred <small style="font-weight:500;opacity:.8">100</small></span>
+      <span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600;white-space:nowrap">Upgrades <small style="font-weight:500;opacity:.8">19</small></span>
+      <span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600;white-space:nowrap">Explore</span>
+      <span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600;white-space:nowrap">Acquire <small style="font-weight:500;opacity:.8">13</small></span>
+    </div>
+    <section style="display:grid;grid-template-columns:var(--bento,repeat(6,minmax(0,1fr)));gap:16px">
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:20px;padding:20px 24px;border-radius:18px;background:linear-gradient(120deg,color-mix(in oklab,var(--tint,#f0805f) 22%,var(--panel,#231f1b)),var(--panel,#231f1b) 70%);border:1px solid var(--line,#3a342c);flex-wrap:wrap">
+        <div style="flex:1 1 320px;min-width:0"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in oklab,var(--tint,#f0805f) 70%,var(--ink,#f5f0e8));margin-bottom:4px">Next</div><div style="font-size:20px;line-height:1.3;font-weight:600;letter-spacing:-.01em;text-wrap:pretty">Buy the 13 cards still missing — about <strong>$22</strong> — then swap the 15 substitutes out as the real copies land.</div></div>
+        <button type="button" style="font:inherit;font-weight:700;padding:0 18px;height:44px;border-radius:12px;border:0;background:var(--pbg,#f5f0e8);color:var(--pink,#1a1815);cursor:pointer;white-space:nowrap" style-hover="transform:translateY(-1px)">Open the buy list →</button>
+      </div>
+      <div style="grid-column:span var(--s3,3);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);display:flex;gap:22px;align-items:center">
+        {{ ring }}
+        <div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)">Progress</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px">
+          <div><div style="display:flex;align-items:center;gap:7px;font-family:var(--display);font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums"><i style="width:10px;height:10px;border-radius:3px;background:var(--inbox,#5cc98a)"></i>85</div><div style="font-size:12px;color:var(--muted,#a99e90)">Real copies in the box</div></div>
+          <div><div style="display:flex;align-items:center;gap:7px;font-family:var(--display);font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums"><i style="width:10px;height:10px;border-radius:3px;background:repeating-linear-gradient(135deg,var(--standin,#c39bff) 0 3px,transparent 3px 5px)"></i>15</div><div style="font-size:12px;color:var(--muted,#a99e90)">Substitutes standing in</div></div>
+          <div><div style="display:flex;align-items:center;gap:7px;font-family:var(--display);font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums"><i style="width:10px;height:10px;border-radius:3px;background:var(--ordered,#3b7dd8)"></i>2</div><div style="font-size:12px;color:var(--muted,#a99e90)">Ordered, on the way</div></div>
+          <div><div style="display:flex;align-items:center;gap:7px;font-family:var(--display);font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums"><i style="width:10px;height:10px;border-radius:3px;background:var(--buy,#f0b35a)"></i>13</div><div style="font-size:12px;color:var(--muted,#a99e90)">Still to buy</div></div>
+        </div></div>
+      </div>
+      <div style="grid-column:span var(--s3,3);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)">Cost</div><div style="font-size:12px;color:var(--muted,#a99e90)">Cap $225 · 0 Game Changers of 2</div></div>
+        <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:40px;font-weight:900;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums">$22</span><span style="color:var(--muted,#a99e90)">to finish</span></div>
+        <div style="height:10px;border-radius:6px;background:var(--raised,#2d2823);overflow:hidden;display:flex"><i style="width:58%;background:var(--inbox,#5cc98a)"></i><i style="width:11%;background:var(--buy,#f0b35a)"></i></div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted,#a99e90)"><span><strong style="color:var(--ink,#f5f0e8);font-weight:600">≈ $132</strong> paid so far</span><span><strong style="color:var(--ink,#f5f0e8);font-weight:600">$156</strong> market value · 69% of cap</span><span><strong style="color:var(--ink,#f5f0e8);font-weight:600">0</strong> lines over the 110% cap</span></div>
+      </div>
+      <div style="grid-column:span var(--s2,2);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c)">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90);margin-bottom:14px">Mana curve</div>
+        <div style="display:flex;gap:6px;align-items:flex-end;height:110px">
+          <sc-for list="{{ curve }}" as="c" hint-placeholder-count="8"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--muted,#a99e90)"><span style="color:var(--ink,#f5f0e8);font-weight:600">{{ c.label }}</span><i style="display:block;width:100%;height:{{ c.h }};min-height:3px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--tint,#f0805f),color-mix(in oklab,var(--tint,#f0805f) 55%,var(--panel,#231f1b)))"></i><span>{{ c.mv }}</span></div></sc-for>
+        </div>
+      </div>
+      <div style="grid-column:span var(--s2,2);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c)">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90);margin-bottom:14px">By card type</div>
+        <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:12px"><i style="flex:38;background:#8fa88a"></i><i style="flex:28;background:var(--tint,#f0805f)"></i><i style="flex:13;background:#b0a89c"></i><i style="flex:12;background:#e2b85a"></i><i style="flex:5;background:#c39bff"></i><i style="flex:4;background:#74b5f7"></i></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px;color:var(--muted,#a99e90)"><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:#8fa88a"></i>Land <strong style="color:var(--ink,#f5f0e8);margin-left:auto">38</strong></span><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:var(--tint,#f0805f)"></i>Creature <strong style="color:var(--ink,#f5f0e8);margin-left:auto">28</strong></span><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:#b0a89c"></i>Artifact <strong style="color:var(--ink,#f5f0e8);margin-left:auto">13</strong></span><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:#e2b85a"></i>Sorcery <strong style="color:var(--ink,#f5f0e8);margin-left:auto">12</strong></span><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:#c39bff"></i>Enchantment <strong style="color:var(--ink,#f5f0e8);margin-left:auto">5</strong></span><span style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:2px;background:#74b5f7"></i>Instant <strong style="color:var(--ink,#f5f0e8);margin-left:auto">4</strong></span></div>
+      </div>
+      <div style="grid-column:span var(--s2,2);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c)">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90);margin-bottom:14px">What the spells do</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <sc-for list="{{ purposes }}" as="p" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,1.2fr) 28px;align-items:center;gap:10px"><span style="color:var(--muted,#a99e90);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.label }}</span><div style="height:8px;border-radius:4px;background:var(--raised,#2d2823);overflow:hidden"><i style="display:block;height:100%;width:{{ p.w }};background:var(--tint,#f0805f);opacity:{{ p.o }}"></i></div><strong style="text-align:right;font-variant-numeric:tabular-nums">{{ p.n }}</strong></div></sc-for>
+        </div>
+      </div>
+      <div style="grid-column:span var(--s4,4);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)">How it plays</div><a href="#guide" style="font-size:13px;color:var(--muted,#a99e90);text-decoration:underline;text-underline-offset:3px">Full guide &amp; SWOT</a></div>
+        <div style="display:grid;grid-template-columns:var(--bento2,1fr 1fr);gap:14px 22px;font-size:13.5px;line-height:1.5">
+          <div><strong style="display:block;font-size:14px;margin-bottom:2px">Engine</strong><span style="color:var(--muted,#a99e90)">Krenko's tap with Thousand-Year Elixir and Thornbite Staff to untap him, so the token count squares. Purphoros turns every token into 2 damage per opponent.</span></div>
+          <div><strong style="display:block;font-size:14px;margin-bottom:2px">Attack</strong><span style="color:var(--muted,#a99e90)">Shared Animosity, Goblin Chieftain, Goblin Warchief and Patchwork Banner turn a wide board into one lethal swing. 13 haste sources.</span></div>
+          <div><strong style="display:block;font-size:14px;margin-bottom:2px">Defense</strong><span style="color:var(--muted,#a99e90)">Thinnest of the seven by design. Goblin Bombardment as outlet and reach, Swiftfoot Boots on Krenko, raw speed as the answer.</span></div>
+          <div><strong style="display:block;font-size:14px;margin-bottom:2px">Ramp</strong><span style="color:var(--muted,#a99e90)">9 pieces, mostly 2-mana rocks and rituals to land Krenko a turn early. 37 lands, 7 nonbasic, none entering tapped.</span></div>
+        </div>
+      </div>
+      <div style="grid-column:span var(--s2,2);padding:22px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)">Upgrade path</div><a href="#upgrades" style="font-size:13px;color:var(--muted,#a99e90);text-decoration:underline;text-underline-offset:3px">All 15</a></div>
+        <sc-for list="{{ upgrades }}" as="u" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line,#3a342c);font-size:13px"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.card }}</strong><span style="color:var(--muted,#a99e90);font-size:12px">replaces {{ u.replaces }}</span></div><span style="font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap">{{ u.price }}</span></div></sc-for>
+      </div>
+      <div style="grid-column:1/-1;padding:18px 22px;border-radius:18px;border:1.5px dashed var(--line,#3a342c);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><strong style="font-size:15px">No games logged yet.</strong> <span style="color:var(--muted,#a99e90)">Log the first and the record reads back here — wins, rate, paid per win.</span></div><button type="button" style="font:inherit;font-weight:600;padding:0 16px;height:40px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">Log a game</button></div>
+    </section>
+    <sc-if value="{{ phone }}" hint-placeholder-val="{{ false }}"><div style="position:sticky;bottom:0;margin:20px -16px -20px;padding:10px 16px 18px;background:color-mix(in oklab,var(--bg,#1a1815) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line,#3a342c);display:flex;gap:8px"><button type="button" style="flex:1;font:inherit;font-weight:700;height:46px;border-radius:12px;border:0;background:var(--pbg,#f5f0e8);color:var(--pink,#1a1815)">Buy list · 13</button><button type="button" style="flex:1;font:inherit;font-weight:600;height:46px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8)">Log a game</button><button type="button" style="width:46px;font:inherit;font-weight:600;height:46px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8)">⋯</button></div></sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1100},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;phone&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;'desktop'|'phone'&quot;}}">
+class Component extends DCLogic {
+  aetherRef = React.createRef();
+  componentDidMount() { import('./aether.js').then(m => { if (this.aetherRef.current) this.stopAether = m.startAether(this.aetherRef.current, {width:190,height:56,axisY:28,start:34,join:150}); }); }
+  componentWillUnmount() { if (this.stopAether) this.stopAether(); }
+  renderVals() {
+    const aether = React.createElement('canvas',{ref:this.aetherRef,'aria-hidden':'true',style:{position:'absolute',left:-8,top:-6,width:190,height:56,pointerEvents:'none',zIndex:0}});
+    const h = React.createElement;
+    const dark = (this.props.theme ?? 'dark') !== 'light';
+    const phone = (this.props.layout ?? 'desktop') === 'phone';
+    const t = dark
+      ? {bg:'#1a1815',panel:'#231f1b',raised:'#2d2823',line:'#3a342c',ink:'#f5f0e8',muted:'#a99e90',primaryBg:'#d9a441',primaryInk:'#1a1815',inbox:'#5cc98a',pull:'#4fc2c0',ordered:'#3b7dd8',buy:'#f0b35a',standin:'#c39bff',tint:{W:'#e9d79a',U:'#74b5f7',B:'#a897bf',R:'#f0805f',G:'#77c58f'}}
+      : {bg:'#f5f0e6',panel:'#fffdf8',raised:'#ece5d7',line:'#d9d0bf',ink:'#1f1c18',muted:'#6e665a',primaryBg:'#2f8f5b',primaryInk:'#f7fbf6',inbox:'#2f8f5b',pull:'#1f9e9c',ordered:'#2f6fcc',buy:'#d0893a',standin:'#8a5be0',tint:{W:'#c9a52e',U:'#2b7fd8',B:'#6f5c8e',R:'#d0603c',G:'#2f8f5b'}};
+    t.tintR = t.tint.R;
+    const L = phone
+      ? {width:'390px',cols:'minmax(0,1fr)',hero:'minmax(0,1fr)',bento:'repeat(6,minmax(0,1fr))',pad:'16px 16px 20px',h1:'36px',s2:'6',s3:'6',s4:'6',bento2:'minmax(0,1fr)'}
+      : {width:'1280px',cols:'216px minmax(0,1fr)',hero:'280px minmax(0,1fr)',bento:'repeat(6,minmax(0,1fr))',pad:'28px 36px 48px',h1:'56px',s2:'2',s3:'3',s4:'4',bento2:'1fr 1fr'};
+    const names = [['Quintorius Spirits','R'],['Chulane Value Loop','G'],['Atraxa Proliferate','W'],['Felothar Walls','W'],['Shadrix Aristocrats','W'],['Krenko Goblins','R'],['Maralen Exile Cast','U']];
+    const decks = names.map(([short,c],i)=>({short,tint:t.tint[c],color:i===5?t.ink:t.muted,weight:i===5?700:500,bg:i===5?t.raised:'transparent'}));
+    const raw = [0,12,20,17,8,4,1,0], max = 20;
+    const curve = raw.map((n,i)=>({label:n||'',h:`${Math.round(n/max*80)}px`,mv:i===7?'7+':String(i)}));
+    const P = [['Token maker',17],['Lord / anthem',7],['Removal',6],['Card draw',6],['Burn',4],['Mana rock',3],['Sacrifice outlet',3],['Haste enabler',3]];
+    const purposes = P.map(([label,n],i)=>({label,n,w:`${Math.round(n/17*100)}%`,o:String(1-i*0.08)}));
+    const upgrades = [['Goblin Motivator','Anger','$0.26'],['Mogg Raider','Barrage of Expendables','$0.38'],['Hammer of Purphoros','Ogre Battledriver','$0.35'],['Lightning Bolt','Cinder Strike','$0.81']].map(([card,replaces,price])=>({card,replaces,price}));
+    // Progress ring: 85 real, 15 substitutes hatched, drawn as SVG arcs.
+    const R=44, C=2*Math.PI*R;
+    const ring = h('svg',{width:112,height:112,viewBox:'0 0 112 112',style:{flex:'0 0 112px'}},
+      h('defs',null,h('pattern',{id:'hatch',width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},h('rect',{width:3,height:6,fill:t.standin}))),
+      h('circle',{cx:56,cy:56,r:R,fill:'none',stroke:t.raised,strokeWidth:12}),
+      h('circle',{cx:56,cy:56,r:R,fill:'none',stroke:'url(#hatch)',strokeWidth:12,strokeDasharray:`${C*0.15} ${C}`,strokeDashoffset:-C*0.85,transform:'rotate(-90 56 56)'}),
+      h('circle',{cx:56,cy:56,r:R,fill:'none',stroke:t.inbox,strokeWidth:12,strokeLinecap:'butt',strokeDasharray:`${C*0.85} ${C}`,transform:'rotate(-90 56 56)'}),
+      h('text',{x:56,y:52,textAnchor:'middle',fill:t.ink,fontSize:26,fontWeight:700,fontFamily:'Satoshi,system-ui,sans-serif',letterSpacing:'-1px'},'100'),
+      h('text',{x:56,y:70,textAnchor:'middle',fill:t.muted,fontSize:11,fontFamily:'Satoshi,system-ui,sans-serif'},'in the box'));
+    return {t, L, desktop:!phone, phone, decks, curve, purposes, upgrades, ring, aether};
+  }
+}
+</script>
+</body>
+</html>
