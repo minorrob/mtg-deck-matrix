@@ -155,6 +155,20 @@ try {
   ok(after > before, `Bought makes it yours: "${bought.split(" — ")[0]}" (owned ${before} → ${after})`);
   await shot("09-acquire-bought");
 
+  /* 5 · A CARD'S NAME OPENS THE CARD, and a menu is a menu (Rob, 24 September). A stray argument
+     made every card-name click end in "back is not defined", and the menus drew transparent over
+     the rows because their colors were defined inside the page and they open outside it. */
+  await page.locator("#cm-roster-table tbody .cm-card-name").first().click();
+  await page.locator("#cm-dialog[open] .cm-inspector").waitFor({timeout: 30000});
+  ok(true, "a card's name in the list opens the card");
+  await page.keyboard.press("Escape");
+  const more = page.getByRole("button", {name: /^More/}).first();
+  await more.click();
+  const menuBg = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-menu[popover]:popover-open")).backgroundColor);
+  ok(menuBg !== "rgba(0, 0, 0, 0)" && menuBg !== "transparent", `the More menu is opaque (${menuBg})`);
+  await more.click();
+  ok(await page.locator(".cm-menu[popover]:popover-open").count() === 0, "and a second click on More closes it");
+
   /* And across the whole walk. */
   ok(thrown.length === 0, `no page errors${thrown.length ? ": " + thrown.join(" | ") : ""}`);
   ok(missing.length === 0, `the site had every file the app asked for${missing.length ? " -- missing: " + [...new Set(missing)].join(", ") : ""}`);

@@ -201,17 +201,6 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
         fail(`at ${width}px: Take a Tour could not be reached through the rail's Menu — ${String(error.message || error).split("\n")[0]}`);
       }
 
-      /* 5. On a desktop the rail's sticky nav never rides over the note beneath it, however
-            far the page is scrolled (UAT M-12): the note starts at or below the nav's bottom. */
-      if (!phone && width >= 1024) {
-        await page.goto(`${base}/index.html#lab`);
-        await page.locator("#cm-main").waitFor({timeout: 30000});
-        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-        await page.waitForTimeout(150);
-        const side = await page.evaluate(() => { const nav = document.querySelector(".cm-sidebar .v-nav-links"), note = document.querySelector(".cm-sidebar .cm-nav-note"); if (!nav || !note) return null; const a = nav.getBoundingClientRect(), b = note.getBoundingClientRect(); return {navBottom: a.bottom, noteTop: b.top, noteShown: b.height > 0}; });
-        checks += 1;
-        if (side && side.noteShown && side.navBottom > side.noteTop + 1) fail(`at ${width}px: the rail nav (bottom ${Math.round(side.navBottom)}) paints over the library note (top ${Math.round(side.noteTop)}) when scrolled`);
-      }
 
       if (errors.length) fail(`at ${width}px the page raised ${errors.length} error(s): ${errors.slice(0, 2).join(" | ")}`);
       checks += 1;

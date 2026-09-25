@@ -42,6 +42,10 @@ import {ROOT, report, readData} from "../schema/index.mjs";
 const require = createRequire(import.meta.url);
 const Classify = require(path.join(ROOT, "card-classify.js"));
 const Payload = require(path.join(ROOT, "graph-payload.js"));
+/* The printed cost's mana value, by the catalog's own rule: a card with a second face counts its
+   front (An Unexpected Party is 4, not 4 + 3), a split card and a Room count both halves. The
+   fallback below summed every symbol in "{2}{W}{W} // {X}{2}{W}" and wrote 7 into the record. */
+const {manaValueOf} = require(path.join(ROOT, "card-catalog.js"));
 
 const CARDS = "data/cards.json", FACTS = "data/card-facts.json", GRAPH = "data/graph.json", MASTER = "data/archive/master-v2.json";
 const args = process.argv.slice(2);
@@ -138,7 +142,7 @@ const records = [...byName.values()].sort((a, b) => a.name.localeCompare(b.name)
   const g = graphByName.get(c.name);
   const r = {
     name: c.name, oracleId: c.oracleId || (g ? g.id : ""),
-    manaCost: c.manaCost || "", manaValue: c.manaValue ?? mvFromCost(c.manaCost || ""), typeLine: c.typeLine || "",
+    manaCost: c.manaCost || "", manaValue: manaValueOf(c), typeLine: c.typeLine || "",
     power: /Creature|Vehicle/.test(c.typeLine || "") ? (c.power ?? (g && g.pow) ?? null) : null, toughness: /Creature|Vehicle/.test(c.typeLine || "") ? (c.toughness ?? (g && g.tou) ?? null) : null,
     oracleText: c.oracleText || "", keywords: c.keywords || [], colorIdentity: c.colorIdentity || (g ? String(g.ci || "").split("").filter(Boolean) : []),
     legalities: c.legalities || {commander: "legal"}, rarity: c.rarity || (g && g.rarity) || "",

@@ -127,7 +127,7 @@ const READS_ONLY = {"tools/reprice-variants.mjs": ["data/cards.json"]};
 const OVERRIDES = {
   "data/game-history.json": ["tool input", "the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state"],
   "data/lenses.json": ["archive candidate", "its reader, sim-lenses.js, was swept with the retired pages; nothing reads it today"],
-  "data/live-state.json": ["serve", "fetched by Load Live (User Functions), not precached: it is a backup, replaced whole"],
+  "data/live-state.json": ["tool input", "Rob's library as a backup, which the browser walks restore through Menu → Restore; never served -- Load Live went on 2026-09-24 and tools/release-pages.mjs keeps it off the site"],
   "sim/status.json": ["serve", "the sweep's status placeholder the Lab reads; the run rewrites it"],
   "data/commander-glossary.json": ["serve", "hand-maintained editorial file: no generator by design; tools/check-glossary.mjs is its check"],
 };

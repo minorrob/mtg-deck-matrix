@@ -102,27 +102,26 @@ function tokensIn(css, selectorRe) {
   eq(noLight, [], `and each states a light value too, so a rung does not stay dark on cream: ${noLight.join(", ")}`);
 }
 
-/* 4. THE DISPLAY FACE IS SELF-HOSTED (revision 2 INTAKE, item 2).
+/* 4. THE DISPLAY FACE IS SATOSHI, AND IT IS SELF-HOSTED.
  *
- * The guide asks for a Google Fonts <link> and a CSP widened to fonts.googleapis.com and
- * fonts.gstatic.com. Rob chose self-hosting instead on 2026-09-20: Young Serif is SIL OFL 1.1
- * (verified against Google's font metadata and the upstream OFL.txt, both shipped beside the
- * woff2 in assets/crankmagic/). So the CSP does not move, and no shipped file may reach out to
- * a font CDN at render time -- a page that does has quietly reintroduced the third-party request
- * this decision removed.
+ * Rob, 2026-09-24: "use the Satoshi header font (H1, H2, H3, etc.) instead of the current header
+ * fonts in our design guide." Headings and big figures were Young Serif (self-hosted from
+ * 2026-09-20 rather than fetched from Google, revision 2 INTAKE item 2); they are Satoshi 700 now,
+ * the body's own face at its bold weight, and the guide's typography.css says the same -- the
+ * type tokens above are held to it. Young Serif is retired rather than left declared: a face
+ * nothing draws with is a download waiting for a stray rule. No shipped page may reach out to a
+ * font CDN at render time either; one that does has reintroduced the third-party request the
+ * self-hosting decision removed.
  */
 {
-  ok(/@font-face\{[^}]*font-family:\s*['"]?Young Serif['"]?[^}]*assets\/crankmagic\/youngserif-400\.woff2/.test(design),
-    "Young Serif is declared @font-face against the self-hosted woff2");
-  ok(/youngserif-400-ext\.woff2[^}]*unicode-range/.test(design) || /unicode-range[^}]*youngserif-400-ext\.woff2/.test(design),
-    "and the latin-ext subset is declared with its unicode-range, so accented card names keep the face");
-  for (const f of ["assets/crankmagic/youngserif-400.woff2", "assets/crankmagic/youngserif-400-ext.woff2", "assets/crankmagic/youngserif-OFL.txt"]) {
-    ok(readFileSync(path.join(ROOT, f)).length > 0, `${f} is in the repository`);
-  }
   const app = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/);
-  ok(/Young Serif/.test(app.get("--font-display") || ""), `--font-display names Young Serif (found ${app.get("--font-display")})`);
+  ok(/^Satoshi\b/.test(app.get("--font-display") || ""), `--font-display is Satoshi (found ${app.get("--font-display")})`);
+  eq(app.get("--display-weight"), "700", "at its bold weight, which is the one Satoshi file headings need");
+  ok(/@font-face\{[^}]*font-family:\s*Satoshi[^}]*font-weight:\s*700[^}]*assets\/crankmagic\/satoshi-700\.woff2/.test(design),
+    "and Satoshi 700 is declared @font-face against the self-hosted woff2");
   ok(app.get("--v-display") === "var(--font-display)", "--v-display is the same face, by reference, not a second declaration");
-  for (const f of ["index.html", "crankmagic.html", "crankmagic-design.css", "crankmagic.css"]) {
+  for (const f of ["index.html", "crankmagic.html", "privacy.html", "terms.html", "crankmagic-design.css", "crankmagic.css", "crankmagic-sw.js"]) {
+    ok(!/Young Serif|youngserif-/.test(read(f).replace(/\/\*[\s\S]*?\*\//g, "")), `${f} no longer declares, draws with or caches the retired Young Serif`);
     ok(!/fonts\.(googleapis|gstatic)\.com/.test(read(f)), `${f} does not fetch a font from a CDN; the face is self-hosted`);
   }
 }

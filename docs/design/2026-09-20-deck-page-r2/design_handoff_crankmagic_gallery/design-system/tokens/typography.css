@@ -1,8 +1,10 @@
+/* Display is Satoshi at 700 (Rob, 2026-09-24: "use the Satoshi header font (H1, H2, H3, etc.) instead
+   of the current header fonts in our design guide"). Young Serif, the face this guide first named, is retired. */
 :root{
-  --font-display:'Young Serif',Georgia,serif;
+  --font-display:Satoshi,system-ui,sans-serif;
   --font-body:Satoshi,system-ui,sans-serif;
-  --display-weight:400;
-  --display-tracking:-.015em;
+  --display-weight:700;
+  --display-tracking:-.02em;
   --display-case:none;
   --text-h1:56px;
   --text-h2:22px;

@@ -23,9 +23,11 @@ const files = [...built.keys()];
 for (const f of ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", "crankmagic-app.js", "crankmagic-design.css", "data/cards.json", "data/graph.json", "sim-worker.js", "sim-engine.js", "sim/config.json", "LICENSE", "DISCLAIMER.md", ".nojekyll", "version.json"])
   ok(built.has(f), `${f} is in the release`);
 eq(files.filter((f) => NEVER.test(f)), [], "nothing from game code, tools, tests, documents, the engine's data or the source workbooks");
+for (const f of ["data/live-state.json", "data/live-load.json"]) ok(NEVER.test(f) && !built.has(f), `${f}, the owner's own collection, is never served`);
+ok(!/load-live|live-state\.json|treycmload/.test(built.get("crankmagic-exchange-ui.js").toString("utf8")), "and nothing in the release offers to fetch it");
 eq(files.filter((f) => /^(AGENTS|CLAUDE|BACKLOG|README|HOTFIX-SUMMARY)\.md$|\.(ps1|sh)$/.test(f)), [], "and none of the repository's own working files");
 for (const f of profile.leaveOut) ok(!built.has(f), `${f} is Play, and is not in the release`);
-ok(mentions.every((m) => / names (tools|data\/archive)\//.test(m)), `the names it declined to follow are tools and the archive, named as provenance: ${mentions.join("; ")}`);
+ok(mentions.every((m) => / names (tools|data\/archive)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive and the owner's collection, named as provenance: ${mentions.join("; ")}`);
 
 /* Play says Coming Soon, and nothing left can reach a game host. */
 for (const p of PAGES) {
