@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:500;src:url("assets/crankmagic/satoshi-500.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0}a{color:inherit;text-decoration:none}a:hover{color:inherit}</style>
+</helmet>
+<div data-screen-label="Gallery · Library" style="--display:Satoshi,system-ui,sans-serif;--bg:{{ t.bg }};--panel:{{ t.panel }};--raised:{{ t.raised }};--line:{{ t.line }};--ink:{{ t.ink }};--muted:{{ t.muted }};--pbg:{{ t.primaryBg }};--pink:{{ t.primaryInk }};--money:{{ t.money }};--inbox:{{ t.inbox }};--pull:{{ t.pull }};--ordered:{{ t.ordered }};--buy:{{ t.buy }};--standin:{{ t.standin }};--watch:{{ t.watch }};--reserved:{{ t.reserved }};--shadow:{{ t.shadow }};width:1280px;min-height:900px;background:var(--bg,#1a1815);color:var(--ink,#f5f0e8);font-family:Satoshi,system-ui,sans-serif;font-size:14px;line-height:1.5;display:grid;grid-template-columns:216px minmax(0,1fr);position:relative;overflow:hidden">
+  <aside style="border-right:1px solid var(--line,#3a342c);padding:22px 18px;display:flex;flex-direction:column;gap:28px;position:relative">
+    <div style="position:relative;display:flex;align-items:center;gap:10px;height:44px">{{ aether }}<img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="position:relative;z-index:1;width:36px;height:36px;object-fit:contain"><div style="position:relative;z-index:1;font-weight:700;font-size:19px;letter-spacing:-.02em">CrankMagic</div></div>
+    <nav style="display:flex;flex-direction:column;gap:4px">
+      <a href="#decks" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Decks</a>
+      <a href="#cards" style="padding:10px 12px;border-radius:10px;font-weight:700;background:var(--raised,#2d2823);color:var(--ink,#f5f0e8)">Library</a>
+      <div style="display:flex;flex-direction:column;gap:2px;margin:4px 0 6px 12px;padding-left:10px;border-left:2px solid var(--line,#3a342c)">
+        <a href="#cards" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--ink,#f5f0e8);font-weight:700;background:var(--raised,#2d2823)"><span>Library</span><small style="color:var(--muted,#a99e90);font-weight:500">866</small></a>
+        <a href="#cards" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)"><span>To buy</span><small style="color:var(--buy,#f0b35a);font-weight:700">101</small></a>
+        <a href="#cards" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)"><span>Orders</span><small style="color:var(--ordered,#3b7dd8);font-weight:700">2</small></a>
+        <a href="#cards" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)"><span>Sheet</span></a>
+      </div>
+      <a href="#discover" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Explore</a>
+      <a href="#game" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Play</a>
+    </nav>
+    <div style="margin-top:auto;font-size:12px;color:var(--muted,#a99e90);line-height:1.5"><strong style="display:block;color:var(--ink,#f5f0e8);font-weight:600">Your cards. Your library.</strong>Saved in this browser · card data 8 days old. <a href="#backup" style="text-decoration:underline;text-underline-offset:3px">Back up now</a></div>
+  </aside>
+  <main style="padding:28px 36px 48px;min-width:0;display:flex;flex-direction:column;gap:18px">
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+      <div><h1 style="font-family:var(--display);margin:0;font-size:44px;line-height:1.05;letter-spacing:-.03em;font-weight:900">Library</h1><p style="margin:8px 0 0;color:var(--muted,#a99e90);font-size:15px"><strong style="color:var(--ink,#f5f0e8);font-weight:600">866</strong> copies you own · <strong style="color:var(--ink,#f5f0e8);font-weight:600">329</strong> on the bench, no deck has reserved them.</p></div>
+      <div style="display:flex;gap:10px;align-items:center"><button type="button" style="font:inherit;font-weight:600;padding:0 14px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">Import list</button><button type="button" style="font:inherit;font-weight:600;padding:0 14px;height:42px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--ink,#f5f0e8);cursor:pointer" style-hover="background:var(--raised)">More ▾</button><button type="button" style="font:inherit;font-weight:700;padding:0 18px;height:42px;border-radius:12px;border:0;background:var(--pbg,#d9a441);color:var(--pink,#1a1815);cursor:pointer" style-hover="transform:translateY(-1px)">Add cards</button></div>
+    </header>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="display:inline-flex;gap:2px;padding:4px;border-radius:14px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c)"><span style="padding:8px 16px;border-radius:10px;background:var(--raised,#2d2823);font-weight:700">Library</span><span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600">To buy <small style="color:var(--buy,#f0b35a);font-weight:700">101</small></span><span style="padding:8px 16px;border-radius:10px;color:var(--muted,#a99e90);font-weight:600">Orders <small style="color:var(--ordered,#3b7dd8);font-weight:700">2</small></span></div>
+      <div style="margin-left:auto;display:inline-flex;gap:2px;padding:4px;border-radius:12px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);font-size:13px"><span style="padding:6px 12px;border-radius:9px;background:var(--raised,#2d2823);font-weight:700">List</span><span style="padding:6px 12px;border-radius:9px;color:var(--muted,#a99e90);font-weight:600">Sheet</span><span style="padding:6px 12px;border-radius:9px;color:var(--muted,#a99e90);font-weight:600">Table</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px">
+      <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="7"><button type="button" style="font:inherit;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid {{ k.border }};background:{{ k.bg }};color:var(--ink,#f5f0e8);cursor:pointer;display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow)" style-hover="border-color:{{ k.c }}"><span style="font-family:var(--display);font-size:26px;font-weight:900;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums;color:{{ k.c }}">{{ k.n }}</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted,#a99e90)"><i style="width:7px;height:7px;border-radius:50%;background:{{ k.c }}"></i>{{ k.label }}</span></button></sc-for>
+    </div>
+    <p style="margin:-6px 0 0;font-size:12px;color:var(--muted,#a99e90)">Reserved = Owned + Ordered + To buy. Owned counts reserved copies; the bench is the rest. Click a count to keep only those rows.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="flex:1 1 260px;display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;border-radius:12px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);color:var(--muted,#a99e90);min-width:0"><span>⌕</span><input placeholder="Search 866 copies" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink,#f5f0e8);outline:none"></label>
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5"><button type="button" style="font:inherit;font-weight:600;font-size:13px;height:42px;padding:0 12px;border-radius:12px;border:1px solid {{ f.border }};background:{{ f.bg }};color:var(--ink,#f5f0e8);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px" style-hover="background:var(--raised)"><span style="color:var(--muted,#a99e90);font-weight:500">{{ f.label }}</span>{{ f.value }} <span style="color:var(--muted,#a99e90);font-size:11px">▾</span></button></sc-for>
+      <button type="button" style="font:inherit;font-weight:600;font-size:13px;height:42px;padding:0 12px;border-radius:12px;border:1px dashed var(--line,#3a342c);background:transparent;color:var(--muted,#a99e90);cursor:pointer;white-space:nowrap" style-hover="color:var(--ink)">More filters</button>
+      <button type="button" style="font:inherit;font-weight:600;font-size:13px;height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--muted,#a99e90);cursor:pointer;white-space:nowrap" style-hover="color:var(--ink)">Group · Deck ▾</button>
+      <button type="button" style="font:inherit;font-weight:600;font-size:13px;height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--muted,#a99e90);cursor:pointer;white-space:nowrap" style-hover="color:var(--ink)">Columns</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap"><span style="color:var(--muted,#a99e90)">Showing <strong style="color:var(--ink,#f5f0e8)">115</strong> of 866 ·</span><span style="display:inline-flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:999px;background:color-mix(in oklab,{{ t.tintR }} 22%,var(--panel,#231f1b));font-weight:600"><img src="assets/mana/R.svg" alt="" style="width:14px;height:14px;border-radius:50%">Deck · D6 Krenko Goblins<span style="display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.2);font-size:11px">×</span></span><a href="#clear" style="color:var(--muted,#a99e90);text-decoration:underline;text-underline-offset:3px">Clear all</a></div>
+    <section style="border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);overflow:hidden;box-shadow:var(--shadow)">
+      <div style="display:grid;grid-template-columns:36px minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1.1fr) 56px 76px 150px 44px;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line,#3a342c);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#a99e90)"><span><input type="checkbox" aria-label="Tick all" style="width:16px;height:16px;margin:0"></span><span>Card ↑</span><span>Type</span><span>Status</span><span>Deck</span><span style="text-align:right">Qty</span><span style="text-align:right">Paid</span><span></span><span></span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:color-mix(in oklab,{{ t.tintR }} 10%,var(--panel,#231f1b));border-bottom:1px solid var(--line,#3a342c);font-size:13px"><span style="color:var(--muted,#a99e90)">▾</span><img src="assets/mana/R.svg" alt="" style="width:14px;height:14px;border-radius:50%"><strong>D6 Krenko Goblins</strong><span style="color:var(--muted,#a99e90)">· 115 rows · 100 in the box, 2 ordered, 13 to buy</span></div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+        <div style="display:grid;grid-template-columns:36px minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1.1fr) 56px 76px 150px 44px;gap:12px;align-items:center;min-height:56px;padding:6px 16px;border-bottom:1px solid var(--line,#3a342c);font-size:13px;cursor:pointer;background:{{ r.rowBg }}" style-hover="background:var(--raised)">
+          <span><input type="checkbox" aria-label="Tick {{ r.name }}" style="width:16px;height:16px;margin:0"></span>
+          <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="display:inline-flex;gap:2px;flex:0 0 auto">{{ r.pips }}</span><span style="min-width:0"><strong style="display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</strong><span style="display:inline-block;margin-top:2px;padding:1px 7px;border-radius:999px;background:var(--raised,#2d2823);font-size:11px;color:var(--muted,#a99e90);font-weight:600">{{ r.purpose }}</span></span></span>
+          <span style="color:var(--muted,#a99e90);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.type }} <span style="opacity:.7">{{ r.mvLabel }}</span></span>
+          <span><span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:color-mix(in oklab,{{ r.stc }} 20%,transparent);color:{{ r.stc }};font-size:12px;font-weight:700;white-space:nowrap"><i style="width:6px;height:6px;border-radius:50%;background:{{ r.stc }}"></i>{{ r.status }}</span></span>
+          <span style="color:var(--muted,#a99e90);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.deck }}</span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums">{{ r.qty }}</span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums;color:{{ r.paidColor }}">{{ r.paid }}</span>
+          <span style="display:flex;justify-content:flex-end">{{ r.verb }}</span>
+          <button type="button" aria-label="Actions for {{ r.name }}" style="width:32px;height:32px;border-radius:9px;border:1px solid var(--line,#3a342c);background:transparent;color:var(--muted,#a99e90);font:inherit;cursor:pointer;justify-self:end" style-hover="color:var(--ink);background:var(--raised)">⋯</button>
+        </div>
+      </sc-for>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;font-size:13px;color:var(--muted,#a99e90)"><span>Rows 1–14 of 115</span><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--raised,#2d2823)"><span style="padding:4px 10px;border-radius:8px;background:var(--panel,#231f1b);color:var(--ink,#f5f0e8);font-weight:700">60</span><span style="padding:4px 10px">120</span><span style="padding:4px 10px">All</span></div><span>Page 1 of 2 <a href="#next" style="margin-left:8px;color:var(--ink,#f5f0e8);text-decoration:underline;text-underline-offset:3px">Next ›</a></span></div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1100},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;}}">
+class Component extends DCLogic {
+  aetherRef = React.createRef();
+  componentDidMount() { import('./aether.js').then(m => { if (this.aetherRef.current) this.stopAether = m.startAether(this.aetherRef.current, {width:190,height:56,axisY:28,start:34,join:150}); }); }
+  componentWillUnmount() { if (this.stopAether) this.stopAether(); }
+  renderVals() {
+    const h = React.createElement;
+    const dark = (this.props.theme ?? 'dark') !== 'light';
+    const t = dark
+      ? {bg:'#1a1815',panel:'#231f1b',raised:'#2d2823',line:'#3a342c',ink:'#f5f0e8',muted:'#a99e90',primaryBg:'#d9a441',primaryInk:'#1a1815',money:'#f0b35a',inbox:'#5cc98a',pull:'#4fc2c0',ordered:'#3b7dd8',buy:'#f0b35a',standin:'#c39bff',watch:'#8f9bb3',reserved:'#8fb3ff',tintR:'#f0805f',shadow:'0 1px 0 rgba(255,255,255,.04) inset'}
+      : {bg:'#f5f0e6',panel:'#fffdf8',raised:'#ece5d7',line:'#d9d0bf',ink:'#1f1c18',muted:'#6e665a',primaryBg:'#2f8f5b',primaryInk:'#f7fbf6',money:'#d0603c',inbox:'#2f8f5b',pull:'#1f9e9c',ordered:'#2f6fcc',buy:'#d0893a',standin:'#8a5be0',watch:'#6e7a8c',reserved:'#3f6fd0',tintR:'#d0603c',shadow:'0 10px 30px -18px rgba(40,30,20,.35)'};
+    const aether = h('canvas',{ref:this.aetherRef,'aria-hidden':'true',style:{position:'absolute',left:-8,top:-6,width:190,height:56,pointerEvents:'none',zIndex:0}});
+    const kpis = [['Reserved',700,t.reserved,false],['Owned',866,t.pull,false],['Substitutes',123,t.standin,false],['Physical deck',700,t.inbox,true],['Ordered',6,t.ordered,false],['To buy',101,t.buy,false],['Watched',14,t.watch,false]].map(([label,n,c,on])=>({label,n,c,border:on?c:t.line,bg:on?`color-mix(in oklab, ${c} 14%, ${t.panel})`:t.panel}));
+    const filters = [['Type','All types',false],['Mana','Any',false],['Color','All',false],['Status','Any',false],['Deck','D6 Krenko',true]].map(([label,value,on])=>({label,value,on,border:on?t.tintR:t.line,bg:on?`color-mix(in oklab, ${t.tintR} 14%, ${t.panel})`:t.panel}));
+    const pip = (c) => c==='C' ? h('img',{key:c,src:'https://svgs.scryfall.io/card-symbols/C.svg',alt:'Colorless',style:{width:16,height:16,borderRadius:'50%',boxShadow:'0 0 0 1px rgba(0,0,0,.25)'}}) : h('img',{key:c,src:`assets/mana/${c}.svg`,alt:c,style:{width:16,height:16,borderRadius:'50%'}});
+    // Land icon: placeholder disc until the real glyph is supplied (Scryfall has no land symbol).
+    const landPip = h('span',{key:'L',title:'Land',style:{display:'inline-grid',placeItems:'center',width:16,height:16,borderRadius:'50%',background:t.raised,boxShadow:`inset 0 0 0 1.5px ${t.muted}`,color:t.muted,fontSize:9,fontWeight:800,fontFamily:"'Young Serif',Georgia,serif",lineHeight:1}},'L');
+    const verb = (label,primary) => label ? h('button',{type:'button',style:{font:'inherit',fontSize:12,fontWeight:700,height:32,padding:'0 12px',borderRadius:9,border:primary?0:`1px solid ${t.line}`,background:primary?t.primaryBg:'transparent',color:primary?t.primaryInk:t.ink,cursor:'pointer',whiteSpace:'nowrap'}},label) : null;
+    const R = [
+      ['Krenko, Mob Boss','R','Legendary Creature',4,'Commander','Physical deck',t.inbox,'D6 Krenko Goblins',1,'$3.22','',false],
+      ['Purphoros, God of the Forge','R','Legendary Enchantment Creature',4,'Burn','Physical deck',t.inbox,'D6 Krenko Goblins',1,'$31.48','',false],
+      ['Thousand-Year Elixir','C','Artifact',3,'Haste enabler','Physical deck',t.inbox,'D6 Krenko Goblins',1,'$14.61','',false],
+      ['Thornbite Staff','C','Kindred Artifact',2,'Value engine','Physical deck',t.inbox,'D6 Krenko Goblins',1,'$8.73','',false],
+      ['Goblin Chieftain','R','Creature',3,'Lord / anthem','Physical deck',t.inbox,'D6 Krenko Goblins',1,'$5.94','',false],
+      ['Anger','R','Creature',4,'Haste enabler','Substitute',t.standin,'D6 · for Goblin Motivator',1,'$0.60','To bench',false],
+      ['Impact Tremors','R','Enchantment',2,'Burn','Substitute',t.standin,'D6 · for Warstorm Surge',1,'$2.10','To bench',false],
+      ['Sol Ring','C','Artifact',1,'Mana rock','Ordered',t.ordered,'D6 Krenko Goblins',1,'$1.45','Arrived',true],
+      ['Lightning Bolt','R','Instant',1,'Removal','Ordered',t.ordered,'D6 Krenko Goblins',1,'≈ $0.81','Arrived',true],
+      ['Goblin Motivator','R','Creature',1,'Haste enabler','To buy',t.buy,'D6 Krenko Goblins',1,'$0.26','Bought',true],
+      ['Warstorm Surge','R','Enchantment',6,'Burn','To buy',t.buy,'D6 Krenko Goblins',1,'$1.44','Bought',true],
+      ['Kher Keep','C','Legendary Land',0,'Token maker','Substitute',t.standin,'D6 · for Den of the Bugbear',1,'$1.90','To bench',false],
+      ['Battlefield Forge','C','Land',0,'Land','Bench',t.pull,'—',1,'$2.10','Reserve…',false],
+      ['Skirk Prospector','R','Creature',1,'Sacrifice outlet','Bench',t.pull,'—',1,'$0.37','Reserve…',false],
+    ];
+    const rows = R.map(([name,ci,type,mv,purpose,status,stc,deck,qty,paid,v,primary])=>({name,type,mv,mvLabel:/Land/.test(type)?'':`· ${mv}`,purpose,status,stc,deck,qty,paid,paidColor:status==='To buy'?t.money:t.ink,pips:/Land/.test(type)?[landPip,...ci.split('').filter(c=>c!=='C').map(pip)]:ci.split('').map(pip),verb:verb(v,primary),rowBg:'transparent'}));
+    return {t, aether, kpis, filters, rows};
+  }
+}
+</script>
+</body>
+</html>

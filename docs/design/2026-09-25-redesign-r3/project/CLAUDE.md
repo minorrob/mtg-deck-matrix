@@ -1,0 +1,1 @@
+- Always write in American English (color, center, gray, organize, favorite, catalog, defense), in UI copy, docs, handoffs and design-system files.

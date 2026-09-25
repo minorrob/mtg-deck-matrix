@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..112,600..800&family=Schibsted+Grotesk:wght@600;700;800&family=Instrument+Sans:wdth,wght@100,600..700&family=Libre+Caslon+Text:wght@700&family=Young+Serif&family=Zilla+Slab:wght@600;700&family=DM+Serif+Display&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div style="display:flex;gap:20px;width:max-content;font-family:Satoshi,system-ui,sans-serif">
+  <sc-for list="{{ faces }}" as="f" hint-placeholder-count="3">
+    <article data-screen-label="Type {{ f.id }}" style="width:420px;padding:26px;border-radius:20px;background:#1a1815;color:#f5f0e8;border:1px solid #3a342c;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#d9a441;color:#1a1815;font-weight:800;font-size:13px">{{ f.id }}</span><span style="font-size:12px;color:#a99e90">{{ f.note }}</span></div>
+      <div style="font-family:{{ f.family }};font-weight:{{ f.weight }};font-size:44px;line-height:.98;letter-spacing:{{ f.tracking }};font-stretch:{{ f.stretch }}">Krenko Goblins</div>
+      <div style="font-family:{{ f.family }};font-weight:{{ f.weight }};font-size:22px;line-height:1.1;letter-spacing:{{ f.tracking }};font-stretch:{{ f.stretch }}">The hundred at a glance</div>
+      <div style="display:flex;gap:14px;align-items:baseline"><span style="font-family:{{ f.family }};font-weight:{{ f.weight }};font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;font-stretch:{{ f.stretch }}">85</span><span style="font-family:{{ f.family }};font-weight:{{ f.weight }};font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#d9a441;font-stretch:{{ f.stretch }}">$22</span><span style="font-family:{{ f.family }};font-weight:{{ f.weight }};font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#c39bff;font-stretch:{{ f.stretch }}">15</span></div>
+      <p style="margin:0;font-size:14px;color:#a99e90;line-height:1.5">Goblin go-wide. Krenko doubles the board every activation, then a damage payoff converts bodies into a win. <span style="color:#f5f0e8">Satoshi stays as the body face.</span></p>
+      <div style="font-size:12px;color:#a99e90">{{ f.name }}</div>
+    </article>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:420}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {faces:[
+      {id:'A',weight:700,name:'Archivo 700 · width 108',family:"'Archivo',Satoshi,sans-serif",tracking:'-.03em',stretch:'108%',note:'Sturdy grotesk, wide-set, no quirks'},
+      {id:'B',weight:700,name:'Schibsted Grotesk 700',family:"'Schibsted Grotesk',Satoshi,sans-serif",tracking:'-.025em',stretch:'100%',note:'Editorial grotesk — sharper terminals, newsroom feel'},
+      {id:'C',weight:700,name:'Instrument Sans 700',family:"'Instrument Sans',Satoshi,sans-serif",tracking:'-.03em',stretch:'100%',note:'Quiet and precise — closest to Satoshi, most restrained'},
+      {id:'D',weight:700,name:'Libre Caslon Text 700',family:"'Libre Caslon Text',Georgia,serif",tracking:'-.015em',stretch:'100%',note:'Bourbon label — old-style serif, sharp and heavy'},
+      {id:'E',weight:400,name:'Young Serif 400',family:"'Young Serif',Georgia,serif",tracking:'-.015em',stretch:'100%',note:'Applied — leather chair: warm, chunky, a little wit'},
+      {id:'F',weight:700,name:'Zilla Slab 700',family:"'Zilla Slab',Georgia,serif",tracking:'-.01em',stretch:'100%',note:'Slab — typewriter-firm, mechanical, fits the gear'},
+      {id:'G',weight:400,name:'DM Serif Display',family:"'DM Serif Display',Georgia,serif",tracking:'-.01em',stretch:'100%',note:'Cigar box — high contrast, elegant, the most formal'},
+      {id:'H',weight:700,name:'Newsreader 700 (opsz 72)',family:"'Newsreader',Georgia,serif",tracking:'-.01em',stretch:'100%',note:'Broadsheet — editorial, steady, ages well'},
+    ]};
+  }
+}
+</script>
+</body>
+</html>

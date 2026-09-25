@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:500;src:url("assets/crankmagic/satoshi-500.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0;background:#100e0c}a{color:#d9a441;text-decoration:none}a:hover{color:#f0c46a}</style>
+</helmet>
+<div data-screen-label="Play · Focus (improved)" style="width:1920px;height:1080px;background:#1a1815;color:#f5f0e8;font-family:Satoshi,system-ui,sans-serif;font-size:14px;line-height:1.4;display:grid;grid-template-rows:48px minmax(0,1fr);overflow:hidden">
+  <header style="display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid #3a342c;background:#161411;white-space:nowrap">
+    <button type="button" aria-label="Menu" style="font:inherit;font-weight:600;height:32px;padding:0 12px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer;white-space:nowrap;padding:0 10px">☰</button>
+    <strong style="font-size:15px;font-weight:900;letter-spacing:-.01em">Turn 4 · You</strong>
+    <span style="padding:3px 10px;border-radius:7px;background:#d9a441;color:#1a1815;font-weight:800;font-size:13px">Main 1</span><span style="color:#a99e90;font-size:13px">3 / 7 ▾</span>
+    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#a99e90">Next: <strong style="color:#f5f0e8;font-weight:600">declare attackers</strong></span>
+    <button type="button" style="font:inherit;font-weight:800;height:32px;padding:0 16px;border-radius:9px;border:0;background:#d9a441;color:#1a1815;cursor:pointer" style-hover="background:#e8b556">Pass priority</button>
+    <button type="button" style="font:inherit;font-weight:600;height:32px;padding:0 12px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer;white-space:nowrap" style-hover="background:#2d2823">Skip to end</button>
+    <span style="width:1px;height:22px;background:#3a342c"></span>
+    <div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.06)"><span style="padding:5px 11px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer" style-hover="background:#2d2823">⊞ Table</span><span style="padding:5px 11px;border-radius:7px;font-size:12px;font-weight:800;background:#d9a441;color:#1a1815">◧ Focus</span><span style="padding:5px 11px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer" style-hover="background:#2d2823">⛶ Full screen</span></div>
+    <button type="button" style="font:inherit;font-weight:600;height:32px;padding:0 12px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer;white-space:nowrap" style-hover="background:#2d2823">History ▾</button>
+    <button type="button" style="font:inherit;font-weight:600;height:32px;padding:0 12px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer;white-space:nowrap" style-hover="background:#2d2823">Tools ▾</button>
+    <button type="button" style="font:inherit;font-weight:600;height:32px;padding:0 12px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer;white-space:nowrap" style-hover="background:#2d2823">Panel ▸</button>
+  </header>
+  <div style="display:grid;grid-template-columns:168px minmax(0,1fr);min-height:0">
+    <aside style="border-right:1px solid #3a342c;padding:12px;display:flex;flex-direction:column;gap:10px;background:#161411">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a99e90">Boards<button type="button" aria-label="Collapse" style="width:24px;height:24px;border-radius:6px;border:1px solid #3a342c;background:transparent;color:#a99e90;cursor:pointer">◂</button></div>
+      <sc-for list="{{ opps }}" as="o" hint-placeholder-count="3">
+        <button type="button" style="font:inherit;text-align:left;aspect-ratio:16/9;border-radius:10px;border:1px solid #3a342c;background:linear-gradient(135deg,{{ o.tint }}33,#231f1b 70%);color:#f5f0e8;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between" style-hover="border-color:{{ o.tint }}"><span style="display:flex;justify-content:space-between;gap:6px;font-size:12px"><strong>{{ o.seat }}</strong><span style="font-variant-numeric:tabular-nums;font-weight:700">{{ o.life }}</span></span><span style="font-size:11px;color:#a99e90;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.cmdr }}</span></button>
+      </sc-for>
+      <button type="button" style="font:inherit;font-weight:700;height:34px;border-radius:9px;border:0;background:#d9a441;color:#1a1815;cursor:pointer">My board</button>
+      <button type="button" style="font:inherit;font-weight:600;height:34px;border-radius:9px;border:1px solid #3a342c;background:transparent;color:#f5f0e8;cursor:pointer" style-hover="background:#2d2823">⊞ Table view</button>
+      <button type="button" style="font:inherit;font-weight:600;height:34px;border-radius:9px;border:1px solid #7cc4ff;background:#7cc4ff14;color:#cfe8ff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#7cc4ff26"><img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="width:16px;height:16px">Coach</button>
+    </aside>
+    <main style="position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:stretch;padding:8px 8px 0 8px">
+      <section style="position:relative;width:100%;aspect-ratio:16/9;flex:0 0 auto;border-radius:18px;padding:12px 12px 140px;box-sizing:border-box;background:radial-gradient(ellipse at 38% 30%,#3d4a4a 0%,#252c2d 45%,#161a1b 100%);box-shadow:0 0 0 2px #d9a441,0 30px 60px -30px #000;display:grid;grid-template-columns:minmax(0,1fr) 160px 160px;grid-template-rows:32px 212px minmax(0,1fr) 212px;gap:8px">
+        <div style="grid-column:1 / -1;display:flex;align-items:center;gap:12px;min-width:0">
+          <strong style="font-size:15px;white-space:nowrap">You · Rob</strong>
+          <span style="display:inline-flex;gap:10px;font-size:13px;white-space:nowrap;color:#e6dfd3"><span><strong style="font-variant-numeric:tabular-nums">40</strong> life</span><span><strong>0</strong> poison</span><span style="color:#a99e90">Cmdr dmg ▾</span></span>
+          <span style="margin-left:14px;display:inline-flex;gap:2px;padding:3px;border-radius:99px;background:rgba(0,0,0,.4);font-size:12px;white-space:nowrap">
+            <sc-for list="{{ steps }}" as="s" hint-placeholder-count="7"><span style="padding:2px 10px;border-radius:99px;background:{{ s.bg }};color:{{ s.color }};font-weight:{{ s.weight }};text-decoration:{{ s.deco }}">{{ s.label }}</span></sc-for>
+          </span>
+          
+        </div>
+        <div style="grid-column:1;grid-row:2 / span 2;position:relative;border:1.5px dashed #d9a441;border-radius:10px;background:rgba(217,164,65,.06);padding:14px 16px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;overflow:visible">
+          <span style="position:absolute;right:12px;top:10px;padding:4px 10px;border-radius:8px;background:#d9a441;color:#1a1815;font-size:12px;font-weight:700">Drop to cast Goblin Bombardment · {1}{R}</span>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6)">Creatures · 10</span><div style="display:flex;gap:10px;align-items:flex-end">
+            <sc-for list="{{ creatures }}" as="c" hint-placeholder-count="7"><div style="position:relative;flex:0 0 auto;width:{{ c.bw }};height:{{ c.bh }};display:flex;align-items:center;justify-content:center;transition:transform .16s ease;transform-origin:{{ c.origin }};z-index:1;cursor:zoom-in" style-hover="transform:scale(2.4);z-index:60"><div style="flex:0 0 auto;width:136px;height:190px;transform:{{ c.rot }};border-radius:7px;background:{{ c.frame }};padding:4px;box-sizing:border-box;box-shadow:{{ c.shadow }};display:flex;flex-direction:column;gap:3px;opacity:{{ c.op }}"><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:700;display:flex;justify-content:space-between;gap:4px;white-space:nowrap"><span style="overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="color:#8a3a24">{{ c.cost }}</span></div><div style="flex:1;border-radius:2px;background:{{ c.art }}"></div><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:7.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.type }}</div><div style="background:#f6efe4;border-radius:2px;height:28px;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px"><i style="height:3px;background:#cfc3b2;border-radius:2px"></i><i style="height:3px;width:78%;background:#cfc3b2;border-radius:2px"></i><i style="height:3px;width:55%;background:#cfc3b2;border-radius:2px"></i></div></div><span style="position:absolute;right:8px;bottom:6px;padding:1px 6px;border-radius:5px;background:#efe4d4;color:#1f1b17;font-size:11px;font-weight:700;border:1px solid #8a3a24">{{ c.pt }}</span><span style="position:absolute;top:-8px;right:-8px;display:{{ c.stackD }};padding:2px 8px;border-radius:99px;background:#d9a441;color:#1a1815;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5)">{{ c.stack }}</span><span style="position:absolute;bottom:6px;left:8px;display:{{ c.sickD }};padding:2px 7px;border-radius:99px;background:#2d2823;color:#a99e90;font-size:10px;font-weight:700;border:1px solid #3a342c">sick</span></div></sc-for>
+          </div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6)">Artifacts &amp; enchantments · 4</span><div style="display:flex;gap:10px;align-items:flex-end">
+            <sc-for list="{{ others }}" as="c" hint-placeholder-count="4"><div style="position:relative;flex:0 0 auto;width:{{ c.bw }};height:{{ c.bh }};display:flex;align-items:center;justify-content:center;transition:transform .16s ease;transform-origin:{{ c.origin }};z-index:1;cursor:zoom-in" style-hover="transform:scale(2.4);z-index:60"><div style="flex:0 0 auto;width:136px;height:190px;transform:{{ c.rot }};border-radius:7px;background:{{ c.frame }};padding:4px;box-sizing:border-box;box-shadow:{{ c.shadow }};display:flex;flex-direction:column;gap:3px"><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:700;display:flex;justify-content:space-between;gap:4px;white-space:nowrap"><span style="overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="color:#8a3a24">{{ c.cost }}</span></div><div style="flex:1;border-radius:2px;background:{{ c.art }}"></div><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:7.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.type }}</div><div style="background:#f6efe4;border-radius:2px;height:28px;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px"><i style="height:3px;background:#cfc3b2;border-radius:2px"></i><i style="height:3px;width:78%;background:#cfc3b2;border-radius:2px"></i></div></div></div></sc-for>
+          </div></div>
+          <span style="position:absolute;left:14px;bottom:6px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:15px;color:rgba(255,255,255,.75)">Battlefield</span>
+        </div>
+        <div style="grid-column:1;grid-row:4;position:relative;border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:10px 16px 24px;display:flex;align-items:center;gap:10px;min-width:0;overflow:visible">
+          <sc-for list="{{ lands }}" as="c" hint-placeholder-count="7"><div style="position:relative;flex:0 0 auto;width:{{ c.bw }};height:{{ c.bh }};display:flex;align-items:center;justify-content:center;transition:transform .16s ease;transform-origin:{{ c.origin }};z-index:1;cursor:zoom-in" style-hover="transform:scale(2.4);z-index:60"><div style="flex:0 0 auto;width:136px;height:190px;transform:{{ c.rot }};border-radius:7px;background:{{ c.frame }};padding:4px;box-sizing:border-box;box-shadow:{{ c.shadow }};display:flex;flex-direction:column;gap:3px;opacity:{{ c.op }}"><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div><div style="flex:1;border-radius:2px;background:{{ c.art }}"></div><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:7.5px;white-space:nowrap">{{ c.type }}</div></div><span style="position:absolute;top:-4px;right:-6px;display:{{ c.stackD }};padding:2px 8px;border-radius:99px;background:#d9a441;color:#1a1815;font-size:12px;font-weight:700">{{ c.stack }}</span></div></sc-for>
+          <span style="margin-left:auto;align-self:flex-start;padding:4px 10px;border-radius:8px;background:rgba(0,0,0,.4);font-size:12px;white-space:nowrap"><strong style="color:#5cc98a">3</strong> mana open · land drop <strong style="color:#d9a441">1</strong> left</span>
+          <span style="position:absolute;left:14px;bottom:4px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:15px;color:rgba(255,255,255,.75)">Lands</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;position:relative;border:1px solid rgba(255,255,255,.4);border-radius:8px;display:grid;place-items:center;padding-bottom:16px"><img src="assets/crankmagic/commander-krenko.webp" alt="Krenko, Mob Boss" style="position:relative;z-index:1;width:136px;height:190px;object-fit:cover;border-radius:6px;box-shadow:0 6px 14px -6px #000;transition:transform .16s ease;transform-origin:100% 0%;cursor:zoom-in" style-hover="transform:scale(2.4);z-index:60"><span style="position:absolute;left:8px;bottom:2px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:13px;color:rgba(255,255,255,.8)">Command</span><span style="position:absolute;right:6px;bottom:3px;font-size:11px;color:#a99e90">tax +0</span></div>
+        <div style="grid-column:3;grid-row:2;position:relative;border:1px solid rgba(255,255,255,.4);border-radius:8px;display:grid;place-items:center;padding-bottom:16px"><div style="width:136px;height:190px;border-radius:6px;background:repeating-linear-gradient(135deg,#2d2823 0 6px,#231f1b 6px 12px);border:1px solid #3a342c;display:grid;place-items:center;font-size:22px;font-weight:700">1</div><span style="position:absolute;left:8px;bottom:2px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:13px;color:rgba(255,255,255,.8)">Exile</span></div>
+        <div style="grid-column:2 / span 2;grid-row:3;min-height:0;border-radius:8px;background:rgba(10,9,8,.55);padding:8px 10px;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a99e90">History<span style="letter-spacing:0;text-transform:none;font-weight:500">⌕ filter</span></div>
+          <sc-for list="{{ log }}" as="l" hint-placeholder-count="6"><div style="font-size:12px;line-height:1.35;opacity:{{ l.op }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#a99e90">{{ l.who }}</span> {{ l.what }}</div></sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:4;position:relative;border:1px solid rgba(255,255,255,.4);border-radius:8px;display:grid;place-items:center;padding-bottom:16px"><div style="position:relative;width:136px;height:190px;border-radius:6px;background:radial-gradient(ellipse at 50% 50%,#8a5a2e 0 30%,#4a3020 31% 100%);border:3px solid #2a1c12;box-sizing:border-box;box-shadow:2px 2px 0 #111,4px 4px 0 #222"></div><span style="position:absolute;left:8px;bottom:2px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:13px;color:rgba(255,255,255,.8)">Library</span><span style="position:absolute;right:6px;bottom:3px;font-size:12px;font-weight:700">87</span></div>
+        <div style="grid-column:3;grid-row:4;position:relative;border:1px solid rgba(255,255,255,.4);border-radius:8px;display:grid;place-items:center;padding-bottom:16px"><div style="position:relative;z-index:1;width:136px;height:190px;border-radius:7px;background:#b8452e;padding:4px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;opacity:.9;transition:transform .16s ease;transform-origin:100% 100%;cursor:zoom-in" style-hover="transform:scale(2.4);z-index:60"><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:9px;font-weight:700">Cinder Strike</div><div style="flex:1;border-radius:2px;background:linear-gradient(160deg,#e8864f,#6a2418)"></div><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 4px;font-size:7.5px">Sorcery</div></div><span style="position:absolute;left:8px;bottom:2px;font-family:Satoshi,system-ui,sans-serif;font-weight:700;letter-spacing:.02em;font-size:13px;color:rgba(255,255,255,.8)">Graveyard</span><span style="position:absolute;right:6px;bottom:3px;font-size:12px;font-weight:700">3</span></div>
+      </section>
+      <section style="position:absolute;left:24px;right:24px;bottom:-120px;height:260px;border-radius:16px 16px 0 0;background:rgba(26,24,21,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;padding:12px 16px 0;box-sizing:border-box;z-index:5;display:flex;align-items:flex-start;gap:12px;overflow:visible">
+        <div style="align-self:flex-start;margin-top:6px;display:flex;flex-direction:column;gap:4px;width:92px;flex:0 0 92px"><strong style="font-size:18px;font-weight:900;letter-spacing:-.02em">Hand · 7</strong><span style="font-size:12px;color:#a99e90;line-height:1.35">Bright = castable now</span></div>
+        <sc-for list="{{ hand }}" as="c" hint-placeholder-count="7"><div style="position:relative;flex:0 0 auto;width:168px;height:235px;display:flex;align-items:flex-end;cursor:grab;transition:transform .16s ease;transform-origin:50% 100%;z-index:1" style-hover="transform:scale(2.4);z-index:60"><div style="width:168px;height:235px;transform:{{ c.rot }};border-radius:8px;background:{{ c.frame }};padding:5px;box-sizing:border-box;box-shadow:{{ c.shadow }};display:flex;flex-direction:column;gap:4px;opacity:{{ c.op }};filter:{{ c.filter }}"><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 5px;font-size:11px;font-weight:700;display:flex;justify-content:space-between;gap:4px;white-space:nowrap"><span style="overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="color:#8a3a24">{{ c.cost }}</span></div><div style="flex:1;border-radius:2px;background:{{ c.art }}"></div><div style="background:#efe4d4;color:#1f1b17;border-radius:3px;padding:2px 5px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.type }}</div><div style="background:#f6efe4;border-radius:2px;height:36px;padding:5px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px"><i style="height:3px;background:#cfc3b2;border-radius:2px"></i><i style="height:3px;width:78%;background:#cfc3b2;border-radius:2px"></i></div></div></div></sc-for>
+        <div style="margin-left:auto;align-self:flex-start;margin-top:6px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:#a99e90;text-align:right;white-space:nowrap"><span>Drag onto the mat to play</span><span>Right-click · more actions</span><span>Hover · zoom</span></div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const RED = '#b8452e', ART = '#8f8a80', LAND = '#7a6a50', TOKEN = '#c8b89e';
+    const art = (a, b) => `linear-gradient(160deg,${a},${b})`;
+    const sh = '0 6px 14px -6px rgba(0,0,0,.85)';
+    const card = (name, cost, type, frame, a, o = {}) => ({
+      name, cost, type, frame, art: a, pt: o.pt || '', bw: o.tapped ? '190px' : '136px', bh: o.tapped ? '136px' : '190px',
+      rot: o.tapped ? 'rotate(90deg)' : (o.lift ? 'translateY(-14px)' : 'none'), op: o.op ?? 1, filter: o.dim ? 'saturate(.35) brightness(.7)' : 'none',
+      shadow: o.sel ? '0 0 0 3px #d9a441, 0 16px 28px -8px rgba(0,0,0,.9)' : o.glow ? '0 0 0 2px rgba(92,201,138,.8), ' + sh : sh,
+      stack: o.stack || '', stackD: o.stack ? 'block' : 'none', sickD: o.sick ? 'block' : 'none'
+    });
+    const goblin = art('#e0864f', '#6a2a18');
+    const O = (list, origin) => list.map(c => ({ ...c, origin }));
+    const creatures = [
+      card('Goblin Chieftain', '1RR', 'Creature — Goblin', RED, goblin, { pt: '2/2' }),
+      card('Goblin Warchief', '1RR', 'Creature — Goblin', RED, art('#d9774a', '#5a2214'), { pt: '2/2' }),
+      card('Skirk Prospector', 'R', 'Creature — Goblin', RED, art('#c98a5a', '#4a2a18'), { pt: '1/1' }),
+      card('Legion Loyalist', 'R', 'Creature — Goblin', RED, art('#e0a060', '#6a3218'), { pt: '1/1', tapped: false }),
+      card('Mogg War Marshal', '1R', 'Creature — Goblin', RED, art('#d8905a', '#5a2a18'), { pt: '1/1', sick: true }),
+      card('Goblin', '', 'Token Creature — Goblin', TOKEN, art('#d98a5a', '#7a3a20'), { pt: '1/1', stack: '×5' }),
+    ];
+    const others = [
+      card('Sol Ring', '1', 'Artifact', ART, art('#d8d2c4', '#6a655c'), { tapped: true }),
+      card('Thornbite Staff', '2', 'Kindred Artifact', ART, art('#9aa27a', '#4a4a30')),
+      card('Shared Animosity', '2R', 'Enchantment', RED, art('#f0a060', '#8a2a18')),
+      card('Impact Tremors', '1R', 'Enchantment', RED, art('#f08a4a', '#5a1a10')),
+    ];
+    const mtn = art('#a8876a', '#4a3a2e');
+    const lands = [
+      card('Mountain', '', 'Basic Land', LAND, mtn, { tapped: true, stack: '×3' }),
+      card('Mountain', '', 'Basic Land', LAND, mtn, { stack: '×2' }),
+      card('Battlefield Forge', '', 'Land', LAND, art('#b89a6a', '#5a3a2a')),
+      card('Kher Keep', '', 'Legendary Land', LAND, art('#8a7a62', '#3a2e24'), { tapped: true }),
+    ];
+    const hand = [
+      card('Goblin Bombardment', '1R', 'Enchantment', RED, art('#f0a060', '#7a2a18'), { sel: true, lift: true }),
+      card('Lightning Bolt', 'R', 'Instant', RED, art('#ffd27a', '#b8452e'), { glow: true }),
+      card('Mountain', '', 'Basic Land', LAND, mtn, { glow: true }),
+      card("Krenko's Command", '1R', 'Sorcery', RED, art('#e0864f', '#5a2a18'), { glow: true }),
+      card('Thousand-Year Elixir', '3', 'Artifact', ART, art('#d8c890', '#6a5a30'), { dim: true }),
+      card('Purphoros, God of the Forge', '3R', 'Legendary Enchantment Creature', RED, art('#ffb060', '#8a2a10'), { dim: true }),
+      card('Warstorm Surge', '5R', 'Enchantment', RED, art('#f07a3a', '#4a1208'), { dim: true }),
+    ];
+    const S = ['Untap', 'Upkeep', 'Draw', 'Main 1', 'Combat', 'Main 2', 'End'];
+    const steps = S.map((label, k) => ({ label, bg: k === 3 ? '#d9a441' : 'transparent', color: k === 3 ? '#1a1815' : k < 3 ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.85)', weight: k === 3 ? 700 : 500, deco: k < 3 ? 'line-through' : 'none' }));
+    const log = [['You', 'played Battlefield Forge'], ['You', 'drew Lightning Bolt'], ['Seat 2', 'attacked you — blocked by Goblin token'], ['Seat 3', 'cast Cultivate'], ['Seat 4', 'drained 1 from each opponent'], ['You', 'tapped Krenko: created 4 Goblins'], ['Seat 2', 'cast Swords to Plowshares on Goblin Warchief — fizzled']].map(([who, what], k) => ({ who, what, op: String(Math.max(.35, 1 - k * .1)) }));
+    const opps = [['Seat 2 · Nina', 'Chulane, Teller of Tales', 38, '#77c58f'], ['Seat 3 · Sam', "Atraxa, Praetors' Voice", 40, '#74b5f7'], ['Seat 4 · Jo', 'Shadrix Silverquill', 35, '#a897bf']].map(([seat, cmdr, life, tint]) => ({ seat, cmdr, life, tint }));
+    return { creatures: O(creatures, '50% 0%'), others: O(others, '50% 40%'), lands: O(lands, '50% 100%'), hand, steps, log, opps };
+  }
+}
+</script>
+</body>
+</html>

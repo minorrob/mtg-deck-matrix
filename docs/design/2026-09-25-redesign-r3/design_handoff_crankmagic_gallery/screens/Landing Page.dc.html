@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>body{margin:0}input::placeholder{color:currentColor;opacity:.7}a{color:inherit;text-decoration:none}a:hover{color:inherit}</style>
+</helmet>
+<div data-screen-label="Landing" style="--h1f:{{ h1.family }};--h1w:{{ h1.weight }};--h1t:{{ h1.tracking }};--h1l:{{ h1.leading }};--bg:{{ t.bg }};--panel:{{ t.panel }};--raised:{{ t.raised }};--line:{{ t.line }};--ink:{{ t.ink }};--muted:{{ t.muted }};--acc:{{ t.acc }};--onacc:{{ t.onAcc }};--aether:{{ t.aether }};--inbox:{{ t.inbox }};--buy:{{ t.buy }};--standin:{{ t.standin }};--shadow:{{ t.shadow }};background:var(--bg,#1a1815);color:var(--ink,#f5f0e8);font-family:Satoshi,system-ui,sans-serif;font-size:15px;line-height:1.5;min-height:100vh;overflow:hidden">
+  <header style="position:relative;z-index:5;max-width:1240px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <a href="#" style="position:relative;display:flex;align-items:center;gap:10px;height:44px">{{ aetherEl }}<img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="position:relative;z-index:1;width:36px;height:36px;object-fit:contain"><span style="position:relative;z-index:1;font-weight:900;font-size:20px;letter-spacing:-.03em">CrankMagic</span></a>
+    <nav style="display:flex;gap:4px;flex-wrap:wrap">
+      <a href="#decks" style="padding:8px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="color:var(--ink);background:var(--raised)">Decks</a>
+      <a href="#cards" style="padding:8px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="color:var(--ink);background:var(--raised)">Library</a>
+      <a href="#discover" style="padding:8px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="color:var(--ink);background:var(--raised)">Explore</a>
+      <a href="#game" style="padding:8px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90);display:inline-flex;align-items:center;gap:6px" style-hover="color:var(--ink);background:var(--raised)">Play<span style="padding:1px 7px;border-radius:99px;background:var(--raised,#2d2823);color:var(--muted,#a99e90);font-size:11px;font-weight:700">Soon</span></a>
+    </nav>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <a href="#signin" style="padding:8px 12px;font-weight:600;color:var(--muted,#a99e90)" style-hover="color:var(--ink)">Sign in</a>
+      <a href="#start" style="padding:0 18px;height:42px;border-radius:12px;background:var(--acc,#d9a441);color:var(--onacc,#1a1815);font-weight:700;display:inline-flex;align-items:center" style-hover="transform:translateY(-1px)">Start free</a>
+    </div>
+  </header>
+  <section style="position:relative;max-width:1240px;margin:0 auto;padding:40px 32px 72px;display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:48px;align-items:center">
+    <div style="position:absolute;right:-160px;top:-120px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,{{ t.glow }},transparent 62%);pointer-events:none"></div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:20px;min-width:0">
+      <span style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc,#d9a441)">Your Commander workshop</span>
+      <h1 style="margin:0;font-family:var(--h1f,'Young Serif',Georgia,serif);font-size:68px;line-height:var(--h1l,1.02);letter-spacing:var(--h1t,-.02em);font-weight:var(--h1w,400);text-wrap:balance">Build the deck. Own the cards. Bring it to the table.</h1>
+      <p style="margin:0;max-width:520px;font-size:18px;line-height:1.5;color:var(--muted,#a99e90);text-wrap:pretty">Plan a hundred, track what's really in the box, find the cards that fit, and play it. Free, on any device.</p>
+      <div id="start" style="margin-top:6px;padding:18px;border-radius:18px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;max-width:600px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acc,#d9a441);color:var(--onacc,#1a1815);font-weight:900;font-size:13px">1</span><strong style="font-weight:700">Step one: start your first deck</strong></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="flex:1 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:12px;background:var(--bg,#1a1815);border:1px solid var(--line,#3a342c);color:var(--muted,#a99e90);min-width:0" style-focus="border-color:var(--acc)"><span style="font-size:17px">⌕</span><input placeholder="Name a commander, or paste a decklist…" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;color:var(--ink,#f5f0e8);outline:none"></label>
+          <button type="button" style="font:inherit;font-weight:700;height:52px;padding:0 22px;border-radius:12px;border:0;background:var(--acc,#d9a441);color:var(--onacc,#1a1815);cursor:pointer;white-space:nowrap" style-hover="transform:translateY(-1px)">Start my deck →</button>
+        </div>
+        <div style="display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--muted,#a99e90)"><span>Or:</span><a href="#archidekt" style="text-decoration:underline;text-underline-offset:3px" style-hover="color:var(--ink)">Import from Archidekt</a><a href="#csv" style="text-decoration:underline;text-underline-offset:3px" style-hover="color:var(--ink)">Upload a CSV</a><a href="#precon" style="text-decoration:underline;text-underline-offset:3px" style-hover="color:var(--ink)">Start from a precon</a></div>
+      </div>
+      <span style="font-size:13px;color:var(--muted,#a99e90)">Free account · saved to the cloud · pick up on any device</span>
+    </div>
+    <div style="position:relative;height:520px;min-width:0">
+      <img src="assets/crankmagic/commander-chulane.webp" alt="Chulane, Teller of Tales" style="position:absolute;left:6%;top:56px;width:270px;aspect-ratio:5/7;object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.08);transform:rotate(-12deg);transition:transform .35s ease;z-index:1" style-hover="transform:rotate(0deg) translateY(-14px) scale(1.03);z-index:9"><img src="assets/crankmagic/commander-atraxa.webp" alt="Atraxa, Praetors' Voice" style="position:absolute;left:30%;top:8px;width:270px;aspect-ratio:5/7;object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.08);transform:rotate(-2deg);transition:transform .35s ease;z-index:2" style-hover="transform:rotate(0deg) translateY(-14px) scale(1.03);z-index:9"><img src="assets/crankmagic/commander-krenko.webp" alt="Krenko, Mob Boss" style="position:absolute;left:54%;top:44px;width:270px;aspect-ratio:5/7;object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.08);transform:rotate(9deg);transition:transform .35s ease;z-index:3" style-hover="transform:rotate(0deg) translateY(-14px) scale(1.03);z-index:9">
+      <div style="position:absolute;left:0;bottom:24px;z-index:10;width:290px;padding:14px 16px;border-radius:16px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);box-shadow:0 20px 40px -20px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><strong style="font-weight:900;letter-spacing:-.02em">Krenko Goblins</strong><span style="font-size:12px;color:var(--muted,#a99e90)">Bracket 3</span></div>
+        <div style="position:relative;display:flex;gap:2px;height:8px;border-radius:5px;overflow:hidden"><i style="flex:85;background:var(--inbox,#5cc98a)"></i><i style="flex:2;background:#3b7dd8"></i><i style="flex:13;background:var(--buy,#f0b35a)"></i><b style="position:absolute;top:0;bottom:0;left:85%;width:15%;background:repeating-linear-gradient(135deg,var(--standin,#c39bff) 0 3px,rgba(0,0,0,.4) 3px 6px)"></b></div>
+        <div style="display:flex;gap:12px;font-size:12px;color:var(--muted,#a99e90)"><span><strong style="color:var(--ink,#f5f0e8)">85</strong> in the box</span><span><strong style="color:var(--buy,#f0b35a)">13</strong> to buy</span><span><strong style="color:var(--ink,#f5f0e8)">$22</strong> to finish</span></div>
+      </div>
+    </div>
+  </section>
+  <section style="max-width:1240px;margin:0 auto;padding:0 32px 80px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap"><h2 style="margin:0;font-size:38px;line-height:1.05;letter-spacing:-.035em;font-weight:900">Where do you want to start?</h2><p style="margin:0;color:var(--muted,#a99e90);max-width:420px">Four ways in. Each one starts with a single step, and they all share the same library.</p></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+      <sc-for list="{{ paths }}" as="p" hint-placeholder-count="4">
+        <a href="{{ p.href }}" style="--tint:{{ p.tint }};position:relative;display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:22px;background:linear-gradient(160deg,color-mix(in oklab,var(--tint) 16%,var(--panel,#231f1b)),var(--panel,#231f1b) 55%);border:1px solid var(--line,#3a342c);box-shadow:var(--shadow);min-height:300px;overflow:hidden;transition:transform .25s ease,border-color .25s ease" style-hover="transform:translateY(-6px);border-color:var(--tint)">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tint)">{{ p.page }}</span><span style="font-size:12px;color:var(--muted,#a99e90);font-weight:600">{{ p.badge }}</span></div>
+          <h3 style="margin:0;font-size:26px;line-height:1.05;letter-spacing:-.03em;font-weight:900">{{ p.title }}</h3>
+          <p style="margin:0;color:var(--muted,#a99e90);font-size:14.5px;line-height:1.5;text-wrap:pretty">{{ p.body }}</p>
+          <span style="margin-top:auto;display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:10px 16px;border-radius:12px;background:var(--raised,#2d2823);font-weight:700;font-size:14px">{{ p.cta }} <span style="color:var(--tint)">→</span></span>
+        </a>
+      </sc-for>
+    </div>
+  </section>
+  <section style="background:var(--panel,#231f1b);border-top:1px solid var(--line,#3a342c);border-bottom:1px solid var(--line,#3a342c)">
+    <div style="max-width:1240px;margin:0 auto;padding:72px 32px;display:flex;flex-direction:column;gap:32px">
+      <h2 style="margin:0;font-size:38px;line-height:1.05;letter-spacing:-.035em;font-weight:900;max-width:620px">From an idea to a deck you can shuffle</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px">
+        <sc-for list="{{ how }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+            <div style="position:relative;aspect-ratio:16/10;border-radius:18px;overflow:hidden;background:var(--bg,#1a1815);border:1px solid var(--line,#3a342c)">{{ s.visual }}</div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--acc,#d9a441);color:var(--acc,#d9a441);font-weight:900;font-size:13px">{{ s.n }}</span><h3 style="margin:0;font-size:22px;letter-spacing:-.025em;font-weight:900">{{ s.title }}</h3></div>
+            <p style="margin:0;color:var(--muted,#a99e90);text-wrap:pretty">{{ s.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  <section style="max-width:1240px;margin:0 auto;padding:56px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px">
+    <sc-for list="{{ trust }}" as="r" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px;padding-top:16px;border-top:2px solid var(--line,#3a342c)"><strong style="font-weight:900;font-size:17px;letter-spacing:-.02em">{{ r.title }}</strong><span style="color:var(--muted,#a99e90);font-size:14px">{{ r.body }}</span></div></sc-for>
+  </section>
+  <section style="max-width:1240px;margin:0 auto;padding:0 32px 64px">
+    <div style="position:relative;overflow:hidden;padding:40px 200px 40px 40px;border-radius:26px;background:{{ t.ctaBg }};color:{{ t.ctaInk }};display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+      <img src="assets/crankmagic/commander-krenko.webp" alt="" style="position:absolute;right:-70px;top:-50%;width:220px;aspect-ratio:5/7;object-fit:cover;border-radius:14px;transform:rotate(14deg);opacity:.28;pointer-events:none">
+      <h2 style="position:relative;margin:0;flex:1 1 360px;font-family:var(--h1f,'Young Serif',Georgia,serif);font-size:40px;line-height:var(--h1l,1.02);letter-spacing:var(--h1t,-.02em);font-weight:var(--h1w,400)">Your first deck is one commander away.</h2>
+      <div style="position:relative;flex:1 1 420px;display:flex;gap:10px;flex-wrap:wrap">
+        <label style="flex:1 1 240px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:12px;background:{{ t.ctaField }};border:1px solid {{ t.ctaLine }};min-width:0"><input placeholder="Name a commander…" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;color:{{ t.ctaFieldInk }};outline:none"></label>
+        <button type="button" style="font:inherit;font-weight:700;height:52px;padding:0 22px;border-radius:12px;border:0;background:{{ t.ctaBtn }};color:{{ t.ctaBtnInk }};cursor:pointer;white-space:nowrap" style-hover="transform:translateY(-1px)">Start my deck →</button>
+      </div>
+    </div>
+  </section>
+  <footer style="border-top:1px solid var(--line,#3a342c)"><div style="max-width:1240px;margin:0 auto;padding:24px 32px;display:flex;gap:10px 24px;flex-wrap:wrap;font-size:12px;color:var(--muted,#a99e90)"><span style="max-width:680px">CrankMagic is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved or endorsed by Wizards. Card data and images from Scryfall; ranks from EDHREC.</span><span style="margin-left:auto;display:flex;gap:18px"><a href="#privacy" style-hover="color:var(--ink)">Privacy</a><a href="#terms" style-hover="color:var(--ink)">Terms</a><a href="#contact" style-hover="color:var(--ink)">Contact</a></span></div></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1000},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;},&quot;displayFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Young Serif (hero only)&quot;,&quot;Satoshi Black&quot;],&quot;default&quot;:&quot;Young Serif (hero only)&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  aetherRef = React.createRef();
+  componentDidMount() { import('./aether.js').then(m => { if (this.aetherRef.current) this.stopAether = m.startAether(this.aetherRef.current, {width:210,height:56,axisY:28,start:34,join:160}); }).catch(()=>{}); }
+  componentWillUnmount() { if (this.stopAether) this.stopAether(); }
+  renderVals() {
+    const h = React.createElement;
+    const dark = (this.props.theme ?? 'dark') !== 'light';
+    const t = dark
+      ? {bg:'#1a1815',panel:'#231f1b',raised:'#2d2823',line:'#3a342c',ink:'#f5f0e8',muted:'#a99e90',acc:'#d9a441',onAcc:'#1a1815',aether:'#7cc4ff',inbox:'#5cc98a',buy:'#f0b35a',standin:'#c39bff',shadow:'0 1px 0 rgba(255,255,255,.04) inset',glow:'rgba(217,164,65,.16)',ctaBg:'#d9a441',ctaInk:'#1a1815',ctaField:'rgba(26,24,21,.88)',ctaLine:'rgba(26,24,21,.9)',ctaFieldInk:'#f5f0e8',ctaBtn:'#1a1815',ctaBtnInk:'#f5f0e8',tint:{W:'#e9d79a',U:'#74b5f7',B:'#a897bf',R:'#f0805f',G:'#77c58f'}}
+      : {bg:'#f5f0e6',panel:'#fffdf8',raised:'#ece5d7',line:'#d9d0bf',ink:'#1f1c18',muted:'#6e665a',acc:'#2f8f5b',onAcc:'#f7fbf6',aether:'#4aa6d8',inbox:'#2f8f5b',buy:'#d0893a',standin:'#8a5be0',shadow:'0 10px 30px -18px rgba(40,30,20,.35)',glow:'rgba(47,143,91,.14)',ctaBg:'#1f3d2c',ctaInk:'#f5f0e6',ctaField:'rgba(255,255,255,.94)',ctaLine:'rgba(255,255,255,.94)',ctaFieldInk:'#1f1c18',ctaBtn:'#f5f0e6',ctaBtnInk:'#1f3d2c',tint:{W:'#b08a1e',U:'#2b7fd8',B:'#6f5c8e',R:'#d0603c',G:'#2f8f5b'}};
+    const aetherEl = h('canvas',{ref:this.aetherRef,'aria-hidden':'true',style:{position:'absolute',left:-8,top:-6,width:210,height:56,pointerEvents:'none',zIndex:0}});
+        const paths = [
+      ['Decks','#decks','I have a commander in mind','Build the hundred, check bracket and budget, and see exactly what is still missing from the box.','Start a deck',t.tint.R,''],
+      ['Library','#cards','I have a pile of cards','Import what you own once. Every deck pulls from it first, so the buy list is only what you truly lack.','Import my cards',t.tint.G,''],
+      ['Explore','#discover','I want ideas','Every card is joined to the cards it works with. Follow a commander, or fill the gap a deck runs light on.','Explore a commander',t.tint.U,''],
+      ['Play','#game','I want to play it','A four-seat table with friends or AI pilots. Your deck, your mat, your life totals in the middle.','Get notified',t.tint.W,'Coming soon'],
+    ].map(([page,href,title,body,cta,tint,badge])=>({page,href,title,body,cta,tint,badge}));
+    // Step visuals, drawn from the app's own vocabulary.
+    const bar = (a,b,c) => h('div',{style:{position:'relative',display:'flex',gap:2,height:10,borderRadius:5,overflow:'hidden'}},h('i',{style:{flex:a,background:t.inbox}}),h('i',{style:{flex:b,background:'#3b7dd8'}}),h('i',{style:{flex:c,background:t.buy}}));
+    const planVis = h('div',{style:{position:'absolute',inset:0,padding:18,display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}},
+      h('div',{style:{gridColumn:'1 / -1',display:'flex',gap:12,alignItems:'center'}},h('img',{src:'assets/crankmagic/commander-krenko.webp',alt:'',style:{width:54,aspectRatio:'5/7',objectFit:'cover',borderRadius:5,transform:'rotate(-4deg)'}}),h('div',null,h('div',{style:{fontWeight:900,fontSize:18,letterSpacing:'-.02em'}},'Krenko Goblins'),h('div',{style:{fontSize:12,color:t.muted}},'Goblin tribal · Tokens · B3'))),
+      h('div',{style:{padding:10,borderRadius:10,background:t.panel,border:`1px solid ${t.line}`,display:'flex',alignItems:'flex-end',gap:4,height:64}},...[12,20,17,8,4,1].map((n,i)=>h('i',{key:i,style:{flex:1,height:n*2.6,borderRadius:3,background:t.tint.R}}))),
+      h('div',{style:{padding:10,borderRadius:10,background:t.panel,border:`1px solid ${t.line}`,display:'flex',flexDirection:'column',justifyContent:'center',gap:2}},h('div',{style:{fontSize:11,color:t.muted}},'Cap $225'),h('div',{style:{fontWeight:900,fontSize:24,letterSpacing:'-.03em'}},'$156'),h('div',{style:{fontSize:11,color:t.muted}},'69% of cap')));
+    const collectVis = h('div',{style:{position:'absolute',inset:0,padding:18,display:'flex',flexDirection:'column',gap:8}},
+      ...[['Krenko, Mob Boss','In the box',t.inbox],['Anger','Substitute',t.standin],['Sol Ring','Ordered','#3b7dd8'],['Goblin Motivator','To buy',t.buy]].map(([n,s,c])=>h('div',{key:n,style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'8px 12px',borderRadius:10,background:t.panel,border:`1px solid ${t.line}`,fontSize:13}},h('strong',{style:{fontWeight:700}},n),h('span',{style:{display:'inline-flex',alignItems:'center',gap:6,padding:'2px 9px',borderRadius:99,background:`color-mix(in oklab, ${c} 20%, transparent)`,color:c,fontSize:11,fontWeight:700}},h('i',{style:{width:6,height:6,borderRadius:'50%',background:c}}),s))),
+      h('div',{style:{marginTop:'auto'}},bar(85,2,13)));
+    const seat = (c,label) => h('div',{style:{borderRadius:10,background:`linear-gradient(135deg, ${c}55, ${t.panel})`,border:`1px solid ${t.line}`,padding:8,fontSize:11,fontWeight:700,display:'flex',alignItems:'flex-end'}},label);
+    const playVis = h('div',{style:{position:'absolute',inset:0,padding:18,display:'grid',gridTemplateColumns:'1fr 1fr',gridTemplateRows:'1fr 1fr',gap:8}},
+      seat(t.tint.G,'Chulane · 38'),seat(t.tint.U,'Atraxa · 40'),seat(t.tint.B,'Shadrix · 35'),seat(t.tint.R,'You · Krenko · 40'),
+      h('div',{style:{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',width:62,height:62,borderRadius:'50%',background:t.bg,border:`2px solid ${t.acc}`,display:'grid',placeItems:'center'}},h('img',{src:'assets/crankmagic/crankmagic-logo-wand-v3-256.webp',alt:'',style:{width:34,height:34}})));
+    const how = [
+      ['1','Plan','Pick a commander, fill the hundred, set a bracket and a budget cap. The deck page tells you the next move.',planVis],
+      ['2','Collect','Real copies, substitutes, orders and a priced buy list, all on one bar per deck. Buy only what you lack.',collectVis],
+      ['3','Play','Sit four at the table with friends or AI pilots, choose your mat, and log how it went.',playVis],
+    ].map(([n,title,body,visual])=>({n,title,body,visual}));
+    const trust = [
+      ['Your account, everywhere','Decks and library saved to your account in the cloud. Start on your laptop, check the buy list at the shop.'],
+      ['Real prices, dated','Scryfall price snapshots with the date shown. Set a cap per deck and see what goes over.'],
+      ['Built for Commander','Color identity, singleton, brackets and Game Changers checked as you build.'],
+    ].map(([title,body])=>({title,body}));
+    const serif = (this.props.displayFont ?? 'Young Serif (hero only)') !== 'Satoshi Black';
+    const h1 = serif ? {family:"'Young Serif',Georgia,serif",weight:'400',tracking:'-.02em',leading:'1.02'} : {family:'Satoshi,system-ui,sans-serif',weight:'900',tracking:'-.045em',leading:'.96'};
+    return { t, h1, aetherEl, paths, how, trust };
+  }
+}
+</script>
+</body>
+</html>

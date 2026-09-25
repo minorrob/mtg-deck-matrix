@@ -1,0 +1,17 @@
+:root{
+  --font-display:Satoshi,system-ui,sans-serif;
+  --font-hero:'Young Serif',Georgia,serif; /* only for headlines 48px and up */
+  --font-body:Satoshi,system-ui,sans-serif;
+  --display-weight:900;
+  --display-tracking:-.035em;
+  --display-case:none;
+  --text-h1:56px;
+  --text-h2:22px;
+  --text-h3:16px;
+  --text-body:14px;
+  --text-small:12px;
+  --text-label:11px;
+  --label-tracking:.08em;
+  --leading-body:1.5;
+  --leading-tight:1.05;
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
+<style>@font-face{font-family:Satoshi;font-weight:400;src:url("assets/crankmagic/satoshi-400.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:500;src:url("assets/crankmagic/satoshi-500.woff2") format("woff2")}@font-face{font-family:Satoshi;font-weight:700;src:url("assets/crankmagic/satoshi-700.woff2") format("woff2")}body{margin:0}a{color:inherit;text-decoration:none}a:hover{color:inherit}</style>
+</helmet>
+<div data-screen-label="Gallery · Explore entry" style="--display:Satoshi,system-ui,sans-serif;--bg:{{ t.bg }};--panel:{{ t.panel }};--raised:{{ t.raised }};--line:{{ t.line }};--ink:{{ t.ink }};--muted:{{ t.muted }};--pbg:{{ t.primaryBg }};--pink:{{ t.primaryInk }};--aether:{{ t.aetherC }};--buy:{{ t.buy }};--inbox:{{ t.inbox }};--shadow:{{ t.shadow }};width:1280px;min-height:900px;background:var(--bg,#1a1815);color:var(--ink,#f5f0e8);font-family:Satoshi,system-ui,sans-serif;font-size:14px;line-height:1.5;display:grid;grid-template-columns:216px minmax(0,1fr);position:relative;overflow:hidden">
+  <aside style="border-right:1px solid var(--line,#3a342c);padding:22px 18px;display:flex;flex-direction:column;gap:28px;position:relative">
+    <div style="position:relative;display:flex;align-items:center;gap:10px;height:44px">{{ aether }}<img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" style="position:relative;z-index:1;width:36px;height:36px;object-fit:contain"><div style="position:relative;z-index:1;font-weight:700;font-size:19px;letter-spacing:-.02em">CrankMagic</div></div>
+    <nav style="display:flex;flex-direction:column;gap:4px">
+      <a href="#decks" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Decks</a>
+      <a href="#cards" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Library</a>
+      <a href="#discover" style="padding:10px 12px;border-radius:10px;font-weight:700;background:var(--raised,#2d2823);color:var(--ink,#f5f0e8)">Explore</a>
+      <a href="#game" style="padding:10px 12px;border-radius:10px;font-weight:600;color:var(--muted,#a99e90)" style-hover="background:var(--raised);color:var(--ink)">Play</a>
+    </nav>
+    <div style="margin-top:auto;font-size:12px;color:var(--muted,#a99e90);line-height:1.5">Graph fetched 19 Sep · 7,179 cards · 41k joins</div>
+  </aside>
+  <main style="padding:36px 48px 56px;min-width:0;position:relative;display:flex;flex-direction:column;gap:32px">
+    <div style="position:absolute;right:-120px;top:-140px;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,color-mix(in oklab,var(--aether,#7cc4ff) 22%,transparent),transparent 65%);pointer-events:none"></div>
+    <header style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:end">
+      <div><div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#a99e90);margin-bottom:10px">Explore</div><h1 style="font-family:'Young Serif',Georgia,serif;margin:0;font-size:52px;line-height:.98;letter-spacing:-.015em;font-weight:400;max-width:640px;text-wrap:balance">Every card is joined to the cards it works with. Start anywhere.</h1><p style="margin:14px 0 0;color:var(--muted,#a99e90);font-size:16px;max-width:560px;text-wrap:pretty">7,179 cards, 41,000 joins read from rules text and co-play. Pick a deck's gap, a commander, or any card — the graph opens on it.</p></div>
+      <label style="display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:14px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);color:var(--muted,#a99e90);box-shadow:var(--shadow)"><span style="font-size:16px">⌕</span><input placeholder="Find any card…" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;color:var(--ink,#f5f0e8);outline:none"><kbd style="font:inherit;font-size:11px;padding:2px 6px;border-radius:6px;border:1px solid var(--line,#3a342c)">/</kbd></label>
+    </header>
+    <section style="position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+      <a href="#gap" style="display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:20px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);box-shadow:var(--shadow);transition:transform .25s ease,border-color .25s ease;min-height:300px" style-hover="transform:translateY(-4px);border-color:var(--buy)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--buy,#f0b35a)">From a deck gap</span><span style="color:var(--muted,#a99e90)">→</span></div>
+        <h2 style="font-family:var(--display);margin:0;font-size:26px;line-height:1.05;letter-spacing:-.03em;font-weight:900">Fill a seat a deck is still missing</h2>
+        <p style="margin:0;color:var(--muted,#a99e90);font-size:13.5px">Pick a deck and a role it runs light on. The graph shows what your commander is joined to that you don't hold yet, owned first.</p>
+        <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ gaps }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--raised,#2d2823);font-size:13px"><img src="assets/mana/{{ g.c }}.svg" alt="" style="width:16px;height:16px;border-radius:50%"><strong style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.deck }}</strong><span style="color:var(--buy,#f0b35a);font-weight:700;white-space:nowrap">{{ g.gap }}</span></div></sc-for>
+        </div>
+      </a>
+      <a href="#commander" style="display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:20px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);box-shadow:var(--shadow);transition:transform .25s ease,border-color .25s ease;min-height:300px;position:relative;overflow:hidden" style-hover="transform:translateY(-4px);border-color:var(--inbox)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--inbox,#5cc98a)">From a commander</span><span style="color:var(--muted,#a99e90)">→</span></div>
+        <h2 style="font-family:var(--display);margin:0;font-size:26px;line-height:1.05;letter-spacing:-.03em;font-weight:900">See what a commander wants around it</h2>
+        <p style="margin:0;color:var(--muted,#a99e90);font-size:13.5px">Yours, or any legal commander by name or EDHREC rank. Trace lights the deck from the commander outward.</p>
+        <div style="margin-top:auto;display:flex;gap:8px;align-items:flex-end;height:118px;position:relative">
+          <sc-for list="{{ cmdrs }}" as="c" hint-placeholder-count="4"><div style="flex:1;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:{{ c.bg }};box-shadow:0 10px 24px -12px #000;transform:rotate({{ c.rot }});display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:22px;color:rgba(255,255,255,.7);transition:transform .3s ease" style-hover="transform:translateY(-6px) rotate(0deg)">{{ c.el }}</div></sc-for>
+        </div>
+      </a>
+      <a href="#card" style="display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:20px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);box-shadow:var(--shadow);transition:transform .25s ease,border-color .25s ease;min-height:300px;position:relative;overflow:hidden" style-hover="transform:translateY(-4px);border-color:var(--aether)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--aether,#7cc4ff)">From a card</span><span style="color:var(--muted,#a99e90)">→</span></div>
+        <h2 style="font-family:var(--display);margin:0;font-size:26px;line-height:1.05;letter-spacing:-.03em;font-weight:900">Follow any card into its connections</h2>
+        <p style="margin:0;color:var(--muted,#a99e90);font-size:13.5px">Type a name or paste a Scryfall link. Two rings out, every join named, loops in gold.</p>
+        <div style="margin-top:auto;position:relative;height:118px">{{ miniGraph }}</div>
+      </a>
+    </section>
+    <section style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="font-family:var(--display);margin:0;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#a99e90)">Pick up where you left off</h3><a href="#clear" style="font-size:12px;color:var(--muted,#a99e90);text-decoration:underline;text-underline-offset:3px">Clear</a></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ recents }}" as="r" hint-placeholder-count="3"><a href="#recent" style="display:inline-flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:999px;background:var(--panel,#231f1b);border:1px solid var(--line,#3a342c);font-size:13px;font-weight:600;box-shadow:var(--shadow)" style-hover="border-color:var(--ink)"><span style="display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:{{ r.bg }}"><img src="assets/mana/{{ r.c }}.svg" alt="" style="width:14px;height:14px;border-radius:50%"></span>{{ r.label }}<span style="color:var(--muted,#a99e90);font-weight:500">{{ r.sub }}</span></a></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <h3 style="font-family:var(--display);margin:0;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#a99e90)">Or read by role</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ roles }}" as="ro" hint-placeholder-count="7"><a href="#lens" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line,#3a342c);font-size:13px;font-weight:600;color:var(--ink,#f5f0e8)" style-hover="background:var(--raised)">{{ ro.label }}<span style="color:var(--muted,#a99e90);font-weight:500">{{ ro.n }}</span></a></sc-for>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;}}">
+class Component extends DCLogic {
+  aetherRef = React.createRef();
+  componentDidMount() { import('./aether.js').then(m => { if (this.aetherRef.current) this.stopAether = m.startAether(this.aetherRef.current, {width:190,height:56,axisY:28,start:34,join:150}); }); }
+  componentWillUnmount() { if (this.stopAether) this.stopAether(); }
+  renderVals() {
+    const h = React.createElement;
+    const dark = (this.props.theme ?? 'dark') !== 'light';
+    const t = dark
+      ? {bg:'#1a1815',panel:'#231f1b',raised:'#2d2823',line:'#3a342c',ink:'#f5f0e8',muted:'#a99e90',primaryBg:'#d9a441',primaryInk:'#1a1815',aetherC:'#7cc4ff',buy:'#f0b35a',inbox:'#5cc98a',gold:'#d9a441',shadow:'0 1px 0 rgba(255,255,255,.04) inset',tint:{W:'#e9d79a',U:'#74b5f7',B:'#a897bf',R:'#f0805f',G:'#77c58f'}}
+      : {bg:'#f5f0e6',panel:'#fffdf8',raised:'#ece5d7',line:'#d9d0bf',ink:'#1f1c18',muted:'#6e665a',primaryBg:'#2f8f5b',primaryInk:'#f7fbf6',aetherC:'#4aa6d8',buy:'#d0893a',inbox:'#2f8f5b',gold:'#b8862a',shadow:'0 10px 30px -18px rgba(40,30,20,.35)',tint:{W:'#c9a52e',U:'#2b7fd8',B:'#6f5c8e',R:'#d0603c',G:'#2f8f5b'}};
+    const aether = h('canvas',{ref:this.aetherRef,'aria-hidden':'true',style:{position:'absolute',left:-8,top:-6,width:190,height:56,pointerEvents:'none',zIndex:0}});
+    const gaps = [['D6 Krenko Goblins','R','Removal · 6 of 8'],['D7 Maralen Exile Cast','U','Ramp · 7 of 10'],['D2 Chulane Value Loop','G','Board wipes · 1 of 2']].map(([deck,c,gap])=>({deck,c,gap}));
+    const img = (src) => h('img',{src,alt:'',style:{width:'100%',height:'100%',objectFit:'cover',objectPosition:'50% 18%',transform:'scale(1.6)',transformOrigin:'50% 22%'}});
+    const cmdrs = [
+      {bg:t.raised,rot:'-8deg',el:img('assets/crankmagic/commander-krenko.webp')},
+      {bg:t.raised,rot:'-3deg',el:img('assets/crankmagic/commander-chulane.webp')},
+      {bg:t.raised,rot:'3deg',el:img('assets/crankmagic/commander-atraxa.webp')},
+      {bg:`linear-gradient(150deg,${t.tint.R},${t.tint.W})`,rot:'8deg',el:'QL'},
+    ];
+    // Mini graph: focus + ring, drawn in SVG.
+    const W=320,H=118,cx=110,cy=60;
+    const pts=[[-70,-30],[-40,42],[30,-40],[60,20],[100,-10],[150,30],[180,-28],[210,40]];
+    const mini=h('svg',{viewBox:`0 0 ${W} ${H}`,style:{position:'absolute',inset:0,width:'100%',height:'100%'},'aria-hidden':'true'},
+      ...pts.map(([dx,dy],i)=>h('line',{key:'l'+i,x1:cx,y1:cy,x2:cx+dx,y2:cy+dy,stroke:i%3===0?t.gold:t.muted,strokeOpacity:i%3===0?.9:.4,strokeWidth:i%3===0?1.8:1})),
+      h('path',{d:`M${cx+pts[2][0]} ${cy+pts[2][1]} Q ${cx+90} ${cy-70} ${cx+pts[4][0]} ${cy+pts[4][1]}`,fill:'none',stroke:t.gold,strokeOpacity:.7,strokeWidth:1.4}),
+      ...pts.map(([dx,dy],i)=>h('circle',{key:'c'+i,cx:cx+dx,cy:cy+dy,r:i%2?6:8,fill:i%4===1?t.panel:t.aetherC,stroke:i%4===1?t.muted:'none',strokeDasharray:i%4===1?'2 2':'none',fillOpacity:i%4===1?1:.9})),
+      h('circle',{cx,cy,r:22,fill:t.aetherC,fillOpacity:.18}),
+      h('circle',{cx,cy,r:13,fill:t.aetherC,stroke:t.inbox,strokeWidth:2.5}));
+    const recents = [['Krenko, Mob Boss','R','· D6, loops only',t.tint.R],['D1 Quintorius Spirits','W','· gap: Draw',t.tint.W],['D2 Chulane Value Loop','G','· trace',t.tint.G]].map(([label,c,sub,bg])=>({label,c,sub,bg:`color-mix(in oklab, ${bg} 30%, ${t.raised})`}));
+    const roles = [['Removal',612],['Board wipe',188],['Protection',240],['Loop',96],['Tutor',210],['Ramp',534],['Draw',702]].map(([label,n])=>({label,n}));
+    return {t, aether, gaps, cmdrs, miniGraph:mini, recents, roles};
+  }
+}
+</script>
+</body>
+</html>
