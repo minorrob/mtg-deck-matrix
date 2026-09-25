@@ -53,6 +53,18 @@ const pw = await import(path.isAbsolute(entry) ? pathToFileURL(entry).href : ent
 const chromium = pw.chromium || pw.default.chromium;
 const browser = await chromium.launch({headless: true, ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {})});
 const page = await browser.newPage({viewport: {width: 1600, height: 1000}});
+/* A handoff loads React and its fonts from CDNs. Where outbound HTTPS must go through a proxy (a cloud session),
+   Chromium cannot reach them itself, and Playwright's proxy option would also send this local server's pages to
+   the proxy. So the CDN requests alone are fetched by Node, which honors HTTPS_PROXY when run with
+   NODE_USE_ENV_PROXY=1:   NODE_USE_ENV_PROXY=1 node tools/render-design.mjs <folder> <out> */
+if (process.env.HTTPS_PROXY || process.env.https_proxy) {
+  await page.route(/^https:\/\//, async (route) => {
+    try {
+      const r = await fetch(route.request().url());
+      await route.fulfill({status: r.status, headers: Object.fromEntries(r.headers), body: Buffer.from(await r.arrayBuffer())});
+    } catch { await route.abort(); }
+  });
+}
 const errors = []; page.on("pageerror", (e) => errors.push(e.message));
 await mkdir(path.join(OUT, "hifi"), {recursive: true});
 
