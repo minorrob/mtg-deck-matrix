@@ -120,9 +120,11 @@ try {
     verdict("the Overview's By card type bar draws", bands.length > 0 && bands.every((c) => c !== "rgba(0, 0, 0, 0)"), `${bands.length} bands`);
     await shot("overview");
     const before = page.url();
-    await page.getByRole("button", {name: "Full guide and SWOT", exact: true}).click(); await page.waitForTimeout(1200);
-    const guideTop = await page.evaluate(() => Math.round(document.getElementById("cm-sec-guide").getBoundingClientRect().top));
-    verdict("Full guide and SWOT stays on the deck and scrolls to its guide", page.url() === before && guideTop < 300 && guideTop > -50, `guide top ${guideTop}`);
+    /* r3 (R3.5) made the guide a dialog; the first look's rule still holds -- the link stays on the deck. */
+    await page.getByRole("button", {name: "Full guide and SWOT", exact: true}).click(); await page.waitForTimeout(800);
+    const guideOpen = await page.evaluate(() => document.getElementById("cm-dialog").open && Boolean(document.querySelector("#cm-dialog #cm-sec-guide")));
+    verdict("Full guide and SWOT stays on the deck and opens its guide", page.url() === before && guideOpen, `dialog open: ${guideOpen}`);
+    await page.keyboard.press("Escape");
     await page.getByRole("tab", {name: /^The hundred/}).click(); await page.waitForTimeout(1200);
     const name = page.locator(".cm-deck-list .cm-card-name").nth(3);
     await restOn(page, name);

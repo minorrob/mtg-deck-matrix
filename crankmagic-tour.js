@@ -204,10 +204,10 @@ const TOURS=[
     {view:'decks',params:()=>({...firstDeck(),tab:'hundred'}),selectors:['.cm-curve','.cm-count-list','#cm-sec-cards'],
      title:'The shape, before any simulation',
      copy:'The curve and the counts tell you things a score cannot: too few lands, nothing to do on turn two, or eleven cards that all want the same slot.'},
-    /* And the recommendations live on the Overview tab now (Phase 1 PR4), for the same reason. */
-    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-suggestions]','#cm-sec-swot','[data-action=compare-decks]'],
+    /* The recommendations sit with the guide and the SWOT, which open as a dialog from How it plays (R3.5). */
+    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-guide]','.cm-plays-grid','#cm-main'],
      title:'And what to do about it',
-     copy:'Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
+     copy:'Full guide and SWOT opens the strengths, weaknesses and recommendations. Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
 
   {id:'acquire',name:'Buy what a deck still needs',icon:'🜛',
    job:'Turn a list into cards in a box.',
