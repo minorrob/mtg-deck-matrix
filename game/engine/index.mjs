@@ -45,7 +45,7 @@ export const ENGINE_STATUS = Object.freeze({
   /* What is built and green, module by module. Not a claim that a game can be played. */
   implemented: Object.freeze([
     "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast",
-    "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects", "resolution", "keywords", "enters", "runtime",
+    "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects", "resolution", "keywords", "enters", "runtime", "storage", "house-pilot",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });
