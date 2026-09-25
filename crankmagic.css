@@ -1897,7 +1897,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
      and a phone showed the three actions twice, in the hero and in the bar at the foot. */
   #matrix-v2 .cm-deck-hero .cm-deck-work{display:none}
   .cm-action-bar{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--v-bg) 95%,transparent);border-top:1px solid var(--color-line);backdrop-filter:blur(6px)}
-  #matrix-v2 .cm-action-bar .v-button{flex:1 1 0;min-width:0;padding:10px 6px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ONE ROW THAT SCROLLS SIDEWAYS (r3, 11-mobile-deck-detail; R3.5). Every button keeps its whole label at its
+     own width -- squeezing them to equal shares clipped "Make the change" to "Ma…" (CW-MOB-02). Make the
+     change rides here on a phone and leaves the hero, as the design draws it. */
+  #matrix-v2 .cm-action-bar{overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none}
+  #matrix-v2 .cm-action-bar::-webkit-scrollbar{display:none}
+  #matrix-v2 .cm-action-bar .v-button{flex:0 0 auto;padding:10px 14px;font-size:13px;white-space:nowrap;scroll-snap-align:start}
+  #matrix-v2 .cm-deck-hero .cm-deck-actions>[data-action=deck-change]{display:none}
   #cm-main:has(.cm-action-bar){padding-bottom:96px}
   .cm-deck-composition{grid-template-columns:1fr}
   .cm-deck-list li{grid-template-columns:22px minmax(0,1fr) minmax(0,auto);font-size:12px}
@@ -2787,3 +2793,10 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-decks-sort{display:flex;align-items:center;gap:8px}
 #matrix-v2 .cm-decks-sort select{min-height:34px;width:auto}
 #matrix-v2 .cm-decks-none{margin:24px 0}
+/* GUIDE & SWOT, THE DIALOG (r3, 31-deck-guide): the SWOT's four quarters as cards, two by two. */
+#cm-dialog.cm-guide-modal .cm-guide-dialog h3{margin:18px 0 8px}
+#cm-dialog.cm-guide-modal .cm-guide-dialog:first-child h3:first-child{margin-top:0}
+#cm-dialog.cm-guide-modal .cm-swot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#cm-dialog.cm-guide-modal .cm-swot>div{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:12px 14px}
+#cm-dialog.cm-guide-modal .cm-swot>div h3{margin:0 0 6px;font-size:15px}
+@media(max-width:560px){#cm-dialog.cm-guide-modal .cm-swot{grid-template-columns:1fr}}
