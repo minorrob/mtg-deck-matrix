@@ -81,7 +81,7 @@ export const PROFILES = {
   /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). */
   "cloud-staging": {
     ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: PLAY, accounts: "on",
-    cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, access: {team: PENDING, aud: PENDING}},
+    cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
 
