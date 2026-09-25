@@ -17,6 +17,9 @@
  *      counts on its button, and the copies do land on the Bench, reserved for no deck.
  *   4. On a phone the count cards show their whole figures, and the Filters dialog fits the screen.
  *   5. No dialog's sticky head covers its first line.
+ *   7. Each count card filters the table to exactly what it counts: the copies under it add up to its
+ *      figure, the other cards keep theirs, and a second click lets every row back. On a phone the
+ *      page brings the table up below the top bar, since the table sits a screen below the cards.
  *   6. INTAKE §3's Library items still stand: the ticked-rows bar, group bands, collection groups, the
  *      Sheet's editable cells and the Table view's piles.
  *
@@ -52,6 +55,29 @@ try {
   /* 3, first: the head. */
   eq(await page.$$eval(".cm-page-head .cm-actions > .v-button", (bs) => bs.map((b) => b.textContent.trim())), ["Import list", "New group", "More", "Add cards"], "the head ends with Add cards");
   ok(await page.$eval(".cm-page-head [data-action=add-card]", (b) => b.classList.contains("primary")), "and Add cards is the primary");
+
+  /* 7. The count cards (Rob, 2026-09-25: "When clicking on any of the card counts, it should filter the card table below it"). */
+  const figures = () => page.$$eval(".cm-kpi", (ks) => ks.map((k) => ({label: k.querySelector("span").textContent.trim(), n: Number(k.querySelector("strong").textContent.replace(/,/g, ""))})));
+  const copiesShown = () => page.$eval("#cm-roster-table", (t) => { const m = (t.querySelector(".cm-paging span, .cm-status-line")?.textContent || "").match(/([\d,]+) cop(?:y|ies)/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
+  const cardsBefore = await figures(), recordsBefore = await records(page);
+  eq(cardsBefore.map((f) => f.label), ["Reserved", "Owned", "Substitutes", "Physical Deck", "Ordered", "To Buy", "Watched"], "seven count cards");
+  for (const [i, f] of cardsBefore.entries()) {
+    await page.locator(".cm-kpi").nth(i).click();
+    await page.waitForFunction((n) => { const t = document.querySelector("#cm-roster-table .cm-paging span, #cm-roster-table .cm-status-line"); return t && /cop(y|ies)/.test(t.textContent); }, null);
+    eq(await copiesShown(), f.n, `${f.label}: the copies under the card add up to its figure, ${f.n}`);
+    eq(await page.$eval(".cm-kpi[aria-pressed=true] span", (s) => s.textContent.trim()), f.label, `${f.label}: the card is the one pressed`);
+    eq(await page.$eval(".cm-fchip", (c) => c.textContent.replace(/\s+/g, " ").replace("✕", "").trim()), `Count: ${f.label}`, `${f.label}: a chip names it`);
+    eq(await figures(), cardsBefore, `${f.label}: the other cards keep their figures`);
+    await page.locator(".cm-kpi").nth(i).click();
+    await page.waitForFunction(() => !document.querySelector(".cm-kpi[aria-pressed=true]"));
+    eq(await records(page), recordsBefore, `${f.label}: a second click lets every row back`);
+  }
+  /* Two figures judged from the library as stored, not from the page's rule. */
+  {
+    const st = await stateOf(page), sum = (f) => st.lots.filter(f).reduce((n, l) => n + l.quantity, 0);
+    eq(cardsBefore[1].n, sum((l) => l.source === "owned" && !!l.allocation), "Owned is the owned copies a deck has reserved");
+    eq(cardsBefore[4].n, sum((l) => l.source === "ordered"), "Ordered is the copies on order");
+  }
 
   /* 1. Filters. */
   const all = await records(page);
@@ -252,6 +278,12 @@ try {
   const kpis = await small.$$eval(".cm-kpi", (ks) => ks.map((k) => { const s = k.querySelector("strong"), r = k.getBoundingClientRect(), cs = getComputedStyle(k), range = document.createRange(); range.selectNodeContents(s); const t = range.getBoundingClientRect();
     return {text: s.textContent, fits: t.left >= r.left + parseFloat(cs.paddingLeft) - 1 && t.right <= r.right - parseFloat(cs.paddingRight) + 1, left: r.left, right: r.right}; }));
   ok(kpis.length === 7 && kpis.every((k) => k.fits && k.left >= 0 && k.right <= 390), `on a phone every count card shows its whole figure: ${JSON.stringify(kpis.filter((k) => !(k.fits && k.left >= 0 && k.right <= 390)))}`);
+  await small.locator(".cm-kpi").nth(1).click();
+  /* Measure once the scroll has come to rest: the same scrollY twice, a quarter second apart. */
+  for (let last = -1, i = 0; i < 40; i++) { await small.waitForTimeout(250); const y = await small.evaluate(() => scrollY); if (y === last && y > 0) break; last = y; }
+  const landed = await small.evaluate(() => { const c = document.getElementById("cm-filter-chips").getBoundingClientRect(), bar = document.querySelector(".cm-sidebar").getBoundingClientRect(); return {chips: Math.round(c.top), bar: Math.round(bar.bottom), h: innerHeight}; });
+  ok(landed.chips >= landed.bar && landed.chips <= landed.bar + 24, `on a phone a count card's click brings the table up to just below the top bar: ${JSON.stringify(landed)}`);
+  await small.evaluate(() => scrollTo(0, 0));
   await small.getByRole("button", {name: /^Filters/}).click();
   await opened(small, "Filters");
   const fit = await small.evaluate(() => { const d = document.getElementById("cm-dialog"), r = d.getBoundingClientRect(); return {left: r.left, right: r.right, sw: d.scrollWidth, cw: d.clientWidth}; });

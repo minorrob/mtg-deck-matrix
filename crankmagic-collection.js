@@ -1,6 +1,6 @@
 /* Every roster is the same semantic table projection. Source, allocation and
  * physical box have separate columns; hiding a column cannot change the model. */
-(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,actions,views,$}=C;let foldPrints=false;let filter={q:'',type:'',subtype:'',mechanic:'',color:'',status:'',offer:'',min:'',max:'',priceMin:'',price:'',group:'',flag:'',mana:''},sort={key:'name',dir:1},page=0,groupBy='',shopGroupBy='deck',visibleRows=[],lastRows=[],collapsed=new Set(),collapsedKey='';
+(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,actions,views,$}=C;let foldPrints=false;let filter={q:'',type:'',subtype:'',mechanic:'',color:'',status:'',offer:'',min:'',max:'',priceMin:'',price:'',kpi:'',group:'',flag:'',mana:''},sort={key:'name',dir:1},page=0,groupBy='',shopGroupBy='deck',visibleRows=[],lastRows=[],collapsed=new Set(),collapsedKey='';
 const columns=[['name','Card'],['type','Type'],['status','Status'],['ownership','Ownership'],['deck','Deck'],['subtype','Subtype'],['mechanic','Mechanic'],['color','Color'],['rarity','Rarity'],['mana','Mana value'],['price','Price'],['cap','Cap'],['vendor','Vendor'],['paid','Paid'],['source','Source'],['placement','Allocation'],['box','Physical location'],['purpose','Purpose'],['quantity','Quantity'],['printing','Printing'],['offer','Sell / Trade'],['groups','Groups']];
 const defaults=['name','type','status','deck','quantity','paid'];let selected=null;
 /* A column set saved before Status existed names Source and Allocation; it reads as Status
@@ -88,23 +88,32 @@ const groupOrder=(r,key)=>G.order(r,key,value,M.statusOrder);
    table itself and the caption under the row, never a number held against a deck, and Sell /
    Trade is a Bench flag rather than a count here. */
 /* The status each figure filters on when clicked: the model's labels, or the list's own 'owned' shorthand. */
-const KPI_STATUS={reserved:'Reserved',owned:'owned',subs:'Substitute',physical:'Physical deck',ordered:'Ordered',toBuy:'To buy',watched:'Watched'};
+/* WHAT A COUNT CARD COUNTS IS WHAT ITS CLICK SHOWS: one rule per card, used for both (Rob, 2026-09-25: "When
+   clicking on any of the card counts, it should filter the card table below it"). The click used to borrow
+   the nearest status filter, and three of the seven disagreed with their own figure: Owned counts the owned
+   copies a deck has reserved but showed every owned copy, Reserved counts every reserved copy but showed
+   only those not yet in a deck, and Watched counts draft-list and suggestion rows that the Watched status
+   never matches. */
+const lotHave=r=>r.kind==='lot'&&r.source!=='watching'&&r.source!=='ordered';
+const KPI_TEST={
+  reserved:r=>r.kind==='need'||r.kind==='lot'&&r.source!=='watching'&&!!r.allocation,
+  owned:r=>lotHave(r)&&!!r.allocation,
+  subs:r=>lotHave(r)&&!!r.standIn,
+  physical:r=>lotHave(r)&&(r.placement==='Physical deck'||r.placement==='Substitute'),
+  ordered:r=>r.kind==='lot'&&r.source==='ordered',
+  toBuy:r=>r.kind==='need',
+  watched:r=>r.kind==='option'||r.kind==='entry'||r.kind==='lot'&&r.source==='watching'};
 const STAT_FIGURES=[['reserved','Reserved','plan'],['owned','Owned','have'],['subs','Substitutes','subs'],['physical','Physical Deck','physical'],['ordered','Ordered','coming'],['toBuy','To Buy','missing'],['watched','Watched','considering']];
 function statsHTML(shown,scoped){
   const t={reserved:0,owned:0,subs:0,physical:0,ordered:0,toBuy:0,watched:0};let bench=0,offered=0,orderedFree=0;
   for(const r of shown){
-    if(r.kind==='need'){t.toBuy+=r.quantity;t.reserved+=r.quantity;continue;}
-    if(r.kind==='option'||r.kind==='entry'){t.watched+=r.quantity;continue;}
-    if(r.kind!=='lot')continue;
-    if(r.source==='watching'){t.watched+=r.quantity;continue;}
-    if(r.allocation)t.reserved+=r.quantity;
-    if(r.source==='ordered'){t.ordered+=r.quantity;if(!r.allocation)orderedFree+=r.quantity;continue;}
-    if(r.allocation)t.owned+=r.quantity;else{bench+=r.quantity;if(r.offer!=='none')offered+=r.quantity;}
-    if(r.standIn)t.subs+=r.quantity;
-    if(r.placement==='Physical deck'||r.placement==='Substitute')t.physical+=r.quantity;
+    for(const k in KPI_TEST)if(KPI_TEST[k](r))t[k]+=r.quantity;
+    if(r.kind!=='lot'||r.source==='watching')continue;
+    if(r.source==='ordered'){if(!r.allocation)orderedFree+=r.quantity;continue;}
+    if(!r.allocation){bench+=r.quantity;if(r.offer!=='none')offered+=r.quantity;}
   }
-  /* The figures as one row of chips that filter the page: a click keeps the rows in that status, a second click lets them all back. */
-  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString('en-US')}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${scoped?`Counting the rows this view shows${bench?`; the ${bench.toLocaleString('en-US')} on the Bench are owned by no deck and are not in the figures above`:''}.`:[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</p></div>`;
+  /* The figures as one row of chips that filter the page: a click keeps the rows that card counts, a second click lets them all back. */
+  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const on=filter.kpi===k;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-kpi="${k}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString('en-US')}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${scoped?`Counting the rows this view shows${bench?`; the ${bench.toLocaleString('en-US')} on the Bench are owned by no deck and are not in the figures above`:''}.`:[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</p></div>`;
 }
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
@@ -128,7 +137,7 @@ function batchBar(){
   if(!n)return '';
   return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Set status','batch-status',{},true,{caret:'down'})}${b('Ordered…','batch-order')}${b('Bought in store','batch-store')}${b('Arrived','batch-arrived')}${b('Add to a group','batch-group')}${b('Put in a physical deck','batch-place')}${b('Move physically to Bench','batch-bench')}${b('Release reservation → To buy','batch-release')}${b('Flag ▾','batch-flag')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
 }
-function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?r.kind==='lot'&&r.source==='owned':(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
+function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!fl.kpi||!!KPI_TEST[fl.kpi]?.(r))&&(!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?r.kind==='lot'&&r.source==='owned':(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
 /* SHOPPING A CONVENTION FLOOR. On a phone the Shop page is not a spreadsheet to study; it
    is a list held in one hand at a booth while the seller waits. So under 640px the page
    head, the six-stat ribbon and the Columns control all go, the three page buttons fold
@@ -215,7 +224,13 @@ views.cards=params=>params.get('view')==='tabletop'&&params.get('tab')!=='orders
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
 actions['cards-tab']=el=>goCards(el.dataset.tab);
-actions['kpi-status']=el=>{const st=el.dataset.status;if(!st)return;filter.status=filter.status===st?'':st;page=0;C.render();};
+/* A card's click filters the table, and on a phone, where the table sits a screen and more below the cards,
+   brings the table up to meet it: a filter applied out of sight reads as a click that did nothing. */
+actions['kpi-status']=el=>{const k=el.dataset.kpi;if(!KPI_TEST[k])return;filter.kpi=filter.kpi===k?'':k;page=0;C.render();
+  requestAnimationFrame(()=>{const at=$('#cm-filter-chips');if(!at||at.getBoundingClientRect().top<=innerHeight-160)return;
+    /* On a phone the rail is a sticky bar across the top; land below it, not under it. */
+    const bar=document.querySelector('.cm-sidebar'),r=bar&&bar.getBoundingClientRect(),cover=r&&getComputedStyle(bar).position==='sticky'&&r.width>innerWidth/2&&r.height<innerHeight/3?r.height:0;
+    scrollTo({top:scrollY+at.getBoundingClientRect().top-cover-8,behavior:CrankMotion.reduced()?'auto':'smooth'});});};
 /* The × on a scope chip drops that one scope -- the card, the deck or the group -- and keeps
    the rest of the address as it is. */
 actions['clear-scope']=el=>{const r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra[el.dataset.key];if(el.dataset.key==='group')filter.group='';goCards(tab,extra);};
@@ -927,7 +942,9 @@ const cell=(r,k)=>{
   if(!canEdit(r,k))return body;
   return `<button type="button" class="cm-cell-edit" data-action="cell-edit" data-record="${e(r.recordId)}" data-field="${e(k)}" title="Click to set ${e(EDITS[k])}">${body}</button>`;
 };
-const draw=()=>{const everything=rows(params,shop),matched=everything.filter(r=>matches(r));lastRows=everything;const ribbon=$('#cm-roster-stats');if(ribbon)ribbon.innerHTML=statsHTML(matched,scoped());
+const draw=()=>{const everything=rows(params,shop),matched=everything.filter(r=>matches(r));lastRows=everything;
+/* The cards count everything the other filters leave, so all seven keep their figures while one is picked and a reader can move between them. */
+const ribbon=$('#cm-roster-stats');if(ribbon)ribbon.innerHTML=statsHTML(filter.kpi?everything.filter(r=>matches(r,{...filter,kpi:''})):matched,!!(params.get('card')||params.get('deck')||params.get('group')||Object.entries(filter).some(([k,v])=>k!=='kpi'&&v!=='')));
 const strip=$('#cm-shop-strip');if(strip)strip.innerHTML=stripHTML(matched);
 const chips=$('#cm-filter-chips');if(chips)chips.innerHTML=chipsHTML();
 /* A tick outlives a redraw only while its row still exists: a copy that was sold, a draft slot that was removed, a requirement that was filled all drop out. */
@@ -978,10 +995,12 @@ const rowMark=c=>/\bLand\b/.test(c.typeLine||'')&&!(c.manaCost||'').trim()
 const rowHTML=r=>`<tr class="cm-row-card${isPicked(r)?' cm-row-ticked':''}" data-record="${e(r.recordId)}" data-action="card" data-card="${e(r.cardId)}">${ticks?`<td class="cm-tick-cell">${pickable(r)?`<input type="checkbox" class="cm-row-tick" data-record="${e(r.recordId)}"${isPicked(r)?' checked':''} aria-label="Tick ${e(r.card.name)}">`:''}</td>`:''}${shown.map(([k])=>`<td class="cm-col-${k}${canEdit(r,k)?' cm-cell-live':''}">${k==='name'?`${rowMark(r.card)}<button class="cm-card-name" data-action="card" data-card="${e(r.cardId)}"><span data-art="${e(r.card.image||'')}">${e(r.card.name)}${(tight||r.kind==='fold')&&r.quantity>1?` <em>×${r.quantity}</em>`:''}</span></button>${tight?(shop?`<span class="cm-row-primary">${primary(r)}</span>`:''):`<small>${r.kind==='fold'?foldCaption(r):`${primaryPurpose(r.card)?`<span class="cm-purpose-chip">${e(primaryPurpose(r.card))}</span>`:''}${/^(Bracket option|Upgrade)$/.test(value(r,'purpose'))?` <span class="cm-muted">${e(value(r,'purpose'))}</span>`:''}${r.kind==='option'?' <span class="cm-muted">Uncommitted suggestion</span>':''}`}</small>`}`:cell(r,k)}</td>`).join('')}<td class="cm-row-actions-cell">${r.kind==='fold'?`${!tight?primary(r):''}<span class="cm-muted cm-fold-note">${r.parts} records</span>`:`${!tight?primary(r):''}<button class="v-button compact cm-row-actions" data-action="row-actions" data-record="${e(r.recordId)}" aria-haspopup="menu" aria-label="Actions" title="Actions">⋯</button>`}</td></tr>`;
 const allFolded=bands.length>0&&bands.every(band=>collapsed.has(band.label));
 const foldAll=groupBy&&bands.length?` · <button type="button" class="cm-text-button" data-groups="${allFolded?'expand':'collapse'}">${allFolded?'Expand all groups':'Collapse all groups'}</button>`:'';
+/* With a count card picked, the line also counts copies, the unit the card counts in, so the figure on the card can be found again under it. */
+const copies=matched.reduce((n,r)=>n+r.quantity,0),copiesNote=filter.kpi?` · ${copies.toLocaleString('en-US')} cop${copies===1?'y':'ies'}`:'';
 /* The paging line carries the records count; the fold-all button rides the top line only (the bottom one repeats the pager). */
-const pagingHTML=(fold=false)=>`<div class="cm-paging"><span>${Number.isFinite(pageSize)?`Page ${page+1} of ${Math.max(1,Math.ceil(items.length/pageSize))}`:`All ${items.length} rows`} · ${visibleRows.length.toLocaleString('en-US')} record${visibleRows.length===1?'':'s'}${fold?foldAll:''}</span><div class="cm-actions"><button class="v-button" data-page="-1" ${page===0||!Number.isFinite(pageSize)?'disabled':''}>Previous</button><button class="v-button" data-page="1" ${!Number.isFinite(pageSize)||(page+1)*pageSize>=items.length?'disabled':''}>Next</button></div></div>`;
+const pagingHTML=(fold=false)=>`<div class="cm-paging"><span>${Number.isFinite(pageSize)?`Page ${page+1} of ${Math.max(1,Math.ceil(items.length/pageSize))}`:`All ${items.length} rows`} · ${visibleRows.length.toLocaleString('en-US')} record${visibleRows.length===1?'':'s'}${copiesNote}${fold?foldAll:''}</span><div class="cm-actions"><button class="v-button" data-page="-1" ${page===0||!Number.isFinite(pageSize)?'disabled':''}>Previous</button><button class="v-button" data-page="1" ${!Number.isFinite(pageSize)||(page+1)*pageSize>=items.length?'disabled':''}>Next</button></div></div>`;
 const longer=Number.isFinite(pageSize)&&items.length>pageSize;
-$('#cm-roster-table').innerHTML=`${ticks?batchBar():''}${longer?pagingHTML(true):`<p class="cm-status-line">${visibleRows.length.toLocaleString('en-US')} record${visibleRows.length===1?'':'s'}${foldAll}</p>`}<div class="cm-table-wrap"><table class="cm-table${tight?' cm-table-shop':''}"><thead><tr>${ticks?`<th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-tick-all"${allTicked?' checked':''} aria-label="Tick every matching record"></th>`:''}${shown.map(([k,l])=>`<th scope="col" class="cm-col-${k}" aria-sort="${sort.key===k?(sort.dir===1?'ascending':'descending'):'none'}"><button data-sort="${k}">${l}${sort.key===k?` <span aria-hidden="true">${sort.dir===1?'↑':'↓'}</span>`:tight?'':' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}<th scope="col">Actions</th></tr></thead><tbody>${(Number.isFinite(pageSize)?items.slice(page*pageSize,page*pageSize+pageSize):items).map(it=>it.band?bandRow(it.band):rowHTML(it.row)).join('')||`<tr><td colspan="${span}">No matching records. Add your cards or clear the filters.</td></tr>`}</tbody></table></div>${pagingHTML()}`;$('#cm-roster-table').onclick=ev=>{
+$('#cm-roster-table').innerHTML=`${ticks?batchBar():''}${longer?pagingHTML(true):`<p class="cm-status-line">${visibleRows.length.toLocaleString('en-US')} record${visibleRows.length===1?'':'s'}${copiesNote}${foldAll}</p>`}<div class="cm-table-wrap"><table class="cm-table${tight?' cm-table-shop':''}"><thead><tr>${ticks?`<th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-tick-all"${allTicked?' checked':''} aria-label="Tick every matching record"></th>`:''}${shown.map(([k,l])=>`<th scope="col" class="cm-col-${k}" aria-sort="${sort.key===k?(sort.dir===1?'ascending':'descending'):'none'}"><button data-sort="${k}">${l}${sort.key===k?` <span aria-hidden="true">${sort.dir===1?'↑':'↓'}</span>`:tight?'':' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}<th scope="col">Actions</th></tr></thead><tbody>${(Number.isFinite(pageSize)?items.slice(page*pageSize,page*pageSize+pageSize):items).map(it=>it.band?bandRow(it.band):rowHTML(it.row)).join('')||`<tr><td colspan="${span}">No matching records. Add your cards or clear the filters.</td></tr>`}</tbody></table></div>${pagingHTML()}`;$('#cm-roster-table').onclick=ev=>{
     const tick=ev.target.closest('.cm-row-tick'),all=ev.target.closest('.cm-tick-all');
     if(tick||all){
       /* The row itself opens the card. Stopping here keeps a tick a tick -- the document's
@@ -1146,9 +1165,9 @@ actions['roster-columns']=()=>{const shop=buyTab(),current=withStatus(shop?shopS
   list.addEventListener('pointerup',drop);list.addEventListener('pointercancel',drop);};
 /* ACTIVE FILTERS AS CHIPS under the search: each one removable on its own, Clear all beside
    them, and the Filters button says how many are on. */
-const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',priceMin:'Min price',price:'Max price',mana:'Mana',flag:'Slot flag',group:'Group'};
+const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',priceMin:'Min price',price:'Max price',kpi:'Count',mana:'Mana',flag:'Slot flag',group:'Group'};
 const activeFilters=()=>Object.entries(filter).filter(([k,v])=>v!==''&&k!=='group');
-function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v):k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
+function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v):k==='kpi'?(STAT_FIGURES.find(([id])=>id===v)||[,v])[1]:k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
   return `<div class="cm-fchips">${on.map(([k,v])=>`<button type="button" class="cm-fchip" data-action="clear-filter" data-key="${e(k)}" aria-label="Remove filter ${e(FILTER_NAMES[k]||k)}">${e(FILTER_NAMES[k]||k)}: <strong>${e(label(k,v))}</strong> <span aria-hidden="true">✕</span></button>`).join('')}<button type="button" class="cm-text-button" data-action="clear-filters">Clear all</button></div>`;}
 actions['clear-filter']=el=>{filter[el.dataset.key]='';page=0;C.render();};
 /* The folded row's caption: how many copies, for which decks. */
