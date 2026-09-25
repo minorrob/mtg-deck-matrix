@@ -10,6 +10,8 @@
     does the same, at startAether(canvas,{width:190,height:56,axisY:28,start:34,join:150}). */
  const ctx=canvas.getContext('2d'),frontCtx=front.getContext('2d');if(!ctx||!frontCtx)return;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ /* The device's setting or the reader's own (Settings › Appearance › Reduce motion). */
+ const still=()=>globalThis.CrankMotion?CrankMotion.reduced():reduced.matches;
  let width=440,height=70,frame=0,last=0,time=0,visible=true,paused=false;
  let thread='',core='',start=62,join=387,end=560,base=56,rise=24,axis=47,radius=9,pitch=240,mistBrush;
  const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
@@ -83,9 +85,9 @@
   }
   ctx.globalAlpha=1;
  }
- function running(){return !paused&&!reduced.matches&&visible&&!document.hidden;}
+ function running(){return !paused&&!still()&&visible&&!document.hidden;}
  function tick(now){frame=0;if(!running()){sync();return;}if(!last)last=now;if(now-last>=32){time+=Math.min(now-last,70)/1000;last=now;draw(time);}frame=requestAnimationFrame(tick);}
- function sync(){cancelAnimationFrame(frame);frame=0;last=0;canvas.dataset.motion=paused||reduced.matches?'still':running()?'running':'suspended';control.hidden=reduced.matches;control.setAttribute('aria-label',paused?'Resume aether animation':'Pause aether animation');control.title=paused?'Resume aether animation':'Pause aether animation';control.textContent=paused?'▷':'Ⅱ';draw(time);if(running())frame=requestAnimationFrame(tick);}
+ function sync(){cancelAnimationFrame(frame);frame=0;last=0;canvas.dataset.motion=paused||still()?'still':running()?'running':'suspended';control.hidden=still();control.setAttribute('aria-label',paused?'Resume aether animation':'Pause aether animation');control.title=paused?'Resume aether animation':'Pause aether animation';control.textContent=paused?'▷':'Ⅱ';draw(time);if(running())frame=requestAnimationFrame(tick);}
  // The name is never cut. When its column is narrower than the word -- a phone with the
  // header's buttons beside it -- the wordmark steps down half a pixel at a time until it
  // fits, and steps back up when there is room again; the stylesheet size is the ceiling.
@@ -113,7 +115,7 @@
   canvas.dataset.threadStart=String(start);canvas.dataset.textEnd=String(join);canvas.dataset.tailEnd=String(end);canvas.dataset.baseline=String(base);canvas.dataset.revision='mist-graduated';
   colors();sync();
  }
- control.addEventListener('click',()=>{paused=!paused;sync();});reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);
+ control.addEventListener('click',()=>{paused=!paused;sync();});if(globalThis.CrankMotion)CrankMotion.onChange(sync);else reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);
  const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(block);sizeObserver.observe(word);
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync();}).observe(canvas);
  new MutationObserver(()=>{colors();draw(time);}).observe(root,{attributes:true,attributeFilter:['style','data-theme']});

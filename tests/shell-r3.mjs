@@ -54,7 +54,9 @@ try {
 
   /* 1, without an account: the chip reads Menu and says what the Menu holds. */
   eq(await page.$eval("#cm-user-functions", (b) => [b.querySelector(".cm-chip-name").textContent, b.querySelector(".cm-chip-status").textContent]),
-    ["Menu", "Settings and backup"], "with no account, the chip reads Menu and what the Menu holds");
+    ["Menu", "Settings & backup"], "with no account, the chip reads Menu and what the Menu holds");
+  const fitsOut = await page.$eval("#cm-user-functions .cm-chip-status", (el) => [el.scrollWidth, el.clientWidth]);
+  ok(fitsOut[0] <= fitsOut[1], `and that line fits the rail without being cut off (${fitsOut.join(" in ")}px)`);
 
   /* 2. Three themes. */
   await openMenu(page);

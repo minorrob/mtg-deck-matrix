@@ -65,9 +65,15 @@ try {
   if (RELEASE) {
     /* The release names itself, and shares the address it is published at -- the canonical link --
        not whatever address this copy happens to be open on. */
+    /* The version moved from the Menu to Settings › About in R3.3 (INTAKE §4.7); the Menu's Settings
+       entry is how a reader gets there. */
     await click("Menu");
-    const version = (await page.locator("#cm-user-menu .cm-version").innerText()).replace(/\s+/g, " ").trim();
-    ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `the Menu names this release: ${version}`);
+    await click("Settings");
+    await page.locator(".cm-settings .cm-version").waitFor({timeout: 15000});
+    const version = (await page.locator(".cm-settings .cm-version").innerText()).replace(/\s+/g, " ").trim();
+    ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `Settings names this release: ${version}`);
+    await shot("01-settings-version");
+    await click("Menu");
     /* A release with accounts offers sign-in to a person who is not signed in -- and nothing else changes. */
     if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
       await page.locator("#cm-account").waitFor({timeout: 15000});
@@ -75,7 +81,7 @@ try {
     }
     const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
     ok((await page.locator("#cm-share-mail").getAttribute("href")).includes(encodeURIComponent(home)), `the share link carries the published address, ${home}`);
-    await shot("01-menu-version");
+    await shot("01b-menu");
     await page.keyboard.press("Escape");
 
     /* Play is Coming Soon. */

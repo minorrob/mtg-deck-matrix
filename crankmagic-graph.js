@@ -600,7 +600,7 @@
          API; the pane draws the controls. */
       const GHOST_RING = 1.28;
       let traceRun = null;   // {result, at, step, playing, speed, last, total, order: [nodes]}
-      const reducedMotion = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+      const reducedMotion = () => { try { return globalThis.CrankMotion ? CrankMotion.reduced() : matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
       function buildTrace(result) {
         const c = byId.get(result.commander.id);
         const nodes = [], edges = [];

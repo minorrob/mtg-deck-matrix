@@ -39,7 +39,7 @@ const VIEWS = new Set();
 /* #collection and #shop are redirects to #cards, kept so nothing bookmarked or written down
    breaks. A tour never needs to visit a redirect; it visits the page it lands on. */
 const ALIASES = new Set(["collection", "shop"]);
-for (const file of ["crankmagic-decks.js", "crankmagic-collection.js", "crankmagic-lab.js", "crankmagic-discover.js"]) {
+for (const file of ["crankmagic-decks.js", "crankmagic-collection.js", "crankmagic-lab.js", "crankmagic-discover.js", "crankmagic-settings.js"]) {
   const text = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
   for (const m of text.matchAll(/views\.([a-z]+)\s*=/g)) if (!ALIASES.has(m[1])) VIEWS.add(m[1]);
 }
