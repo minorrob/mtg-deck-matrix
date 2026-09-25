@@ -782,11 +782,12 @@ actions['deck-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);document.query
   menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});};
 actions['delete-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.archived)throw Error('Archive the deck first. Delete permanently is offered on archived decks only.');
   const games=C.state.games.filter(g=>g.deckId===d.id).length,reports=C.state.reports.filter(r=>r.deckId===d.id).length;
-  /* The typed DELETE goes with the message: a reader who has turned the warning off has
+  /* The deck's own name is what is typed (r3, 74-confirm-delete): it proves the reader is deleting
+     the deck they think they are, which a fixed word did not. The typing goes with the message: a reader who has turned the warning off has
      said they know what this does, and asking them to type it anyway is theatre. What is
      never skipped is that it only applies to archived decks. */
   if(C.skipping('deleteDeck'))return commit({type:'deleteDeck',deckId:d.id,confirmed:true}).then(()=>{C.notice('Deleted permanently. You turned this confirmation off; User Functions → Confirmations turns it back on.');go('decks');});
-  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. This cannot be undone.`,true)}${f('Type DELETE to confirm','confirm','','required autocomplete="off"')}<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again</label></div>`,async v=>{if(v.confirm!=='DELETE')throw Error('Type DELETE exactly.');if(v.skipNext)await C.setSkip('deleteDeck',true);await commit({type:'deleteDeck',deckId:d.id,confirmed:true});go('decks');},'Delete permanently');};
+  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. Only the Undo offered straight after can bring it back.`,true)}${f('Type the deck name to confirm','confirm','',`required autocomplete="off" placeholder="${e(d.name)}"`)}<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again</label></div>`,async v=>{if(v.confirm.trim()!==d.name.trim())throw Error(`Type the deck name exactly: ${d.name}`);if(v.skipNext)await C.setSkip('deleteDeck',true);await commit({type:'deleteDeck',deckId:d.id,confirmed:true});go('decks');},'Delete permanently');};
 /* Straight through when the reader has said so, with a toast that names what happened and
    where the confirmation went, so a silent archive is never a mystery. */
 actions.archive=el=>C.skipping('archive')

@@ -429,6 +429,20 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-rail-menu{display:flex;width:100%;justify-content:flex-start;gap:9px;min-height:42px;padding:0 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel);color:var(--v-ink);font-weight:600}
 #matrix-v2 .cm-rail-menu:hover{background:var(--v-raised)}
 #matrix-v2 .cm-rail-menu .cm-btn-chevron{margin-left:auto}
+/* THE MENU IS A CHIP (r3, 04-shell and 06-global-menu): an initial, who is signed in, and one
+   line on whether the library has reached the cloud. crankmagic-account.js fills it; without an
+   account it reads Menu, and what the Menu holds. */
+#matrix-v2 .cm-rail-menu{min-height:52px;padding:0 8px;gap:8px;text-align:left}
+#matrix-v2 .cm-rail-menu .cm-btn-chevron{flex:0 0 auto;margin-left:auto}
+#matrix-v2 .cm-chip-avatar{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);font-size:13px;font-weight:700}
+#matrix-v2 .cm-rail-menu.is-signed-in .cm-chip-avatar{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-chip-text{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+#matrix-v2 .cm-chip-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-chip-status{font-size:11px;font-weight:500;color:var(--v-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-rail-menu.is-trouble .cm-chip-status{color:color-mix(in oklab,var(--st-remove) 55%,var(--v-ink))}
+/* Three theme choices, the one in force marked (aria-pressed is the state; the mark only shows it). */
+.cm-menu .cm-theme-choices button[aria-pressed=true]{background:var(--v-raised);font-weight:700}
+.cm-menu .cm-theme-choices button[aria-pressed=true]:after{content:'✓';float:right;color:var(--v-muted)}
 /* A deck row in the sub-nav carries an 8px dot in its commander's first color (guide, step 2).
    crankmagic-app.js sets --dot per row; a row without one shows no dot rather than a gray one. */
 #matrix-v2 .cm-sidebar .cm-subnav a{font-size:13px}
@@ -445,7 +459,9 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
   #matrix-v2 .cm-sidebar .v-aether-wrap{display:none}
   #matrix-v2 .cm-rail-foot{margin-top:0;flex:0 0 auto}
   #matrix-v2 .cm-rail-menu{width:auto;min-height:40px;padding:0 10px}
-  #matrix-v2 .cm-rail-menu .cm-btn-label{display:none}
+  #matrix-v2 .cm-rail-menu{min-height:40px}
+  #matrix-v2 .cm-rail-menu .cm-chip-text{display:none}
+  #matrix-v2 .cm-chip-avatar{flex-basis:26px;width:26px;height:26px}
 }
 /* THE TYPE SCALE, MEASURED (tools/compare-to-screen.mjs). The layout was already exact against
    the screens -- grid, tile, gaps all within a pixel -- and the type was eight pixels small
@@ -2713,3 +2729,26 @@ button.cm-building { pointer-events: none; }
 .cm-visit-crank{flex-basis:100%;text-align:center;padding:5px 12px;font-size:12px;font-weight:500;
   background:none;border:1px solid var(--v-line);color:var(--v-muted);text-decoration:none;border-radius:var(--v-radius-control)}
 .cm-visit-crank:hover,.cm-visit-crank:focus-visible{color:var(--v-text);border-color:var(--v-accent)}
+/* A TOAST CARRIES ONE ACTION (r3, 72-toast-error): Undo after a save, Retry after a failure that
+   may pass. The message and the button sit on one line; the button is a real button. */
+#cm-notice.cm-toast:not([hidden]){display:flex;align-items:center;gap:14px}
+#cm-notice .cm-toast-text{min-width:0}
+#cm-notice:not(.error) .cm-toast-text:before{content:'✓ ';color:var(--st-inbox)}
+#cm-notice .cm-toast-action{flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-panel);color:var(--v-ink);font-weight:700;cursor:pointer}
+#cm-notice .cm-toast-action:hover{background:var(--v-bg)}
+/* HELP IS A RIGHT SLIDE-OVER (r3, 07-help-panel): the page stays in view beside it, dimmed, and
+   the glossary and Got it sit at its foot. The Library's wide help keeps its width. */
+#matrix-v2 dialog#cm-dialog.cm-slideover[open]{display:flex;flex-direction:column;margin:0 0 0 auto;width:min(460px,100vw);height:100dvh;max-height:100dvh;border-radius:0;border-width:0 0 0 1px;animation:cm-slide-in .18s ease-out}
+#matrix-v2 dialog#cm-dialog.cm-slideover:has(.cm-help-wide)[open]{width:min(960px,100vw)}
+#cm-dialog.cm-slideover .cm-help-body{flex:1 1 auto;min-height:0}
+#cm-dialog .cm-help-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--v-line)}
+#cm-dialog .cm-link{border:0;background:none;padding:0;color:var(--v-accent);font:inherit;font-weight:700;cursor:pointer}
+#cm-dialog .cm-link:hover{text-decoration:underline}
+#cm-dialog.cm-slideover::backdrop{backdrop-filter:none;background:color-mix(in srgb,var(--v-bg) 55%,transparent)}
+@keyframes cm-slide-in{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){#matrix-v2 dialog#cm-dialog.cm-slideover[open]{animation:none}}
+/* THE GLOSSARY (r3, 76-glossary): a term, then its one sentence; a status wears its own color. */
+#cm-dialog .cm-glossary{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:10px 18px;align-items:baseline;font-size:14px}
+#cm-dialog .cm-gloss-row{display:contents}
+#cm-dialog .cm-gloss-term{justify-self:start;padding:2px 9px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:700;background:color-mix(in oklab,var(--tone,var(--v-muted)) 18%,transparent);color:var(--v-ink)}
+@media(max-width:560px){#cm-dialog .cm-glossary{grid-template-columns:1fr;gap:4px}#cm-dialog .cm-gloss-row>span:last-child{margin-bottom:8px}}
