@@ -59,7 +59,7 @@ for (const p of PAGES) {
 }
 eq(version.origin, "https://crankmagic.com/", "version.json says where it is published");
 const wrangler = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
-eq([wrangler.name, wrangler.assets, wrangler.main], ["crankmagic", {directory: "./"}, undefined], "wrangler.jsonc serves the release as static files, no script, from the Worker named crankmagic");
+eq([wrangler.name, wrangler.assets, wrangler.main], ["crankmagic", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, "cloud/worker.mjs"], "wrangler.jsonc serves every page as a file from the Worker named crankmagic, running its script for /api/* only");
 eq([wrangler.routes, wrangler.workers_dev, wrangler.preview_urls], [[{pattern: "crankmagic.com", custom_domain: true}], false, false],
   "on crankmagic.com alone: no workers.dev or preview address, each of which would be another origin with its own browser library");
 const ignored = built.get(".assetsignore").toString("utf8").split("\n");
@@ -107,10 +107,16 @@ ok(built.get("privacy.html").toString("utf8").includes("mailto:admin@crankmagic.
 ok(broken((m) => m.set("crankmagic-app.js", Buffer.from(m.get("crankmagic-app.js").toString() + "\n// someone.personal@example.com\n"))).some((p) => p.includes("names an email address other than admin@crankmagic.com")),
   "a release that would show any other email address is refused");
 
-/* PRODUCTION HAS NO ACCOUNTS until Rob approves them on staging; STAGING HAS EVERYTHING they need. */
-for (const f of ["cloud-sync.js", "crankmagic-account.js"]) ok(!built.has(f), `${f} is not in the production release`);
-ok(PAGES.every((p) => !built.get(p).toString("utf8").includes("crankmagic-accounts")), "and neither production page is marked accounts-on");
-ok(!JSON.parse(built.get("wrangler.jsonc").toString("utf8")).main, "and production runs no Worker script");
+/* PRODUCTION HAS ACCOUNTS since Rob approved them on staging (2026-09-24: "Everything looks good!"), on its
+   own database and its own Access application; STAGING KEEPS ITS OWN of both. */
+for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) ok(built.has(f), `${f} is in the production release`);
+ok(PAGES.every((p) => built.get(p).toString("utf8").includes('<meta name="crankmagic-accounts" content="on">')), "and both production pages are marked accounts-on");
+const pw = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
+eq([pw.name, pw.main, pw.assets, pw.routes], ["crankmagic", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "crankmagic.com", custom_domain: true}]],
+  "production: the Worker crankmagic on crankmagic.com, its API script run for /api/* only, every page still served as a file");
+eq(pw.d1_databases, [{binding: "DB", database_name: "crankmagic", database_id: "131b2c74-70a0-471e-8474-b8d079b0d322", migrations_dir: "cloud/migrations"}], "production's own database");
+eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"},
+  "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
 eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"},
@@ -126,7 +132,7 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a Worker that would run for every path, not just the API, is named");
 ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2, vars: {...sw2.vars, ACCESS_JWKS: "{\"keys\":[]}"}}))]]), PROFILES["cloud-staging"]).some((p) => p.includes("ACCESS_JWKS")),
   "a release that would hand the Worker its own signing keys is refused");
-ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace("<meta charset=\"utf-8\">", "<meta charset=\"utf-8\">\n<meta name=\"crankmagic-accounts\" content=\"on\">"))]]), profile).some((p) => p.includes("release without accounts")),
-  "a production page marked accounts-on is named");
+ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace('<meta name="crankmagic-accounts" content="on">', ""))]]), profile).some((p) => p.includes("would stay asleep")),
+  "a production page that lost its accounts-on mark is named");
 
 console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);

@@ -63,9 +63,9 @@ D1 (cloud/library.mjs, cloud/migrations) ── users · snapshots · heads
 
 | | Staging | Production |
 |---|---|---|
-| Worker | `crankmagic-staging` on staging.crankmagic.com | `crankmagic` on crankmagic.com (today: static only) |
-| D1 | `crankmagic-staging` (`b7f806ec-…`, created 2026-09-24) | `crankmagic` (to create at cutover) |
-| Access | "CrankMagic staging": the whole host, Rob only — **Rob's setup** | "CrankMagic accounts": crankmagic.com/api/*, the invite list |
+| Worker | `crankmagic-staging` on staging.crankmagic.com | `crankmagic` on crankmagic.com — pages as files, the API for `/api/*` |
+| D1 | `crankmagic-staging` (`b7f806ec-…`, created 2026-09-24) | `crankmagic` (`131b2c74-…`, created and migrated 2026-09-24) |
+| Access | "CrankMagic staging": the whole host, Rob only — **Rob's setup** | "CrankMagic accounts": crankmagic.com/api/*, the invite list — **Rob adds an invitee by adding their email to its Invited policy** |
 
 Rob's setup (these steps involve Google's client secret, which only he enters): Zero Trust team; Google as a
 login method (a Google Cloud OAuth client whose redirect URI is `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`);
@@ -77,4 +77,4 @@ as pending and refuses to be written out.
 
 1. Rob's Access values → deploy staging (`wrangler d1 migrations apply crankmagic-staging --remote`, then
    `wrangler deploy` from the tested folder) → Rob signs in on two devices.
-2. Rob approves → the production Access application and database → the `pages` profile gains accounts.
+2. ~~Rob approves → production.~~ Done 2026-09-24: Rob approved staging ("Everything looks good!"), created the production Access application, and the `pages` profile gained accounts.
