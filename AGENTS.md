@@ -61,7 +61,7 @@ of that same build, made only after `tests/uat/release-acceptance.mjs` passes on
 the builder's profile. Rob set this on 2026-09-24, when he chose to merge Account Cloud and Play into
 `main` as they are built rather than hold them on long branches.
 
-## American English, always
+## The United States, always
 
 Everything written here is American English: prose, comments, commit messages, labels, tests,
 documents. Never the British spellings: write color, center, gray, license, organize,
@@ -70,6 +70,22 @@ handoff did -- and are converted when quoted or applied; the designer's verbatim
 under `docs/design/` is the one exemption, as source material. `tests/feature-wiring.mjs` counts
 UK spellings across tracked files and the count only goes down; a commit that adds one fails.
 Rob set this on 2026-09-20 and it applies to every tool he works with, not only this repository.
+
+**Nothing from anywhere but the United States** (Rob, 2026-09-25: *"I NEVER WANT ANYTHING, grammar,
+currency, etc. from anywhere except The US"*). That is wider than spelling:
+
+- **Currency is US dollars, only.** No euros, pounds or any other currency, and no currency switch. A source
+  that also carries another currency (Scryfall's `eur`, `tix`) is read for its USD and nothing else.
+- **Numbers and dates are formatted as in the US, whatever the reader's browser is set to:** every
+  `toLocaleString`, `toLocaleDateString`, `Intl.NumberFormat` and `Intl.DateTimeFormat` names `'en-US'`. A
+  date a reader sees is written the US way ("Sep 25, 2026"), never as a bare ISO `2026-09-25`; ISO stays
+  for filenames, keys and data.
+- **A design or a recommendation that brings in anything else is refused, not built.** The r3 Settings
+  wireframe drew a USD/EUR switch; it was recommended and approved before this rule was written, and it is
+  dropped (`docs/decisions-2026-09-25.md`, M1 · 8).
+
+`tests/feature-wiring.mjs` holds all three: no formatter without `'en-US'`, no raw date field printed
+into a page, and no other currency in anything that ships.
 
 ## Decisions inside the game belong to the players
 

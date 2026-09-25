@@ -4,9 +4,9 @@
    every day (the theme, a backup, help); everything else lives here, in the sections the design
    draws.
 
-   Three things the design draws are not here yet, on purpose, because nothing ships before it works:
-   EUR prices wait for the price sync (M2), Card size waits for R3.9's pass over every card surface,
-   and Delete account is drawn by crankmagic-account.js, which alone knows whether anyone is signed in. */
+   The design also drew a second-currency switch. It is not here and never will be: prices are US dollars, only
+   (AGENTS.md, "The United States, always"). Card size waits for R3.9's pass over every card surface, and
+   Delete account is drawn by crankmagic-account.js, which alone knows whether anyone is signed in. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {esc:e,button:b,actions,views,notice,commit}=C;
 const money=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const card=(id,title,body,cls='')=>`<section class="cm-settings-card${cls?' '+cls:''}" aria-labelledby="cm-settings-h-${id}"><h2 id="cm-settings-h-${id}">${e(title)}</h2>${body}</section>`;

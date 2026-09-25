@@ -1,14 +1,14 @@
 {
  "meta": {
   "repo": "mtg-deck-matrix",
-  "generatedAt": "2026-09-25T13:06:03.120Z",
-  "filesParsed": 128,
-  "resolvedCalls": 1999,
-  "unresolvedCalls": 13749,
-  "globalsIndexed": 67,
-  "globalImports": 65,
+  "generatedAt": "2026-09-25T18:34:29.453Z",
+  "filesParsed": 132,
+  "resolvedCalls": 2031,
+  "unresolvedCalls": 14018,
+  "globalsIndexed": 68,
+  "globalImports": 71,
   "globalCalls": 66,
-  "registryLinks": 17,
+  "registryLinks": 18,
   "pagesParsed": 3,
   "extractor": "extract_ts.mjs@0.2.0"
  },
@@ -1212,14 +1212,14 @@
    "kind": "CodeModule",
    "name": "crankmagic-account.js",
    "file": "crankmagic-account.js",
-   "loc": 145
+   "loc": 208
   },
   {
    "id": "fn:crankmagic-account.js#api",
    "kind": "CodeFunction",
    "name": "api",
    "file": "crankmagic-account.js",
-   "line": 23,
+   "line": 25,
    "exported": false,
    "nested": true,
    "test": false
@@ -1229,7 +1229,7 @@
    "kind": "CodeFunction",
    "name": "packed",
    "file": "crankmagic-account.js",
-   "line": 36,
+   "line": 38,
    "exported": false,
    "nested": true,
    "test": false
@@ -1239,7 +1239,7 @@
    "kind": "CodeFunction",
    "name": "unpacked",
    "file": "crankmagic-account.js",
-   "line": 40,
+   "line": 42,
    "exported": false,
    "nested": true,
    "test": false
@@ -1249,7 +1249,7 @@
    "kind": "CodeFunction",
    "name": "save",
    "file": "crankmagic-account.js",
-   "line": 46,
+   "line": 48,
    "exported": false,
    "nested": true,
    "test": false
@@ -1259,7 +1259,7 @@
    "kind": "CodeFunction",
    "name": "bringIn",
    "file": "crankmagic-account.js",
-   "line": 55,
+   "line": 58,
    "exported": false,
    "nested": true,
    "test": false
@@ -1269,7 +1269,7 @@
    "kind": "CodeFunction",
    "name": "sync",
    "file": "crankmagic-account.js",
-   "line": 64,
+   "line": 68,
    "exported": false,
    "nested": true,
    "test": false
@@ -1279,7 +1279,7 @@
    "kind": "CodeFunction",
    "name": "ask",
    "file": "crankmagic-account.js",
-   "line": 88,
+   "line": 92,
    "exported": false,
    "nested": true,
    "test": false
@@ -1289,7 +1289,37 @@
    "kind": "CodeFunction",
    "name": "draw",
    "file": "crankmagic-account.js",
-   "line": 123,
+   "line": 130,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-account.js#settings",
+   "kind": "CodeFunction",
+   "name": "settings",
+   "file": "crankmagic-account.js",
+   "line": 147,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-account.js#danger",
+   "kind": "CodeFunction",
+   "name": "danger",
+   "file": "crankmagic-account.js",
+   "line": 162,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-account.js#chip",
+   "kind": "CodeFunction",
+   "name": "chip",
+   "file": "crankmagic-account.js",
+   "line": 183,
    "exported": false,
    "nested": true,
    "test": false
@@ -1306,7 +1336,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-app.js",
    "file": "crankmagic-app.js",
-   "loc": 494
+   "loc": 552
   },
   {
    "id": "fn:crankmagic-app.js#colors",
@@ -1483,7 +1513,7 @@
    "kind": "CodeFunction",
    "name": "notice",
    "file": "crankmagic-app.js",
-   "line": 102,
+   "line": 108,
    "exported": false,
    "nested": true,
    "test": false
@@ -1493,7 +1523,7 @@
    "kind": "CodeFunction",
    "name": "modal",
    "file": "crankmagic-app.js",
-   "line": 118,
+   "line": 127,
    "exported": false,
    "nested": true,
    "test": false
@@ -1503,7 +1533,7 @@
    "kind": "CodeFunction",
    "name": "form",
    "file": "crankmagic-app.js",
-   "line": 123,
+   "line": 132,
    "exported": false,
    "nested": true,
    "test": false
@@ -1513,7 +1543,7 @@
    "kind": "CodeFunction",
    "name": "route",
    "file": "crankmagic-app.js",
-   "line": 129,
+   "line": 138,
    "exported": false,
    "nested": true,
    "test": false
@@ -1523,7 +1553,7 @@
    "kind": "CodeFunction",
    "name": "go",
    "file": "crankmagic-app.js",
-   "line": 130,
+   "line": 139,
    "exported": false,
    "nested": true,
    "test": false
@@ -1533,7 +1563,7 @@
    "kind": "CodeFunction",
    "name": "describeData",
    "file": "crankmagic-app.js",
-   "line": 140,
+   "line": 149,
    "exported": false,
    "nested": true,
    "test": false
@@ -1543,7 +1573,37 @@
    "kind": "CodeFunction",
    "name": "rescueBrand",
    "file": "crankmagic-app.js",
-   "line": 166,
+   "line": 175,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-app.js#themeChoice",
+   "kind": "CodeFunction",
+   "name": "themeChoice",
+   "file": "crankmagic-app.js",
+   "line": 183,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-app.js#applyTheme",
+   "kind": "CodeFunction",
+   "name": "applyTheme",
+   "file": "crankmagic-app.js",
+   "line": 184,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-app.js#applyMotion",
+   "kind": "CodeFunction",
+   "name": "applyMotion",
+   "file": "crankmagic-app.js",
+   "line": 195,
    "exported": false,
    "nested": true,
    "test": false
@@ -1553,7 +1613,7 @@
    "kind": "CodeFunction",
    "name": "render",
    "file": "crankmagic-app.js",
-   "line": 170,
+   "line": 206,
    "exported": false,
    "nested": true,
    "test": false
@@ -1563,7 +1623,7 @@
    "kind": "CodeFunction",
    "name": "status",
    "file": "crankmagic-app.js",
-   "line": 171,
+   "line": 207,
    "exported": false,
    "nested": true,
    "test": false
@@ -1573,7 +1633,7 @@
    "kind": "CodeFunction",
    "name": "restage",
    "file": "crankmagic-app.js",
-   "line": 175,
+   "line": 211,
    "exported": false,
    "nested": true,
    "test": false
@@ -1583,7 +1643,7 @@
    "kind": "CodeFunction",
    "name": "refresh",
    "file": "crankmagic-app.js",
-   "line": 176,
+   "line": 212,
    "exported": false,
    "nested": true,
    "test": false
@@ -1593,7 +1653,7 @@
    "kind": "CodeFunction",
    "name": "commit",
    "file": "crankmagic-app.js",
-   "line": 177,
+   "line": 213,
    "exported": false,
    "nested": true,
    "test": false
@@ -1603,7 +1663,7 @@
    "kind": "CodeFunction",
    "name": "download",
    "file": "crankmagic-app.js",
-   "line": 178,
+   "line": 214,
    "exported": false,
    "nested": true,
    "test": false
@@ -1613,7 +1673,7 @@
    "kind": "CodeFunction",
    "name": "seedStarterGroups",
    "file": "crankmagic-app.js",
-   "line": 186,
+   "line": 222,
    "exported": false,
    "nested": true,
    "test": false
@@ -1623,7 +1683,7 @@
    "kind": "CodeFunction",
    "name": "ensureDeckGroups",
    "file": "crankmagic-app.js",
-   "line": 202,
+   "line": 238,
    "exported": false,
    "nested": true,
    "test": false
@@ -1633,7 +1693,7 @@
    "kind": "CodeFunction",
    "name": "backupData",
    "file": "crankmagic-app.js",
-   "line": 215,
+   "line": 251,
    "exported": false,
    "nested": true,
    "test": false
@@ -1643,7 +1703,7 @@
    "kind": "CodeFunction",
    "name": "readableLocation",
    "file": "crankmagic-app.js",
-   "line": 216,
+   "line": 252,
    "exported": false,
    "nested": true,
    "test": false
@@ -1653,7 +1713,7 @@
    "kind": "CodeFunction",
    "name": "affected",
    "file": "crankmagic-app.js",
-   "line": 217,
+   "line": 253,
    "exported": false,
    "nested": true,
    "test": false
@@ -1663,7 +1723,7 @@
    "kind": "CodeFunction",
    "name": "setSkip",
    "file": "crankmagic-app.js",
-   "line": 224,
+   "line": 260,
    "exported": false,
    "nested": true,
    "test": false
@@ -1673,7 +1733,7 @@
    "kind": "CodeFunction",
    "name": "skipBox",
    "file": "crankmagic-app.js",
-   "line": 225,
+   "line": 261,
    "exported": false,
    "nested": true,
    "test": false
@@ -1683,7 +1743,7 @@
    "kind": "CodeFunction",
    "name": "deckLine",
    "file": "crankmagic-app.js",
-   "line": 233,
+   "line": 269,
    "exported": false,
    "nested": true,
    "test": false
@@ -1693,7 +1753,7 @@
    "kind": "CodeFunction",
    "name": "review",
    "file": "crankmagic-app.js",
-   "line": 239,
+   "line": 275,
    "exported": false,
    "nested": true,
    "test": false
@@ -1703,7 +1763,7 @@
    "kind": "CodeFunction",
    "name": "effectsHTML",
    "file": "crankmagic-app.js",
-   "line": 243,
+   "line": 279,
    "exported": false,
    "nested": true,
    "test": false
@@ -1713,7 +1773,7 @@
    "kind": "CodeFunction",
    "name": "buyLink",
    "file": "crankmagic-app.js",
-   "line": 247,
+   "line": 283,
    "exported": false,
    "nested": true,
    "test": false
@@ -1723,7 +1783,7 @@
    "kind": "CodeFunction",
    "name": "kingdomLink",
    "file": "crankmagic-app.js",
-   "line": 251,
+   "line": 287,
    "exported": false,
    "nested": true,
    "test": false
@@ -1733,7 +1793,7 @@
    "kind": "CodeFunction",
    "name": "priceBlock",
    "file": "crankmagic-app.js",
-   "line": 254,
+   "line": 290,
    "exported": false,
    "nested": true,
    "test": false
@@ -1743,7 +1803,7 @@
    "kind": "CodeFunction",
    "name": "compareCards",
    "file": "crankmagic-app.js",
-   "line": 264,
+   "line": 300,
    "exported": false,
    "nested": true,
    "test": false
@@ -1753,7 +1813,7 @@
    "kind": "CodeFunction",
    "name": "cardPicker",
    "file": "crankmagic-app.js",
-   "line": 272,
+   "line": 308,
    "exported": false,
    "nested": true,
    "test": false
@@ -1763,7 +1823,7 @@
    "kind": "CodeFunction",
    "name": "manualCard",
    "file": "crankmagic-app.js",
-   "line": 285,
+   "line": 321,
    "exported": false,
    "nested": true,
    "test": false
@@ -1773,7 +1833,7 @@
    "kind": "CodeFunction",
    "name": "termsToggle",
    "file": "crankmagic-app.js",
-   "line": 327,
+   "line": 363,
    "exported": false,
    "nested": true,
    "test": false
@@ -1783,7 +1843,7 @@
    "kind": "CodeFunction",
    "name": "playsAs",
    "file": "crankmagic-app.js",
-   "line": 328,
+   "line": 364,
    "exported": false,
    "nested": true,
    "test": false
@@ -1793,7 +1853,7 @@
    "kind": "CodeFunction",
    "name": "standing",
    "file": "crankmagic-app.js",
-   "line": 336,
+   "line": 372,
    "exported": false,
    "nested": true,
    "test": false
@@ -1803,7 +1863,7 @@
    "kind": "CodeFunction",
    "name": "graphTerms",
    "file": "crankmagic-app.js",
-   "line": 361,
+   "line": 397,
    "exported": false,
    "nested": true,
    "test": false
@@ -1813,7 +1873,7 @@
    "kind": "CodeFunction",
    "name": "inspector",
    "file": "crankmagic-app.js",
-   "line": 364,
+   "line": 400,
    "exported": false,
    "nested": true,
    "test": false
@@ -1823,7 +1883,7 @@
    "kind": "CodeFunction",
    "name": "exportFile",
    "file": "crankmagic-app.js",
-   "line": 393,
+   "line": 444,
    "exported": false,
    "nested": true,
    "test": false
@@ -1833,7 +1893,17 @@
    "kind": "CodeFunction",
    "name": "feedbackLink",
    "file": "crankmagic-app.js",
-   "line": 401,
+   "line": 452,
+   "exported": false,
+   "nested": true,
+   "test": false
+  },
+  {
+   "id": "fn:crankmagic-app.js#mayPass",
+   "kind": "CodeFunction",
+   "name": "mayPass",
+   "file": "crankmagic-app.js",
+   "line": 486,
    "exported": false,
    "nested": true,
    "test": false
@@ -1843,7 +1913,7 @@
    "kind": "CodeFunction",
    "name": "shareLinks",
    "file": "crankmagic-app.js",
-   "line": 435,
+   "line": 493,
    "exported": false,
    "nested": true,
    "test": false
@@ -1853,7 +1923,7 @@
    "kind": "CodeFunction",
    "name": "openNewDeckIfAsked",
    "file": "crankmagic-app.js",
-   "line": 472,
+   "line": 530,
    "exported": false,
    "nested": true,
    "test": false
@@ -1870,14 +1940,14 @@
    "kind": "CodeModule",
    "name": "crankmagic-brand.js",
    "file": "crankmagic-brand.js",
-   "loc": 123
+   "loc": 125
   },
   {
    "id": "fn:crankmagic-brand.js#colors",
    "kind": "CodeFunction",
    "name": "colors",
    "file": "crankmagic-brand.js",
-   "line": 18,
+   "line": 20,
    "exported": false,
    "nested": true,
    "test": false
@@ -1887,7 +1957,7 @@
    "kind": "CodeFunction",
    "name": "helix",
    "file": "crankmagic-brand.js",
-   "line": 29,
+   "line": 31,
    "exported": false,
    "nested": true,
    "test": false
@@ -1897,7 +1967,7 @@
    "kind": "CodeFunction",
    "name": "branchAt",
    "file": "crankmagic-brand.js",
-   "line": 36,
+   "line": 38,
    "exported": false,
    "nested": true,
    "test": false
@@ -1907,7 +1977,7 @@
    "kind": "CodeFunction",
    "name": "branchBlend",
    "file": "crankmagic-brand.js",
-   "line": 37,
+   "line": 39,
    "exported": false,
    "nested": true,
    "test": false
@@ -1917,7 +1987,7 @@
    "kind": "CodeFunction",
    "name": "tailY",
    "file": "crankmagic-brand.js",
-   "line": 38,
+   "line": 40,
    "exported": false,
    "nested": true,
    "test": false
@@ -1927,7 +1997,7 @@
    "kind": "CodeFunction",
    "name": "draw",
    "file": "crankmagic-brand.js",
-   "line": 44,
+   "line": 46,
    "exported": false,
    "nested": true,
    "test": false
@@ -1937,7 +2007,7 @@
    "kind": "CodeFunction",
    "name": "running",
    "file": "crankmagic-brand.js",
-   "line": 86,
+   "line": 88,
    "exported": false,
    "nested": true,
    "test": false
@@ -1947,7 +2017,7 @@
    "kind": "CodeFunction",
    "name": "tick",
    "file": "crankmagic-brand.js",
-   "line": 87,
+   "line": 89,
    "exported": false,
    "nested": true,
    "test": false
@@ -1957,7 +2027,7 @@
    "kind": "CodeFunction",
    "name": "sync",
    "file": "crankmagic-brand.js",
-   "line": 88,
+   "line": 90,
    "exported": false,
    "nested": true,
    "test": false
@@ -1967,7 +2037,7 @@
    "kind": "CodeFunction",
    "name": "fit",
    "file": "crankmagic-brand.js",
-   "line": 93,
+   "line": 95,
    "exported": false,
    "nested": true,
    "test": false
@@ -1977,7 +2047,7 @@
    "kind": "CodeFunction",
    "name": "resize",
    "file": "crankmagic-brand.js",
-   "line": 94,
+   "line": 96,
    "exported": false,
    "nested": true,
    "test": false
@@ -2098,7 +2168,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-collection.js",
    "file": "crankmagic-collection.js",
-   "loc": 1538
+   "loc": 1540
   },
   {
    "id": "fn:crankmagic-collection.js#plans",
@@ -2225,7 +2295,7 @@
    "kind": "CodeFunction",
    "name": "sheetRows",
    "file": "crankmagic-collection.js",
-   "line": 317,
+   "line": 319,
    "exported": false,
    "nested": true,
    "test": false
@@ -2235,7 +2305,7 @@
    "kind": "CodeFunction",
    "name": "sheetNeighbour",
    "file": "crankmagic-collection.js",
-   "line": 339,
+   "line": 341,
    "exported": false,
    "nested": true,
    "test": false
@@ -2245,7 +2315,7 @@
    "kind": "CodeFunction",
    "name": "sheetApply",
    "file": "crankmagic-collection.js",
-   "line": 349,
+   "line": 351,
    "exported": false,
    "nested": true,
    "test": false
@@ -2255,7 +2325,7 @@
    "kind": "CodeFunction",
    "name": "sheetEdit",
    "file": "crankmagic-collection.js",
-   "line": 360,
+   "line": 362,
    "exported": false,
    "nested": true,
    "test": false
@@ -2265,7 +2335,7 @@
    "kind": "CodeFunction",
    "name": "playDeck",
    "file": "crankmagic-collection.js",
-   "line": 429,
+   "line": 431,
    "exported": false,
    "nested": true,
    "test": false
@@ -2275,7 +2345,7 @@
    "kind": "CodeFunction",
    "name": "playSpec",
    "file": "crankmagic-collection.js",
-   "line": 430,
+   "line": 432,
    "exported": false,
    "nested": true,
    "test": false
@@ -2285,7 +2355,7 @@
    "kind": "CodeFunction",
    "name": "sentIds",
    "file": "crankmagic-collection.js",
-   "line": 457,
+   "line": 459,
    "exported": false,
    "nested": true,
    "test": false
@@ -2295,7 +2365,7 @@
    "kind": "CodeFunction",
    "name": "setSentIds",
    "file": "crankmagic-collection.js",
-   "line": 458,
+   "line": 460,
    "exported": false,
    "nested": true,
    "test": false
@@ -2305,7 +2375,7 @@
    "kind": "CodeFunction",
    "name": "sentRows",
    "file": "crankmagic-collection.js",
-   "line": 459,
+   "line": 461,
    "exported": false,
    "nested": true,
    "test": false
@@ -2315,7 +2385,7 @@
    "kind": "CodeFunction",
    "name": "scoreboard",
    "file": "crankmagic-collection.js",
-   "line": 470,
+   "line": 472,
    "exported": false,
    "nested": true,
    "test": false
@@ -2325,7 +2395,7 @@
    "kind": "CodeFunction",
    "name": "tabletop",
    "file": "crankmagic-collection.js",
-   "line": 498,
+   "line": 500,
    "exported": false,
    "nested": true,
    "test": false
@@ -2335,7 +2405,7 @@
    "kind": "CodeFunction",
    "name": "tabletopDetail",
    "file": "crankmagic-collection.js",
-   "line": 637,
+   "line": 639,
    "exported": false,
    "nested": true,
    "test": false
@@ -2345,7 +2415,7 @@
    "kind": "CodeFunction",
    "name": "stageRows",
    "file": "crankmagic-collection.js",
-   "line": 648,
+   "line": 650,
    "exported": false,
    "nested": true,
    "test": false
@@ -2355,7 +2425,7 @@
    "kind": "CodeFunction",
    "name": "tabletopDrop",
    "file": "crankmagic-collection.js",
-   "line": 667,
+   "line": 669,
    "exported": false,
    "nested": true,
    "test": false
@@ -2365,7 +2435,7 @@
    "kind": "CodeFunction",
    "name": "shortSeats",
    "file": "crankmagic-collection.js",
-   "line": 741,
+   "line": 743,
    "exported": false,
    "nested": true,
    "test": false
@@ -2375,7 +2445,7 @@
    "kind": "CodeFunction",
    "name": "followDeck",
    "file": "crankmagic-collection.js",
-   "line": 754,
+   "line": 756,
    "exported": false,
    "nested": true,
    "test": false
@@ -2385,7 +2455,7 @@
    "kind": "CodeFunction",
    "name": "shelfGroup",
    "file": "crankmagic-collection.js",
-   "line": 758,
+   "line": 760,
    "exported": false,
    "nested": true,
    "test": false
@@ -2395,7 +2465,7 @@
    "kind": "CodeFunction",
    "name": "fileInGroup",
    "file": "crankmagic-collection.js",
-   "line": 765,
+   "line": 767,
    "exported": false,
    "nested": true,
    "test": false
@@ -2405,7 +2475,7 @@
    "kind": "CodeFunction",
    "name": "sheet",
    "file": "crankmagic-collection.js",
-   "line": 771,
+   "line": 773,
    "exported": false,
    "nested": true,
    "test": false
@@ -2415,7 +2485,7 @@
    "kind": "CodeFunction",
    "name": "foldByCard",
    "file": "crankmagic-collection.js",
-   "line": 856,
+   "line": 858,
    "exported": false,
    "nested": true,
    "test": false
@@ -2425,7 +2495,7 @@
    "kind": "CodeFunction",
    "name": "show",
    "file": "crankmagic-collection.js",
-   "line": 881,
+   "line": 883,
    "exported": false,
    "nested": true,
    "test": false
@@ -2435,7 +2505,7 @@
    "kind": "CodeFunction",
    "name": "batch",
    "file": "crankmagic-collection.js",
-   "line": 1008,
+   "line": 1010,
    "exported": false,
    "nested": true,
    "test": false
@@ -2445,7 +2515,7 @@
    "kind": "CodeFunction",
    "name": "orderCommands",
    "file": "crankmagic-collection.js",
-   "line": 1035,
+   "line": 1037,
    "exported": false,
    "nested": true,
    "test": false
@@ -2455,7 +2525,7 @@
    "kind": "CodeFunction",
    "name": "chipsHTML",
    "file": "crankmagic-collection.js",
-   "line": 1089,
+   "line": 1091,
    "exported": false,
    "nested": true,
    "test": false
@@ -2465,7 +2535,7 @@
    "kind": "CodeFunction",
    "name": "primary",
    "file": "crankmagic-collection.js",
-   "line": 1117,
+   "line": 1119,
    "exported": false,
    "nested": true,
    "test": false
@@ -2475,7 +2545,7 @@
    "kind": "CodeFunction",
    "name": "tapCommand",
    "file": "crankmagic-collection.js",
-   "line": 1128,
+   "line": 1130,
    "exported": false,
    "nested": true,
    "test": false
@@ -2485,7 +2555,7 @@
    "kind": "CodeFunction",
    "name": "oneTap",
    "file": "crankmagic-collection.js",
-   "line": 1129,
+   "line": 1131,
    "exported": false,
    "nested": true,
    "test": false
@@ -2495,7 +2565,7 @@
    "kind": "CodeFunction",
    "name": "capCell",
    "file": "crankmagic-collection.js",
-   "line": 1147,
+   "line": 1149,
    "exported": false,
    "nested": true,
    "test": false
@@ -2505,7 +2575,7 @@
    "kind": "CodeFunction",
    "name": "poolStart",
    "file": "crankmagic-collection.js",
-   "line": 1154,
+   "line": 1156,
    "exported": false,
    "nested": true,
    "test": false
@@ -2515,7 +2585,7 @@
    "kind": "CodeFunction",
    "name": "stripHTML",
    "file": "crankmagic-collection.js",
-   "line": 1155,
+   "line": 1157,
    "exported": false,
    "nested": true,
    "test": false
@@ -2525,7 +2595,7 @@
    "kind": "CodeFunction",
    "name": "findRow",
    "file": "crankmagic-collection.js",
-   "line": 1168,
+   "line": 1170,
    "exported": false,
    "nested": true,
    "test": false
@@ -2535,7 +2605,7 @@
    "kind": "CodeFunction",
    "name": "stepperCommit",
    "file": "crankmagic-collection.js",
-   "line": 1188,
+   "line": 1190,
    "exported": false,
    "nested": true,
    "test": false
@@ -2545,7 +2615,7 @@
    "kind": "CodeFunction",
    "name": "slotFlagButtons",
    "file": "crankmagic-collection.js",
-   "line": 1252,
+   "line": 1254,
    "exported": false,
    "nested": true,
    "test": false
@@ -2555,7 +2625,7 @@
    "kind": "CodeFunction",
    "name": "pickedSlots",
    "file": "crankmagic-collection.js",
-   "line": 1257,
+   "line": 1259,
    "exported": false,
    "nested": true,
    "test": false
@@ -2565,7 +2635,7 @@
    "kind": "CodeFunction",
    "name": "statusMenu",
    "file": "crankmagic-collection.js",
-   "line": 1314,
+   "line": 1316,
    "exported": false,
    "nested": true,
    "test": false
@@ -2575,7 +2645,7 @@
    "kind": "CodeFunction",
    "name": "wireSubmenu",
    "file": "crankmagic-collection.js",
-   "line": 1336,
+   "line": 1338,
    "exported": false,
    "nested": true,
    "test": false
@@ -2585,7 +2655,7 @@
    "kind": "CodeFunction",
    "name": "printing",
    "file": "crankmagic-collection.js",
-   "line": 1389,
+   "line": 1391,
    "exported": false,
    "nested": true,
    "test": false
@@ -2595,7 +2665,7 @@
    "kind": "CodeFunction",
    "name": "acquire",
    "file": "crankmagic-collection.js",
-   "line": 1408,
+   "line": 1410,
    "exported": false,
    "nested": true,
    "test": false
@@ -2605,7 +2675,7 @@
    "kind": "CodeFunction",
    "name": "quantityAction",
    "file": "crankmagic-collection.js",
-   "line": 1455,
+   "line": 1457,
    "exported": false,
    "nested": true,
    "test": false
@@ -2615,7 +2685,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-decks.js",
    "file": "crankmagic-decks.js",
-   "loc": 855
+   "loc": 856
   },
   {
    "id": "fn:crankmagic-decks.js#mechanicsOf",
@@ -2862,7 +2932,7 @@
    "kind": "CodeFunction",
    "name": "recordSummary",
    "file": "crankmagic-decks.js",
-   "line": 808,
+   "line": 809,
    "exported": false,
    "nested": true,
    "test": false
@@ -2872,7 +2942,7 @@
    "kind": "CodeFunction",
    "name": "recordHTML",
    "file": "crankmagic-decks.js",
-   "line": 809,
+   "line": 810,
    "exported": false,
    "nested": true,
    "test": false
@@ -5616,7 +5686,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-sea.js",
    "file": "crankmagic-sea.js",
-   "loc": 109
+   "loc": 114
   },
   {
    "id": "fn:crankmagic-sea.js#startSea",
@@ -5627,6 +5697,13 @@
    "exported": false,
    "nested": true,
    "test": false
+  },
+  {
+   "id": "mod:crankmagic-settings.js",
+   "kind": "CodeModule",
+   "name": "crankmagic-settings.js",
+   "file": "crankmagic-settings.js",
+   "loc": 50
   },
   {
    "id": "mod:crankmagic-sim.js",
@@ -9469,7 +9546,7 @@
    "kind": "CodeModule",
    "name": "cloud/library.mjs",
    "file": "cloud/library.mjs",
-   "loc": 115
+   "loc": 128
   },
   {
    "id": "cls:cloud/library.mjs#Conflict",
@@ -9522,14 +9599,23 @@
    "kind": "CodeModule",
    "name": "cloud/worker.mjs",
    "file": "cloud/worker.mjs",
-   "loc": 99
+   "loc": 122
+  },
+  {
+   "id": "fn:cloud/worker.mjs#overLimit",
+   "kind": "CodeFunction",
+   "name": "overLimit",
+   "file": "cloud/worker.mjs",
+   "line": 33,
+   "exported": false,
+   "test": false
   },
   {
    "id": "fn:cloud/worker.mjs#fromTheApp",
    "kind": "CodeFunction",
    "name": "fromTheApp",
    "file": "cloud/worker.mjs",
-   "line": 31,
+   "line": 44,
    "exported": false,
    "test": false
   },
@@ -9538,7 +9624,7 @@
    "kind": "CodeFunction",
    "name": "body",
    "file": "cloud/worker.mjs",
-   "line": 38,
+   "line": 51,
    "exported": false,
    "test": false
   },
@@ -9547,7 +9633,7 @@
    "kind": "CodeFunction",
    "name": "handle",
    "file": "cloud/worker.mjs",
-   "line": 45,
+   "line": 58,
    "exported": true,
    "test": false
   },
@@ -9557,6 +9643,16 @@
    "name": "reply",
    "file": "cloud/worker.mjs",
    "line": 26,
+   "exported": false,
+   "arrow": true,
+   "test": false
+  },
+  {
+   "id": "fn:cloud/worker.mjs#tooMany",
+   "kind": "CodeFunction",
+   "name": "tooMany",
+   "file": "cloud/worker.mjs",
+   "line": 38,
    "exported": false,
    "arrow": true,
    "test": false
@@ -9897,14 +9993,14 @@
    "kind": "CodeModule",
    "name": "tools/release-pages.mjs",
    "file": "tools/release-pages.mjs",
-   "loc": 428
+   "loc": 446
   },
   {
    "id": "fn:tools/release-pages.mjs#commitSource",
    "kind": "CodeFunction",
    "name": "commitSource",
    "file": "tools/release-pages.mjs",
-   "line": 143,
+   "line": 153,
    "exported": true,
    "test": false
   },
@@ -9913,7 +10009,7 @@
    "kind": "CodeFunction",
    "name": "worktreeSource",
    "file": "tools/release-pages.mjs",
-   "line": 167,
+   "line": 177,
    "exported": true,
    "test": false
   },
@@ -9922,7 +10018,7 @@
    "kind": "CodeFunction",
    "name": "stripComments",
    "file": "tools/release-pages.mjs",
-   "line": 176,
+   "line": 186,
    "exported": false,
    "test": false
   },
@@ -9931,7 +10027,7 @@
    "kind": "CodeFunction",
    "name": "referencesOf",
    "file": "tools/release-pages.mjs",
-   "line": 184,
+   "line": 194,
    "exported": true,
    "test": false
   },
@@ -9940,7 +10036,7 @@
    "kind": "CodeFunction",
    "name": "walk",
    "file": "tools/release-pages.mjs",
-   "line": 221,
+   "line": 231,
    "exported": true,
    "test": false
   },
@@ -9949,7 +10045,7 @@
    "kind": "CodeFunction",
    "name": "transform",
    "file": "tools/release-pages.mjs",
-   "line": 242,
+   "line": 252,
    "exported": true,
    "test": false
   },
@@ -9958,7 +10054,7 @@
    "kind": "CodeFunction",
    "name": "verify",
    "file": "tools/release-pages.mjs",
-   "line": 268,
+   "line": 278,
    "exported": true,
    "test": false
   },
@@ -9967,7 +10063,7 @@
    "kind": "CodeFunction",
    "name": "build",
    "file": "tools/release-pages.mjs",
-   "line": 344,
+   "line": 362,
    "exported": true,
    "test": false
   },
@@ -9976,7 +10072,7 @@
    "kind": "CodeFunction",
    "name": "commitRelease",
    "file": "tools/release-pages.mjs",
-   "line": 372,
+   "line": 390,
    "exported": true,
    "test": false
   },
@@ -9985,7 +10081,7 @@
    "kind": "CodeFunction",
    "name": "writeOut",
    "file": "tools/release-pages.mjs",
-   "line": 396,
+   "line": 414,
    "exported": false,
    "test": false
   },
@@ -9994,7 +10090,7 @@
    "kind": "CodeFunction",
    "name": "git",
    "file": "tools/release-pages.mjs",
-   "line": 140,
+   "line": 150,
    "exported": false,
    "arrow": true,
    "test": false
@@ -10004,7 +10100,7 @@
    "kind": "CodeFunction",
    "name": "escape",
    "file": "tools/release-pages.mjs",
-   "line": 239,
+   "line": 249,
    "exported": false,
    "arrow": true,
    "test": false
@@ -10014,7 +10110,7 @@
    "kind": "CodeFunction",
    "name": "releaseBranch",
    "file": "tools/release-pages.mjs",
-   "line": 371,
+   "line": 389,
    "exported": true,
    "arrow": true,
    "test": false
@@ -10497,7 +10593,7 @@
    "kind": "CodeModule",
    "name": "game/engine/journal.mjs",
    "file": "game/engine/journal.mjs",
-   "loc": 132
+   "loc": 139
   },
   {
    "id": "fn:game/engine/journal.mjs#canonical",
@@ -10522,7 +10618,7 @@
    "kind": "CodeFunction",
    "name": "createJournal",
    "file": "game/engine/journal.mjs",
-   "line": 70,
+   "line": 73,
    "exported": true,
    "test": false
   },
@@ -10601,6 +10697,59 @@
    "file": "game/engine/rng.mjs",
    "line": 69,
    "exported": true,
+   "test": false
+  },
+  {
+   "id": "mod:game/engine/storage.mjs",
+   "kind": "CodeModule",
+   "name": "game/engine/storage.mjs",
+   "file": "game/engine/storage.mjs",
+   "loc": 147
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "CodeFunction",
+   "name": "checkKey",
+   "file": "game/engine/storage.mjs",
+   "line": 36,
+   "exported": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "CodeFunction",
+   "name": "checkStorage",
+   "file": "game/engine/storage.mjs",
+   "line": 45,
+   "exported": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#memoryStorage",
+   "kind": "CodeFunction",
+   "name": "memoryStorage",
+   "file": "game/engine/storage.mjs",
+   "line": 52,
+   "exported": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#createMatchStore",
+   "kind": "CodeFunction",
+   "name": "createMatchStore",
+   "file": "game/engine/storage.mjs",
+   "line": 79,
+   "exported": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#pad",
+   "kind": "CodeFunction",
+   "name": "pad",
+   "file": "game/engine/storage.mjs",
+   "line": 71,
+   "exported": false,
+   "arrow": true,
    "test": false
   },
   {
@@ -10858,6 +11007,22 @@
    "line": 8,
    "exported": false,
    "arrow": true,
+   "test": false
+  },
+  {
+   "id": "mod:game/server/storage-fs.mjs",
+   "kind": "CodeModule",
+   "name": "game/server/storage-fs.mjs",
+   "file": "game/server/storage-fs.mjs",
+   "loc": 63
+  },
+  {
+   "id": "fn:game/server/storage-fs.mjs#fileStorage",
+   "kind": "CodeFunction",
+   "name": "fileStorage",
+   "file": "game/server/storage-fs.mjs",
+   "line": 23,
+   "exported": true,
    "test": false
   },
   {
@@ -11565,6 +11730,42 @@
    "file": "game/engine/keywords/combat.mjs",
    "line": 158,
    "exported": true,
+   "arrow": true,
+   "test": false
+  },
+  {
+   "id": "mod:game/engine/pilots/house-pilot.mjs",
+   "kind": "CodeModule",
+   "name": "game/engine/pilots/house-pilot.mjs",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "loc": 183
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "kind": "CodeFunction",
+   "name": "housePilot",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 41,
+   "exported": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#isLand",
+   "kind": "CodeFunction",
+   "name": "isLand",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 34,
+   "exported": false,
+   "arrow": true,
+   "test": false
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
+   "kind": "CodeFunction",
+   "name": "isCreature",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 35,
+   "exported": false,
    "arrow": true,
    "test": false
   },
@@ -13436,7 +13637,7 @@
    "name": "crankmagic.html",
    "file": "crankmagic.html",
    "page": true,
-   "loc": 137
+   "loc": 138
   },
   {
    "id": "mod:graph.html",
@@ -13452,7 +13653,7 @@
    "name": "index.html",
    "file": "index.html",
    "page": true,
-   "loc": 139
+   "loc": 140
   }
  ],
  "edges": [
@@ -14171,6 +14372,24 @@
    "source": "parser"
   },
   {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#settings",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#danger",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#chip",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#colors",
    "kind": "contains",
@@ -14311,6 +14530,24 @@
   {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#rescueBrand",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#themeChoice",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#applyTheme",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#applyMotion",
    "kind": "contains",
    "source": "parser"
   },
@@ -14485,6 +14722,12 @@
   {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#feedbackLink",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#mayPass",
    "kind": "contains",
    "source": "parser"
   },
@@ -18846,6 +19089,12 @@
   },
   {
    "from": "mod:cloud/worker.mjs",
+   "to": "fn:cloud/worker.mjs#overLimit",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:cloud/worker.mjs",
    "to": "fn:cloud/worker.mjs#fromTheApp",
    "kind": "contains",
    "source": "parser"
@@ -18865,6 +19114,12 @@
   {
    "from": "mod:cloud/worker.mjs",
    "to": "fn:cloud/worker.mjs#reply",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:cloud/worker.mjs",
+   "to": "fn:cloud/worker.mjs#tooMany",
    "kind": "contains",
    "source": "parser"
   },
@@ -19463,6 +19718,36 @@
    "source": "parser"
   },
   {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#memoryStorage",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#createMatchStore",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#pad",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
    "from": "mod:game/engine/vocabulary.mjs",
    "to": "fn:game/engine/vocabulary.mjs#normalizeKeyword",
    "kind": "contains",
@@ -19609,6 +19894,12 @@
   {
    "from": "mod:game/server/local-table-runtime.mjs",
    "to": "fn:game/server/local-table-runtime.mjs#delay",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/server/storage-fs.mjs",
+   "to": "fn:game/server/storage-fs.mjs#fileStorage",
    "kind": "contains",
    "source": "parser"
   },
@@ -20041,6 +20332,24 @@
   {
    "from": "mod:game/engine/keywords/combat.mjs",
    "to": "fn:game/engine/keywords/combat.mjs#lifelinkFrom",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isLand",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
    "kind": "contains",
    "source": "parser"
   },
@@ -21892,6 +22201,13 @@
   },
   {
    "from": "fn:crankmagic-account.js#sync",
+   "to": "fn:crankmagic-account.js#draw",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:crankmagic-account.js#sync",
    "to": "fn:crankmagic-account.js#api",
    "kind": "calls",
    "source": "parser",
@@ -21919,15 +22235,29 @@
    "resolved": true
   },
   {
-   "from": "fn:crankmagic-account.js#sync",
-   "to": "fn:crankmagic-account.js#draw",
+   "from": "fn:crankmagic-account.js#ask",
+   "to": "fn:crankmagic-account.js#unpacked",
    "kind": "calls",
    "source": "parser",
    "resolved": true
   },
   {
-   "from": "fn:crankmagic-account.js#ask",
-   "to": "fn:crankmagic-account.js#unpacked",
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#chip",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#settings",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#danger",
    "kind": "calls",
    "source": "parser",
    "resolved": true
@@ -21990,6 +22320,13 @@
    "resolved": true
   },
   {
+   "from": "fn:crankmagic-app.js#applyTheme",
+   "to": "fn:crankmagic-app.js#themeChoice",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
    "from": "fn:crankmagic-app.js#render",
    "to": "fn:crankmagic-app.js#rescueBrand",
    "kind": "calls",
@@ -21999,6 +22336,20 @@
   {
    "from": "fn:crankmagic-app.js#render",
    "to": "fn:crankmagic-app.js#describeData",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:crankmagic-app.js#render",
+   "to": "fn:crankmagic-app.js#applyTheme",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:crankmagic-app.js#render",
+   "to": "fn:crankmagic-app.js#applyMotion",
    "kind": "calls",
    "source": "parser",
    "resolved": true
@@ -22503,6 +22854,13 @@
    "kind": "calls",
    "source": "parser",
    "resolved": true
+  },
+  {
+   "from": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global"
   },
   {
    "from": "mod:crankmagic-card-client.js",
@@ -24533,6 +24891,13 @@
    "via": "global"
   },
   {
+   "from": "mod:crankmagic-graph.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global"
+  },
+  {
    "from": "fn:crankmagic-groupings.js#order",
    "to": "fn:crankmagic-groupings.js#label",
    "kind": "calls",
@@ -25251,6 +25616,13 @@
    "resolved": true
   },
   {
+   "from": "mod:crankmagic-sea.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global"
+  },
+  {
    "from": "fn:crankmagic-sim.js#packFor",
    "to": "fn:crankmagic-sim.js#protocolFor",
    "kind": "calls",
@@ -25368,6 +25740,13 @@
    "kind": "calls",
    "source": "parser",
    "resolved": true
+  },
+  {
+   "from": "mod:crankmagic-tabletop.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global"
   },
   {
    "from": "fn:crankmagic-tabletop.js#printSheet",
@@ -28108,6 +28487,20 @@
   },
   {
    "from": "fn:cloud/worker.mjs#handle",
+   "to": "fn:cloud/worker.mjs#overLimit",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:cloud/worker.mjs#handle",
+   "to": "fn:cloud/worker.mjs#tooMany",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:cloud/worker.mjs#handle",
    "to": "fn:cloud/access.mjs#verifyAccess",
    "kind": "calls",
    "source": "parser",
@@ -28725,6 +29118,47 @@
    "resolved": true
   },
   {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "mod:game/engine/journal.mjs",
+   "kind": "imports",
+   "source": "parser"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#memoryStorage",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/journal.mjs#hashState",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#pad",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
    "from": "mod:game/server/engine-runtime.mjs",
    "to": "mod:game/engine/state/index.mjs",
    "kind": "imports",
@@ -29225,6 +29659,19 @@
   {
    "from": "fn:game/server/local-table-runtime.mjs#restoreLocalTableRuntime",
    "to": "fn:game/server/local-table-runtime.mjs#createLocalTableRuntime",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "mod:game/server/storage-fs.mjs",
+   "to": "mod:game/engine/storage.mjs",
+   "kind": "imports",
+   "source": "parser"
+  },
+  {
+   "from": "fn:game/server/storage-fs.mjs#fileStorage",
+   "to": "fn:game/engine/storage.mjs#checkKey",
    "kind": "calls",
    "source": "parser",
    "resolved": true
@@ -30091,6 +30538,20 @@
   {
    "from": "fn:game/engine/keywords/combat.mjs#lifelinkFrom",
    "to": "fn:game/engine/keywords/combat.mjs#has",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true
+  },
+  {
+   "from": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isLand",
    "kind": "calls",
    "source": "parser",
    "resolved": true
@@ -32273,6 +32734,14 @@
    "global": "CrankFeatures"
   },
   {
+   "from": "mod:crankmagic-settings.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "depends-on",
+   "source": "parser",
+   "via": "registry",
+   "global": "CrankFeatures"
+  },
+  {
    "from": "mod:crankmagic-tour.js",
    "to": "mod:crankmagic-app.js",
    "kind": "depends-on",
@@ -32754,7 +33223,7 @@
   },
   {
    "from": "mod:crankmagic.html",
-   "to": "mod:crankmagic-app.js",
+   "to": "mod:crankmagic-settings.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
@@ -32762,11 +33231,19 @@
   },
   {
    "from": "mod:crankmagic.html",
-   "to": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
    "order": 60
+  },
+  {
+   "from": "mod:crankmagic.html",
+   "to": "mod:crankmagic-brand.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "script-tag",
+   "order": 61
   },
   {
    "from": "mod:graph.html",
@@ -33250,7 +33727,7 @@
   },
   {
    "from": "mod:index.html",
-   "to": "mod:crankmagic-app.js",
+   "to": "mod:crankmagic-settings.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
@@ -33258,11 +33735,19 @@
   },
   {
    "from": "mod:index.html",
-   "to": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
    "order": 61
+  },
+  {
+   "from": "mod:index.html",
+   "to": "mod:crankmagic-brand.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "script-tag",
+   "order": 62
   }
  ]
 }

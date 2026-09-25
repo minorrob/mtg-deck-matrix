@@ -202,12 +202,12 @@
       const total = (g.counts && g.counts.cards) || g.cards.length, links = (g.counts && g.counts.playedWith) || (g.played || []).length;
       const commanders = g.cards.filter((c) => c.isCommander).length;
       const whole = /^every/i.test(g.scope || '');
-      const when = g.generatedAt ? new Date(g.generatedAt).toLocaleDateString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}) : '';
+      const when = g.generatedAt ? new Date(g.generatedAt).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : '';
       const body = whole
-        ? `<p><strong>${total.toLocaleString()} cards</strong> is every card legal in Commander, as Scryfall lists the format — one entry per card, not per printing. <strong>${commanders.toLocaleString()}</strong> of them can lead a deck, and every one of those is here.</p>
-           <p>Two kinds of evidence join them. What a card <em>does</em> — what it causes, triggers on, produces, multiplies, the tribe it is or wants — is read off every card's rules text by the same classifier that reads a card you type. What people <em>actually play</em> comes from EDHREC: for each of the ${commanders.toLocaleString()} commanders, the cards its real decks run alongside it, <strong>${links.toLocaleString()}</strong> co-play links in all.</p>
+        ? `<p><strong>${total.toLocaleString('en-US')} cards</strong> is every card legal in Commander, as Scryfall lists the format — one entry per card, not per printing. <strong>${commanders.toLocaleString('en-US')}</strong> of them can lead a deck, and every one of those is here.</p>
+           <p>Two kinds of evidence join them. What a card <em>does</em> — what it causes, triggers on, produces, multiplies, the tribe it is or wants — is read off every card's rules text by the same classifier that reads a card you type. What people <em>actually play</em> comes from EDHREC: for each of the ${commanders.toLocaleString('en-US')} commanders, the cards its real decks run alongside it, <strong>${links.toLocaleString('en-US')}</strong> co-play links in all.</p>
            <p>So if a card is legal, it is here; if any commander's players play it, that link is here too. A Commander deck cannot legally contain anything outside this set, which is why you can treat it as the definitive universe of cards you will care about — for any commander, not only the ones you own.</p>`
-        : `<p><strong>${total.toLocaleString()} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString()}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
+        : `<p><strong>${total.toLocaleString('en-US')} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString('en-US')}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
       return `<details class="cm-inline-menu cm-hint cm-universe-hint"><summary class="cm-hint-btn" aria-label="What is this universe of cards?" title="What is this universe of cards?">?</summary><div class="cm-menu cm-inline-menu-body cm-hint-body cm-universe-body"><h4>The universe</h4>${body}${when ? `<p class="cm-muted">Refreshed ${e(when)}.</p>` : ''}</div></details>`;
     }
     /* EXPLORE SCOPE: query contract for scoped entry into Discover.
@@ -282,7 +282,7 @@
             <div>
               <p class="cm-explore-eyebrow">Explore</p>
               <h1 class="cm-explore-title">Every card is joined to the cards it works with. Start anywhere.</h1>
-              <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString()} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
+              <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString('en-US')} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
             </div>
             <form class="cm-explore-search" role="search"><label class="cm-visually-hidden" for="cm-entry-query">Find any card</label><input id="cm-entry-query" name="q" type="search" placeholder="Find any card…" autocomplete="off"><button type="submit" class="v-button">Find</button></form>
           </header>
@@ -315,7 +315,7 @@
               </svg>
             </button>
           </div>
-          ${roleCounts.length ? `<div class="cm-explore-roles"><p class="cm-explore-recents-label">Or read by role</p><div class="cm-explore-role-pills">${roleCounts.map((r) => `<button type="button" class="cm-chip cm-role-chip" data-action="explore-role" data-role="${e(r.id)}">${e(r.id)} <b>${r.n.toLocaleString()}</b></button>`).join('')}</div></div>` : ''}
+          ${roleCounts.length ? `<div class="cm-explore-roles"><p class="cm-explore-recents-label">Or read by role</p><div class="cm-explore-role-pills">${roleCounts.map((r) => `<button type="button" class="cm-chip cm-role-chip" data-action="explore-role" data-role="${e(r.id)}">${e(r.id)} <b>${r.n.toLocaleString('en-US')}</b></button>`).join('')}</div></div>` : ''}
           ${recents.length ? `<div class="cm-explore-recents">
             <p class="cm-explore-recents-label">Pick up where you left off</p>
             <div class="cm-explore-recent-chips">${recents.map((r) => `<button type="button" class="cm-chip" data-action="explore-recent" data-recent="${e(JSON.stringify(r))}">${e(r.label)}</button>`).join('')}
@@ -351,7 +351,7 @@
         C.modal('Explore from a commander', `<form class="cm-form">
           <div class="cm-form-grid"><label>Commander name<input name="commander" list="cm-commander-list" placeholder="Type a commander name" required autocomplete="off"></label>
           <datalist id="cm-commander-list">${commanders.slice(0, 200).map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
-          <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString()} commanders in the catalog.</p></div></div>
+          <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString('en-US')} commanders in the catalog.</p></div></div>
           <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore commander</button></div>
         </form>`).querySelector('form').addEventListener('submit', (ev) => {
           ev.preventDefault();
@@ -430,8 +430,8 @@
        stays on the tooltip, the fold ("used by one card") still reads the whole graph so the
        list does not reshuffle, and an option no current card carries steps back rather than
        vanishing, so the reader can still see it exists. */
-    const countLabel = (row, narrow) => { const n = narrow ? (narrow.get(row.value) || 0) : row.count; return {n, note: narrow && n !== row.count ? `${n.toLocaleString()} of ${row.count.toLocaleString()} in the whole graph, under your other filters` : `${row.count.toLocaleString()} card${row.count === 1 ? '' : 's'} in the whole graph`}; };
-    const pickButton = (key, row, folds, narrow) => { const {n, note} = countLabel(row, narrow); return `<button type="button" class="cm-facet-pick${n === 0 ? ' is-empty' : ''}" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}" data-count="${e(note)}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${n.toLocaleString()}</small></button>`; };
+    const countLabel = (row, narrow) => { const n = narrow ? (narrow.get(row.value) || 0) : row.count; return {n, note: narrow && n !== row.count ? `${n.toLocaleString('en-US')} of ${row.count.toLocaleString('en-US')} in the whole graph, under your other filters` : `${row.count.toLocaleString('en-US')} card${row.count === 1 ? '' : 's'} in the whole graph`}; };
+    const pickButton = (key, row, folds, narrow) => { const {n, note} = countLabel(row, narrow); return `<button type="button" class="cm-facet-pick${n === 0 ? ' is-empty' : ''}" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}" data-count="${e(note)}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${n.toLocaleString('en-US')}</small></button>`; };
     function facetBar() {
       const placed = new Set(FACET_GROUPS.flatMap(([, keys]) => keys)), extra = facets.filter((f) => !placed.has(f.key)).map((f) => f.key);
       return FACET_GROUPS.map(([label, keys]) => [label, label === 'Rules' ? keys.concat(extra) : keys]).map(([label, keys]) => {
@@ -620,7 +620,7 @@
         ...rel.fed.map((t) => termChip('requires', t, p)),
         ...rel.shared.map((t) => termChip(keyOf(from, t), t, p))
       ];
-      const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString()} decks</p>` : '';
+      const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString('en-US')} decks</p>` : '';
       return `${chips.length ? `<p class="cm-muted">${e(rel.reason || rel.kind)}</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}${co}`;
     }
     function ownTermsHTML(card) {
@@ -1054,7 +1054,7 @@
       const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
-      view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
+      view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString('en-US')} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}${b('Send to the table', 'results-table')}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
@@ -1252,11 +1252,11 @@
       document.querySelector('.cm-graph-grid')?.classList.toggle('cm-lands-mode', lands);
       document.getElementById('matrix-v2')?.classList.toggle('cm-lands', lands);
       $('#cm-facet-count').textContent = picks
-        ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
+        ? `${shown.length.toLocaleString('en-US')} of ${data.cards.length.toLocaleString('en-US')} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
         : (deckPicked && loopMode 
-          ? `${data.cards.length.toLocaleString()} cards. Explore loops in ${loopMode ? 'this deck' : 'the graph'}, or use Advanced Tools to filter further.`
-          : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`);
-      $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString()} cards` : '· none applied';
+          ? `${data.cards.length.toLocaleString('en-US')} cards. Explore loops in ${loopMode ? 'this deck' : 'the graph'}, or use Advanced Tools to filter further.`
+          : `${data.cards.length.toLocaleString('en-US')} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`);
+      $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString('en-US')} cards` : '· none applied';
       $('#cm-facet-chips').innerHTML = CrankFacets.chips(selection)
         .map((chip) => `<button class="cm-chip${chip.exclude ? ' is-not' : ''}" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${chip.exclude ? '<span aria-hidden="true">−</span> ' : ''}${e(chip.label)}: ${e(chip.value)}${chip.exclude ? '<span class="cm-visually-hidden"> — excluded</span>' : ''} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
         .join('') + (picks ? b('Clear filters', 'facet-clear') : '');
@@ -1352,7 +1352,7 @@
       const open = list.dataset.expanded !== '1';
       list.dataset.expanded = open ? '1' : '0';
       const rare = list.querySelectorAll('[data-rare="1"]').length;
-      button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString()} more used by one card`;
+      button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString('en-US')} more used by one card`;
       applyFacetRows(key);
     };
     const onModeChange = (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); updateFacetCounts(); } };
@@ -1423,10 +1423,10 @@
       const rows = sortedRows(key), rare = rows.filter((r) => r.count < 2).length, folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
       const narrow = narrowedFor(key);
       C.modal(facet.label, `<div class="cm-facet-dialog" data-facet-dialog="${e(key)}">
-        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString()} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.${narrow ? ' Counts are under the filters you already have.' : ''}</p>
+        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString('en-US')} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.${narrow ? ' Counts are under the filters you already have.' : ''}</p>
         ${rows.length > 12 ? `<label class="cm-search"><span class="cm-muted">Find in ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(key)}" placeholder="Type to narrow"></label>` : ''}
         <div class="cm-facet-list cm-facet-grid" data-facet-list="${e(key)}" data-expanded="0">${rows.map((row) => pickButton(key, row, folds, narrow)).join('')}</div>
-        ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
+        ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString('en-US')} more used by one card</button>` : ''}
         <div class="cm-facet-dialog-foot"><span class="cm-facet-mode"><span class="cm-muted">A card must match</span><label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label><label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label></span><span class="cm-facet-drop-tools">${b('Clear ' + facet.label.toLowerCase(), 'facet-clear-one', {key}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span></div></div>`);
       redrawTicks();
     };
@@ -1439,7 +1439,7 @@
       for (const pick of dialog.querySelectorAll('[data-facet-pick]')) {
         const row = byValue.get(pick.dataset.value); if (!row) continue;
         const {n, note} = countLabel(row, narrow);
-        const small = pick.querySelector('small'); if (small) small.textContent = n.toLocaleString();
+        const small = pick.querySelector('small'); if (small) small.textContent = n.toLocaleString('en-US');
         pick.classList.toggle('is-empty', n === 0); pick.dataset.count = note;
       }
       const help = dialog.querySelector('.cm-facet-help'); if (help) help.textContent = help.textContent.replace(/ Counts are under the filters you already have\.$/, '') + (narrow ? ' Counts are under the filters you already have.' : '');

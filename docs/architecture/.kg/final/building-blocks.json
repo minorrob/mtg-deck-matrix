@@ -8133,7 +8133,7 @@
   {
    "id": "req:M1-settings",
    "req_id": "M1-settings",
-   "text": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+   "text": "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set's date and the version.",
    "kind": "functional",
    "priority": "must",
    "ontology": {},

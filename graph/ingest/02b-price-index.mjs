@@ -64,7 +64,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const out = {};
   index.forEach((e, id) => { out[id] = [e.usd, e.foil, e.set, e.tcg, e.printings]; });
   await writeFile(`${cacheDir}/price-index.json`, JSON.stringify(out));
-  console.log(`${rows.toLocaleString()} printings -> ${index.size.toLocaleString()} oracle cards`);
-  console.log(`  with a usd price: ${priced.toLocaleString()} (${(100 * priced / index.size).toFixed(1)}%)`);
-  console.log(`  with a TCGPlayer link: ${linked.toLocaleString()}`);
+  console.log(`${rows.toLocaleString("en-US")} printings -> ${index.size.toLocaleString("en-US")} oracle cards`);
+  console.log(`  with a usd price: ${priced.toLocaleString("en-US")} (${(100 * priced / index.size).toFixed(1)}%)`);
+  console.log(`  with a TCGPlayer link: ${linked.toLocaleString("en-US")}`);
 }

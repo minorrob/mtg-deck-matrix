@@ -52,7 +52,7 @@ The machinery that keeps the stores fresh:
 - [ ] Have the Worker serve `/data/*` from R2, with `run_worker_first` and an R2 binding.
 - [ ] Have the app read `current.json` in place of `?v=` pins.
 - [ ] Show "Card data: prices refreshed today" in Settings › About.
-- [ ] Add **EUR** prices, which the r3 Settings page offers.
+- ~~Add **EUR** prices, which the r3 Settings page offers.~~ **Dropped** (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always"). Prices are US dollars, only.
 - [ ] Refresh precon lists, for R3.10.
 - [ ] Split or move `graph-played.json` (21.6 MB) before it reaches the 25 MiB per-file cap.
 - [ ] Check Scryfall's and EDHREC's terms for automated pulls.
@@ -312,7 +312,7 @@ That is the M11 page's missing half: **the facts behind the drawings, and the cu
 
 | When | Decision |
 | --- | --- |
-| Now (M1) | The r3 type (satoshi-900) · the landing page's audience (invite-only or open) · "Get notified" · where the undrawn Menu entries go · EUR and Delete account · Merge on restore · the land icon |
+| Now (M1) | The r3 type (satoshi-900) · the landing page's audience (invite-only or open) · "Get notified" · where the undrawn Menu entries go · Delete account · Merge on restore · the land icon |
 | Now (M2) | Turn on R2 · the token · the schedule |
 | Now (M11) | The page's go. Engram is approved (2026-09-25), to run in a cloud session |
 | Now (M4) | Forge's role (drop phase 5?) · unsupported cards in Play v1 |

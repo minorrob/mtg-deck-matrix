@@ -228,7 +228,7 @@
   };
   /* `count === null` prints the name alone: the New group tile is a door, not a pile, and
      "New group… · 0" reads as an empty pile rather than as somewhere to drop a card. */
-  const placard = (label, count, sub) => `<div class="cm-tt-placard"><strong>${esc(label)}</strong>${count === null || count === undefined ? "" : ` · ${count.toLocaleString()}`}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
+  const placard = (label, count, sub) => `<div class="cm-tt-placard"><strong>${esc(label)}</strong>${count === null || count === undefined ? "" : ` · ${count.toLocaleString('en-US')}`}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
 
   /* How many group piles each arch holds, outer first: a full arch, then one two piles
      narrower inside it, and so on; the sizes sum to n and no pile is on two arches. */
@@ -316,7 +316,7 @@
     const cards = rows.slice(from, to).map((row, i) => ({row, x: inset + (i % cols) * (sz.w + sz.gap), y: Math.floor(i / cols) * pitch, index: from + i}));
     const lines = Math.max(1, Math.ceil(cards.length / cols));
     return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
-      copies, label: total ? `${(from + 1).toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}${copies !== total ? ` · ${copies.toLocaleString()} copies` : ""}` : "Nothing on this pile"};
+      copies, label: total ? `${(from + 1).toLocaleString('en-US')}–${to.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}${copies !== total ? ` · ${copies.toLocaleString('en-US')} copies` : ""}` : "Nothing on this pile"};
   }
   const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
   const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
@@ -489,7 +489,7 @@
     const copies = rows.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
     const day = now instanceof Date && !isNaN(now) ? now.toISOString().slice(0, 10) : String(now);
     const tr = rows.map((r, i) => { const c = r.card || {}, d = say(r) || {}; return `<tr><td>${i + 1}</td><td>${esc(c.name || "")}</td><td>${esc(c.typeLine || "")}</td><td>${c.manaValue === null || c.manaValue === undefined || c.manaValue === "" ? "" : esc(c.manaValue)}</td><td>${esc(d.status || "")}</td><td>${esc(d.price || "")}</td><td>${esc(d.deck || "")}</td><td>${Number(r.quantity) || 1}</td></tr>`; }).join("");
-    return `<section class="cm-tt-printsheet"><h1>${esc(pile ? pile.label : "")}</h1><p>${rows.length.toLocaleString()} card${rows.length === 1 ? "" : "s"} · ${copies.toLocaleString()} cop${copies === 1 ? "y" : "ies"}${library ? ` · ${esc(library)}` : ""} · ${esc(day)}</p><table><thead><tr><th>#</th><th>Card</th><th>Type</th><th>MV</th><th>Status</th><th>Price</th><th>Deck</th><th>Copies</th></tr></thead><tbody>${tr}</tbody></table></section>`;
+    return `<section class="cm-tt-printsheet"><h1>${esc(pile ? pile.label : "")}</h1><p>${rows.length.toLocaleString('en-US')} card${rows.length === 1 ? "" : "s"} · ${copies.toLocaleString('en-US')} cop${copies === 1 ? "y" : "ies"}${library ? ` · ${esc(library)}` : ""} · ${esc(day)}</p><table><thead><tr><th>#</th><th>Card</th><th>Type</th><th>MV</th><th>Status</th><th>Price</th><th>Deck</th><th>Copies</th></tr></thead><tbody>${tr}</tbody></table></section>`;
   }
 
   /* Draw the table into `host`. The geometry is computed from the host's width. Three states,
@@ -667,7 +667,7 @@
     const readWidth = (shelf ? 480 : 310) + readings.reduce((n, p) => n + Math.min(170, String(p.label).length * 7 + 46) + 8, 0);
     const readLines = readings.length ? Math.max(1, Math.ceil(readWidth / Math.max(240, width - 32))) : 0;
     const readH = readings.length ? readLines * 26 + 14 : 0;
-    const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>${shelf ? "The statuses — lay one out to look at it. In shelf mode the places to put a card are your groups:" : "Readings of a plan, not places for a card — lay one out to look:"}</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
+    const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>${shelf ? "The statuses — lay one out to look at it. In shelf mode the places to put a card are your groups:" : "Readings of a plan, not places for a card — lay one out to look:"}</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString('en-US')}</button>`).join("")}</div>` : "";
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
     const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     /* A grouping's name is a term as well: what "Primary Purpose" or "Price band" means is a
@@ -818,7 +818,7 @@
       /* A pile open, or a selection: the group piles become a shelf of placards along the back
          (the open one lit), the stage takes the middle, the status piles keep the front. */
       const shelfTop = railH + 22;
-      const shelfHTML = `<div class="cm-tt-shelf" style="top:${shelfTop}px"><label class="cm-tt-shelf-pick">Group piles by ${groupSelect}</label>${groups.map((p) => `<button type="button" class="cm-tt-chip${p.id === homeId ? " is-open cm-tt-home" : ""}${p.count ? "" : " is-empty"}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" title="${esc(p.folded ? p.label + ": " + p.bands.join(", ") : p.label)}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>`;
+      const shelfHTML = `<div class="cm-tt-shelf" style="top:${shelfTop}px"><label class="cm-tt-shelf-pick">Group piles by ${groupSelect}</label>${groups.map((p) => `<button type="button" class="cm-tt-chip${p.id === homeId ? " is-open cm-tt-home" : ""}${p.count ? "" : " is-empty"}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" title="${esc(p.folded ? p.label + ": " + p.bands.join(", ") : p.label)}">${esc(p.label)} · ${p.count.toLocaleString('en-US')}</button>`).join("")}</div>`;
       const chipRows = Math.max(1, Math.ceil((gN * 132 + 200) / (width - 32)));
       const stageTop = shelfTop + 44 + (chipRows - 1) * 34 + 12;
       let stageH;
@@ -862,7 +862,7 @@
       height = statusTop + statusRows * ROW + readH + (narrow ? 86 : 44);
       body = shelfHTML + stageHTML + bar.html + statusHTML;
     }
-    const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
+    const legend = `${model.total.toLocaleString('en-US')} cards on the table · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     paint(host, `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`);
     /* Clicks, keys and the context menu, delegated once per draw. The selects are assigned as
        PROPERTIES rather than added as listeners: a select that survives a patch (§3.1) would

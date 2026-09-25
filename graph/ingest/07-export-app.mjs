@@ -88,7 +88,7 @@ RETURN c.oracleId AS id, c.name AS name, c.manaValue AS mv, c.colorIdentity AS c
        [(c)-[a:ASSIGNED_TO]->(d:Deck) | {deck: d.name, target: a.target, actual: a.actual}] AS decks
 ORDER BY c.name`);
 
-console.log(`  ${cards.length.toLocaleString()} cards`);
+console.log(`  ${cards.length.toLocaleString("en-US")} cards`);
 const known = new Set(cards.map((c) => c.id));
 
 const played = (await cypher(`
@@ -96,7 +96,7 @@ MATCH (a:Card)-[p:PLAYED_WITH]->(b:Card)
 RETURN a.oracleId AS from, b.oracleId AS to, p.inclusion AS inclusion,
        p.synergy AS synergy, p.numDecks AS decks`))
   .filter((e) => known.has(e.from) && known.has(e.to) && Number(e.inclusion || 0) >= 0.08);
-console.log(`  ${played.length.toLocaleString()} PLAYED_WITH edges`);
+console.log(`  ${played.length.toLocaleString("en-US")} PLAYED_WITH edges`);
 
 const decks = await cypher(`MATCH (d:Deck) RETURN d.id AS id, d.name AS name ORDER BY d.id`);
 

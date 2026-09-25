@@ -1,4 +1,4 @@
-generatedAt: '2026-09-25T13:06:05.699630Z'
+generatedAt: '2026-09-25T18:34:32.040592Z'
 repo: crankmagic
 stages_present:
 - survey
@@ -8,6 +8,6 @@ stages_present:
 - c4-lift
 - opm-bind
 counts:
-  nodes: 494
-  edges: 2367
+  nodes: 491
+  edges: 2360
 source_hashes: {}

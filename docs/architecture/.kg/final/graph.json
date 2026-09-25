@@ -2,7 +2,7 @@
  "meta": {
   "repo": "crankmagic",
   "repo_id": "repo:crankmagic",
-  "generatedAt": "2026-09-25T13:06:05.699630Z",
+  "generatedAt": "2026-09-25T18:34:32.040592Z",
   "schema": "engram-schema.yaml@0.3.0",
   "stages_present": [
    "survey",
@@ -13,8 +13,8 @@
    "opm-bind"
   ],
   "counts": {
-   "nodes": 494,
-   "edges": 2367
+   "nodes": 491,
+   "edges": 2360
   },
   "redact_policy": "name-kind-only"
  },
@@ -2292,21 +2292,6 @@
    "classification": "internal"
   },
   {
-   "id": "rec:library.preferences.currency",
-   "kind": "RecordField",
-   "name": "currency",
-   "table": "rec:library.preferences",
-   "type": "text",
-   "meaning": "USD or EUR.",
-   "example": "USD",
-   "required": false,
-   "source": "Settings",
-   "core": true,
-   "status": "intent",
-   "stage": "structure",
-   "classification": "internal"
-  },
-  {
    "id": "rec:library.preferences.budgetCap",
    "kind": "RecordField",
    "name": "budgetCap",
@@ -2655,21 +2640,6 @@
    "type": "number",
    "meaning": "The US price (TCGplayer).",
    "example": "1.49",
-   "required": false,
-   "source": "Scryfall prices",
-   "core": true,
-   "status": "intent",
-   "stage": "structure",
-   "classification": "internal"
-  },
-  {
-   "id": "rec:store.cards.prices.eur",
-   "kind": "RecordField",
-   "name": "prices.eur",
-   "table": "rec:store.cards",
-   "type": "number",
-   "meaning": "The euro price (Cardmarket).",
-   "example": "1.20",
    "required": false,
    "source": "Scryfall prices",
    "core": true,
@@ -3554,21 +3524,6 @@
    "type": "number",
    "meaning": "US dollars, from TCGplayer.",
    "example": "1.49",
-   "required": false,
-   "source": "Scryfall",
-   "core": true,
-   "status": "intent",
-   "stage": "structure",
-   "classification": "internal"
-  },
-  {
-   "id": "rec:scryfall.prices.eur",
-   "kind": "RecordField",
-   "name": "eur",
-   "table": "rec:scryfall.prices",
-   "type": "number",
-   "meaning": "Euros, from Cardmarket.",
-   "example": "1.20",
    "required": false,
    "source": "Scryfall",
    "core": true,
@@ -4684,9 +4639,9 @@
   {
    "id": "req:M1-settings",
    "kind": "Requirement",
-   "name": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+   "name": "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set's date and the version.",
    "req_id": "M1-settings",
-   "text": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+   "text": "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set's date and the version.",
    "req_kind": "functional",
    "priority": "must",
    "attributes": {
@@ -5525,7 +5480,7 @@
   {
    "id": "flow:crankmagic/m1-settings",
    "kind": "Flow",
-   "name": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with",
+   "name": "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with ",
    "entry": "M1-settings",
    "status": "intent",
    "stage": "behavior",
@@ -9538,20 +9493,6 @@
    "stage": "structure"
   },
   {
-   "from": "rec:library.preferences.currency",
-   "to": "req:M1-settings",
-   "kind": "traces-to",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:library.preferences",
-   "to": "rec:library.preferences.currency",
-   "kind": "has-field",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
    "from": "rec:library.preferences.budgetCap",
    "to": "req:M1-settings",
    "kind": "traces-to",
@@ -10009,20 +9950,6 @@
   {
    "from": "rec:store.cards",
    "to": "rec:store.cards.prices.usd",
-   "kind": "has-field",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:store.cards.prices.eur",
-   "to": "req:M1-settings",
-   "kind": "traces-to",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:store.cards",
-   "to": "rec:store.cards.prices.eur",
    "kind": "has-field",
    "source": "model",
    "stage": "structure"
@@ -11171,27 +11098,6 @@
   {
    "from": "rec:scryfall.prices",
    "to": "rec:scryfall.prices.usd",
-   "kind": "has-field",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:scryfall.prices.eur",
-   "to": "req:M2-live-first",
-   "kind": "traces-to",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:scryfall.prices.eur",
-   "to": "req:M2-stores",
-   "kind": "traces-to",
-   "source": "model",
-   "stage": "structure"
-  },
-  {
-   "from": "rec:scryfall.prices",
-   "to": "rec:scryfall.prices.eur",
    "kind": "has-field",
    "source": "model",
    "stage": "structure"

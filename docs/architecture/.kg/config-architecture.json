@@ -481,10 +481,10 @@
     "plan": "M1 restyles it to r3"
    },
    "file": "index.html",
-   "line": 102,
+   "line": 103,
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    }
   },
   {
@@ -572,10 +572,10 @@
     "plan": "M2 adds /data/*, M3 rate limits and delete, M5 tables, M6 the AI door"
    },
    "file": "tools/release-pages.mjs",
-   "line": 121,
+   "line": 127,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 127
    }
   },
   {
@@ -594,10 +594,10 @@
     "plan": "Built from one commit of main by tools/release-pages.mjs"
    },
    "file": "tools/release-pages.mjs",
-   "line": 123,
+   "line": 129,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 123
+    "line": 129
    }
   },
   {
@@ -638,10 +638,10 @@
     "plan": "M5 adds tables and seats, M6 the AI allowlist and call log"
    },
    "file": "tools/release-pages.mjs",
-   "line": 128,
+   "line": 134,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 128
+    "line": 134
    }
   },
   {
@@ -2507,10 +2507,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 73,
+   "line": 69,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    }
   },
   {
@@ -2525,10 +2525,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 98,
+   "line": 105,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 98
+    "line": 105
    }
   },
   {
@@ -2582,10 +2582,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 73,
+   "line": 69,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    }
   },
   {
@@ -3158,10 +3158,10 @@
     "owner": "The person owns their library"
    },
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    }
   },
   {
@@ -3282,10 +3282,10 @@
    "name": "A signed-out visitor",
    "person": "Visitor",
    "file": "index.html",
-   "line": 102,
+   "line": 103,
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    }
   },
   {
@@ -3333,10 +3333,10 @@
    "name": "A builder on two devices",
    "person": "Builder",
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    }
   },
   {
@@ -3346,10 +3346,10 @@
    "journey": "journey:builder",
    "order": 1,
    "file": "crankmagic-account.js",
-   "line": 118,
+   "line": 122,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 118
+    "line": 122
    }
   },
   {
@@ -3359,10 +3359,10 @@
    "journey": "journey:builder",
    "order": 2,
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    }
   },
   {
@@ -3372,10 +3372,10 @@
    "journey": "journey:builder",
    "order": 3,
    "file": "crankmagic-account.js",
-   "line": 135,
+   "line": 197,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 135
+    "line": 197
    }
   },
   {
@@ -3385,10 +3385,10 @@
    "journey": "journey:builder",
    "order": 4,
    "file": "crankmagic-account.js",
-   "line": 112,
+   "line": 116,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 112
+    "line": 116
    }
   },
   {
@@ -3897,7 +3897,7 @@
    "to": "mod:index.html",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 102
+   "line": 103
   },
   {
    "from": "net:service-worker",
@@ -3925,14 +3925,14 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 121
+   "line": 127
   },
   {
    "from": "net:assets",
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 123
+   "line": 129
   },
   {
    "from": "net:analytics",
@@ -3946,7 +3946,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 128
+   "line": 134
   },
   {
    "from": "net:github",
@@ -5057,7 +5057,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 73
+   "line": 69
   },
   {
    "from": "rec:room.journal",
@@ -5070,7 +5070,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 98
+   "line": 105
   },
   {
    "from": "rec:room.journal",
@@ -5103,7 +5103,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 73
+   "line": 69
   },
   {
    "from": "rec:room.checkpoint",
@@ -5638,7 +5638,7 @@
    "protocol": "In the browser",
    "auth": "Same origin",
    "description": "Registers the worker that keeps files for offline use.",
-   "evidence": "crankmagic-app.js:490"
+   "evidence": "crankmagic-app.js:548"
   },
   {
    "from": "net:browser",
@@ -5658,7 +5658,7 @@
    "protocol": "HTTPS redirect",
    "auth": "Google, or an emailed code (library only)",
    "description": "Signing in, when a person chooses to.",
-   "evidence": "crankmagic-account.js:118"
+   "evidence": "crankmagic-account.js:122"
   },
   {
    "from": "net:access",
@@ -5679,7 +5679,7 @@
    "auth": "Access token cookie + an x-crankmagic header on writes",
    "policy": "connect-src 'self'",
    "description": "Library sync today; data files, tables and the AI door in the final state.",
-   "evidence": "crankmagic-account.js:41"
+   "evidence": "crankmagic-account.js:43"
   },
   {
    "from": "net:worker",
@@ -5699,7 +5699,7 @@
    "protocol": "D1 binding (SQL)",
    "auth": "Binding: nothing else can reach it",
    "description": "Reads and writes users, snapshots and heads.",
-   "evidence": "cloud/worker.mjs:56"
+   "evidence": "cloud/worker.mjs:71"
   },
   {
    "from": "net:browser",
@@ -5851,7 +5851,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41
+   "line": 43
   },
   {
    "from": "dflow:library-sync",
@@ -6179,7 +6179,7 @@
    "to": "mod:index.html",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 102
+   "line": 103
   },
   {
    "from": "jstep:visitor.2",
@@ -6264,14 +6264,14 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41
+   "line": 43
   },
   {
    "from": "jstep:builder.1",
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 118
+   "line": 122
   },
   {
    "from": "journey:builder",
@@ -6297,7 +6297,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41
+   "line": 43
   },
   {
    "from": "journey:builder",
@@ -6329,7 +6329,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 135
+   "line": 197
   },
   {
    "from": "journey:builder",
@@ -6355,7 +6355,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 112
+   "line": 116
   },
   {
    "from": "journey:builder",

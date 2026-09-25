@@ -35,7 +35,7 @@ requirements:
       text: "A landing page at / for a signed-out visitor with no library in the browser; anyone else goes straight to Decks.",
       source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.8, decision 3" } }
   - { id: M1-settings, kind: functional, priority: must, attributes: { area: web },
-      text: "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+      text: "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set's date and the version.",
       source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.3" } }
   - { id: M1-delete-account, kind: functional, priority: must, attributes: { area: account },
       text: "Delete account: a Worker route removes the person's snapshots, head and user row; removing them from Access stays Rob's runbook step.",

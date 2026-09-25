@@ -42,7 +42,7 @@ let priceIndex = new Map();
 if (existsSync(`${cacheDir}/default_cards.jsonl`)) {
   const built = await buildPriceIndex(cacheDir);
   priceIndex = built.index;
-  console.log(`priced from ${built.rows.toLocaleString()} printings`);
+  console.log(`priced from ${built.rows.toLocaleString("en-US")} printings`);
 } else {
   console.log("no default_cards.jsonl -- falling back to one printing per card; run 01-fetch.mjs to fix prices");
 }
@@ -185,4 +185,4 @@ const files = {
 for (const [f, body] of Object.entries(files)) await writeFile(`${outDir}/${f}`, body);
 
 console.log(`scanned ${seen} oracle cards, ${legal} commander-legal`);
-for (const [f, body] of Object.entries(files)) console.log(`  ${f.padEnd(16)} ${(body.split("\n").length - 2).toLocaleString()} rows`);
+for (const [f, body] of Object.entries(files)) console.log(`  ${f.padEnd(16)} ${(body.split("\n").length - 2).toLocaleString("en-US")} rows`);

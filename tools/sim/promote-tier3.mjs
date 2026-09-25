@@ -410,7 +410,7 @@ if (args.write) {
       note: row.promoted
         ? `${row.promoted} Game Changer${row.promoted === 1 ? "" : "s"} promoted into the rung; ${row.gcInFinal} in the finished deck, against Bracket 3's limit of three`
         : "no in-color Game Changer could be added without breaking the deck",
-      stopReason: `Measured over ${GAMES.toLocaleString()} games on a seed the selection never saw.`
+      stopReason: `Measured over ${GAMES.toLocaleString("en-US")} games on a seed the selection never saw.`
     });
   });
   summary.generatedAt = new Date().toISOString();

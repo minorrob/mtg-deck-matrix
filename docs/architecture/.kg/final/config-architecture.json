@@ -1969,19 +1969,6 @@
    "status": "intent"
   },
   {
-   "id": "rec:library.preferences.currency",
-   "kind": "RecordField",
-   "name": "currency",
-   "table": "rec:library.preferences",
-   "type": "text",
-   "meaning": "USD or EUR.",
-   "example": "USD",
-   "required": false,
-   "source": "Settings",
-   "core": true,
-   "status": "intent"
-  },
-  {
    "id": "rec:library.preferences.budgetCap",
    "kind": "RecordField",
    "name": "budgetCap",
@@ -2288,19 +2275,6 @@
    "type": "number",
    "meaning": "The US price (TCGplayer).",
    "example": "1.49",
-   "required": false,
-   "source": "Scryfall prices",
-   "core": true,
-   "status": "intent"
-  },
-  {
-   "id": "rec:store.cards.prices.eur",
-   "kind": "RecordField",
-   "name": "prices.eur",
-   "table": "rec:store.cards",
-   "type": "number",
-   "meaning": "The euro price (Cardmarket).",
-   "example": "1.20",
    "required": false,
    "source": "Scryfall prices",
    "core": true,
@@ -3075,19 +3049,6 @@
    "type": "number",
    "meaning": "US dollars, from TCGplayer.",
    "example": "1.49",
-   "required": false,
-   "source": "Scryfall",
-   "core": true,
-   "status": "intent"
-  },
-  {
-   "id": "rec:scryfall.prices.eur",
-   "kind": "RecordField",
-   "name": "eur",
-   "table": "rec:scryfall.prices",
-   "type": "number",
-   "meaning": "Euros, from Cardmarket.",
-   "example": "1.20",
    "required": false,
    "source": "Scryfall",
    "core": true,
@@ -5995,18 +5956,6 @@
    "source": "model"
   },
   {
-   "from": "rec:library.preferences.currency",
-   "to": "req:M1-settings",
-   "kind": "traces-to",
-   "source": "model"
-  },
-  {
-   "from": "rec:library.preferences",
-   "to": "rec:library.preferences.currency",
-   "kind": "has-field",
-   "source": "model"
-  },
-  {
    "from": "rec:library.preferences.budgetCap",
    "to": "req:M1-settings",
    "kind": "traces-to",
@@ -6399,18 +6348,6 @@
   {
    "from": "rec:store.cards",
    "to": "rec:store.cards.prices.usd",
-   "kind": "has-field",
-   "source": "model"
-  },
-  {
-   "from": "rec:store.cards.prices.eur",
-   "to": "req:M1-settings",
-   "kind": "traces-to",
-   "source": "model"
-  },
-  {
-   "from": "rec:store.cards",
-   "to": "rec:store.cards.prices.eur",
    "kind": "has-field",
    "source": "model"
   },
@@ -7395,24 +7332,6 @@
   {
    "from": "rec:scryfall.prices",
    "to": "rec:scryfall.prices.usd",
-   "kind": "has-field",
-   "source": "model"
-  },
-  {
-   "from": "rec:scryfall.prices.eur",
-   "to": "req:M2-live-first",
-   "kind": "traces-to",
-   "source": "model"
-  },
-  {
-   "from": "rec:scryfall.prices.eur",
-   "to": "req:M2-stores",
-   "kind": "traces-to",
-   "source": "model"
-  },
-  {
-   "from": "rec:scryfall.prices",
-   "to": "rec:scryfall.prices.eur",
    "kind": "has-field",
    "source": "model"
   },

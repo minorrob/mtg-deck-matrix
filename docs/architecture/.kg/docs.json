@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generatedAt": "2026-09-25T13:06:03.319911Z",
+  "generatedAt": "2026-09-25T18:34:29.619237Z",
   "filesParsed": 9,
   "extractor": "extract_md.py@0.1.0"
  },
@@ -10,7 +10,7 @@
    "kind": "Document",
    "name": "Rules of engagement for AI systems working in this repository",
    "file": "AGENTS.md",
-   "loc": 132
+   "loc": 148
   },
   {
    "id": "doc:docs/design/2026-09-25-redesign-r3/INTAKE.md",
@@ -38,7 +38,7 @@
    "kind": "Document",
    "name": "Stage 2 \u2014 Account Cloud",
    "file": "docs/plan-account-cloud.md",
-   "loc": 81
+   "loc": 94
   },
   {
    "id": "doc:docs/plan-data-sync.md",

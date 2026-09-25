@@ -59,7 +59,7 @@ Rob confirms this in §4.
 | App shell, dark and light (`shell-dark`, `shell-light`) | live | Built, except the rail's foot | **The rail's foot becomes an account chip**: avatar · name · "Synced · just now" ▾, which opens the Global menu. Signed out, it is a Sign in chip. The "saved in this browser" note went on 2026-09-24; the chip replaces the Menu button. |
 | Global menu (`global-menu`) | live | Built, with more in it | Account (name, e-mail, sync state) · Theme **Dark / Light / Match system** (today it is one toggle) · Settings · Back up library… · Restore backup… · Help & glossary · Take a tour · Send feedback · Sign out. **Not drawn:** Share by e-mail, QR code, Publish To Trade, E-mail the export, Export as Excel, Undo / See every change, Confirmations…, Reset comparison picks, Clear all data, card data ages and version. Where each goes is decision §4.7. |
 | Help ? panel (`help-panel`) | live | A dialog | A right slide-over, scoped to the page. |
-| Settings (`settings`) | "live" | **Does not exist** | A page with four cards. **Account:** name, e-mail, Sign out. **Appearance:** Dark / Light / System · Card size · Reduce motion. **Prices:** **USD / EUR** · default budget cap. **Data:** Back up · Restore · **Delete account…**. EUR and Delete account are new features (§4.8). |
+| Settings (`settings`) | "live" | **Does not exist** | A page with four cards. **Account:** name, e-mail, Sign out. **Appearance:** Dark / Light / System · Card size · Reduce motion. **Prices:** ~~USD / EUR~~ US dollars only (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always") · default budget cap. **Data:** Back up · Restore · **Delete account…**. Delete account is a new feature (§4.8); EUR is dropped. |
 | Mobile: Decks, Library, Explore | live | Built | Restyle. The rail becomes a top row; tiles and doors stack. |
 | Mobile: Deck detail | planned | Built; the bar was fixed 2026-09-24 | The sticky action row as **one row that scrolls sideways**, in place of three equal buttons. |
 
@@ -153,9 +153,9 @@ The design redraws surfaces. It does not list everything they do. Each item belo
    - **Settings › About:** the card data ages and the version.
    - This also answers the open "which backup/share entries stay" question from 2026-09-24. *Recommended as listed.*
 8. **Two new features on Settings.**
-   - **EUR prices.** The card data carries USD only. The data sync (M2) would add Scryfall's EUR.
+   - ~~**EUR prices.** The card data carries USD only. The data sync (M2) would add Scryfall's EUR.~~ **Dropped** (Rob, 2026-09-25: US only; see AGENTS.md, "The United States, always").
    - **Delete account.** A self-service delete route in the Worker, plus the Access e-mail removal, which stays a dashboard step for Rob. It fulfills the promise on the privacy page.
-   - *Recommended:* both, EUR after M2.
+   - *Recommended:* ~~both, EUR after M2~~ Delete account only; built in R3.3b (#384).
 9. **Merge on restore.** Merging a backup into a library is new model work (duplicate copies, conflicting states, receipts). *Recommended:* Replace only in this pass; Merge later with its own tests.
 10. **The land icon.** The design asks Rob for one.
 

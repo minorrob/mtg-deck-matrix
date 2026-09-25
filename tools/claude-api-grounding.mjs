@@ -69,7 +69,7 @@ const SAMPLE = [
 ];
 
 let failures = 0;
-console.log(`\nGrounding gate -- ${universe.counts.cards.toLocaleString()} Commander-legal cards, ${universe.counts.commanders.toLocaleString()} legal commanders`);
+console.log(`\nGrounding gate -- ${universe.counts.cards.toLocaleString("en-US")} Commander-legal cards, ${universe.counts.commanders.toLocaleString("en-US")} legal commanders`);
 console.log(`Deck color identity ${IDENTITY}; already in the deck: ${IN_DECK.join(", ")}\n`);
 console.log(`  ${"name".padEnd(28)}${"verdict".padEnd(9)}why`);
 console.log(`  ${"-".repeat(28)}${"-".repeat(9)}${"-".repeat(46)}`);

@@ -162,6 +162,23 @@ try {
   ok(signedOut, "and the page signs out, so nothing uploads the library straight back");
   await signed.close();
 
+  /* THE UNITED STATES, ALWAYS: a reader whose browser is set to German still reads US numbers and US dates. */
+  const german = await browser.newContext({viewport: {width: 1400, height: 900}, locale: "de-DE", serviceWorkers: "block"});
+  const g = await german.newPage();
+  if (stub) await stub(g);
+  await loadLiveState(g, base);
+  ok(await g.evaluate(() => (1400).toLocaleString() === "1.400"), "the browser really is German: its own locale writes 1,400 as 1.400");
+  await g.goto(`${base}/index.html#cards`);
+  await g.locator("#cm-roster-table").waitFor({timeout: 60000});
+  const summary = await g.locator("#cm-main .cm-page-head").innerText();
+  ok(/1,400 copies/.test(summary) && !/1\.400/.test(summary), `the Library still says 1,400, the US way: ${summary.replace(/\s+/g, " ").slice(0, 80)}`);
+  await g.goto(`${base}/index.html#settings`);
+  await g.locator(".cm-settings").getByRole("button", {name: "See every change…"}).click();
+  await g.locator("#cm-history-rows article").first().waitFor();
+  const stamp = (await g.locator("#cm-history-rows article .cm-muted").first().innerText()).split(" · ")[0];
+  ok(/^[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2}\s?[AP]M$/.test(stamp), `History dates a change the US way, not as ISO or German: "${stamp}"`);
+  await german.close();
+
   const phone = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true, serviceWorkers: "block"});
   const small = await phone.newPage();
   if (stub) await stub(small);

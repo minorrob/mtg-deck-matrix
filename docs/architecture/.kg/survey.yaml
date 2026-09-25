@@ -5,7 +5,7 @@ description: 'CrankMagic: a Commander deck workshop (decks, library, explore) se
   invite-only accounts that sync a library to D1, and a clean-room rules engine (CME) that will host Play in Durable Objects.'
 stack:
 - language: JavaScript
-  files: 128
+  files: 132
 - language: Markdown
   files: 9
 - language: HTML
@@ -46,8 +46,8 @@ exclusions:
 - target
 - vendor
 - venv
-files_ingested: 156
-files_dropped: 1393
+files_ingested: 160
+files_dropped: 1400
 notes:
 - 'Scoped to the code that carries the architecture: the served app, the account Worker (cloud/), the engine and the frozen
   local game host, the release builder and data tools, the CI workflows, and the plans that define the final state.'
@@ -116,6 +116,7 @@ files_by_extractor:
   - crankmagic-rules.js
   - crankmagic-sandbox.js
   - crankmagic-sea.js
+  - crankmagic-settings.js
   - crankmagic-sim.js
   - crankmagic-strategies.js
   - crankmagic-sw.js
@@ -144,6 +145,7 @@ files_by_extractor:
   - game/engine/index.mjs
   - game/engine/journal.mjs
   - game/engine/keywords/combat.mjs
+  - game/engine/pilots/house-pilot.mjs
   - game/engine/pilots/random-legal.mjs
   - game/engine/projection.mjs
   - game/engine/rng.mjs
@@ -168,10 +170,12 @@ files_by_extractor:
   - game/engine/script/resolution.mjs
   - game/engine/script/schema.mjs
   - game/engine/state/index.mjs
+  - game/engine/storage.mjs
   - game/engine/vocabulary.mjs
   - game/server/engine-runtime.mjs
   - game/server/guest-gateway.mjs
   - game/server/local-table-runtime.mjs
+  - game/server/storage-fs.mjs
   - game/server/table-broker.mjs
   - game/tools/ai-compatibility.mjs
   - game/tools/setup-catalog.mjs
@@ -215,7 +219,7 @@ deploy_facts:
 dir_census:
   .:
     .html: 5
-    .js: 74
+    .js: 75
     .md: 1
   .github:
     .yml: 3
@@ -227,7 +231,7 @@ dir_census:
   game:
     .java: 9
     .json: 1
-    .mjs: 44
+    .mjs: 47
   schema:
     .mjs: 2
   tools:

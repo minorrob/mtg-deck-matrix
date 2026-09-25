@@ -421,7 +421,7 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
       const verdict = size <= tolerance
         ? "level with the Tuned build inside the margin of error"
         : `${size.toFixed(1)} points ${delta > 0 ? "stronger" : "weaker"} than the Tuned build`;
-      return `Adopting the whole ${label} rung measured ${metrics.score.toFixed(1)} against Tuned's ${tunedMetrics.score.toFixed(1)} over ${GAMES.toLocaleString()} games each — ${verdict}.`;
+      return `Adopting the whole ${label} rung measured ${metrics.score.toFixed(1)} against Tuned's ${tunedMetrics.score.toFixed(1)} over ${GAMES.toLocaleString("en-US")} games each — ${verdict}.`;
     };
     const enhanceNote = note(enhanceMetrics, "Enhance");
     const maxNote = note(maxMetrics, "Max");
