@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-23T01:02:07.969Z",
+ "generatedAt": "2026-09-25T02:52:28.787Z",
  "generator": "tools/data-manifest.mjs",
  "count": 21,
  "files": [
@@ -40,22 +40,22 @@
   {
    "file": "data/cards.json",
    "schema": "cards@2",
-   "stamp": "2026-09-19T21:12:43.932Z",
+   "stamp": "2026-09-25T02:31:35.131Z",
    "generator": "tools/build-card-records.mjs",
-   "bytes": 4844486,
-   "sha256": "8c9bb6a778792e254c375ac14c2c4da4391790f84f2633706dd632dd6c4ee058",
-   "version": 11,
+   "bytes": 4844484,
+   "sha256": "f2adfe773cf38d5344fb3428a29bc1e3f7deb42d746607e0480d5cde6a6ff2d8",
+   "version": 12,
    "served": true,
    "cache": "precached"
   },
   {
    "file": "data/card-facts.json",
    "schema": "card-facts@1",
-   "stamp": "2026-09-19T21:12:43.933Z",
+   "stamp": "2026-09-25T02:31:35.132Z",
    "generator": "tools/build-card-records.mjs",
    "bytes": 491128,
-   "sha256": "fc5dd4a4b8ac4f25b7fd51c93c6ee398632537fea43d85234d713e91b330e519",
-   "version": 8,
+   "sha256": "64ea719bcfe8586ffc07cd5a8047fe2e5fe84c38d1e6dc98b66fd3f988a1bdd8",
+   "version": 9,
    "served": true,
    "cache": "precached"
   },
@@ -189,7 +189,7 @@
    "sha256": "5c3e7e1ec2434973ea029b24d942909f3f79de962defd96dbfda3de0125af6e8",
    "version": null,
    "served": false,
-   "cache": "fetched by Load Live"
+   "cache": "not served"
   },
   {
    "file": "data/game-history.json",

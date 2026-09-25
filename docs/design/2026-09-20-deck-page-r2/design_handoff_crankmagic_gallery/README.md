@@ -35,7 +35,7 @@ Dark = **Brass & Slate** (default). Light = **Felt & Cream** (`[data-theme="ligh
 | `--st-standin` | `#c39bff` | `#8a5be0` | substitute (hatched over bars) |
 | `--st-remove` | `#ef6b60` | `#c0392f` | to take out |
 
-Type: `--font-display: 'Young Serif', Georgia, serif` (Google Fonts, single weight 400) for h1/h2/h3, deck names and big figures (tabular numerals); `--font-body: Satoshi` (the app's existing woff2s) for everything else. Sizes: h1 44–56px / 1.0–1.05 / −.015em; h2 22px; h3 16px; body 14px/1.5; small 12px; labels 11px uppercase, .08em tracking, 700, muted colour.
+Type: `--font-display: Satoshi, system-ui, sans-serif` at weight 700 (`--display-weight`) for h1/h2/h3, deck names and big figures (tabular numerals) -- Satoshi replaced Young Serif as the display face on 2026-09-24; `--font-body: Satoshi` (the app's existing woff2s) for everything else. Sizes: h1 44–56px / 1.0–1.05 / −.015em; h2 22px; h3 16px; body 14px/1.5; small 12px; labels 11px uppercase, .08em tracking, 700, muted colour.
 
 Shape: control radius **12px**; cards 18px; tiles 22px; chips/pills 999px. Panel = `--color-panel` + 1px `--color-line`; dark has no shadow (inset 1px highlight `rgba(255,255,255,.04)`), light gets `0 10px 30px -18px rgba(40,30,20,.35)`.
 
@@ -116,7 +116,7 @@ Unchanged from the app: routes `#decks`, `#decks?deck=&tab=`, `#cards?tab=&view=
 Anything not in `screens/` or the wireframes (Lab/Build, Discover List and Trace panes in full, the Tabletop view, User Functions, Tour, Share, import/export dialogs, the tabletop "Table" view of Library, phone layouts of the wireframed pages) follows these rules — apply them in order and the page will belong:
 
 1. **Shell first.** 216px rail with the aether wordmark, current page raised, its sub-pages indented (deck sub-pages under the open deck; Library · To buy · Orders · Sheet under Library; Graph · List · Trace · Role lens under Explore). Main padding 28px 36px 48px. No top header bar; Share / Feedback / User Functions live under the rail-foot **Menu ▾**.
-2. **One head, one primary.** h1 in Young Serif 44–56px, one muted summary sentence with the two or three figures that matter in ink weight 600; at right ≤ 3 buttons — one brass (dark) / felt (light) primary, the rest outlined 12px-radius — plus **More ▾**. The primary is the state's next action, not a fixed slot. Actions change with the tab (see "The action row follows the tab").
+2. **One head, one primary.** h1 in Satoshi 700, 44–56px, one muted summary sentence with the two or three figures that matter in ink weight 600; at right ≤ 3 buttons — one brass (dark) / felt (light) primary, the rest outlined 12px-radius — plus **More ▾**. The primary is the state's next action, not a fixed slot. Actions change with the tab (see "The action row follows the tab").
 3. **Tabs as a segmented control** (panel bg, 14px radius, 4px pad, selected = raised + 700, counts as small in status colour). Views (List · Sheet · Table) are a second segment right-aligned on the same row.
 4. **Counts as tiles, not a ribbon.** A row of equal tiles (`repeat(n, minmax(0,1fr))`, gap 8px): 26px display figure in its status colour, dot + 12px label; tiles that filter show their border in that colour when active. One caption line under the row states the equation.
 5. **Filters in view, the rest folded.** Search 42px in a panel-bg field, up to five dropdown buttons showing "Label value ▾" (the set one tinted by the scope colour), dashed "More filters", Group ▾, Columns. Active filters as removable chips with Clear all.

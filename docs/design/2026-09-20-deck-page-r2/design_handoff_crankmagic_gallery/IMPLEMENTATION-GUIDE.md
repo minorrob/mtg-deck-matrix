@@ -25,7 +25,7 @@ Replace the Deep Field custom-property block in `crankmagic.css` (`#matrix-v2{�
   --st-inbox:#5cc98a; --st-pull:#4fc2c0; --st-ordered:#3b7dd8; --st-buy:#f0b35a; --st-standin:#c39bff; --st-watch:#8f9bb3; --st-draft:#7f8ba0; --st-remove:#ef6b60; --st-reserved:#8fb3ff; --st-physical:#3fae7a;
   --mana-W:#e9d79a; --mana-U:#74b5f7; --mana-B:#a897bf; --mana-R:#f0805f; --mana-G:#77c58f;
   --v-radius:12px; --v-radius-card:18px; --v-radius-tile:22px;
-  --v-display:'Young Serif',Georgia,serif; --v-body:Satoshi,system-ui,sans-serif;
+  --v-display:Satoshi,system-ui,sans-serif; --v-body:Satoshi,system-ui,sans-serif;
 }
 #matrix-v2[data-theme="light"]{
   /* Felt & Cream */
@@ -92,6 +92,6 @@ Follow `screens/Gallery Deck Page.dc.html`, `Gallery Library.dc.html`, `Gallery 
 1. No hex literal from the old palette renders (inspect with DevTools: computed background/border of rail, tiles, buttons, tabs, table headers, chips).
 2. Exactly one accent-filled button on the page.
 3. Blue appears only in: the logo, the aether mist, the focus ring, the Explore graph focus.
-4. Headings and big figures in Young Serif; everything else Satoshi.
+4. Headings and big figures in Satoshi 700 (the display face since 2026-09-24; Young Serif is retired); everything else Satoshi at 400–500.
 5. Radii 12 / 18 / 22 only.
 6. Screenshot side-by-side with the matching `screens/*.dc.html` at 1280px: same structure, same spacing within ±4px.

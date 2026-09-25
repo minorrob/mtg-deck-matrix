@@ -183,3 +183,34 @@ Rob, later the same day, as the direction for the next stretch of work:
 The full statement, what exists against it (measured), the three decisions still needed, the work in
 order and the proposed pivot gate are in **`docs/handoff-2026-09-24-direction.md`**. It supersedes pieces
 1–4 of `docs/plan-web-to-local-table-2026-09-21.md`: decks go out and results come back by file.
+
+## 12. The web app after accounts: the list from the first look at crankmagic.com
+
+Rob, the evening the account cloud went live, walking the production site (with Grok Bot's UAT of
+the same build beside it, `workbench/uat-2026-09-24-cloud-workshop/`). The calls, as he made them:
+
+- **Headings are Satoshi.** *"Use the Satoshi header font (H1, H2, H3, etc.) instead of the current
+  header fonts in our design guide."* Display is Satoshi 700 through `--font-display` and
+  `--display-weight`, in the app and in the guide's own `typography.css`; Young Serif is retired.
+- **The github.io furniture goes.** Subscribe to updates, Keep a file up to date automatically,
+  Load Live, and the rail's *"Your cards. Your library. Saved in this browser…"* note with its data
+  age and Back up now: *"None of that should be there."* A signed-in library lives in the account.
+  Rob's own collection (`data/live-state.json`, `data/live-load.json`) is never served now; the
+  release builder refuses it.
+- **Explore opens in Inspect.** *"On the Explore tab we should always default to Inspect not
+  Navigate."*
+- **A card's cost is the one in its top-right corner.** *"It should not be using … the additional
+  mana costs to execute the actions on the card, such as An Unexpected Party."* A card with a second
+  face (adventure, omen, modal or transforming back) shows and counts its front; a split card or a
+  Room keeps both halves. `CrankCatalog.frontCost` is the rule, and the record set's mana values were
+  rebuilt by it (32 cards, An Unexpected Party 7 → 4).
+- **A card name shows the card.** Hovering a name in Library or in a deck's hundred shows the card
+  large, *"about twice the size"* of the Library's first hover, and hovering off hides it.
+- **The Table view's S, M and L are each about 30% larger.**
+- **Records and simulation history are the account's.** A logged game and a measured report are in
+  the library the account keeps; `tests/uat/cloud-e2e.mjs` step 5 reads them back out of the cloud's
+  copy.
+
+Still open from the same list: the card catalog, prices, popularity and the relationship graph
+refreshing themselves and served from Cloudflare storage (a design is owed), and which of the
+remaining backup and share entries in Menu stay now that accounts exist.

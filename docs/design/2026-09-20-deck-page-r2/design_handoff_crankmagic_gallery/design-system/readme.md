@@ -1,6 +1,6 @@
 # CrankMagic — CrankMagic design system
 
-Brass & Slate for dark mode, Felt & Cream for light mode. Young Serif display over Satoshi body.
+Brass & Slate for dark mode, Felt & Cream for light mode. Satoshi throughout: bold for display, regular for body.
 
 Source: the CrankMagic app, github.com/minorrob/mtg-deck-matrix (main). Logo, Satoshi webfonts and mana symbols are copied from its `assets/`. The palette was chosen from the Turn 3 palette study in this project (Palette Options.dc.html) and applied to the Gallery screens (Gallery Decks / Deck Page / Explore .dc.html).
 
@@ -12,7 +12,7 @@ Source: the CrankMagic app, github.com/minorrob/mtg-deck-matrix (main). Logo, Sa
 
 ## Visual foundations
 - **Colour.** Default theme is dark; add `data-theme="light"` on the root for light mode. Ground → panel → raised control are three planes; the action accent is the only thing that asks to be pressed; the aether blue lives in the logo mist; money reads in its own hue. Each deck's surfaces take a tint from its commander's colour identity (`--mana-*`). Status is one hue per rung everywhere (`--st-*`); substitutes are hatched over the bar.
-- **Type.** Display: Young Serif at its single weight (400), tracking -.015em for deck names, headings and big figures (tabular numerals). Body: Satoshi 14px/1.5; labels 11px uppercase with .08em tracking.
+- **Type.** Display: Satoshi 700, tracking -.02em, for deck names, headings (h1, h2, h3) and big figures (tabular numerals). Young Serif was the first display face and was retired on 2026-09-24 at the owner's direction. Body: Satoshi 14px/1.5; labels 11px uppercase with .08em tracking.
 - **Shape.** Control radius 12px; cards 1.5×, tiles 1.8×; chips are pills. Dark: flat, hairline border. Light: white card on cream with a soft paper shadow (0 10px 30px -18px rgba(40,30,20,.35)).
 - **Art.** Commander art is the hero: full-bleed on deck tiles behind a gradient toward the deck tint; the physical card, tilted, on the deck page; a square-clipped thumbnail beside the pane on Explore.
 - **Motion.** Lift + slight rotate on hover (250ms ease); bars ease in from zero on load; light mode may spring-settle cards. Reduced-motion turns all of it off.

@@ -31,7 +31,7 @@ const files = REGISTRY.filter((r) => r.file !== OUT).map((r) => {
     file: r.file, schema: data.schema || null, stamp: at ? data[at] : null, generator: data.generator || null,
     bytes: text.length, sha256: createHash("sha256").update(text).digest("hex"),
     version: versions.get(r.file) ?? null, served: versions.has(r.file),
-    cache: precached.has(r.file) ? "precached" : onDemand.has(r.file) ? "on demand" : r.file === "data/live-state.json" ? "fetched by Load Live" : "not served",
+    cache: precached.has(r.file) ? "precached" : onDemand.has(r.file) ? "on demand" : "not served",
   };
 });
 const out = stamp("manifest@1", "tools/data-manifest.mjs", {files}, {count: files.length});

@@ -55,8 +55,11 @@ export const PAGES = ["index.html", "crankmagic.html"];
 export const PUBLIC_CONTACT = "admin@crankmagic.com";
 export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", ".nojekyll"];
 
-/* Folders that never ship, whatever references them. */
-export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\//;
+/* Folders that never ship, whatever references them -- and the owner's own collection. data/live-state.json
+   and data/live-load.json are Rob's library, which Load Live used to fetch from the site with a password
+   printed in the page; Load Live is gone (Rob, 2026-09-24) and his library lives in his account now, so
+   the two files stay in the repository for the tools that build them and are never served. */
+export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
 const PLAY = ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"];
 const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];

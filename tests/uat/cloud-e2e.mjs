@@ -11,6 +11,7 @@
  *   3. B makes a deck; A, reopened, has it
  *   4. both make a deck; B is asked which library to keep, keeps its own; A, reopened, has B's --
  *      and A's version is still in the cloud, displaced, not lost
+ *   5. a game is logged and a simulation measured on A; the cloud's copy of the library carries both
  *
  *   node tests/uat/cloud-e2e.mjs      (WRANGLER=<wrangler.js>, UAT_PLAYWRIGHT, UAT_CHROME as for the other walks)
  */
@@ -142,6 +143,33 @@ try {
   await open(a);
   await until("A to take B's choice", async () => {const d = await decks(a); return d.includes("Beta Goblins") && !d.includes("Alpha Goblins");});
   ok((await cloud(a, "/api/library")).head.id === kept.id, "A, reopened, has the library B chose");
+
+  /* 5. A game logged and a simulation measured are the account's too, not just the decks (Rob, 24
+        September: "when a record is created or a simulation history is created, those are being
+        written back to the user's account"). Both go in through the repository's own commit, as
+        Log a game and Measure write them, and the cloud's copy -- fetched, unzipped and opened with
+        the same readBackup a device brings a library in with -- carries both. */
+  const beforeRecord = (await cloud(a, "/api/library")).head.id;
+  await a.evaluate(async () => {
+    const r = await CrankRepository.open();
+    try {
+      let s = await r.getState(); const d = s.decks.find((x) => x.name === "Beta Goblins") || s.decks[0];
+      await r.commit({id: crypto.randomUUID(), type: "game", deckId: d.id, outcome: "win", playedAt: "2026-09-24", pod: 4, notes: "E2E game record"}, s.revision);
+      s = await r.getState();
+      await r.commit({id: crypto.randomUUID(), type: "report", deckId: d.id, report: {protocol: "e2e-measure@1", deckFingerprint: "e2e-fingerprint", origin: "measured", summary: "E2E simulation history"}}, s.revision);
+    } finally {r.close();}
+  });
+  const carried = await until("the record and the report to reach the cloud", async () => {
+    const h = (await cloud(a, "/api/library")).head;
+    if (h.id === beforeRecord) return null;
+    const copy = await a.evaluate(async (id) => {
+      const {version} = await (await fetch(`/api/library/versions/${id}`, {cache: "no-store"})).json();
+      const {state} = await CrankExchange.readBackup(await CrankCloudSync.gunzip(CrankCloudSync.fromBase64(version.body)));
+      return {games: state.games.map((g) => g.notes), reports: state.reports.map((x) => x.summary)};
+    }, h.id);
+    return copy.games.includes("E2E game record") && copy.reports.includes("E2E simulation history") && copy;
+  });
+  ok(carried.games.length === 1 && carried.reports.length === 1, "a logged game and a measured report are in the account's copy of the library");
 
   ok(errors.length === 0, `no page errors${errors.length ? ": " + errors.join(" | ") : ""}`);
   console.log(`cloud-e2e: ${checks} checks passed -- two devices, one library, through the real Worker and a local D1.`);

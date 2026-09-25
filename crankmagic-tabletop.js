@@ -284,7 +284,9 @@
   }
 
   /* ------------------------------------------------------------------ TB2: lay out, page, select */
-  const SIZES = {S: {w: 64, h: 90, gap: 10, cap: 14}, M: {w: 96, h: 134, gap: 12, cap: 18}, L: {w: 140, h: 196, gap: 14, cap: 20}};
+  /* Each a third larger than the first cut (Rob, 24 September: "about 30% larger ... same for
+     medium, same for small"). The piles on the mat keep their own 64px; these are an open pile's. */
+  const SIZES = {S: {w: 83, h: 117, gap: 10, cap: 14}, M: {w: 125, h: 174, gap: 12, cap: 18}, L: {w: 182, h: 255, gap: 14, cap: 20}};
   /* The one card on the stage: the picture at the size the reader chose, up to Scryfall's
      normal print (488 × 680), narrowed to the mat where the mat is narrower. */
   const STAGE = {L: {w: 140, h: 196}, XL: {w: 244, h: 341}, XXL: {w: 366, h: 512}, full: {w: 488, h: 680}};
@@ -636,7 +638,7 @@
         + `<button type="button" class="cm-tt-drawer-print" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button>`
         + `<button type="button" class="cm-tt-back cm-tt-drawer-shut" data-tt="open" data-pile="${esc(openPile.id)}" title="Close ${esc(openPile.label)}" aria-label="Close ${esc(openPile.label)}">&#215;</button>`;
       const body = l.cards.length
-        ? `<div class="cm-tt-grid is-drawer" style="height:${drawSz.h + drawSz.cap}px;width:${l.cards.length ? l.cards[l.cards.length - 1].x + drawSz.w : 0}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size === "L", style: `left:${x}px;top:0;`})).join("")}</div>`
+        ? `<div class="cm-tt-grid is-drawer" style="height:${drawSz.h + drawSz.cap}px;width:${l.cards.length ? l.cards[l.cards.length - 1].x + drawSz.w : 0}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size !== "S", style: `left:${x}px;top:0;`})).join("")}</div>`
         : `<p class="cm-tt-play-invite">Nothing on this pile.</p>`;
       drawerHTML = `<div class="cm-tt-drawer"><span class="cm-tt-strip is-top cm-tt-drawer-head">${head}</span><div class="cm-tt-drawer-strip">${body}</div></div>`;
     } else {
