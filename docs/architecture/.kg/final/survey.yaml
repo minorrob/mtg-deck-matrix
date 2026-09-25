@@ -1,0 +1,61 @@
+repo: crankmagic
+repo_id: repo:crankmagic
+vcs: none
+forward: true
+profile: cloudflare
+description: 'A Commander deck workshop and a place to play: decks, library, explore and Play, all on Cloudflare at crankmagic.com,
+  with invite-only accounts, live-first card data, and games run by CME, the CrankMagic Engine, in Durable Objects.
+
+  '
+stack: []
+extractors: []
+entry_points: []
+module_map: {}
+notes:
+- forward-modeled from intent.yaml; no source code
+files_by_extractor: {}
+deploy_facts: {}
+dir_census: {}
+classification:
+  default: internal
+  rules:
+  - glob: data/live-state.json
+    level: confidential
+  - glob: data/live-load.json
+    level: confidential
+  - glob: data/source/*
+    level: confidential
+  - glob: docs/uat/*
+    level: confidential
+  - glob: game/.local/*
+    level: confidential
+  overrides:
+  - node: d1:users.email
+    level: confidential
+  - node: d1:snapshots.body
+    level: confidential
+  - node: d1:snapshots.device
+    level: confidential
+  - node: d1:ai_allowlist.email
+    level: confidential
+  - node: d1:ai_calls.user_id
+    level: confidential
+  - node: d1:ai_calls.prompt_digest
+    level: confidential
+  - node: rec:library.lots.notes
+    level: confidential
+  - node: rec:library.games.opponents
+    level: confidential
+  - node: rec:library.games.notes
+    level: confidential
+  - node: rec:room.seats.identity
+    level: confidential
+  - node: secret:cloudflare-api-token
+    level: confidential
+  - node: secret:r2-token
+    level: confidential
+  - node: secret:anthropic-key
+    level: confidential
+  - node: secret:access-service-tokens
+    level: confidential
+  redact: name-kind-only

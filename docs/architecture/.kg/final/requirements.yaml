@@ -1,0 +1,882 @@
+generated_by: forward_generate.py@0.1.0
+nodes:
+- id: req:S1-release
+  kind: Requirement
+  name: The web app is released from one commit of main through release/pages and deployed with wrangler after the acceptance
+    wa
+  req_id: S1-release
+  text: The web app is released from one commit of main through release/pages and deployed with wrangler after the acceptance
+    walk passes, staging first.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: release
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/release-pages.md
+  status: intent
+- id: req:S1-one-address
+  kind: Requirement
+  name: One address serves the app, crankmagic.com, and the only public contact is admin@crankmagic.com.
+  req_id: S1-one-address
+  text: One address serves the app, crankmagic.com, and the only public contact is admin@crankmagic.com.
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: tools/release-pages.mjs
+  status: intent
+- id: req:S2-sync
+  kind: Requirement
+  name: A signed-in person's library saves itself to the cloud and follows them to any device; a conflict is put to the person
+    a
+  req_id: S2-sync
+  text: A signed-in person's library saves itself to the cloud and follows them to any device; a conflict is put to the person
+    and the other version is held 30 days.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: account
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-account-cloud.md
+  status: intent
+- id: req:S2-access
+  kind: Requirement
+  name: 'Every /api/* request passes Cloudflare Access and is verified again by the Worker: signature, audience, issuer, expiry
+    a'
+  req_id: S2-access
+  text: 'Every /api/* request passes Cloudflare Access and is verified again by the Worker: signature, audience, issuer, expiry
+    and a named person.'
+  req_kind: non-functional
+  priority: must
+  attributes:
+    security: true
+  ontology: {}
+  source:
+    graph: repo
+    node: cloud/access.mjs
+  status: intent
+- id: req:M1-design
+  kind: Requirement
+  name: 'The web app follows the r3 design system: its tokens, Satoshi type and the brass accent, in dark and light.'
+  req_id: M1-design
+  text: 'The web app follows the r3 design system: its tokens, Satoshi type and the brass accent, in dark and light.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: web
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: R3.0-R3.9
+  status: intent
+- id: req:M1-landing
+  kind: Requirement
+  name: A landing page at / for a signed-out visitor with no library in the browser; anyone else goes straight to Decks.
+  req_id: M1-landing
+  text: A landing page at / for a signed-out visitor with no library in the browser; anyone else goes straight to Decks.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: web
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: R3.8, decision 3
+  status: intent
+- id: req:M1-settings
+  kind: Requirement
+  name: 'A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set''s date and the version.'
+  req_id: M1-settings
+  text: 'A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set''s date and the version.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: web
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: R3.3
+  status: intent
+- id: req:M1-delete-account
+  kind: Requirement
+  name: 'Delete account: a Worker route removes the person''s snapshots, head and user row; removing them from Access stays
+    Rob''s '
+  req_id: M1-delete-account
+  text: 'Delete account: a Worker route removes the person''s snapshots, head and user row; removing them from Access stays
+    Rob''s runbook step.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: account
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M3, R3.3
+  status: intent
+- id: req:M1-notify
+  kind: Requirement
+  name: For a signed-in person, 'Tell me when it's ready' on Play is a switch stored with the account; no mailing list.
+  req_id: M1-notify
+  text: For a signed-in person, 'Tell me when it's ready' on Play is a switch stored with the account; no mailing list.
+  req_kind: functional
+  priority: should
+  attributes:
+    area: account
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: decision 5
+  status: intent
+- id: req:M1-archidekt
+  kind: Requirement
+  name: Import from an Archidekt link through a Worker route, with a size limit and nothing stored.
+  req_id: M1-archidekt
+  text: Import from an Archidekt link through a Worker route, with a size limit and nothing stored.
+  req_kind: functional
+  priority: should
+  attributes:
+    area: import
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: R3.10
+  status: intent
+- id: req:M1-precons
+  kind: Requirement
+  name: Start from a precon, from a list refreshed with the card data from MTGJSON.
+  req_id: M1-precons
+  text: Start from a precon, from a list refreshed with the card data from MTGJSON.
+  req_kind: functional
+  priority: should
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/design/2026-09-25-redesign-r3/INTAKE.md
+    query: R3.10
+  status: intent
+- id: req:M2-live-first
+  kind: Requirement
+  name: 'Outside data is read live first, then from the reader''s cache (IndexedDB: 7 days for records, 24 hours for prices),
+    then'
+  req_id: M2-live-first
+  text: 'Outside data is read live first, then from the reader''s cache (IndexedDB: 7 days for records, 24 hours for prices),
+    then from a refreshed store.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0
+  status: intent
+- id: req:M2-images
+  kind: Requirement
+  name: Card images always come from Scryfall's CDN, through the browser's and the worker's caches, and are never stored by
+    us.
+  req_id: M2-images
+  text: Card images always come from Scryfall's CDN, through the browser's and the worker's caches, and are never stored by
+    us.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0 artwork
+  status: intent
+- id: req:M2-stores
+  kind: Requirement
+  name: 'Stores only where live cannot do the job: the name index, the engine''s oracle snapshot, one dated price snapshot,
+    EDHREC'
+  req_id: M2-stores
+  text: 'Stores only where live cannot do the job: the name index, the engine''s oracle snapshot, one dated price snapshot,
+    EDHREC ranks and co-play, precons, and our derived graph and strategies.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0
+  status: intent
+- id: req:M2-schedule
+  kind: Requirement
+  name: 'A scheduled GitHub Actions run of tools/refresh.mjs publishes dated keys and current.json to R2 and keeps 7 runs;
+    a run '
+  req_id: M2-schedule
+  text: A scheduled GitHub Actions run of tools/refresh.mjs publishes dated keys and current.json to R2 and keeps 7 runs;
+    a run that fails its proof publishes nothing.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: design 1-2
+  status: intent
+- id: req:M2-serve
+  kind: Requirement
+  name: The Worker serves /data/* from R2, and the app reads current.json in place of ?v= pins.
+  req_id: M2-serve
+  text: The Worker serves /data/* from R2, and the app reads current.json in place of ?v= pins.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: design 3
+  status: intent
+- id: req:M2-ages
+  kind: Requirement
+  name: Settings › About shows every data set's date, and anything past its lifetime is labeled stale.
+  req_id: M2-ages
+  text: Settings › About shows every data set's date, and anything past its lifetime is labeled stale.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: web
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M2
+  status: intent
+- id: req:M2-pin
+  kind: Requirement
+  name: A game pins the oracle snapshot and card-definition version it started with, so a replay is identical.
+  req_id: M2-pin
+  text: A game pins the oracle snapshot and card-definition version it started with, so a replay is identical.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0 rules
+  status: intent
+- id: req:M2-adjudication
+  kind: Requirement
+  name: A rules adjudication log citing the CR, the card's rulings, the release notes and the Commander page, and a scheduled
+    Co
+  req_id: M2-adjudication
+  text: A rules adjudication log citing the CR, the card's rulings, the release notes and the Commander page, and a scheduled
+    Comprehensive Rules check.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: outside-data
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M2
+  status: intent
+- id: req:M2-terms
+  kind: Requirement
+  name: 'Honor each source''s terms: Scryfall''s User-Agent, rate and bulk files; EDHREC read gently on a schedule; Wizards''
+    texts '
+  req_id: M2-terms
+  text: 'Honor each source''s terms: Scryfall''s User-Agent, rate and bulk files; EDHREC read gently on a schedule; Wizards''
+    texts cited and not redistributed.'
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0 terms
+  status: intent
+- id: req:M2-csp
+  kind: Requirement
+  name: The browser reaches only api.scryfall.com and loads images only from Scryfall's CDNs; every other source goes through
+    th
+  req_id: M2-csp
+  text: The browser reaches only api.scryfall.com and loads images only from Scryfall's CDNs; every other source goes through
+    the Worker or the scheduled job.
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0 security policy
+  status: intent
+- id: req:M2-offline
+  kind: Requirement
+  name: 'Offline still works: the worker keeps the last good copy of every stored set and the reader''s cache keeps what they
+    open'
+  req_id: M2-offline
+  text: 'Offline still works: the worker keeps the last good copy of every stored set and the reader''s cache keeps what they
+    opened.'
+  req_kind: non-functional
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-data-sync.md
+    query: §0 offline
+  status: intent
+- id: req:M3-rate-limits
+  kind: Requirement
+  name: Rate limits on /api/*, per identity and per IP.
+  req_id: M3-rate-limits
+  text: Rate limits on /api/*, per identity and per IP.
+  req_kind: non-functional
+  priority: must
+  attributes:
+    security: true
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M3
+  status: intent
+- id: req:M3-monitoring
+  kind: Requirement
+  name: Workers observability logs, alerts on 5xx and on sync conflicts, and a weekly check.
+  req_id: M3-monitoring
+  text: Workers observability logs, alerts on 5xx and on sync conflicts, and a weekly check.
+  req_kind: non-functional
+  priority: must
+  attributes:
+    observability: true
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M3
+  status: intent
+- id: req:M3-backups
+  kind: Requirement
+  name: D1 Time Travel's window confirmed, and a nightly export of D1 to R2.
+  req_id: M3-backups
+  text: D1 Time Travel's window confirmed, and a nightly export of D1 to R2.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: account
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M3
+  status: intent
+- id: req:M3-invite
+  kind: Requirement
+  name: Accounts are invite-only through the Access 'Invited' policy; the free plan caps it at 50 people.
+  req_id: M3-invite
+  text: Accounts are invite-only through the Access 'Invited' policy; the free plan caps it at 50 people.
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M3
+  status: intent
+- id: req:M4-engine
+  kind: Requirement
+  name: 'CME plays Rob''s seven decks deterministically with hidden information held, writing its journal and checkpoints
+    through '
+  req_id: M4-engine
+  text: CME plays Rob's seven decks deterministically with hidden information held, writing its journal and checkpoints through
+    a storage adapter.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/engine/PLAN.md
+    query: phases 2-3, 4.1b
+  status: intent
+- id: req:M4-house-pilot
+  kind: Requirement
+  name: The house pilot, the engine's own opponent, sees only its seat and costs nothing per game.
+  req_id: M4-house-pilot
+  text: The house pilot, the engine's own opponent, sees only its seat and costs nothing per game.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M4 4.2
+  status: intent
+- id: req:M4-legality
+  kind: Requirement
+  name: Deck legality is checked at prepare against a dated banned list, refusing by name.
+  req_id: M4-legality
+  text: Deck legality is checked at prepare against a dated banned list, refusing by name.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M4
+  status: intent
+- id: req:M5-room
+  kind: Requirement
+  name: One Durable Object per match runs CME, holds the authoritative state and hides hands.
+  req_id: M5-room
+  text: One Durable Object per match runs CME, holds the authoritative state and hides hands.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-transport
+  kind: Requirement
+  name: A WebSocket on the Durable Object carries ordered view updates and receipts, with no polling.
+  req_id: M5-transport
+  text: A WebSocket on the Durable Object carries ordered view updates and receipts, with no polling.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-front-door
+  kind: Requirement
+  name: The Worker creates, joins and leaves tables and hands a seat to an Access identity; identity stays out of the engine.
+  req_id: M5-front-door
+  text: The Worker creates, joins and leaves tables and hands a seat to an Access identity; identity stays out of the engine.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-lobby
+  kind: Requirement
+  name: 'The lobby per r3''s 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every
+    human se'
+  req_id: M5-lobby
+  text: 'The lobby per r3''s 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every
+    human seat.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-reconnect
+  kind: Requirement
+  name: Reconnect sends a fresh permitted view; a game never concedes silently and AI takes over only by agreement.
+  req_id: M5-reconnect
+  text: Reconnect sends a fresh permitted view; a game never concedes silently and AI takes over only by agreement.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-results
+  kind: Requirement
+  name: A finished game files its record under the deck and syncs with the account; a guest's deck never overwrites the host's
+    l
+  req_id: M5-results
+  text: A finished game files its record under the deck and syncs with the account; a guest's deck never overwrites the host's
+    library.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-definitions
+  kind: Requirement
+  name: Card definitions are served to the room from R2, not bundled.
+  req_id: M5-definitions
+  text: Card definitions are served to the room from R2, not bundled.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5
+  status: intent
+- id: req:M5-hidden
+  kind: Requirement
+  name: Hidden information holds in network payloads, logs and reconnect snapshots.
+  req_id: M5-hidden
+  text: Hidden information holds in network payloads, logs and reconnect snapshots.
+  req_kind: non-functional
+  priority: must
+  attributes:
+    security: true
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M5 launch gate
+  status: intent
+- id: req:M6-door
+  kind: Requirement
+  name: 'The AI door: its own Access application (Google with MFA, never the emailed code), an AI allowlist in D1, the key
+    as a W'
+  req_id: M6-door
+  text: 'The AI door: its own Access application (Google with MFA, never the emailed code), an AI allowlist in D1, the key
+    as a Worker secret, spend caps, and a log of every call.'
+  req_kind: functional
+  priority: must
+  attributes:
+    area: ai
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M6
+  status: intent
+- id: req:M6-privacy
+  kind: Requirement
+  name: The privacy page says what goes to the AI before any AI feature is switched on.
+  req_id: M6-privacy
+  text: The privacy page says what goes to the AI before any AI feature is switched on.
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M6
+  status: intent
+- id: req:M7-compiler
+  kind: Requirement
+  name: Every card is compiled and reconciled into card definitions shipped as data; a card that cannot be is refused, naming
+    wh
+  req_id: M7-compiler
+  text: Every card is compiled and reconciled into card definitions shipped as data; a card that cannot be is refused, naming
+    what it lacks.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: engine
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M7
+  status: intent
+- id: req:M8-playtest
+  kind: Requirement
+  name: A playtest table on staging for Grok Bot's four agents, whose games export seed, journal and per-seat projections.
+  req_id: M8-playtest
+  text: A playtest table on staging for Grok Bot's four agents, whose games export seed, journal and per-seat projections.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: play
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M8
+  status: intent
+- id: req:M9-cutover
+  kind: Requirement
+  name: 'CME is the only engine: Forge, the local Windows host and the tunnel are retired.'
+  req_id: M9-cutover
+  text: 'CME is the only engine: Forge, the local Windows host and the tunnel are retired.'
+  req_kind: constraint
+  priority: must
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M9
+  status: intent
+- id: req:M10-finish
+  kind: Requirement
+  name: The Coach's logic through the AI door, the Lab's data-driven strategy, and the accounts' later features if Rob still
+    wan
+  req_id: M10-finish
+  text: The Coach's logic through the AI door, the Lab's data-driven strategy, and the accounts' later features if Rob still
+    wants them.
+  req_kind: functional
+  priority: could
+  attributes:
+    area: ai
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M10
+  status: intent
+- id: req:M11-architecture
+  kind: Requirement
+  name: An architecture page draws the final state from engram's graph, with a current-state toggle.
+  req_id: M11-architecture
+  text: An architecture page draws the final state from engram's graph, with a current-state toggle.
+  req_kind: functional
+  priority: must
+  attributes:
+    area: web
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: M11
+  status: intent
+- id: req:HK-github-io
+  kind: Requirement
+  name: github.io is retired from main; nothing names it.
+  req_id: HK-github-io
+  text: github.io is retired from main; nothing names it.
+  req_kind: constraint
+  priority: should
+  attributes: {}
+  ontology: {}
+  source:
+    graph: repo
+    node: docs/plan-to-100.md
+    query: Housekeeping
+  status: intent
+edges:
+- from: repo:crankmagic
+  to: req:S1-release
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:S1-one-address
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:S2-sync
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:S2-access
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-design
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-landing
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-settings
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-delete-account
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-notify
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-archidekt
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M1-precons
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-live-first
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-images
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-stores
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-schedule
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-serve
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-ages
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-pin
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-adjudication
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-terms
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-csp
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M2-offline
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M3-rate-limits
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M3-monitoring
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M3-backups
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M3-invite
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M4-engine
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M4-house-pilot
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M4-legality
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-room
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-transport
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-front-door
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-lobby
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-reconnect
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-results
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-definitions
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M5-hidden
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M6-door
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M6-privacy
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M7-compiler
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M8-playtest
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M9-cutover
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M10-finish
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:M11-architecture
+  kind: contains
+  source: forward_generate
+- from: repo:crankmagic
+  to: req:HK-github-io
+  kind: contains
+  source: forward_generate

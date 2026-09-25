@@ -1,0 +1,70 @@
+# engram schema extension for CrankMagic (M11, docs/plan-to-100.md).
+# Copied to docs/architecture/.kg/schema-ext.yaml and docs/architecture/.kg/final/schema-ext.yaml by
+# docs/architecture/map.sh; kg_validate merges its edge_types OVER engram's base schema, so the kinds
+# below are enforced exactly like built-in ones. The base schema stays engram's own.
+schema_ext_version: 1
+extends: engram-schema.yaml@0.3.0
+
+id_conventions:
+  d1_table: "d1:<table>"                    # d1:users
+  d1_field: "d1:<table>.<column>"           # d1:users.email
+  worker_route: "route:<METHOD>:<path>"     # route:PUT:/api/library
+  r2_object: "r2:<key>"                     # r2:data/current.json
+  durable_object: "do:<class>"              # do:game-room
+  outside_source: "src:<name>"              # src:scryfall-api
+  record_type: "rec:<store>.<name>"         # rec:library.decks (IndexedDB, the reader's cache, R2 JSON, a room)
+  record_field: "rec:<store>.<name>.<field>"
+  network_node: "net:<name>"                # net:worker, net:browser
+  secret: "secret:<name>"                   # the variable's own name is an attribute, and confidential
+  data_flow: "dflow:<name>"
+  journey: "journey:<name>"
+  journey_step: "jstep:<journey>.<n>"
+
+node_types:
+  # The kinds the M11 page draws. Every one maps onto the base vocabulary for UML/SysML/OPM readers.
+  D1Table:           { uml: "class (data)",     sysml: "item def",            opm: "object w/ states",       layer: local, store: d1 }
+  D1Field:           { uml: attribute,          sysml: "attribute usage",     opm: "object (attribute)",     layer: local }
+  WorkerRoute:       { uml: "interface operation", sysml: "interface def",    opm: "process (boundary)",     layer: local }
+  R2Object:          { uml: artifact,           sysml: "item def",            opm: "object (informatical)",  layer: local, store: r2 }
+  DurableObjectRoom: { uml: component,          sysml: "part (stateful)",     opm: "object w/ states",       layer: local }
+  OutsideSource:     { uml: "actor (system)",   sysml: "part (external)",     opm: "object (environmental)", layer: local }
+  RecordType:        { uml: "class (data)",     sysml: "item def",            opm: object,                   layer: local }
+  RecordField:       { uml: attribute,          sysml: "attribute usage",     opm: "object (attribute)",     layer: local }
+  NetworkNode:       { uml: node,               sysml: "part (environment)",  opm: "object (physical)",      layer: local }
+  Secret:            { uml: artifact,           sysml: "attribute usage",     opm: "object (informatical)",  layer: local }
+  DataFlow:          { uml: activity,           sysml: "action flow",         opm: "process chain",          layer: local }
+  Journey:           { uml: "use case",         sysml: "use case def",        opm: "process chain",          layer: local }
+  JourneyStep:       { uml: "use case step",    sysml: action,                opm: process,                  layer: local }
+
+# Every piece of the page is one of these. Piece-level attributes (all optional):
+#   status: intent            the forward model's mark (final state); absent in the current map
+#   evidence: {file, line}    the current map's mark: where the parsed code proves the piece exists today
+#   place: {<view>: {...}}    where the page draws it (lane, group, row); presentation, not fact
+#   detail: {...}             the tap-in facts: protocol, auth, lifetime, owner, source, terms, plan item
+#   origin: ours | scryfall | edhrec | mtgjson | wizards | archidekt | anthropic | google
+node_attributes:
+  origin:
+    values: [ours, scryfall, edhrec, mtgjson, wizards, archidekt, anthropic, google, cloudflare, github]
+    default: ours
+
+edge_types:
+  has-field:    { from: [D1Table, RecordType], to: [D1Field, RecordField], source: parser+model }
+  joins:        { from: [D1Field, RecordField], to: [D1Field, RecordField], source: parser+model, attrs: [cardinality, description] }
+  hosted-on:    { from: [D1Table, R2Object, DurableObjectRoom, WorkerRoute, RecordType, Secret], to: [NetworkNode], source: parser+model }
+  connects-to:  { from: [NetworkNode], to: [NetworkNode, OutsideSource], source: parser+model, attrs: [protocol, auth, policy, description] }
+  reads-from:   { from: [WorkerRoute, NetworkNode, DurableObjectRoom], to: [D1Table, R2Object, RecordType, OutsideSource, DurableObjectRoom, Secret], source: parser+model }
+  writes-to:    { from: [WorkerRoute, NetworkNode, DurableObjectRoom], to: [D1Table, R2Object, RecordType, DurableObjectRoom], source: parser+model }
+  fed-by:       { from: [RecordType, R2Object], to: [OutsideSource, RecordType, R2Object], source: model }
+  flow-step:    { from: [DataFlow], to: [NetworkNode, WorkerRoute, D1Table, R2Object, DurableObjectRoom, OutsideSource, RecordType, Secret], source: model, attrs: [order, action] }
+  journey-step: { from: [Journey], to: [JourneyStep], source: model, attrs: [order] }
+  uses-flow:    { from: [JourneyStep], to: [DataFlow], source: model }
+  touches:      { from: [JourneyStep], to: [NetworkNode, WorkerRoute, DurableObjectRoom, RecordType, D1Table, OutsideSource, R2Object, Secret], source: model }
+  evidenced-by: { from: [D1Table, D1Field, WorkerRoute, R2Object, DurableObjectRoom, OutsideSource, RecordType, RecordField, NetworkNode, Secret, DataFlow, Journey, JourneyStep],
+                  to: [CodeModule, CodeFunction, ConfigObject, Document], source: parser,
+                  required_coverage: "every piece of the current map has >=1 evidenced-by edge to a parsed fact" }
+  # Forward lineage, widened to the kinds above: the base traces-to plus this system's own kinds.
+  traces-to:    { from: [Person, SoftwareSystem, Container, Component, DeploymentNode, SysMLElement, OPMProcess, OPMObject, Flow,
+                         D1Table, D1Field, WorkerRoute, R2Object, DurableObjectRoom, OutsideSource, RecordType, RecordField, NetworkNode, Secret, DataFlow, Journey, JourneyStep],
+                  to: [Requirement], source: forward_generate+model,
+                  required_coverage: "every status: intent element has >=1 traces-to a Requirement" }
+  realized-by:  { from: [D1Table, WorkerRoute, R2Object, DurableObjectRoom, NetworkNode, RecordType], to: [Container, Component, SoftwareSystem], source: model }

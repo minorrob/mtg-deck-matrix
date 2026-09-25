@@ -1,0 +1,73 @@
+{
+ "meta": {
+  "generatedAt": "2026-09-25T07:31:05.910819Z",
+  "filesParsed": 9,
+  "extractor": "extract_md.py@0.1.0"
+ },
+ "nodes": [
+  {
+   "id": "doc:AGENTS.md",
+   "kind": "Document",
+   "name": "Rules of engagement for AI systems working in this repository",
+   "file": "AGENTS.md",
+   "loc": 132
+  },
+  {
+   "id": "doc:docs/design/2026-09-25-redesign-r3/INTAKE.md",
+   "kind": "Document",
+   "name": "Revision 3 \u2014 the evaluation against the live app, and the plan to build it",
+   "file": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+   "loc": 184
+  },
+  {
+   "id": "doc:docs/engine/PLAN.md",
+   "kind": "Document",
+   "name": "CrankMagic rules engine: the plan to deprecate Forge",
+   "file": "docs/engine/PLAN.md",
+   "loc": 751
+  },
+  {
+   "id": "doc:docs/handoff-2026-09-25.md",
+   "kind": "Document",
+   "name": "Hand-off \u2014 2026-09-25",
+   "file": "docs/handoff-2026-09-25.md",
+   "loc": 214
+  },
+  {
+   "id": "doc:docs/plan-account-cloud.md",
+   "kind": "Document",
+   "name": "Stage 2 \u2014 Account Cloud",
+   "file": "docs/plan-account-cloud.md",
+   "loc": 81
+  },
+  {
+   "id": "doc:docs/plan-data-sync.md",
+   "kind": "Document",
+   "name": "Card data that refreshes itself, served from Cloudflare \u2014 the plan",
+   "file": "docs/plan-data-sync.md",
+   "loc": 112
+  },
+  {
+   "id": "doc:docs/plan-program-2026-09-24.md",
+   "kind": "Document",
+   "name": "The program \u2014 one cloud CrankMagic",
+   "file": "docs/plan-program-2026-09-24.md",
+   "loc": 119
+  },
+  {
+   "id": "doc:docs/plan-to-100.md",
+   "kind": "Document",
+   "name": "CrankMagic to 100% \u2014 every task, in order",
+   "file": "docs/plan-to-100.md",
+   "loc": 336
+  },
+  {
+   "id": "doc:docs/release-pages.md",
+   "kind": "Document",
+   "name": "The production release",
+   "file": "docs/release-pages.md",
+   "loc": 102
+  }
+ ],
+ "edges": []
+}

@@ -1,0 +1,1345 @@
+# The pieces the M11 architecture page draws: CrankMagic's own kinds, over engram's graph.
+#
+# One entry per piece. docs/architecture/map.sh reads this file twice:
+#   - for the CURRENT map (docs/architecture/.kg), a piece is emitted only when its `current` probe
+#     matches the code today (a regex in a file engram mapped), with an `evidenced-by` edge to that
+#     file's node. D1 tables and fields and the Worker's routes are parsed from the code directly.
+#   - for the FINAL model (docs/architecture/.kg/final), a piece is emitted when it lists `final`
+#     requirement ids from model/intent.yaml, with `status: intent` and a `traces-to` edge to each.
+# The page's status for a piece (final, current, or both) is its membership in those two graphs,
+# never a flag in this file. When a milestone lands, its probe starts to match and the next run
+# marks the piece as both; nothing in the drawings changes.
+#
+# Field rules for tables: `core: true` marks the four to six fields the diagram shows. A field is
+# current when its table is and its own probe matches (default: its name as a word in the table's
+# evidence file); `current: false` marks a field the final state adds.
+
+lanes:
+  network:
+    - { id: device,   title: "Your device",              blurb: "The browser on a phone or a desktop, and what it keeps." }
+    - { id: edge,     title: "Cloudflare edge",          blurb: "crankmagic.com: the sign-in check, the Worker and the app's files." }
+    - { id: platform, title: "Cloudflare data and rooms", blurb: "Where the cloud keeps things: D1, R2 and the game rooms." }
+    - { id: pipeline, title: "GitHub",                   blurb: "The private repository, the tests and the scheduled data job." }
+    - { id: outside,  title: "Outside services",         blurb: "Other companies' data and services. Their content is their IP." }
+    - { id: operator, title: "Rob, the operator",        blurb: "Invites, secrets, approvals and deploys." }
+    - { id: retired,  title: "Being retired",            blurb: "Exists today, has no place in the final state." }
+  schema:
+    - { id: d1,      title: "D1: accounts",                 blurb: "The cloud database. One row per person, their library's versions, and a head." }
+    - { id: d1-play, title: "D1: tables and the AI door",   blurb: "Added by Play (M5) and the AI door (M6)." }
+    - { id: library, title: "The library, in the browser",  blurb: "IndexedDB on the reader's device. The cloud keeps copies of it as snapshots." }
+    - { id: cache,   title: "The reader's cache",           blurb: "What the browser keeps from outside sources, each with a lifetime." }
+    - { id: stores,  title: "Stored by us, refreshed",      blurb: "Only where live cannot do the job (plan-data-sync §0)." }
+    - { id: room,    title: "The game room",                blurb: "One Durable Object per match, running CME." }
+    - { id: outside, title: "Outside sources",              blurb: "Tables whose content is another company's IP, color-coded by source." }
+  origins:
+    - { id: ours,     title: "Ours" }
+    - { id: scryfall, title: "Scryfall" }
+    - { id: edhrec,   title: "EDHREC" }
+    - { id: mtgjson,  title: "MTGJSON" }
+    - { id: wizards,  title: "Wizards of the Coast" }
+
+# ─────────────────────────────── Network nodes ───────────────────────────────
+nodes:
+  - id: net:browser
+    kind: NetworkNode
+    name: The app in your browser
+    final: [M1-design, S2-sync]
+    current: { file: index.html, match: 'crankmagic-app\.js' }
+    realizes: web
+    place: { network: { lane: device, order: 1 } }
+    detail:
+      what: "The pages and modules that make CrankMagic, running on the reader's phone or computer. A deck, a library and Explore all work without an account."
+      protocol: "HTTPS from crankmagic.com"
+      owner: "Ours"
+      plan: "M1 restyles it to r3"
+
+  - id: net:service-worker
+    kind: NetworkNode
+    name: Service worker
+    final: [M2-offline, M2-live-first]
+    current: { file: crankmagic-sw.js, match: 'SHELL_CACHE' }
+    realizes: web
+    place: { network: { lane: device, order: 2 } }
+    detail:
+      what: "A small script the browser keeps beside the app. It saves the app's files and the data sets so the app opens and works offline."
+      today: "Precaches the shell and the data files by their ?v= pins."
+      final: "Keeps the last good copy of each dated data set named by current.json, and a size-limited image cache."
+      plan: "M2"
+
+  - id: net:indexeddb
+    kind: NetworkNode
+    name: IndexedDB
+    final: [S2-sync, M2-live-first]
+    current: { file: collection-repository.js, match: 'crankmagic-library' }
+    realizes: reader-cache
+    place: { network: { lane: device, order: 3 } }
+    detail:
+      what: "The browser's own database. It holds the library and, in the final state, the card records fetched from Scryfall with their lifetimes."
+      owner: "The reader's device"
+
+  - id: net:access
+    kind: NetworkNode
+    name: Cloudflare Access
+    final: [S2-access, M3-invite]
+    current: { file: cloud/access.mjs, match: 'Cf-Access-Jwt-Assertion' }
+    place: { network: { lane: edge, order: 1 } }
+    detail:
+      what: "Cloudflare's sign-in gate in front of /api/*. It lets through only people on the Invited list and hands the Worker a signed token naming them."
+      auth: "Google sign-in; an emailed one-time code for library sync only"
+      owner: "Rob manages the Invited list in the Zero Trust dashboard"
+      terms: "The free plan caps Access at 50 people"
+
+  - id: net:access-ai
+    kind: NetworkNode
+    name: Access for the AI door
+    final: [M6-door]
+    place: { network: { lane: edge, order: 2 } }
+    detail:
+      what: "A second Access application, only for the AI routes. Google with passkey MFA where the plan offers it, and never the emailed code."
+      plan: "M6"
+
+  - id: net:worker
+    kind: NetworkNode
+    name: The crankmagic Worker
+    final: [S2-sync, M2-serve, M5-front-door, M6-door, M3-rate-limits]
+    current: { file: tools/release-pages.mjs, match: 'main: "cloud/worker\.mjs"' }
+    realizes: worker
+    place: { network: { lane: edge, order: 3 } }
+    detail:
+      what: "A small program at Cloudflare's edge. It answers /api/* for accounts, and in the final state also /data/* from R2, the table front door, imports and the AI door. Every other path is a plain file."
+      protocol: "HTTPS; bindings to D1, R2 and the game rooms"
+      auth: "Checks the Access token again on every request: signature, audience, issuer, expiry and a named person"
+      today: "Runs for /api/* only, with D1"
+      plan: "M2 adds /data/*, M3 rate limits and delete, M5 tables, M6 the AI door"
+
+  - id: net:assets
+    kind: NetworkNode
+    name: The app's files
+    final: [S1-release, M1-design]
+    current: { file: tools/release-pages.mjs, match: 'binding: "ASSETS"' }
+    realizes: worker
+    place: { network: { lane: edge, order: 4 } }
+    detail:
+      what: "The released pages, scripts, styles and pictures, served straight from Cloudflare without running any code."
+      policy: "The security policy lets the page load scripts and fonts only from this site"
+      plan: "Built from one commit of main by tools/release-pages.mjs"
+
+  - id: net:analytics
+    kind: NetworkNode
+    name: Web Analytics
+    final: [M3-monitoring]
+    current: { file: tools/release-pages.mjs, match: 'static\.cloudflareinsights\.com' }
+    realizes: observability
+    place: { network: { lane: edge, order: 5 } }
+    detail:
+      what: "Cloudflare's privacy-first page counts. Its beacon reports to this site's own address."
+      owner: "Rob asked for it on 2026-09-24"
+
+  - id: net:d1
+    kind: NetworkNode
+    name: D1 database
+    final: [S2-sync, M5-front-door, M6-door]
+    current: { file: tools/release-pages.mjs, match: 'd1_databases' }
+    realizes: d1
+    place: { network: { lane: platform, order: 1 } }
+    detail:
+      what: "Cloudflare's SQL database. Production is `crankmagic`, staging is `crankmagic-staging`."
+      protocol: "A binding the Worker calls; nothing else reaches it"
+      today: "users, snapshots, heads"
+      plan: "M5 adds tables and seats, M6 the AI allowlist and call log"
+
+  - id: net:r2
+    kind: NetworkNode
+    name: R2 bucket
+    final: [M2-schedule, M2-serve, M5-definitions, M3-backups]
+    realizes: r2
+    place: { network: { lane: platform, order: 2 } }
+    detail:
+      what: "Cloudflare's file storage. It holds each good data run under a dated key, a small current.json naming the newest, the card definitions and the nightly database copy."
+      plan: "M2. Rob turns R2 on and makes its token"
+      terms: "Free tier: 10 GB-month, 1 million writes and 10 million reads a month, free egress"
+
+  - id: net:game-rooms
+    kind: NetworkNode
+    name: Game rooms
+    final: [M5-room, M5-transport, M5-hidden]
+    realizes: game-room
+    place: { network: { lane: platform, order: 3 } }
+    detail:
+      what: "One Durable Object per match: a single place in the cloud that runs the engine, keeps the authoritative game and sends each seat only what that seat may see."
+      protocol: "WebSocket through the Worker"
+      plan: "M5. Likely needs Workers Paid ($5 a month) once the engine's CPU per request passes 10 ms"
+
+  - id: net:github
+    kind: NetworkNode
+    name: The repository
+    final: [S1-release]
+    current: { file: AGENTS.md, match: 'release/pages' }
+    place: { network: { lane: pipeline, order: 1 } }
+    detail:
+      what: "minorrob/mtg-deck-matrix, private. main holds everything; release/pages records each production build."
+
+  - id: net:actions
+    kind: NetworkNode
+    name: GitHub Actions
+    final: [S1-release, M2-schedule, M2-adjudication]
+    current: { file: .github/workflows/tests.yml, match: 'runtests\.sh' }
+    realizes: refresh
+    place: { network: { lane: pipeline, order: 2 } }
+    detail:
+      what: "GitHub's runners. Today they run the test gate on every push. In the final state they also run the data refresh on a schedule and the weekly rules check."
+      terms: "A private repository gets 2,000 free minutes a month; CI plus the refresh is about 300 a month more"
+      plan: "M2"
+
+  - id: net:cf-dashboard
+    kind: NetworkNode
+    name: Cloudflare dashboard
+    final: [M3-invite]
+    current: { file: docs/handoff-2026-09-25.md, match: 'Zero Trust' }
+    place: { network: { lane: operator, order: 1 } }
+    detail:
+      what: "Where Rob invites people, sets Email Routing and zone settings, and enters Worker secrets. These stay his, in a browser."
+
+  - id: net:cloud-session
+    kind: NetworkNode
+    name: A cloud session
+    final: [S1-release]
+    current: { file: docs/handoff-2026-09-25.md, match: 'Working from a cloud session' }
+    place: { network: { lane: operator, order: 2 } }
+    detail:
+      what: "A Claude Code session in a cloud container. It builds, tests and deploys with an API credential the environment holds, so no step needs Rob's laptop."
+      auth: "An account-scoped Cloudflare API token, injected by the environment; never typed into chat"
+
+  - id: net:email-routing
+    kind: NetworkNode
+    name: admin@crankmagic.com
+    final: [S1-one-address]
+    current: { file: tools/release-pages.mjs, match: 'admin@crankmagic\.com' }
+    place: { network: { lane: operator, order: 3 } }
+    detail:
+      what: "The only public address. Cloudflare Email Routing forwards it to Rob; where it forwards is set in the dashboard and kept out of the repository."
+
+  # Retiring: exists today, no place in the final state
+  - id: net:laptop
+    kind: NetworkNode
+    name: Rob's laptop
+    current: { file: AGENTS.md, match: 'Personal-HP' }
+    place: { network: { lane: retired, order: 1 } }
+    detail:
+      what: "Personal-HP, where the data refresh and releases used to run by hand, and where the local game host and Forge live."
+      final: "Nothing in the final state needs it: data refreshes on a schedule and deploys run from a cloud session."
+      plan: "M2 and M9"
+
+  - id: net:local-host
+    kind: NetworkNode
+    name: The local game host
+    current: { file: index.html, match: '127\.0\.0\.1:8768' }
+    place: { network: { lane: retired, order: 2 } }
+    detail:
+      what: "The Windows host that serves a Forge-backed table at 127.0.0.1:8768. Frozen; the cloud game rooms replace it."
+      plan: "M9 retires it"
+
+  - id: net:forge
+    kind: NetworkNode
+    name: Forge
+    current: { file: game/server/local-table-runtime.mjs, match: 'Forge' }
+    place: { network: { lane: retired, order: 3 } }
+    detail:
+      what: "The open-source rules engine the local host drives through Java. CME replaces it; nothing from Forge comes into CME."
+      plan: "M9"
+
+  - id: net:tunnel
+    kind: NetworkNode
+    name: The trycloudflare tunnel
+    current: { file: index.html, match: 'trycloudflare' }
+    place: { network: { lane: retired, order: 4 } }
+    detail:
+      what: "A temporary public address that let remote guests reach the local host. The security policy still allows it on main."
+      plan: "M9"
+
+  - id: net:github-pages
+    kind: NetworkNode
+    name: github.io
+    current: { file: tools/release-pages.mjs, match: 'minorrob\.github\.io' }
+    place: { network: { lane: retired, order: 5 } }
+    detail:
+      what: "The app's first address. GitHub Pages was turned off on 2026-09-25; main still names the address in a few places."
+      plan: "Housekeeping: retire github.io from main"
+
+  - id: net:load-live
+    kind: NetworkNode
+    name: The Load Live workflow
+    current: { file: .github/workflows/live-load.yml, match: 'live-state\.json' }
+    place: { network: { lane: retired, order: 6 } }
+    detail:
+      what: "A workflow that rebuilt Rob's library files from his workbook for the site to fetch. Load Live went on 2026-09-24; the files are never served."
+      plan: "M3 decides how the workbook reaches his account; M9 freezes the workflow"
+
+  # ─────────────────────────────── Outside sources ───────────────────────────────
+  - id: src:scryfall-api
+    kind: OutsideSource
+    name: Scryfall API
+    origin: scryfall
+    final: [M2-live-first, M2-csp]
+    current: { file: scryfall-client.js, match: 'api\.scryfall\.com' }
+    place: { network: { lane: outside, order: 1 } }
+    detail:
+      what: "Card records, prices, rulings and legality, one card at a time."
+      live: "Live: read when a card is opened or added"
+      terms: "A descriptive User-Agent, about ten requests a second at most, and bulk files for bulk pulls"
+
+  - id: src:scryfall-cdn
+    kind: OutsideSource
+    name: Scryfall images
+    origin: scryfall
+    final: [M2-images]
+    current: { file: index.html, match: 'cards\.scryfall\.io' }
+    place: { network: { lane: outside, order: 2 } }
+    detail:
+      what: "cards.scryfall.io and svgs.scryfall.io: card pictures and mana symbols."
+      live: "Always live; never stored by us"
+      lifetime: "The browser's HTTP cache, and the worker's image cache with a size limit"
+
+  - id: src:scryfall-bulk
+    kind: OutsideSource
+    name: Scryfall bulk files
+    origin: scryfall
+    final: [M2-schedule, M2-stores]
+    current: { file: tools/refresh.mjs, match: 'commander-universe' }
+    place: { network: { lane: outside, order: 3 } }
+    detail:
+      what: "Daily files of every card (oracle_cards, default_cards). The scheduled job reads them, never a reader's browser."
+      refresh: "Daily"
+      terms: "Scryfall asks that bulk pulls use these files"
+
+  - id: src:edhrec
+    kind: OutsideSource
+    name: EDHREC
+    origin: edhrec
+    final: [M2-stores, M2-terms]
+    current: { file: edhrec-client.js, match: 'json\.edhrec\.com' }
+    place: { network: { lane: outside, order: 4 } }
+    detail:
+      what: "Commander popularity, themes and which cards are played together."
+      live: "Stored: EDHREC has no public API and is not built for live traffic from an app"
+      refresh: "Weekly, gently, by the scheduled job"
+
+  - id: src:mtgjson
+    kind: OutsideSource
+    name: MTGJSON
+    origin: mtgjson
+    final: [M1-precons]
+    place: { network: { lane: outside, order: 5 } }
+    detail:
+      what: "Precon decklists and set data, as bulk files."
+      refresh: "Weekly"
+
+  - id: src:archidekt
+    kind: OutsideSource
+    name: Archidekt
+    origin: archidekt
+    final: [M1-archidekt]
+    current: { file: deck-sources.js, match: 'archidekt' }
+    place: { network: { lane: outside, order: 6 } }
+    detail:
+      what: "A deck-building site. A deck link is read once and the result lands in the person's library."
+      live: "Live, through the Worker; never stored"
+
+  - id: src:wizards
+    kind: OutsideSource
+    name: Wizards of the Coast
+    origin: wizards
+    final: [M2-adjudication, M4-legality]
+    current: { file: game/engine/index.mjs, match: 'CR|Comprehensive' }
+    place: { network: { lane: outside, order: 7 } }
+    detail:
+      what: "The Comprehensive Rules text, release notes and the Commander format page (banned list, Game Changers, brackets)."
+      live: "Read at build time by the engine's tooling and when a case is adjudicated; never by a reader's browser"
+      terms: "Wizards' texts are read and cited, not redistributed or committed"
+
+  - id: src:anthropic
+    kind: OutsideSource
+    name: Anthropic API
+    origin: anthropic
+    final: [M6-door, M7-compiler]
+    place: { network: { lane: outside, order: 8 } }
+    detail:
+      what: "Claude, for the Coach, LLM seats and card compilation. Reached only by the Worker's AI door and the compiler job."
+      auth: "A key held as a Worker secret; it never reaches a browser"
+
+  - id: src:google
+    kind: OutsideSource
+    name: Google sign-in
+    origin: google
+    final: [S2-access]
+    current: { file: docs/handoff-2026-09-25.md, match: 'Google sign-in' }
+    place: { network: { lane: outside, order: 9 } }
+    detail:
+      what: "The identity provider behind Cloudflare Access. CrankMagic never sees a password."
+
+  # ─────────────────────────────── Worker routes ───────────────────────────────
+  # The seven live today are parsed from cloud/worker.mjs; listing them here gives them their final-state traces.
+  - { id: "route:GET:/api/auth/login", kind: WorkerRoute, name: "GET /api/auth/login", final: [S2-access], hosted: net:worker,
+      detail: { what: "After Access signs a person in, sends them back to the app. Only a fragment of this app may be the destination." } }
+  - { id: "route:GET:/api/me", kind: WorkerRoute, name: "GET /api/me", final: [S2-sync], hosted: net:worker,
+      detail: { what: "Who is signed in, and the library version their devices converge on." } }
+  - { id: "route:GET:/api/library", kind: WorkerRoute, name: "GET /api/library", final: [S2-sync], hosted: net:worker,
+      detail: { what: "The head: the newest version of this person's library." } }
+  - { id: "route:PUT:/api/library", kind: WorkerRoute, name: "PUT /api/library", final: [S2-sync], hosted: net:worker,
+      detail: { what: "Saves a version. The head moves only from where this device left it; otherwise the answer is 409 and the person chooses." } }
+  - { id: "route:POST:/api/library/kept", kind: WorkerRoute, name: "POST /api/library/kept", final: [S2-sync], hosted: net:worker,
+      detail: { what: "Files this device's version without moving the head: the side a person did not keep, held 30 days." } }
+  - { id: "route:GET:/api/library/history", kind: WorkerRoute, name: "GET /api/library/history", final: [S2-sync], hosted: net:worker,
+      detail: { what: "The versions held, newest first, without their bodies." } }
+  - { id: "route:GET:/api/library/versions/:id", kind: WorkerRoute, name: "GET /api/library/versions/:id", final: [S2-sync], hosted: net:worker,
+      detail: { what: "One version with its body, only ever the asking person's own." } }
+  - { id: "route:DELETE:/api/account", kind: WorkerRoute, name: "DELETE /api/account", final: [M1-delete-account], hosted: net:worker,
+      detail: { what: "Deletes the person's snapshots, head and user row after a type-to-confirm dialog. Removing them from Access is Rob's runbook step.", plan: "M1 (R3.3) and M3" } }
+  - { id: "route:PUT:/api/me", kind: WorkerRoute, name: "PUT /api/me", final: [M1-notify], hosted: net:worker,
+      detail: { what: "Stores account-level switches, such as 'Tell me when Play is ready'.", plan: "M1" } }
+  - { id: "route:GET:/data/*", kind: WorkerRoute, name: "GET /data/*", final: [M2-serve], hosted: net:worker,
+      detail: { what: "Serves current.json (short cache) and the dated data files (long cache) from R2.", plan: "M2" } }
+  - { id: "route:POST:/api/import/archidekt", kind: WorkerRoute, name: "POST /api/import/archidekt", final: [M1-archidekt], hosted: net:worker,
+      detail: { what: "Fetches a deck from an Archidekt link, with a size limit, and stores nothing.", plan: "M1 (R3.10)" } }
+  - { id: "route:POST:/api/tables", kind: WorkerRoute, name: "POST /api/tables", final: [M5-front-door, M5-lobby], hosted: net:worker,
+      detail: { what: "Creates a table and its game room; returns the invite link and QR.", plan: "M5" } }
+  - { id: "route:POST:/api/tables/:id/seats", kind: WorkerRoute, name: "POST /api/tables/:id/seats", final: [M5-front-door], hosted: net:worker,
+      detail: { what: "Joins or leaves a seat, handing it to the signed-in person. Identity stays out of the engine.", plan: "M5" } }
+  - { id: "route:GET:/api/tables/:id/socket", kind: WorkerRoute, name: "GET /api/tables/:id/socket", final: [M5-transport, M5-reconnect], hosted: net:worker,
+      detail: { what: "Upgrades to a WebSocket and hands it to the table's game room; a reconnect gets a fresh permitted view.", plan: "M5" } }
+  - { id: "route:POST:/api/ai/call", kind: WorkerRoute, name: "POST /api/ai/call", final: [M6-door, M10-finish], hosted: net:worker,
+      detail: { what: "The AI door: checks the allowlist and the spend cap, calls the model, and logs the call.", plan: "M6" } }
+
+  # ─────────────────────────────── R2 objects ───────────────────────────────
+  - id: r2:data/current.json
+    kind: R2Object
+    name: current.json
+    final: [M2-serve, M2-pin]
+    hosted: net:r2
+    detail:
+      what: "A small file naming the newest good data run: each file's dated key, checksum and date. The app reads it in place of ?v= pins."
+      lifetime: "Short cache"
+      plan: "M2"
+  - id: r2:data/dated
+    kind: R2Object
+    name: Dated data runs
+    final: [M2-schedule, M2-stores]
+    hosted: net:r2
+    detail:
+      what: "Each good run's files under data/<date>/. The last seven runs are kept, so a bad day rolls back by rewriting current.json."
+      lifetime: "Long cache; a dated file never changes"
+      plan: "M2"
+  - id: r2:engine/definitions
+    kind: R2Object
+    name: Card definitions
+    final: [M5-definitions, M7-compiler]
+    hosted: net:r2
+    detail:
+      what: "The engine's card definitions, versioned, loaded by a game room for the version the game pinned."
+      plan: "M5 and M7"
+  - id: r2:backups/d1
+    kind: R2Object
+    name: Nightly D1 copy
+    final: [M3-backups]
+    hosted: net:r2
+    detail:
+      what: "A nightly export of the D1 database, beside D1's own Time Travel."
+      plan: "M3, once M2 turns R2 on"
+
+  # ─────────────────────────────── Durable Object ───────────────────────────────
+  - id: do:game-room
+    kind: DurableObjectRoom
+    name: GameRoom
+    final: [M5-room, M5-transport, M5-reconnect, M5-hidden, M4-engine]
+    hosted: net:game-rooms
+    realizes: game-room
+    detail:
+      what: "The class each match runs in. It holds the authoritative state, applies each action through CME, writes the journal and checkpoints through the storage adapter, and sends each seat its own view."
+      plan: "M4 builds the storage adapter; M5 builds the room"
+
+  # ─────────────────────────────── Secrets (names withheld on the page) ───────────────────────────────
+  - { id: secret:cloudflare-api-token, kind: Secret, name: "Deploy credential", variable: CLOUDFLARE_API_TOKEN, final: [S1-release], hosted: net:cloud-session,
+      current: { file: docs/handoff-2026-09-25.md, match: 'CLOUDFLARE_API_TOKEN' } }
+  - { id: secret:r2-token, kind: Secret, name: "Data job credential", variable: CLOUDFLARE_R2_TOKEN, final: [M2-schedule], hosted: net:actions }
+  - { id: secret:anthropic-key, kind: Secret, name: "AI provider key", variable: ANTHROPIC_API_KEY, final: [M6-door], hosted: net:worker }
+  - { id: secret:access-service-tokens, kind: Secret, name: "Playtest agents' credentials", variable: "Access service tokens", final: [M8-playtest], hosted: net:access }
+
+# ─────────────────────────────── Network links ───────────────────────────────
+links:
+  - { from: net:browser, to: net:assets, protocol: HTTPS, auth: "None: public pages", policy: "default-src 'self'", final: [S1-release],
+      current: { file: index.html, match: "default-src 'self'" }, description: "Loads the app's pages, scripts and styles." }
+  - { from: net:browser, to: net:service-worker, protocol: "In the browser", auth: "Same origin", final: [M2-offline],
+      current: { file: crankmagic-app.js, match: 'serviceWorker' }, description: "Registers the worker that keeps files for offline use." }
+  - { from: net:browser, to: net:indexeddb, protocol: "In the browser", auth: "Same origin", final: [S2-sync, M2-live-first],
+      current: { file: collection-repository.js, match: 'idb\.open' }, description: "Saves every change to the library before it shows." }
+  - { from: net:browser, to: net:access, protocol: "HTTPS redirect", auth: "Google, or an emailed code (library only)", final: [S2-access],
+      current: { file: crankmagic-account.js, match: 'api/auth/login' }, description: "Signing in, when a person chooses to." }
+  - { from: net:access, to: src:google, protocol: "OIDC", auth: "Google account", final: [S2-access],
+      current: { file: docs/handoff-2026-09-25.md, match: 'Google sign-in' }, description: "Access asks Google who the person is." }
+  - { from: net:browser, to: net:worker, protocol: "HTTPS JSON", auth: "Access token cookie + an x-crankmagic header on writes", policy: "connect-src 'self'", final: [S2-sync, M2-serve, M5-front-door],
+      current: { file: crankmagic-account.js, match: 'api/library' }, description: "Library sync today; data files, tables and the AI door in the final state." }
+  - { from: net:worker, to: net:access, protocol: "HTTPS (published keys)", auth: "Public signing keys, cached ten minutes", final: [S2-access],
+      current: { file: cloud/access.mjs, match: 'cdn-cgi/access/certs' }, description: "The Worker checks each token's signature against the team's keys." }
+  - { from: net:worker, to: net:d1, protocol: "D1 binding (SQL)", auth: "Binding: nothing else can reach it", final: [S2-sync, M5-front-door, M6-door],
+      current: { file: cloud/worker.mjs, match: 'env\.DB' }, description: "Reads and writes users, snapshots and heads." }
+  - { from: net:worker, to: net:r2, protocol: "R2 binding", auth: "Binding", final: [M2-serve], description: "Serves /data/* from the bucket." }
+  - { from: net:worker, to: net:game-rooms, protocol: "Durable Object stub + WebSocket", auth: "The Worker hands over a seat only to its Access identity", final: [M5-front-door, M5-transport],
+      description: "Creates rooms and passes each player's WebSocket to their table's room." }
+  - { from: net:game-rooms, to: net:r2, protocol: "R2 binding", auth: "Binding", final: [M5-definitions, M2-pin], description: "Loads the card definitions and oracle snapshot the game pinned." }
+  - { from: net:browser, to: net:game-rooms, protocol: "WebSocket (through the Worker)", auth: "Access identity", final: [M5-transport],
+      description: "Ordered view updates and receipts, with no polling." }
+  - { from: net:worker, to: src:anthropic, protocol: "HTTPS", auth: "The AI provider key, a Worker secret", final: [M6-door], description: "Only for allowlisted people, under a spend cap, every call logged." }
+  - { from: net:browser, to: net:access-ai, protocol: "HTTPS redirect", auth: "Google with MFA; never the emailed code", final: [M6-door], description: "A separate sign-in for the AI features." }
+  - { from: net:worker, to: src:archidekt, protocol: "HTTPS", auth: "None", policy: "Size limit; nothing stored", final: [M1-archidekt], description: "Reads a deck by link for the person importing it." }
+  - { from: net:browser, to: src:scryfall-api, protocol: "HTTPS (CORS)", auth: "None", policy: "connect-src api.scryfall.com", final: [M2-live-first, M2-csp],
+      current: { file: index.html, match: 'connect-src[^"]*api\.scryfall\.com' }, description: "One card at a time, when it is opened or added." }
+  - { from: net:browser, to: src:scryfall-cdn, protocol: "HTTPS images", auth: "None", policy: "img-src cards.scryfall.io svgs.scryfall.io", final: [M2-images],
+      current: { file: index.html, match: 'img-src[^"]*cards\.scryfall\.io' }, description: "Card pictures and mana symbols." }
+  - { from: net:actions, to: src:scryfall-bulk, protocol: HTTPS, auth: "None; descriptive User-Agent", final: [M2-schedule], description: "Daily: every card and its prices." }
+  - { from: net:actions, to: src:edhrec, protocol: HTTPS, auth: "None; gentle, weekly", final: [M2-schedule, M2-terms], description: "Weekly: ranks and co-play." }
+  - { from: net:actions, to: src:mtgjson, protocol: HTTPS, auth: "None", final: [M1-precons], description: "Weekly: precon decklists." }
+  - { from: net:actions, to: src:wizards, protocol: HTTPS, auth: "None", final: [M2-adjudication], description: "A newer Comprehensive Rules date re-checks every citation." }
+  - { from: net:actions, to: net:r2, protocol: "R2 API", auth: "The data job credential, a GitHub secret", final: [M2-schedule], description: "Publishes a good run's dated files, then current.json." }
+  - { from: net:github, to: net:actions, protocol: "Git events and schedules", auth: "GitHub", final: [S1-release, M2-schedule],
+      current: { file: .github/workflows/tests.yml, match: 'on:' }, description: "Every push runs the gate." }
+  - { from: net:cloud-session, to: net:worker, protocol: "wrangler deploy (Cloudflare API)", auth: "The deploy credential, an environment secret", policy: "Staging first; production on Rob's go", final: [S1-release],
+      current: { file: docs/handoff-2026-09-25.md, match: 'wrangler@4\.139\.0 whoami' }, description: "Deploys the walked build." }
+  - { from: net:cloud-session, to: net:github, protocol: "Git over HTTPS", auth: "The session's GitHub access", final: [S1-release],
+      current: { file: docs/handoff-2026-09-25.md, match: 'GitHub access' }, description: "Branches, pull requests and release/pages." }
+  - { from: net:cf-dashboard, to: net:access, protocol: "Dashboard", auth: "Rob's Cloudflare login", final: [M3-invite],
+      current: { file: docs/handoff-2026-09-25.md, match: 'Invited' }, description: "Rob adds a person to the Invited list." }
+  - { from: net:browser, to: net:analytics, protocol: "HTTPS beacon", auth: "None", policy: "script-src static.cloudflareinsights.com", final: [M3-monitoring],
+      current: { file: tools/release-pages.mjs, match: 'cloudflareinsights' }, description: "Anonymous page counts." }
+  # Retiring links
+  - { from: net:browser, to: src:edhrec, protocol: "HTTPS (CORS)", auth: "None", policy: "connect-src json.edhrec.com",
+      current: { file: index.html, match: 'json\.edhrec\.com' }, description: "Today the browser asks EDHREC directly. In the final state only the scheduled job does." }
+  - { from: net:browser, to: src:archidekt, protocol: "HTTPS (CORS)", auth: "None", policy: "connect-src archidekt.com",
+      current: { file: index.html, match: 'archidekt\.com' }, description: "Today the browser may reach Archidekt directly. In the final state the Worker does." }
+  - { from: net:browser, to: net:local-host, protocol: "HTTP on 127.0.0.1:8768", auth: "Local", current: { file: index.html, match: '127\.0\.0\.1:8768' },
+      description: "The local copy of Play, frozen." }
+  - { from: net:browser, to: net:tunnel, protocol: "HTTPS", auth: "Invitation link", current: { file: index.html, match: 'trycloudflare' },
+      description: "Remote guests reached the local host this way." }
+  - { from: net:tunnel, to: net:local-host, protocol: "cloudflared tunnel", auth: "None", current: { file: game/server/guest-gateway.mjs, match: 'tunnel|trycloudflare' },
+      description: "The tunnel forwards to the host on Rob's machine." }
+  - { from: net:local-host, to: net:forge, protocol: "Java process", auth: "Local", current: { file: game/server/local-table-runtime.mjs, match: 'Forge' },
+      description: "The host drives Forge through the adapter." }
+  - { from: net:laptop, to: src:scryfall-bulk, protocol: HTTPS, auth: "None", current: { file: tools/refresh.mjs, match: 'commander-universe' },
+      description: "Today the refresh runs by hand on a machine, and someone commits the result." }
+  - { from: net:laptop, to: net:worker, protocol: "wrangler deploy (browser sign-in)", auth: "Wrangler's OAuth token on the laptop", current: { file: docs/handoff-2026-09-25.md, match: 'WRANGLER=' },
+      description: "How deploys ran before the cloud session held a credential." }
+  - { from: net:load-live, to: net:github-pages, protocol: "Git push", auth: "GitHub", current: { file: .github/workflows/live-load.yml, match: 'live-state' },
+      description: "Load Live published Rob's library files for the site to fetch. Both ends are off." }
+
+# ─────────────────────────────── Tables and records ───────────────────────────────
+tables:
+  # D1 (parsed from cloud/migrations for the current map)
+  - id: d1:users
+    kind: D1Table
+    name: users
+    final: [S2-sync]
+    hosted: net:d1
+    place: { schema: { group: d1, order: 1 } }
+    detail: { what: "One row per person who has signed in.", source: "Cloudflare Access names the person; the Worker writes the row", owner: "Ours; person-level" }
+    fields:
+      - { name: id, type: INTEGER, core: true, required: true, meaning: "The person's number here.", example: "42", source: "Assigned by D1" }
+      - { name: email, type: TEXT, core: true, required: true, meaning: "Who they are, lower-cased, from the Access token.", example: "withheld", source: "Cloudflare Access" }
+      - { name: created_at, type: TEXT, core: true, required: true, meaning: "When they first signed in.", example: "2026-09-24T18:02:11Z", source: "The Worker's clock" }
+      - { name: seen_at, type: TEXT, core: true, required: true, meaning: "When they were last seen, moved at most hourly to save writes.", example: "2026-09-25T07:40:00Z", source: "The Worker's clock" }
+      - { name: notify_play, type: INTEGER, core: false, required: false, current: false, meaning: "The 'Tell me when Play is ready' switch.", example: "1", source: "The person, in the app", final: [M1-notify] }
+  - id: d1:snapshots
+    kind: D1Table
+    name: snapshots
+    final: [S2-sync]
+    hosted: net:d1
+    place: { schema: { group: d1, order: 2 } }
+    detail: { what: "Saved versions of a person's library. Each is the app's own checksummed backup, gzipped by the browser. The Worker never opens one.", lifetime: "The newest 20 everyday versions; a displaced or kept version for 30 days" }
+    fields:
+      - { name: id, type: "TEXT (UUID)", core: true, required: true, meaning: "The version's id, minted by the Worker.", example: "3f2a…c91e", source: "The Worker" }
+      - { name: user_id, type: INTEGER, core: true, required: true, meaning: "Whose library this is.", example: "42", source: "The signed-in person", joins: { to: d1:users.id, cardinality: "many to one" } }
+      - { name: parent_id, type: TEXT, core: true, required: false, meaning: "The version the device started from; empty for a first save.", example: "9b10…77aa", source: "The device", joins: { to: d1:snapshots.id, cardinality: "many to one" } }
+      - { name: kind, type: TEXT, core: true, required: true, meaning: "sync, displaced (replaced by a choice) or kept (the side not chosen).", example: "sync", source: "The Worker" }
+      - { name: revision, type: INTEGER, core: true, required: true, meaning: "The device's own revision number when it saved.", example: "318", source: "The device", joins: { to: rec:library.state.revision, cardinality: "one to one" } }
+      - { name: device, type: TEXT, required: true, meaning: "How the device describes itself.", example: "withheld", source: "The device" }
+      - { name: checksum, type: TEXT, required: true, meaning: "The backup's SHA-256; the browser verifies it on the way back.", example: "a3c4…", source: "The browser" }
+      - { name: size, type: INTEGER, required: true, meaning: "Length of the body in characters.", example: "184220", source: "The Worker" }
+      - { name: body, type: TEXT, core: true, required: true, meaning: "The whole library, gzipped and base64-encoded.", example: "withheld", source: "The browser" }
+      - { name: created_at, type: TEXT, required: true, meaning: "When it was saved.", example: "2026-09-25T07:41:03Z", source: "The Worker's clock" }
+  - id: d1:heads
+    kind: D1Table
+    name: heads
+    final: [S2-sync]
+    hosted: net:d1
+    place: { schema: { group: d1, order: 3 } }
+    detail: { what: "For each person, the version every device should converge on. It moves only from where a device left it." }
+    fields:
+      - { name: user_id, type: INTEGER, core: true, required: true, meaning: "Whose head this is.", example: "42", source: "The signed-in person", joins: { to: d1:users.id, cardinality: "one to one" } }
+      - { name: snapshot_id, type: TEXT, core: true, required: true, meaning: "The current version.", example: "3f2a…c91e", source: "The Worker", joins: { to: d1:snapshots.id, cardinality: "one to one" } }
+      - { name: updated_at, type: TEXT, core: true, required: true, meaning: "When the head last moved.", example: "2026-09-25T07:41:03Z", source: "The Worker's clock" }
+  - id: d1:tables
+    kind: D1Table
+    name: tables
+    final: [M5-front-door, M5-lobby]
+    hosted: net:d1
+    place: { schema: { group: d1-play, order: 1 } }
+    detail: { what: "A table someone is hosting, and the game room that runs it.", plan: "M5" }
+    fields:
+      - { name: id, type: TEXT, core: true, required: true, meaning: "The table's id, in its invite link.", example: "tbl_7k2q", source: "The Worker" }
+      - { name: host_user_id, type: INTEGER, core: true, required: true, meaning: "Who is hosting.", example: "42", source: "The signed-in person", joins: { to: d1:users.id, cardinality: "many to one" } }
+      - { name: room_id, type: TEXT, core: true, required: true, meaning: "The Durable Object running the match.", example: "do_91f…", source: "Cloudflare", joins: { to: rec:room.state.room_id, cardinality: "one to one" } }
+      - { name: status, type: TEXT, core: true, required: true, meaning: "lobby, countdown, playing or finished.", example: "lobby", source: "The room" }
+      - { name: rules, type: "TEXT (JSON)", core: false, required: true, meaning: "The table's rules: bracket, timers, who may join.", example: "{\"bracket\":3}", source: "The host" }
+      - { name: created_at, type: TEXT, core: true, required: true, meaning: "When it was set up.", example: "2026-10-12T19:30:00Z", source: "The Worker's clock" }
+  - id: d1:seats
+    kind: D1Table
+    name: seats
+    final: [M5-front-door, M5-lobby]
+    hosted: net:d1
+    place: { schema: { group: d1-play, order: 2 } }
+    detail: { what: "Who sits where: a person, the house pilot, or an LLM seat. Invitations are seats with no person yet.", plan: "M5" }
+    fields:
+      - { name: table_id, type: TEXT, core: true, required: true, meaning: "Which table.", example: "tbl_7k2q", source: "The Worker", joins: { to: d1:tables.id, cardinality: "many to one" } }
+      - { name: seat, type: INTEGER, core: true, required: true, meaning: "Seat 1 to 4.", example: "2", source: "The host" }
+      - { name: user_id, type: INTEGER, core: true, required: false, meaning: "The person in it; empty for an AI seat or an open invitation.", example: "57", source: "The Access identity that joined", joins: { to: d1:users.id, cardinality: "many to one" } }
+      - { name: kind, type: TEXT, core: true, required: true, meaning: "human, house or llm.", example: "human", source: "The host" }
+      - { name: invite_token, type: TEXT, core: false, required: false, meaning: "The link or QR code's token for an open human seat.", example: "withheld", source: "The Worker" }
+  - id: d1:ai_allowlist
+    kind: D1Table
+    name: ai_allowlist
+    final: [M6-door]
+    hosted: net:d1
+    place: { schema: { group: d1-play, order: 3 } }
+    detail: { what: "The people Rob allows to use AI features. Separate from the invite list.", owner: "Rob manages it", plan: "M6" }
+    fields:
+      - { name: email, type: TEXT, core: true, required: true, meaning: "Who may use AI.", example: "withheld", source: "Rob", joins: { to: d1:users.email, cardinality: "one to one" } }
+      - { name: cap_usd, type: REAL, core: true, required: true, meaning: "Their spend cap per month.", example: "5.00", source: "Rob" }
+      - { name: added_at, type: TEXT, core: true, required: true, meaning: "When Rob added them.", example: "2026-11-02T10:00:00Z", source: "The clock" }
+      - { name: note, type: TEXT, core: false, required: false, meaning: "Why they are on the list.", example: "Playtester", source: "Rob" }
+  - id: d1:ai_calls
+    kind: D1Table
+    name: ai_calls
+    final: [M6-door]
+    hosted: net:d1
+    place: { schema: { group: d1-play, order: 4 } }
+    detail: { what: "A log of every AI call: who, what for, tokens and cost.", plan: "M6" }
+    fields:
+      - { name: id, type: TEXT, core: true, required: true, meaning: "The call's id.", example: "call_2c1…", source: "The Worker" }
+      - { name: user_id, type: INTEGER, core: true, required: true, meaning: "Who made it.", example: "42", source: "The signed-in person", joins: { to: d1:users.id, cardinality: "many to one" } }
+      - { name: purpose, type: TEXT, core: true, required: true, meaning: "coach, llm-seat, explain-score or compile.", example: "coach", source: "The feature" }
+      - { name: tokens, type: INTEGER, core: true, required: true, meaning: "Tokens in and out.", example: "1840", source: "The provider's reply" }
+      - { name: cost_usd, type: REAL, core: true, required: true, meaning: "What it cost.", example: "0.012", source: "Computed from the provider's price" }
+      - { name: prompt_digest, type: TEXT, core: false, required: true, meaning: "A hash of what was sent, not the text.", example: "withheld", source: "The Worker" }
+      - { name: at, type: TEXT, core: false, required: true, meaning: "When.", example: "2026-11-02T20:14:09Z", source: "The clock" }
+
+  # The library (IndexedDB crankmagic-library, store `state`)
+  - id: rec:library.state
+    kind: RecordType
+    name: library
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'schemaVersion:VERSION' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 1 } }
+    detail: { what: "The library as one record: every collection below, a schema version and a revision. A change is saved with its receipt and an undo point in one transaction.", owner: "The reader" }
+    fields:
+      - { name: schemaVersion, type: integer, core: true, required: true, meaning: "The record's shape; 3 today.", example: "3", source: "The app" }
+      - { name: revision, type: integer, core: true, required: true, meaning: "Goes up by one with every saved change.", example: "318", source: "The app" }
+      - { name: createdAt, type: date, core: true, required: false, meaning: "When the library was started.", example: "2026-09-02T12:00:00Z", source: "The app" }
+      - { name: updatedAt, type: date, core: true, required: false, meaning: "When it last changed.", example: "2026-09-25T07:40:59Z", source: "The app" }
+  - id: rec:library.cards
+    kind: RecordType
+    name: cards
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'oracleId' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 2 } }
+    detail: { what: "The cards this library knows, as references: the facts live on the Card record, read from the catalog." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "Scryfall's id for the printing.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "many to one" } }
+      - { name: name, type: text, core: true, required: true, meaning: "The printed name.", example: "Sol Ring", source: "Scryfall" }
+      - { name: oracleId, type: text, core: true, required: true, meaning: "The card across all printings.", example: "6ad8011d-…", source: "Scryfall", joins: { to: rec:scryfall.card.oracle_id, cardinality: "many to one" } }
+      - { name: shipped, type: boolean, core: true, required: true, meaning: "True when the shipped record set carries the card, so only its identity is kept.", example: "true", source: "The app" }
+  - id: rec:library.lots
+    kind: RecordType
+    name: lots
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'allocation' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 3 } }
+    detail: { what: "Physical copies, in groups: owned, ordered, watching or to buy, where they sit, and which deck slot they fill." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The lot's id.", example: "lot_8w1…", source: "The app" }
+      - { name: cardId, type: text, core: true, required: true, meaning: "Which card.", example: "5f8287b1-…", source: "The person", joins: { to: rec:library.cards.id, cardinality: "many to one" } }
+      - { name: quantity, type: integer, core: true, required: true, meaning: "How many copies.", example: "2", source: "The person" }
+      - { name: source, type: text, core: true, required: true, meaning: "owned, ordered, watching or toBuy.", example: "owned", source: "The person" }
+      - { name: allocation.deckId, type: text, core: true, required: false, match: 'deckId', meaning: "The deck these copies are reserved for.", example: "deck_3k…", source: "The person", joins: { to: rec:library.decks.id, cardinality: "many to one" } }
+      - { name: allocation.slotId, type: text, core: false, required: false, match: 'slotId', meaning: "The slot they fill.", example: "slot_9d…", source: "The person", joins: { to: rec:library.slots.id, cardinality: "many to one" } }
+      - { name: paid, type: number, required: false, meaning: "What was paid per copy.", example: "1.49", source: "The person" }
+      - { name: notes, type: text, required: false, meaning: "The person's own notes.", example: "withheld", source: "The person" }
+  - id: rec:library.decks
+    kind: RecordType
+    name: decks
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'commanders' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 4 } }
+    detail: { what: "Decks: a commander, a list of slots, a definition (bracket, budget, style) and a status from draft to final." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The deck's id.", example: "deck_3k…", source: "The app" }
+      - { name: name, type: text, core: true, required: true, meaning: "Its name.", example: "Tempest of Wings", source: "The person" }
+      - { name: commanders, type: list, core: true, required: true, meaning: "Its commander or commanders.", example: "[Kykar]", source: "The person", joins: { to: rec:library.cards.id, cardinality: "many to many" } }
+      - { name: status, type: text, core: true, required: true, meaning: "draft or final.", example: "final", source: "The person" }
+      - { name: version, type: integer, core: true, required: true, meaning: "Goes up when the list is finalized.", example: "4", source: "The app" }
+      - { name: groupId, type: text, required: false, meaning: "The collection group the deck belongs to.", example: "group:main-deck", source: "The app", joins: { to: rec:library.groups.id, cardinality: "many to one" } }
+  - id: rec:library.slots
+    kind: RecordType
+    name: slots
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'slots' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 5 } }
+    detail: { what: "A deck's hundred: one row per card it calls for. Held inside its deck." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The slot's id.", example: "slot_9d…", source: "The app" }
+      - { name: deck, type: "parent", core: true, required: true, match: 'slots', meaning: "The deck it belongs to (it is stored inside the deck).", example: "deck_3k…", source: "The app", joins: { to: rec:library.decks.id, cardinality: "many to one" } }
+      - { name: cardId, type: text, core: true, required: true, meaning: "The card called for.", example: "5f8287b1-…", source: "The person", joins: { to: rec:library.cards.id, cardinality: "many to one" } }
+      - { name: quantity, type: integer, core: true, required: true, meaning: "How many.", example: "1", source: "The person" }
+      - { name: committed, type: boolean, core: true, required: false, meaning: "True once the deck is finalized and the slot counts toward To Buy.", example: "true", source: "The app" }
+  - id: rec:library.groups
+    kind: RecordType
+    name: groups
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 'STARTER_GROUPS' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 6 } }
+    detail: { what: "Collection groups: Main Deck, Bench, To Trade, To Buy, and the person's own." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The group's id.", example: "group:bench", source: "The app" }
+      - { name: name, type: text, core: true, required: true, meaning: "Its name.", example: "Bench", source: "The person" }
+      - { name: entries, type: list, core: true, required: true, meaning: "What is in it.", example: "[lot_8w1…]", source: "The person" }
+  - id: rec:library.reports
+    kind: RecordType
+    name: reports
+    final: [S2-sync]
+    current: { file: collection-model.js, match: 's\.reports' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 7 } }
+    detail: { what: "Measure reports filed under a deck." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The report's id.", example: "report_4f…", source: "The app" }
+      - { name: deckId, type: text, core: true, required: true, meaning: "The deck it measured.", example: "deck_3k…", source: "The app", joins: { to: rec:library.decks.id, cardinality: "many to one" } }
+      - { name: origin, type: text, core: true, required: true, meaning: "measured or imported.", example: "measured", source: "The app" }
+      - { name: importedAt, type: date, core: true, required: true, meaning: "When it was filed.", example: "2026-09-20T21:00:00Z", source: "The app" }
+  - id: rec:library.games
+    kind: RecordType
+    name: games
+    final: [S2-sync, M5-results, M2-pin]
+    current: { file: collection-model.js, match: 's\.games' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 8 } }
+    detail: { what: "Games played with a deck. In the final state a cloud game files its own record here, with the data version it pinned." }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The game's id.", example: "game_2m…", source: "The app or the room" }
+      - { name: deckId, type: text, core: true, required: true, meaning: "The deck played.", example: "deck_3k…", source: "The person", joins: { to: rec:library.decks.id, cardinality: "many to one" } }
+      - { name: deckVersion, type: integer, core: true, required: true, meaning: "Which version of the deck.", example: "4", source: "The app" }
+      - { name: outcome, type: text, core: true, required: true, meaning: "won, lost or drew.", example: "won", source: "The person or the room" }
+      - { name: at, type: date, core: true, required: true, meaning: "When it was played.", example: "2026-09-19T22:10:00Z", source: "The app" }
+      - { name: dataVersion, type: text, core: false, required: false, current: false, meaning: "The card data and definitions the game pinned.", example: "2026-10-12", source: "The room", final: [M2-pin], joins: { to: rec:store.current.date, cardinality: "many to one" } }
+      - { name: opponents, type: text, required: false, meaning: "Who played.", example: "withheld", source: "The person" }
+      - { name: notes, type: text, required: false, meaning: "The person's notes.", example: "withheld", source: "The person" }
+  - id: rec:library.preferences
+    kind: RecordType
+    name: preferences
+    final: [M1-settings]
+    current: { file: collection-model.js, match: 'preferences:' }
+    hosted: net:indexeddb
+    place: { schema: { group: library, order: 9 } }
+    detail: { what: "The person's settings that travel with the library." }
+    fields:
+      - { name: starterGroups, type: boolean, core: true, required: false, meaning: "Whether the starter groups were offered.", example: "true", source: "The app" }
+      - { name: currency, type: text, core: true, required: false, current: false, meaning: "USD or EUR.", example: "USD", source: "Settings", final: [M1-settings] }
+      - { name: budgetCap, type: number, core: true, required: false, current: false, meaning: "The budget a new deck starts with.", example: "150", source: "Settings", final: [M1-settings] }
+      - { name: reduceMotion, type: boolean, core: true, required: false, current: false, meaning: "Fewer animations.", example: "false", source: "Settings", final: [M1-settings] }
+
+  # The reader's cache
+  - id: rec:cache.card-records
+    kind: RecordType
+    name: card records (IndexedDB)
+    origin: scryfall
+    final: [M2-live-first, M2-offline]
+    hosted: net:indexeddb
+    place: { schema: { group: cache, order: 1 } }
+    detail: { what: "Each card record fetched from Scryfall, kept in the browser with its fetch time.", live: "Live first; this is the second choice", lifetime: "7 days for a record, 24 hours for its price, and at once when a set releases", source: "Scryfall", terms: "Scryfall's content, cached for the reader only", plan: "M2" }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "Scryfall's id.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "one to one" } }
+      - { name: record, type: object, core: true, required: true, meaning: "The card as Scryfall returned it.", example: "{…}", source: "Scryfall" }
+      - { name: fetchedAt, type: date, core: true, required: true, meaning: "When it was read.", example: "2026-10-01T09:00:00Z", source: "The browser" }
+      - { name: etag, type: text, core: true, required: false, meaning: "Lets the browser ask 'has it changed?' instead of downloading again.", example: "W/\"a1b2\"", source: "Scryfall" }
+  - id: rec:cache.session-scryfall
+    kind: RecordType
+    name: card lookups (session storage)
+    origin: scryfall
+    current: { file: crankmagic-card-client.js, match: 'sessionStorage' }
+    hosted: net:browser
+    place: { schema: { group: cache, order: 2 } }
+    detail: { what: "Today's cache of Scryfall lookups: kept in the tab's session storage for 24 hours, and gone when the tab closes.", final: "Replaced by the IndexedDB card records, which survive a restart and work offline.", source: "Scryfall", lifetime: "24 hours, this tab only", plan: "M2" }
+    fields:
+      - { name: key, type: text, core: true, required: true, meaning: "The lookup, such as a name.", example: "named:sol ring", source: "The app", match: 'prefix' }
+      - { name: payload, type: object, core: true, required: true, meaning: "What Scryfall returned.", example: "{…}", source: "Scryfall" }
+      - { name: savedAt, type: number, core: true, required: true, meaning: "When it was saved.", example: "1727250000000", source: "The browser", match: 'savedAt|CACHE_TTL' }
+  - id: rec:cache.files
+    kind: RecordType
+    name: app and data files (Cache Storage)
+    final: [M2-offline]
+    current: { file: crankmagic-sw.js, match: 'DATA_CACHE' }
+    hosted: net:service-worker
+    place: { schema: { group: cache, order: 3 } }
+    detail: { what: "The service worker's copies of the app and the data sets, so the app opens offline.", today: "Keyed by ?v= pins", final: "Keyed by the dated files current.json names; the last good copy stays", plan: "M2" }
+    fields:
+      - { name: url, type: text, core: true, required: true, meaning: "The file's address.", example: "data/2026-10-12/cards.json", source: "The app", match: 'request' }
+      - { name: cache, type: text, core: true, required: true, meaning: "shell or data.", example: "data", source: "The worker", match: 'SHELL_CACHE' }
+      - { name: version, type: text, core: true, required: true, meaning: "Which build or data run it belongs to.", example: "2026-10-12", source: "current.json", match: 'keyFor' }
+
+  # Stored by us, refreshed
+  - id: rec:store.current
+    kind: RecordType
+    name: current.json
+    final: [M2-serve, M2-ages, M2-pin]
+    hosted: net:r2
+    place: { schema: { group: stores, order: 1 } }
+    detail: { what: "The index of the newest good data run. The app, the Settings page and a game room all read it.", lifetime: "Short cache", refresh: "Rewritten last by each good run", plan: "M2" }
+    fields:
+      - { name: date, type: date, core: true, required: true, meaning: "The run's date; a game pins it.", example: "2026-10-12", source: "The scheduled job" }
+      - { name: "files[].name", type: text, core: true, required: true, meaning: "A data set's name.", example: "cards", source: "The job" }
+      - { name: "files[].key", type: text, core: true, required: true, meaning: "Its dated key in R2.", example: "data/2026-10-12/cards.json", source: "The job" }
+      - { name: "files[].sha256", type: text, core: true, required: true, meaning: "Its checksum.", example: "e3b0…", source: "The job" }
+      - { name: "files[].madeAt", type: date, core: true, required: true, meaning: "When that set was last refreshed; Settings › About shows it.", example: "2026-10-12T04:10:00Z", source: "The job" }
+  - id: rec:store.pinned
+    kind: RecordType
+    name: ?v= pinned data files
+    current: { file: crankmagic-sw.js, match: 'data/graph\.json\?v=' }
+    hosted: net:assets
+    place: { schema: { group: stores, order: 2 } }
+    detail: { what: "Today the data files ship inside each release, each named with a ?v= number the code carries. A refresh is a code change.", final: "Replaced by current.json and dated files in R2.", plan: "M2" }
+    fields:
+      - { name: file, type: text, core: true, required: true, meaning: "The data file.", example: "data/cards.json", source: "The release", match: 'data/' }
+      - { name: v, type: integer, core: true, required: true, meaning: "The pin a browser needs to fetch the new copy.", example: "21", source: "tools/bump-pins.mjs", match: '\?v=' }
+      - { name: sha, type: text, core: true, required: true, meaning: "The checksum tests/asset-versions.mjs records.", example: "9c1d…", source: "The manifest", match: 'keyFor' }
+  - id: rec:store.cards
+    kind: RecordType
+    name: card records and prices
+    origin: scryfall
+    final: [M2-stores, M2-schedule]
+    current: { file: crankmagic-assets.js, match: 'cards\.json' }
+    hosted: net:r2
+    place: { schema: { group: stores, order: 3 } }
+    detail: { what: "One dated snapshot of the card records the app carries, with prices, for bulk arithmetic: a deck's cost to finish, the buy list's total, the cap checks.", today: "data/cards.json, a pinned static file refreshed by hand", source: "Scryfall's default_cards bulk file", refresh: "Daily", terms: "Scryfall's data; bulk file, descriptive User-Agent", plan: "M2" }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "Scryfall's id.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "one to one" } }
+      - { name: name, type: text, core: true, required: true, meaning: "The card's name.", example: "Sol Ring", source: "Scryfall" }
+      - { name: typeLine, type: text, core: true, required: true, meaning: "Its type line.", example: "Artifact", source: "Scryfall" }
+      - { name: prices.usd, type: number, core: true, required: false, match: 'usd', meaning: "The US price (TCGplayer).", example: "1.49", source: "Scryfall prices" }
+      - { name: prices.eur, type: number, core: true, required: false, current: false, meaning: "The euro price (Cardmarket).", example: "1.20", source: "Scryfall prices", final: [M1-settings] }
+  - id: rec:store.name-index
+    kind: RecordType
+    name: name index
+    origin: scryfall
+    final: [M2-stores]
+    current: { file: crankmagic-assets.js, match: 'commander-universe' }
+    hosted: net:r2
+    place: { schema: { group: stores, order: 4 } }
+    detail: { what: "Every Commander-legal card's name and identity, so search and pickers work without 31,830 requests.", today: "data/commander-universe.json", source: "Scryfall's oracle_cards bulk file", refresh: "Daily", plan: "M2" }
+    fields:
+      - { name: name, type: text, core: true, required: true, meaning: "The card's name.", example: "Sol Ring", source: "Scryfall" }
+      - { name: oracleId, type: text, core: true, required: true, meaning: "The card across printings.", example: "6ad8011d-…", source: "Scryfall", joins: { to: rec:scryfall.card.oracle_id, cardinality: "one to one" } }
+      - { name: colorIdentity, type: text, core: true, required: true, meaning: "Its colors for Commander.", example: "C", source: "Scryfall" }
+  - id: rec:store.oracle
+    kind: RecordType
+    name: engine oracle snapshot
+    origin: scryfall
+    final: [M2-stores, M2-pin, M4-engine]
+    current: { file: tools/build-engine-cards.mjs, match: 'oracle' }
+    hosted: net:r2
+    place: { schema: { group: stores, order: 5 } }
+    detail: { what: "The rules text of all 31,830 cards the engine knows, as of a stated date, so a game is deterministic and replays identically.", today: "data/engine/oracle.json, committed", source: "Scryfall's oracle_cards (Wizards' Oracle text)", refresh: "Daily, pinned by date", plan: "M2 and M5" }
+    fields:
+      - { name: oracleId, type: text, core: true, required: true, meaning: "The card.", example: "6ad8011d-…", source: "Scryfall", joins: { to: rec:scryfall.card.oracle_id, cardinality: "one to one" } }
+      - { name: name, type: text, core: true, required: true, meaning: "Its name.", example: "Sol Ring", source: "Scryfall" }
+      - { name: oracleText, type: text, core: true, required: true, meaning: "Its rules text.", example: "{T}: Add {C}{C}.", source: "Wizards, through Scryfall", match: 'oracle' }
+      - { name: date, type: date, core: true, required: true, meaning: "The snapshot's date.", example: "2026-10-12", source: "The job", match: 'generatedAt' }
+  - id: rec:store.definitions
+    kind: RecordType
+    name: card definitions
+    final: [M7-compiler, M5-definitions]
+    hosted: net:r2
+    place: { schema: { group: stores, order: 6 } }
+    detail: { what: "The engine's definition of each card, hand-authored for the seven decks and compiled for the rest, each checked against its oracle text.", plan: "M4 (the seven decks), M7 (every card)" }
+    fields:
+      - { name: oracleId, type: text, core: true, required: true, meaning: "The card.", example: "6ad8011d-…", source: "The oracle snapshot", joins: { to: rec:store.oracle.oracleId, cardinality: "one to one" } }
+      - { name: version, type: text, core: true, required: true, meaning: "The definition's version; a game pins it.", example: "2026-10-12.3", source: "The compiler" }
+      - { name: script, type: object, core: true, required: true, meaning: "The card's behavior in the engine's vocabulary.", example: "{…}", source: "Hand-authored or compiled" }
+      - { name: status, type: text, core: true, required: true, meaning: "supported, or refused with what it lacks.", example: "supported", source: "The support ledger", joins: { to: rec:engine.support.status, cardinality: "one to one" } }
+  - id: rec:engine.support
+    kind: RecordType
+    name: support ledger
+    final: [M7-compiler, M4-engine]
+    current: { file: tools/build-engine-cards.mjs, match: 'support' }
+    hosted: net:r2
+    place: { schema: { group: stores, order: 7 } }
+    detail: { what: "For every card in the pool, whether the engine can play it yet and, if not, the construct it lacks.", today: "data/engine/support.json; every row unsupported until definitions land", plan: "M4 and M7" }
+    fields:
+      - { name: oracleId, type: text, core: true, required: true, meaning: "The card.", example: "6ad8011d-…", source: "The pool", joins: { to: rec:store.oracle.oracleId, cardinality: "one to one" } }
+      - { name: tier, type: integer, core: true, required: true, meaning: "How much new engine work the card needs.", example: "0", source: "The inventory", match: 'tier' }
+      - { name: status, type: text, core: true, required: true, meaning: "supported or unsupported.", example: "unsupported", source: "The ledger", match: 'status|legend' }
+  - id: rec:store.graph
+    kind: RecordType
+    name: relationship graph
+    final: [M2-stores]
+    current: { file: crankmagic-assets.js, match: 'graph\.json' }
+    hosted: net:r2
+    place: { schema: { group: stores, order: 8 } }
+    detail: { what: "Our own derived data: how every card relates to every other, behind Explore. Computed across every card, so it must be stored.", today: "data/graph.json (16 MB) and data/graph-played.json (21 MB), near Cloudflare's 25 MiB file cap", refresh: "Weekly, when its inputs change", plan: "M2 splits graph-played before it reaches the cap" }
+    fields:
+      - { name: card, type: text, core: true, required: true, meaning: "A card.", example: "Sol Ring", source: "The name index", match: 'cards', joins: { to: rec:store.name-index.name, cardinality: "one to one" } }
+      - { name: facets, type: list, core: true, required: true, meaning: "Its roles, such as ramp or removal.", example: "[ramp]", source: "Our classifier", match: 'facets' }
+      - { name: played, type: list, core: true, required: false, meaning: "Cards played with it, from EDHREC co-play.", example: "[Arcane Signet]", source: "EDHREC", match: 'played', joins: { to: rec:edhrec.coplay.card, cardinality: "one to many" } }
+  - id: rec:store.d1-backup
+    kind: RecordType
+    name: nightly database copy
+    final: [M3-backups]
+    hosted: net:r2
+    place: { schema: { group: stores, order: 9 } }
+    detail: { what: "A nightly export of D1, beside Time Travel.", owner: "Ours; person-level", plan: "M3" }
+    fields:
+      - { name: date, type: date, core: true, required: true, meaning: "The night it was taken.", example: "2026-10-12", source: "The job" }
+      - { name: tables, type: list, core: true, required: true, meaning: "users, snapshots, heads and the rest.", example: "[users, snapshots, heads]", source: "D1", joins: { to: d1:users.id, cardinality: "copy of" } }
+
+  # The game room (implemented in the engine today; hosted by no room yet)
+  - id: rec:room.state
+    kind: RecordType
+    name: game state
+    final: [M5-room, M4-engine, M2-pin]
+    current: { file: game/engine/state/index.mjs, match: 'zones|seed' }
+    hosted: net:game-rooms
+    place: { schema: { group: room, order: 1 } }
+    detail: { what: "The authoritative game: the seed, the turn, every zone and a hash of it all. Only the room holds it.", today: "CME builds it in its own tests; no room hosts it yet", plan: "M4 and M5" }
+    fields:
+      - { name: room_id, type: text, core: true, required: true, current: false, meaning: "The room this game lives in.", example: "do_91f…", source: "Cloudflare", final: [M5-room] }
+      - { name: seed, type: text, core: true, required: true, meaning: "The random seed; the same seed and actions give the same game.", example: "0x5eed…", source: "The room", match: 'seed' }
+      - { name: turn, type: integer, core: true, required: true, meaning: "Whose turn and which step.", example: "7", source: "The engine", match: 'turn' }
+      - { name: zones, type: object, core: true, required: true, meaning: "Library, hand, battlefield, graveyard, exile, stack and command zone for each seat.", example: "{…}", source: "The engine", match: 'zones' }
+      - { name: dataVersion, type: text, core: true, required: true, current: false, meaning: "The oracle snapshot and definitions pinned at start.", example: "2026-10-12", source: "current.json", final: [M2-pin], joins: { to: rec:store.current.date, cardinality: "many to one" } }
+  - id: rec:room.journal
+    kind: RecordType
+    name: journal
+    final: [M5-room, M4-engine, M8-playtest]
+    current: { file: game/engine/journal.mjs, match: 'journal' }
+    hosted: net:game-rooms
+    place: { schema: { group: room, order: 2 } }
+    detail: { what: "Every action in order, with a hash after each. A game replays identically from its seed and journal; a playtest exports both.", plan: "M4 (the CME history event contract), M8 (the download)" }
+    fields:
+      - { name: seq, type: integer, core: true, required: true, meaning: "The action's number.", example: "412", source: "The room", match: 'seq' }
+      - { name: seat, type: integer, core: true, required: true, meaning: "Who acted.", example: "2", source: "The room", match: 'seat' }
+      - { name: action, type: object, core: true, required: true, meaning: "What they did, with its targets.", example: "{cast: …}", source: "The player", match: 'action' }
+      - { name: hash, type: text, core: true, required: true, meaning: "The state's hash after it.", example: "9a0f…", source: "The engine", match: 'hash' }
+  - id: rec:room.checkpoint
+    kind: RecordType
+    name: checkpoint
+    final: [M5-room, M4-engine, M5-reconnect]
+    current: { file: game/engine/journal.mjs, match: 'checkpoint' }
+    hosted: net:game-rooms
+    place: { schema: { group: room, order: 3 } }
+    detail: { what: "A saved copy of the state every so often, so a room resumes identically after a restart, written through the storage adapter.", plan: "M4 (4.1b, the storage adapter)" }
+    fields:
+      - { name: seq, type: integer, core: true, required: true, meaning: "The journal position it saves.", example: "400", source: "The room", match: 'seq', joins: { to: rec:room.journal.seq, cardinality: "one to one" } }
+      - { name: state, type: object, core: true, required: true, meaning: "The whole state at that point.", example: "{…}", source: "The engine", match: 'state' }
+      - { name: hash, type: text, core: true, required: true, meaning: "Its hash, checked on resume.", example: "71c2…", source: "The engine", match: 'hash' }
+  - id: rec:room.seats
+    kind: RecordType
+    name: seats in play
+    final: [M5-room, M5-hidden, M5-reconnect]
+    current: { file: game/engine/projection.mjs, match: 'seat' }
+    hosted: net:game-rooms
+    place: { schema: { group: room, order: 4 } }
+    detail: { what: "Each seat's connection and the view it may see. A seat's view never includes another seat's hand.", plan: "M5" }
+    fields:
+      - { name: seat, type: integer, core: true, required: true, meaning: "Seat 1 to 4.", example: "2", source: "The table", match: 'seat', joins: { to: d1:seats.seat, cardinality: "one to one" } }
+      - { name: identity, type: text, core: true, required: true, current: false, meaning: "Who is in the seat, from Access; kept out of the engine.", example: "withheld", source: "The Worker", final: [M5-front-door] }
+      - { name: kind, type: text, core: true, required: true, current: false, meaning: "human, house or llm.", example: "house", source: "The table", final: [M5-room] }
+      - { name: connected, type: boolean, core: true, required: true, current: false, meaning: "Whether the seat is connected; a game pauses at a required decision rather than conceding.", example: "true", source: "The room", final: [M5-reconnect] }
+
+  # Outside sources, color-coded
+  - id: rec:scryfall.card
+    kind: RecordType
+    name: Scryfall card
+    origin: scryfall
+    final: [M2-live-first]
+    current: { file: scryfall-client.js, match: 'oracle_id' }
+    hosted: net:browser
+    fed: src:scryfall-api
+    place: { schema: { group: outside, order: 1 } }
+    detail: { what: "A card as Scryfall publishes it.", live: "Live, per card", lifetime: "7 days in the reader's IndexedDB", refresh: "Daily bulk for the stores", terms: "User-Agent, ~10 requests a second, bulk files for bulk pulls", source: "Scryfall API /cards/named and /cards/collection" }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The printing's id.", example: "5f8287b1-…", source: "Scryfall" }
+      - { name: oracle_id, type: text, core: true, required: true, meaning: "The card across printings.", example: "6ad8011d-…", source: "Scryfall" }
+      - { name: name, type: text, core: true, required: true, meaning: "The printed name.", example: "Sol Ring", source: "Scryfall" }
+      - { name: type_line, type: text, core: true, required: true, meaning: "Its type line.", example: "Artifact", source: "Scryfall" }
+      - { name: legalities.commander, type: text, core: true, required: true, match: 'legalities', meaning: "legal, banned or not_legal in Commander.", example: "legal", source: "Scryfall, from Wizards' announcements" }
+      - { name: mana_cost, type: text, core: false, required: false, meaning: "The printed cost.", example: "{1}", source: "Scryfall" }
+  - id: rec:scryfall.prices
+    kind: RecordType
+    name: Scryfall prices
+    origin: scryfall
+    final: [M2-live-first, M2-stores]
+    current: { file: scryfall-client.js, match: 'prices' }
+    hosted: net:browser
+    fed: src:scryfall-api
+    place: { schema: { group: outside, order: 2 } }
+    detail: { what: "Prices Scryfall gathers once a day.", live: "Live, per card", lifetime: "24 hours in the reader's cache", refresh: "Daily snapshot for bulk views", terms: "Scryfall's data; TCGplayer and Cardmarket prices", source: "Scryfall `prices`" }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The printing.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "one to one" } }
+      - { name: usd, type: number, core: true, required: false, meaning: "US dollars, from TCGplayer.", example: "1.49", source: "Scryfall" }
+      - { name: eur, type: number, core: true, required: false, meaning: "Euros, from Cardmarket.", example: "1.20", source: "Scryfall" }
+      - { name: date, type: date, core: true, required: true, current: false, meaning: "When the price was read; shown as its age.", example: "2026-10-12", source: "The reader's cache", final: [M2-ages] }
+  - id: rec:scryfall.images
+    kind: RecordType
+    name: Scryfall images
+    origin: scryfall
+    final: [M2-images]
+    current: { file: card-images.js, match: 'scryfall' }
+    hosted: net:browser
+    fed: src:scryfall-cdn
+    place: { schema: { group: outside, order: 3 } }
+    detail: { what: "Card pictures.", live: "Always live from Scryfall's CDN", lifetime: "The browser's HTTP cache and the worker's image cache", refresh: "Never stored by us", terms: "Wizards' and the artists' work, served by Scryfall" }
+    fields:
+      - { name: id, type: text, core: true, required: true, meaning: "The printing.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "one to one" } }
+      - { name: normal, type: url, core: true, required: true, meaning: "The card picture.", example: "https://cards.scryfall.io/normal/…", source: "Scryfall", match: 'normal' }
+      - { name: art_crop, type: url, core: true, required: false, meaning: "The artwork alone.", example: "https://cards.scryfall.io/art_crop/…", source: "Scryfall", match: 'art_crop' }
+  - id: rec:scryfall.rulings
+    kind: RecordType
+    name: Scryfall rulings
+    origin: scryfall
+    final: [M2-live-first, M2-adjudication]
+    hosted: net:browser
+    fed: src:scryfall-api
+    place: { schema: { group: outside, order: 4 } }
+    detail: { what: "Wizards' official rulings for a card, in the card pop-up.", live: "Live, on demand", lifetime: "7 days in the reader's cache", refresh: "Only rulings a card definition cites are stored, with that definition", source: "Scryfall /cards/:id/rulings", plan: "M2" }
+    fields:
+      - { name: oracle_id, type: text, core: true, required: true, meaning: "The card.", example: "6ad8011d-…", source: "Scryfall", joins: { to: rec:scryfall.card.oracle_id, cardinality: "many to one" } }
+      - { name: published_at, type: date, core: true, required: true, meaning: "When the ruling was published.", example: "2021-03-19", source: "Wizards" }
+      - { name: comment, type: text, core: true, required: true, meaning: "The ruling.", example: "…", source: "Wizards" }
+  - id: rec:edhrec.ranks
+    kind: RecordType
+    name: EDHREC ranks
+    origin: edhrec
+    final: [M2-stores]
+    current: { file: crankmagic-assets.js, match: 'commander-ranks' }
+    hosted: net:r2
+    fed: src:edhrec
+    place: { schema: { group: outside, order: 5 } }
+    detail: { what: "How popular each commander is.", live: "Stored: EDHREC has no public API", lifetime: "The worker's data cache", refresh: "Weekly, gently", terms: "Unofficial JSON pages; read gently on a schedule and cached", source: "EDHREC" }
+    fields:
+      - { name: name, type: text, core: true, required: true, meaning: "The commander.", example: "Kykar, Wind's Fury", source: "EDHREC", joins: { to: rec:store.name-index.name, cardinality: "one to one" } }
+      - { name: rank, type: integer, core: true, required: true, meaning: "Its place.", example: "212", source: "EDHREC" }
+      - { name: period, type: text, core: true, required: true, meaning: "The window EDHREC measured.", example: "past 2 years", source: "EDHREC" }
+  - id: rec:edhrec.coplay
+    kind: RecordType
+    name: EDHREC co-play
+    origin: edhrec
+    final: [M2-stores]
+    current: { file: crankmagic-assets.js, match: 'graph-played' }
+    hosted: net:r2
+    fed: src:edhrec
+    place: { schema: { group: outside, order: 6 } }
+    detail: { what: "Which cards are played together, behind the graph.", live: "Stored", refresh: "Weekly", terms: "As EDHREC ranks", source: "EDHREC" }
+    fields:
+      - { name: card, type: text, core: true, required: true, meaning: "A card.", example: "Sol Ring", source: "EDHREC" }
+      - { name: with, type: text, core: true, required: true, meaning: "A card played with it.", example: "Arcane Signet", source: "EDHREC" }
+      - { name: count, type: integer, core: true, required: true, meaning: "How many decks play both.", example: "412331", source: "EDHREC" }
+  - id: rec:mtgjson.precons
+    kind: RecordType
+    name: MTGJSON precons
+    origin: mtgjson
+    final: [M1-precons]
+    hosted: net:r2
+    fed: src:mtgjson
+    place: { schema: { group: outside, order: 7 } }
+    detail: { what: "Preconstructed Commander decks, for 'Start from a precon'.", live: "Stored: bulk files", refresh: "Weekly", terms: "MTGJSON's license applies", source: "MTGJSON", plan: "M1 (R3.10) with M2" }
+    fields:
+      - { name: code, type: text, core: true, required: true, meaning: "The product's code.", example: "C21-LOREHOLD", source: "MTGJSON" }
+      - { name: name, type: text, core: true, required: true, meaning: "The deck's name.", example: "Lorehold Legacies", source: "MTGJSON" }
+      - { name: commander, type: text, core: true, required: true, meaning: "Its commander.", example: "Osgir, the Reconstructor", source: "MTGJSON", joins: { to: rec:store.name-index.name, cardinality: "many to one" } }
+      - { name: cards, type: list, core: true, required: true, meaning: "Its hundred.", example: "[…]", source: "MTGJSON" }
+  - id: rec:wizards.cr
+    kind: RecordType
+    name: Comprehensive Rules
+    origin: wizards
+    final: [M2-adjudication]
+    current: { file: game/engine/index.mjs, match: 'CR|Comprehensive' }
+    hosted: net:actions
+    fed: src:wizards
+    place: { schema: { group: outside, order: 8 } }
+    detail: { what: "The game's rules, revised with most sets. The engine cites rules by number.", live: "Read at build time and when adjudicating; never by a reader's browser", lifetime: "A git-ignored cache in the job", refresh: "A scheduled check for a newer text date", terms: "Wizards' text: read and cited, not committed or redistributed", source: "media.wizards.com" }
+    fields:
+      - { name: rule, type: text, core: true, required: true, meaning: "The rule's number.", example: "903.4", source: "Wizards", match: 'CR' }
+      - { name: text, type: text, core: true, required: true, current: false, meaning: "Its words, never committed.", example: "…", source: "Wizards", final: [M2-adjudication] }
+      - { name: date, type: date, core: true, required: true, current: false, meaning: "The text's effective date.", example: "2026-09-26", source: "Wizards", final: [M2-adjudication] }
+  - id: rec:wizards.legality
+    kind: RecordType
+    name: Commander legality
+    origin: wizards
+    final: [M4-legality]
+    current: { file: scryfall-client.js, match: 'legalities' }
+    hosted: net:r2
+    fed: src:scryfall-api
+    place: { schema: { group: outside, order: 9 } }
+    detail: { what: "The banned list, Game Changers and brackets, as a dated snapshot the engine checks a deck against at prepare.", live: "Per card, with the card record", refresh: "Daily with the metadata", source: "Wizards' Commander page, through Scryfall", plan: "M4" }
+    fields:
+      - { name: oracle_id, type: text, core: true, required: true, meaning: "The card.", example: "6ad8011d-…", source: "Scryfall", joins: { to: rec:scryfall.card.oracle_id, cardinality: "one to one" } }
+      - { name: commander, type: text, core: true, required: true, meaning: "legal or banned.", example: "legal", source: "Wizards", match: 'commander' }
+      - { name: game_changer, type: boolean, core: true, required: false, meaning: "On the Game Changers list.", example: "true", source: "Wizards", match: 'game_changer' }
+      - { name: date, type: date, core: true, required: true, current: false, meaning: "The snapshot's date.", example: "2026-10-12", source: "The job", final: [M4-legality] }
+
+# ─────────────────────────────── Data flows ───────────────────────────────
+flows:
+  - id: dflow:library-sync
+    name: A library, saved and followed
+    final: [S2-sync]
+    current: { file: crankmagic-account.js, match: 'api/library' }
+    detail: { what: "A change is saved in the browser first, then copied to the cloud, where every other device picks it up. A conflict is put to the person.", freshness: "Seconds after a change", owner: "The person owns their library" }
+    steps:
+      - { piece: net:browser, action: "A change is made: a card bought, a deck finalized." }
+      - { piece: rec:library.state, action: "Saved in IndexedDB with its receipt and an undo point, before it shows." }
+      - { piece: net:access, action: "Signed in, the request carries the Access token." }
+      - { piece: "route:PUT:/api/library", action: "The library, gzipped and checksummed, is sent with the version it started from." }
+      - { piece: d1:snapshots, action: "Stored as a new version." }
+      - { piece: d1:heads, action: "The head moves only if no other device saved in between; otherwise the person chooses." }
+      - { piece: "route:GET:/api/library", action: "Another device reads the head and restores it, checking the checksum." }
+  - id: dflow:card-live
+    name: A card, read live
+    final: [M2-live-first, M2-csp]
+    current: { file: scryfall-client.js, match: 'api\.scryfall\.com' }
+    detail: { what: "Opening or adding a card asks Scryfall directly, then keeps the answer with a lifetime.", freshness: "Live; 7 days for a record, 24 hours for a price", owner: "Scryfall's data" }
+    steps:
+      - { piece: net:browser, action: "A card is opened or added." }
+      - { piece: rec:cache.card-records, action: "If a fresh copy is in the reader's cache, it is used and checked in the background." }
+      - { piece: src:scryfall-api, action: "Otherwise Scryfall is asked, one card, within its rate." }
+      - { piece: rec:scryfall.card, action: "The record and its price arrive." }
+      - { piece: rec:cache.card-records, action: "Kept with the time it was read; its age is shown." }
+  - id: dflow:images
+    name: Card pictures
+    final: [M2-images]
+    current: { file: index.html, match: 'cards\.scryfall\.io' }
+    detail: { what: "Pictures always come from Scryfall's CDN and are never stored by us.", freshness: "Live", owner: "Wizards and the artists, served by Scryfall" }
+    steps:
+      - { piece: net:browser, action: "A card is drawn on screen." }
+      - { piece: src:scryfall-cdn, action: "Its picture is loaded from cards.scryfall.io." }
+      - { piece: net:service-worker, action: "Kept in the browser's caches, with a size limit." }
+  - id: dflow:stores-refresh
+    name: Stores that refresh themselves
+    final: [M2-schedule, M2-serve, M2-stores, M2-ages]
+    detail: { what: "A scheduled job reads the bulk sources, rebuilds our stores, proves them, and publishes them to R2. The app reads current.json and shows each set's age.", freshness: "Prices and records daily; the graph and EDHREC weekly", owner: "Ours, from others' data" }
+    steps:
+      - { piece: net:actions, action: "On schedule, tools/refresh.mjs runs." }
+      - { piece: src:scryfall-bulk, action: "Reads every card and its prices." }
+      - { piece: src:edhrec, action: "Weekly: ranks and co-play, gently." }
+      - { piece: src:mtgjson, action: "Weekly: precon decklists." }
+      - { piece: net:actions, action: "Rebuilds the stores and runs their proof. A failing run publishes nothing." }
+      - { piece: r2:data/dated, action: "Uploads the files under today's date." }
+      - { piece: r2:data/current.json, action: "Then rewrites current.json to name them. The last seven runs are kept." }
+      - { piece: "route:GET:/data/*", action: "The Worker serves them, current.json on a short cache." }
+      - { piece: rec:cache.files, action: "The service worker keeps the last good copy for offline use." }
+  - id: dflow:stores-pinned
+    name: Stores pinned by hand
+    current: { file: crankmagic-sw.js, match: 'data/graph\.json\?v=' }
+    detail: { what: "Today's path: someone runs the refresh on a machine, bumps the ?v= pins, commits, and a release ships the files.", freshness: "As old as the last release", owner: "Ours" }
+    steps:
+      - { piece: net:laptop, action: "tools/refresh.mjs is run by hand." }
+      - { piece: src:scryfall-bulk, action: "Reads the bulk files." }
+      - { piece: rec:store.pinned, action: "Changed files get new ?v= pins and are committed." }
+      - { piece: net:assets, action: "A release ships them as static files." }
+      - { piece: rec:cache.files, action: "The service worker precaches them by pin." }
+  - id: dflow:engine-cards
+    name: The engine's cards
+    final: [M4-engine, M5-definitions, M7-compiler, M2-pin]
+    current: { file: tools/build-engine-cards.mjs, match: 'oracle' }
+    detail: { what: "The rules text becomes a dated snapshot; each card gets a definition, hand-authored or compiled and checked; a game room loads the version it pinned.", freshness: "Daily snapshot; definitions when recompiled", owner: "Ours; the text is Wizards'" }
+    steps:
+      - { piece: src:scryfall-bulk, action: "The oracle text of every Commander-legal card." }
+      - { piece: rec:store.oracle, action: "A dated snapshot of 31,830 cards." }
+      - { piece: rec:engine.support, action: "The ledger says which cards the engine can play." }
+      - { piece: rec:store.definitions, action: "Definitions: the seven decks by hand (M4), then every card compiled and checked (M7)." }
+      - { piece: r2:engine/definitions, action: "Published, versioned." }
+      - { piece: do:game-room, action: "A room loads the version its game pinned." }
+  - id: dflow:game
+    name: A game, played in the cloud
+    final: [M5-room, M5-transport, M5-hidden, M5-results, M4-engine]
+    detail: { what: "Each action goes to the table's room, which applies it through CME, writes it down, and sends every seat only what it may see. The result files itself into the library.", freshness: "Live, ordered, no polling", owner: "The players; hidden information never leaves the room" }
+    steps:
+      - { piece: net:browser, action: "A player acts: casts a spell, chooses a target." }
+      - { piece: "route:GET:/api/tables/:id/socket", action: "Over the table's WebSocket." }
+      - { piece: do:game-room, action: "The room applies it through CME; every choice is offered to its owner." }
+      - { piece: rec:room.journal, action: "Written to the journal with a hash." }
+      - { piece: rec:room.checkpoint, action: "Checkpointed through the storage adapter." }
+      - { piece: rec:room.seats, action: "Each seat gets its own view; no seat sees another's hand." }
+      - { piece: rec:library.games, action: "At the end, the game's record is filed under the deck and syncs." }
+  - id: dflow:local-game
+    name: A game on the local host
+    current: { file: game/server/local-table-runtime.mjs, match: 'Forge' }
+    detail: { what: "Today's path for Play: the frozen Windows host runs Forge, and remote guests arrive through a tunnel.", freshness: "Live while Rob's machine is on", owner: "Rob's machine" }
+    steps:
+      - { piece: net:browser, action: "A player opens the local table." }
+      - { piece: net:tunnel, action: "A remote guest comes through a trycloudflare address." }
+      - { piece: net:local-host, action: "The host keeps the table." }
+      - { piece: net:forge, action: "Forge runs the rules." }
+  - id: dflow:ai-call
+    name: An AI call, through the door
+    final: [M6-door, M6-privacy]
+    detail: { what: "Only an allowlisted person, signed in with MFA, under a spend cap, with every call logged.", freshness: "Live", owner: "The person; the key is Rob's" }
+    steps:
+      - { piece: net:browser, action: "The Coach is asked, or an LLM seat takes its turn." }
+      - { piece: net:access-ai, action: "The AI door's own sign-in: Google with MFA." }
+      - { piece: "route:POST:/api/ai/call", action: "The Worker receives the call." }
+      - { piece: d1:ai_allowlist, action: "Checks the person is allowed and under their cap." }
+      - { piece: secret:anthropic-key, action: "Uses the key held as a Worker secret." }
+      - { piece: src:anthropic, action: "Calls the model." }
+      - { piece: d1:ai_calls, action: "Logs who, what for, tokens and cost." }
+  - id: dflow:rules
+    name: Rules adjudication
+    final: [M2-adjudication, M4-legality]
+    current: { file: game/engine/index.mjs, match: 'CR|Comprehensive' }
+    detail: { what: "Where the engine meets an unclear case, the sources are read in order and the ruling is logged with the test that holds it.", freshness: "A newer CR date re-checks every citation", owner: "Ours; the texts are Wizards'" }
+    steps:
+      - { piece: src:wizards, action: "The Comprehensive Rules, then the card's rulings, then the release notes, then the Commander page." }
+      - { piece: rec:wizards.cr, action: "Rules are cited by number against a stated date." }
+      - { piece: net:actions, action: "A scheduled check lists the rules that moved." }
+      - { piece: rec:wizards.legality, action: "A dated banned list checks decks at prepare." }
+  - id: dflow:archidekt
+    name: A deck from Archidekt
+    final: [M1-archidekt]
+    detail: { what: "A deck link is read once through the Worker; the person's library holds the result.", freshness: "Live, once", owner: "The person" }
+    steps:
+      - { piece: net:browser, action: "A deck link is pasted." }
+      - { piece: "route:POST:/api/import/archidekt", action: "The Worker fetches it with a size limit." }
+      - { piece: src:archidekt, action: "Archidekt returns the list." }
+      - { piece: rec:library.decks, action: "It becomes a deck in the library." }
+  - id: dflow:backup
+    name: The nightly database copy
+    final: [M3-backups]
+    detail: { what: "D1 is exported to R2 each night, beside D1's own Time Travel.", freshness: "Nightly", owner: "Ours; person-level" }
+    steps:
+      - { piece: net:d1, action: "The database." }
+      - { piece: r2:backups/d1, action: "Exported each night." }
+      - { piece: rec:store.d1-backup, action: "Kept as a dated copy." }
+  - id: dflow:release
+    name: A release
+    final: [S1-release]
+    current: { file: tools/release-pages.mjs, match: 'RELEASE_BRANCH' }
+    detail: { what: "One commit of main becomes a walked build, deployed to staging and then, on Rob's go, to production.", freshness: "Per release", owner: "Ours" }
+    steps:
+      - { piece: net:github, action: "A commit of main." }
+      - { piece: net:actions, action: "The gate runs." }
+      - { piece: net:cloud-session, action: "tools/release-pages.mjs builds it and the acceptance walk passes on it." }
+      - { piece: secret:cloudflare-api-token, action: "wrangler deploys with the deploy credential." }
+      - { piece: net:assets, action: "Staging first, then production on Rob's go." }
+
+# ─────────────────────────────── User journeys ───────────────────────────────
+journeys:
+  - id: journey:visitor
+    name: A signed-out visitor
+    person: Visitor
+    final: [M1-landing, M1-design]
+    current: { file: index.html, match: 'crankmagic-app\.js' }
+    steps:
+      - { text: "Arrives at crankmagic.com and sees the landing page.", touches: [net:assets], final: [M1-landing] }
+      - { text: "Starts a deck by pasting a list or naming a commander.", touches: [net:browser], flows: [dflow:card-live], final: [M1-landing], current: { file: deck-import.js, match: 'parse' } }
+      - { text: "Browses Library and Explore; pictures load from Scryfall.", touches: [net:browser, src:scryfall-cdn], flows: [dflow:images, dflow:stores-refresh], final: [M1-design], current: { file: index.html, match: 'cards\.scryfall\.io' } }
+      - { text: "Everything is kept in this browser. Signing in is optional.", touches: [net:indexeddb], flows: [], final: [S2-sync], current: { file: collection-repository.js, match: 'crankmagic-library' } }
+  - id: journey:builder
+    name: A builder on two devices
+    person: Builder
+    final: [S2-sync]
+    current: { file: crankmagic-account.js, match: 'api/library' }
+    steps:
+      - { text: "Signs in with Google through Access.", touches: [net:access, src:google], flows: [], final: [S2-access], current: { file: crankmagic-account.js, match: 'api/auth/login' } }
+      - { text: "Edits a deck on the laptop; the library saves itself to the cloud.", touches: [net:worker, d1:snapshots], flows: [dflow:library-sync], final: [S2-sync], current: { file: crankmagic-account.js, match: 'api/library' } }
+      - { text: "Opens the phone; the same library is there.", touches: [d1:heads], flows: [dflow:library-sync], final: [S2-sync], current: { file: crankmagic-account.js, match: 'api/me' } }
+      - { text: "Both changed offline: asked which to keep, and the other is held 30 days.", touches: ["route:POST:/api/library/kept"], flows: [dflow:library-sync], final: [S2-sync], current: { file: crankmagic-account.js, match: 'api/library/kept' } }
+      - { text: "Checks Settings › About for how old each data set is.", touches: [rec:store.current], flows: [dflow:stores-refresh], final: [M2-ages] }
+  - id: journey:collector
+    name: A collector at a shop
+    person: Collector
+    final: [M2-live-first, M2-offline]
+    current: { file: scryfall-client.js, match: 'api\.scryfall\.com' }
+    steps:
+      - { text: "Opens a card on the phone and sees today's price and its age.", touches: [src:scryfall-api, rec:cache.card-records], flows: [dflow:card-live], final: [M2-live-first], current: { file: scryfall-client.js, match: 'prices' } }
+      - { text: "Signal drops; the library and cached cards still work.", touches: [net:service-worker, rec:cache.files], flows: [dflow:card-live], final: [M2-offline], current: { file: crankmagic-sw.js, match: 'DATA_CACHE' } }
+      - { text: "Adds it to To Buy; the deck's cost to finish updates from the price snapshot.", touches: [rec:library.lots, rec:store.cards], flows: [dflow:stores-refresh, dflow:library-sync], final: [M2-stores], current: { file: collection-model.js, match: 'toBuy' } }
+  - id: journey:table
+    name: A host and an invited guest
+    person: Host
+    final: [M5-front-door, M5-lobby, M5-transport]
+    steps:
+      - { text: "The host creates a table and picks a mat.", touches: ["route:POST:/api/tables", d1:tables, do:game-room], flows: [], final: [M5-front-door] }
+      - { text: "Invites a guest by e-mail, link or QR.", touches: [d1:seats], flows: [], final: [M5-lobby] }
+      - { text: "The guest signs in and takes the seat.", touches: [net:access, "route:POST:/api/tables/:id/seats"], flows: [], final: [M5-front-door] }
+      - { text: "Every human seat ready: a ten-second countdown, then the game starts.", touches: [do:game-room], flows: [dflow:game], final: [M5-lobby] }
+      - { text: "They play over the table's WebSocket; a dropped phone reconnects to a fresh view.", touches: ["route:GET:/api/tables/:id/socket", rec:room.seats], flows: [dflow:game], final: [M5-reconnect] }
+      - { text: "The result files itself under each player's deck.", touches: [rec:library.games], flows: [dflow:game, dflow:library-sync], final: [M5-results] }
+      - { text: "Today: the host starts the Windows host with remote guests on, and the guest joins through a trycloudflare address.", touches: [net:local-host, net:tunnel], flows: [dflow:local-game], current: { file: game/server/guest-gateway.mjs, match: 'guest' } }
+  - id: journey:ai-seat
+    name: A player with an AI seat
+    person: AI-seat player
+    final: [M4-house-pilot, M6-door]
+    steps:
+      - { text: "Fills a seat with the house pilot, which costs nothing and sees only its seat.", touches: [do:game-room], flows: [dflow:game], final: [M4-house-pilot] }
+      - { text: "Or, if allowlisted, an LLM seat through the AI door.", touches: [net:access-ai, d1:ai_allowlist], flows: [dflow:ai-call], final: [M6-door] }
+      - { text: "A spend meter shows what the game has cost.", touches: [d1:ai_calls], flows: [dflow:ai-call], final: [M6-door] }
+      - { text: "Asks the Coach what to do next.", touches: ["route:POST:/api/ai/call", src:anthropic], flows: [dflow:ai-call], final: [M10-finish] }
+  - id: journey:operator
+    name: Rob as the operator
+    person: Rob
+    final: [M3-invite, S1-release]
+    current: { file: docs/handoff-2026-09-25.md, match: 'Invited' }
+    steps:
+      - { text: "Invites a person by adding their e-mail to the Access Invited list.", touches: [net:cf-dashboard, net:access], flows: [], final: [M3-invite], current: { file: docs/handoff-2026-09-25.md, match: 'Invited' } }
+      - { text: "Enters secrets himself: the data job's token in GitHub, the AI key as a Worker secret.", touches: [secret:r2-token, secret:anthropic-key], flows: [], final: [M2-schedule, M6-door] }
+      - { text: "Approves a plan; a cloud session builds, walks and deploys it to staging.", touches: [net:cloud-session, net:worker], flows: [dflow:release], final: [S1-release], current: { file: docs/handoff-2026-09-25.md, match: 'Working from a cloud session' } }
+      - { text: "Says go; production deploys.", touches: [net:assets], flows: [dflow:release], final: [S1-release], current: { file: AGENTS.md, match: 'release-acceptance' } }
+      - { text: "Gets an alert on errors or sync conflicts.", touches: [net:analytics], flows: [], final: [M3-monitoring] }
+
+# ─────────────────────────────── Plain words ───────────────────────────────
+glossary:
+  - { term: "Worker", means: "A small program Cloudflare runs close to the reader, for each request it is asked to answer." }
+  - { term: "D1", means: "Cloudflare's SQL database. Only the Worker can reach it." }
+  - { term: "R2", means: "Cloudflare's file storage, for whole files like a day's card data." }
+  - { term: "Durable Object", means: "A single, named place in Cloudflare that keeps state and runs code for it; here, one per game." }
+  - { term: "Access", means: "Cloudflare's sign-in gate. It lets through only invited people and tells the Worker who they are." }
+  - { term: "token", means: "A signed note that proves who someone is for a short time." }
+  - { term: "IndexedDB", means: "The browser's own database, on the reader's device." }
+  - { term: "service worker", means: "A script the browser keeps beside a site so it can open and work offline." }
+  - { term: "Cache Storage", means: "Where a service worker keeps copies of files." }
+  - { term: "session storage", means: "Browser storage that lasts only as long as the tab." }
+  - { term: "CDN", means: "A network that serves the same files from many places, close to each reader." }
+  - { term: "bulk file", means: "One large download of a whole data set, instead of one request per record." }
+  - { term: "current.json", means: "A small file naming the newest good copy of each data set." }
+  - { term: "?v=", means: "A number added to a file's address so a browser fetches the new copy after a change." }
+  - { term: "WebSocket", means: "A connection that stays open so updates arrive as they happen, without asking again." }
+  - { term: "CME", means: "The CrankMagic Engine: our own implementation of the game's rules." }
+  - { term: "journal", means: "The ordered list of every action in a game; replaying it gives the same game." }
+  - { term: "checkpoint", means: "A saved copy of a game's state so it can resume after a restart." }
+  - { term: "storage adapter", means: "The one interface the engine saves through, so the same engine runs in a test or a game room." }
+  - { term: "house pilot", means: "The engine's own opponent. It sees only its seat and costs nothing to run." }
+  - { term: "hidden information", means: "What a player may not see: another player's hand, the order of a library." }
+  - { term: "security policy", means: "The list of places a page may load from or talk to. The browser enforces it." }
+  - { term: "CORS", means: "The browser's rule for when a page may read another site's answer." }
+  - { term: "OIDC", means: "The standard way one service asks another, such as Google, who a person is." }
+  - { term: "MFA", means: "Signing in with a second proof, such as a passkey." }
+  - { term: "allowlist", means: "The list of people allowed to use something." }
+  - { term: "binding", means: "A direct connection Cloudflare sets up between a Worker and a database or bucket, with no address to attack." }
+  - { term: "stale-while-revalidate", means: "Show the saved copy now and quietly fetch a fresh one." }
+  - { term: "snapshot", means: "A saved copy of something as it was at one moment." }
+  - { term: "head", means: "The version every device should end up with." }
+  - { term: "Comprehensive Rules", means: "Wizards' complete rules of the game, numbered." }
+  - { term: "oracle text", means: "A card's official, current rules text." }
+  - { term: "wrangler", means: "Cloudflare's command-line tool for deploying Workers." }
+  - { term: "GitHub Actions", means: "GitHub's machines that run jobs on a push or a schedule." }
+  - { term: "engram", means: "Rob's tool that maps a codebase into a graph. This page is drawn from it." }

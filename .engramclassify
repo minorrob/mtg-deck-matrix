@@ -1,0 +1,30 @@
+# engram classification for CrankMagic (docs/architecture/, M11).
+# Levels: public | internal | confidential. LAST matching glob wins; `node <id> <level>` beats every glob.
+# Confidential nodes reach every export, the architecture page included, as name and kind only.
+default internal
+redact name-kind-only
+
+# Person-level data: Rob's own library and workbooks, and playtest evidence with people in it.
+data/live-state.json confidential
+data/live-load.json confidential
+data/source/* confidential
+docs/uat/* confidential
+game/.local/* confidential
+
+# Fields that hold a person's identity or their library's contents.
+node d1:users.email confidential
+node d1:snapshots.body confidential
+node d1:snapshots.device confidential
+node d1:ai_allowlist.email confidential
+node d1:ai_calls.user_id confidential
+node d1:ai_calls.prompt_digest confidential
+node rec:library.lots.notes confidential
+node rec:library.games.opponents confidential
+node rec:library.games.notes confidential
+node rec:room.seats.identity confidential
+
+# Secret names: what a secret is called is withheld as well as its value.
+node secret:cloudflare-api-token confidential
+node secret:r2-token confidential
+node secret:anthropic-key confidential
+node secret:access-service-tokens confidential
