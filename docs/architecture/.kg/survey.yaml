@@ -1,0 +1,278 @@
+repo: crankmagic
+repo_id: repo:crankmagic
+vcs: git
+description: 'CrankMagic: a Commander deck workshop (decks, library, explore) served from Cloudflare at crankmagic.com, with
+  invite-only accounts that sync a library to D1, and a clean-room rules engine (CME) that will host Play in Durable Objects.'
+stack:
+- language: JavaScript
+  files: 128
+- language: Markdown
+  files: 9
+- language: HTML
+  files: 5
+- language: YAML
+  files: 3
+extractors:
+- config
+- md
+- ts
+entry_points: []
+module_map:
+  .github: ''
+  cloud: ''
+  docs: ''
+  game: ''
+  schema: ''
+  tools: ''
+exclusions:
+- .git
+- .idea
+- .kg
+- .mypy_cache
+- .obsidian
+- .pytest_cache
+- .tox
+- .venv
+- .vscode
+- __pycache__
+- _archive
+- build
+- coverage
+- dist
+- node_modules
+- out
+- output
+- site-packages
+- target
+- vendor
+- venv
+files_ingested: 156
+files_dropped: 1357
+notes:
+- 'Scoped to the code that carries the architecture: the served app, the account Worker (cloud/), the engine and the frozen
+  local game host, the release builder and data tools, the CI workflows, and the plans that define the final state.'
+- The final state is forward-modeled in docs/architecture/.kg/final from docs/architecture/model/intent.yaml.
+files_by_extractor:
+  config:
+  - .github/workflows/compile-game-logs.yml
+  - .github/workflows/live-load.yml
+  - .github/workflows/tests.yml
+  md:
+  - AGENTS.md
+  - docs/design/2026-09-25-redesign-r3/INTAKE.md
+  - docs/engine/PLAN.md
+  - docs/handoff-2026-09-25.md
+  - docs/plan-account-cloud.md
+  - docs/plan-data-sync.md
+  - docs/plan-program-2026-09-24.md
+  - docs/plan-to-100.md
+  - docs/release-pages.md
+  ts:
+  - card-catalog.js
+  - card-classify.js
+  - card-images.js
+  - card-link.js
+  - cloud-sync.js
+  - cloud/access.mjs
+  - cloud/library.mjs
+  - cloud/worker.mjs
+  - collection-evidence.js
+  - collection-exchange.js
+  - collection-lobby-draft.js
+  - collection-model.js
+  - collection-repository.js
+  - combat.js
+  - compliance-model.js
+  - crankmagic-account.js
+  - crankmagic-advisor.js
+  - crankmagic-app.js
+  - crankmagic-assets.js
+  - crankmagic-brand.js
+  - crankmagic-card-client.js
+  - crankmagic-change-ui.js
+  - crankmagic-change.js
+  - crankmagic-collection.js
+  - crankmagic-decks.js
+  - crankmagic-discover.js
+  - crankmagic-evidence.js
+  - crankmagic-exchange-ui.js
+  - crankmagic-facets.js
+  - crankmagic-game.js
+  - crankmagic-glossary.js
+  - crankmagic-graph-scoped.js
+  - crankmagic-graph.js
+  - crankmagic-groupings.js
+  - crankmagic-how.js
+  - crankmagic-lab.js
+  - crankmagic-lens.js
+  - crankmagic-lobby.js
+  - crankmagic-loops.js
+  - crankmagic-online.js
+  - crankmagic-orders.js
+  - crankmagic-plan-editor.js
+  - crankmagic-pull.js
+  - crankmagic-qr.js
+  - crankmagic-route.js
+  - crankmagic-rules.js
+  - crankmagic-sandbox.js
+  - crankmagic-sea.js
+  - crankmagic-sim.js
+  - crankmagic-strategies.js
+  - crankmagic-sw.js
+  - crankmagic-tabletop.js
+  - crankmagic-tour.js
+  - crankmagic-trace.js
+  - crankmagic-trade.js
+  - crankmagic.html
+  - custom-model.js
+  - deck-generator.js
+  - deck-import.js
+  - deck-measure.js
+  - deck-sources.js
+  - docx-writer.js
+  - draft-builder.js
+  - edhrec-client.js
+  - game-record.js
+  - game/contracts/deck-list-import.mjs
+  - game/contracts/deck-snapshot.mjs
+  - game/contracts/forge-card-index.mjs
+  - game/contracts/moxfield-import.mjs
+  - game/contracts/pilot-policy.mjs
+  - game/contracts/seat-access.mjs
+  - game/contracts/table-lifecycle.mjs
+  - game/engine/controller.mjs
+  - game/engine/index.mjs
+  - game/engine/journal.mjs
+  - game/engine/keywords/combat.mjs
+  - game/engine/pilots/random-legal.mjs
+  - game/engine/projection.mjs
+  - game/engine/rng.mjs
+  - game/engine/rules/actions.mjs
+  - game/engine/rules/combat.mjs
+  - game/engine/rules/commander.mjs
+  - game/engine/rules/layers.mjs
+  - game/engine/rules/mana.mjs
+  - game/engine/rules/mulligan.mjs
+  - game/engine/rules/priority.mjs
+  - game/engine/rules/replacement.mjs
+  - game/engine/rules/sba.mjs
+  - game/engine/rules/stack.mjs
+  - game/engine/rules/trigger.mjs
+  - game/engine/rules/turn.mjs
+  - game/engine/script/effects/asking.mjs
+  - game/engine/script/effects/index.mjs
+  - game/engine/script/effects/permanents.mjs
+  - game/engine/script/effects/resources.mjs
+  - game/engine/script/effects/zones.mjs
+  - game/engine/script/filter.mjs
+  - game/engine/script/resolution.mjs
+  - game/engine/script/schema.mjs
+  - game/engine/state/index.mjs
+  - game/engine/vocabulary.mjs
+  - game/server/engine-runtime.mjs
+  - game/server/guest-gateway.mjs
+  - game/server/local-table-runtime.mjs
+  - game/server/table-broker.mjs
+  - game/tools/ai-compatibility.mjs
+  - game/tools/setup-catalog.mjs
+  - game/tools/windows-credential.mjs
+  - game/ui/playmats.mjs
+  - graph-payload.js
+  - graph.html
+  - guide-agent.js
+  - guide-measured.js
+  - index.html
+  - lineup-model.js
+  - pilot-policy.js
+  - privacy.html
+  - schema/index.mjs
+  - schema/validate.mjs
+  - scryfall-client.js
+  - shop-export.js
+  - sim-engine.js
+  - sim-worker.js
+  - slot-model.js
+  - terms.html
+  - tools/build-engine-cards.mjs
+  - tools/data-manifest.mjs
+  - tools/lib/envelope.mjs
+  - tools/refresh.mjs
+  - tools/release-pages.mjs
+  - user-state.js
+  - xlsx-reader.js
+  - xlsx-writer.js
+deploy_facts:
+  workflows:
+  - .github/workflows/compile-game-logs.yml
+  - .github/workflows/live-load.yml
+  - .github/workflows/tests.yml
+  pages:
+  - crankmagic.html
+  - graph.html
+  - index.html
+  - privacy.html
+  - terms.html
+dir_census:
+  .:
+    .html: 5
+    .js: 74
+    .md: 1
+  .github:
+    .yml: 3
+  cloud:
+    .mjs: 3
+    .sql: 1
+  docs:
+    .md: 8
+  game:
+    .java: 9
+    .json: 1
+    .mjs: 44
+  schema:
+    .mjs: 2
+  tools:
+    .mjs: 5
+classification:
+  default: internal
+  rules:
+  - glob: data/live-state.json
+    level: confidential
+  - glob: data/live-load.json
+    level: confidential
+  - glob: data/source/*
+    level: confidential
+  - glob: docs/uat/*
+    level: confidential
+  - glob: game/.local/*
+    level: confidential
+  overrides:
+  - node: d1:users.email
+    level: confidential
+  - node: d1:snapshots.body
+    level: confidential
+  - node: d1:snapshots.device
+    level: confidential
+  - node: d1:ai_allowlist.email
+    level: confidential
+  - node: d1:ai_calls.user_id
+    level: confidential
+  - node: d1:ai_calls.prompt_digest
+    level: confidential
+  - node: rec:library.lots.notes
+    level: confidential
+  - node: rec:library.games.opponents
+    level: confidential
+  - node: rec:library.games.notes
+    level: confidential
+  - node: rec:room.seats.identity
+    level: confidential
+  - node: secret:cloudflare-api-token
+    level: confidential
+  - node: secret:r2-token
+    level: confidential
+  - node: secret:anthropic-key
+    level: confidential
+  - node: secret:access-service-tokens
+    level: confidential
+  redact: name-kind-only
+source_dir: /home/user/mtg-deck-matrix

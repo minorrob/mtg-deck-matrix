@@ -1,0 +1,254 @@
+{
+ "meta": {
+  "generatedAt": "2026-09-25T07:31:05.852945Z",
+  "filesParsed": 3,
+  "extractor": "extract_config.py@0.1.0"
+ },
+ "nodes": [
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml",
+   "kind": "ConfigObject",
+   "name": ".github/workflows/compile-game-logs.yml",
+   "file": ".github/workflows/compile-game-logs.yml"
+  },
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml#name",
+   "kind": "ConfigObject",
+   "name": "name",
+   "file": ".github/workflows/compile-game-logs.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml#True",
+   "kind": "ConfigObject",
+   "name": true,
+   "file": ".github/workflows/compile-game-logs.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml#permissions",
+   "kind": "ConfigObject",
+   "name": "permissions",
+   "file": ".github/workflows/compile-game-logs.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml#jobs",
+   "kind": "ConfigObject",
+   "name": "jobs",
+   "file": ".github/workflows/compile-game-logs.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/compile-game-logs.yml#jobs.compile",
+   "kind": "ConfigObject",
+   "name": "compile",
+   "file": ".github/workflows/compile-game-logs.yml",
+   "collection": "jobs",
+   "title": null
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml",
+   "kind": "ConfigObject",
+   "name": ".github/workflows/live-load.yml",
+   "file": ".github/workflows/live-load.yml"
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#name",
+   "kind": "ConfigObject",
+   "name": "name",
+   "file": ".github/workflows/live-load.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#True",
+   "kind": "ConfigObject",
+   "name": true,
+   "file": ".github/workflows/live-load.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#True.workflow_dispatch",
+   "kind": "ConfigObject",
+   "name": "workflow_dispatch",
+   "file": ".github/workflows/live-load.yml",
+   "collection": true,
+   "title": null
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#permissions",
+   "kind": "ConfigObject",
+   "name": "permissions",
+   "file": ".github/workflows/live-load.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#concurrency",
+   "kind": "ConfigObject",
+   "name": "concurrency",
+   "file": ".github/workflows/live-load.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#jobs",
+   "kind": "ConfigObject",
+   "name": "jobs",
+   "file": ".github/workflows/live-load.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/live-load.yml#jobs.rebuild",
+   "kind": "ConfigObject",
+   "name": "rebuild",
+   "file": ".github/workflows/live-load.yml",
+   "collection": "jobs",
+   "title": null
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml",
+   "kind": "ConfigObject",
+   "name": ".github/workflows/tests.yml",
+   "file": ".github/workflows/tests.yml"
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml#name",
+   "kind": "ConfigObject",
+   "name": "name",
+   "file": ".github/workflows/tests.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml#True",
+   "kind": "ConfigObject",
+   "name": true,
+   "file": ".github/workflows/tests.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml#permissions",
+   "kind": "ConfigObject",
+   "name": "permissions",
+   "file": ".github/workflows/tests.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml#jobs",
+   "kind": "ConfigObject",
+   "name": "jobs",
+   "file": ".github/workflows/tests.yml",
+   "container": true
+  },
+  {
+   "id": "cfg:.github/workflows/tests.yml#jobs.suites",
+   "kind": "ConfigObject",
+   "name": "suites",
+   "file": ".github/workflows/tests.yml",
+   "collection": "jobs",
+   "title": null
+  }
+ ],
+ "edges": [
+  {
+   "from": "cfg:.github/workflows/compile-game-logs.yml",
+   "to": "cfg:.github/workflows/compile-game-logs.yml#name",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/compile-game-logs.yml",
+   "to": "cfg:.github/workflows/compile-game-logs.yml#True",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/compile-game-logs.yml",
+   "to": "cfg:.github/workflows/compile-game-logs.yml#permissions",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/compile-game-logs.yml",
+   "to": "cfg:.github/workflows/compile-game-logs.yml#jobs",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/compile-game-logs.yml#jobs",
+   "to": "cfg:.github/workflows/compile-game-logs.yml#jobs.compile",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml",
+   "to": "cfg:.github/workflows/live-load.yml#name",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml",
+   "to": "cfg:.github/workflows/live-load.yml#True",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml#True",
+   "to": "cfg:.github/workflows/live-load.yml#True.workflow_dispatch",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml",
+   "to": "cfg:.github/workflows/live-load.yml#permissions",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml",
+   "to": "cfg:.github/workflows/live-load.yml#concurrency",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml",
+   "to": "cfg:.github/workflows/live-load.yml#jobs",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/live-load.yml#jobs",
+   "to": "cfg:.github/workflows/live-load.yml#jobs.rebuild",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/tests.yml",
+   "to": "cfg:.github/workflows/tests.yml#name",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/tests.yml",
+   "to": "cfg:.github/workflows/tests.yml#True",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/tests.yml",
+   "to": "cfg:.github/workflows/tests.yml#permissions",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/tests.yml",
+   "to": "cfg:.github/workflows/tests.yml#jobs",
+   "kind": "contains",
+   "source": "parser"
+  },
+  {
+   "from": "cfg:.github/workflows/tests.yml#jobs",
+   "to": "cfg:.github/workflows/tests.yml#jobs.suites",
+   "kind": "contains",
+   "source": "parser"
+  }
+ ]
+}

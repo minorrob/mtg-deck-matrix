@@ -1,0 +1,139 @@
+# engram overlay profile: cloudflare -- CrankMagic's platform, for forward modeling (M11).
+# Extends engram's generic `technical` profile by id; nothing in it is a secret or a person.
+profile: cloudflare
+extends: technical
+description: >
+  CrankMagic's building blocks on Cloudflare (Workers with static assets, D1, R2, Durable Objects,
+  Access), GitHub Actions for scheduled data work, and the reader's own browser as a tier.
+
+catalog:
+  - { id: web-app,        name: The app in the browser,     technology: "Static pages + ES modules + service worker, served as Worker assets", deploys_to: [device] }
+  - { id: api,            name: The crankmagic Worker,      technology: "Cloudflare Worker (run_worker_first for /api/* and /data/*)",       deploys_to: [edge] }
+  - { id: relational-db,  name: D1 database,                technology: "Cloudflare D1 (SQLite)",                                               deploys_to: [cf-platform] }
+  - { id: object-storage, name: R2 bucket,                  technology: "Cloudflare R2 (dated keys + current.json)",                            deploys_to: [cf-platform] }
+  - { id: reader-cache,   name: The reader's cache,         category: data, c4: container, technology: "IndexedDB + Cache Storage", role: data-store, deploys_to: [device], ai: false, ontology: { class: "engram:Cache" } }
+  - { id: game-room,      name: Game room,                  category: application, c4: container, technology: "Durable Object per match, running CME", deploys_to: [cf-platform], ai: false, ontology: { class: "engram:Service" } }
+  - { id: identity,       name: Cloudflare Access,          technology: "Access applications (Google sign-in; emailed code for library sync only)" }
+  - { id: secrets,        name: Secrets,                    technology: "Worker secrets + GitHub Actions secrets + the cloud environment's credential", deploys_to: [cf-platform] }
+  - { id: observability,  name: Observability,              technology: "Workers observability logs + Web Analytics + alerts", deploys_to: [cf-platform] }
+  - { id: data-pipeline,  name: Scheduled data refresh,     technology: "GitHub Actions running tools/refresh.mjs", deploys_to: [github] }
+  - { id: ci-release,     name: CI and the release builder, category: platform, c4: container, technology: "GitHub Actions + tools/release-pages.mjs + wrangler", deploys_to: [github], ai: false, ontology: { class: "engram:Pipeline" } }
+  - { id: llm-service,    name: Anthropic API,              c4: external, technology: "Claude through the AI door" }
+
+environments:
+  - id: live
+    name: crankmagic.com
+    nodes:
+      - { id: device,      name: "The reader's device",         technology: "A browser (iPhone to desktop)" }
+      - { id: edge,        name: "Cloudflare edge",             technology: "Workers + Access, crankmagic.com" }
+      - { id: cf-platform, name: "Cloudflare platform",         technology: "D1, R2, Durable Objects" }
+      - { id: github,      name: "GitHub",                      technology: "The private repository and Actions" }
+
+patterns:
+  - id: cf-web
+    title: The web app, released from one commit
+    when: { kind: functional, area: web }
+    blocks:
+      - { catalog: web-app, key: web, components: [pages, service-worker, design-system] }
+      - { catalog: api,     key: worker, components: [static-assets] }
+    relationships:
+      - { from: web, to: worker, description: "loads the app's files", technology: "HTTPS" }
+    processes: ["Serve the app", "Render a page"]
+  - id: cf-account
+    title: Accounts and the cloud library
+    when: { kind: functional, area: account }
+    blocks:
+      - { catalog: web-app,       key: web,    components: [cloud-sync, account-chip] }
+      - { catalog: api,           key: worker, components: [api-routes, access-verify] }
+      - { catalog: relational-db, key: d1 }
+      - { catalog: identity,      key: access }
+    relationships:
+      - { from: web,    to: worker, description: "saves and reads the library", technology: "HTTPS/JSON + Access token" }
+      - { from: worker, to: d1,     description: "reads and writes users, snapshots, heads", technology: "D1 binding (SQL)" }
+    processes: ["Sign in", "Save a library version", "Resolve a conflict"]
+  - id: cf-outside-data
+    title: Live first, the reader's cache, refreshed stores
+    when: { kind: functional, area: outside-data }
+    blocks:
+      - { catalog: web-app,        key: web,      components: [card-client, data-ages] }
+      - { catalog: reader-cache,   key: reader-cache }
+      - { catalog: data-pipeline,  key: refresh,  components: [bulk-readers, builders, proof, r2-publish] }
+      - { catalog: object-storage, key: r2 }
+      - { catalog: api,            key: worker,   components: [data-route] }
+    relationships:
+      - { from: web,     to: reader-cache, description: "keeps what it fetched, with a lifetime", technology: "IndexedDB / Cache Storage" }
+      - { from: refresh, to: r2,           description: "publishes dated keys and current.json", technology: "R2 API" }
+      - { from: worker,  to: r2,           description: "serves /data/*", technology: "R2 binding" }
+      - { from: web,     to: worker,       description: "reads current.json and the dated files", technology: "HTTPS" }
+    processes: ["Read a card live", "Cache with a lifetime", "Refresh a store", "Publish current.json"]
+  - id: cf-import
+    title: Imports through the Worker
+    when: { kind: functional, area: import }
+    blocks:
+      - { catalog: web-app, key: web, components: [import] }
+      - { catalog: api,     key: worker, components: [import-route] }
+    relationships:
+      - { from: web, to: worker, description: "asks for a deck by link", technology: "HTTPS/JSON" }
+    processes: ["Import a deck"]
+  - id: cf-engine
+    title: CME, the CrankMagic Engine
+    when: { kind: functional, area: engine }
+    blocks:
+      - { catalog: game-room,      key: game-room, components: [cme-engine, storage-adapter, seat-projection, house-pilot] }
+      - { catalog: object-storage, key: r2 }
+    relationships:
+      - { from: game-room, to: r2, description: "loads card definitions by version", technology: "R2 binding" }
+    processes: ["Apply a player's action", "Write the journal", "Project a seat's view"]
+  - id: cf-play
+    title: Play in the cloud
+    when: { kind: functional, area: play }
+    blocks:
+      - { catalog: web-app,   key: web,       components: [lobby, board] }
+      - { catalog: api,       key: worker,    components: [table-front-door] }
+      - { catalog: game-room, key: game-room, components: [cme-engine, storage-adapter, seat-projection] }
+      - { catalog: relational-db, key: d1 }
+    relationships:
+      - { from: web,    to: worker,    description: "creates and joins a table", technology: "HTTPS/JSON + Access token" }
+      - { from: worker, to: game-room, description: "hands the seat's WebSocket to the room", technology: "Durable Object stub" }
+      - { from: worker, to: d1,        description: "records tables and seats", technology: "D1 binding (SQL)" }
+    processes: ["Create a table", "Join a seat", "Play a turn", "File the result"]
+  - id: cf-ai
+    title: The AI door
+    when: { kind: functional, area: ai }
+    blocks:
+      - { catalog: web-app,       key: web,    components: [coach] }
+      - { catalog: api,           key: worker, components: [ai-door] }
+      - { catalog: relational-db, key: d1 }
+      - { catalog: llm-service,   key: anthropic }
+      - { catalog: secrets,       key: secrets }
+    relationships:
+      - { from: worker, to: anthropic, description: "calls the model for an allowlisted person", technology: "HTTPS (Worker secret key)" }
+      - { from: worker, to: d1,        description: "checks the allowlist and logs the call", technology: "D1 binding (SQL)" }
+    processes: ["Check the allowlist", "Call the model under a cap", "Log the call"]
+  - id: cf-release
+    title: The release
+    when: { kind: functional, area: release }
+    blocks:
+      - { catalog: ci-release, key: release, components: [tests, release-builder, acceptance-walk] }
+      - { catalog: api,        key: worker }
+    relationships:
+      - { from: release, to: worker, description: "deploys the walked build", technology: "wrangler (API token)" }
+    processes: ["Build the release", "Walk the release", "Deploy staging, then production"]
+  # Refinements over `technical` (merged by id): one secrets block and one Access, not a second vault.
+  - id: nfr-security
+    title: Security baseline on Cloudflare
+    when: { kind: non-functional, security: true }
+    blocks:
+      - { catalog: identity, key: access }
+      - { catalog: secrets,  key: secrets }
+      - { catalog: api,      key: worker, components: [access-verify, rate-limits] }
+    relationships:
+      - { from: worker, to: access, description: "verifies the Access token against the team's published keys", technology: "HTTPS (JWKS)" }
+    processes: ["Authenticate principal", "Rotate secret"]
+  - id: nfr-observability
+    title: Operability baseline on Cloudflare
+    when: { kind: non-functional, observability: true }
+    blocks:
+      - { catalog: observability, key: observability }
+    relationships: []
+    processes: ["Collect telemetry", "Alert on threshold"]

@@ -1,0 +1,8969 @@
+{
+ "system": {
+  "id": "c4:system.crankmagic",
+  "name": "CrankMagic",
+  "ontology": {},
+  "holon": {
+   "level": "system",
+   "parent": "portfolio:rob-minor"
+  },
+  "shards": []
+ },
+ "profile": "cloudflare",
+ "nodes": [
+  {
+   "id": "c4:system.crankmagic",
+   "kind": "SoftwareSystem",
+   "name": "CrankMagic",
+   "properties": {
+    "description": "A Commander deck workshop and a place to play: decks, library, explore and Play, all on Cloudflare at crankmagic.com, with invite-only accounts, live-first card data, and games run by CME, the CrankMagic Engine, in Durable Objects.\n",
+    "external": false,
+    "source": "declared",
+    "status": "intent",
+    "ontology": {},
+    "holon": {
+     "level": "system",
+     "parent": "portfolio:rob-minor"
+    },
+    "shards": []
+   }
+  },
+  {
+   "id": "c4:person.visitor",
+   "kind": "Person",
+   "name": "Visitor",
+   "properties": {
+    "description": "Signed out, trying the workshop; the library lives in this browser.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.builder",
+   "kind": "Person",
+   "name": "Builder",
+   "properties": {
+    "description": "Signed in, building decks on two devices.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.collector",
+   "kind": "Person",
+   "name": "Collector",
+   "properties": {
+    "description": "At a shop with a phone, checking prices and the To Buy list.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.host",
+   "kind": "Person",
+   "name": "Host",
+   "properties": {
+    "description": "Sets up a table and invites people to it.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.guest",
+   "kind": "Person",
+   "name": "Guest",
+   "properties": {
+    "description": "Invited to a table, signs in and plays a seat.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.ai-seat-player",
+   "kind": "Person",
+   "name": "AI-seat player",
+   "properties": {
+    "description": "Plays against the house pilot or an LLM seat, and asks the Coach.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.rob",
+   "kind": "Person",
+   "name": "Rob",
+   "properties": {
+    "description": "The operator: invites people, holds the secrets, approves deploys.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:person.playtest-agent",
+   "kind": "Person",
+   "name": "Playtest agent",
+   "properties": {
+    "description": "One of Grok Bot's four agents, playing on staging and logging findings.",
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.scryfall",
+   "kind": "SoftwareSystem",
+   "name": "Scryfall",
+   "properties": {
+    "description": "Card records, prices, rulings, legality and images.",
+    "technology": "HTTPS JSON API, CDN, bulk files",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.edhrec",
+   "kind": "SoftwareSystem",
+   "name": "EDHREC",
+   "properties": {
+    "description": "Commander popularity and co-play.",
+    "technology": "HTTPS JSON pages (no public API)",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.mtgjson",
+   "kind": "SoftwareSystem",
+   "name": "MTGJSON",
+   "properties": {
+    "description": "Precon decklists and set data.",
+    "technology": "HTTPS bulk files",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.archidekt",
+   "kind": "SoftwareSystem",
+   "name": "Archidekt",
+   "properties": {
+    "description": "Deck imports by link.",
+    "technology": "HTTPS deck API",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.wizards",
+   "kind": "SoftwareSystem",
+   "name": "Wizards",
+   "properties": {
+    "description": "The Comprehensive Rules, release notes and the Commander format page.",
+    "technology": "HTTPS text and pages",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.google",
+   "kind": "SoftwareSystem",
+   "name": "Google",
+   "properties": {
+    "description": "Sign-in.",
+    "technology": "OIDC, through Cloudflare Access",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:system.github",
+   "kind": "SoftwareSystem",
+   "name": "GitHub",
+   "properties": {
+    "description": "The private repository, CI and the scheduled refresh.",
+    "technology": "Git + Actions",
+    "external": true,
+    "source": "declared",
+    "status": "intent"
+   }
+  },
+  {
+   "id": "c4:container.release",
+   "kind": "Container",
+   "name": "CI and the release builder",
+   "properties": {
+    "technology": "GitHub Actions + tools/release-pages.mjs + wrangler",
+    "role": "application",
+    "ai": false,
+    "description": "CI and the release builder (ci-release) \u2014 designed for S1-release.",
+    "catalog": "ci-release",
+    "category": "platform",
+    "ontology": {
+     "class": "engram:Pipeline"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:component.release.tests",
+   "kind": "Component",
+   "name": "tests",
+   "properties": {
+    "technology": "GitHub Actions + tools/release-pages.mjs + wrangler",
+    "description": "tests inside CI and the release builder.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.release"
+    }
+   }
+  },
+  {
+   "id": "c4:component.release.release-builder",
+   "kind": "Component",
+   "name": "release-builder",
+   "properties": {
+    "technology": "GitHub Actions + tools/release-pages.mjs + wrangler",
+    "description": "release-builder inside CI and the release builder.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.release"
+    }
+   }
+  },
+  {
+   "id": "c4:component.release.acceptance-walk",
+   "kind": "Component",
+   "name": "acceptance-walk",
+   "properties": {
+    "technology": "GitHub Actions + tools/release-pages.mjs + wrangler",
+    "description": "acceptance-walk inside CI and the release builder.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.release"
+    }
+   }
+  },
+  {
+   "id": "c4:container.worker",
+   "kind": "Container",
+   "name": "The crankmagic Worker",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "role": "application",
+    "ai": false,
+    "description": "The crankmagic Worker (api) \u2014 designed for M1-archidekt, M1-delete-account, M1-design, M1-landing, M1-notify, M1-precons, M1-settings, M10-finish, M11-architecture, M2-adjudication, M2-ages, M2-images, M2-live-first, M2-schedule, M2-serve, M2-stores, M3-backups, M3-rate-limits, M5-front-door, M5-hidden, M5-lobby, M5-reconnect, M5-results, M5-room, M5-transport, M6-door, M8-playtest, S1-release, S2-access, S2-sync.",
+    "catalog": "api",
+    "category": "application",
+    "ontology": {
+     "class": "engram:Service"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.api-routes",
+   "kind": "Component",
+   "name": "api-routes",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "api-routes inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.access-verify",
+   "kind": "Component",
+   "name": "access-verify",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "access-verify inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.rate-limits",
+   "kind": "Component",
+   "name": "rate-limits",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "rate-limits inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.static-assets",
+   "kind": "Component",
+   "name": "static-assets",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "static-assets inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.import-route",
+   "kind": "Component",
+   "name": "import-route",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "import-route inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.data-route",
+   "kind": "Component",
+   "name": "data-route",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "data-route inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.table-front-door",
+   "kind": "Component",
+   "name": "table-front-door",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "table-front-door inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:component.worker.ai-door",
+   "kind": "Component",
+   "name": "ai-door",
+   "properties": {
+    "technology": "Cloudflare Worker (run_worker_first for /api/* and /data/*)",
+    "description": "ai-door inside The crankmagic Worker.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.worker"
+    }
+   }
+  },
+  {
+   "id": "c4:container.web",
+   "kind": "Container",
+   "name": "The app in the browser",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "role": "application",
+    "ai": false,
+    "description": "The app in the browser (web-app) \u2014 designed for M1-archidekt, M1-delete-account, M1-design, M1-landing, M1-notify, M1-precons, M1-settings, M10-finish, M11-architecture, M2-adjudication, M2-ages, M2-images, M2-live-first, M2-schedule, M2-serve, M2-stores, M3-backups, M5-front-door, M5-lobby, M5-reconnect, M5-results, M5-room, M5-transport, M6-door, M8-playtest, S2-sync.",
+    "catalog": "web-app",
+    "category": "application",
+    "ontology": {
+     "class": "engram:WebApplication"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.cloud-sync",
+   "kind": "Component",
+   "name": "cloud-sync",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "cloud-sync inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.account-chip",
+   "kind": "Component",
+   "name": "account-chip",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "account-chip inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.pages",
+   "kind": "Component",
+   "name": "pages",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "pages inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.service-worker",
+   "kind": "Component",
+   "name": "service-worker",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "service-worker inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.design-system",
+   "kind": "Component",
+   "name": "design-system",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "design-system inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.import",
+   "kind": "Component",
+   "name": "import",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "import inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.card-client",
+   "kind": "Component",
+   "name": "card-client",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "card-client inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.data-ages",
+   "kind": "Component",
+   "name": "data-ages",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "data-ages inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.lobby",
+   "kind": "Component",
+   "name": "lobby",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "lobby inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.board",
+   "kind": "Component",
+   "name": "board",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "board inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:component.web.coach",
+   "kind": "Component",
+   "name": "coach",
+   "properties": {
+    "technology": "Static pages + ES modules + service worker, served as Worker assets",
+    "description": "coach inside The app in the browser.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.web"
+    }
+   }
+  },
+  {
+   "id": "c4:container.d1",
+   "kind": "Container",
+   "name": "D1 database",
+   "properties": {
+    "technology": "Cloudflare D1 (SQLite)",
+    "role": "data-store",
+    "ai": false,
+    "description": "D1 database (relational-db) \u2014 designed for M1-delete-account, M1-notify, M10-finish, M3-backups, M5-front-door, M5-lobby, M5-reconnect, M5-results, M5-room, M5-transport, M6-door, M8-playtest, S2-sync.",
+    "catalog": "relational-db",
+    "category": "data",
+    "ontology": {
+     "class": "engram:Database"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:system.cloudflare-access",
+   "kind": "SoftwareSystem",
+   "name": "Cloudflare Access",
+   "properties": {
+    "technology": "Access applications (Google sign-in; emailed code for library sync only)",
+    "external": true,
+    "source": "declared",
+    "status": "intent",
+    "catalog": "identity",
+    "ontology": {
+     "class": "engram:Identity"
+    }
+   }
+  },
+  {
+   "id": "c4:container.secrets",
+   "kind": "Container",
+   "name": "Secrets",
+   "properties": {
+    "technology": "Worker secrets + GitHub Actions secrets + the cloud environment's credential",
+    "role": "data-store",
+    "ai": false,
+    "description": "Secrets (secrets) \u2014 designed for M10-finish, M3-rate-limits, M5-hidden, M6-door, S2-access.",
+    "catalog": "secrets",
+    "category": "platform",
+    "ontology": {
+     "class": "engram:Secrets"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:container.reader-cache",
+   "kind": "Container",
+   "name": "The reader's cache",
+   "properties": {
+    "technology": "IndexedDB + Cache Storage",
+    "role": "data-store",
+    "ai": false,
+    "description": "The reader's cache (reader-cache) \u2014 designed for M1-precons, M2-adjudication, M2-images, M2-live-first, M2-schedule, M2-serve, M2-stores.",
+    "catalog": "reader-cache",
+    "category": "data",
+    "ontology": {
+     "class": "engram:Cache"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:container.refresh",
+   "kind": "Container",
+   "name": "Scheduled data refresh",
+   "properties": {
+    "technology": "GitHub Actions running tools/refresh.mjs",
+    "role": "application",
+    "ai": false,
+    "description": "Scheduled data refresh (data-pipeline) \u2014 designed for M1-precons, M2-adjudication, M2-images, M2-live-first, M2-schedule, M2-serve, M2-stores.",
+    "catalog": "data-pipeline",
+    "category": "data",
+    "ontology": {
+     "class": "engram:Pipeline"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:component.refresh.bulk-readers",
+   "kind": "Component",
+   "name": "bulk-readers",
+   "properties": {
+    "technology": "GitHub Actions running tools/refresh.mjs",
+    "description": "bulk-readers inside Scheduled data refresh.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.refresh"
+    }
+   }
+  },
+  {
+   "id": "c4:component.refresh.builders",
+   "kind": "Component",
+   "name": "builders",
+   "properties": {
+    "technology": "GitHub Actions running tools/refresh.mjs",
+    "description": "builders inside Scheduled data refresh.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.refresh"
+    }
+   }
+  },
+  {
+   "id": "c4:component.refresh.proof",
+   "kind": "Component",
+   "name": "proof",
+   "properties": {
+    "technology": "GitHub Actions running tools/refresh.mjs",
+    "description": "proof inside Scheduled data refresh.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.refresh"
+    }
+   }
+  },
+  {
+   "id": "c4:component.refresh.r2-publish",
+   "kind": "Component",
+   "name": "r2-publish",
+   "properties": {
+    "technology": "GitHub Actions running tools/refresh.mjs",
+    "description": "r2-publish inside Scheduled data refresh.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.refresh"
+    }
+   }
+  },
+  {
+   "id": "c4:container.r2",
+   "kind": "Container",
+   "name": "R2 bucket",
+   "properties": {
+    "technology": "Cloudflare R2 (dated keys + current.json)",
+    "role": "data-store",
+    "ai": false,
+    "description": "R2 bucket (object-storage) \u2014 designed for M1-precons, M2-adjudication, M2-images, M2-live-first, M2-pin, M2-schedule, M2-serve, M2-stores, M4-engine, M4-house-pilot, M4-legality, M5-definitions, M7-compiler.",
+    "catalog": "object-storage",
+    "category": "data",
+    "ontology": {
+     "class": "engram:ObjectStore"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:container.game-room",
+   "kind": "Container",
+   "name": "Game room",
+   "properties": {
+    "technology": "Durable Object per match, running CME",
+    "role": "application",
+    "ai": false,
+    "description": "Game room (game-room) \u2014 designed for M2-pin, M4-engine, M4-house-pilot, M4-legality, M5-definitions, M5-front-door, M5-lobby, M5-reconnect, M5-results, M5-room, M5-transport, M7-compiler, M8-playtest.",
+    "catalog": "game-room",
+    "category": "application",
+    "ontology": {
+     "class": "engram:Service"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:component.game-room.cme-engine",
+   "kind": "Component",
+   "name": "cme-engine",
+   "properties": {
+    "technology": "Durable Object per match, running CME",
+    "description": "cme-engine inside Game room.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.game-room"
+    }
+   }
+  },
+  {
+   "id": "c4:component.game-room.storage-adapter",
+   "kind": "Component",
+   "name": "storage-adapter",
+   "properties": {
+    "technology": "Durable Object per match, running CME",
+    "description": "storage-adapter inside Game room.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.game-room"
+    }
+   }
+  },
+  {
+   "id": "c4:component.game-room.seat-projection",
+   "kind": "Component",
+   "name": "seat-projection",
+   "properties": {
+    "technology": "Durable Object per match, running CME",
+    "description": "seat-projection inside Game room.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.game-room"
+    }
+   }
+  },
+  {
+   "id": "c4:component.game-room.house-pilot",
+   "kind": "Component",
+   "name": "house-pilot",
+   "properties": {
+    "technology": "Durable Object per match, running CME",
+    "description": "house-pilot inside Game room.",
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "component",
+     "parent": "c4:container.game-room"
+    }
+   }
+  },
+  {
+   "id": "c4:container.observability",
+   "kind": "Container",
+   "name": "Observability",
+   "properties": {
+    "technology": "Workers observability logs + Web Analytics + alerts",
+    "role": "application",
+    "ai": false,
+    "description": "Observability (observability) \u2014 designed for M3-monitoring.",
+    "catalog": "observability",
+    "category": "platform",
+    "ontology": {
+     "class": "engram:Observability"
+    },
+    "source": "declared",
+    "status": "intent",
+    "holon": {
+     "level": "container",
+     "parent": "c4:system.crankmagic"
+    }
+   }
+  },
+  {
+   "id": "c4:system.anthropic-api",
+   "kind": "SoftwareSystem",
+   "name": "Anthropic API",
+   "properties": {
+    "technology": "Claude through the AI door",
+    "external": true,
+    "source": "declared",
+    "status": "intent",
+    "catalog": "llm-service",
+    "ontology": {
+     "class": "engram:ModelService"
+    }
+   }
+  },
+  {
+   "id": "c4:node.device",
+   "kind": "DeploymentNode",
+   "name": "The reader's device",
+   "properties": {
+    "technology": "A browser (iPhone to desktop)",
+    "source": "declared",
+    "status": "intent",
+    "environment": "crankmagic.com"
+   }
+  },
+  {
+   "id": "c4:node.edge",
+   "kind": "DeploymentNode",
+   "name": "Cloudflare edge",
+   "properties": {
+    "technology": "Workers + Access, crankmagic.com",
+    "source": "declared",
+    "status": "intent",
+    "environment": "crankmagic.com"
+   }
+  },
+  {
+   "id": "c4:node.cf-platform",
+   "kind": "DeploymentNode",
+   "name": "Cloudflare platform",
+   "properties": {
+    "technology": "D1, R2, Durable Objects",
+    "source": "declared",
+    "status": "intent",
+    "environment": "crankmagic.com"
+   }
+  },
+  {
+   "id": "c4:node.github",
+   "kind": "DeploymentNode",
+   "name": "GitHub",
+   "properties": {
+    "technology": "The private repository and Actions",
+    "source": "declared",
+    "status": "intent",
+    "environment": "crankmagic.com"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "from": "repo:crankmagic",
+   "to": "c4:system.crankmagic",
+   "kind": "models",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:S1-one-address",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-terms",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-csp",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M2-offline",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M3-monitoring",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M3-invite",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M6-privacy",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M9-cutover",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "req:HK-github-io",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.visitor",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.visitor",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.builder",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.collector",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.collector",
+   "to": "req:M2-offline",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.host",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.host",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.guest",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.guest",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.ai-seat-player",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.ai-seat-player",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.rob",
+   "to": "req:M3-invite",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.rob",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.playtest-agent",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.scryfall",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.scryfall",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.edhrec",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.mtgjson",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.archidekt",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.wizards",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.google",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.github",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.github",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.release",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "c4:component.release.tests",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.release.tests",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "c4:component.release.release-builder",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.release.release-builder",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "c4:component.release.acceptance-walk",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.release.acceptance-walk",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.worker",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.api-routes",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.api-routes",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.access-verify",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.access-verify",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.rate-limits",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.rate-limits",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.static-assets",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.static-assets",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.import-route",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.import-route",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.data-route",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.data-route",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.table-front-door",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.table-front-door",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:component.worker.ai-door",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.worker.ai-door",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.web",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.cloud-sync",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.cloud-sync",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.account-chip",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.account-chip",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.pages",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.pages",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.service-worker",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.service-worker",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.design-system",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.design-system",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.import",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.import",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.card-client",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.card-client",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.data-ages",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.data-ages",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.lobby",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.lobby",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.board",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.board",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:component.web.coach",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-archidekt",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-design",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-landing",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M1-settings",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M11-architecture",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-ages",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.web.coach",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.d1",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:M1-delete-account",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:M1-notify",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:M3-backups",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.cloudflare-access",
+   "to": "req:S2-sync",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.secrets",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "req:M3-rate-limits",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "req:M5-hidden",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "req:S2-access",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.reader-cache",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.refresh",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:component.refresh.bulk-readers",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.bulk-readers",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:component.refresh.builders",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.builders",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:component.refresh.proof",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.proof",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:component.refresh.r2-publish",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.refresh.r2-publish",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.r2",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M1-precons",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-adjudication",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-images",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-live-first",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-schedule",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-serve",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M2-stores",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.game-room",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:component.game-room.cme-engine",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.cme-engine",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:component.game-room.storage-adapter",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.storage-adapter",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:component.game-room.seat-projection",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.seat-projection",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:component.game-room.house-pilot",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M2-pin",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M4-engine",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M4-house-pilot",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M4-legality",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-definitions",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-front-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-lobby",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-reconnect",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-results",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-room",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M5-transport",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M7-compiler",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:component.game-room.house-pilot",
+   "to": "req:M8-playtest",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.crankmagic",
+   "to": "c4:container.observability",
+   "kind": "contains",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.observability",
+   "to": "req:M3-monitoring",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.anthropic-api",
+   "to": "req:M10-finish",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:system.anthropic-api",
+   "to": "req:M6-door",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:person.visitor",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.builder",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.collector",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.host",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.guest",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.ai-seat-player",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.rob",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:person.playtest-agent",
+   "to": "c4:container.web",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "uses",
+    "technology": "HTTPS"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "c4:container.worker",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "deploys the walked build",
+    "technology": "wrangler (API token)",
+    "requirement": "S1-release"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:container.worker",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "saves and reads the library",
+    "technology": "HTTPS/JSON + Access token",
+    "requirement": "S2-sync"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:container.d1",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "reads and writes users, snapshots, heads",
+    "technology": "D1 binding (SQL)",
+    "requirement": "S2-sync"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.cloudflare-access",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "verifies the Access token against the team's published keys",
+    "technology": "HTTPS (JWKS)",
+    "requirement": "S2-access"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:container.reader-cache",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "keeps what it fetched, with a lifetime",
+    "technology": "IndexedDB / Cache Storage",
+    "requirement": "M1-precons"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:container.r2",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "publishes dated keys and current.json",
+    "technology": "R2 API",
+    "requirement": "M1-precons"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:container.r2",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "serves /data/*",
+    "technology": "R2 binding",
+    "requirement": "M1-precons"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:container.r2",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "loads card definitions by version",
+    "technology": "R2 binding",
+    "requirement": "M2-pin"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:container.game-room",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "hands the seat's WebSocket to the room",
+    "technology": "Durable Object stub",
+    "requirement": "M5-room"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.anthropic-api",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "calls the model for an allowlisted person",
+    "technology": "HTTPS (Worker secret key)",
+    "requirement": "M6-door"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.scryfall",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "HTTPS JSON API, CDN, bulk files"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.edhrec",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "HTTPS JSON pages (no public API)"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.mtgjson",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "HTTPS bulk files"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.archidekt",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "HTTPS deck API"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.wizards",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "HTTPS text and pages"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.google",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "OIDC, through Cloudflare Access"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:system.github",
+   "kind": "uses",
+   "properties": {
+    "source": "forward_generate",
+    "description": "integrates with",
+    "technology": "Git + Actions"
+   }
+  },
+  {
+   "from": "c4:node.device",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:node.edge",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:node.cf-platform",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:node.github",
+   "to": "req:S1-release",
+   "kind": "traces-to",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.release",
+   "to": "c4:node.github",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.worker",
+   "to": "c4:node.edge",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.web",
+   "to": "c4:node.device",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.d1",
+   "to": "c4:node.cf-platform",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.secrets",
+   "to": "c4:node.cf-platform",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.reader-cache",
+   "to": "c4:node.device",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.refresh",
+   "to": "c4:node.github",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.r2",
+   "to": "c4:node.cf-platform",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.game-room",
+   "to": "c4:node.cf-platform",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  },
+  {
+   "from": "c4:container.observability",
+   "to": "c4:node.cf-platform",
+   "kind": "deployed-on",
+   "properties": {
+    "source": "forward_generate"
+   }
+  }
+ ],
+ "requirements": [
+  {
+   "id": "req:S1-release",
+   "req_id": "S1-release",
+   "text": "The web app is released from one commit of main through release/pages and deployed with wrangler after the acceptance walk passes, staging first.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/release-pages.md"
+   }
+  },
+  {
+   "id": "req:S1-one-address",
+   "req_id": "S1-one-address",
+   "text": "One address serves the app, crankmagic.com, and the only public contact is admin@crankmagic.com.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "tools/release-pages.mjs"
+   }
+  },
+  {
+   "id": "req:S2-sync",
+   "req_id": "S2-sync",
+   "text": "A signed-in person's library saves itself to the cloud and follows them to any device; a conflict is put to the person and the other version is held 30 days.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-account-cloud.md"
+   }
+  },
+  {
+   "id": "req:S2-access",
+   "req_id": "S2-access",
+   "text": "Every /api/* request passes Cloudflare Access and is verified again by the Worker: signature, audience, issuer, expiry and a named person.",
+   "kind": "non-functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "cloud/access.mjs"
+   }
+  },
+  {
+   "id": "req:M1-design",
+   "req_id": "M1-design",
+   "text": "The web app follows the r3 design system: its tokens, Satoshi type and the brass accent, in dark and light.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "R3.0-R3.9"
+   }
+  },
+  {
+   "id": "req:M1-landing",
+   "req_id": "M1-landing",
+   "text": "A landing page at / for a signed-out visitor with no library in the browser; anyone else goes straight to Decks.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "R3.8, decision 3"
+   }
+  },
+  {
+   "id": "req:M1-settings",
+   "req_id": "M1-settings",
+   "text": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "R3.3"
+   }
+  },
+  {
+   "id": "req:M1-delete-account",
+   "req_id": "M1-delete-account",
+   "text": "Delete account: a Worker route removes the person's snapshots, head and user row; removing them from Access stays Rob's runbook step.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M3, R3.3"
+   }
+  },
+  {
+   "id": "req:M1-notify",
+   "req_id": "M1-notify",
+   "text": "For a signed-in person, 'Tell me when it's ready' on Play is a switch stored with the account; no mailing list.",
+   "kind": "functional",
+   "priority": "should",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "decision 5"
+   }
+  },
+  {
+   "id": "req:M1-archidekt",
+   "req_id": "M1-archidekt",
+   "text": "Import from an Archidekt link through a Worker route, with a size limit and nothing stored.",
+   "kind": "functional",
+   "priority": "should",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "R3.10"
+   }
+  },
+  {
+   "id": "req:M1-precons",
+   "req_id": "M1-precons",
+   "text": "Start from a precon, from a list refreshed with the card data from MTGJSON.",
+   "kind": "functional",
+   "priority": "should",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/design/2026-09-25-redesign-r3/INTAKE.md",
+    "query": "R3.10"
+   }
+  },
+  {
+   "id": "req:M2-live-first",
+   "req_id": "M2-live-first",
+   "text": "Outside data is read live first, then from the reader's cache (IndexedDB: 7 days for records, 24 hours for prices), then from a refreshed store.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70"
+   }
+  },
+  {
+   "id": "req:M2-images",
+   "req_id": "M2-images",
+   "text": "Card images always come from Scryfall's CDN, through the browser's and the worker's caches, and are never stored by us.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70 artwork"
+   }
+  },
+  {
+   "id": "req:M2-stores",
+   "req_id": "M2-stores",
+   "text": "Stores only where live cannot do the job: the name index, the engine's oracle snapshot, one dated price snapshot, EDHREC ranks and co-play, precons, and our derived graph and strategies.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70"
+   }
+  },
+  {
+   "id": "req:M2-schedule",
+   "req_id": "M2-schedule",
+   "text": "A scheduled GitHub Actions run of tools/refresh.mjs publishes dated keys and current.json to R2 and keeps 7 runs; a run that fails its proof publishes nothing.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "design 1-2"
+   }
+  },
+  {
+   "id": "req:M2-serve",
+   "req_id": "M2-serve",
+   "text": "The Worker serves /data/* from R2, and the app reads current.json in place of ?v= pins.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "design 3"
+   }
+  },
+  {
+   "id": "req:M2-ages",
+   "req_id": "M2-ages",
+   "text": "Settings \u203a About shows every data set's date, and anything past its lifetime is labeled stale.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M2"
+   }
+  },
+  {
+   "id": "req:M2-pin",
+   "req_id": "M2-pin",
+   "text": "A game pins the oracle snapshot and card-definition version it started with, so a replay is identical.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70 rules"
+   }
+  },
+  {
+   "id": "req:M2-adjudication",
+   "req_id": "M2-adjudication",
+   "text": "A rules adjudication log citing the CR, the card's rulings, the release notes and the Commander page, and a scheduled Comprehensive Rules check.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M2"
+   }
+  },
+  {
+   "id": "req:M2-terms",
+   "req_id": "M2-terms",
+   "text": "Honor each source's terms: Scryfall's User-Agent, rate and bulk files; EDHREC read gently on a schedule; Wizards' texts cited and not redistributed.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70 terms"
+   }
+  },
+  {
+   "id": "req:M2-csp",
+   "req_id": "M2-csp",
+   "text": "The browser reaches only api.scryfall.com and loads images only from Scryfall's CDNs; every other source goes through the Worker or the scheduled job.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70 security policy"
+   }
+  },
+  {
+   "id": "req:M2-offline",
+   "req_id": "M2-offline",
+   "text": "Offline still works: the worker keeps the last good copy of every stored set and the reader's cache keeps what they opened.",
+   "kind": "non-functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-data-sync.md",
+    "query": "\u00a70 offline"
+   }
+  },
+  {
+   "id": "req:M3-rate-limits",
+   "req_id": "M3-rate-limits",
+   "text": "Rate limits on /api/*, per identity and per IP.",
+   "kind": "non-functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M3"
+   }
+  },
+  {
+   "id": "req:M3-monitoring",
+   "req_id": "M3-monitoring",
+   "text": "Workers observability logs, alerts on 5xx and on sync conflicts, and a weekly check.",
+   "kind": "non-functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M3"
+   }
+  },
+  {
+   "id": "req:M3-backups",
+   "req_id": "M3-backups",
+   "text": "D1 Time Travel's window confirmed, and a nightly export of D1 to R2.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M3"
+   }
+  },
+  {
+   "id": "req:M3-invite",
+   "req_id": "M3-invite",
+   "text": "Accounts are invite-only through the Access 'Invited' policy; the free plan caps it at 50 people.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M3"
+   }
+  },
+  {
+   "id": "req:M4-engine",
+   "req_id": "M4-engine",
+   "text": "CME plays Rob's seven decks deterministically with hidden information held, writing its journal and checkpoints through a storage adapter.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/engine/PLAN.md",
+    "query": "phases 2-3, 4.1b"
+   }
+  },
+  {
+   "id": "req:M4-house-pilot",
+   "req_id": "M4-house-pilot",
+   "text": "The house pilot, the engine's own opponent, sees only its seat and costs nothing per game.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M4 4.2"
+   }
+  },
+  {
+   "id": "req:M4-legality",
+   "req_id": "M4-legality",
+   "text": "Deck legality is checked at prepare against a dated banned list, refusing by name.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M4"
+   }
+  },
+  {
+   "id": "req:M5-room",
+   "req_id": "M5-room",
+   "text": "One Durable Object per match runs CME, holds the authoritative state and hides hands.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-transport",
+   "req_id": "M5-transport",
+   "text": "A WebSocket on the Durable Object carries ordered view updates and receipts, with no polling.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-front-door",
+   "req_id": "M5-front-door",
+   "text": "The Worker creates, joins and leaves tables and hands a seat to an Access identity; identity stays out of the engine.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-lobby",
+   "req_id": "M5-lobby",
+   "text": "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human seat.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-reconnect",
+   "req_id": "M5-reconnect",
+   "text": "Reconnect sends a fresh permitted view; a game never concedes silently and AI takes over only by agreement.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-results",
+   "req_id": "M5-results",
+   "text": "A finished game files its record under the deck and syncs with the account; a guest's deck never overwrites the host's library.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-definitions",
+   "req_id": "M5-definitions",
+   "text": "Card definitions are served to the room from R2, not bundled.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5"
+   }
+  },
+  {
+   "id": "req:M5-hidden",
+   "req_id": "M5-hidden",
+   "text": "Hidden information holds in network payloads, logs and reconnect snapshots.",
+   "kind": "non-functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M5 launch gate"
+   }
+  },
+  {
+   "id": "req:M6-door",
+   "req_id": "M6-door",
+   "text": "The AI door: its own Access application (Google with MFA, never the emailed code), an AI allowlist in D1, the key as a Worker secret, spend caps, and a log of every call.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M6"
+   }
+  },
+  {
+   "id": "req:M6-privacy",
+   "req_id": "M6-privacy",
+   "text": "The privacy page says what goes to the AI before any AI feature is switched on.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M6"
+   }
+  },
+  {
+   "id": "req:M7-compiler",
+   "req_id": "M7-compiler",
+   "text": "Every card is compiled and reconciled into card definitions shipped as data; a card that cannot be is refused, naming what it lacks.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M7"
+   }
+  },
+  {
+   "id": "req:M8-playtest",
+   "req_id": "M8-playtest",
+   "text": "A playtest table on staging for Grok Bot's four agents, whose games export seed, journal and per-seat projections.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M8"
+   }
+  },
+  {
+   "id": "req:M9-cutover",
+   "req_id": "M9-cutover",
+   "text": "CME is the only engine: Forge, the local Windows host and the tunnel are retired.",
+   "kind": "constraint",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M9"
+   }
+  },
+  {
+   "id": "req:M10-finish",
+   "req_id": "M10-finish",
+   "text": "The Coach's logic through the AI door, the Lab's data-driven strategy, and the accounts' later features if Rob still wants them.",
+   "kind": "functional",
+   "priority": "could",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M10"
+   }
+  },
+  {
+   "id": "req:M11-architecture",
+   "req_id": "M11-architecture",
+   "text": "An architecture page draws the final state from engram's graph, with a current-state toggle.",
+   "kind": "functional",
+   "priority": "must",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "M11"
+   }
+  },
+  {
+   "id": "req:HK-github-io",
+   "req_id": "HK-github-io",
+   "text": "github.io is retired from main; nothing names it.",
+   "kind": "constraint",
+   "priority": "should",
+   "ontology": {},
+   "source": {
+    "graph": "repo",
+    "node": "docs/plan-to-100.md",
+    "query": "Housekeeping"
+   }
+  }
+ ],
+ "holarchy": [
+  {
+   "level": "system",
+   "id": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.release",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.worker",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.web",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.d1",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.secrets",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.reader-cache",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.refresh",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.r2",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.game-room",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "container",
+   "id": "c4:container.observability",
+   "parent": "c4:system.crankmagic"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.release.tests",
+   "parent": "c4:container.release"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.release.release-builder",
+   "parent": "c4:container.release"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.release.acceptance-walk",
+   "parent": "c4:container.release"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.api-routes",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.access-verify",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.rate-limits",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.static-assets",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.import-route",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.data-route",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.table-front-door",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.worker.ai-door",
+   "parent": "c4:container.worker"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.cloud-sync",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.account-chip",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.pages",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.service-worker",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.design-system",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.import",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.card-client",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.data-ages",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.lobby",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.board",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.web.coach",
+   "parent": "c4:container.web"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.refresh.bulk-readers",
+   "parent": "c4:container.refresh"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.refresh.builders",
+   "parent": "c4:container.refresh"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.refresh.proof",
+   "parent": "c4:container.refresh"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.refresh.r2-publish",
+   "parent": "c4:container.refresh"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.game-room.cme-engine",
+   "parent": "c4:container.game-room"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.game-room.storage-adapter",
+   "parent": "c4:container.game-room"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.game-room.seat-projection",
+   "parent": "c4:container.game-room"
+  },
+  {
+   "level": "component",
+   "id": "c4:component.game-room.house-pilot",
+   "parent": "c4:container.game-room"
+  }
+ ],
+ "pattern_matches": {
+  "S1-release": [
+   "cf-release"
+  ],
+  "S1-one-address": [],
+  "S2-sync": [
+   "cf-account"
+  ],
+  "S2-access": [
+   "nfr-security"
+  ],
+  "M1-design": [
+   "cf-web"
+  ],
+  "M1-landing": [
+   "cf-web"
+  ],
+  "M1-settings": [
+   "cf-web"
+  ],
+  "M1-delete-account": [
+   "cf-account"
+  ],
+  "M1-notify": [
+   "cf-account"
+  ],
+  "M1-archidekt": [
+   "cf-import"
+  ],
+  "M1-precons": [
+   "cf-outside-data"
+  ],
+  "M2-live-first": [
+   "cf-outside-data"
+  ],
+  "M2-images": [
+   "cf-outside-data"
+  ],
+  "M2-stores": [
+   "cf-outside-data"
+  ],
+  "M2-schedule": [
+   "cf-outside-data"
+  ],
+  "M2-serve": [
+   "cf-outside-data"
+  ],
+  "M2-ages": [
+   "cf-web"
+  ],
+  "M2-pin": [
+   "cf-engine"
+  ],
+  "M2-adjudication": [
+   "cf-outside-data"
+  ],
+  "M2-terms": [],
+  "M2-csp": [],
+  "M2-offline": [],
+  "M3-rate-limits": [
+   "nfr-security"
+  ],
+  "M3-monitoring": [
+   "nfr-observability"
+  ],
+  "M3-backups": [
+   "cf-account"
+  ],
+  "M3-invite": [],
+  "M4-engine": [
+   "cf-engine"
+  ],
+  "M4-house-pilot": [
+   "cf-engine"
+  ],
+  "M4-legality": [
+   "cf-engine"
+  ],
+  "M5-room": [
+   "cf-play"
+  ],
+  "M5-transport": [
+   "cf-play"
+  ],
+  "M5-front-door": [
+   "cf-play"
+  ],
+  "M5-lobby": [
+   "cf-play"
+  ],
+  "M5-reconnect": [
+   "cf-play"
+  ],
+  "M5-results": [
+   "cf-play"
+  ],
+  "M5-definitions": [
+   "cf-engine"
+  ],
+  "M5-hidden": [
+   "nfr-security"
+  ],
+  "M6-door": [
+   "cf-ai"
+  ],
+  "M6-privacy": [],
+  "M7-compiler": [
+   "cf-engine"
+  ],
+  "M8-playtest": [
+   "cf-play"
+  ],
+  "M9-cutover": [],
+  "M10-finish": [
+   "cf-ai"
+  ],
+  "M11-architecture": [
+   "cf-web"
+  ],
+  "HK-github-io": []
+ },
+ "unmatched_functional_requirements": []
+}

@@ -1,0 +1,160 @@
+# engram forward-model input for CrankMagic's FINAL state (M11, docs/plan-to-100.md).
+# Every requirement below is taken from a plan document, named in its `source`. The forward model
+# (docs/architecture/map.sh) turns them into the final state with `status: intent` and `traces-to`
+# lineage; docs/architecture/model/pieces.yaml then names the pieces the page draws against these ids.
+intent_version: 1
+profile: cloudflare
+
+system:
+  name: CrankMagic
+  description: >
+    A Commander deck workshop and a place to play: decks, library, explore and Play, all on Cloudflare
+    at crankmagic.com, with invite-only accounts, live-first card data, and games run by CME, the
+    CrankMagic Engine, in Durable Objects.
+  holon: { level: system, parent: "portfolio:rob-minor" }
+
+requirements:
+  # Stages 1 and 2, shipped and standing (docs/release-pages.md, docs/plan-account-cloud.md)
+  - { id: S1-release, kind: functional, priority: must, attributes: { area: release },
+      text: "The web app is released from one commit of main through release/pages and deployed with wrangler after the acceptance walk passes, staging first.",
+      source: { graph: repo, node: docs/release-pages.md } }
+  - { id: S1-one-address, kind: constraint, priority: must,
+      text: "One address serves the app, crankmagic.com, and the only public contact is admin@crankmagic.com.",
+      source: { graph: repo, node: tools/release-pages.mjs } }
+  - { id: S2-sync, kind: functional, priority: must, attributes: { area: account },
+      text: "A signed-in person's library saves itself to the cloud and follows them to any device; a conflict is put to the person and the other version is held 30 days.",
+      source: { graph: repo, node: docs/plan-account-cloud.md } }
+  - { id: S2-access, kind: non-functional, priority: must, attributes: { security: true },
+      text: "Every /api/* request passes Cloudflare Access and is verified again by the Worker: signature, audience, issuer, expiry and a named person.",
+      source: { graph: repo, node: cloud/access.mjs } }
+  # M1, the r3 design refresh (docs/design/2026-09-25-redesign-r3/INTAKE.md)
+  - { id: M1-design, kind: functional, priority: must, attributes: { area: web },
+      text: "The web app follows the r3 design system: its tokens, Satoshi type and the brass accent, in dark and light.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.0-R3.9" } }
+  - { id: M1-landing, kind: functional, priority: must, attributes: { area: web },
+      text: "A landing page at / for a signed-out visitor with no library in the browser; anyone else goes straight to Decks.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.8, decision 3" } }
+  - { id: M1-settings, kind: functional, priority: must, attributes: { area: web },
+      text: "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.3" } }
+  - { id: M1-delete-account, kind: functional, priority: must, attributes: { area: account },
+      text: "Delete account: a Worker route removes the person's snapshots, head and user row; removing them from Access stays Rob's runbook step.",
+      source: { graph: repo, node: docs/plan-to-100.md, query: "M3, R3.3" } }
+  - { id: M1-notify, kind: functional, priority: should, attributes: { area: account },
+      text: "For a signed-in person, 'Tell me when it's ready' on Play is a switch stored with the account; no mailing list.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "decision 5" } }
+  - { id: M1-archidekt, kind: functional, priority: should, attributes: { area: import },
+      text: "Import from an Archidekt link through a Worker route, with a size limit and nothing stored.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.10" } }
+  - { id: M1-precons, kind: functional, priority: should, attributes: { area: outside-data },
+      text: "Start from a precon, from a list refreshed with the card data from MTGJSON.",
+      source: { graph: repo, node: docs/design/2026-09-25-redesign-r3/INTAKE.md, query: "R3.10" } }
+  # M2, outside data (docs/plan-data-sync.md §0 governs)
+  - { id: M2-live-first, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "Outside data is read live first, then from the reader's cache (IndexedDB: 7 days for records, 24 hours for prices), then from a refreshed store.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0" } }
+  - { id: M2-images, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "Card images always come from Scryfall's CDN, through the browser's and the worker's caches, and are never stored by us.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0 artwork" } }
+  - { id: M2-stores, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "Stores only where live cannot do the job: the name index, the engine's oracle snapshot, one dated price snapshot, EDHREC ranks and co-play, precons, and our derived graph and strategies.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0" } }
+  - { id: M2-schedule, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "A scheduled GitHub Actions run of tools/refresh.mjs publishes dated keys and current.json to R2 and keeps 7 runs; a run that fails its proof publishes nothing.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "design 1-2" } }
+  - { id: M2-serve, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "The Worker serves /data/* from R2, and the app reads current.json in place of ?v= pins.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "design 3" } }
+  - { id: M2-ages, kind: functional, priority: must, attributes: { area: web },
+      text: "Settings › About shows every data set's date, and anything past its lifetime is labeled stale.",
+      source: { graph: repo, node: docs/plan-to-100.md, query: "M2" } }
+  - { id: M2-pin, kind: functional, priority: must, attributes: { area: engine },
+      text: "A game pins the oracle snapshot and card-definition version it started with, so a replay is identical.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0 rules" } }
+  - { id: M2-adjudication, kind: functional, priority: must, attributes: { area: outside-data },
+      text: "A rules adjudication log citing the CR, the card's rulings, the release notes and the Commander page, and a scheduled Comprehensive Rules check.",
+      source: { graph: repo, node: docs/plan-to-100.md, query: "M2" } }
+  - { id: M2-terms, kind: constraint, priority: must,
+      text: "Honor each source's terms: Scryfall's User-Agent, rate and bulk files; EDHREC read gently on a schedule; Wizards' texts cited and not redistributed.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0 terms" } }
+  - { id: M2-csp, kind: constraint, priority: must,
+      text: "The browser reaches only api.scryfall.com and loads images only from Scryfall's CDNs; every other source goes through the Worker or the scheduled job.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0 security policy" } }
+  - { id: M2-offline, kind: non-functional, priority: must,
+      text: "Offline still works: the worker keeps the last good copy of every stored set and the reader's cache keeps what they opened.",
+      source: { graph: repo, node: docs/plan-data-sync.md, query: "§0 offline" } }
+  # M3, accounts and operations
+  - { id: M3-rate-limits, kind: non-functional, priority: must, attributes: { security: true },
+      text: "Rate limits on /api/*, per identity and per IP.", source: { graph: repo, node: docs/plan-to-100.md, query: "M3" } }
+  - { id: M3-monitoring, kind: non-functional, priority: must, attributes: { observability: true },
+      text: "Workers observability logs, alerts on 5xx and on sync conflicts, and a weekly check.", source: { graph: repo, node: docs/plan-to-100.md, query: "M3" } }
+  - { id: M3-backups, kind: functional, priority: must, attributes: { area: account },
+      text: "D1 Time Travel's window confirmed, and a nightly export of D1 to R2.", source: { graph: repo, node: docs/plan-to-100.md, query: "M3" } }
+  - { id: M3-invite, kind: constraint, priority: must,
+      text: "Accounts are invite-only through the Access 'Invited' policy; the free plan caps it at 50 people.", source: { graph: repo, node: docs/plan-to-100.md, query: "M3" } }
+  # M4, the engine
+  - { id: M4-engine, kind: functional, priority: must, attributes: { area: engine },
+      text: "CME plays Rob's seven decks deterministically with hidden information held, writing its journal and checkpoints through a storage adapter.",
+      source: { graph: repo, node: docs/engine/PLAN.md, query: "phases 2-3, 4.1b" } }
+  - { id: M4-house-pilot, kind: functional, priority: must, attributes: { area: engine },
+      text: "The house pilot, the engine's own opponent, sees only its seat and costs nothing per game.", source: { graph: repo, node: docs/plan-to-100.md, query: "M4 4.2" } }
+  - { id: M4-legality, kind: functional, priority: must, attributes: { area: engine },
+      text: "Deck legality is checked at prepare against a dated banned list, refusing by name.", source: { graph: repo, node: docs/plan-to-100.md, query: "M4" } }
+  # M5, Play in the cloud
+  - { id: M5-room, kind: functional, priority: must, attributes: { area: play },
+      text: "One Durable Object per match runs CME, holds the authoritative state and hides hands.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-transport, kind: functional, priority: must, attributes: { area: play },
+      text: "A WebSocket on the Durable Object carries ordered view updates and receipts, with no polling.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-front-door, kind: functional, priority: must, attributes: { area: play },
+      text: "The Worker creates, joins and leaves tables and hands a seat to an Access identity; identity stays out of the engine.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-lobby, kind: functional, priority: must, attributes: { area: play },
+      text: "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human seat.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-reconnect, kind: functional, priority: must, attributes: { area: play },
+      text: "Reconnect sends a fresh permitted view; a game never concedes silently and AI takes over only by agreement.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-results, kind: functional, priority: must, attributes: { area: play },
+      text: "A finished game files its record under the deck and syncs with the account; a guest's deck never overwrites the host's library.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-definitions, kind: functional, priority: must, attributes: { area: engine },
+      text: "Card definitions are served to the room from R2, not bundled.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+  - { id: M5-hidden, kind: non-functional, priority: must, attributes: { security: true },
+      text: "Hidden information holds in network payloads, logs and reconnect snapshots.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5 launch gate" } }
+  # M6, the AI door
+  - { id: M6-door, kind: functional, priority: must, attributes: { area: ai },
+      text: "The AI door: its own Access application (Google with MFA, never the emailed code), an AI allowlist in D1, the key as a Worker secret, spend caps, and a log of every call.",
+      source: { graph: repo, node: docs/plan-to-100.md, query: "M6" } }
+  - { id: M6-privacy, kind: constraint, priority: must,
+      text: "The privacy page says what goes to the AI before any AI feature is switched on.", source: { graph: repo, node: docs/plan-to-100.md, query: "M6" } }
+  # M7-M10
+  - { id: M7-compiler, kind: functional, priority: must, attributes: { area: engine },
+      text: "Every card is compiled and reconciled into card definitions shipped as data; a card that cannot be is refused, naming what it lacks.",
+      source: { graph: repo, node: docs/plan-to-100.md, query: "M7" } }
+  - { id: M8-playtest, kind: functional, priority: must, attributes: { area: play },
+      text: "A playtest table on staging for Grok Bot's four agents, whose games export seed, journal and per-seat projections.", source: { graph: repo, node: docs/plan-to-100.md, query: "M8" } }
+  - { id: M9-cutover, kind: constraint, priority: must,
+      text: "CME is the only engine: Forge, the local Windows host and the tunnel are retired.", source: { graph: repo, node: docs/plan-to-100.md, query: "M9" } }
+  - { id: M10-finish, kind: functional, priority: could, attributes: { area: ai },
+      text: "The Coach's logic through the AI door, the Lab's data-driven strategy, and the accounts' later features if Rob still wants them.", source: { graph: repo, node: docs/plan-to-100.md, query: "M10" } }
+  - { id: M11-architecture, kind: functional, priority: must, attributes: { area: web },
+      text: "An architecture page draws the final state from engram's graph, with a current-state toggle.", source: { graph: repo, node: docs/plan-to-100.md, query: "M11" } }
+  - { id: HK-github-io, kind: constraint, priority: should,
+      text: "github.io is retired from main; nothing names it.", source: { graph: repo, node: docs/plan-to-100.md, query: "Housekeeping" } }
+
+persons:
+  - { name: Visitor,        description: "Signed out, trying the workshop; the library lives in this browser.",  requirements: [M1-landing, M1-design] }
+  - { name: Builder,        description: "Signed in, building decks on two devices.",                             requirements: [S2-sync] }
+  - { name: Collector,      description: "At a shop with a phone, checking prices and the To Buy list.",          requirements: [M2-live-first, M2-offline] }
+  - { name: Host,           description: "Sets up a table and invites people to it.",                             requirements: [M5-front-door, M5-lobby] }
+  - { name: Guest,          description: "Invited to a table, signs in and plays a seat.",                        requirements: [M5-front-door, M5-reconnect] }
+  - { name: AI-seat player, description: "Plays against the house pilot or an LLM seat, and asks the Coach.",     requirements: [M4-house-pilot, M6-door] }
+  - { name: Rob,            description: "The operator: invites people, holds the secrets, approves deploys.",    requirements: [M3-invite, S1-release] }
+  - { name: Playtest agent, description: "One of Grok Bot's four agents, playing on staging and logging findings.", requirements: [M8-playtest] }
+
+external_systems:
+  - { name: Scryfall,       technology: "HTTPS JSON API, CDN, bulk files", description: "Card records, prices, rulings, legality and images.", requirements: [M2-live-first, M2-images] }
+  - { name: EDHREC,         technology: "HTTPS JSON pages (no public API)", description: "Commander popularity and co-play.",                 requirements: [M2-stores] }
+  - { name: MTGJSON,        technology: "HTTPS bulk files",                 description: "Precon decklists and set data.",                     requirements: [M1-precons] }
+  - { name: Archidekt,      technology: "HTTPS deck API",                   description: "Deck imports by link.",                              requirements: [M1-archidekt] }
+  - { name: Wizards,        technology: "HTTPS text and pages",             description: "The Comprehensive Rules, release notes and the Commander format page.", requirements: [M2-adjudication] }
+  - { name: Google,         technology: "OIDC, through Cloudflare Access",  description: "Sign-in.",                                           requirements: [S2-access] }
+  - { name: GitHub,         technology: "Git + Actions",                    description: "The private repository, CI and the scheduled refresh.", requirements: [S1-release, M2-schedule] }
+
+constraints: []
