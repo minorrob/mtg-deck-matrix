@@ -166,7 +166,7 @@ for (const deck of wanted) {
 const outTokens = wanted.length * 1700;
 const cost = (inTokens * PRICE.in + outTokens * PRICE.out) / 1e6;
 console.log(`${wanted.length} deck${wanted.length === 1 ? "" : "s"} with no guide.`);
-console.log(`~${inTokens.toLocaleString()} tokens in, ~${outTokens.toLocaleString()} out on ${Agent.MODEL}.`);
+console.log(`~${inTokens.toLocaleString("en-US")} tokens in, ~${outTokens.toLocaleString("en-US")} out on ${Agent.MODEL}.`);
 console.log(`About $${cost.toFixed(2)} at list, $${(cost / 2).toFixed(2)} batched. Token counts are estimates;`);
 console.log(`confirm exactly and for free with POST /v1/messages/count_tokens.\n`);
 
@@ -243,7 +243,7 @@ for (const deck of wanted) {
 
 const billed = (spent.input * PRICE.in + spent.output * PRICE.out) / 1e6;
 console.log(`\n${written.length} of ${wanted.length} written. ` +
-  `${spent.input.toLocaleString()} tokens in, ${spent.output.toLocaleString()} out — $${billed.toFixed(3)}.`);
+  `${spent.input.toLocaleString("en-US")} tokens in, ${spent.output.toLocaleString("en-US")} out — $${billed.toFixed(3)}.`);
 
 if (!WRITE) {
   console.log("Nothing saved. --write to merge into data/deck-guides.json.");

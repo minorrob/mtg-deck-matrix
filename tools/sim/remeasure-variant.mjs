@@ -100,7 +100,7 @@ const stderr = (xs) => {
 const summary = await readJson(path.join(ROOT, "data/simulation-summary.json"));
 const moves = [];
 
-console.log(`${REPLICATES} seeds × ${GAMES.toLocaleString()} games a list, the same seed on both sides of every pair.`);
+console.log(`${REPLICATES} seeds × ${GAMES.toLocaleString("en-US")} games a list, the same seed on both sides of every pair.`);
 console.log(`Δ is the mean paired difference in score, ± two standard errors.\n`);
 for (const swap of SWAPS) {
   const plan = buyPlans.plans[swap.variantId];
@@ -152,7 +152,7 @@ for (const swap of SWAPS) {
       moves.push({
         variantId: swap.variantId, rung: rung.label, published,
         deltas: {dScore, dPower, dWin, dPodFun, dFun, dEndTurn},
-        note: `${swap.basic} traded for ${swap.add}, worth ${dScore >= 0 ? "+" : ""}${dScore.toFixed(2)} ±${(2 * se).toFixed(2)} against the same hundred without it over ${REPLICATES} × ${GAMES.toLocaleString()} games`
+        note: `${swap.basic} traded for ${swap.add}, worth ${dScore >= 0 ? "+" : ""}${dScore.toFixed(2)} ±${(2 * se).toFixed(2)} against the same hundred without it over ${REPLICATES} × ${GAMES.toLocaleString("en-US")} games`
       });
     }
   }

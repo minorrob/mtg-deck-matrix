@@ -755,7 +755,6 @@ tables:
     detail: { what: "The person's settings that travel with the library." }
     fields:
       - { name: starterGroups, type: boolean, core: true, required: false, meaning: "Whether the starter groups were offered.", example: "true", source: "The app" }
-      - { name: currency, type: text, core: true, required: false, current: false, meaning: "USD or EUR.", example: "USD", source: "Settings", final: [M1-settings] }
       - { name: budgetCap, type: number, core: true, required: false, current: false, meaning: "The budget a new deck starts with.", example: "150", source: "Settings", final: [M1-settings] }
       - { name: reduceMotion, type: boolean, core: true, required: false, current: false, meaning: "Fewer animations.", example: "false", source: "Settings", final: [M1-settings] }
 
@@ -837,7 +836,6 @@ tables:
       - { name: name, type: text, core: true, required: true, meaning: "The card's name.", example: "Sol Ring", source: "Scryfall" }
       - { name: typeLine, type: text, core: true, required: true, meaning: "Its type line.", example: "Artifact", source: "Scryfall" }
       - { name: prices.usd, type: number, core: true, required: false, match: 'usd', meaning: "The US price (TCGplayer).", example: "1.49", source: "Scryfall prices" }
-      - { name: prices.eur, type: number, core: true, required: false, current: false, meaning: "The euro price (Cardmarket).", example: "1.20", source: "Scryfall prices", final: [M1-settings] }
   - id: rec:store.name-index
     kind: RecordType
     name: name index
@@ -997,7 +995,6 @@ tables:
     fields:
       - { name: id, type: text, core: true, required: true, meaning: "The printing.", example: "5f8287b1-…", source: "Scryfall", joins: { to: rec:scryfall.card.id, cardinality: "one to one" } }
       - { name: usd, type: number, core: true, required: false, meaning: "US dollars, from TCGplayer.", example: "1.49", source: "Scryfall" }
-      - { name: eur, type: number, core: true, required: false, meaning: "Euros, from Cardmarket.", example: "1.20", source: "Scryfall" }
       - { name: date, type: date, core: true, required: true, current: false, meaning: "When the price was read; shown as its age.", example: "2026-10-12", source: "The reader's cache", final: [M2-ages] }
   - id: rec:scryfall.images
     kind: RecordType

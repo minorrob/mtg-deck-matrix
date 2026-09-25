@@ -2,7 +2,7 @@
  "meta": {
   "repo": "crankmagic",
   "repo_id": "repo:crankmagic",
-  "generatedAt": "2026-09-25T13:06:03.895597Z",
+  "generatedAt": "2026-09-25T18:34:30.201732Z",
   "schema": "engram-schema.yaml@0.3.0",
   "stages_present": [
    "survey",
@@ -11,8 +11,8 @@
    "docs"
   ],
   "counts": {
-   "nodes": 1634,
-   "edges": 3605
+   "nodes": 1656,
+   "edges": 3652
   },
   "redact_policy": "name-kind-only"
  },
@@ -26,7 +26,7 @@
    "stack": [
     {
      "language": "JavaScript",
-     "files": 128
+     "files": 132
     },
     {
      "language": "Markdown",
@@ -1488,7 +1488,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-account.js",
    "file": "crankmagic-account.js",
-   "loc": 145,
+   "loc": 208,
    "stage": "structure",
    "classification": "internal"
   },
@@ -1497,7 +1497,7 @@
    "kind": "CodeFunction",
    "name": "api",
    "file": "crankmagic-account.js",
-   "line": 23,
+   "line": 25,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1509,7 +1509,7 @@
    "kind": "CodeFunction",
    "name": "packed",
    "file": "crankmagic-account.js",
-   "line": 36,
+   "line": 38,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1521,7 +1521,7 @@
    "kind": "CodeFunction",
    "name": "unpacked",
    "file": "crankmagic-account.js",
-   "line": 40,
+   "line": 42,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1533,7 +1533,7 @@
    "kind": "CodeFunction",
    "name": "save",
    "file": "crankmagic-account.js",
-   "line": 46,
+   "line": 48,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1545,7 +1545,7 @@
    "kind": "CodeFunction",
    "name": "bringIn",
    "file": "crankmagic-account.js",
-   "line": 55,
+   "line": 58,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1557,7 +1557,7 @@
    "kind": "CodeFunction",
    "name": "sync",
    "file": "crankmagic-account.js",
-   "line": 64,
+   "line": 68,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1569,7 +1569,7 @@
    "kind": "CodeFunction",
    "name": "ask",
    "file": "crankmagic-account.js",
-   "line": 88,
+   "line": 92,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1581,7 +1581,43 @@
    "kind": "CodeFunction",
    "name": "draw",
    "file": "crankmagic-account.js",
-   "line": 123,
+   "line": 130,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-account.js#settings",
+   "kind": "CodeFunction",
+   "name": "settings",
+   "file": "crankmagic-account.js",
+   "line": 147,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-account.js#danger",
+   "kind": "CodeFunction",
+   "name": "danger",
+   "file": "crankmagic-account.js",
+   "line": 162,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-account.js#chip",
+   "kind": "CodeFunction",
+   "name": "chip",
+   "file": "crankmagic-account.js",
+   "line": 183,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1602,7 +1638,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-app.js",
    "file": "crankmagic-app.js",
-   "loc": 494,
+   "loc": 552,
    "stage": "structure",
    "classification": "internal"
   },
@@ -1815,7 +1851,7 @@
    "kind": "CodeFunction",
    "name": "notice",
    "file": "crankmagic-app.js",
-   "line": 102,
+   "line": 108,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1827,7 +1863,7 @@
    "kind": "CodeFunction",
    "name": "modal",
    "file": "crankmagic-app.js",
-   "line": 118,
+   "line": 127,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1839,7 +1875,7 @@
    "kind": "CodeFunction",
    "name": "form",
    "file": "crankmagic-app.js",
-   "line": 123,
+   "line": 132,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1851,7 +1887,7 @@
    "kind": "CodeFunction",
    "name": "route",
    "file": "crankmagic-app.js",
-   "line": 129,
+   "line": 138,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1863,7 +1899,7 @@
    "kind": "CodeFunction",
    "name": "go",
    "file": "crankmagic-app.js",
-   "line": 130,
+   "line": 139,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1875,7 +1911,7 @@
    "kind": "CodeFunction",
    "name": "describeData",
    "file": "crankmagic-app.js",
-   "line": 140,
+   "line": 149,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1887,7 +1923,43 @@
    "kind": "CodeFunction",
    "name": "rescueBrand",
    "file": "crankmagic-app.js",
-   "line": 166,
+   "line": 175,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-app.js#themeChoice",
+   "kind": "CodeFunction",
+   "name": "themeChoice",
+   "file": "crankmagic-app.js",
+   "line": 183,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-app.js#applyTheme",
+   "kind": "CodeFunction",
+   "name": "applyTheme",
+   "file": "crankmagic-app.js",
+   "line": 184,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-app.js#applyMotion",
+   "kind": "CodeFunction",
+   "name": "applyMotion",
+   "file": "crankmagic-app.js",
+   "line": 195,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1899,7 +1971,7 @@
    "kind": "CodeFunction",
    "name": "render",
    "file": "crankmagic-app.js",
-   "line": 170,
+   "line": 206,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1911,7 +1983,7 @@
    "kind": "CodeFunction",
    "name": "status",
    "file": "crankmagic-app.js",
-   "line": 171,
+   "line": 207,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1923,7 +1995,7 @@
    "kind": "CodeFunction",
    "name": "restage",
    "file": "crankmagic-app.js",
-   "line": 175,
+   "line": 211,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1935,7 +2007,7 @@
    "kind": "CodeFunction",
    "name": "refresh",
    "file": "crankmagic-app.js",
-   "line": 176,
+   "line": 212,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1947,7 +2019,7 @@
    "kind": "CodeFunction",
    "name": "commit",
    "file": "crankmagic-app.js",
-   "line": 177,
+   "line": 213,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1959,7 +2031,7 @@
    "kind": "CodeFunction",
    "name": "download",
    "file": "crankmagic-app.js",
-   "line": 178,
+   "line": 214,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1971,7 +2043,7 @@
    "kind": "CodeFunction",
    "name": "seedStarterGroups",
    "file": "crankmagic-app.js",
-   "line": 186,
+   "line": 222,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1983,7 +2055,7 @@
    "kind": "CodeFunction",
    "name": "ensureDeckGroups",
    "file": "crankmagic-app.js",
-   "line": 202,
+   "line": 238,
    "exported": false,
    "nested": true,
    "test": false,
@@ -1995,7 +2067,7 @@
    "kind": "CodeFunction",
    "name": "backupData",
    "file": "crankmagic-app.js",
-   "line": 215,
+   "line": 251,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2007,7 +2079,7 @@
    "kind": "CodeFunction",
    "name": "readableLocation",
    "file": "crankmagic-app.js",
-   "line": 216,
+   "line": 252,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2019,7 +2091,7 @@
    "kind": "CodeFunction",
    "name": "affected",
    "file": "crankmagic-app.js",
-   "line": 217,
+   "line": 253,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2031,7 +2103,7 @@
    "kind": "CodeFunction",
    "name": "setSkip",
    "file": "crankmagic-app.js",
-   "line": 224,
+   "line": 260,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2043,7 +2115,7 @@
    "kind": "CodeFunction",
    "name": "skipBox",
    "file": "crankmagic-app.js",
-   "line": 225,
+   "line": 261,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2055,7 +2127,7 @@
    "kind": "CodeFunction",
    "name": "deckLine",
    "file": "crankmagic-app.js",
-   "line": 233,
+   "line": 269,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2067,7 +2139,7 @@
    "kind": "CodeFunction",
    "name": "review",
    "file": "crankmagic-app.js",
-   "line": 239,
+   "line": 275,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2079,7 +2151,7 @@
    "kind": "CodeFunction",
    "name": "effectsHTML",
    "file": "crankmagic-app.js",
-   "line": 243,
+   "line": 279,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2091,7 +2163,7 @@
    "kind": "CodeFunction",
    "name": "buyLink",
    "file": "crankmagic-app.js",
-   "line": 247,
+   "line": 283,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2103,7 +2175,7 @@
    "kind": "CodeFunction",
    "name": "kingdomLink",
    "file": "crankmagic-app.js",
-   "line": 251,
+   "line": 287,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2115,7 +2187,7 @@
    "kind": "CodeFunction",
    "name": "priceBlock",
    "file": "crankmagic-app.js",
-   "line": 254,
+   "line": 290,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2127,7 +2199,7 @@
    "kind": "CodeFunction",
    "name": "compareCards",
    "file": "crankmagic-app.js",
-   "line": 264,
+   "line": 300,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2139,7 +2211,7 @@
    "kind": "CodeFunction",
    "name": "cardPicker",
    "file": "crankmagic-app.js",
-   "line": 272,
+   "line": 308,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2151,7 +2223,7 @@
    "kind": "CodeFunction",
    "name": "manualCard",
    "file": "crankmagic-app.js",
-   "line": 285,
+   "line": 321,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2163,7 +2235,7 @@
    "kind": "CodeFunction",
    "name": "termsToggle",
    "file": "crankmagic-app.js",
-   "line": 327,
+   "line": 363,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2175,7 +2247,7 @@
    "kind": "CodeFunction",
    "name": "playsAs",
    "file": "crankmagic-app.js",
-   "line": 328,
+   "line": 364,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2187,7 +2259,7 @@
    "kind": "CodeFunction",
    "name": "standing",
    "file": "crankmagic-app.js",
-   "line": 336,
+   "line": 372,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2199,7 +2271,7 @@
    "kind": "CodeFunction",
    "name": "graphTerms",
    "file": "crankmagic-app.js",
-   "line": 361,
+   "line": 397,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2211,7 +2283,7 @@
    "kind": "CodeFunction",
    "name": "inspector",
    "file": "crankmagic-app.js",
-   "line": 364,
+   "line": 400,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2223,7 +2295,7 @@
    "kind": "CodeFunction",
    "name": "exportFile",
    "file": "crankmagic-app.js",
-   "line": 393,
+   "line": 444,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2235,7 +2307,19 @@
    "kind": "CodeFunction",
    "name": "feedbackLink",
    "file": "crankmagic-app.js",
-   "line": 401,
+   "line": 452,
+   "exported": false,
+   "nested": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:crankmagic-app.js#mayPass",
+   "kind": "CodeFunction",
+   "name": "mayPass",
+   "file": "crankmagic-app.js",
+   "line": 486,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2247,7 +2331,7 @@
    "kind": "CodeFunction",
    "name": "shareLinks",
    "file": "crankmagic-app.js",
-   "line": 435,
+   "line": 493,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2259,7 +2343,7 @@
    "kind": "CodeFunction",
    "name": "openNewDeckIfAsked",
    "file": "crankmagic-app.js",
-   "line": 472,
+   "line": 530,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2280,7 +2364,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-brand.js",
    "file": "crankmagic-brand.js",
-   "loc": 123,
+   "loc": 125,
    "stage": "structure",
    "classification": "internal"
   },
@@ -2289,7 +2373,7 @@
    "kind": "CodeFunction",
    "name": "colors",
    "file": "crankmagic-brand.js",
-   "line": 18,
+   "line": 20,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2301,7 +2385,7 @@
    "kind": "CodeFunction",
    "name": "helix",
    "file": "crankmagic-brand.js",
-   "line": 29,
+   "line": 31,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2313,7 +2397,7 @@
    "kind": "CodeFunction",
    "name": "branchAt",
    "file": "crankmagic-brand.js",
-   "line": 36,
+   "line": 38,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2325,7 +2409,7 @@
    "kind": "CodeFunction",
    "name": "branchBlend",
    "file": "crankmagic-brand.js",
-   "line": 37,
+   "line": 39,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2337,7 +2421,7 @@
    "kind": "CodeFunction",
    "name": "tailY",
    "file": "crankmagic-brand.js",
-   "line": 38,
+   "line": 40,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2349,7 +2433,7 @@
    "kind": "CodeFunction",
    "name": "draw",
    "file": "crankmagic-brand.js",
-   "line": 44,
+   "line": 46,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2361,7 +2445,7 @@
    "kind": "CodeFunction",
    "name": "running",
    "file": "crankmagic-brand.js",
-   "line": 86,
+   "line": 88,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2373,7 +2457,7 @@
    "kind": "CodeFunction",
    "name": "tick",
    "file": "crankmagic-brand.js",
-   "line": 87,
+   "line": 89,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2385,7 +2469,7 @@
    "kind": "CodeFunction",
    "name": "sync",
    "file": "crankmagic-brand.js",
-   "line": 88,
+   "line": 90,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2397,7 +2481,7 @@
    "kind": "CodeFunction",
    "name": "fit",
    "file": "crankmagic-brand.js",
-   "line": 93,
+   "line": 95,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2409,7 +2493,7 @@
    "kind": "CodeFunction",
    "name": "resize",
    "file": "crankmagic-brand.js",
-   "line": 94,
+   "line": 96,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2556,7 +2640,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-collection.js",
    "file": "crankmagic-collection.js",
-   "loc": 1538,
+   "loc": 1540,
    "stage": "structure",
    "classification": "internal"
   },
@@ -2709,7 +2793,7 @@
    "kind": "CodeFunction",
    "name": "sheetRows",
    "file": "crankmagic-collection.js",
-   "line": 317,
+   "line": 319,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2721,7 +2805,7 @@
    "kind": "CodeFunction",
    "name": "sheetNeighbour",
    "file": "crankmagic-collection.js",
-   "line": 339,
+   "line": 341,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2733,7 +2817,7 @@
    "kind": "CodeFunction",
    "name": "sheetApply",
    "file": "crankmagic-collection.js",
-   "line": 349,
+   "line": 351,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2745,7 +2829,7 @@
    "kind": "CodeFunction",
    "name": "sheetEdit",
    "file": "crankmagic-collection.js",
-   "line": 360,
+   "line": 362,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2757,7 +2841,7 @@
    "kind": "CodeFunction",
    "name": "playDeck",
    "file": "crankmagic-collection.js",
-   "line": 429,
+   "line": 431,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2769,7 +2853,7 @@
    "kind": "CodeFunction",
    "name": "playSpec",
    "file": "crankmagic-collection.js",
-   "line": 430,
+   "line": 432,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2781,7 +2865,7 @@
    "kind": "CodeFunction",
    "name": "sentIds",
    "file": "crankmagic-collection.js",
-   "line": 457,
+   "line": 459,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2793,7 +2877,7 @@
    "kind": "CodeFunction",
    "name": "setSentIds",
    "file": "crankmagic-collection.js",
-   "line": 458,
+   "line": 460,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2805,7 +2889,7 @@
    "kind": "CodeFunction",
    "name": "sentRows",
    "file": "crankmagic-collection.js",
-   "line": 459,
+   "line": 461,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2817,7 +2901,7 @@
    "kind": "CodeFunction",
    "name": "scoreboard",
    "file": "crankmagic-collection.js",
-   "line": 470,
+   "line": 472,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2829,7 +2913,7 @@
    "kind": "CodeFunction",
    "name": "tabletop",
    "file": "crankmagic-collection.js",
-   "line": 498,
+   "line": 500,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2841,7 +2925,7 @@
    "kind": "CodeFunction",
    "name": "tabletopDetail",
    "file": "crankmagic-collection.js",
-   "line": 637,
+   "line": 639,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2853,7 +2937,7 @@
    "kind": "CodeFunction",
    "name": "stageRows",
    "file": "crankmagic-collection.js",
-   "line": 648,
+   "line": 650,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2865,7 +2949,7 @@
    "kind": "CodeFunction",
    "name": "tabletopDrop",
    "file": "crankmagic-collection.js",
-   "line": 667,
+   "line": 669,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2877,7 +2961,7 @@
    "kind": "CodeFunction",
    "name": "shortSeats",
    "file": "crankmagic-collection.js",
-   "line": 741,
+   "line": 743,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2889,7 +2973,7 @@
    "kind": "CodeFunction",
    "name": "followDeck",
    "file": "crankmagic-collection.js",
-   "line": 754,
+   "line": 756,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2901,7 +2985,7 @@
    "kind": "CodeFunction",
    "name": "shelfGroup",
    "file": "crankmagic-collection.js",
-   "line": 758,
+   "line": 760,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2913,7 +2997,7 @@
    "kind": "CodeFunction",
    "name": "fileInGroup",
    "file": "crankmagic-collection.js",
-   "line": 765,
+   "line": 767,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2925,7 +3009,7 @@
    "kind": "CodeFunction",
    "name": "sheet",
    "file": "crankmagic-collection.js",
-   "line": 771,
+   "line": 773,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2937,7 +3021,7 @@
    "kind": "CodeFunction",
    "name": "foldByCard",
    "file": "crankmagic-collection.js",
-   "line": 856,
+   "line": 858,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2949,7 +3033,7 @@
    "kind": "CodeFunction",
    "name": "show",
    "file": "crankmagic-collection.js",
-   "line": 881,
+   "line": 883,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2961,7 +3045,7 @@
    "kind": "CodeFunction",
    "name": "batch",
    "file": "crankmagic-collection.js",
-   "line": 1008,
+   "line": 1010,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2973,7 +3057,7 @@
    "kind": "CodeFunction",
    "name": "orderCommands",
    "file": "crankmagic-collection.js",
-   "line": 1035,
+   "line": 1037,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2985,7 +3069,7 @@
    "kind": "CodeFunction",
    "name": "chipsHTML",
    "file": "crankmagic-collection.js",
-   "line": 1089,
+   "line": 1091,
    "exported": false,
    "nested": true,
    "test": false,
@@ -2997,7 +3081,7 @@
    "kind": "CodeFunction",
    "name": "primary",
    "file": "crankmagic-collection.js",
-   "line": 1117,
+   "line": 1119,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3009,7 +3093,7 @@
    "kind": "CodeFunction",
    "name": "tapCommand",
    "file": "crankmagic-collection.js",
-   "line": 1128,
+   "line": 1130,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3021,7 +3105,7 @@
    "kind": "CodeFunction",
    "name": "oneTap",
    "file": "crankmagic-collection.js",
-   "line": 1129,
+   "line": 1131,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3033,7 +3117,7 @@
    "kind": "CodeFunction",
    "name": "capCell",
    "file": "crankmagic-collection.js",
-   "line": 1147,
+   "line": 1149,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3045,7 +3129,7 @@
    "kind": "CodeFunction",
    "name": "poolStart",
    "file": "crankmagic-collection.js",
-   "line": 1154,
+   "line": 1156,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3057,7 +3141,7 @@
    "kind": "CodeFunction",
    "name": "stripHTML",
    "file": "crankmagic-collection.js",
-   "line": 1155,
+   "line": 1157,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3069,7 +3153,7 @@
    "kind": "CodeFunction",
    "name": "findRow",
    "file": "crankmagic-collection.js",
-   "line": 1168,
+   "line": 1170,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3081,7 +3165,7 @@
    "kind": "CodeFunction",
    "name": "stepperCommit",
    "file": "crankmagic-collection.js",
-   "line": 1188,
+   "line": 1190,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3093,7 +3177,7 @@
    "kind": "CodeFunction",
    "name": "slotFlagButtons",
    "file": "crankmagic-collection.js",
-   "line": 1252,
+   "line": 1254,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3105,7 +3189,7 @@
    "kind": "CodeFunction",
    "name": "pickedSlots",
    "file": "crankmagic-collection.js",
-   "line": 1257,
+   "line": 1259,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3117,7 +3201,7 @@
    "kind": "CodeFunction",
    "name": "statusMenu",
    "file": "crankmagic-collection.js",
-   "line": 1314,
+   "line": 1316,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3129,7 +3213,7 @@
    "kind": "CodeFunction",
    "name": "wireSubmenu",
    "file": "crankmagic-collection.js",
-   "line": 1336,
+   "line": 1338,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3141,7 +3225,7 @@
    "kind": "CodeFunction",
    "name": "printing",
    "file": "crankmagic-collection.js",
-   "line": 1389,
+   "line": 1391,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3153,7 +3237,7 @@
    "kind": "CodeFunction",
    "name": "acquire",
    "file": "crankmagic-collection.js",
-   "line": 1408,
+   "line": 1410,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3165,7 +3249,7 @@
    "kind": "CodeFunction",
    "name": "quantityAction",
    "file": "crankmagic-collection.js",
-   "line": 1455,
+   "line": 1457,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3177,7 +3261,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-decks.js",
    "file": "crankmagic-decks.js",
-   "loc": 855,
+   "loc": 856,
    "stage": "structure",
    "classification": "internal"
   },
@@ -3474,7 +3558,7 @@
    "kind": "CodeFunction",
    "name": "recordSummary",
    "file": "crankmagic-decks.js",
-   "line": 808,
+   "line": 809,
    "exported": false,
    "nested": true,
    "test": false,
@@ -3486,7 +3570,7 @@
    "kind": "CodeFunction",
    "name": "recordHTML",
    "file": "crankmagic-decks.js",
-   "line": 809,
+   "line": 810,
    "exported": false,
    "nested": true,
    "test": false,
@@ -6792,7 +6876,7 @@
    "kind": "CodeModule",
    "name": "crankmagic-sea.js",
    "file": "crankmagic-sea.js",
-   "loc": 109,
+   "loc": 114,
    "stage": "structure",
    "classification": "internal"
   },
@@ -6805,6 +6889,15 @@
    "exported": false,
    "nested": true,
    "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "mod:crankmagic-settings.js",
+   "kind": "CodeModule",
+   "name": "crankmagic-settings.js",
+   "file": "crankmagic-settings.js",
+   "loc": 50,
    "stage": "structure",
    "classification": "internal"
   },
@@ -11435,7 +11528,7 @@
    "kind": "CodeModule",
    "name": "cloud/library.mjs",
    "file": "cloud/library.mjs",
-   "loc": 115,
+   "loc": 128,
    "stage": "structure",
    "classification": "internal"
   },
@@ -11500,7 +11593,18 @@
    "kind": "CodeModule",
    "name": "cloud/worker.mjs",
    "file": "cloud/worker.mjs",
-   "loc": 99,
+   "loc": 122,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:cloud/worker.mjs#overLimit",
+   "kind": "CodeFunction",
+   "name": "overLimit",
+   "file": "cloud/worker.mjs",
+   "line": 33,
+   "exported": false,
+   "test": false,
    "stage": "structure",
    "classification": "internal"
   },
@@ -11509,7 +11613,7 @@
    "kind": "CodeFunction",
    "name": "fromTheApp",
    "file": "cloud/worker.mjs",
-   "line": 31,
+   "line": 44,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -11520,7 +11624,7 @@
    "kind": "CodeFunction",
    "name": "body",
    "file": "cloud/worker.mjs",
-   "line": 38,
+   "line": 51,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -11531,7 +11635,7 @@
    "kind": "CodeFunction",
    "name": "handle",
    "file": "cloud/worker.mjs",
-   "line": 45,
+   "line": 58,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -11543,6 +11647,18 @@
    "name": "reply",
    "file": "cloud/worker.mjs",
    "line": 26,
+   "exported": false,
+   "arrow": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:cloud/worker.mjs#tooMany",
+   "kind": "CodeFunction",
+   "name": "tooMany",
+   "file": "cloud/worker.mjs",
+   "line": 38,
    "exported": false,
    "arrow": true,
    "test": false,
@@ -11957,7 +12073,7 @@
    "kind": "CodeModule",
    "name": "tools/release-pages.mjs",
    "file": "tools/release-pages.mjs",
-   "loc": 428,
+   "loc": 446,
    "stage": "structure",
    "classification": "internal"
   },
@@ -11966,7 +12082,7 @@
    "kind": "CodeFunction",
    "name": "commitSource",
    "file": "tools/release-pages.mjs",
-   "line": 143,
+   "line": 153,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -11977,7 +12093,7 @@
    "kind": "CodeFunction",
    "name": "worktreeSource",
    "file": "tools/release-pages.mjs",
-   "line": 167,
+   "line": 177,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -11988,7 +12104,7 @@
    "kind": "CodeFunction",
    "name": "stripComments",
    "file": "tools/release-pages.mjs",
-   "line": 176,
+   "line": 186,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -11999,7 +12115,7 @@
    "kind": "CodeFunction",
    "name": "referencesOf",
    "file": "tools/release-pages.mjs",
-   "line": 184,
+   "line": 194,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12010,7 +12126,7 @@
    "kind": "CodeFunction",
    "name": "walk",
    "file": "tools/release-pages.mjs",
-   "line": 221,
+   "line": 231,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12021,7 +12137,7 @@
    "kind": "CodeFunction",
    "name": "transform",
    "file": "tools/release-pages.mjs",
-   "line": 242,
+   "line": 252,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12032,7 +12148,7 @@
    "kind": "CodeFunction",
    "name": "verify",
    "file": "tools/release-pages.mjs",
-   "line": 268,
+   "line": 278,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12043,7 +12159,7 @@
    "kind": "CodeFunction",
    "name": "build",
    "file": "tools/release-pages.mjs",
-   "line": 344,
+   "line": 362,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12054,7 +12170,7 @@
    "kind": "CodeFunction",
    "name": "commitRelease",
    "file": "tools/release-pages.mjs",
-   "line": 372,
+   "line": 390,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12065,7 +12181,7 @@
    "kind": "CodeFunction",
    "name": "writeOut",
    "file": "tools/release-pages.mjs",
-   "line": 396,
+   "line": 414,
    "exported": false,
    "test": false,
    "stage": "structure",
@@ -12076,7 +12192,7 @@
    "kind": "CodeFunction",
    "name": "git",
    "file": "tools/release-pages.mjs",
-   "line": 140,
+   "line": 150,
    "exported": false,
    "arrow": true,
    "test": false,
@@ -12088,7 +12204,7 @@
    "kind": "CodeFunction",
    "name": "escape",
    "file": "tools/release-pages.mjs",
-   "line": 239,
+   "line": 249,
    "exported": false,
    "arrow": true,
    "test": false,
@@ -12100,7 +12216,7 @@
    "kind": "CodeFunction",
    "name": "releaseBranch",
    "file": "tools/release-pages.mjs",
-   "line": 371,
+   "line": 389,
    "exported": true,
    "arrow": true,
    "test": false,
@@ -12693,7 +12809,7 @@
    "kind": "CodeModule",
    "name": "game/engine/journal.mjs",
    "file": "game/engine/journal.mjs",
-   "loc": 132,
+   "loc": 139,
    "stage": "structure",
    "classification": "internal"
   },
@@ -12724,7 +12840,7 @@
    "kind": "CodeFunction",
    "name": "createJournal",
    "file": "game/engine/journal.mjs",
-   "line": 70,
+   "line": 73,
    "exported": true,
    "test": false,
    "stage": "structure",
@@ -12821,6 +12937,71 @@
    "file": "game/engine/rng.mjs",
    "line": 69,
    "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "mod:game/engine/storage.mjs",
+   "kind": "CodeModule",
+   "name": "game/engine/storage.mjs",
+   "file": "game/engine/storage.mjs",
+   "loc": 147,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "CodeFunction",
+   "name": "checkKey",
+   "file": "game/engine/storage.mjs",
+   "line": 36,
+   "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "CodeFunction",
+   "name": "checkStorage",
+   "file": "game/engine/storage.mjs",
+   "line": 45,
+   "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#memoryStorage",
+   "kind": "CodeFunction",
+   "name": "memoryStorage",
+   "file": "game/engine/storage.mjs",
+   "line": 52,
+   "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#createMatchStore",
+   "kind": "CodeFunction",
+   "name": "createMatchStore",
+   "file": "game/engine/storage.mjs",
+   "line": 79,
+   "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/storage.mjs#pad",
+   "kind": "CodeFunction",
+   "name": "pad",
+   "file": "game/engine/storage.mjs",
+   "line": 71,
+   "exported": false,
+   "arrow": true,
    "test": false,
    "stage": "structure",
    "classification": "internal"
@@ -13136,6 +13317,26 @@
    "line": 8,
    "exported": false,
    "arrow": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "mod:game/server/storage-fs.mjs",
+   "kind": "CodeModule",
+   "name": "game/server/storage-fs.mjs",
+   "file": "game/server/storage-fs.mjs",
+   "loc": 63,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/server/storage-fs.mjs#fileStorage",
+   "kind": "CodeFunction",
+   "name": "fileStorage",
+   "file": "game/server/storage-fs.mjs",
+   "line": 23,
+   "exported": true,
    "test": false,
    "stage": "structure",
    "classification": "internal"
@@ -14001,6 +14202,50 @@
    "file": "game/engine/keywords/combat.mjs",
    "line": 158,
    "exported": true,
+   "arrow": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "mod:game/engine/pilots/house-pilot.mjs",
+   "kind": "CodeModule",
+   "name": "game/engine/pilots/house-pilot.mjs",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "loc": 183,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "kind": "CodeFunction",
+   "name": "housePilot",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 41,
+   "exported": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#isLand",
+   "kind": "CodeFunction",
+   "name": "isLand",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 34,
+   "exported": false,
+   "arrow": true,
+   "test": false,
+   "stage": "structure",
+   "classification": "internal"
+  },
+  {
+   "id": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
+   "kind": "CodeFunction",
+   "name": "isCreature",
+   "file": "game/engine/pilots/house-pilot.mjs",
+   "line": 35,
+   "exported": false,
    "arrow": true,
    "test": false,
    "stage": "structure",
@@ -16286,7 +16531,7 @@
    "name": "crankmagic.html",
    "file": "crankmagic.html",
    "page": true,
-   "loc": 137,
+   "loc": 138,
    "stage": "structure",
    "classification": "internal"
   },
@@ -16306,7 +16551,7 @@
    "name": "index.html",
    "file": "index.html",
    "page": true,
-   "loc": 139,
+   "loc": 140,
    "stage": "structure",
    "classification": "internal"
   },
@@ -16844,10 +17089,10 @@
     "plan": "M1 restyles it to r3"
    },
    "file": "index.html",
-   "line": 102,
+   "line": 103,
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    },
    "stage": "structure",
    "classification": "internal"
@@ -16943,10 +17188,10 @@
     "plan": "M2 adds /data/*, M3 rate limits and delete, M5 tables, M6 the AI door"
    },
    "file": "tools/release-pages.mjs",
-   "line": 121,
+   "line": 127,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 127
    },
    "stage": "structure",
    "classification": "internal"
@@ -16967,10 +17212,10 @@
     "plan": "Built from one commit of main by tools/release-pages.mjs"
    },
    "file": "tools/release-pages.mjs",
-   "line": 123,
+   "line": 129,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 123
+    "line": 129
    },
    "stage": "structure",
    "classification": "internal"
@@ -17015,10 +17260,10 @@
     "plan": "M5 adds tables and seats, M6 the AI allowlist and call log"
    },
    "file": "tools/release-pages.mjs",
-   "line": 128,
+   "line": 134,
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 128
+    "line": 134
    },
    "stage": "structure",
    "classification": "internal"
@@ -19078,10 +19323,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 73,
+   "line": 69,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    },
    "stage": "structure",
    "classification": "internal"
@@ -19098,10 +19343,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 98,
+   "line": 105,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 98
+    "line": 105
    },
    "stage": "structure",
    "classification": "internal"
@@ -19161,10 +19406,10 @@
    "source": "The room",
    "core": true,
    "file": "game/engine/journal.mjs",
-   "line": 73,
+   "line": 69,
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    },
    "stage": "structure",
    "classification": "internal"
@@ -19795,10 +20040,10 @@
     "owner": "The person owns their library"
    },
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "stage": "structure",
    "classification": "internal"
@@ -19935,10 +20180,10 @@
    "name": "A signed-out visitor",
    "person": "Visitor",
    "file": "index.html",
-   "line": 102,
+   "line": 103,
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    },
    "stage": "structure",
    "classification": "internal"
@@ -19994,10 +20239,10 @@
    "name": "A builder on two devices",
    "person": "Builder",
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "stage": "structure",
    "classification": "internal"
@@ -20009,10 +20254,10 @@
    "journey": "journey:builder",
    "order": 1,
    "file": "crankmagic-account.js",
-   "line": 118,
+   "line": 122,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 118
+    "line": 122
    },
    "stage": "structure",
    "classification": "internal"
@@ -20024,10 +20269,10 @@
    "journey": "journey:builder",
    "order": 2,
    "file": "crankmagic-account.js",
-   "line": 41,
+   "line": 43,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "stage": "structure",
    "classification": "internal"
@@ -20039,10 +20284,10 @@
    "journey": "journey:builder",
    "order": 3,
    "file": "crankmagic-account.js",
-   "line": 135,
+   "line": 197,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 135
+    "line": 197
    },
    "stage": "structure",
    "classification": "internal"
@@ -20054,10 +20299,10 @@
    "journey": "journey:builder",
    "order": 4,
    "file": "crankmagic-account.js",
-   "line": 112,
+   "line": 116,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 112
+    "line": 116
    },
    "stage": "structure",
    "classification": "internal"
@@ -20395,7 +20640,7 @@
    "kind": "Document",
    "name": "Rules of engagement for AI systems working in this repository",
    "file": "AGENTS.md",
-   "loc": 132,
+   "loc": 148,
    "stage": "structure",
    "classification": "internal"
   },
@@ -20431,7 +20676,7 @@
    "kind": "Document",
    "name": "Stage 2 \u2014 Account Cloud",
    "file": "docs/plan-account-cloud.md",
-   "loc": 81,
+   "loc": 94,
    "stage": "structure",
    "classification": "internal"
   },
@@ -21307,6 +21552,27 @@
    "stage": "structure"
   },
   {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#settings",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#danger",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-account.js",
+   "to": "fn:crankmagic-account.js#chip",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#colors",
    "kind": "contains",
@@ -21470,6 +21736,27 @@
   {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#rescueBrand",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#themeChoice",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#applyTheme",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#applyMotion",
    "kind": "contains",
    "source": "parser",
    "stage": "structure"
@@ -21673,6 +21960,13 @@
   {
    "from": "mod:crankmagic-app.js",
    "to": "fn:crankmagic-app.js#feedbackLink",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-app.js",
+   "to": "fn:crankmagic-app.js#mayPass",
    "kind": "contains",
    "source": "parser",
    "stage": "structure"
@@ -26761,6 +27055,13 @@
   },
   {
    "from": "mod:cloud/worker.mjs",
+   "to": "fn:cloud/worker.mjs#overLimit",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:cloud/worker.mjs",
    "to": "fn:cloud/worker.mjs#fromTheApp",
    "kind": "contains",
    "source": "parser",
@@ -26783,6 +27084,13 @@
   {
    "from": "mod:cloud/worker.mjs",
    "to": "fn:cloud/worker.mjs#reply",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:cloud/worker.mjs",
+   "to": "fn:cloud/worker.mjs#tooMany",
    "kind": "contains",
    "source": "parser",
    "stage": "structure"
@@ -27481,6 +27789,41 @@
    "stage": "structure"
   },
   {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#memoryStorage",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#createMatchStore",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "fn:game/engine/storage.mjs#pad",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
    "from": "mod:game/engine/vocabulary.mjs",
    "to": "fn:game/engine/vocabulary.mjs#normalizeKeyword",
    "kind": "contains",
@@ -27651,6 +27994,13 @@
   {
    "from": "mod:game/server/local-table-runtime.mjs",
    "to": "fn:game/server/local-table-runtime.mjs#delay",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/server/storage-fs.mjs",
+   "to": "fn:game/server/storage-fs.mjs#fileStorage",
    "kind": "contains",
    "source": "parser",
    "stage": "structure"
@@ -28155,6 +28505,27 @@
   {
    "from": "mod:game/engine/keywords/combat.mjs",
    "to": "fn:game/engine/keywords/combat.mjs#lifelinkFrom",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isLand",
+   "kind": "contains",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/engine/pilots/house-pilot.mjs",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
    "kind": "contains",
    "source": "parser",
    "stage": "structure"
@@ -30297,6 +30668,14 @@
   },
   {
    "from": "fn:crankmagic-account.js#sync",
+   "to": "fn:crankmagic-account.js#draw",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:crankmagic-account.js#sync",
    "to": "fn:crankmagic-account.js#api",
    "kind": "calls",
    "source": "parser",
@@ -30328,16 +30707,32 @@
    "stage": "structure"
   },
   {
-   "from": "fn:crankmagic-account.js#sync",
-   "to": "fn:crankmagic-account.js#draw",
+   "from": "fn:crankmagic-account.js#ask",
+   "to": "fn:crankmagic-account.js#unpacked",
    "kind": "calls",
    "source": "parser",
    "resolved": true,
    "stage": "structure"
   },
   {
-   "from": "fn:crankmagic-account.js#ask",
-   "to": "fn:crankmagic-account.js#unpacked",
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#chip",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#settings",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:crankmagic-account.js#draw",
+   "to": "fn:crankmagic-account.js#danger",
    "kind": "calls",
    "source": "parser",
    "resolved": true,
@@ -30409,6 +30804,14 @@
    "stage": "structure"
   },
   {
+   "from": "fn:crankmagic-app.js#applyTheme",
+   "to": "fn:crankmagic-app.js#themeChoice",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
    "from": "fn:crankmagic-app.js#render",
    "to": "fn:crankmagic-app.js#rescueBrand",
    "kind": "calls",
@@ -30419,6 +30822,22 @@
   {
    "from": "fn:crankmagic-app.js#render",
    "to": "fn:crankmagic-app.js#describeData",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:crankmagic-app.js#render",
+   "to": "fn:crankmagic-app.js#applyTheme",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:crankmagic-app.js#render",
+   "to": "fn:crankmagic-app.js#applyMotion",
    "kind": "calls",
    "source": "parser",
    "resolved": true,
@@ -30994,6 +31413,14 @@
    "kind": "calls",
    "source": "parser",
    "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global",
    "stage": "structure"
   },
   {
@@ -33310,6 +33737,14 @@
    "stage": "structure"
   },
   {
+   "from": "mod:crankmagic-graph.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global",
+   "stage": "structure"
+  },
+  {
    "from": "fn:crankmagic-groupings.js#order",
    "to": "fn:crankmagic-groupings.js#label",
    "kind": "calls",
@@ -34128,6 +34563,14 @@
    "stage": "structure"
   },
   {
+   "from": "mod:crankmagic-sea.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global",
+   "stage": "structure"
+  },
+  {
    "from": "fn:crankmagic-sim.js#packFor",
    "to": "fn:crankmagic-sim.js#protocolFor",
    "kind": "calls",
@@ -34261,6 +34704,14 @@
    "kind": "calls",
    "source": "parser",
    "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic-tabletop.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "global",
    "stage": "structure"
   },
   {
@@ -37393,6 +37844,22 @@
   },
   {
    "from": "fn:cloud/worker.mjs#handle",
+   "to": "fn:cloud/worker.mjs#overLimit",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:cloud/worker.mjs#handle",
+   "to": "fn:cloud/worker.mjs#tooMany",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:cloud/worker.mjs#handle",
    "to": "fn:cloud/access.mjs#verifyAccess",
    "kind": "calls",
    "source": "parser",
@@ -38099,6 +38566,53 @@
    "stage": "structure"
   },
   {
+   "from": "mod:game/engine/storage.mjs",
+   "to": "mod:game/engine/journal.mjs",
+   "kind": "imports",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#memoryStorage",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#checkStorage",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#checkKey",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/journal.mjs#hashState",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/storage.mjs#createMatchStore",
+   "to": "fn:game/engine/storage.mjs#pad",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
    "from": "mod:game/server/engine-runtime.mjs",
    "to": "mod:game/engine/state/index.mjs",
    "kind": "imports",
@@ -38672,6 +39186,21 @@
   {
    "from": "fn:game/server/local-table-runtime.mjs#restoreLocalTableRuntime",
    "to": "fn:game/server/local-table-runtime.mjs#createLocalTableRuntime",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "mod:game/server/storage-fs.mjs",
+   "to": "mod:game/engine/storage.mjs",
+   "kind": "imports",
+   "source": "parser",
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/server/storage-fs.mjs#fileStorage",
+   "to": "fn:game/engine/storage.mjs#checkKey",
    "kind": "calls",
    "source": "parser",
    "resolved": true,
@@ -39663,6 +40192,22 @@
   {
    "from": "fn:game/engine/keywords/combat.mjs#lifelinkFrom",
    "to": "fn:game/engine/keywords/combat.mjs#has",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isCreature",
+   "kind": "calls",
+   "source": "parser",
+   "resolved": true,
+   "stage": "structure"
+  },
+  {
+   "from": "fn:game/engine/pilots/house-pilot.mjs#housePilot",
+   "to": "fn:game/engine/pilots/house-pilot.mjs#isLand",
    "kind": "calls",
    "source": "parser",
    "resolved": true,
@@ -42162,6 +42707,15 @@
    "stage": "structure"
   },
   {
+   "from": "mod:crankmagic-settings.js",
+   "to": "mod:crankmagic-app.js",
+   "kind": "depends-on",
+   "source": "parser",
+   "via": "registry",
+   "global": "CrankFeatures",
+   "stage": "structure"
+  },
+  {
    "from": "mod:crankmagic-tour.js",
    "to": "mod:crankmagic-app.js",
    "kind": "depends-on",
@@ -42703,7 +43257,7 @@
   },
   {
    "from": "mod:crankmagic.html",
-   "to": "mod:crankmagic-app.js",
+   "to": "mod:crankmagic-settings.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
@@ -42712,11 +43266,20 @@
   },
   {
    "from": "mod:crankmagic.html",
-   "to": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
    "order": 60,
+   "stage": "structure"
+  },
+  {
+   "from": "mod:crankmagic.html",
+   "to": "mod:crankmagic-brand.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "script-tag",
+   "order": 61,
    "stage": "structure"
   },
   {
@@ -43261,7 +43824,7 @@
   },
   {
    "from": "mod:index.html",
-   "to": "mod:crankmagic-app.js",
+   "to": "mod:crankmagic-settings.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
@@ -43270,11 +43833,20 @@
   },
   {
    "from": "mod:index.html",
-   "to": "mod:crankmagic-brand.js",
+   "to": "mod:crankmagic-app.js",
    "kind": "imports",
    "source": "parser",
    "via": "script-tag",
    "order": 61,
+   "stage": "structure"
+  },
+  {
+   "from": "mod:index.html",
+   "to": "mod:crankmagic-brand.js",
+   "kind": "imports",
+   "source": "parser",
+   "via": "script-tag",
+   "order": 62,
    "stage": "structure"
   },
   {
@@ -43588,6 +44160,13 @@
   {
    "from": "repo:crankmagic",
    "to": "mod:crankmagic-sea.js",
+   "kind": "contains",
+   "source": "builder",
+   "stage": "structure"
+  },
+  {
+   "from": "repo:crankmagic",
+   "to": "mod:crankmagic-settings.js",
    "kind": "contains",
    "source": "builder",
    "stage": "structure"
@@ -43944,6 +44523,13 @@
   },
   {
    "from": "repo:crankmagic",
+   "to": "mod:game/engine/storage.mjs",
+   "kind": "contains",
+   "source": "builder",
+   "stage": "structure"
+  },
+  {
+   "from": "repo:crankmagic",
    "to": "mod:game/engine/vocabulary.mjs",
    "kind": "contains",
    "source": "builder",
@@ -43966,6 +44552,13 @@
   {
    "from": "repo:crankmagic",
    "to": "mod:game/server/local-table-runtime.mjs",
+   "kind": "contains",
+   "source": "builder",
+   "stage": "structure"
+  },
+  {
+   "from": "repo:crankmagic",
+   "to": "mod:game/server/storage-fs.mjs",
    "kind": "contains",
    "source": "builder",
    "stage": "structure"
@@ -44015,6 +44608,13 @@
   {
    "from": "repo:crankmagic",
    "to": "mod:game/engine/keywords/combat.mjs",
+   "kind": "contains",
+   "source": "builder",
+   "stage": "structure"
+  },
+  {
+   "from": "repo:crankmagic",
+   "to": "mod:game/engine/pilots/house-pilot.mjs",
    "kind": "contains",
    "source": "builder",
    "stage": "structure"
@@ -44628,7 +45228,7 @@
    "to": "mod:index.html",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 102,
+   "line": 103,
    "stage": "structure"
   },
   {
@@ -44660,7 +45260,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 121,
+   "line": 127,
    "stage": "structure"
   },
   {
@@ -44668,7 +45268,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 123,
+   "line": 129,
    "stage": "structure"
   },
   {
@@ -44684,7 +45284,7 @@
    "to": "mod:tools/release-pages.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 128,
+   "line": 134,
    "stage": "structure"
   },
   {
@@ -45964,7 +46564,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 73,
+   "line": 69,
    "stage": "structure"
   },
   {
@@ -45979,7 +46579,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 98,
+   "line": 105,
    "stage": "structure"
   },
   {
@@ -46017,7 +46617,7 @@
    "to": "mod:game/engine/journal.mjs",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 73,
+   "line": 69,
    "stage": "structure"
   },
   {
@@ -46632,7 +47232,7 @@
    "protocol": "In the browser",
    "auth": "Same origin",
    "description": "Registers the worker that keeps files for offline use.",
-   "evidence": "crankmagic-app.js:490",
+   "evidence": "crankmagic-app.js:548",
    "stage": "structure"
   },
   {
@@ -46654,7 +47254,7 @@
    "protocol": "HTTPS redirect",
    "auth": "Google, or an emailed code (library only)",
    "description": "Signing in, when a person chooses to.",
-   "evidence": "crankmagic-account.js:118",
+   "evidence": "crankmagic-account.js:122",
    "stage": "structure"
   },
   {
@@ -46677,7 +47277,7 @@
    "auth": "Access token cookie + an x-crankmagic header on writes",
    "policy": "connect-src 'self'",
    "description": "Library sync today; data files, tables and the AI door in the final state.",
-   "evidence": "crankmagic-account.js:41",
+   "evidence": "crankmagic-account.js:43",
    "stage": "structure"
   },
   {
@@ -46699,7 +47299,7 @@
    "protocol": "D1 binding (SQL)",
    "auth": "Binding: nothing else can reach it",
    "description": "Reads and writes users, snapshots and heads.",
-   "evidence": "cloud/worker.mjs:56",
+   "evidence": "cloud/worker.mjs:71",
    "stage": "structure"
   },
   {
@@ -46866,7 +47466,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41,
+   "line": 43,
    "stage": "structure"
   },
   {
@@ -47236,7 +47836,7 @@
    "to": "mod:index.html",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 102,
+   "line": 103,
    "stage": "structure"
   },
   {
@@ -47334,7 +47934,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41,
+   "line": 43,
    "stage": "structure"
   },
   {
@@ -47342,7 +47942,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 118,
+   "line": 122,
    "stage": "structure"
   },
   {
@@ -47372,7 +47972,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 41,
+   "line": 43,
    "stage": "structure"
   },
   {
@@ -47409,7 +48009,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 135,
+   "line": 197,
    "stage": "structure"
   },
   {
@@ -47439,7 +48039,7 @@
    "to": "mod:crankmagic-account.js",
    "kind": "evidenced-by",
    "source": "parser",
-   "line": 112,
+   "line": 116,
    "stage": "structure"
   },
   {

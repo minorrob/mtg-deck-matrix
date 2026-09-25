@@ -93,9 +93,9 @@ nodes:
   status: intent
 - id: req:M1-settings
   kind: Requirement
-  name: 'A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set''s date and the version.'
+  name: 'A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set''s date and the version.'
   req_id: M1-settings
-  text: 'A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set''s date and the version.'
+  text: 'A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set''s date and the version.'
   req_kind: functional
   priority: must
   attributes:

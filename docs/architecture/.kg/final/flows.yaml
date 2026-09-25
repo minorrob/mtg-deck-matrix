@@ -22,7 +22,7 @@ nodes:
   status: intent
 - id: flow:crankmagic/m1-settings
   kind: Flow
-  name: 'A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with'
+  name: 'A Settings page: Account, Appearance, Prices (US dollars), Data, and About with '
   entry: M1-settings
   status: intent
 - id: flow:crankmagic/m1-delete-account

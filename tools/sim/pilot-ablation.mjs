@@ -106,7 +106,7 @@ const KNOBS = [
 
 function runKnobs() {
   console.log(`Each row is the published pilot with ONE decision changed.`);
-  console.log(`${decks.length} deck${decks.length === 1 ? "" : "s"}, ${seedCount} seeds of ${games.toLocaleString()} games each.\n`);
+  console.log(`${decks.length} deck${decks.length === 1 ? "" : "s"}, ${seedCount} seeds of ${games.toLocaleString("en-US")} games each.\n`);
   const header = "decision".padEnd(26) + decks.map((d) => pad(d.id, 8)).join("") + pad("mean", 9) + pad("win%", 8);
   console.log(header);
   console.log("-".repeat(header.length));
@@ -151,7 +151,7 @@ function runKnobs() {
 
 function runLens() {
   console.log(`The two shipped policies and what each decision was worth, per deck.`);
-  console.log(`${seedCount} seeds of ${games.toLocaleString()} games, ${2 + Policy.ABLATIONS.length} runs per deck, `
+  console.log(`${seedCount} seeds of ${games.toLocaleString("en-US")} games, ${2 + Policy.ABLATIONS.length} runs per deck, `
     + `${combatMode} combat.\n`);
   for (const deck of decks) {
     const lens = Measure.measureLens(hundred(deck), {

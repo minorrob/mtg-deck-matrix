@@ -155,7 +155,7 @@ for (const id of ids) {
 const worse = moves.filter((m) => m.delta < 0);
 const better = moves.filter((m) => m.delta > 0);
 const mean = moves.reduce((n, m) => n + m.delta, 0) / Math.max(1, moves.length);
-console.log(`\n${moves.length} rungs re-measured on ${SEEDS} seeds of ${GAMES.toLocaleString()} ` +
+console.log(`\n${moves.length} rungs re-measured on ${SEEDS} seeds of ${GAMES.toLocaleString("en-US")} ` +
   `in ${Math.round((Date.now() - started) / 1000)}s.`);
 console.log(`${worse.length} scored lower, ${better.length} higher, mean move ${mean.toFixed(2)} points.`);
 const sorted = moves.slice().sort((a, b) => a.delta - b.delta);
@@ -205,7 +205,7 @@ for (const [variantId, deckBuilds] of Object.entries(summary.builds)) {
 summary.caveats = Object.assign({}, summary.caveats, {inversions, podFunOverCeiling: overCeiling});
 
 summary.regimeNote = `All ${moves.length} rungs re-measured together by ` +
-  `tools/sim/remeasure-all.mjs on ${SEEDS} seeds of ${GAMES.toLocaleString()} games, on the ` +
+  `tools/sim/remeasure-all.mjs on ${SEEDS} seeds of ${GAMES.toLocaleString("en-US")} games, on the ` +
   `protocol established when printed power and toughness reached the engine. Before that run each ` +
   `rung carried whatever size and seed its own optimizer stopped at, so the numbers on the ` +
   `Compare page were only loosely comparable with each other; now every one of them was ` +

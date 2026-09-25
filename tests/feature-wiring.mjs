@@ -291,4 +291,31 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   }
 }
 
+/* THE UNITED STATES, ALWAYS (AGENTS.md; Rob, 2026-09-25: "I NEVER WANT ANYTHING, grammar, currency, etc.
+   from anywhere except The US"). Three holds, each a hard zero rather than a ratchet:
+   1. every number and date formatter names 'en-US', so a reader's browser locale never turns 1,024 into
+      1.024 or Sep 25 into 25 Sept;
+   2. no raw timestamp or ISO date is printed into a page -- dates go through usDate / usDateTime;
+   3. nothing that ships carries another currency. */
+{
+  const {execFileSync} = await import("node:child_process");
+  const scripts = execFileSync("git", ["ls-files", "--", "*.js", "*.mjs"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/)
+    .filter((f) => f && !/^(docs|design|data|tests)\//.test(f));   // tests may probe another locale on purpose
+  const bare = [];
+  for (const f of scripts) {
+    const code = read(f);
+    for (const m of code.matchAll(/toLocale(?:Date|Time)?String\(([^)]{0,40})|Intl\.(?:NumberFormat|DateTimeFormat|RelativeTimeFormat|PluralRules|ListFormat)\(([^)]{0,40})/g))
+      if (!/^\s*['"]en-US['"]/.test(m[1] ?? m[2] ?? "")) bare.push(`${f}: ${m[0].slice(0, 40)}`);
+  }
+  ok(bare.length === 0, `every toLocale*String and Intl formatter names 'en-US' (${scripts.length} scripts read); these do not: ${bare.slice(0, 8).join(" | ")}`);
+  const pages = ["crankmagic-app.js", ...features];
+  const raw = pages.flatMap((f) => [...read(f).matchAll(/\$\{(?:e|esc|C\.esc)\((?:String\()?[\w.?]*\.(?:at|savedAt|createdAt|updatedAt|importedAt|playedAt|rankDate)\)?(?:\.slice\(0, ?1[06]\))?\)\}/g)].map((m) => `${f}: ${m[0]}`));
+  ok(raw.length === 0, `no raw timestamp or ISO date is printed into a page; dates go through usDate/usDateTime: ${raw.join(" | ")}`);
+  ok(/const usDate=v=>\{const t=M\.localDate\(v\);return t\?t\.toLocaleDateString\('en-US'/.test(read("crankmagic-app.js")), "usDate writes a date the US way");
+  const shipped = execFileSync("git", ["ls-files", "--", "*.js", "*.html", "*.css"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/)
+    .filter((f) => f && !/^(docs|design|data|tests|game|tools|graph|sim)\//.test(f));
+  const foreign = shipped.filter((f) => /\bEUR\b|\bGBP\b|\beur\b|\btix\b|€|£|¥/.test(read(f)));
+  ok(foreign.length === 0, `nothing that ships carries another currency (${shipped.length} files read): ${foreign.join(", ")}`);
+}
+
 console.log(`feature-wiring: ${checks} checks passed — ${features.length} feature files read; dialogs bound, help entries titled, dates local, compare picks in memory.`);

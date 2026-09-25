@@ -84,11 +84,11 @@ function describe(p) {
   const out = {path: p, size, ext, shape: "", versions: [], stamp: "", note: ""};
   if (ext !== "json") { out.shape = ext === "xlsx" ? "workbook" : ext === "docx" ? "document" : ext; return out; }
   let data; try { data = JSON.parse(readFileSync(full, "utf8")); } catch (e) { out.shape = "unreadable JSON"; out.note = e.message.slice(0, 60); return out; }
-  if (Array.isArray(data)) out.shape = `array · ${data.length.toLocaleString()}`;
+  if (Array.isArray(data)) out.shape = `array · ${data.length.toLocaleString("en-US")}`;
   else if (data && typeof data === "object") {
     const keys = Object.keys(data);
     const big = keys.map((k) => [k, Array.isArray(data[k]) ? data[k].length : data[k] && typeof data[k] === "object" ? Object.keys(data[k]).length : 0]).filter(([, n]) => n >= 10).sort((a, b) => b[1] - a[1]).slice(0, 2);
-    out.shape = `{${keys.slice(0, 6).join(", ")}${keys.length > 6 ? ", …" : ""}}${big.length ? " · " + big.map(([k, n]) => `${k} ${n.toLocaleString()}`).join(", ") : ""}`;
+    out.shape = `{${keys.slice(0, 6).join(", ")}${keys.length > 6 ? ", …" : ""}}${big.length ? " · " + big.map(([k, n]) => `${k} ${n.toLocaleString("en-US")}`).join(", ") : ""}`;
     for (const k of VERSIONS) if (data[k] !== undefined && typeof data[k] !== "object") out.versions.push(`${k} ${data[k]}`);
     for (const k of STAMPS) if (typeof data[k] === "string" && /^\d{4}-\d{2}-\d{2}/.test(data[k])) { out.stamp = data[k].slice(0, 10); break; }
     /* backups and payloads carry their state one level down */

@@ -1,4 +1,4 @@
-generatedAt: '2026-09-25T13:06:03.895597Z'
+generatedAt: '2026-09-25T18:34:30.201732Z'
 repo: crankmagic
 stages_present:
 - survey
@@ -6,8 +6,8 @@ stages_present:
 - config
 - docs
 counts:
-  nodes: 1634
-  edges: 3605
+  nodes: 1656
+  edges: 3652
 source_hashes:
   card-catalog.js: d6fc513df1b325f8
   card-classify.js: ddfda996d17e5eee
@@ -21,46 +21,47 @@ source_hashes:
   collection-repository.js: fd2b5287b193df6e
   combat.js: 218a98465449d00c
   compliance-model.js: 5843be95892058c1
-  crankmagic-account.js: 36bed9d85c35ee1e
+  crankmagic-account.js: 72b63b785a873f57
   crankmagic-advisor.js: 7416b6a23fc3baac
-  crankmagic-app.js: b1250f726aad5b77
+  crankmagic-app.js: ebd19df8f1822634
   crankmagic-assets.js: 19b7e415ab88dd5f
-  crankmagic-brand.js: 3d83643a63f3b69d
+  crankmagic-brand.js: 6c6f6a53a59f228a
   crankmagic-card-client.js: 4c937886d914b612
   crankmagic-change-ui.js: 50b1441d682dc57e
   crankmagic-change.js: ff45272f85b35fdf
-  crankmagic-collection.js: 8dd9e447d4da2ebf
-  crankmagic-decks.js: 4d3d788e69d7e3bf
-  crankmagic-discover.js: 0a313e44b8fd6c5c
-  crankmagic-evidence.js: 38218165c8fe8536
+  crankmagic-collection.js: c598700ffe98c3db
+  crankmagic-decks.js: a694d9e854374fa3
+  crankmagic-discover.js: 5f360095f49e4bc7
+  crankmagic-evidence.js: cc0b2830cf6bdeb5
   crankmagic-exchange-ui.js: d5842eb8f4a2799d
   crankmagic-facets.js: 4435ee146e381a16
   crankmagic-game.js: 7d6a2d366aa28680
   crankmagic-glossary.js: 0c33bfa5350ffa0d
   crankmagic-graph-scoped.js: d77245bd485ce9b7
-  crankmagic-graph.js: 18d53f8ed2da8a74
+  crankmagic-graph.js: 8ab411214cce9660
   crankmagic-groupings.js: 2674cb1e7b895062
   crankmagic-how.js: dddcd6bfaa9e3cd6
-  crankmagic-lab.js: a97691252d5db52f
+  crankmagic-lab.js: e3822f4f2f876793
   crankmagic-lens.js: 5de2d4a9a4e4577a
   crankmagic-lobby.js: ecbc7b30ef555bcc
   crankmagic-loops.js: 8bc4072293739dab
   crankmagic-online.js: 34b59583481a26bb
-  crankmagic-orders.js: 41eb90b8654cb936
+  crankmagic-orders.js: 1e9e5e046e7b8fb1
   crankmagic-plan-editor.js: 4eb23f2843c5410f
   crankmagic-pull.js: ceaea4c2c1884f29
   crankmagic-qr.js: b646b5be9060a1f4
   crankmagic-route.js: 23a8f6e75dd90cbe
   crankmagic-rules.js: e7ec63cf02b363da
   crankmagic-sandbox.js: 1b6ab205430f283b
-  crankmagic-sea.js: d7f9fd867c8577ad
+  crankmagic-sea.js: 2a276b9b826ef07c
+  crankmagic-settings.js: c4690d43cddde384
   crankmagic-sim.js: bc408814790fb9fa
   crankmagic-strategies.js: 9f7f7f7b84fc59c0
-  crankmagic-sw.js: c5b8ee8e94ca625e
-  crankmagic-tabletop.js: 72ceff9707a1e4ac
-  crankmagic-tour.js: dc33ac850e7ac05e
+  crankmagic-sw.js: e12d5cb4881f94ee
+  crankmagic-tabletop.js: f8535cffc6cbf768
+  crankmagic-tour.js: 3f8a8d88f0143f89
   crankmagic-trace.js: aacb53a680b6bdd3
-  crankmagic-trade.js: 39a30baf0036b25f
+  crankmagic-trade.js: 334a7190e620c1b1
   custom-model.js: 4c2b2793f05a10be
   deck-generator.js: d91fd61911ff9b9b
   deck-import.js: ea1dd37c6ce291cf
@@ -84,14 +85,14 @@ source_hashes:
   xlsx-reader.js: b0bbed5589c2f043
   xlsx-writer.js: 05fd48698e0bb05a
   cloud/access.mjs: 062aef9ccd6fa87e
-  cloud/library.mjs: 48e4a276bc064759
-  cloud/worker.mjs: 17c736dd35d21693
+  cloud/library.mjs: 365304776477b981
+  cloud/worker.mjs: e0233d5a4f2400fb
   schema/index.mjs: 5a510cf6cf7c0421
   schema/validate.mjs: 3432f49342831ef1
   tools/build-engine-cards.mjs: 55891fb80eac2215
   tools/data-manifest.mjs: 348d049159a09efb
   tools/refresh.mjs: 00f353d49fa40568
-  tools/release-pages.mjs: 649561354bef37d5
+  tools/release-pages.mjs: a65559efaacc8f29
   game/contracts/deck-list-import.mjs: 7d3d678c61274b25
   game/contracts/deck-snapshot.mjs: c84406e521169aaf
   game/contracts/forge-card-index.mjs: 313c581346cffca3
@@ -100,14 +101,16 @@ source_hashes:
   game/contracts/seat-access.mjs: 9d139669ac3b99c3
   game/contracts/table-lifecycle.mjs: 9a7aff9e78720f68
   game/engine/controller.mjs: 8c52ddf3db6c9cbf
-  game/engine/index.mjs: 7541a0f0eb847398
-  game/engine/journal.mjs: f84b3a63adf2b850
+  game/engine/index.mjs: 97532ceebb58edc7
+  game/engine/journal.mjs: 6abff43e1d0b906b
   game/engine/projection.mjs: f1d04e4a28bbc979
   game/engine/rng.mjs: 1a46f7ff515d1952
+  game/engine/storage.mjs: d262a54c130562e7
   game/engine/vocabulary.mjs: 76e0c215f84cb61e
   game/server/engine-runtime.mjs: d26fc5d4becb78f1
   game/server/guest-gateway.mjs: defe18ae75c8addd
   game/server/local-table-runtime.mjs: 997388948bf9baa9
+  game/server/storage-fs.mjs: 2e6904e19c5301e6
   game/server/table-broker.mjs: b7ab2bb973bcc9f4
   game/tools/ai-compatibility.mjs: 32797124611acb85
   game/tools/setup-catalog.mjs: 9e8b67d41d505035
@@ -115,6 +118,7 @@ source_hashes:
   game/ui/playmats.mjs: 7a791b482540d69d
   tools/lib/envelope.mjs: bc0f80d5408dca48
   game/engine/keywords/combat.mjs: 38a1620a62ffe424
+  game/engine/pilots/house-pilot.mjs: df4160a2ac8b39b1
   game/engine/pilots/random-legal.mjs: 2989a708cfe08fd8
   game/engine/rules/actions.mjs: 9707dd70972269bb
   game/engine/rules/combat.mjs: f609a397745750ba
@@ -137,19 +141,19 @@ source_hashes:
   game/engine/script/effects/permanents.mjs: 8a6e20892d20ff12
   game/engine/script/effects/resources.mjs: 7d0c1a43d5d3d884
   game/engine/script/effects/zones.mjs: ac35b40a41dbc768
-  crankmagic.html: cd889cbd54e8701a
+  crankmagic.html: bc5f1c0a4b26ebf7
   graph.html: de97e0bab2daeda8
-  index.html: 41e661b3b8eca3f7
+  index.html: fb51027be824bb50
   cloud/migrations/0001_accounts.sql: fffd390f0b75d663
-  AGENTS.md: ccb9d0bdf4952bf1
+  AGENTS.md: 8e50e7e0e5c32023
   .github/workflows/tests.yml: abdf10934b872bc6
   docs/handoff-2026-09-25.md: b891c89026b4706e
   .github/workflows/live-load.yml: 29082fd3f150cc80
   .github/workflows/compile-game-logs.yml: 72f84e8bc47f3cca
-  docs/design/2026-09-25-redesign-r3/INTAKE.md: 5b264b197f6a34c4
-  docs/engine/PLAN.md: 34bcb247f13605b0
-  docs/plan-account-cloud.md: a44c61c549d07ada
-  docs/plan-data-sync.md: 79fa4e0f0d0d6fb5
+  docs/design/2026-09-25-redesign-r3/INTAKE.md: ed1d9764399c28c2
+  docs/engine/PLAN.md: bdf420d058a0e6e7
+  docs/plan-account-cloud.md: 7e7bbb2ebc224844
+  docs/plan-data-sync.md: cb859bd333c38ddc
   docs/plan-program-2026-09-24.md: 6c1cf0b887a177a7
-  docs/plan-to-100.md: 3e881b44c425205a
+  docs/plan-to-100.md: c3cfabdd497d54e5
   docs/release-pages.md: f5cee7454b7118e4

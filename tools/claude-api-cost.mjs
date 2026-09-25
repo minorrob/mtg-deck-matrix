@@ -195,8 +195,8 @@ console.log(`free, with POST /v1/messages/count_tokens once a key exists.\n`);
 for (const r of rows) {
   console.log(`--- ${r.title}`);
   console.log(`    ${r.note}`);
-  console.log(`    input  ${lpad(r.inChars.toLocaleString(), 8)} chars  ~${lpad(r.inTok.toLocaleString(), 7)} tokens`);
-  console.log(`    output ${lpad(r.outChars.toLocaleString(), 8)} chars  ~${lpad(r.outTok.toLocaleString(), 7)} tokens`);
+  console.log(`    input  ${lpad(r.inChars.toLocaleString("en-US"), 8)} chars  ~${lpad(r.inTok.toLocaleString("en-US"), 7)} tokens`);
+  console.log(`    output ${lpad(r.outChars.toLocaleString("en-US"), 8)} chars  ~${lpad(r.outTok.toLocaleString("en-US"), 7)} tokens`);
   console.log(`    ${pad("", 18)}${MODELS.map((m) => lpad(m.label, 14)).join("")}`);
   const one = MODELS.map((m) => lpad(money(cost(m, r.inTok, r.outTok)), 14)).join("");
   const hundred = MODELS.map((m) => lpad(money(cost(m, r.inTok, r.outTok) * 100), 14)).join("");
@@ -213,7 +213,7 @@ for (const r of rows) {
 
 const worst = rows.reduce((a, b) => (a.inTok + a.outTok > b.inTok + b.outTok ? a : b));
 console.log(`Largest single call is "${worst.title.replace(/^\d+\w*\.\s*/, "")}" at`);
-console.log(`~${(worst.inTok + worst.outTok).toLocaleString()} tokens, ${money(cost(MODELS[2], worst.inTok, worst.outTok))} on Opus 5.\n`);
+console.log(`~${(worst.inTok + worst.outTok).toLocaleString("en-US")} tokens, ${money(cost(MODELS[2], worst.inTok, worst.outTok))} on Opus 5.\n`);
 
 const everything = rows.reduce((sum, r) => sum + cost(MODELS[2], r.inTok, r.outTok) * r.volume, 0);
 console.log(`Every scenario at its stated volume, all on Opus 5, standard tier: ${money(everything)}`);

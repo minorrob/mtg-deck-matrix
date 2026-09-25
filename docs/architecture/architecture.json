@@ -4,15 +4,15 @@
  "graphs": {
   "current": {
    "path": "docs/architecture/.kg/graph.json",
-   "generatedAt": "2026-09-25T13:06:03.895597Z",
-   "nodes": 1634,
-   "edges": 3605
+   "generatedAt": "2026-09-25T18:34:30.201732Z",
+   "nodes": 1656,
+   "edges": 3652
   },
   "final": {
    "path": "docs/architecture/.kg/final/graph.json",
-   "generatedAt": "2026-09-25T13:06:05.699630Z",
-   "nodes": 494,
-   "edges": 2367
+   "generatedAt": "2026-09-25T18:34:32.040592Z",
+   "nodes": 491,
+   "edges": 2360
   }
  },
  "lanes": {
@@ -281,7 +281,7 @@
    "source": "docs/design/2026-09-25-redesign-r3/INTAKE.md"
   },
   "req:M1-settings": {
-   "text": "A Settings page: Account, Appearance, Prices (USD and EUR), Data, and About with every data set's date and the version.",
+   "text": "A Settings page: Account, Appearance, Prices (US dollars), Data, and About with every data set's date and the version.",
    "source": "docs/design/2026-09-25-redesign-r3/INTAKE.md"
   },
   "req:M10-finish": {
@@ -1482,7 +1482,7 @@
    },
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "traces": [
     "req:S2-sync"
@@ -1620,7 +1620,7 @@
    "person": "Builder",
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "traces": [
     "req:S2-sync"
@@ -1684,7 +1684,7 @@
    "person": "Visitor",
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    },
    "traces": [
     "req:M1-design",
@@ -1749,7 +1749,7 @@
    "order": 1,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 118
+    "line": 122
    },
    "traces": [
     "req:S2-access"
@@ -1765,7 +1765,7 @@
    "order": 2,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 41
+    "line": 43
    },
    "traces": [
     "req:S2-sync"
@@ -1781,7 +1781,7 @@
    "order": 3,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 135
+    "line": 197
    },
    "traces": [
     "req:S2-sync"
@@ -1797,7 +1797,7 @@
    "order": 4,
    "evidence": {
     "file": "crankmagic-account.js",
-    "line": 112
+    "line": 116
    },
    "traces": [
     "req:S2-sync"
@@ -2204,7 +2204,7 @@
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 123
+    "line": 129
    },
    "traces": [
     "req:M1-design",
@@ -2234,7 +2234,7 @@
    },
    "evidence": {
     "file": "index.html",
-    "line": 102
+    "line": 103
    },
    "traces": [
     "req:M1-design",
@@ -2311,7 +2311,7 @@
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 128
+    "line": 134
    },
    "traces": [
     "req:M5-front-door",
@@ -2606,7 +2606,7 @@
    },
    "evidence": {
     "file": "tools/release-pages.mjs",
-    "line": 121
+    "line": 127
    },
    "traces": [
     "req:M2-serve",
@@ -3987,7 +3987,6 @@
    ],
    "fields": [
     "rec:library.preferences.starterGroups",
-    "rec:library.preferences.currency",
     "rec:library.preferences.budgetCap",
     "rec:library.preferences.reduceMotion"
    ],
@@ -4002,23 +4001,6 @@
    "type": "number",
    "meaning": "The budget a new deck starts with.",
    "example": "150",
-   "required": false,
-   "source": "Settings",
-   "core": true,
-   "table": "rec:library.preferences",
-   "traces": [
-    "req:M1-settings"
-   ]
-  },
-  "rec:library.preferences.currency": {
-   "id": "rec:library.preferences.currency",
-   "kind": "RecordField",
-   "name": "currency",
-   "status": "final",
-   "classification": "internal",
-   "type": "text",
-   "meaning": "USD or EUR.",
-   "example": "USD",
    "required": false,
    "source": "Settings",
    "core": true,
@@ -4601,7 +4583,7 @@
    "table": "rec:room.checkpoint",
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    },
    "traces": [
     "req:M4-engine",
@@ -4722,7 +4704,7 @@
    "table": "rec:room.journal",
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 98
+    "line": 105
    },
    "traces": [
     "req:M4-engine",
@@ -4745,7 +4727,7 @@
    "table": "rec:room.journal",
    "evidence": {
     "file": "game/engine/journal.mjs",
-    "line": 73
+    "line": 69
    },
    "traces": [
     "req:M4-engine",
@@ -5282,7 +5264,6 @@
    "fields": [
     "rec:scryfall.prices.id",
     "rec:scryfall.prices.usd",
-    "rec:scryfall.prices.eur",
     "rec:scryfall.prices.date"
    ],
    "hostedOn": "net:browser",
@@ -5303,24 +5284,6 @@
    "table": "rec:scryfall.prices",
    "traces": [
     "req:M2-ages"
-   ]
-  },
-  "rec:scryfall.prices.eur": {
-   "id": "rec:scryfall.prices.eur",
-   "kind": "RecordField",
-   "name": "eur",
-   "status": "final",
-   "classification": "internal",
-   "type": "number",
-   "meaning": "Euros, from Cardmarket.",
-   "example": "1.20",
-   "required": false,
-   "source": "Scryfall",
-   "core": true,
-   "table": "rec:scryfall.prices",
-   "traces": [
-    "req:M2-live-first",
-    "req:M2-stores"
    ]
   },
   "rec:scryfall.prices.id": {
@@ -5487,8 +5450,7 @@
     "rec:store.cards.id",
     "rec:store.cards.name",
     "rec:store.cards.typeLine",
-    "rec:store.cards.prices.usd",
-    "rec:store.cards.prices.eur"
+    "rec:store.cards.prices.usd"
    ],
    "hostedOn": "net:r2"
   },
@@ -5526,23 +5488,6 @@
    "traces": [
     "req:M2-schedule",
     "req:M2-stores"
-   ]
-  },
-  "rec:store.cards.prices.eur": {
-   "id": "rec:store.cards.prices.eur",
-   "kind": "RecordField",
-   "name": "prices.eur",
-   "status": "final",
-   "classification": "internal",
-   "type": "number",
-   "meaning": "The euro price (Cardmarket).",
-   "example": "1.20",
-   "required": false,
-   "source": "Scryfall prices",
-   "core": true,
-   "table": "rec:store.cards",
-   "traces": [
-    "req:M1-settings"
    ]
   },
   "rec:store.cards.prices.usd": {
@@ -7027,7 +6972,7 @@
    "protocol": "HTTPS redirect",
    "auth": "Google, or an emailed code (library only)",
    "description": "Signing in, when a person chooses to.",
-   "evidence": "crankmagic-account.js:118"
+   "evidence": "crankmagic-account.js:122"
   },
   {
    "from": "net:browser",
@@ -7090,7 +7035,7 @@
    "protocol": "In the browser",
    "auth": "Same origin",
    "description": "Registers the worker that keeps files for offline use.",
-   "evidence": "crankmagic-app.js:490"
+   "evidence": "crankmagic-app.js:548"
   },
   {
    "from": "net:browser",
@@ -7109,7 +7054,7 @@
    "auth": "Access token cookie + an x-crankmagic header on writes",
    "policy": "connect-src 'self'",
    "description": "Library sync today; data files, tables and the AI door in the final state.",
-   "evidence": "crankmagic-account.js:41"
+   "evidence": "crankmagic-account.js:43"
   },
   {
    "from": "net:browser",
@@ -7238,7 +7183,7 @@
    "protocol": "D1 binding (SQL)",
    "auth": "Binding: nothing else can reach it",
    "description": "Reads and writes users, snapshots and heads.",
-   "evidence": "cloud/worker.mjs:56"
+   "evidence": "cloud/worker.mjs:71"
   },
   {
    "from": "net:worker",

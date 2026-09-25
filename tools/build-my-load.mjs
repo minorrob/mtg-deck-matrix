@@ -29,9 +29,9 @@ const known = new Set(User.keys());
 function report(file) {
   const rows = Object.keys(file.values).map((k) => {
     const meta = User.KEYS.find((x) => x.key === k);
-    return `  ${k}  ${(file.values[k] || "").length.toLocaleString()} bytes  ${meta ? meta.what : "UNKNOWN KEY"}`;
+    return `  ${k}  ${(file.values[k] || "").length.toLocaleString("en-US")} bytes  ${meta ? meta.what : "UNKNOWN KEY"}`;
   });
-  console.log(`${OUT}: ${rows.length} keys, ${JSON.stringify(file).length.toLocaleString()} bytes`);
+  console.log(`${OUT}: ${rows.length} keys, ${JSON.stringify(file).length.toLocaleString("en-US")} bytes`);
   console.log(rows.join("\n"));
 }
 

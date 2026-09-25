@@ -38,7 +38,7 @@ a secret, a purchase, an invitation, a file only he has) stay his, and the table
 | M1 · 5 | "Get notified" | **A switch stored with the account**, shown when Play ships; no mailing list | — |
 | M1 · 6 | Sign in | **Google plus the emailed code (library only); no Apple** | — |
 | M1 · 7 | The Menu entries the design does not draw | **As INTAKE §4.7 lists them** | — |
-| M1 · 8 | EUR and Delete account | **Both; EUR after M2** | — |
+| M1 · 8 | EUR and Delete account | **Delete account: built (#384). EUR: dropped.** Rob, 2026-09-25: *"Why would I want EUR? I live in the US. I NEVER WANT ANYTHING, grammar, currency, etc. from anywhere except The US."* The rule is AGENTS.md, "The United States, always" | — |
 | M1 · 9 | Merge on restore | **Replace only now; Merge later, with its own tests** | — |
 | M1 · 10 | The land icon | Rob supplies it; the placeholder stays until then | **Rob** |
 | M2 | Turn on R2 | **Yes, the free plan** | **Rob**, in the dashboard |

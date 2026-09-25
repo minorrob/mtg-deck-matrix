@@ -18,7 +18,7 @@ const R=globalThis.CrankRules;
 const cardsView=views.cards;
 views.cards=params=>params.get('tab')==='orders'?ordersView(params):cardsView(params);
 actions['shop-orders']=()=>go('cards',{tab:'orders'});actions['shop-acquire']=()=>go('cards',{tab:'buy'});
-const when=iso=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleDateString(undefined,{dateStyle:'medium'}):(iso||'—');};
+const when=iso=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleDateString('en-US',{dateStyle:'medium'}):(iso||'—');};
 const fold=n=>String(n||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 /* The rule markers on a line: over $30, over the 110% cap, $5 and over from a mail-order vendor. */
 const flags=(l,vendor)=>R?R.warnings({price:C.card(l.cardId)&&C.card(l.cardId).price,paid:l.paid,vendor}):[];

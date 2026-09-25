@@ -55,4 +55,4 @@ await mkdir(outDir, {recursive: true});
 const header = ["commanderId","cardId","commander","card","category","numDecks","potentialDecks","inclusion","synergy"];
 await writeFile(`${outDir}/played_with.csv`,
   [header.join(","), ...rows.map((r) => r.map(csv).join(","))].join("\n") + "\n");
-console.log(`${pages} commander pages -> ${rows.length.toLocaleString()} PLAYED_WITH edges${unmatched ? ` (${unmatched} pages had no matching Card node)` : ""}`);
+console.log(`${pages} commander pages -> ${rows.length.toLocaleString("en-US")} PLAYED_WITH edges${unmatched ? ` (${unmatched} pages had no matching Card node)` : ""}`);
