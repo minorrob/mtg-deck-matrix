@@ -1,0 +1,263 @@
+/* r3's LIBRARY (R3.6; wireframes 36-library-list, 41-filters-dialog, 42-columns-dialog, 43-add-cards).
+ *
+ * In a real page with the committed library restored:
+ *
+ *   1. Filters is a dialog: chips for type, color, status and deck, ranges for mana value and price.
+ *      It works on a draft. Its button counts the records the draft would show, and after Show the
+ *      page counts the same number. Every row left then really is red, at mana value 3 or less, and
+ *      priced within the range, judged from the library's own card records, not from the page.
+ *      Closing it any other way changes nothing. Clear all empties the draft. A deck chip moves the
+ *      address to that deck.
+ *   2. Columns is one list: Card and Status are always shown, Card stays first, the rest reorder by
+ *      the arrows or by dragging the grip. The table draws them in that order, the saved preference
+ *      holds it, and the CSV export follows it. Reset puts the defaults back. A column set saved
+ *      without Status gains it.
+ *   3. Add cards is the head's primary, and sits last. The picker takes a name or a pasted list; a
+ *      list opens the import filled in, as copies you own. The copies dialog says where they land,
+ *      counts on its button, and the copies do land on the Bench, reserved for no deck.
+ *   4. On a phone the count cards show their whole figures, and the Filters dialog fits the screen.
+ *   5. No dialog's sticky head covers its first line.
+ *   6. INTAKE §3's Library items still stand: the ticked-rows bar, group bands, collection groups, the
+ *      Sheet's editable cells and the Table view's piles.
+ *
+ * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
+ */
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
+
+let checks = 0;
+const ok = (cond, msg) => { checks++; assert.ok(cond, msg); };
+const eq = (a, b, msg) => { checks++; assert.deepEqual(a, b, msg); };
+
+const {browser, base, stub, close} = await openBrowser({name: "library-r3", flag: "GEOMETRY_REQUIRED"});
+const LIB = `${base}/index.html#cards`;
+/* The page's own record count, from the paging line or the status line above the table. */
+const records = (page) => page.$eval("#cm-roster-table", (t) => { const m = (t.querySelector(".cm-paging span, .cm-status-line")?.textContent || "").match(/([\d,]+) records?/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
+const promised = (page) => page.$eval("#cm-fd-show", (b) => { const m = b.textContent.match(/Show ([\d,]+) records?/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
+const heads = (page) => page.$$eval(".cm-table thead th[class*=cm-col-]", (ths) => ths.map((th) => [...th.classList].find((c) => c.startsWith("cm-col-")).slice(7)));
+/* The library as stored, judged here in Node: the page's security policy (rightly) refuses eval. */
+const stateOf = (page) => page.evaluate(async () => { const r = await CrankRepository.open(); try { const s = await r.getState(); return {cards: s.cards, lots: s.lots, decks: s.decks.map((d) => ({id: d.id, name: d.name, archived: !!d.archived})), preferences: s.preferences}; } finally { r.close(); } });
+const opened = async (page, name) => { await page.locator("#cm-dialog[open]").waitFor(); eq(await page.locator("#cm-dialog-title").textContent(), name, `the dialog is ${name}`); };
+const settle = (page) => page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-table"));
+
+try {
+  const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block", acceptDownloads: true});
+  const page = await context.newPage();
+  if (stub) await stub(page);
+  await loadLiveState(page, base);
+  await page.goto(LIB);
+  await settle(page);
+
+  /* 3, first: the head. */
+  eq(await page.$$eval(".cm-page-head .cm-actions > .v-button", (bs) => bs.map((b) => b.textContent.trim())), ["Import list", "New group", "More", "Add cards"], "the head ends with Add cards");
+  ok(await page.$eval(".cm-page-head [data-action=add-card]", (b) => b.classList.contains("primary")), "and Add cards is the primary");
+
+  /* 1. Filters. */
+  const all = await records(page);
+  ok(all > 100, `the library shows its records (${all})`);
+  ok(!(await page.$("#cm-filter-host, .cm-filter-panel")), "no filter panel is drawn into the page");
+  await page.getByRole("button", {name: /^Filters/}).click();
+  await opened(page, "Filters");
+  eq(await page.$$eval("#cm-dialog legend", (ls) => ls.map((l) => l.textContent)), ["Type", "Color", "Status", "Deck", "Mana value", "Price"], "type, color, status and deck chips, then the mana value and price ranges");
+  eq(await promised(page), all, "with nothing chosen the button promises every record the page shows");
+  const head = await page.evaluate(() => { const d = document.getElementById("cm-dialog"); return {head: d.querySelector(".cm-dialog-head").getBoundingClientRect().bottom, first: d.querySelector("legend").getBoundingClientRect().top}; });
+  ok(head.first >= head.head, `5. the sticky head clears the dialog's first line: ${JSON.stringify(head)}`);
+
+  await page.locator("[data-fd=color][data-value=R]").click();
+  eq(await page.locator("[data-fd=color][data-value=R]").getAttribute("aria-pressed"), "true", "the Red chip is pressed");
+  const red = await promised(page);
+  ok(red > 0 && red < all, `and the button's count falls to the red records (${red} of ${all})`);
+  eq(await records(page), all, "while the page behind has not changed: nothing applies until Show");
+  await page.locator("[data-fd=color][data-value=R]").click();
+  eq(await promised(page), all, "pressing the chip again lets go of it");
+  await page.locator("[data-fd=color][data-value=R]").click();
+  await page.fill("#cm-dialog [name=max]", "3");
+  await page.fill("#cm-dialog [name=priceMin]", "0.25");
+  await page.fill("#cm-dialog [name=price]", "5");
+  const narrow = await promised(page);
+  ok(narrow > 0 && narrow < red, `mana value up to 3 and price $0.25 to $5 narrow it further (${narrow})`);
+
+  /* Escape leaves the page as it was. */
+  await page.keyboard.press("Escape");
+  await page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
+  ok(!(await page.$("#cm-dialog[open]")), "Escape closes the dialog");
+  eq(await records(page), all, "and applies nothing");
+  eq(await page.locator(".cm-fchip").count(), 0, "no filter chip appeared");
+
+  /* Show applies the draft. */
+  await page.getByRole("button", {name: /^Filters/}).click();
+  await opened(page, "Filters");
+  eq(await page.$$eval("#cm-dialog [aria-pressed=true]", (bs) => bs.length), 0, "the dialog reopens on the page's filters, not the draft that was dropped");
+  await page.locator("[data-fd=color][data-value=R]").click();
+  await page.fill("#cm-dialog [name=max]", "3");
+  await page.fill("#cm-dialog [name=priceMin]", "0.25");
+  await page.fill("#cm-dialog [name=price]", "5");
+  eq(await promised(page), narrow, "the same draft promises the same count");
+  await page.locator("#cm-fd-show").click();
+  await page.waitForFunction((n) => { const t = document.querySelector("#cm-roster-table .cm-paging span, #cm-roster-table .cm-status-line"); return t && t.textContent.includes(n.toLocaleString("en-US") + " record"); }, narrow);
+  eq(await records(page), narrow, `after Show the page counts exactly what the button promised (${narrow})`);
+  eq(await page.$eval("[data-action=roster-filters]", (b) => b.textContent.trim()), "Filters (4)", "the Filters button counts the four filters on");
+  eq((await page.$$eval(".cm-fchip", (cs) => cs.map((c) => c.textContent.replace(/\s+/g, " ").replace("✕", "").trim()))).sort(), ["Color: Red", "Max mana value: 3", "Max price: $5.00", "Min price: $0.25"], "and each shows as a chip, the prices in dollars");
+
+  /* Every row left is what was asked for, judged from the library's card records. */
+  const shown = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => tr.dataset.card));
+  ok(shown.length > 0, "the page shows rows");
+  /* The card facts come from the model's projection, the card as the library resolves it, not from the view's filter code. */
+  const facts = await page.evaluate(async (ids) => { const r = await CrankRepository.open(); try { const s = await r.getState(), by = {};
+      /* Plan and draft rows are not copies, so the projection would not resolve their cards; a probe copy of each lets it. */
+      const probe = {...s, lots: [...s.lots, ...[...new Set(ids)].map((id, i) => ({id: "probe:" + i, cardId: id, quantity: 1, source: "owned", printing: {}, location: {kind: "bench", box: ""}, allocation: null, offer: "none", groupIds: []}))]};
+      for (const row of CrankCollection.projection(probe)) if (row.card) by[row.cardId] = {red: (row.card.colorIdentity || []).includes("R"), mv: row.card.manaValue, price: row.card.price}; return ids.map((id) => by[id] ? {id, ...by[id]} : {id, missing: true}); } finally { r.close(); } }, shown);
+  const verdict = facts;
+  ok(verdict.every((v) => !v.missing), "every row's card is in the library");
+  ok(verdict.every((v) => v.red), `every row is red: ${verdict.filter((v) => !v.red).map((v) => v.id).slice(0, 3)}`);
+  ok(verdict.every((v) => v.mv !== null && v.mv <= 3), `every row is mana value 3 or less: ${JSON.stringify(verdict.filter((v) => !(v.mv <= 3)).slice(0, 2))}`);
+  ok(verdict.every((v) => v.price !== null && v.price >= 0.25 && v.price <= 5), `every row is priced $0.25 to $5: ${JSON.stringify(verdict.filter((v) => !(v.price >= 0.25 && v.price <= 5)).slice(0, 2))}`);
+
+  /* Clear all, in the dialog, empties the draft. */
+  await page.getByRole("button", {name: /^Filters/}).click();
+  await opened(page, "Filters");
+  eq(await page.locator("[data-fd=color][data-value=R]").getAttribute("aria-pressed"), "true", "the dialog opens on the filters in force");
+  eq(await page.inputValue("#cm-dialog [name=priceMin]"), "0.25", "ranges included");
+  await page.locator("[data-fd-clear]").click();
+  eq(await page.$$eval("#cm-dialog [aria-pressed=true]", (bs) => bs.length), 0, "Clear all lets go of every chip");
+  eq(await page.inputValue("#cm-dialog [name=max]"), "", "and empties the ranges");
+  eq(await promised(page), all, "so the button promises everything again");
+
+  /* A deck chip moves to that deck. */
+  const decksNow = (await stateOf(page)).decks;
+  const deck = decksNow.find((d) => !d.archived && /^D6\b/.test(d.name)) || decksNow.find((d) => !d.archived);
+  await page.locator(`[data-fd=deck][data-value="${deck.id}"]`).click();
+  const forDeck = await promised(page);
+  await page.locator("#cm-fd-show").click();
+  await page.waitForFunction((id) => decodeURIComponent(location.hash).includes(`deck=${id}`), deck.id);
+  await settle(page);
+  ok(decodeURIComponent(page.url()).includes(`deck=${deck.id}`), `the deck chip put ${deck.name} in the address`);
+  ok(/Deck:/.test(await page.locator(".cm-scope-chip").innerText()), "and the page wears it as a scope chip");
+  eq(await records(page), forDeck, `and counts what the button promised for it (${forDeck})`);
+  await page.goto(LIB);
+  await settle(page);
+
+  /* 2. Columns. */
+  await page.getByRole("button", {name: "Columns", exact: true}).click();
+  await opened(page, "Columns");
+  const order = () => page.$$eval("#cm-col-list .cm-col-row", (ls) => ls.map((l) => l.dataset.col));
+  eq((await order())[0], "name", "Card is first");
+  ok(await page.$eval("#cm-col-list [data-col=name] input", (i) => i.checked && i.disabled), "Card cannot be hidden");
+  ok(await page.$eval("#cm-col-list [data-col=status] input", (i) => i.checked && i.disabled), "nor can Status");
+  eq(await page.locator("#cm-col-list [data-col=name] [data-move]").count(), 0, "and Card has no arrows: it stays first");
+  const before = await order();
+  const from = before.indexOf("paid");
+  await page.locator("#cm-col-list [data-col=paid] [data-move='-1']").click();
+  await page.locator("#cm-col-list [data-col=paid] [data-move='-1']").click();
+  eq((await order()).indexOf("paid"), from - 2, "the up arrow moves Paid up, twice");
+  await page.locator("#cm-col-list [data-col=type] [data-move='-1']").click();
+  eq((await order())[0], "name", "and nothing moves above Card");
+  /* Drag Quantity's grip above Type. */
+  const grip = await page.locator("#cm-col-list [data-col=quantity] [data-grip]").boundingBox();
+  const target = await page.locator("#cm-col-list [data-col=type]").boundingBox();
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grip.x + grip.width / 2, target.y + 4, {steps: 12});
+  await page.mouse.up();
+  const dragged = await order();
+  ok(dragged.indexOf("quantity") < dragged.indexOf("type") && dragged[0] === "name", `dragging the grip put Quantity above Type: ${dragged.slice(0, 6).join(", ")}`);
+  await page.locator("#cm-col-list [data-col=color] input").check();
+  const want = (await order()).filter((k) => k === "name" || k === "status" || ["type", "deck", "quantity", "paid", "color"].includes(k));
+  await page.getByRole("button", {name: "Done", exact: true}).click();
+  await page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
+  await settle(page);
+  eq(await heads(page), want, `the table draws the columns in that order: ${want.join(", ")}`);
+  eq((await stateOf(page)).preferences.columns, want, "and the preference holds the order");
+
+  /* The CSV follows the same order. */
+  await page.getByRole("button", {name: /^More/}).first().click();
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", {name: "Export view", exact: true}).click()]);
+  const csv = fs.readFileSync(await download.path(), "utf8").replace(/^﻿/, "");
+  const labels = {name: "Card", type: "Type", status: "Status", deck: "Deck", quantity: "Quantity", paid: "Paid", color: "Color"};
+  eq(csv.split(/\r?\n/)[0].split(",").map((h) => h.replace(/^"|"$/g, "")), want.map((k) => labels[k]), "the CSV export's columns come in the same order");
+
+  /* Reset puts back the defaults; nothing is saved until Done. */
+  await page.getByRole("button", {name: "Columns", exact: true}).click();
+  await opened(page, "Columns");
+  eq((await order()).slice(0, want.length), want, "the dialog reopens in the saved order");
+  await page.getByRole("button", {name: "Reset", exact: true}).click();
+  eq((await order()).slice(0, 6), ["name", "type", "status", "deck", "quantity", "paid"], "Reset restores the default order");
+  eq(await page.$$eval("#cm-col-list input:checked", (is) => is.map((i) => i.name)), ["name", "type", "status", "deck", "quantity", "paid"], "and the default set");
+  await page.keyboard.press("Escape");
+  eq((await stateOf(page)).preferences.columns, want, "closing without Done saves nothing");
+
+  /* A set saved without Status gains it. */
+  await page.evaluate(async () => { const r = await CrankRepository.open(); try { const s = await r.getState(); await r.commit({id: crypto.randomUUID(), type: "preferences", values: {columns: ["name", "type", "deck"]}}, s.revision); } finally { r.close(); } });
+  await page.reload();
+  await settle(page);
+  eq(await heads(page), ["name", "type", "status", "deck"], "a saved set without Status shows it after Type");
+
+  /* 3. Add cards. */
+  await page.getByRole("button", {name: "Add cards", exact: true}).click();
+  await opened(page, "Add cards");
+  eq(await page.locator("#cm-dialog label", {has: page.locator("#cm-card-query")}).evaluate((l) => l.firstChild.textContent), "Search by name, or paste a list", "the picker asks for a name or a list");
+  const paste = (text) => page.$eval("#cm-card-query", (input, t) => { const dt = new DataTransfer(); dt.setData("text/plain", t); input.dispatchEvent(new ClipboardEvent("paste", {clipboardData: dt, bubbles: true, cancelable: true})); }, text);
+  await paste("Sol Ring");
+  eq(await page.locator("#cm-dialog-title").textContent(), "Add cards", "one pasted line stays a search");
+  await paste("1 Sol Ring\n2 Arcane Signet\n");
+  await page.waitForFunction(() => document.getElementById("cm-dialog-title")?.textContent === "Import cards or a deck list");
+  eq(await page.inputValue("#cm-dialog textarea[name=text]"), "1 Sol Ring\n2 Arcane Signet\n", "a pasted list opens the import with it filled in");
+  eq(await page.inputValue("#cm-dialog select[name=mode]"), "owned", "as copies you own");
+  await page.keyboard.press("Escape");
+
+  const bench = async (page) => { const s = await stateOf(page); const id = Object.values(s.cards).find((c) => c.name === "Sol Ring")?.id; const mine = s.lots.filter((l) => l.cardId === id && l.source === "owned"); const n = (f) => mine.filter(f).reduce((k, l) => k + l.quantity, 0); return {id, bench: n((l) => !l.allocation && l.location?.kind === "bench"), reserved: n((l) => !!l.allocation), all: n(() => true)}; };
+  const was = await bench(page);
+  await page.getByRole("button", {name: "Add cards", exact: true}).click();
+  await opened(page, "Add cards");
+  await page.fill("#cm-card-query", "Sol Ring");
+  await page.locator("[data-pick-card]", {hasText: "Sol Ring"}).first().click();
+  await opened(page, "Add copies of Sol Ring");
+  ok(/New copies you own land on the Bench, reserved for no deck/.test(await page.locator("#cm-dialog .cm-copy-where").textContent()), "the dialog says where new copies land");
+  eq(await page.locator("#cm-dialog [type=submit]").textContent(), "Add 1 copy", "its button counts one copy");
+  await page.locator("#cm-dialog [data-copy=more]").click();
+  eq(await page.locator("#cm-dialog [type=submit]").textContent(), "Add 2 copies", "and two, after one more");
+  await page.locator("#cm-dialog [type=submit]").click();
+  await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
+  const now = await bench(page);
+  eq(now.all - was.all, 2, "two copies of Sol Ring were recorded as owned");
+  eq(now.bench - was.bench, 2, "both on the Bench");
+  eq(now.reserved, was.reserved, "and neither reserved for a deck");
+  /* §3, what must not be lost: the Library's other surfaces still stand after the restyle. */
+  await page.goto(LIB);
+  await settle(page);
+  await page.locator("#cm-roster-table .cm-row-tick").first().check();
+  ok(await page.locator(".cm-batch-bar").isVisible(), "§3: ticking a row brings up the ticked-rows bar");
+  await page.selectOption("[name=groupBy]", "deck");
+  await page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-group-row"));
+  ok(await page.locator("#cm-roster-table .cm-group-row").first().isVisible(), "§3: Group rows by draws a group band over the rows");
+  ok((await page.locator("[name=groupPick] option").count()) > 1, "§3: the collection groups are offered");
+  await page.goto(`${base}/index.html#cards?view=sheet`);
+  await page.locator(".cm-sheet-cell").first().waitFor();
+  ok((await page.locator(".cm-sheet-cell").count()) > 10, "§3: the Sheet draws its editable cells");
+  await page.goto(`${base}/index.html#cards?view=tabletop`);
+  await page.locator(".cm-tt-pile").first().waitFor();
+  ok((await page.locator(".cm-tt-pile").count()) > 1, "§3: the Table view draws its piles");
+  await context.close();
+
+  /* 4. A phone. */
+  const phone = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true, serviceWorkers: "block"});
+  const small = await phone.newPage();
+  if (stub) await stub(small);
+  await loadLiveState(small, base);
+  await small.goto(LIB);
+  await settle(small);
+  /* The figure's own text box, measured with a Range, has to sit inside the card's padding: a clipped or
+     overflowing figure is wider than the room the card gives it. */
+  const kpis = await small.$$eval(".cm-kpi", (ks) => ks.map((k) => { const s = k.querySelector("strong"), r = k.getBoundingClientRect(), cs = getComputedStyle(k), range = document.createRange(); range.selectNodeContents(s); const t = range.getBoundingClientRect();
+    return {text: s.textContent, fits: t.left >= r.left + parseFloat(cs.paddingLeft) - 1 && t.right <= r.right - parseFloat(cs.paddingRight) + 1, left: r.left, right: r.right}; }));
+  ok(kpis.length === 7 && kpis.every((k) => k.fits && k.left >= 0 && k.right <= 390), `on a phone every count card shows its whole figure: ${JSON.stringify(kpis.filter((k) => !(k.fits && k.left >= 0 && k.right <= 390)))}`);
+  await small.getByRole("button", {name: /^Filters/}).click();
+  await opened(small, "Filters");
+  const fit = await small.evaluate(() => { const d = document.getElementById("cm-dialog"), r = d.getBoundingClientRect(); return {left: r.left, right: r.right, sw: d.scrollWidth, cw: d.clientWidth}; });
+  ok(fit.left >= 0 && fit.right <= 390 && fit.sw <= fit.cw, `and the Filters dialog fits the screen: ${JSON.stringify(fit)}`);
+  await phone.close();
+} finally {
+  await close();
+}
+console.log(`library-r3: ${checks} checks passed — Filters as a dialog with MV and price, Columns reorder with Card and Status locked, Add cards landing on the Bench.`);

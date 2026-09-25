@@ -1,11 +1,12 @@
 /* Every roster is the same semantic table projection. Source, allocation and
  * physical box have separate columns; hiding a column cannot change the model. */
-(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,actions,views,$}=C;let foldPrints=false;let filter={q:'',type:'',subtype:'',mechanic:'',color:'',status:'',offer:'',min:'',max:'',price:'',group:'',flag:'',mana:''},sort={key:'name',dir:1},page=0,expanded=false,groupBy='',shopGroupBy='deck',visibleRows=[],lastRows=[],collapsed=new Set(),collapsedKey='';
+(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,actions,views,$}=C;let foldPrints=false;let filter={q:'',type:'',subtype:'',mechanic:'',color:'',status:'',offer:'',min:'',max:'',priceMin:'',price:'',group:'',flag:'',mana:''},sort={key:'name',dir:1},page=0,groupBy='',shopGroupBy='deck',visibleRows=[],lastRows=[],collapsed=new Set(),collapsedKey='';
 const columns=[['name','Card'],['type','Type'],['status','Status'],['ownership','Ownership'],['deck','Deck'],['subtype','Subtype'],['mechanic','Mechanic'],['color','Color'],['rarity','Rarity'],['mana','Mana value'],['price','Price'],['cap','Cap'],['vendor','Vendor'],['paid','Paid'],['source','Source'],['placement','Allocation'],['box','Physical location'],['purpose','Purpose'],['quantity','Quantity'],['printing','Printing'],['offer','Sell / Trade'],['groups','Groups']];
 const defaults=['name','type','status','deck','quantity','paid'];let selected=null;
 /* A column set saved before Status existed names Source and Allocation; it reads as Status
-   in their place, and is only rewritten when the reader next changes columns. */
-const withStatus=list=>{if(!Array.isArray(list))return null;if(list.includes('status'))return list;const at=list.findIndex(k=>k==='source'||k==='placement');if(at<0)return list;const out=list.filter(k=>k!=='source'&&k!=='placement');out.splice(at,0,'status');return out;};
+   in their place, and is only rewritten when the reader next changes columns. Status is always
+   shown (R3.6), so a set saved without it gains it after Type, or after Card. */
+const withStatus=list=>{if(!Array.isArray(list))return null;if(list.includes('status'))return list;const at=list.findIndex(k=>k==='source'||k==='placement');if(at<0){const out=[...list],after=out.indexOf('type');out.splice(after<0?Math.min(1,out.length):after+1,0,'status');return out;}const out=list.filter(k=>k!=='source'&&k!=='placement');out.splice(at,0,'status');return out;};
 /* THE SHOP'S COLUMNS ARE THE MONEY COLUMNS, at every width. The desktop Shop showed the
    Collection's columns -- print, purpose, allocation -- and no price; the phone showed a
    price and a Buy button; the two disagreed about what shopping is. One set now, and the
@@ -127,7 +128,7 @@ function batchBar(){
   if(!n)return '';
   return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Set status','batch-status',{},true,{caret:'down'})}${b('Ordered…','batch-order')}${b('Bought in store','batch-store')}${b('Arrived','batch-arrived')}${b('Add to a group','batch-group')}${b('Put in a physical deck','batch-place')}${b('Move physically to Bench','batch-bench')}${b('Release reservation → To buy','batch-release')}${b('Flag ▾','batch-flag')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
 }
-function matches(r){const c=r.card,q=filter.q.toLowerCase();return (!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!filter.type||c.typeLine.split('—')[0].includes(filter.type))&&(!filter.subtype||c.typeLine.toLowerCase().includes(filter.subtype.toLowerCase()))&&(!filter.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(filter.mechanic.toLowerCase()))&&(!filter.color||(filter.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(filter.color)))&&(!filter.status||(filter.status==='owned'?r.kind==='lot'&&r.source==='owned':(r.status||statusOf(r))===filter.status))&&(!filter.flag||(filter.flag==='option'?!!r.option:!!r.pinned))&&(!filter.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(filter.mana))&&(!filter.offer||(filter.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':filter.offer==='held'?r.offer==='held':r.offer==='available'))&&(filter.min===''||c.manaValue!==null&&c.manaValue>=Number(filter.min))&&(filter.max===''||c.manaValue!==null&&c.manaValue<=Number(filter.max))&&(filter.price===''||c.price!==null&&c.price<=Number(filter.price));}
+function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?r.kind==='lot'&&r.source==='owned':(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
 /* SHOPPING A CONVENTION FLOOR. On a phone the Shop page is not a spreadsheet to study; it
    is a list held in one hand at a booth while the seller waits. So under 640px the page
    head, the six-stat ribbon and the Columns control all go, the three page buttons fold
@@ -170,7 +171,7 @@ const viewSwitch=(view,tab='library')=>{const has={table:true,sheet:tab==='libra
 function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts(),group=params.get('group')||'';
   const third=tab==='buy'?b('Print buy list','print-buy-list',{},false,{cls:'compact'}):tab==='orders'?b('Paste receipt','paste-receipt',{},false,{cls:'compact'}):view==='sheet'?b('Add a card row','sheet-add',{},false,{cls:'compact'}):b('New group','new-group',{},false,{cls:'compact'});
   const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString('en-US')}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
-  /* Add cards is the one thing done often, so it is the primary; Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
+  /* Add cards is the one thing done often, so it is the primary, and it sits last, where r3 puts every page's primary (wireframe 36); Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
     /* THE SUMMARY SENTENCE (Track V.4c, the guide's "One head, one primary"): what the library
      holds, in the two figures that matter -- the copies owned, and the ones on the bench that no
      deck has reserved. Both are counted from the lots the tiles count, so the sentence and the
@@ -178,7 +179,7 @@ function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts()
   const ownedN=C.state.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0);
   const benchN=C.state.lots.filter(l=>l.source==='owned'&&!l.allocation).reduce((n,l)=>n+l.quantity,0);
   const summary='<p class="cm-cards-summary"><b>'+ownedN.toLocaleString('en-US')+' copies</b> you own'+(benchN?', <b>'+benchN.toLocaleString('en-US')+'</b> of them on the bench with no deck waiting on them':'')+'.</p>';
-  return (tight?'':C.pageHead('Library',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards',summary))+tabs+sittingBar();}
+  return (tight?'':C.pageHead('Library',b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'})+b('Add cards','add-card',{},true,{cls:'compact'}),'cards',summary))+tabs+sittingBar();}
 /* THE SITTING, IN ONE BAR IN ONE PLACE (plan §2.6). It is rendered from cardsHead, so List, To
    buy, Orders, the Sheet and the Table all carry the same bar saying the same number: there is
    no lens you can be on where a sitting is open and invisible. */
@@ -507,7 +508,7 @@ function tabletop(params,shop=false){
     /* The library's rows, and then the cards sent over from Discover -- minus any the library
        already holds a record of, because a card is never both a copy you have and a card you are
        considering; the copy is the truer row and it is already on the table. */
-    const base=rows(params,shop).filter(matches).map(r=>({...r,status:statusOf(r)}));
+    const base=rows(params,shop).filter(r=>matches(r)).map(r=>({...r,status:statusOf(r)}));
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
@@ -888,21 +889,15 @@ const gbGet=()=>shop?shopGroupBy:groupBy,gbSet=v=>{if(shop)shopGroupBy=v;else gr
 /* A tick is about the records in front of you; carrying it from a deck to a group, or from
    the Collection to the Shop, would act on rows the reader can no longer see. */
 const scope=[tab,params.get('deck')||'',params.get('group')||'',params.get('card')||''].join('|');
-if(params.get('placement')){filter.status=params.get('placement');expanded=true;}
+if(params.get('placement'))filter.status=params.get('placement');
 if(scope!==pickScope){pickScope=scope;picked.clear();}
 /* Crossing the phone boundary changes which page is correct, not just how it looks, so
    the view is rebuilt rather than restyled. Registered once, and only while a roster
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(C.route().view==='cards')C.render();});}
-const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(activeFilters().length?`Filters (${activeFilters().length})`:gbGet()?'Filters •':'Filters','roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
+C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(activeFilters().length?`Filters (${activeFilters().length})`:'Filters','roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
-/* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
-   mana, color, status, deck. Subtype, mechanic, flags, offers, mana value and
-   price fold under More filters, which opens itself whenever one of them is set, so a filter
-   can never act from behind a closed fold. */
-const MORE_FILTERS=['subtype','mechanic','flag','offer','min','max','price'],moreSet=MORE_FILTERS.filter(k=>filter[k]!=='').length;
-if(expanded)$('#cm-filter-host').innerHTML=`<div class="cm-filter-panel">${tight?s('Group rows by','groupBy',GROUP_CHOICES,gbGet()):''}${s('Card type','type',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Mana','mana',[['','Any'],'Mana rock','Mana dork','Mana source','Ramp spell','Land','Basic land'],filter.mana)}${s('Color identity','color',[['','All colors'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Status','status',[['','Any status'],['owned','Owned (any)'],'Physical deck','Substitute','Reserved','Bench','Ordered','Watched','To buy','Draft list','Suggestion','Planned'],filter.status)}${s('Deck','deck',[['','All decks'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}<details class="cm-more-filters"${moreSet?' open':''}><summary>More filters${moreSet?` (${moreSet} set)`:''}</summary><div>${f('Subtype','subtype',filter.subtype)}${f('Mechanic / keyword','mechanic',filter.mechanic)}${s('Slot flag','flag',[['','Any flag'],['option','Option — first to swap out'],['pinned','Pinned — keep']],filter.flag)}${s('Bench / Sell / Trade','offer',[['','All cards'],['bench','Unassigned bench'],['available','Sell / Trade'],['held','Pending deals']],filter.offer)}${f('Minimum mana value','min',filter.min,'type="number" min="0"')}${f('Maximum mana value','max',filter.max,'type="number" min="0"')}${f('Maximum price ($)','price',filter.price,'type="number" min="0" step="0.01"')}</div></details></div>`;
 const scoped=()=>!!(params.get('card')||params.get('deck')||params.get('group')||Object.values(filter).some(v=>v!==''));
 /* One cell, rendered. `tight` is the phone's Shop layout, which is why this lives inside
    the view rather than beside canEdit(): the same column reads differently there. */
@@ -932,16 +927,15 @@ const cell=(r,k)=>{
   if(!canEdit(r,k))return body;
   return `<button type="button" class="cm-cell-edit" data-action="cell-edit" data-record="${e(r.recordId)}" data-field="${e(k)}" title="Click to set ${e(EDITS[k])}">${body}</button>`;
 };
-const draw=()=>{const everything=rows(params,shop),matched=everything.filter(matches);lastRows=everything;const ribbon=$('#cm-roster-stats');if(ribbon)ribbon.innerHTML=statsHTML(matched,scoped());
+const draw=()=>{const everything=rows(params,shop),matched=everything.filter(r=>matches(r));lastRows=everything;const ribbon=$('#cm-roster-stats');if(ribbon)ribbon.innerHTML=statsHTML(matched,scoped());
 const strip=$('#cm-shop-strip');if(strip)strip.innerHTML=stripHTML(matched);
 const chips=$('#cm-filter-chips');if(chips)chips.innerHTML=chipsHTML();
-/* The fold's summary counts the filters set behind it, and a filter typed there changes the count without a re-render. */
-const fold=$('.cm-more-filters>summary');if(fold){const n=MORE_FILTERS.filter(k=>filter[k]!=='').length;fold.textContent=n?`More filters (${n} set)`:'More filters';}
 /* A tick outlives a redraw only while its row still exists: a copy that was sold, a draft slot that was removed, a requirement that was filled all drop out. */
 const live=new Set(everything.map(r=>r.recordId));for(const id of picked)if(!live.has(id))picked.delete(id);
 const groupBy=gbGet();
 visibleRows=(foldPrints?foldByCard(matched,groupBy):matched).sort((a,b)=>{if(groupBy){const g=groupOrder(a,groupBy).localeCompare(groupOrder(b,groupBy));if(g)return g;}const av=value(a,sort.key),bv=value(b,sort.key);return (typeof av==='number'&&typeof bv==='number'?av-bv:String(av??'').localeCompare(String(bv??''),undefined,{numeric:true}))*sort.dir||a.recordId.localeCompare(b.recordId);});
-const shown=columns.filter(([k])=>cols.includes(k));
+/* In the reader's order (the Columns dialog saves it), Card first. */
+const shown=cols.map(k=>columns.find(([c])=>c===k)).filter(Boolean);
 /* The phone Shop is a list held in one hand at a booth; it has no room for a column that
    only matters when you are sitting down with the whole library. */
 /* A folded row ticks as its copies: the box on the row stands for every pickable part. */
@@ -1002,7 +996,7 @@ $('#cm-roster-table').innerHTML=`${ticks?batchBar():''}${longer?pagingHTML(true)
     if(one){ev.stopPropagation();const label=one.dataset.groupToggle;if(collapsed.has(label))collapsed.delete(label);else collapsed.add(label);draw();return;}
     if(every){ev.stopPropagation();if(every.dataset.groups==='collapse')for(const band of bands)collapsed.add(band.label);else collapsed.clear();draw();return;}
     const so=ev.target.closest('[data-sort]'),pa=ev.target.closest('[data-page]');if(so){const key=so.dataset.sort;sort={key,dir:sort.key===key?-sort.dir:1};draw();}if(pa){page+=Number(pa.dataset.page);draw();}};};
-$('#cm-roster-query').addEventListener('input',ev=>{filter.q=ev.target.value;page=0;draw();});$('[name=groupBy]')?.addEventListener('change',ev=>{gbSet(ev.target.value);page=0;draw();});$('[name=groupPick]')?.addEventListener('change',ev=>{filter.group=ev.target.value;goCards(tab,{deck:params.get('deck'),group:filter.group});});$('#cm-filter-host').addEventListener('input',ev=>{if(ev.target.name==='deck')return;if(ev.target.name==='groupBy'){gbSet(ev.target.value);page=0;draw();return;}if(ev.target.name==='group'){filter.group=ev.target.value;goCards(tab,{deck:params.get('deck'),group:filter.group});return;}filter[ev.target.name]=ev.target.value;page=0;draw();});$('#cm-filter-host').addEventListener('change',ev=>{if(ev.target.name==='deck')goCards(tab,{deck:ev.target.value,group:params.get('group')});});draw();}
+$('#cm-roster-query').addEventListener('input',ev=>{filter.q=ev.target.value;page=0;draw();});$('[name=groupBy]')?.addEventListener('change',ev=>{gbSet(ev.target.value);page=0;draw();});$('[name=groupPick]')?.addEventListener('change',ev=>{filter.group=ev.target.value;goCards(tab,{deck:params.get('deck'),group:filter.group});});draw();}
 /* ONE RECEIPT FOR THE WHOLE BATCH. Each of these is the review dialog the single-record
    command already uses, handed every ticked record at once: one revision, one line in the
    history, one thing to undo. The ticks survive the change, because marking eleven cards
@@ -1082,13 +1076,79 @@ actions['batch-group']=()=>{
    back sat wherever the open pile had pushed it; this is in the toolbar, where the rest of
    the page's controls are. It is the same move Escape makes: nothing open, nothing picked. */
 actions['tt-rest']=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();C.render();};
-actions['roster-filters']=()=>{expanded=!expanded;C.render();};actions['clear-filters']=()=>{for(const k of Object.keys(filter))filter[k]='';page=0;const buy=buyTab();if(buy)shopGroupBy='deck';else groupBy='';goCards(buy?'buy':'library');};
-actions['roster-columns']=()=>{const shop=buyTab(),current=shop?shopSelected:selected;form('Choose table columns',`<div class="cm-full cm-columns-grid">${columns.map(([k,l])=>`<label class="cm-checkbox"><input type="checkbox" name="${k}" ${current.includes(k)?'checked':''} ${k==='name'?'disabled':''}>${l}</label>`).join('')}</div><label class="cm-checkbox cm-full"><input type="checkbox" name="__fold" ${foldFor(shop)?'checked':''}>One row per card, whatever the print or deck</label>${s('Rows per page','__pageSize',[['60','60'],['120','120'],['all','All']],C.state.preferences.pageSize||'60')}`,async data=>{const next=['name',...columns.filter(([k])=>k!=='name'&&data[k]).map(([k])=>k)];const values={pageSize:data.__pageSize,[shop?'shopFold':'foldPrints']:!!data.__fold};if(shop){shopSelected=next;values.shopColumns=next;}else{selected=next;values.columns=next;}page=0;await commit({type:'preferences',values});},'Apply columns');};
+/* THE FILTERS DIALOG (r3, wireframe 41-filters-dialog; INTAKE R3.6). Type, color, status and deck
+   are chips, one choice each, pressed again to let go; mana value and price are ranges. Nothing
+   applies while it is open: the dialog works on a draft, the button counts what the draft would
+   show -- the same records the page would count, folded the same way -- and Show applies it.
+   Closing it any other way leaves the page as it was. The deck is the address's, as it always was,
+   so Show moves there when the deck changed. The rarer filters fold under More filters, which opens
+   itself when one of them is set, so a filter never acts from behind a closed fold. */
+const FILTER_TYPES=['Creature','Instant','Sorcery','Artifact','Enchantment','Land','Planeswalker','Battle'];
+const FILTER_COLORS=[['W','W','White'],['U','U','Blue'],['B','B','Black'],['R','R','Red'],['G','G','Green'],['C','Colorless','Colorless']];
+const FILTER_STATUSES=[['owned','Owned (any)'],'Physical deck','Substitute','Reserved','Bench','Ordered','Watched','To buy','Draft list','Suggestion','Planned'];
+const MORE_FILTERS=['subtype','mechanic','mana','flag','offer'];
+actions['roster-filters']=()=>{const r=C.route(),params=new URLSearchParams(r.params),shop=buyTab(),tab=shop?'buy':'library',tight=compactShop(shop);
+  const draft={...filter},deckNow=params.get('deck')||'';let deck=deckNow,grouping=shop?shopGroupBy:groupBy;
+  const decks=C.state.decks.filter(d=>!d.archived&&(C.showLobbyDecks||!M.isLobbyDeck(d)));
+  const chips=(key,legend,choices)=>`<fieldset class="cm-fd-group"><legend>${legend}</legend><div class="cm-fd-chips">${choices.map(c=>{const [v,l,t]=Array.isArray(c)?c:[c,c];return `<button type="button" class="v-button cm-chip-toggle" data-fd="${key}" data-value="${e(v)}" aria-pressed="false"${t&&t!==l?` title="${e(t)}" aria-label="${e(t)}"`:''}>${e(l)}</button>`;}).join('')}</div></fieldset>`;
+  const range=(legend,lo,hi,attrs,unit='')=>`<fieldset class="cm-fd-range"><legend>${legend}</legend><label><span>From${unit}</span><input type="number" name="${lo}" value="${e(draft[lo])}" placeholder="0" ${attrs}></label><span aria-hidden="true">—</span><label><span>To${unit}</span><input type="number" name="${hi}" value="${e(draft[hi])}" placeholder="Any" ${attrs}></label></fieldset>`;
+  const moreSet=MORE_FILTERS.some(k=>draft[k]!=='');
+  const d=modal('Filters',`<form class="cm-filters-form">${tight?s('Group rows by','groupBy',GROUP_CHOICES,grouping):''}${chips('type','Type',FILTER_TYPES)}${chips('color','Color',FILTER_COLORS)}${chips('status','Status',FILTER_STATUSES)}${decks.length?chips('deck','Deck',decks.map(x=>[x.id,shortDeck(x),x.name])):''}`
+    +`<div class="cm-fd-ranges">${range('Mana value','min','max','min="0" max="1000" step="1" inputmode="numeric"')}${range('Price','priceMin','price','min="0" step="0.01" inputmode="decimal"',' ($)')}</div>`
+    +`<details class="cm-more-filters"${moreSet?' open':''}><summary>More filters</summary><div class="cm-form-grid">${f('Subtype','subtype',draft.subtype)}${f('Mechanic / keyword','mechanic',draft.mechanic)}${s('Mana','mana',[['','Any'],'Mana rock','Mana dork','Mana source','Ramp spell','Land','Basic land'],draft.mana)}${s('Slot flag','flag',[['','Any flag'],['option','Option — first to swap out'],['pinned','Pinned — keep']],draft.flag)}${s('Bench / Sell / Trade','offer',[['','All cards'],['bench','Unassigned bench'],['available','Sell / Trade'],['held','Pending deals']],draft.offer)}</div></details>`
+    +`<div class="cm-form-footer"><button type="button" class="v-button" data-fd-clear>Clear all</button><button type="submit" class="v-button primary" id="cm-fd-show">Show</button></div></form>`);
+  d.classList.add('cm-filters-dialog');
+  const formEl=$('form',d),show=$('#cm-fd-show',d);
+  /* The count the button promises is the page's own: the same rows, the same match, the same fold. */
+  const count=()=>{const p=new URLSearchParams(params);if(deck)p.set('deck',deck);else p.delete('deck');const hit=rows(p,shop).filter(x=>matches(x,draft));return foldFor(shop)?foldByCard(hit,grouping).length:hit.length;};
+  const paint=()=>{for(const chip of d.querySelectorAll('[data-fd]'))chip.setAttribute('aria-pressed',String((chip.dataset.fd==='deck'?deck:draft[chip.dataset.fd])===chip.dataset.value));
+    const n=count();show.textContent=`Show ${n.toLocaleString('en-US')} record${n===1?'':'s'}`;};
+  formEl.addEventListener('click',ev=>{const chip=ev.target.closest('[data-fd]');
+    if(chip){const k=chip.dataset.fd,v=chip.dataset.value;if(k==='deck')deck=deck===v?'':v;else draft[k]=draft[k]===v?'':v;paint();return;}
+    if(ev.target.closest('[data-fd-clear]')){for(const k of Object.keys(draft))if(k!=='q'&&k!=='group')draft[k]='';deck='';for(const el of formEl.querySelectorAll('input,select'))if(el.name!=='groupBy')el.value='';paint();}});
+  formEl.addEventListener('input',ev=>{const t=ev.target;if(t.name==='groupBy')grouping=t.value;else if(t.name in draft)draft[t.name]=t.value.trim();paint();});
+  formEl.addEventListener('submit',ev=>{ev.preventDefault();if(!formEl.reportValidity())return;Object.assign(filter,draft);if(shop)shopGroupBy=grouping;else groupBy=grouping;page=0;d.close();
+    if(deck!==deckNow)goCards(tab,{deck,group:params.get('group')});else C.render();});
+  paint();};
+actions['clear-filters']=()=>{for(const k of Object.keys(filter))filter[k]='';page=0;const buy=buyTab();if(buy)shopGroupBy='deck';else groupBy='';goCards(buy?'buy':'library');};
+/* THE COLUMNS DIALOG (r3, wireframe 42-columns-dialog; INTAKE R3.6): show, hide and reorder. Card and
+   Status are always shown -- a row with no card is nothing, and Status is what every row is about.
+   Card also stays first, where the tick box and the name belong. The rest move by dragging the grip,
+   or by the two arrow buttons on each row, which is the same move for a keyboard or a thumb. The
+   table draws its columns in the order saved here, and so does the CSV export. Reset puts back the
+   page's defaults; nothing is written until Done. */
+const LOCKED_COLUMNS=['name','status'];
+const columnRow=(k,l,on)=>{const locked=LOCKED_COLUMNS.includes(k),first=k==='name';
+  return `<li class="cm-col-row" data-col="${k}">${first?'<span class="cm-col-grip" aria-hidden="true"></span>':`<span class="cm-col-grip" data-grip title="Drag to reorder" aria-hidden="true">⋮⋮</span>`}`
+   +`<label class="cm-checkbox"><input type="checkbox" name="${k}"${on||locked?' checked':''}${locked?' disabled':''}>${e(l)}${locked?' <small>(always shown)</small>':''}</label>`
+   +(first?'':`<span class="cm-col-move"><button type="button" class="cm-icon-button" data-move="-1" aria-label="Move ${e(l)} up" title="Move up">↑</button><button type="button" class="cm-icon-button" data-move="1" aria-label="Move ${e(l)} down" title="Move down">↓</button></span>`)+'</li>';};
+const columnList=chosen=>{const order=['name',...chosen.filter(k=>k!=='name'&&columns.some(([c])=>c===k)),...columns.map(([k])=>k).filter(k=>k!=='name'&&!chosen.includes(k))];
+  return order.map(k=>columnRow(k,columns.find(([c])=>c===k)[1],chosen.includes(k))).join('');};
+actions['roster-columns']=()=>{const shop=buyTab(),current=withStatus(shop?shopSelected:selected)||(shop?SHOP_DEFAULTS:defaults);
+  const f2=form('Columns',`<p class="cm-full cm-muted">Show, hide and drag to reorder. Card and Status are always shown.</p><ol class="cm-full cm-col-list" id="cm-col-list">${columnList(current)}</ol>`
+    +`<details class="cm-full cm-col-options"><summary>Rows and folding</summary><div class="cm-form-grid"><label class="cm-checkbox cm-full"><input type="checkbox" name="__fold" ${foldFor(shop)?'checked':''}>One row per card, whatever the print or deck</label>${s('Rows per page','__pageSize',[['60','60'],['120','120'],['all','All']],C.state.preferences.pageSize||'60')}</div></details>`,
+    async data=>{const next=[...list.querySelectorAll('.cm-col-row')].map(li=>li.dataset.col).filter(k=>LOCKED_COLUMNS.includes(k)||data[k]);
+      const values={pageSize:data.__pageSize,[shop?'shopFold':'foldPrints']:!!data.__fold};if(shop){shopSelected=next;values.shopColumns=next;}else{selected=next;values.columns=next;}page=0;await commit({type:'preferences',values});},'Done');
+  f2.closest('dialog').classList.add('cm-columns-dialog');
+  const list=$('#cm-col-list',f2);
+  /* Reset replaces Cancel in the footer, as drawn; the dialog's × still closes it unchanged. */
+  const cancel=$('.cm-form-footer [data-action=close]',f2);if(cancel){cancel.removeAttribute('data-action');cancel.dataset.colReset='';cancel.textContent='Reset';}
+  const move=(li,step)=>{const to=step<0?li.previousElementSibling:li.nextElementSibling;if(!to||to.dataset.col==='name')return;if(step<0)to.before(li);else to.after(li);};
+  f2.addEventListener('click',ev=>{const m=ev.target.closest('[data-move]');if(m){const li=m.closest('.cm-col-row');move(li,Number(m.dataset.move));m.focus();return;}
+    if(ev.target.closest('[data-col-reset]')){ev.preventDefault();list.innerHTML=columnList(shop?SHOP_DEFAULTS:defaults);}});
+  /* Dragging is pointer events, not HTML drag and drop, so a finger on a phone drags the same as a mouse. */
+  let dragging=null;
+  list.addEventListener('pointerdown',ev=>{const grip=ev.target.closest('[data-grip]');if(!grip)return;ev.preventDefault();dragging=grip.closest('.cm-col-row');dragging.classList.add('is-dragging');list.setPointerCapture(ev.pointerId);});
+  list.addEventListener('pointermove',ev=>{if(!dragging)return;
+    const over=[...list.children].find(li=>li!==dragging&&li.dataset.col!=='name'&&(()=>{const r=li.getBoundingClientRect();return ev.clientY>=r.top&&ev.clientY<=r.bottom;})());
+    if(!over)return;const r=over.getBoundingClientRect();if(ev.clientY<r.top+r.height/2)over.before(dragging);else over.after(dragging);});
+  const drop=()=>{if(!dragging)return;dragging.classList.remove('is-dragging');dragging=null;};
+  list.addEventListener('pointerup',drop);list.addEventListener('pointercancel',drop);};
 /* ACTIVE FILTERS AS CHIPS under the search: each one removable on its own, Clear all beside
    them, and the Filters button says how many are on. */
-const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',price:'Max price',group:'Group'};
+const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',priceMin:'Min price',price:'Max price',mana:'Mana',flag:'Slot flag',group:'Group'};
 const activeFilters=()=>Object.entries(filter).filter(([k,v])=>v!==''&&k!=='group');
-function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v):k==='price'?'$'+v:v;
+function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v):k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
   return `<div class="cm-fchips">${on.map(([k,v])=>`<button type="button" class="cm-fchip" data-action="clear-filter" data-key="${e(k)}" aria-label="Remove filter ${e(FILTER_NAMES[k]||k)}">${e(FILTER_NAMES[k]||k)}: <strong>${e(label(k,v))}</strong> <span aria-hidden="true">✕</span></button>`).join('')}<button type="button" class="cm-text-button" data-action="clear-filters">Clear all</button></div>`;}
 actions['clear-filter']=el=>{filter[el.dataset.key]='';page=0;C.render();};
 /* The folded row's caption: how many copies, for which decks. */
@@ -1411,6 +1471,7 @@ async function acquire(c){
   const f2=form('Add copies of '+c.name,
     `<div class="cm-full cm-copies"><div class="cm-copy-rows">${copyRow(0)}</div>`
     +`<button type="button" class="cm-text-button cm-copy-more" data-copy="row">+ row</button></div>`
+    +`<p class="cm-full cm-muted cm-copy-where">New copies you own land on the Bench, reserved for no deck. Reserve… on the row gives them to one.</p>`
     +`<div class="cm-full cm-copy-extras" hidden><details><summary>Printing, box, price and notes (optional)</summary>`
     +`<div class="cm-form-grid">${printFields()}${f('Box / location','box')}${f('Price paid','paid','','type="number" min="0" step="0.01"')}`
     +`<label class="cm-full">Notes<textarea name="notes"></textarea></label></div></details></div>`,
@@ -1450,10 +1511,15 @@ async function acquire(c){
     if(kind==='drop'){if(rowsEl.children.length<2)return;row.remove();renumber();ownedShowsExtras();return;}
     const box=$('input',row),n=Number(box.value)||1;box.value=String(Math.max(1,Math.min(1000000,n+(kind==='more'?1:-1))));});
   f2.addEventListener('change',ev=>{if(ev.target.matches('[data-copy=source]'))ownedShowsExtras();});
-  renumber();ownedShowsExtras();
+  /* The button says what it will do: Add 1 copy, Add 3 copies. */
+  const submit=$('[type=submit]',f2),say=()=>{const n=[...rowsEl.querySelectorAll('input[type=number]')].reduce((k,i)=>k+(Math.max(0,Math.floor(Number(i.value)))||0),0);submit.textContent=`Add ${n.toLocaleString('en-US')} cop${n===1?'y':'ies'}`;};
+  f2.addEventListener('input',say);f2.addEventListener('click',()=>queueMicrotask(say));
+  renumber();ownedShowsExtras();say();
 }
 
-actions['add-card']=el=>el.dataset.card?acquire(C.card(el.dataset.card)||C.catalog.get(el.dataset.card)):C.cardPicker('Add to your library',c=>acquire(c));
+/* ADD CARDS (r3, wireframe 43-add-cards): search by name, or paste a list -- a pasted list opens the
+   import with it filled in, as copies you own. Either way new copies land on the Bench. */
+actions['add-card']=el=>el.dataset.card?acquire(C.card(el.dataset.card)||C.catalog.get(el.dataset.card)):C.cardPicker('Add cards',c=>acquire(c),{label:'Search by name, or paste a list',paste:text=>C.importList({mode:'owned',text})});
 function quantityAction(el,title,extra,build){const r=findRow(el.dataset.record);if(!r||r.kind!=='lot')throw Error('Select a physical or pending card record.');const l=M.lot(C.state,r.id);return form(title,`<div class="cm-full">${note(C.affected(l),!!l.allocation||l.location?.kind==='deck')}</div>`+f('Copies affected','quantity',l.quantity,`type="number" min="1" max="${l.quantity}" required`)+extra(l),v=>commit({...build(l,v),lotId:l.id,quantity:Number(v.quantity),confirmed:true}),'Confirm change');}
 actions['place-row']=el=>quantityAction(el,el.dataset.deck?'Put in '+M.deck(C.state,el.dataset.deck).name:'Move physically to Bench',()=>f('Box label (optional)','box'),(_,v)=>({type:'place',deckId:el.dataset.deck||undefined,box:v.box}));
 /* A SUBSTITUTE fills a seat while the real card is bought or on its way: the copy goes into the
@@ -1499,7 +1565,7 @@ actions['export-view']=()=>{const shop=buyTab(),chosen=shop?shopSelected:selecte
      same columns, so the file agrees with the strip above the table it came from. */
   if(shop){const need=visibleRows.filter(r=>r.kind==='need'),sub=new Map();for(const r of need){const deck=r.deckId?M.deck(C.state,r.deckId).name:'Unassigned';const s=sub.get(deck)||{n:0,d:0};s.n+=r.quantity;s.d+=(r.card.price>0?r.card.price:0)*r.quantity;sub.set(deck,s);}
     for(const [deck,s] of [...sub].sort())rows.push({name:`Subtotal · ${deck}`,deck,quantity:s.n,price:Math.round(s.d*100)/100});rows.push({name:'Total to buy',quantity:need.reduce((n,r)=>n+r.quantity,0),price:Math.round([...sub.values()].reduce((n,s)=>n+s.d,0)*100)/100});}
-  const cols=columns.filter(([k])=>chosen.includes(k)||shop&&['price','cap','vendor','deck'].includes(k)).map(([key,label])=>({key,label}));C.download(shop?'CrankMagic-buy-list.csv':'CrankMagic-filtered-roster.csv',C.E.csv(rows,cols),'text/csv');C.notice('Exported the complete filtered view, including rows beyond the current page.');};
+  const cols=[...chosen,...(shop?['price','cap','vendor','deck'].filter(k=>!chosen.includes(k)):[])].map(k=>columns.find(([c])=>c===k)).filter(Boolean).map(([key,label])=>({key,label}));C.download(shop?'CrankMagic-buy-list.csv':'CrankMagic-filtered-roster.csv',C.E.csv(rows,cols),'text/csv');C.notice('Exported the complete filtered view, including rows beyond the current page.');};
 });
 
 /* A HOVER PREVIEW INSTEAD OF A 26px THUMBNAIL. The thumbnails in every row were too small to
