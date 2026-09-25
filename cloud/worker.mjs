@@ -85,6 +85,10 @@ export async function handle(request, env, deps = {}) {
 
 export default {
   async fetch(request, env) {
+    /* The platform runs this script for /api/* -- and for any path that matches no file, since a Worker
+       with assets gets what the assets cannot answer. Those are not the API's: they go back to the files,
+       so a mistyped address is an honest 404, not a request to sign in. */
+    if (!new URL(request.url).pathname.startsWith("/api/")) return env.ASSETS ? env.ASSETS.fetch(request) : new Response("Not found", {status: 404});
     try {return await handle(request, env);}
     catch (error) {
       console.error("crankmagic api:", error && error.stack || error);
