@@ -166,4 +166,14 @@ eq((await call("GET", "/api/auth/login?to=https://evil.example/")).headers.get("
 eq((await call("GET", "/api/nothing")).status, 404, "an unknown endpoint: 404");
 eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-control"), "nosniff no-store", "answers are never sniffed or cached");
 
+/* A path that is not the API goes back to the files: an honest 404 for a mistyped address, never "sign in". */
+{
+  const {default: worker} = await import("../cloud/worker.mjs");
+  const assets = {fetch: (r) => new Response(`asset ${new URL(r.url).pathname}`, {status: 404})};
+  const miss = await worker.fetch(new Request("https://crankmagic.test/cloud/worker.mjs"), {...env, ASSETS: assets});
+  eq([miss.status, await miss.text()], [404, "asset /cloud/worker.mjs"], "a missing file is the assets' 404, not the API's 401");
+  const api = await worker.fetch(new Request("https://crankmagic.test/api/me"), {...env, ASSETS: assets});
+  eq(api.status, 401, "and /api/* is still the API's, which wants a signed-in person");
+}
+
 console.log(`cloud-worker: ${checks} checks passed — Access tokens verified, writes from the app only, the head moves only from where a device left it, nothing crosses between people.`);
