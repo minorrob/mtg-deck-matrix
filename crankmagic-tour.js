@@ -247,7 +247,7 @@ const TOURS=[
    steps:[
     {view:'decks',selectors:['#cm-user-functions'],act:'openMenu',
      title:'It all lives in one menu',
-     copy:'Back it up, restore it, export it, and move it between machines. Your library is saved in this browser and nowhere else, which is exactly why this menu matters.'},
+     copy:'Back it up, restore it, export it, and move it between machines. Signed in, your library also saves itself to the cloud and follows you to any device you sign in on; signed out, it lives in this browser alone, which is exactly why this menu matters.'},
     {view:'decks',selectors:['[data-action=backup]'],act:'openMenu',
      title:'A backup is one file',
      copy:'Your whole library — decks, collection, groups, prices, every status. The file is the copy that outlives the browser.'},
@@ -265,10 +265,7 @@ const TOURS=[
      copy:'The same button, the other direction. Export from the phone, mail it home, restore on the desktop — and the statuses you set at the booth land on the machine you build on.'},
     {view:'decks',selectors:['[data-action=export-excel]'],act:'openMenu',
      title:'The other kind of export',
-     copy:'Excel gives you your collection plus everything the app worked out about it: real prices, colors, types, what each card is for. Cards in, metadata out.'},
-    {view:'decks',selectors:['[data-action=mirror]'],act:'openMenu',
-     title:'Or never think about it again',
-     copy:'Point it at a file once and it keeps that file current, so the backup is never the thing you forgot to do.'}]}];
+     copy:'Excel gives you your collection plus everything the app worked out about it: real prices, colors, types, what each card is for. Cards in, metadata out.'}]}];
 
 /* A tour that describes work on a deck opens by saying what is missing rather than
    spotlighting six empty states in a row. */
