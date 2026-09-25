@@ -14,7 +14,7 @@
  *      cannot drift back. Raising a ceiling is a decision made in this file, not by accident.
  */
 import assert from "node:assert/strict";
-import {readFileSync, readdirSync} from "node:fs";
+import {readFileSync, readdirSync, existsSync} from "node:fs";
 import path from "node:path";
 import {ROOT} from "../schema/index.mjs";
 
@@ -23,11 +23,12 @@ const ok = (c, m) => { assert.ok(c, m); checks++; };
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks++; };
 const read = (f) => readFileSync(path.join(ROOT, f), "utf8");
 
-/* Revision 2 of the handoff wins where it disagrees with the first (docs/design/2026-09-20-deck-page-r2/
-   INTAKE.md). The four token files are byte-identical across the two revisions today, so this repoint
-   changes nothing that renders -- it means a later r2-only change to the designer's tokens is actually
-   held here rather than silently compared against the superseded copy. */
-const HANDOFF = "docs/design/2026-09-20-deck-page-r2/design_handoff_crankmagic_gallery/design-system/tokens/";
+/* Revision 3 wins where revisions disagree, and inside r3 its "Type (final)" wins (R3.0,
+   docs/design/2026-09-25-redesign-r3/INTAKE.md §2.1). The final tokens are the project root's,
+   project/tokens/*.css. The copy under r3's design_handoff_crankmagic_gallery/design-system/tokens/ is the
+   designer's older one (Young Serif on h1-h3) and is SUPERSEDED: it is not read here. Colors and shape are
+   byte-identical to r2's; only type moved (Satoshi 900 at -.035em, and --font-hero). */
+const HANDOFF = "docs/design/2026-09-25-redesign-r3/project/tokens/";
 const design = read("crankmagic-design.css");
 const pageCss = read("crankmagic.css");
 
@@ -102,27 +103,36 @@ function tokensIn(css, selectorRe) {
   eq(noLight, [], `and each states a light value too, so a rung does not stay dark on cream: ${noLight.join(", ")}`);
 }
 
-/* 4. THE DISPLAY FACE IS SATOSHI, AND IT IS SELF-HOSTED.
+/* 4. THE DISPLAY FACE IS SATOSHI 900, THE HERO FACE IS YOUNG SERIF, AND BOTH ARE SELF-HOSTED.
  *
- * Rob, 2026-09-24: "use the Satoshi header font (H1, H2, H3, etc.) instead of the current header
- * fonts in our design guide." Headings and big figures were Young Serif (self-hosted from
- * 2026-09-20 rather than fetched from Google, revision 2 INTAKE item 2); they are Satoshi 700 now,
- * the body's own face at its bold weight, and the guide's typography.css says the same -- the
- * type tokens above are held to it. Young Serif is retired rather than left declared: a face
- * nothing draws with is a download waiting for a stray rule. No shipped page may reach out to a
- * font CDN at render time either; one that does has reintroduced the third-party request the
- * self-hosting decision removed.
+ * r3's "Type (final)", approved by Rob on 2026-09-25 (docs/decisions-2026-09-25.md, decision M1-1):
+ * headings and big figures are Satoshi Black 900 at -.035em; Young Serif is --font-hero, for hero
+ * headlines of 48px and up only. Satoshi 700 had been the display face since 2026-09-24, when Rob asked
+ * for "the Satoshi header font (H1, H2, H3, etc.)"; r3 keeps that face and takes it to its black weight.
+ * tests/type-final.mjs holds the same rule in a rendered page. No shipped page may reach out to a font
+ * CDN at render time: every face is a self-hosted file.
  */
 {
   const app = tokensIn(design, /(?:^|,)\s*#matrix-v2\s*$/);
   ok(/^Satoshi\b/.test(app.get("--font-display") || ""), `--font-display is Satoshi (found ${app.get("--font-display")})`);
-  eq(app.get("--display-weight"), "700", "at its bold weight, which is the one Satoshi file headings need");
-  ok(/@font-face\{[^}]*font-family:\s*Satoshi[^}]*font-weight:\s*700[^}]*assets\/crankmagic\/satoshi-700\.woff2/.test(design),
-    "and Satoshi 700 is declared @font-face against the self-hosted woff2");
+  eq(app.get("--display-weight"), "900", "at its black weight, r3's final");
+  eq(app.get("--display-tracking"), "-.035em", "tracked at r3's -.035em");
+  ok(/^'Young Serif'/.test(app.get("--font-hero") || ""), `--font-hero is Young Serif (found ${app.get("--font-hero")})`);
+  for (const w of ["400", "500", "700", "900"]) {
+    ok(new RegExp(`@font-face\\{[^}]*font-family:\\s*Satoshi[^}]*font-weight:\\s*${w}[^}]*assets/crankmagic/satoshi-${w}\\.woff2`).test(design),
+      `Satoshi ${w} is declared @font-face against the self-hosted woff2`);
+    ok(existsSync(path.join(ROOT, `assets/crankmagic/satoshi-${w}.woff2`)), `and assets/crankmagic/satoshi-${w}.woff2 exists`);
+  }
+  for (const f of ["youngserif-400.woff2", "youngserif-400-ext.woff2", "youngserif-OFL.txt"]) ok(existsSync(path.join(ROOT, "assets/crankmagic", f)), `assets/crankmagic/${f} is committed`);
+  ok((design.match(/@font-face\{font-family:'Young Serif'[^}]*assets\/crankmagic\/youngserif-400(-ext)?\.woff2/g) || []).length === 2, "Young Serif's two subsets are declared @font-face, self-hosted");
   ok(app.get("--v-display") === "var(--font-display)", "--v-display is the same face, by reference, not a second declaration");
+  /* The hero face is reached only through --font-hero, never named in a rule, so it cannot spread. */
+  ok(!/Young Serif/.test(pageCss.replace(/\/\*[\s\S]*?\*\//g, "")), "crankmagic.css reaches Young Serif only through var(--font-hero)");
+  const sw = read("crankmagic-sw.js");
+  for (const f of ["satoshi-900.woff2", "youngserif-400.woff2", "youngserif-400-ext.woff2"]) ok(sw.includes(`assets/crankmagic/${f}`), `the service worker keeps ${f} for offline use`);
+  ok(/Young Serif/.test(read("THIRD-PARTY-NOTICES.md")) && /satoshi-\{400,500,700,900\}/.test(read("THIRD-PARTY-NOTICES.md")), "THIRD-PARTY-NOTICES names both faces and every file");
   for (const f of ["index.html", "crankmagic.html", "privacy.html", "terms.html", "crankmagic-design.css", "crankmagic.css", "crankmagic-sw.js"]) {
-    ok(!/Young Serif|youngserif-/.test(read(f).replace(/\/\*[\s\S]*?\*\//g, "")), `${f} no longer declares, draws with or caches the retired Young Serif`);
-    ok(!/fonts\.(googleapis|gstatic)\.com/.test(read(f)), `${f} does not fetch a font from a CDN; the face is self-hosted`);
+    ok(!/fonts\.(googleapis|gstatic)\.com|api\.fontshare\.com|cdn\.fontshare\.com/.test(read(f)), `${f} does not fetch a font from a CDN; every face is self-hosted`);
   }
 }
 

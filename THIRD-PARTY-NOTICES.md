@@ -84,7 +84,8 @@ CrankMagic is not affiliated with any of them.
 | Face | Files | Terms |
 | --- | --- | --- |
 | **Oxanium** | subset embedded in the wordmark CSS | SIL Open Font License 1.1 — full text in `assets/crankmagic/oxanium-OFL.txt`. Copyright 2019 The Oxanium Project Authors. |
-| **Satoshi** | `assets/crankmagic/satoshi-{400,500,700}.woff2` | Indian Type Foundry, distributed via Fontshare under the foundry's own license. Free for personal and commercial *use*; **redistribution of the font files is restricted by the foundry's terms.** Anyone forking this repository should read those terms rather than assume the files may travel with it. |
+| **Satoshi** | `assets/crankmagic/satoshi-{400,500,700,900}.woff2` | Indian Type Foundry, distributed via Fontshare under the ITF Free Font License (FFL). Free for personal and commercial *use*, and self-hosting for our own site is permitted; the files are used unmodified (the license forbids subsetting or conversion). **Redistribution of the font files is restricted by the foundry's terms.** Anyone forking this repository should read those terms rather than assume the files may travel with it. `satoshi-900.woff2` is Fontshare's `Satoshi-Black.woff2`, downloaded 2026-09-25 with Rob's approval (r3 decision 1). |
+| **Young Serif** | `assets/crankmagic/youngserif-400.woff2`, `youngserif-400-ext.woff2` | SIL Open Font License 1.1 — full text in `assets/crankmagic/youngserif-OFL.txt`. The hero face for headlines of 48px and up (r3). Retired 2026-09-24 and restored from git on 2026-09-25. |
 | System stacks | — | No embedded files. |
 
 ## Artwork not originated by this project
