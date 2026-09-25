@@ -65,10 +65,11 @@
     aria-label="${tools ? 'Hide search and filters' : 'Show search and filters'}"
     title="${tools ? 'Hide search and filters' : 'Show search and filters'}">${TOOLS_ICON}</button>`;
   /* PROGRESSIVE DISCLOSURE (Explore B): toggle for advanced tools (Filters, Trace, Lens) */
-  const advancedToolsButton = () => `<button type="button" class="cm-advanced-tools-toggle" data-action="toggle-advanced-tools"
-    aria-expanded="${advancedToolsOpen}" aria-controls="cm-advanced-tools-panel"
-    aria-label="${advancedToolsOpen ? 'Hide advanced tools' : 'Show advanced tools'}"
-    title="${advancedToolsOpen ? 'Hide Filters, Trace, and Lens' : 'Show Filters, Trace, and Lens'}">${advancedToolsOpen ? '▼' : '▶'} ${advancedToolsOpen ? 'Hide' : 'Show'} Advanced Tools</button>`;
+  /* PROGRESSIVE DISCLOSURE (Explore B): the toggle for the advanced tools (filters, Trace, lens). In r3's
+     head it is "Filters · lens" (wireframe 50), pressed while the tools are open. */
+  const advancedToolsButton = () => `<button type="button" class="v-button cm-advanced-tools-toggle" data-action="toggle-advanced-tools"
+    aria-expanded="${advancedToolsOpen}" aria-pressed="${advancedToolsOpen}" aria-controls="cm-advanced-tools-panel"
+    title="${advancedToolsOpen ? 'Hide filters, Trace and lens' : 'Show filters, Trace and lens'}">Filters · lens</button>`;
   const applyStage = () => {
     const root = document.getElementById('matrix-v2');
     root?.classList.toggle('cm-stage', stage);
@@ -444,12 +445,13 @@
       }).join('');
     }
 
-    C.main.innerHTML = C.pageHead('Explore', toolsButton(), 'discover')
+    /* A graph opened from a deck says which deck (wireframe 50: "Explore › D6 Krenko Goblins") and has the
+       way back to it in the head, beside Filters · lens. */
+    const fromDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) : null;
+    C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
+      + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
-      <div class="cm-advanced-tools-disclosure">
-        ${advancedToolsButton()}
-      </div>
 
       <div class="cm-advanced-tools-panel" id="cm-advanced-tools-panel"${advancedToolsOpen ? '' : ' hidden'}>
         <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">
@@ -767,28 +769,69 @@
         ? `<button type="button" class="v-button" data-action="graph-back" title="Back to ${e(prior.name)}">◀ Back to Prior Card</button>`
         : '';
     }
-    /* ADD/BUY, ONE MENU FOR THE PANE AND EVERY LIST ROW: the two vendors, the library, the
-       collection groups and the draft decks. */
+    /* ADD AND/OR BUY, ONE DIALOG (r3, wireframe 52; INTAKE R3.7). The choices are kept distinct, each
+       saying where the card lands: into a deck (a draft's list, or a finished deck's upgrade option,
+       whose swap is chosen next), Wanted (the want list: the To Buy group, nothing bought), On the
+       Bench (a copy you own, reserved for no deck), or a collection group. The vendors sit beside the
+       price. The pane's button and every list row's caret open the same dialog. */
     function buyMenu(c, rec, compact = false) {
-      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
-      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
-      const cardId = CrankCatalog.key(c.name);
-      const groups = C.state.groups || [];
-      const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
-      return `<details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn${compact ? ' cm-buy-caret' : ''}"${compact ? ` title="Add/Buy" aria-label="Add or buy ${e(c.name)}"` : ''}>${compact ? (C.caret ? C.caret('down') : '▾') : 'Add/Buy'}</summary><div class="cm-menu cm-inline-menu-body">
-              <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
-              <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
-              <hr>
-              <p>Add to collection</p>
-              <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
-              ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
-                || '<p class="cm-muted">No collection groups yet.</p>'}
-              <hr>
-              <p>Add to deck</p>
-              ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
-                || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
-            </div></details>`;
+      return compact
+        ? `<button type="button" class="v-button cm-buy-caret" data-action="add-buy" data-card="${e(c.name)}" title="Add and/or buy" aria-label="Add or buy ${e(c.name)}">${C.caret ? C.caret('down') : '▾'}</button>`
+        : `<button type="button" class="v-button primary" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
     }
+    actions['add-buy'] = (el) => {
+      const name = el.dataset.card, rec = C.catalog.exact(name) || {name}, c = C.catalog.get(CrankCatalog.key(name)) || rec;
+      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
+      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(name);
+      const price = [rec.price, c.price].find((p) => Number.isFinite(p) && p > 0);
+      const scoped = C.route().params.get('deck') || '';
+      const decks = (C.state.decks || []).filter((d) => !d.archived).sort((a, b) => (b.id === scoped) - (a.id === scoped) || a.name.localeCompare(b.name, 'en-US', {numeric: true}));
+      const groups = (C.state.groups || []).filter((g) => g.id !== 'group:to-buy');
+      const img = rec.image || c.image || '';
+      const choice = (value, label, hint, extra = '', on = false) => `<label class="cm-add-choice"><input type="radio" name="put" value="${value}"${on ? ' checked' : ''}><span><b>${label}</b><small>${hint}</small></span>${extra}</label>`;
+      const deckWhy = (d) => d.status === 'draft' ? 'Adds it to the list' : 'As an upgrade option; you choose the card it replaces next';
+      const f = C.form(`Add ${name}`,
+        `<div class="cm-full cm-add-head">${img ? `<img src="${e(img)}" alt="" loading="lazy">` : '<div class="cm-add-art"></div>'}<div><b>${e(name)}</b><small>${price ? `Best price ${e(C.money(price))} · ` : ''}<a href="${e(buy)}" target="_blank" rel="noopener">TCGplayer ↗</a> · <a href="${e(kingdom)}" target="_blank" rel="noopener">Card Kingdom ↗</a></small></div></div>`
+        + `<fieldset class="cm-full cm-add-put"><legend>Put it</legend>`
+        + (decks.length ? choice('deck', 'Into a deck', e(deckWhy(decks[0])), C.select('Deck', 'deck', decks.map((d) => [d.id, d.name]), decks[0].id), !!scoped) : '')
+        + choice('wanted', 'Wanted', 'Remember it: your want list (the To Buy group). Nothing is bought.', '', !scoped || !decks.length)
+        + choice('bench', 'On the Bench', 'You own it: a copy on the Bench, reserved for no deck.', `<label class="cm-add-qty">Copies<input type="number" name="qty" value="1" min="1" max="1000"></label>`)
+        + (groups.length ? choice('group', 'Into a collection group', 'Planned there; planning a card is not owning it.', C.select('Group', 'group', groups.map((g) => [g.id, g.name]), groups[0].id)) : '')
+        + `</fieldset>`,
+        async (v) => {
+          const card = await cardFor(name);
+          if (v.put === 'deck') {
+            const deck = C.M.deck(C.state, v.deck);
+            if (deck.status === 'draft') return actions['discover-to-deck']({dataset: {deck: deck.id, card: name}});
+            if (!C.state.cards[card.id]) await C.commit({type: 'cards', cards: [card]}, {renderView: false});
+            /* The swap is its own dialog, the outgoing and incoming cards side by side; this one closes first. */
+            setTimeout(() => optionDialog(deck, C.card(card.id) || card, 'Explore'), 0);
+            return;
+          }
+          if (v.put === 'wanted') return actions['discover-to-group']({dataset: {group: 'group:to-buy', card: name}});
+          if (v.put === 'group') return actions['discover-to-group']({dataset: {group: v.group, card: name}});
+          if (v.put === 'bench') {
+            const qty = Math.floor(Number(v.qty));
+            if (!(qty >= 1)) throw Error('Put at least one copy on the Bench.');
+            await C.commit({type: 'acquire', cards: [card], lot: {cardId: card.id, quantity: qty, source: 'owned', printing: {}, location: {kind: 'bench', box: ''}}}, {renderView: false});
+            C.notice(`${qty === 1 ? '1 copy' : qty + ' copies'} of ${card.name} on the Bench, reserved for no deck.`);
+            return;
+          }
+          throw Error('Choose where to put it.');
+        }, 'Add');
+      f.closest('dialog').classList.add('cm-add-buy-dialog');
+      const submit = f.querySelector('[type=submit]');
+      const say = () => {
+        const put = f.querySelector('input[name=put]:checked')?.value, deck = decks.find((d) => d.id === f.querySelector('select[name=deck]')?.value);
+        const deckHint = f.querySelector('input[value=deck]')?.closest('label')?.querySelector('small');
+        if (deckHint && deck) deckHint.textContent = deckWhy(deck);
+        submit.textContent = put === 'deck' ? (deck && deck.status !== 'draft' ? 'Choose the swap…' : 'Add to deck') : put === 'wanted' ? 'Remember it' : put === 'bench' ? 'Add to the Bench' : put === 'group' ? 'Add to group' : 'Add';
+      };
+      /* Touching a choice's own field picks that choice. */
+      f.addEventListener('input', (ev) => { const row = ev.target.closest('.cm-add-choice'); if (row && ev.target.name !== 'put') row.querySelector('input[name=put]').checked = true; say(); });
+      f.addEventListener('change', say);
+      say();
+    };
     function tabButton(id, label) { return `<button type="button" role="tab" class="cm-pane-tab${paneTab === id ? ' is-on' : ''}" aria-selected="${paneTab === id}" data-action="pane-tab" data-tab="${id}">${label}</button>`; }
     function applyTab() {
       for (const t of document.querySelectorAll('.cm-pane-tab')) { const on = t.dataset.tab === paneTab; t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on)); }
@@ -1214,7 +1257,7 @@
           <!-- INSPECT BELONGS TO THE ART, so it sits directly beneath it in the art's own
                column, where there was nothing but empty space. -->
           <div class="cm-card-view-tools">
-            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
+            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)})}
           </div>
         </div>
         <!-- NO ORACLE BOX. The card image above is the whole card, rules text included, so

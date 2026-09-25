@@ -2852,3 +2852,25 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    cell's width, the name keeps every letter that fits and ends in its own ellipsis. */
 #cm-roster-table td.cm-col-name .cm-card-name{max-width:100%;vertical-align:middle}
 #cm-roster-table td.cm-col-name .cm-card-name>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* EXPLORE'S ADD DIALOG (r3, R3.7; wireframe 52): the card and its price on top, then the choices as rows,
+   each saying where the card lands, the one picked outlined. */
+#cm-dialog.cm-add-buy-dialog{width:min(560px,calc(100vw - 32px))}
+#matrix-v2 .cm-add-head{display:flex;gap:14px;align-items:center}
+#matrix-v2 .cm-add-head img,#matrix-v2 .cm-add-head .cm-add-art{width:84px;aspect-ratio:5/7;border-radius:6px;object-fit:cover;background:var(--v-raised);flex:0 0 84px}
+#matrix-v2 .cm-add-head b{display:block;font-size:17px}
+#matrix-v2 .cm-add-head small{color:var(--v-muted)}
+#matrix-v2 .cm-add-head a{color:var(--v-accent)}
+#matrix-v2 .cm-add-put{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+#matrix-v2 .cm-add-put legend{padding:0;margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-add-choice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);cursor:pointer}
+#matrix-v2 .cm-add-choice:has(input[name=put]:checked){border-color:var(--v-accent);background:color-mix(in oklab,var(--v-accent) 8%,var(--v-panel))}
+#matrix-v2 .cm-add-choice>input[name=put]{width:16px;height:16px;min-height:0;margin:0;flex:0 0 16px}
+#matrix-v2 .cm-add-choice>span{display:grid;gap:2px;flex:1 1 220px;min-width:0}
+#matrix-v2 .cm-add-choice>span small{color:var(--v-muted)}
+#matrix-v2 .cm-add-choice>label{flex:1 1 180px;min-width:0}
+#matrix-v2 .cm-add-choice select,#matrix-v2 .cm-add-choice input[type=number]{width:100%}
+#matrix-v2 .cm-add-qty{max-width:120px}
+/* EXPLORE'S HEAD (R3.7, wireframe 50): where the graph came from, in the app's own crumbs, above the title;
+   Filters · lens pressed while open. */
+#matrix-v2 .cm-crumbs{margin:0 0 4px}
+#matrix-v2 .cm-advanced-tools-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
