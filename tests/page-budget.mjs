@@ -38,7 +38,11 @@ const EXPLORE_COMMANDER = "Chulane%2C%20Teller%20of%20Tales";
    table, list or canvas of the page; words and controls are counted before it in document
    order. Budgets are words / controls / explainer words. */
 const PAGES = [
-  ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
+  /* R3.4 (r3, 16-decks-hub; INTAKE row R3.4, approved 2026-09-25): the design puts a bar above the tiles --
+     four stage chips, the sort, and Show archived, which moved up from the footer under the grid. That is one
+     control more than the old head had room for and one word more, both the design's own; the budget rises
+     to exactly what it draws and no further. The explainer budget does not move. */
+  ["decks", "Decks", ".cm-deck-grid", [25, 9, 4], [25, 9, 4]],
   /* Deck page (14 September): Make the change (n) joins the hero for a final deck — the change
      list Rob asked for needs a way in from the deck itself; 44 → 48 words, 14 → 15 controls. */
   /* Track V.4b: the Gallery hero carries the deck's strategy sentence from deck.notes, which the

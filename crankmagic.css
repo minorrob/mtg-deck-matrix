@@ -2777,3 +2777,13 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* A form that deletes says so in its button (r3, 74-confirm-delete): red, not the everyday brass. */
 #cm-dialog .cm-form.cm-destructive [type=submit]{background:var(--st-remove);border-color:var(--st-remove);color:var(--v-on)}
 #cm-dialog .cm-form.cm-destructive [type=submit]:hover{background:color-mix(in oklab,var(--st-remove) 85%,var(--v-ink))}
+/* THE DECKS BAR (r3, 16-decks-hub): stage chips on the left; the sort and Show archived on the right. The
+   chip in force is aria-current, drawn pressed like Settings' choices. */
+#matrix-v2 .cm-decks-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:4px 0 16px}
+#matrix-v2 .cm-decks-stages{display:flex;flex-wrap:wrap;gap:8px}
+#matrix-v2 .cm-decks-stages .v-button{min-height:34px;padding:0 14px;border-radius:var(--radius-pill)}
+#matrix-v2 .cm-chip-toggle[aria-current=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-decks-order{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--v-muted)}
+#matrix-v2 .cm-decks-sort{display:flex;align-items:center;gap:8px}
+#matrix-v2 .cm-decks-sort select{min-height:34px;width:auto}
+#matrix-v2 .cm-decks-none{margin:24px 0}
