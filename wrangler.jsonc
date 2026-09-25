@@ -1,0 +1,32 @@
+{
+  "name": "crankmagic-staging",
+  "main": "cloud/worker.mjs",
+  "compatibility_date": "2026-09-24",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "routes": [
+    {
+      "pattern": "staging.crankmagic.com",
+      "custom_domain": true
+    }
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crankmagic-staging",
+      "database_id": "b7f806ec-c9e8-4265-9f23-7d9705db9a26",
+      "migrations_dir": "cloud/migrations"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
+    "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"
+  }
+}
