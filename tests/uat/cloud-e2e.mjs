@@ -114,6 +114,10 @@ try {
   const aDecks = await decks(a);
   const first = await until("A's first save", async () => (await cloud(a, "/api/library")).head);
   ok(first.device.includes("Chrome") && first.size > 1000, `A's library saved itself to the cloud (${aDecks.length} decks, ${first.size.toLocaleString("en-US")} characters compressed)`);
+  /* The Menu chip (R3.2) reads the same sync the Menu does. */
+  const chipSays = () => a.$eval("#cm-user-functions", (b) => [b.querySelector(".cm-chip-name").textContent, b.querySelector(".cm-chip-status").textContent]);
+  await until("A's chip to say it synced", async () => (await chipSays())[1].startsWith("Synced · "));
+  ok(JSON.stringify(await chipSays()) === JSON.stringify(["rob@e2e.test", "Synced · just now"]), "the Menu chip says who is signed in and that the library reached the cloud just now");
 
   /* 2. Device B: signs in empty, and brings the library in. */
   const b = await device("B");

@@ -112,12 +112,17 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
 }
 
-/* Track V.1b: the theme is a saved preference the shell applies, and User Functions can switch it. */
+/* Track V.1b, and r3's three choices: the theme is a saved preference the shell applies -- dark,
+   light, or the device's own setting -- and the Menu offers all three. */
 {
   const app = read("crankmagic-app.js");
-  ok(/dataset\.theme=state\.preferences&&state\.preferences\.theme==='light'\?'light':'dark'/.test(app), "render applies the saved theme to #matrix-v2");
-  ok(/actions\['toggle-theme'\]/.test(app), "and User Functions can switch it");
-  for (const f of ["index.html", "crankmagic.html"]) ok(/data-action="toggle-theme"/.test(read(f)), `${f}: the menu carries the theme switch`);
+  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),shown=choice==='system'\?\(lightQuery\.matches\?'light':'dark'\):choice;document\.getElementById\('matrix-v2'\)\.dataset\.theme=shown;/.test(app), "applyTheme sets #matrix-v2's theme from the saved choice, resolving Match system");
+  ok(/describeData\(\);applyTheme\(\);/.test(app), "render applies it");
+  ok(/lightQuery\.addEventListener\('change',\(\)=>\{if\(themeChoice\(\)==='system'\)applyTheme\(\);\}\)/.test(app), "and Match system follows the device live");
+  ok(/actions\['set-theme'\]/.test(app) && !/actions\['toggle-theme'\]/.test(app), "the Menu sets a theme rather than flipping one");
+  for (const f of ["index.html", "crankmagic.html"])
+    for (const choice of ["dark", "light", "system"])
+      ok(new RegExp(`data-action="set-theme" data-theme-choice="${choice}" aria-pressed=`).test(read(f)), `${f}: the menu offers the ${choice} theme`);
   ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
 }
 

@@ -99,7 +99,16 @@ function helpButton(key){return `<button type="button" class="v-button cm-help-b
    the live brand block out of the shell, so the logo, the wordmark and its mist arrive together
    and the canvas keeps animating. Only the local copy uses it (Rob, 2026-09-24). */
 function pageHead(name,controls='',help='',summary=''){const title=name?`<h1>${esc(name)}</h1>`:`<div class="cm-page-brand" id="cm-brand-slot"></div><span class="cm-page-online">Online</span>`;return `<header class="cm-page-head"><div class="cm-page-title"><div class="cm-page-name">${title}${help?helpButton(help):''}</div>${summary}</div>${controls?`<div class="cm-actions">${controls}</div>`:''}</header>`;}
-function notice(message,error=false){const el=$('#cm-notice');el.textContent=message;el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
+/* A NOTICE CAN CARRY ONE ACTION (r3, 72-toast-error): a save offers Undo, a failure that may pass
+   offers Retry. The message is set as text and the button is built, so nothing in either is read as
+   markup. A save's own notice offers Undo, and so does any notice its flow raises straight after it,
+   while that save is still the last change: the undo it offers is the one History would give. */
+let undoRevision=null,undoAt=0;
+const UNDO={label:'Undo',run:()=>actions.undo()};
+function notice(message,error=false,{action=null}={}){const el=$('#cm-notice');if(!action&&!error&&undoRevision===state.revision&&Date.now()-undoAt<3000)action=UNDO;
+  const text=document.createElement('span');text.className='cm-toast-text';text.textContent=message;el.replaceChildren(text);
+  if(action){const b=document.createElement('button');b.type='button';b.className='cm-toast-action';b.textContent=action.label;b.addEventListener('click',async()=>{el.hidden=true;clearTimeout(noticeTimer);try{await action.run();}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});el.append(b);}
+  el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
 /* CLOSING A SUB-DIALOG GOES BACK, IT DOES NOT THROW THE WHOLE THING AWAY.
  *
  * Rob, 2026-09-24: "in any of the menu screens in any of the create, load, import, etc. when a
@@ -167,14 +176,22 @@ function rescueBrand(){
   const block=document.querySelector('.v-brand-block'),home=document.querySelector('.cm-sidebar');
   if(block&&home&&block.parentElement!==home)home.prepend(block);
 }
-async function render(){if(!catalog)return;rescueBrand();document.getElementById('matrix-v2').classList.toggle('cm-local',isLocal());describeData();/* the theme is a saved preference; dark is the default and what the tokens define (Track V) */document.getElementById('matrix-v2').dataset.theme=state.preferences&&state.preferences.theme==='light'?'light':'dark';disposeView?.();disposeView=null;glossary?.hide();const seq=++renderSeq,r=route();const group=NAV_GROUP[r.view]||r.view;document.querySelectorAll('[data-nav]').forEach(el=>el.setAttribute('aria-current',el.dataset.nav===group?'page':'false'));try{subnav(group);}catch(e){console.error(e);}try{const cleanup=await views[r.view](r.params);if(seq===renderSeq)disposeView=cleanup||null;else cleanup?.();}catch(err){if(seq===renderSeq)main.innerHTML=head('Unable to open this view','Your saved library is intact',err.message,button('Decks','home'));}status();openNewDeckIfAsked();}
+/* THE THEME IS ONE OF THREE (r3, 06-global-menu): Dark, Light, or Match system. It is a saved
+   preference; dark is the default and what the tokens define (Track V). Match system is resolved
+   here and followed live, so turning the device to light mode turns the app with it. */
+const lightQuery=matchMedia('(prefers-color-scheme: light)');
+function themeChoice(){const t=state.preferences&&state.preferences.theme;return t==='light'||t==='system'?t:'dark';}
+function applyTheme(){const choice=themeChoice(),shown=choice==='system'?(lightQuery.matches?'light':'dark'):choice;document.getElementById('matrix-v2').dataset.theme=shown;
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===choice)));}
+lightQuery.addEventListener('change',()=>{if(themeChoice()==='system')applyTheme();});
+async function render(){if(!catalog)return;rescueBrand();document.getElementById('matrix-v2').classList.toggle('cm-local',isLocal());describeData();applyTheme();disposeView?.();disposeView=null;glossary?.hide();const seq=++renderSeq,r=route();const group=NAV_GROUP[r.view]||r.view;document.querySelectorAll('[data-nav]').forEach(el=>el.setAttribute('aria-current',el.dataset.nav===group?'page':'false'));try{subnav(group);}catch(e){console.error(e);}try{const cleanup=await views[r.view](r.params);if(seq===renderSeq)disposeView=cleanup||null;else cleanup?.();}catch(err){if(seq===renderSeq)main.innerHTML=head('Unable to open this view','Your saved library is intact',err.message,button('Decks','home'));}status();openNewDeckIfAsked();}
 function status(){if(repo)$('#cm-save-status').textContent=`Saved locally · revision ${state.revision}${navigator.onLine?'':' · offline'}`;}
 /* A SITTING IS RE-VALIDATED WHENEVER THE LIBRARY MOVES (plan §2.7). Another tab confirming,
    a restored backup, or this tab's own save can leave a staged move with nothing to act on;
    the fold names those and drops them rather than letting them fail at Confirm. */
 function restage(){if(!sandbox||!sandbox.open)return sandbox&&sandbox.revalidate(state);const {dropped}=sandbox.revalidate(state);if(dropped.length)notice(`${dropped.length} staged move${dropped.length===1?'':'s'} no longer appl${dropped.length===1?'ies':'y'} and ${dropped.length===1?'was':'were'} dropped: ${dropped.map(d=>d.cardName).join(', ')}.`,true);return {dropped};}
 async function refresh(){state=await repo.getState();for(const c of Object.values(state.cards))catalog?.overlay(c);restage();await render();}
-async function commit(command,{renderView=true}={}){if(committing)throw Error('A save is already in progress. Please wait for its receipt.');committing=true;$('#cm-save-status').textContent='Saving…';try{const result=await repo.commit({id:uid(),...command},state.revision);state=result.state;for(const c of Object.values(state.cards))catalog.overlay(c);restage();notice(result.summary);if(renderView)await render();else status();return result;}catch(error){state=await repo.getState();status();throw error;}finally{committing=false;}}
+async function commit(command,{renderView=true}={}){if(committing)throw Object.assign(Error('A save is already in progress. Please wait for its receipt.'),{retryable:true});committing=true;$('#cm-save-status').textContent='Saving…';try{const result=await repo.commit({id:uid(),...command},state.revision);state=result.state;for(const c of Object.values(state.cards))catalog.overlay(c);restage();undoRevision=state.revision;undoAt=Date.now();notice(result.summary);if(renderView)await render();else status();return result;}catch(error){state=await repo.getState();status();throw error;}finally{committing=false;}}
 function download(name,content,type='application/json'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 /* THE STARTER GROUPS REACH A LIBRARY THAT PREDATES THEM, ONCE. A new library gets Main
    Deck, Bench, To Trade and To Buy from Model.empty(), which already carries the flag --
@@ -371,7 +388,21 @@ const C={M,E,$,esc,uid,isLocal,money,card:cardOf,cards:cardsOf,source,colors,man
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
 /* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
-actions['page-help']=el=>{const h=HELP[el.dataset.help];if(h)modal(h.title,typeof h.body==='function'?h.body():h.body);};
+/* HELP SLIDES IN FROM THE RIGHT (r3, 07-help-panel) and leaves the page visible beside it. The
+   glossary is one step on, and closing it comes back here. */
+actions['page-help']=el=>{const h=HELP[el.dataset.help];if(!h)return;const key=el.dataset.help;
+  modal('Help — '+h.title,`<div class="cm-help-body">${typeof h.body==='function'?h.body():h.body}</div><div class="cm-help-foot"><button type="button" class="cm-link" data-action="open-glossary" data-help="${esc(key)}">Open the glossary →</button>${button('Got it','close',{},true)}</div>`);
+  dialog.classList.add('cm-slideover');};
+/* THE GLOSSARY (r3, 76-glossary): the app's own words, one sentence each, the statuses in the
+   colors they wear everywhere else. Rules terms stay on their hover; this is the vocabulary a
+   reader meets in CrankMagic and nowhere else. */
+const TERM_TONE={'physical-deck':'--st-physical','substitute':'--st-standin','reserved':'--st-reserved','bench':'--st-pull','ordered':'--st-ordered','watched':'--st-watch','to-buy':'--st-buy','draft-list':'--st-draft'};
+actions['open-glossary']=el=>{const key=el&&el.dataset.help,back=key&&HELP[key]?()=>actions['page-help'](el):null;
+  const rows=COLLECTION_TERMS.map(t=>`<div class="cm-gloss-row"><span class="cm-gloss-term"${TERM_TONE[t.id]?` style="--tone:var(${TERM_TONE[t.id]})"`:''}>${esc(t.term)}</span><span>${esc(t.definition)}</span></div>`).join('');
+  modal('Glossary',`<div class="cm-glossary">${rows}</div><div class="cm-form-footer">${button('Close','close')}</div>`,back);};
+/* The Menu's Help opens the help of the page underneath, which is what "help" means from there;
+   a page with no help opens the glossary. */
+actions['menu-help']=()=>{const b=$('#cm-main [data-action="page-help"]');if(b&&HELP[b.dataset.help])actions['page-help'](b);else actions['open-glossary']();};
 actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
 actions.close=()=>{const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
 /* Clicking the backdrop is the same gesture as the corner control: it goes back if there is
@@ -380,7 +411,8 @@ actions.close=()=>{const back=modalBack;modalBack=null;if(back)back();else dialo
 dialog.addEventListener('click',event=>{if(event.target===dialog)actions.close();});
 /* Esc closes the dialog natively, which would skip the journey. Cancel it and go back instead. */
 dialog.addEventListener('cancel',event=>{if(modalBack){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
-actions['toggle-theme']=async()=>{const next=state.preferences&&state.preferences.theme==='light'?'dark':'light';await commit({type:'preferences',values:{theme:next}});notice(next==='light'?'Light theme (Felt and Cream).':'Dark theme (Brass and Slate).');};
+const THEME_SAID={dark:'Dark theme (Brass and Slate).',light:'Light theme (Felt and Cream).',system:'The theme now follows this device’s light or dark setting.'};
+actions['set-theme']=async el=>{const choice=el.dataset.themeChoice;if(!THEME_SAID[choice]||choice===themeChoice())return;await commit({type:'preferences',values:{theme:choice}});notice(THEME_SAID[choice]);};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
 /* E-MAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
    are bought, then the library sent home. No browser can attach a file to a mailto: draft,
@@ -425,7 +457,10 @@ addEventListener('pointerdown',e=>{const m=openMenu();pressedMenuButton=m&&m.cmA
 document.addEventListener('click',async e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;const fn=actions[el.dataset.action];if(!fn)return;e.preventDefault();
   const open=openMenu(),again=pressedMenuButton===el||(open&&open.cmAnchor===el);pressedMenuButton=null;
   if(again){if(open)open.hidePopover();return;}
-  try{const run=fn(el,e),opened=openMenu();if(opened&&!opened.cmAnchor)opened.cmAnchor=el;await run;}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});
+  try{const run=fn(el,e),opened=openMenu();if(opened&&!opened.cmAnchor)opened.cmAnchor=el;await run;}catch(error){if(error.name!=='AbortError')notice(error.message,true,{action:mayPass(error)&&el.isConnected?{label:'Retry',run:()=>fn(el,e)}:null});}});
+/* Retry is offered only for a failure that trying again could fix -- the network, a save that was
+   busy -- never for a rule the reader has not met yet, which would fail the same way twice. */
+function mayPass(error){return Boolean(error.retryable)||!navigator.onLine||(error.name==='TypeError'&&/fetch|network|load failed/i.test(error.message));}
 /* SHARE. Two ways to hand the app to someone, neither needing a server: sharing is a
    pre-written draft with the To line left for them, and the QR code is drawn in the page
    (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
@@ -487,7 +522,7 @@ if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soo
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=322',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=324',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();
