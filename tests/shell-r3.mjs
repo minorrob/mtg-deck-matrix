@@ -67,8 +67,16 @@ try {
   /* 3. The save's toast carries Undo, and Undo takes it back. */
   const saved = await toast(page);
   ok(saved.shown && /Light theme/.test(saved.text) && saved.action === "Undo" && !saved.error, `the theme's toast carries Undo: ${JSON.stringify(saved)}`);
+  /* Every notice raised while Undo runs, not just the last: the repository announces the new revision
+     to this tab's own listeners before undo() returns, and a listener that took it for another tab's
+     change once posted "refreshed after a change in another tab" on top of "Last change undone" --
+     only sometimes, by timing. Recording them all makes that a certainty rather than a race. */
+  await page.evaluate(() => { window.__notices = []; new MutationObserver(() => { const t = document.querySelector("#cm-notice .cm-toast-text")?.textContent; if (t) window.__notices.push(t); }).observe(document.getElementById("cm-notice"), {childList: true, subtree: true, characterData: true}); });
   await page.locator("#cm-notice .cm-toast-action").click();
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
+  await page.waitForTimeout(600);
+  const during = await page.evaluate(() => window.__notices);
+  ok(!during.some((t) => /another tab/.test(t)), `Undo in this tab is not reported as another tab's change: ${JSON.stringify(during)}`);
   const undone = await toast(page);
   ok(/Last change undone/.test(undone.text) && undone.action === null, `Undo put the dark theme back, and its own toast offers nothing further: ${JSON.stringify(undone)}`);
 
