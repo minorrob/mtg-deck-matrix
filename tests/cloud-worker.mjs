@@ -166,6 +166,36 @@ eq((await call("GET", "/api/auth/login?to=https://evil.example/")).headers.get("
 eq((await call("GET", "/api/nothing")).status, 404, "an unknown endpoint: 404");
 eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-control"), "nosniff no-store", "answers are never sniffed or cached");
 
+/* RATE LIMITS (M3): per IP before anything else, per person once Access has said who. The bindings are
+   Cloudflare's; here each is a counter with the same `limit({key}) -> {success}` shape. */
+{
+  const counter = (allowed) => { const seen = new Map(); return {seen, limit: async ({key}) => { seen.set(key, (seen.get(key) ?? 0) + 1); return {success: seen.get(key) <= allowed}; }}; };
+  const limitedEnv = {...env, LIMIT_IP: counter(3), LIMIT_PERSON: counter(2)};
+  const ask = async (path, {ip = "198.51.100.7", as = "rob@example.com", method = "GET", body, jwt} = {}) => {
+    const headers = {"cf-connecting-ip": ip, "cf-access-jwt-assertion": jwt ?? await token({email: as})};
+    if (body) Object.assign(headers, {"content-type": "application/json", "x-crankmagic": "sync"});
+    const response = await handle(new Request(`https://crankmagic.test${path}`, {method, headers, body: body ? JSON.stringify(body) : undefined}), limitedEnv, {fetchImpl, now: clock});
+    return {status: response.status, retry: response.headers.get("retry-after"), json: await response.json()};
+  };
+  eq([(await ask("/api/me")).status, (await ask("/api/me")).status], [200, 200], "a person's first requests go through");
+  const third = await ask("/api/me");
+  eq([third.status, third.retry], [429, "60"], "past the per-person limit: 429, with Retry-After");
+  ok(/Too many requests from your account\. Nothing was changed\. Wait a minute, then try again\./.test(third.json.error), "and a refusal that says what happened and what to do");
+  eq((await ask("/api/me", {ip: "203.0.113.9"})).status, 429, "the person's limit follows them to another network");
+  eq((await ask("/api/me", {ip: "203.0.113.9", as: "trey@example.com"})).status, 200, "and never spends someone else's");
+  const head = (await call("GET", "/api/library")).json.head;
+  const refused = await ask("/api/library", {method: "PUT", as: "rob@example.com", ip: "203.0.113.10", body: {...library(200), parent: head?.id ?? null}});
+  eq(refused.status, 429, "a save past the limit is refused");
+  eq((await call("GET", "/api/library")).json.head, head, "and changes nothing");
+  keyFetches = 0;
+  for (let i = 0; i < 3; i += 1) await ask("/api/me", {ip: "192.0.2.1", as: `person${i}@example.com`});
+  forgetKeys();
+  const flood = await ask("/api/me", {ip: "192.0.2.1", as: "person9@example.com", jwt: "not.checked.yet"});
+  eq([flood.status, flood.retry], [429, "60"], "past the per-IP limit: 429, whoever is asking");
+  ok(/Too many requests from this network/.test(flood.json.error), "naming the network, not an account");
+  eq(keyFetches, 0, "and turned away before the token is even checked, so a flood costs no work");
+}
+
 /* A path that is not the API goes back to the files: an honest 404 for a mistyped address, never "sign in". */
 {
   const {default: worker} = await import("../cloud/worker.mjs");
