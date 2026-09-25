@@ -540,7 +540,7 @@ check("every route a lobby control navigates to exists", () => {
 // want to send the error report to me. (e.g. Error: Send error report?) Then the Start/Stop
 // button should have a 3rd option that only appears when that text shows error, which should be
 // 'Send Log' ... opens default e-mail client and pastes the error into the text with
-// pre-populating my e-mail minor.rob@gmail.com as the To field."
+// pre-populating my e-mail [my personal address, removed 2026-09-24] as the To field."
 //
 // The restart was mine: lobby-start's catch sets startInFlight = false and redraws, the redraw
 // asks syncCountdown, the table is still ready, and it counts down into the same failure again,

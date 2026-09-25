@@ -389,13 +389,17 @@ actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.st
    sits inside the tap that asked for it, which Safari requires. */
 let shareFile=null;
 async function exportFile(){const data=await E.backup(await backupData());return new File([JSON.stringify(data,null,2)],'CrankMagic-export-'+M.today()+'.json',{type:'application/json'});}
+/* THE ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail."
+   admin@crankmagic.com forwards to him (Cloudflare Email Routing); nothing the app shows names any
+   other address, and tools/release-pages.mjs refuses a release that does. */
+const CONTACT='admin@crankmagic.com';
 /* SEND FEEDBACK. A mailto, opened the same way the export's e-mail is: no form to fill in
    here, no message stored anywhere, and it works from a phone and a desktop alike because
    the mail client is the one the reader already uses. */
 function feedbackLink(){
   const where=location.hash?location.hash.replace('#',''):'decks';
   const body=`\n\n---\nWhere I was: ${where}\nScreen: ${innerWidth}x${innerHeight}\n`;
-  return 'mailto:minor.rob@gmail.com?subject='+encodeURIComponent('CrankMagic Feedback')+'&body='+encodeURIComponent(body);
+  return 'mailto:'+CONTACT+'?subject='+encodeURIComponent('CrankMagic Feedback')+'&body='+encodeURIComponent(body);
 }
 /* A clicked anchor rather than location.href: iOS Safari refuses some scripted navigations
    to a mailto and does nothing at all, which reads as a dead button. */
@@ -415,7 +419,7 @@ document.addEventListener('click',async e=>{const el=e.target.closest('[data-act
    (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
    whatever address this copy happens to be open on: the page's canonical link, which
    tools/release-pages.mjs sets to the address a release is published at. */
-const APP_URL=canonicalBase(),SUBSCRIBE_TO='minor.rob@gmail.com';
+const APP_URL=canonicalBase(),SUBSCRIBE_TO=CONTACT;
 function shareLinks(){const sub=$('#cm-share-subscribe'),mail=$('#cm-share-mail');if(!sub||!mail)return;
   sub.href='mailto:'+SUBSCRIBE_TO+'?subject='+encodeURIComponent('Subscribe me to CrankMagic updates')+'&body='+encodeURIComponent('Please add this address to the CrankMagic update list.\n\nName: \n\n(Sent from '+APP_URL+')');
   mail.href='mailto:?subject='+encodeURIComponent('CrankMagic: an intelligent Commander deck creator and card library')+'&body='+encodeURIComponent('Have a look at CrankMagic: '+APP_URL+'\n\nIt builds and measures Commander decks, keeps your card library, and works on a phone at the table.');}
@@ -472,7 +476,7 @@ if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soo
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=315',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=316',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

@@ -52,6 +52,7 @@ export const RELEASE_BRANCH = "release/pages";
 /* The address the app was first published at; absolute links to it are the app's own files. */
 export const FIRST_PUBLIC = "https://minorrob.github.io/mtg-deck-matrix/";
 export const PAGES = ["index.html", "crankmagic.html"];
+export const PUBLIC_CONTACT = "admin@crankmagic.com";
 export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", ".nojekyll"];
 
 /* Folders that never ship, whatever references them. */
@@ -304,6 +305,14 @@ export function verify(built, profile) {
     const text = built.get(p)?.toString("utf8") || "";
     if (!text.includes(`<link rel="canonical" href="${profile.origin}`)) problems.push(`${p}'s canonical link is not ${profile.origin}`);
     if (text.includes(FIRST_PUBLIC)) problems.push(`${p} still names ${FIRST_PUBLIC}`);
+  }
+  /* ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail." Nothing
+     released may name an email address but the public contact (which forwards to him); the problem masks
+     what it found, so the refusal itself never prints someone's address. */
+  for (const [f, body] of built) {
+    if (!/\.(html|js|mjs|css|md|json|txt)$|^LICENSE$/.test(f)) continue;
+    for (const m of body.toString("utf8").matchAll(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g))
+      if (m[0].toLowerCase() !== PUBLIC_CONTACT) problems.push(`${f} names an email address other than ${PUBLIC_CONTACT} (${m[0].slice(0, 2)}…@${m[0].split("@")[1]})`);
   }
   /* The service worker's lists are the app's own statement of what it fetches: all must be here. */
   const sw = built.get("crankmagic-sw.js")?.toString("utf8") || "";

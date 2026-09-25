@@ -97,6 +97,16 @@ eq([...referencesOf("a.js", "const u = `assets/mana/${symbol}.svg`;", have)].sor
 eq([...referencesOf("a.js", "/* see docs/plan.md */ // and docs/plan.md\nfetch('data/cards.json?v=3')", have)], ["data/cards.json"], "a file named in a comment is not a reference; one fetched is");
 eq([...referencesOf("index.html", '<meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/mana/W.svg">', have)], ["assets/mana/W.svg"], "an absolute link to the app's own address is its own file");
 
+/* PRIVACY, TERMS, AND ONE PUBLIC ADDRESS (Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail"). */
+ok(built.has("privacy.html") && built.has("terms.html"), "the privacy policy and the terms of use are published");
+for (const p of PAGES) {
+  const footer = (/<footer class="cm-legal"[\s\S]*?<\/footer>/.exec(built.get(p).toString("utf8")) || [""])[0];
+  ok(['href="privacy.html"', 'href="terms.html"', 'href="mailto:admin@crankmagic.com"'].every((h) => footer.includes(h)), `${p}'s footer links Privacy, Terms and the contact address`);
+}
+ok(built.get("privacy.html").toString("utf8").includes("mailto:admin@crankmagic.com"), "and the privacy policy gives the contact address");
+ok(broken((m) => m.set("crankmagic-app.js", Buffer.from(m.get("crankmagic-app.js").toString() + "\n// someone.personal@example.com\n"))).some((p) => p.includes("names an email address other than admin@crankmagic.com")),
+  "a release that would show any other email address is refused");
+
 /* PRODUCTION HAS NO ACCOUNTS until Rob approves them on staging; STAGING HAS EVERYTHING they need. */
 for (const f of ["cloud-sync.js", "crankmagic-account.js"]) ok(!built.has(f), `${f} is not in the production release`);
 ok(PAGES.every((p) => !built.get(p).toString("utf8").includes("crankmagic-accounts")), "and neither production page is marked accounts-on");
