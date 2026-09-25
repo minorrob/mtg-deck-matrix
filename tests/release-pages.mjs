@@ -112,7 +112,9 @@ for (const f of ["cloud-sync.js", "crankmagic-account.js"]) ok(!built.has(f), `$
 ok(PAGES.every((p) => !built.get(p).toString("utf8").includes("crankmagic-accounts")), "and neither production page is marked accounts-on");
 ok(!JSON.parse(built.get("wrangler.jsonc").toString("utf8")).main, "and production runs no Worker script");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
-eq(staging.problems.filter((p) => !/ is pending: /.test(p)), [], "the staging build is complete except for values its Access application hands out");
+eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"},
+  "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
   "staging: its own Worker on staging.crankmagic.com, the API script run for /api/* only");
