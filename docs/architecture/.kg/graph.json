@@ -2,7 +2,7 @@
  "meta": {
   "repo": "crankmagic",
   "repo_id": "repo:crankmagic",
-  "generatedAt": "2026-09-25T18:34:30.201732Z",
+  "generatedAt": "2026-09-25T19:10:54.432547Z",
   "schema": "engram-schema.yaml@0.3.0",
   "stages_present": [
    "survey",
@@ -20412,7 +20412,7 @@
   {
    "id": "jstep:operator.1",
    "kind": "JourneyStep",
-   "name": "Invites a person by adding their e-mail to the Access Invited list.",
+   "name": "Invites a person by adding their email to the Access Invited list.",
    "journey": "journey:operator",
    "order": 1,
    "file": "docs/handoff-2026-09-25.md",
@@ -20640,7 +20640,7 @@
    "kind": "Document",
    "name": "Rules of engagement for AI systems working in this repository",
    "file": "AGENTS.md",
-   "loc": 148,
+   "loc": 150,
    "stage": "structure",
    "classification": "internal"
   },

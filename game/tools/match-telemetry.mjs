@@ -40,7 +40,7 @@ export function summarizeEvents(events,visibleCards,viewerSeatId=0){
       const player=kind==='GameEventTurnPhase'?f.playerTurn:f.player;
       if(Number.isInteger(player?.playerId))recent.push({id:e.eventId,turn:e.data?.turn??null,cardId:null,name:player.name||'Player',playerId:player.playerId,label:kind==='GameEventTurnPhase'?String(f.phase).replaceAll('_',' ').toLowerCase():`Life ${f.oldLives} → ${f.newLives}`});continue;
     }
-    if(kind==='browser-cast-cancelled'){source=e.data?.card;actor=e.data?.playerId;label='Cast cancelled · payment failed'+(e.data?.cost?' · required '+e.data.cost:'');metric='cancelledCasts';}
+    if(kind==='browser-cast-cancelled'){source=e.data?.card;actor=e.data?.playerId;label='Cast canceled · payment failed'+(e.data?.cost?' · required '+e.data.cost:'');metric='cancelledCasts';}
     else if(kind==='GameEventLandPlayed'){source=f.land;actor=f.player?.playerId;label='Land played';metric='lands';}
     else if(kind==='GameEventCardChangeZone'){
       source=f.card;actor=f.to?.player?.playerId??f.from?.player?.playerId;const from=f.from?.zoneType,to=f.to?.zoneType;

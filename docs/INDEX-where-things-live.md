@@ -34,7 +34,7 @@ Anchor: `docs/design/2026-09-20-deck-page-r2/design_handoff_crankmagic_gallery/R
 
 | Source | Authority | Measured by |
 |---|---|---|
-| `screens/*.dc.html` (5) | **Pixels.** "High-fidelity. Colours, type, spacing, radii and copy are final. Recreate pixel-close." | `tools/compare-to-screen.mjs`, ±4px at 1280 |
+| `screens/*.dc.html` (5) | **Pixels.** "High-fidelity. Colors, type, spacing, radii and copy are final. Recreate pixel-close." | `tools/compare-to-screen.mjs`, ±4px at 1280 |
 | `wireframes/Wireframes.dc.html` | **Structure and content order only.** "They are low-fidelity." Drawn at ~half scale — a 640×440 card with a 108px rail standing in for 1280 with 216 — so their type is *not* authoritative. | `tests/wireframe-conformance.mjs` |
 | README prose §"Play lobby (table-first, wireframe 2b)" | The lobby's behavior rules, including what the host gets on someone else's seat. | `tests/wireframe-conformance.mjs` |
 | `DELTA-play-and-implementation.md` | Changes to Play since the first revision. **B.4's "a seat that is not yours shows no controls" means PLAYER controls** — the README keeps the host's. | — |

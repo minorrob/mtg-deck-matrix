@@ -84,6 +84,8 @@ currency, etc. from anywhere except The US"*). That is wider than spelling:
   wireframe drew a USD/EUR switch; it was recommended and approved before this rule was written, and it is
   dropped (`docs/decisions-2026-09-25.md`, M1 · 8).
 
+Designers get the same rule, as a table of what to write and what never to, in **`docs/design/BRIEF.md`**, which `docs/design/README.md` sends them to first.
+
 `tests/feature-wiring.mjs` holds all three: no formatter without `'en-US'`, no raw date field printed
 into a page, and no other currency in anything that ships.
 

@@ -2,7 +2,7 @@
 //
 // The fixture is a real Archidekt API response, trimmed to six cards with every
 // field left exactly as the site sends it -- including the two shapes that would
-// otherwise be guessed wrong: colour identity spelled out in full ("Green", not
+// otherwise be guessed wrong: color identity spelled out in full ("Green", not
 // "G") and a type line that has to be assembled from three separate arrays.
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";

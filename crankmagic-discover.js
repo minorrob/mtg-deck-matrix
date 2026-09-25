@@ -127,7 +127,7 @@
   function setAdvancedToolsState(open) { try { localStorage.setItem(advancedToolsKey, open ? 'open' : 'closed'); } catch { /* private mode */ } }
 
   views.discover = async (params) => {
-    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labelled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labeled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
     C.main.innerHTML = C.pageHead('Explore') + '<p role="status">Loading graph metadata…</p>';
 
     /* SCOPED LOADING: when there's a seed (deck/commander/card), load a neighborhood first
@@ -803,9 +803,9 @@
     /* THE LIST. graph.reach() at the widest setting, over the filtered world the graph is
        mounted on, so every filter still applies and only the sliders do not. */
     const LIST_COLS = [['name', 'Card'], ['link', 'Link'], ['color', 'Color'], ['price', 'Price']];
-    /* ONE PIP PER CARD, whatever it costs. A mono-coloured card shows its symbol once; a
-       colourless one the grey pip; a multicoloured one a pip of the same shape split into
-       wedges of its own colours -- and a four- or five-colour card the full five-way split,
+    /* ONE PIP PER CARD, whatever it costs. A mono-colored card shows its symbol once; a
+       colourless one the gray pip; a multicoloured one a pip of the same shape split into
+       wedges of its own colors -- and a four- or five-color card the full five-way split,
        which is the format's own sign for "all of them". */
     const PIP = {W: '#fff0b4', U: '#53acff', B: '#696076', R: '#ee735f', G: '#66b889'};
     const PIP_NAME = {W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green'};
@@ -1190,8 +1190,8 @@
       };
       const bracket = BRACKETS[c.bracket || (c.gameChanger || rec.gameChanger ? 'gameChanger' : '')]
         || ['No bracket restriction', 'Legal at every bracket.'];
-      /* The frame around the art takes the card's identity: one colour for one colour,
-         gold for three or more, a quiet grey for colourless. */
+      /* The frame around the art takes the card's identity: one color for one color,
+         gold for three or more, a quiet gray for colourless. */
       const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
       const tint = ci.length >= 3 ? '#e0b660' : ci.length === 2 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : ci.length === 1 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : '#6f8199';
       view.innerHTML = `
@@ -1200,8 +1200,8 @@
           <div class="cm-card-view-title">
             <h2>${e(c.name)}</h2>
             <p>${e(rec.typeLine || c.type || '')}</p>
-            <!-- The mana cost already says the colours. Printing the identity pips beside
-                 it gave Atraxa eight symbols for a four-colour card; the pips are for the
+            <!-- The mana cost already says the colors. Printing the identity pips beside
+                 it gave Atraxa eight symbols for a four-color card; the pips are for the
                  cards that have no cost to read, which is the lands. -->
             <p class="cm-card-view-cost">${cost || C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}

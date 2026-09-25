@@ -9,13 +9,13 @@
 // Unifier as "SpongeBob SquarePants"; Universes Beyond prints Abrade as "You're Gonna
 // Need a Bigger Boat". Somebody typing what is written on their card found nothing,
 // because the local catalog had never heard of it -- they had to press "Search exact
-// name / link", which reaches Scryfall, which does match flavour names.
+// name / link", which reaches Scryfall, which does match flavor names.
 //
 // That is a wall in the middle of the one thing the app promises: every card findable.
-// 647 cards carry a flavour name, which is small enough to ship, so the catalog now
+// 647 cards carry a flavor name, which is small enough to ship, so the catalog now
 // knows them all offline and the search box answers on the first keystroke.
 //
-// A card can carry SEVERAL flavour names across printings. All of them are kept: the
+// A card can carry SEVERAL flavor names across printings. All of them are kept: the
 // reader types the one on the card in front of them, not the one Scryfall happens to
 // return first.
 //
@@ -35,7 +35,7 @@ async function get(url) {
   return JSON.parse(stdout);
 }
 
-const pairs = new Map();   // flavour name -> {oracle, sets:Set}
+const pairs = new Map();   // flavor name -> {oracle, sets:Set}
 let page = 1, total = 0, more = true;
 while (more) {
   const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(QUERY)}&unique=prints&page=${page}`;
@@ -50,7 +50,7 @@ while (more) {
   }
   more = Boolean(data.has_more);
   page += 1;
-  process.stdout.write(`  page ${page - 1} · ${pairs.size} flavour names of ${total} printings\r`);
+  process.stdout.write(`  page ${page - 1} · ${pairs.size} flavor names of ${total} printings\r`);
   await new Promise((r) => setTimeout(r, 110));   // Scryfall asks for 50-100ms between calls
 }
 
@@ -58,7 +58,7 @@ const rows = [...pairs.entries()]
   .map(([flavor, row]) => [flavor, row.oracle, [...row.sets].filter(Boolean).sort().join(" · ")])
   .sort((a, b) => a[0].localeCompare(b[0]));
 
-console.log(`\n${rows.length} flavour names over ${total} printings`);
+console.log(`\n${rows.length} flavor names over ${total} printings`);
 console.log(rows.slice(0, 6).map(([f, o]) => `  ${f} = ${o}`).join("\n"));
 
 if (check) process.exit(0);

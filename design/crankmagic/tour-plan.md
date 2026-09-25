@@ -103,7 +103,7 @@ Notation: **view** · `selector` · *act*. Copy is the real copy, not a placehol
 | 1 | discover · `#cm-graph-query` | Start from a card you already play. Every Commander-legal card is in here, including printings under a different name. |
 | 2 | discover · `#cm-graph` | Lines are relationships, not similarity: this **triggers** that, that **multiplies** this. It is why the graph finds cards a search never would. |
 | 3 | discover · `#cm-depth` | Depth is how far from your card to look. One step is the obvious partners; two or three is where the deck you had not thought of lives. |
-| 4 | discover · `#cm-facet-summary` *(open)* | Narrow by role, colour, type or mechanic — so "what goes with my commander" becomes "what goes with my commander *and* costs under three". |
+| 4 | discover · `#cm-facet-summary` *(open)* | Narrow by role, color, type or mechanic — so "what goes with my commander" becomes "what goes with my commander *and* costs under three". |
 | 5 | discover · `#cm-card-view` | Click a card to read it, see what it connects to, and add it straight to a deck or your collection from here. |
 | 6 | discover · `[data-action=add-card]` | Adding from Discover puts it where you say: a deck's plan, a group, or your wish list. |
 | — | **You now have** | Cards in your deck that you found by how they interact, not by remembering them — and the reason each one is in there. |
@@ -116,7 +116,7 @@ Notation: **view** · `selector` · *act*. Copy is the real copy, not a placehol
 |---|---|---|
 | 1 | collection · `[data-action=import-list]` | Start by telling the app what you own. Paste a list, upload a CSV or a spreadsheet, or type names — it resolves them to real cards. |
 | 2 | collection · `#cm-roster-table` | One row per card, with what it is, what it costs and where it lives. Click a row to see the card. |
-| 3 | collection · `[data-action=roster-filters]` *(open)* | Filter by anything in the table, and group by deck, source, type, colour or allocation. Grouping is how you find the eleven copies of the same land. |
+| 3 | collection · `[data-action=roster-filters]` *(open)* | Filter by anything in the table, and group by deck, source, type, color or allocation. Grouping is how you find the eleven copies of the same land. |
 | 4 | collection · `[data-action=new-group]` | A group is a box of cards that is not yet a deck: a precon you took apart, a trade binder, the pile you bought at a convention. |
 | 5 | collection · `[data-action=roster-columns]` | Choose what the table shows. What you pick here is what an export carries. |
 | 6 | collection · `[data-action=add-card]` | Add one card at a time when you buy it — including cards you do not own yet, marked as wanted. |
@@ -148,10 +148,10 @@ Notation: **view** · `selector` · *act*. Copy is the real copy, not a placehol
 |---|---|---|
 | 1 | shop · `#cm-roster-table` | Everything your decks need and you do not have, priced at the cheapest paper printing the app could find. |
 | 2 | shop · `[data-action=shop-mode]` | Switch between the acquisition list — what to buy — and deck assembly, which is what to pull off the shelf once it arrives. |
-| 3 | shop · `[data-action=roster-filters]` | Filter to one deck, one colour, one price band. At a booth you want "the red cards under five dollars", not the whole list. |
-| 4 | shop · *a Buy button* | **Buy** marks it owned and assigns it. On a phone this is the whole interface: name, colour, type, rarity, price, Buy. |
+| 3 | shop · `[data-action=roster-filters]` | Filter to one deck, one color, one price band. At a booth you want "the red cards under five dollars", not the whole list. |
+| 4 | shop · *a Buy button* | **Buy** marks it owned and assigns it. On a phone this is the whole interface: name, color, type, rarity, price, Buy. |
 | 5 | shop · `[data-action=export-view]` | Export exactly what you are looking at — filters, grouping and columns — as a list you can print or take to a shop. |
-| 6 | shop · `.cm-user-menu` | Or e-mail it to yourself, which is how the list gets from your desktop into your pocket. |
+| 6 | shop · `.cm-user-menu` | Or email it to yourself, which is how the list gets from your desktop into your pocket. |
 | — | **You now have** | A priced list of exactly what is missing, filtered to what you are shopping for today, and one tap per card to mark it bought. |
 
 ---
@@ -165,11 +165,11 @@ a round trip. Desktop → phone → convention → phone → desktop, without lo
 |---|---|---|
 | 1 | any · `#cm-user-functions` *(open)* | Everything about your data lives in one menu: back it up, restore it, export it, and move it between machines. |
 | 2 | menu · `[data-action=backup]` | A backup is one file holding your whole library — decks, collection, groups, prices, every status. Saved in this browser only; the file is the copy that outlives it. |
-| 3 | menu · `[data-action=share-export]` | E-mail that file to yourself. This is the desktop→phone leg: open the mail on the phone and restore from the attachment. |
+| 3 | menu · `[data-action=share-export]` | Email that file to yourself. This is the desktop→phone leg: open the mail on the phone and restore from the attachment. |
 | 4 | menu · `[data-action=restore]` | Restoring replaces this device's library with the file's. Do this on the phone before you leave for the convention. |
 | 5 | shop · *the compact Shop* | At the booth you mark cards bought on the phone. Those changes live in the phone's browser and nowhere else until you move them. |
 | 6 | menu · `[data-action=share-export]` | Same button, other direction. Export from the phone, mail it home, restore on the desktop — the statuses you set at the booth land back on the machine you build on. |
-| 7 | menu · `[data-action=export-excel]` | Excel is the other kind of export: your library plus everything the app worked out about it — real prices, colours, types, what each card is for. Cards in, metadata out. |
+| 7 | menu · `[data-action=export-excel]` | Excel is the other kind of export: your library plus everything the app worked out about it — real prices, colors, types, what each card is for. Cards in, metadata out. |
 | 8 | menu · `[data-action=mirror]` | Or point it at a file once and it keeps that file current, so the backup is never something you forgot to do. |
 | — | **You now have** | A backup you can restore anywhere, a spreadsheet of your collection enriched with everything the app knows, and a phone and desktop that can hand work back and forth without either forgetting what the other did. |
 
@@ -177,7 +177,7 @@ a round trip. Desktop → phone → convention → phone → desktop, without lo
 
 ## The "You now have" card
 
-Not a step with a spotlight — a centred card with no target, the same shape the engine already
+Not a step with a spotlight — a centered card with no target, the same shape the engine already
 draws when a step has nothing solid to point at. Title is the tour's name, body is the
 sentence above, and the two buttons are **Done** and **Take another tour** (back to the
 chooser). Progress reads *"Build a deck · finish"* rather than a step count, because it is not

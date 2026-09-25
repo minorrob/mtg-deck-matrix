@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generatedAt": "2026-09-25T18:34:29.619237Z",
+  "generatedAt": "2026-09-25T19:10:53.860488Z",
   "filesParsed": 9,
   "extractor": "extract_md.py@0.1.0"
  },
@@ -10,7 +10,7 @@
    "kind": "Document",
    "name": "Rules of engagement for AI systems working in this repository",
    "file": "AGENTS.md",
-   "loc": 148
+   "loc": 150
   },
   {
    "id": "doc:docs/design/2026-09-25-redesign-r3/INTAKE.md",

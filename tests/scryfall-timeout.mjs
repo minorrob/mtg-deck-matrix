@@ -75,7 +75,7 @@ await ok("a caller that cancels still gets AbortError, not the timeout's message
   const pending = client.named("Lightning Bolt", {exact: true, signal: controller.signal});
   setTimeout(() => controller.abort(), 30);
   await assert.rejects(pending, (error) => {
-    assert.equal(error.name, "AbortError", `a cancelled request reported ${error.name}`);
+    assert.equal(error.name, "AbortError", `a canceled request reported ${error.name}`);
     return true;
   });
 });

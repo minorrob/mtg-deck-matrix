@@ -12,7 +12,7 @@ import {buildPilotCandidates} from './ai-pilot.mjs';
  * validates a click, so a forced action can never be an illegal one: the worst case is that the
  * engine rejects it and the table is no worse off than before.
  *
- * It prefers an automatic candidate -- the required draw, the acknowledgement -- because those are
+ * It prefers an automatic candidate -- the required draw, the acknowledgment -- because those are
  * the decisions with only one lawful answer and forcing them changes nothing about the game. Only
  * when there is no such answer does it take the first legal choice, and the caller is told which
  * happened so the journal records a real choice as a real choice.

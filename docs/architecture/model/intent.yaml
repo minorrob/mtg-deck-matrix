@@ -108,7 +108,7 @@ requirements:
   - { id: M5-front-door, kind: functional, priority: must, attributes: { area: play },
       text: "The Worker creates, joins and leaves tables and hands a seat to an Access identity; identity stays out of the engine.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
   - { id: M5-lobby, kind: functional, priority: must, attributes: { area: play },
-      text: "The lobby per r3's 2b design: invites by e-mail, link and QR, table rules, and auto-launch that waits for every human seat.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
+      text: "The lobby per r3's 2b design: invites by email, link and QR, table rules, and auto-launch that waits for every human seat.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
   - { id: M5-reconnect, kind: functional, priority: must, attributes: { area: play },
       text: "Reconnect sends a fresh permitted view; a game never concedes silently and AI takes over only by agreement.", source: { graph: repo, node: docs/plan-to-100.md, query: "M5" } }
   - { id: M5-results, kind: functional, priority: must, attributes: { area: play },

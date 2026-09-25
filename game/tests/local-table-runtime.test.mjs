@@ -151,7 +151,7 @@ test('the engine boots during the countdown, not after it',async t=>{
 
   now=10000;await runtime.poll();await runtime.poll();
   assert.equal(runtime.view().phase,'playing');
-  assert.equal(spawnedAt.length,1,'the launch recognised the engine it had already started');
+  assert.equal(spawnedAt.length,1,'the launch recognized the engine it had already started');
   assert.equal(runtime.view().matchId,spawnedMatches[0],'and it is the same match');
 });
 

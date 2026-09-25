@@ -1,7 +1,7 @@
 // The graph's filters, against the real 7,764-card graph.
 //
 // These are cheap to get subtly wrong in ways nobody notices: an OR where an AND was
-// meant, a colour rule that quietly hides colourless cards, an Ownership control that
+// meant, a color rule that quietly hides colourless cards, an Ownership control that
 // appears on an empty library offering one useless option. Each of those is a check here.
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
@@ -116,14 +116,14 @@ check("picks across facets narrow further", () => {
   assert.ok(two < one && two > 0, `${two} of ${one}`);
 });
 
-/* --------------------------------------------------- colour, the one with a rule */
+/* --------------------------------------------------- color, the one with a rule */
 
-check("a colourless card is legal in every deck, so it passes any colour pick", () => {
+check("a colourless card is legal in every deck, so it passes any color pick", () => {
   const solRing = CARDS.find((c) => c.name === "Sol Ring");
   assert.ok(solRing, "Sol Ring must be in the catalog");
   assert.equal(solRing.ci || "", "", "Sol Ring is colourless");
   assert.ok(Facets.matches(solRing, {colors: ["W"]}), "colourless must pass a mono-white deck");
-  assert.ok(Facets.matches(solRing, {colors: ["U", "B"]}), "and a two-colour one");
+  assert.ok(Facets.matches(solRing, {colors: ["U", "B"]}), "and a two-color one");
 });
 
 check("ticking C alone is how you isolate colourless", () => {
@@ -134,12 +134,12 @@ check("ticking C alone is how you isolate colourless", () => {
 });
 
 check("a card outside the picked identity is excluded", () => {
-  // ci is stored in a canonical order (BW, not WB), so pick a real two-colour card and
+  // ci is stored in a canonical order (BW, not WB), so pick a real two-color card and
   // use its own letters rather than assuming which way round they are written.
   const pair = CARDS.find((c) => c.ci && c.ci.length === 2);
-  assert.ok(pair, "the catalog must hold a two-colour card");
+  assert.ok(pair, "the catalog must hold a two-color card");
   const [a, b] = pair.ci.split("");
-  assert.ok(Facets.matches(pair, {colors: [a, b]}), `${pair.name} (${pair.ci}) fits its own two colours`);
+  assert.ok(Facets.matches(pair, {colors: [a, b]}), `${pair.name} (${pair.ci}) fits its own two colors`);
   assert.ok(!Facets.matches(pair, {colors: [a]}), `${pair.name} (${pair.ci}) does not fit a mono-${a} deck`);
 });
 
@@ -265,7 +265,7 @@ check("the whole catalog narrows to a small, real answer", () => {
   assert.ok(rows.every((c) => /Creature/.test(c.type)));
 });
 
-check("any-mode within a facet is an OR, and colour keeps its own rule either way", () => {
+check("any-mode within a facet is an OR, and color keeps its own rule either way", () => {
   const all = Facets.apply(CARDS, {roles: ["ramp", "draw"]}, null).length;
   const any = Facets.apply(CARDS, {roles: ["ramp", "draw"]}, null, {any: true}).length;
   const ramp = Facets.apply(CARDS, {roles: ["ramp"]}, null).length;
@@ -274,7 +274,7 @@ check("any-mode within a facet is an OR, and colour keeps its own rule either wa
   assert.ok(any <= ramp + draw && any > all, `any (${any}) must sit between all (${all}) and ramp+draw (${ramp + draw})`);
   const pair = CARDS.find((c) => c.ci && c.ci.length === 2);
   const [a] = pair.ci.split("");
-  assert.ok(!Facets.matches(pair, {colors: [a]}, {any: true}), `${pair.name} must still fail a mono-${a} deck in any-mode: colour is one question about the whole identity`);
+  assert.ok(!Facets.matches(pair, {colors: [a]}, {any: true}), `${pair.name} must still fail a mono-${a} deck in any-mode: color is one question about the whole identity`);
 });
 
 
@@ -374,8 +374,8 @@ check("in any mode a facet's own includes are lifted, its excludes kept", () => 
   const all = Facets.narrowedCounts(CARDS, sel, null, "colors", {any: false});
   const none = Facets.narrowedCounts(CARDS, {colors: ["!W"]}, null, "colors");
   assert.deepEqual([...any.entries()].sort(), [...none.entries()].sort(), "any mode counts as if only the exclude were picked");
-  assert.ok((all.get("U") || 0) <= (any.get("U") || 0), "all mode counts within the picked colours");
-  assert.equal(any.get("W"), undefined, "an excluded colour has no cards left to count");
+  assert.ok((all.get("U") || 0) <= (any.get("U") || 0), "all mode counts within the picked colors");
+  assert.equal(any.get("W"), undefined, "an excluded color has no cards left to count");
   assert.equal(Facets.narrowedCounts(CARDS, {}, null, "nope").size, 0, "an unknown facet counts nothing");
 });
 
@@ -383,7 +383,7 @@ check("in any mode a facet's own includes are lifted, its excludes kept", () => 
 
 /* matches() is the rule, written card by card; apply() and narrowedCounts() answer through the
    posting lists. Every kind of pick the dialog can make is held to the scan here: all and any
-   mode, excludes, colour's own rule and C alone, the alternatives facets, lands, and the two
+   mode, excludes, color's own rule and C alone, the alternatives facets, lands, and the two
    personal facets with and without a library. */
 const reference = (cards, sel, state, opts) => Facets.decorate(cards, state).filter((c) => Facets.matches(c, sel, opts));
 const top = (key, i = 0) => Facets.values(CARDS, null)[key][i].value;

@@ -126,7 +126,7 @@ on every apply, and a validator that refuses a command that no longer fits.
   finalized first) is shown for review with the summary the model already writes — never
   dropped, never forced.
 - **Idempotent by id.** A command's id is minted on the device, so a replay after a lost
-  answer is one the server recognises and answers again rather than applies twice; the log
+  answer is one the server recognizes and answers again rather than applies twice; the log
   holds each command once.
 - **Order.** The server's revision order is the order. Device clocks are recorded for the
   audit, not trusted for sequencing.

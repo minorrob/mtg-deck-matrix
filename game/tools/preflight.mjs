@@ -38,7 +38,7 @@ for (const [dir, file] of suites) {
   process.stdout.write('X');
 }
 console.log('');
-if (skipped.length) console.log(`   ${skipped.length} known Windows checkout artefact(s) ignored: ${skipped.join(', ')}`);
+if (skipped.length) console.log(`   ${skipped.length} known Windows checkout artifact(s) ignored: ${skipped.join(', ')}`);
 if (failed.length) {
   console.log(`   ${failed.length} SUITE(S) FAILED:`);
   for (const f of failed) {

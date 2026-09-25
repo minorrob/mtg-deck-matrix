@@ -44,7 +44,7 @@ Those services are independent of this project. CrankMagic:
   seller;
 - **does not simulate the game accurately.** The built-in simulator is a
   heuristic model. Its scores are estimates produced by this project's own code,
-  are labelled as such in the app, and must not be read as a statement about how
+  are labeled as such in the app, and must not be read as a statement about how
   a deck performs in real play.
 
 Every third-party service named here has its own terms of service. If you run,
@@ -68,7 +68,7 @@ create and does not own**, including:
 - **Typefaces** — Oxanium under the SIL Open Font License 1.1; Satoshi under its
   foundry's own license.
 
-Their presence in this repository is **not** a licence to reuse them. See
+Their presence in this repository is **not** a license to reuse them. See
 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) for what is known about each,
 and [`LICENSE`](LICENSE) §1(b)–(e).
 

@@ -30,7 +30,7 @@ const priceOf = new Map(catalog.cards.map((c) => [c.name.toLowerCase(), Number(c
 /* An entry the catalog cannot price is not free. It keeps whatever the figure already
    carried for it, which is impossible to recover per card -- so instead the variant keeps
    its published figure whole and is named at the end. A number half-derived from today's
-   prices and half from a year ago is worse than an old number honestly labelled. */
+   prices and half from a year ago is worse than an old number honestly labeled. */
 function priceHundred(list) {
   let total = 0, unpriced = 0;
   for (const entry of list || []) {

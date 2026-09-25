@@ -51,7 +51,7 @@ endpoint (`https://svgs.scryfall.io/card-symbols/{symbol}.svg`) on 7 September
 - **Where:** `data/commander-ranks.json`, the co-play block of `data/graph.json`,
   produced by `tools/commander-ranks.mjs`.
 - **Terms:** EDHREC's site terms apply. Their data is used as a dated snapshot
-  for a personal tool and is clearly labelled in the app as observed co-play
+  for a personal tool and is clearly labeled in the app as observed co-play
   rather than a recommendation.
 - CrankMagic is **not affiliated with or endorsed by EDHREC.**
 

@@ -190,9 +190,9 @@ built (below). Measured:
 
 The blocker does exactly its job — twenty percentage points more of the incoming damage is
 stopped, about 1.9 extra damage a game. It is still not worth a seventeenth of the offence,
-and the reason is structural rather than a modelling error: **you must kill three players and
+and the reason is structural rather than a modeling error: **you must kill three players and
 any one of them need only kill you once.** Offence compounds toward three eliminations;
-defence buys life against a table with three sources of it. That is a real property of
+defense buys life against a table with three sources of it. That is a real property of
 four-player Commander, not an artifact, and it is why "block less than feels right" is
 ordinary multiplayer advice.
 
@@ -336,7 +336,7 @@ before the normal one, and double strike is both.
 **6 · Instants, and the fact that a turn is not a turn.** A defender holding two untapped
 lands and a combat trick is a different defender. The current engine has no concept of
 holding mana up for something, so a pump spell, a removal spell at instant speed and a fog
-are all just cards that were cast at some point. Modelling this needs, at minimum: mana held
+are all just cards that were cast at some point. Modeling this needs, at minimum: mana held
 open, a hand the pilot is willing to spend from at instant speed, and the same block-or-take
 value function extended to "or change the outcome for two mana".
 
@@ -386,7 +386,7 @@ read `classifyCard` against the real catalog rather than watching a score look w
 its findings were still live on `main`, and both were about a card the engine had
 misunderstood while producing a perfectly plausible number.
 
-**A fetch land was an untapped land of every colour it could reach.** `entersTapped` was read
+**A fetch land was an untapped land of every color it could reach.** `entersTapped` was read
 off the fetch's own text — and a fetch does not print *"enters tapped"*, because the fetch is
 not the land that does. So:
 
@@ -398,17 +398,17 @@ not the land that does. So:
 | Naya Panorama | untapped, R G W | **{1}** on top of the sacrifice, and tapped |
 | Bant Panorama | untapped, G W U | as above |
 
-Two five-colour lands available the turn they are played is strictly better than any land in
+Two five-color lands available the turn they are played is strictly better than any land in
 Magic. Five lands change. Myriad Landscape and Krosan Verge already read as tapped, because
 they print the words; this makes the other five agree with them. The fetch now enters tapped,
 which costs it the `{C}` the Panoramas really do tap for that turn and still does not charge
-the mana to crack them — two errors pointing opposite ways, with the colour landing on the
+the mana to crack them — two errors pointing opposite ways, with the color landing on the
 right turn.
 
 **The question has to be asked of the unstripped text.** A true dual prints its whole mana
 ability as reminder text, because the ability comes from the basic land types on the type
 line — `({T}: Add {W} or {U}.)` is the entirety of Tundra. Ask "does this land make its own
-colour" of the *stripped* text and every dual in Magic has no mana ability, which makes every
+color" of the *stripped* text and every dual in Magic has no mana ability, which makes every
 dual a fetch. `producedColors` already reads the raw text for exactly this reason; the fetch
 test now does too, and `tests/sim-engine.mjs` pins it with a land that both fetches and
 prints its ability only in parentheses.
@@ -571,8 +571,8 @@ question of what a creature is for — wait on section 3.
 - **No mulligan skill.** The keep rule is a heuristic on land count; a real player's keep
   depends on the matchup and the seat. It is now a *parameter* — see section 3a — but a
   parameterised heuristic is still a heuristic.
-- **Colour screw is approximate.** The mana model tracks sources and pips but not the order
-  lands enter, so a hand that is one turn short of its second colour is scored as if it were
+- **Color screw is approximate.** The mana model tracks sources and pips but not the order
+  lands enter, so a hand that is one turn short of its second color is scored as if it were
   not.
 
 None of these is hidden. All of them push in the same direction: the engine measures how a

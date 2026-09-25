@@ -179,16 +179,16 @@ The front door, and the landing page. Title on screen: **My Commander Decks**.
 | Feature | What it does | Why it exists | State |
 |---|---|---|---|
 | **Three doors above the list** — Add a deck, Build one, Explore cards | The three ways in, in a row above the deck grid, under a heading reading *My Decks* | Add and Build used to sit at the *end* of the grid "on the reasoning that they are what you reach for after looking at what is already there. That holds at six decks and stops holding at sixteen" (PR #73). Explore cards was added at the same time because the card graph had no route from this page but a footer link | Shipped, #73 |
-| **Decks tab** | Every deck, ranked by measured score, with commander art, a one-line hook, and how much of its hundred is boxed. Opening one gives the play guide, the shape, the upgrade paths and all hundred cards colour-coded by in the box / on the bench / on order / still to buy | The original replacement for the workbook's per-deck sheets (PR #46) | Shipped |
+| **Decks tab** | Every deck, ranked by measured score, with commander art, a one-line hook, and how much of its hundred is boxed. Opening one gives the play guide, the shape, the upgrade paths and all hundred cards color-coded by in the box / on the bench / on order / still to buy | The original replacement for the workbook's per-deck sheets (PR #46) | Shipped |
 | **Bench tab** | Spare copies, filtered and sorted through `card-table.js` | At 3,200 owned cards the bench was 1,940 cards in one list — 156 phone screens. It now shows fifty, says *"50 of 1,940 cards"*, opens on what a spare card is *worth* rather than alphabetically, and has one button for the rest (PR #70) | Shipped |
-| **Upgrades tab** | The card going in, the card coming out, and why — filterable by deck, rung, status, colour, price band, type and rarity | "Upgrades is what had no home at all" (PR #74). It replaced a To Buy tab that duplicated and disagreed with the Matrix's Shop; `#/buy` now redirects to `matrix.html#shop` | Shipped, #74 |
+| **Upgrades tab** | The card going in, the card coming out, and why — filterable by deck, rung, status, color, price band, type and rarity | "Upgrades is what had no home at all" (PR #74). It replaced a To Buy tab that duplicated and disagreed with the Matrix's Shop; `#/buy` now redirects to `matrix.html#shop` | Shipped, #74 |
 | **Add a deck** (`import-panel.js`) | Paste a decklist or give an Archidekt link → resolve → preview → measure → save | A pasted deck should be a peer of the six that ship. The parse is the blank line, because Moxfield puts the command zone in its own trailing block and does not label it (`deck-import.js`) | Shipped |
-| **Deck sources** (`deck-sources.js`) | Archidekt is fetched; Moxfield and Deckstats are recognised and answered with export-and-paste instructions | Measured, not assumed: Archidekt's API answers 200 with every card carrying its own `oracleCard`; Moxfield answers **403** "to a server and to a browser alike, not an origin-header problem." The module refuses to pretend otherwise | Shipped |
+| **Deck sources** (`deck-sources.js`) | Archidekt is fetched; Moxfield and Deckstats are recognized and answered with export-and-paste instructions | Measured, not assumed: Archidekt's API answers 200 with every card carrying its own `oracleCard`; Moxfield answers **403** "to a server and to a browser alike, not an origin-header problem." The module refuses to pretend otherwise | Shipped |
 | **The fix-the-names screen** (`card-resolve.js`) | A name that is not a card becomes a question with up to five candidates, each carrying *why* it is offered, plus **Leave it out** as a real answer | It was a dead end: "1 card name could not be matched" and a Save button that saved a 99-card deck the simulator would then refuse to score. Four rungs, cheapest and most certain first: a trigram/word match against the 31,830-card registry with no request at all, autocomplete on the whole name, autocomplete on the part before the comma, fuzzy `named`, then a word search | Shipped, #75 |
 | **A link is an answer** (`card-link.js`) | Every unmatched row also takes a URL: a Scryfall card page resolves a printing outright, a link stating a name is tried exactly, a TCGplayer product id is looked up by id, a slug is guessed from the longest reading down and checked before it is believed | "Sometimes the reader knows exactly which card they meant and none of the six is it — it is open in another tab" (PR #76) | Shipped, #76 |
 | **Manual cards** (`manual-cards.js`) | A card no lookup can place is kept as a manual card carrying the name asked about, the picture if the link is one, and where it came from. One `/cards/collection` request asks about all of them on every load; exact matches only; the day a card is indexed it stops being manual in every deck holding it | Refusing the card is the same dead end the fix screen exists to remove. A manual card has no rules text, so the deck says so plainly "rather than being one card short and silent about why" | Shipped, #76 |
 | **Never offer a card the list already has** | The exclusion holds at every rung, including the fill request that can rename a registry hit on the way out. Basics are exempt | Commander is singleton: offering a card already in the deck builds an illegal hundred | Shipped, #76 |
-| **Build a deck** (`build-panel.js`, `deck-generator.js`, `deck-build.js`) | Commander, sixteen themes as chips, six play styles, a budget to aim at, cards to keep. Queries live Scryfall and builds three complete, Tier 3 legal, exactly-100-card rungs | The generator had been dead code since the Choose tab was retired — 983 lines reachable from nowhere (PR #70). The budget is labelled *aimed at, not capped*, because that is what it is | Shipped, #70 |
+| **Build a deck** (`build-panel.js`, `deck-generator.js`, `deck-build.js`) | Commander, sixteen themes as chips, six play styles, a budget to aim at, cards to keep. Queries live Scryfall and builds three complete, Tier 3 legal, exactly-100-card rungs | The generator had been dead code since the Choose tab was retired — 983 lines reachable from nowhere (PR #70). The budget is labeled *aimed at, not capped*, because that is what it is | Shipped, #70 |
 | **Ranked by what people play with *your* commander** (`edhrec-client.js`) | EDHREC per-commander inclusion and synergy, split against the global rank | `edhrecRank` is *global* popularity: "Sol Ring outranks every card in Magic and says nothing about whether it belongs in an Atraxa deck rather than a Krenko one." Inclusion alone rebuilds the same staples for everybody; synergy alone builds a themed deck with no removal. A commander with no EDHREC page still builds — the weight folds back onto the global rank, asserted card for card | Shipped, #70 |
 | **Upload what you own** (`inventory-import.js`, `xlsx-reader.js`) | csv, xlsx or a pasted note, allocated copy by copy across decks in order, remainder to the bench | "The allocation is the hard part, not the parse." `.xlsx` is read by walking the ZIP central directory and inflating the shared-string table with `DecompressionStream("deflate-raw")` rather than telling the reader to export a CSV, which `xlsx-reader.js` calls "asking the user to do the app's job" | Shipped |
 | **Archive and Delete** | A **⋯** menu on every deck card. Archive takes a deck off the list and its cards out of the buy total; one click in the drawer brings both back. Delete destroys a deck you added and asks first; the six that ship offer archiving only | Sixteen decks is not a list you hold in your head. Archiving is **one filter in one place** — `rebuild()`, where the catalog is built — so the grid, the ranking, the bench, the buy list and the allocation all stop seeing the deck at once. Delete is not offered for the shipped six "because there is nothing local to delete and a button claiming otherwise would be lying about what it does" | Shipped, #73 |
@@ -207,7 +207,7 @@ screen: **My MtG Deck Builder**.
 | **Deck step** (`deck-page.js`, `slot-model.js`) | One row per slot, expanding in place into its rung ladder plus owned cards that fit, each badged with where the physical copy lives | Keyed on the two things that actually exist: the **slot** (deck + position) and the **card** (merged across decks). Six tabs collapsed into this plus Shop in PR #14 | Shipped |
 | **The five rungs a person sees** | Twelve storage arrays collapse into five rungs | `lineup-model.js` owns twelve named ladder arrays chained by `replaces`; `slot-model.js` is the one projection both the Deck page and the Shop read | Shipped |
 | **Ready to sleeve** | A strip answering *is it legal* (through `compliance-model.js` at the deck's bracket) and *can it cast itself* (`Slot.manaHealth`: sources and pips weighted by slot quantity, commander excluded from demand) | The two questions you are actually asking with the cards in your hands (PR #28) | Shipped, #28 |
-| **Three cards you own could fill this slot** (`Slot.slotFit`) | Up to three owned cards that would do the slot's job, ranked, with the reasoning shown; pressing one files it as a Manual pick | Ranks on type, then what the card is *for*, then cost, with colour identity as a **gate rather than a score** — an out-of-identity card is not a worse fit, it is illegal. The role tests are lifted from `sim-engine.js` and pinned against it across the catalog. Two things keep it quiet: it appears only on a slot you would still have to buy or an empty one, and only offers cards sharing the slot's role | Shipped (BACKLOG item 2, struck through) |
+| **Three cards you own could fill this slot** (`Slot.slotFit`) | Up to three owned cards that would do the slot's job, ranked, with the reasoning shown; pressing one files it as a Manual pick | Ranks on type, then what the card is *for*, then cost, with color identity as a **gate rather than a score** — an out-of-identity card is not a worse fit, it is illegal. The role tests are lifted from `sim-engine.js` and pinned against it across the catalog. Two things keep it quiet: it appears only on a slot you would still have to buy or an empty one, and only offers cards sharing the slot's role | Shipped (BACKLOG item 2, struck through) |
 | **Active vs Assigned** | Every slot carries two states: Active (what the deck is counted, shopped and rules-checked as) and Assigned (the reviewed recommendation behind it, moved only by *Make Assigned*) | They start identical and diverge only on a rung change (PR #43) | Shipped |
 | **Shop step** (`shop-page.js`) | Every slot re-keyed by card name and merged across decks, scoped to what is still **owed**. Four views: Table, Gallery, Store and Bench, sharing one filter engine and one group-by | A phone landed on the Table — 414 rows, each stacked into a 195px card, 105 screens. A narrow screen lands on **Store** now, decided when Shop is first opened and never again, so choosing the table on a phone keeps the table (PR #70) | Shipped |
 | **Store view** | A search box, the seller's own letter groups, one green Buy button per row, a count of what is left to find | Built for a phone at a vendor's booth. "It was already there and already scoped to what is owed. Nothing was wrong with it except that nobody was sent to it" | Shipped |
@@ -236,7 +236,7 @@ typed in and looked up live.
 | **The Copilot** (`data/lenses.json`, `sim-lenses.js`) | Findings that state a fact, cite the evidence, and hand you a filter | "The copilot never picks a card and never edits a deck… a lens you disagree with costs one click to ignore and can never quietly change anything." Every lens is generated from a query, so a finding that stops being true stops appearing rather than sitting there being wrong. `lenses.json` is optional: the two fetches race and the cards never wait on the advice | Shipped, #67 |
 | **Copilot filters** | Three axes — deck, kind (Warning / Worth a look / Opportunity) and source (card rules vs simulator) — each multi-select, counted the faceted way | The rule that makes them safe to switch on: **nothing is hidden.** What does not match folds into a drawer with its count on the label, "because a filter that hides evidence is one you have to remember you set" | Shipped, #72 |
 | **Simulator-derived findings** | Ten lenses computed from `data/deck-ratings.json` deltas, including the negative one — an upgrade that measures *worse* than what you already have | "no invented thresholds and each step of the ladder counted once" (PR #70) | Shipped |
-| **Card Click to Navigate Graph** | A labelled on/off pill; off shows the card, on re-centres the graph. The list honours it too | The original ask was a lock toggle. It shipped the other way round first — "a mode is a cost paid on every click… 'What is this card?' is what you do constantly; re-centring is deliberate" (PR #66) — and then became an explicit labelled pill in PR #74 | Shipped, #66 then #74 |
+| **Card Click to Navigate Graph** | A labeled on/off pill; off shows the card, on re-centres the graph. The list honors it too | The original ask was a lock toggle. It shipped the other way round first — "a mode is a cost paid on every click… 'What is this card?' is what you do constantly; re-centring is deliberate" (PR #66) — and then became an explicit labeled pill in PR #74 | Shipped, #66 then #74 |
 
 ### 4.4 · Cross-cutting
 
@@ -543,7 +543,7 @@ one of the failure modes this list documents (see 14 and 16).
    **Note on why this shipped broken:** "no test ever imported a list with a bad name in it."
 
 4. **When everything is cleared, the bench and all of my state should not be present.** —
-   **paraphrase.** PR #76 records only the verdict, not the words: the behaviour "is the
+   **paraphrase.** PR #76 records only the verdict, not the words: the behavior "is the
    opposite of what was asked for."
    **Requirement:** a cleared browser must behave like one that has never opened the app, and
    must stay that way.
@@ -585,7 +585,7 @@ one of the failure modes this list documents (see 14 and 16).
    **Where:** `deck-page.js`, PR #37. The reasoning is preserved verbatim in a source comment
    at `deck-page.js:928`.
 
-8. **Make the app say what the physical audit says.** — **paraphrase** of an artefact rather
+8. **Make the app say what the physical audit says.** — **paraphrase** of an artifact rather
    than a message: `71e200f` records "Rob audited all six boxes card by card and sent the
    result: one row per deck and card, with its status and count, every deck summing to a
    hundred."
@@ -609,7 +609,7 @@ one of the failure modes this list documents (see 14 and 16).
     from the answering commit's own title (`756e4bb`).
     **Requirement:** the Max rung must actually spend the Bracket 3 allowance.
     **Met by:** forty of the fifty Max rungs composed byte-identical to the Tuned hundred.
-    `tools/sim/promote-tier3.mjs` promotes in-colour, priced Game Changers already sitting in
+    `tools/sim/promote-tier3.mjs` promotes in-color, priced Game Changers already sitting in
     each plan: at most three in the finished hundred (counting one that is already the
     commander), checked with `compliance-model.js` on the *composed* list rather than assumed
     from a counter — variant `2a` shipped four before this landed, an illegal deck nothing was
@@ -670,7 +670,7 @@ one of the failure modes this list documents (see 14 and 16).
     **Met by:** a readiness strip. Legality runs the boxed hundred through
     `compliance-model.js` at the deck's bracket; castability is `Slot.manaHealth`, counting
     sources and pips across the boxed cards weighted by slot quantity (so `Forest x7` counts as
-    seven) and flagging a colour whose sources fall under a floor scaled to how much that colour
+    seven) and flagging a color whose sources fall under a floor scaled to how much that color
     is actually demanded, with the commander excluded from demand.
     **Where:** `slot-model.js`, PR #28. `tests/slot-model.mjs` pins the mana rules card-for-card
     against `sim-engine.js` across the whole catalog, because a drifted second copy is worse
@@ -683,8 +683,8 @@ one of the failure modes this list documents (see 14 and 16).
     **Met by:** answered differently first, with the reasoning recorded: "a mode is a cost paid
     on every click… 'What is this card?' is what you do constantly; re-centring is deliberate."
     So tapping a card shows the card and focusing became a button inside the popup. Later
-    feedback turned it into an explicit labelled on/off pill, **Card Click to Navigate Graph**,
-    which the list honours too — "which it never did."
+    feedback turned it into an explicit labeled on/off pill, **Card Click to Navigate Graph**,
+    which the list honors too — "which it never did."
     **Where:** PR #66, revised in PR #74.
 
 17. **A load I can undo, and a way to see how long since I exported.** — **paraphrase**;
@@ -779,8 +779,8 @@ Six items, ordered by how much they would change a build night. Item 2 is shippe
    a one-shot undo for a load and a header chip saying how long since the last export.
 2. ~~"Three cards you own could fill this slot"~~ — **shipped.** Still open inside it: it
    ranks against the loose pool only, and does not consider what removing a card does to the
-   curve or the colour sources (see item 5).
-3. **A pull sheet for building at the table.** The Deck page is organised by the deck's
+   curve or the color sources (see item 5).
+3. **A pull sheet for building at the table.** The Deck page is organized by the deck's
    structure; physically pulling a hundred cards wants them ordered the way they are sitting
    in boxes. Needs a new view with print styles and a second way of ticking that agrees with
    the first.
@@ -862,7 +862,7 @@ the app's job. `deck-audit.js` explains why a re-run measures two hundreds rathe
 There is no linter for this; the convention holds because the reasoning is the only place
 some of these decisions are recorded.
 
-**Every behaviour has a test.** 33 Node suites under `tests/`, using only Node built-ins.
+**Every behavior has a test.** 33 Node suites under `tests/`, using only Node built-ins.
 `runtests.sh` runs them all and its own header explains why a shell loop will not do: the
 obvious one-liner exits 0 whatever happens, because the exit code belongs to the last `echo`.
 "That happened, and something got pushed on the strength of it."
@@ -982,7 +982,7 @@ subject. **#2**, **#54** and **#77** are open drafts and are listed separately a
 | #53 | Stop reading reminder text as rules text, and re-measure | Reminder text in parentheses has no rules meaning and was being read as rules; 138 cards changed classification |
 | #55 | Put the six real decks into the comparison app | The six real decks and the fifty-variant catalog met on one page |
 | #56 | Rename slots 3 and 7 to fit the decks that are actually in them | Two role names no longer described the decks that had moved into them |
-| #57 | Correct deck 8's mono-color claim and pin the count | Seven of fifty variants are mono-colour, in five different roles |
+| #57 | Correct deck 8's mono-color claim and pin the count | Seven of fifty variants are mono-color, in five different roles |
 | #58 | Stop the commander tile clipping its own label | "COMMANDER" had been rendering as "COMM" at every desktop width |
 | #59 | Add a back link from the matrix app to the viewer | The only way home had been the browser button |
 | #60 | Add the card graph: Neo4j model over every Commander-legal card | Cards link to events, not to cards, so synergy is a path derived at query time |
@@ -993,7 +993,7 @@ subject. **#2**, **#54** and **#77** are open drafts and are listed separately a
 | #65 | Price from every printing, not the one row oracle_cards happens to carry | Four staple shocklands had read as free |
 | #66 | Tapping a card shows the card; focusing the graph is a button inside it | The frequent act became free; the deliberate one became explicit |
 | #67 | Add the copilot layer: findings that hand you a filter | Findings that state a fact, cite the evidence, and hand you a filter — never edit a deck |
-| #68 | Fix three extraction gaps, and the colour filter that hid every artifact | A colour filter had been excluding every colourless card |
+| #68 | Fix three extraction gaps, and the color filter that hid every artifact | A color filter had been excluding every colourless card |
 | #69 | Guard master-v2.json as a build artifact | Exchange the workbook and the code, never the generated JSON |
 | #70 | Build decks from nothing, and hold up on the first visit, at collection scale, and on the way out | The generator got a front door; the browser-journey harness arrived with the first-visit and 3,200-card personas; two pages stopped waiting on unreachable hosts; the export stopped leaving behind the part somebody typed in |
 | #71 | Reconcile the collection, scope the Shop to what is owed, and put the pull list in it | The Shop went from a claimed 263 cards / $315.28 to a real 17 / $80.14 |
@@ -1136,7 +1136,7 @@ Each of those five numbers is the competitive score minus the same line with tha
 decision handed back to the casual pilot — a run, not an inference. That is what lets the
 app say *which* decision the gap is made of rather than listing the ones that differ.
 
-The **shape** of that profile is the finding, and it is arithmetic rather than judgement:
+The **shape** of that profile is the finding, and it is arithmetic rather than judgment:
 
 | Profile | What it means | What it becomes on screen |
 |---|---|---|

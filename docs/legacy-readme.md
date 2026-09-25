@@ -146,7 +146,7 @@ about whether it belongs in an Atraxa deck rather than a Krenko one. A commander
 EDHREC page still builds; the weight folds back onto the global rank instead, and the deck it
 produces is asserted card for card against the one it produced before.
 
-The budget is labelled *aimed at, not capped*, because that is what it is. The rung you keep
+The budget is labeled *aimed at, not capped*, because that is what it is. The rung you keep
 is stored exactly the way a pasted deck is, so it is a peer of every other deck everywhere
 downstream.
 
@@ -453,7 +453,7 @@ moved.
   the problem, the options, the measurement and what was rejected — usually by naming the bug
   that made the file what it is. Commit messages do the same at a larger scale, and quote the
   complaint that caused the change. `git log` is the design history, not a changelog.
-- **Every behaviour gets a test, and the test names the rule where it broke.**
+- **Every behavior gets a test, and the test names the rule where it broke.**
 - **Measure, do not assume.** Moxfield answers 403 because that was checked, not because it
   seemed likely. A CDN that cannot be reached cost 12.7 seconds of blank page, measured. Prose
   in this repository should be able to name where a number came from.

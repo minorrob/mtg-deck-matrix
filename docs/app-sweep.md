@@ -34,11 +34,11 @@ button at 24px, and the commander picker's name button at 16px. All 36px or more
 
 ### One mana source paid every pip, and nothing was ever spent (fixed, #103)
 
-The engine kept a count, per colour, of permanents making that colour, and asked each
-colour of a cost against it independently. So a single Watery Grave paid a `{U}` and a
+The engine kept a count, per color, of permanents making that color, and asked each
+color of a cost against it independently. So a single Watery Grave paid a `{U}` and a
 `{B}` in the same spell; a triome counted three times; the table never decremented, so
 the same land paid for the first spell of a turn and the fourth; and "Add {C}{C}" was
-read as "any colour", which is how Sol Ring came to fix a five-colour manabase.
+read as "any color", which is how Sol Ring came to fix a five-color manabase.
 
 Costs are now matched to distinct sources and the assignment that proves a cost payable
 is the payment. Every published score moved, so this is engine generation **v2.7** with a
@@ -54,10 +54,10 @@ why a spellslinger list measured the way it did.
 
 `tests/slot-model.mjs` compares what `slot-model.js` and `sim-engine.js` say about the
 same card. Fixing the engine's colourless-mana and ritual rules broke it, correctly: the
-page still called Ashnod's Altar a five-colour source and Cabal Ritual ramp. Both were
+page still called Ashnod's Altar a five-color source and Cabal Ritual ramp. Both were
 fixed in the page too. **This test is the most valuable one in the repo** and the reason
 is worth stating: it is the only place where two independent implementations of the same
-judgement are forced to agree, and it caught a real bug in the half nobody had touched.
+judgment are forced to agree, and it caught a real bug in the half nobody had touched.
 
 ### The ratings generator pointed at a file that had moved (fixed, #103)
 
@@ -101,10 +101,10 @@ engine computes one** — and writing that check found that `rampAmount` credits
 fetching ONE land with two mana (13 cards, Rampant Growth and Solemn Simulacrum among
 them), while Nature's Lore gets one for the same effect. Recorded as item 6 of
 `docs/simulator-enhancement-plan.md`; the fix moves published numbers, so it belongs in the
-v2.7 re-sweep, and the test pins today's behaviour with a comment pointing there.
+v2.7 re-sweep, and the test pins today's behavior with a comment pointing there.
 
 
-`tests/slot-model.mjs` compares roles and colour production between the page and the
+`tests/slot-model.mjs` compares roles and color production between the page and the
 engine. It should also compare **mana value, the ramp amount, and the instant/one-shot
 split**, which are the other judgements both halves make independently. Cost: small, and
 it extends the one mechanism that has actually caught things.

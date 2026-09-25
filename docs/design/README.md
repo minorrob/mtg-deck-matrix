@@ -1,5 +1,8 @@
 # docs/design — where a design handoff lands
 
+**Designers: read [`BRIEF.md`](BRIEF.md) first.** CrankMagic is US-only: US spelling, "email", US dollars
+and nothing else, US numbers and dates. A handoff that brings in anything else is refused at intake.
+
 One folder per handoff, named for its date (`2026-09-xx/`), holding what Claude Design (or a
 person) produced, untouched: HTML previews, token files, images, notes. The intake for each
 handoff is written in `docs/design-intake-<date>.md` at the repository's docs root; the first is

@@ -4,7 +4,7 @@
  * Board wipe, Protection, Loop, Tutor, Ramp, Draw -- and read two lists: the deck's own cards
  * that carry the role, counted against the house minimum, and the candidates that could join
  * them: the bench, the buy list, the deck's linked upgrades and the commander's co-play
- * neighbours, none of them already in the hundred, all inside the deck's colour identity,
+ * neighbours, none of them already in the hundred, all inside the deck's color identity,
  * ranked by how often the commander's real decks run them, then owned before ordered before
  * not owned, price shown.
  *
@@ -69,7 +69,7 @@
 
   /* The lens over one deck. `deps.cardOf(id)` is the app's C.card; `deps.coPlay(oracleId)`
      returns the commander's co-play row as a Map oracleId -> {inclusion, synergy, decks} (or
-     null when the pairs are not loaded); `deps.byOracle(oracleId)` resolves a neighbour to a
+     null when the pairs are not loaded); `deps.byOracle(oracleId)` resolves a neighbor to a
      catalog card (or null). */
   function lens(state, deck, lensId, deps) {
     const l = lensOf(lensId);

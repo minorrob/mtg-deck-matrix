@@ -8,9 +8,9 @@ finding it produces becomes a PR of its own with a test that pins it.
 
 ## 1. What "the data model" is, in this application
 
-Seven layers, each with an owner module, a shipped artefact, and (mostly) a test:
+Seven layers, each with an owner module, a shipped artifact, and (mostly) a test:
 
-| Layer | Owner | Artefact | Pinned by |
+| Layer | Owner | Artifact | Pinned by |
 |---|---|---|---|
 | **Library state** — decks, slots, lots, groups, reports, games, advice, imports, preferences | `collection-model.js` (pure; `VERSION` 2, `migrate`, `apply`, `validate`, `projection`, `readiness`, `matrix`) | IndexedDB `crankmagic-library` (schema 1: state, journal, meta, cache) via `collection-repository.js` | `tests/collection-model.mjs`, `assignment-model`, `slot-model`, `user-state`, `deck-store` |
 | **Exchange** — backups, imports, exports | `collection-exchange.js`, `inventory-import.js`, `xlsx-*`, `docx-writer.js` | `crankmagic-backup` v1 (SHA-256), Library sheets, CSV/TSV | `collection-exchange`, `inventory-import`, `xlsx-writer`, `docx-writer` |
@@ -32,9 +32,9 @@ opinion.
 **Defined.** Is every entity's shape written down in one place, with its invariants, and
 does the code enforce them? Today: `docs/crankmagic-architecture.md` states the collection
 invariants in prose; `validate()` enforces some; the graph card shape, the live-load shape
-and the report shape are defined only by their producers. *Measure:* for each artefact, a
+and the report shape are defined only by their producers. *Measure:* for each artifact, a
 JSON Schema (or a `validate` function) exists, is run in a test on the committed file, and
-the doc links to it. Gap count = artefacts without one.
+the doc links to it. Gap count = artifacts without one.
 
 **Clean.** Is each fact stored once, named once, and read from one place? Known
 duplications: the status vocabulary lives in `statusOf` (Cards page), `PILL_KIND` (app
@@ -72,11 +72,11 @@ exists or is a finding.
 
 ## 3. Method
 
-1. **Inventory** (one session). A generated table of every artefact: file, size, producer
+1. **Inventory** (one session). A generated table of every artifact: file, size, producer
    tool, consumers (grep), version field, schema/validator, tests that read it, last
    regenerated. Script it (`tools/data-inventory.mjs`) so it stays true. Include the legacy
    files and mark each *serve · archive · delete*.
-2. **Entity catalogue** (one session). For state, graph card, live-load deck/card, report,
+2. **Entity catalog** (one session). For state, graph card, live-load deck/card, report,
    game, group entry: every field, its type, its source (typed · imported · derived · cached),
    its invariants, its readers. Written as JSON Schema drafts under `schema/` and rendered
    into the architecture doc. Where two schemas disagree (catalog card vs graph card vs
@@ -165,7 +165,7 @@ Named now so the evaluation checks them rather than rediscovers them:
 
 ## 5. Sequence and sizing
 
-E0 inventory → E1 entity catalogue and schemas → E2 invariant sweep and the reliability
+E0 inventory → E1 entity catalog and schemas → E2 invariant sweep and the reliability
 tests → E3 the two vocabularies (status, groupings) and the rules absorption → E4 graph and
 legacy-file hygiene → E5 the report. Five to six sessions at the pace of Phases A–C, each
 its own PR, each leaving every suite green. The Trace and Tabletop plans both list the

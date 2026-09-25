@@ -30,7 +30,7 @@ views.settings=async()=>{
       +`<form class="cm-settings-cap" data-settings-cap><label>Default budget cap ($)<input name="cap" type="number" min="1" step="1" inputmode="numeric" value="${own??''}" placeholder="${e(rule??'')}"></label>${b('Save cap','save-budget-cap',{},true)}</form>`
       +`<p class="cm-muted">A deck with no cap of its own is held to <strong>${e(money(C.deckCap()))}</strong>${own?'':` — the pod's rule`}. Clear the box to go back to the rule${rule?` (${e(money(rule))})`:''}.</p>`)
    +card('data','Data',
-      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('E-mail the export…','share-export')}</div>`
+      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
       +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`

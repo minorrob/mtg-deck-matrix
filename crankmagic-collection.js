@@ -34,7 +34,7 @@ function plans(d){
 /* ONE COLUMN FOR THE STATE. Source (owned, ordered, watching) and Allocation (Physical deck,
    Substitute, Reserved, Bench) were two columns saying one thing between them. Status is that
    one thing: an owned copy's placement; Ordered; Watched; To buy for a requirement; Draft
-   list, Suggestion or Planned for a row that is not a copy yet. The colour is the state. */
+   list, Suggestion or Planned for a row that is not a copy yet. The color is the state. */
 const statusOf=M.statusOf;   // the model's status vocabulary (M.STATUS); the words are spelled there and nowhere here
 /* THE LENS (Rob, 14 September; plan §2.6). "I want to avoid List, Sheet and Table not always
    being in agreement with each other; never independently manipulated out of sync with one
@@ -67,11 +67,11 @@ function ownPair(r){
 }
 function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute'+(r.standInForCardId?` for ${(C.card(r.standInForCardId)||{}).name||''}`:''):''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
 /* GROUPING IS NOT THE SAME QUESTION AS SORTING. The Color column prints a card's identity
-   letters, which as a grouping would make a heading per colour pair and answer nothing:
-   a reader grouping by colour wants their mono-white cards together and everything gold
-   in one pile. So colour groups into the five, Colorless, and Multiple -- and the piles
+   letters, which as a grouping would make a heading per color pair and answer nothing:
+   a reader grouping by color wants their mono-white cards together and everything gold
+   in one pile. So color groups into the five, Colorless, and Multiple -- and the piles
    come out in WUBRG order rather than alphabetically, because that is the order a Magic
-   player reads colours in. */
+   player reads colors in. */
 const G=globalThis.CrankGroupings;
 const groupLabel=(r,key)=>G.label(r,key,value);
 const groupOrder=(r,key)=>G.order(r,key,value,M.statusOrder);
@@ -144,7 +144,7 @@ const buyable=r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned';
 /* The five phone columns have about 345px between them, so Type and Rarity print the
    short forms a player already reads on a card: the type's last word (a Legendary
    Creature is a Creature when you are deciding whether to buy it) and rarity's initial,
-   coloured the way the set symbol is. */
+   colored the way the set symbol is. */
 const TYPE_SHORT={Enchantment:'Enchant',Planeswalker:'Walker',Creature:'Creature',Artifact:'Artifact',Instant:'Instant',Sorcery:'Sorcery',Land:'Land',Battle:'Battle'};
 const RARITY_LETTER={common:'C',uncommon:'U',rare:'R',mythic:'M',special:'S',bonus:'B',c:'C',u:'U',r:'R',m:'M',s:'S',b:'B'};
 const shortType=c=>{const head=(c.typeLine||'').split('—')[0].trim().split(/\s+/).pop()||'';return TYPE_SHORT[head]||head;};
@@ -550,7 +550,7 @@ function tabletop(params,shop=false){
          twenty-five entries holding perhaps two a reader can use, and a band was never going to be
          one of them: "Card draw" is a reading of the card, not a place it can go. So the menu is
          the accepting piles only, in the order the status band uses, and when nothing accepts the
-         card it says why instead of showing a wall of grey. The drag is untouched: mid-drag a
+         card it says why instead of showing a wall of gray. The drag is untouched: mid-drag a
          refused pile ringed in red answers "can I drop here", which is the question being asked;
          in a menu the same thing is only noise. */
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
@@ -898,7 +898,7 @@ const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button 
 C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 /* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
-   mana, colour, status, deck. Subtype, mechanic, flags, offers, mana value and
+   mana, color, status, deck. Subtype, mechanic, flags, offers, mana value and
    price fold under More filters, which opens itself whenever one of them is set, so a filter
    can never act from behind a closed fold. */
 const MORE_FILTERS=['subtype','mechanic','flag','offer','min','max','price'],moreSet=MORE_FILTERS.filter(k=>filter[k]!=='').length;
@@ -917,7 +917,7 @@ const cell=(r,k)=>{
     :tight&&k==='type'?e(shortType(r.card))
     :tight&&k==='rarity'?shortRarity(r.card)
     :e(value(r,k)??'Unknown');
-  /* Status wears the state's colour and the badges; Source and Allocation, kept for the
+  /* Status wears the state's color and the badges; Source and Allocation, kept for the
      Columns dialog, read the same way. */
   const stateCol=k==='status'||k==='placement';
   /* A STAGED READING WEARS A MARK (plan §2.6). The status in this cell is already the sitting's,
@@ -1099,7 +1099,7 @@ const foldCaption=r=>{const decks=[...new Set(r.partRows.map(p=>p.deckId?shortDe
 actions['pull-picker']=el=>{const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');if(!decks.length)throw Error('Finalize a deck first — Ready to add lists a finalized deck’s owned, reserved copies.');popAt(el,`<p>Ready to add for</p>${decks.map(d=>{const r=M.readiness(C.state,d),n=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${n?` · ${n} ready to add`:''}`,'deck-pull',{deck:d.id});}).join('')}`);};
 /* The phone toolbar's menus. Each one is the control the desktop shows inline, folded
    into a tap so the bar stays one row on a 375px screen. */
-actions['shop-tools']=el=>popAt(el,`<p>Library</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}`);
+actions['shop-tools']=el=>popAt(el,`<p>Library</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an emailed backup…','restore')}${b('Send this library to email…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}`);
 /* The search field stays in the DOM whether or not it is showing, so the listener bound
    at render time keeps working and a typed query survives the toggle. */
 actions['shop-search']=el=>{const row=$('#cm-shop-search');if(!row)return;searchOpen=row.hidden;row.hidden=!searchOpen;el.setAttribute('aria-expanded',String(searchOpen));if(searchOpen)$('#cm-roster-query').focus();};
@@ -1473,7 +1473,7 @@ actions.replacement=el=>{const d=M.deck(C.state,el.dataset.deck),r=M.slot(C.stat
 /* A REPLACEMENT IS FOR A PARTICULAR CARD. The picker used to open on the catalog's most
    popular cards, which offered The Restoration of Eiganjo for Abrade -- a suggestion with
    nothing to do with the card being replaced. It now ranks by likeness to that card and
-   filters to the deck's colour identity, and the confirmation shows both cards, both
+   filters to the deck's color identity, and the confirmation shows both cards, both
    prices and both TCGplayer pages side by side, because a swap decided from two names in
    a sentence is a swap decided blind. */
 actions['choose-replacement']=el=>{

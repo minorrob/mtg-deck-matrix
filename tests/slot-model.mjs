@@ -565,9 +565,9 @@ ok("the page and the simulation agree about what a card is FOR, card for card", 
 });
 
 ok("the page and the simulation agree about what a card IS, card for card", () => {
-  /* Roles, colours, mana cost and mana value are already compared above. What was not
+  /* Roles, colors, mana cost and mana value are already compared above. What was not
      was the type reading underneath all of them -- and the instant/one-shot split, which
-     is the judgement that decides whether mana is still on the table next turn. Reading
+     is the judgment that decides whether mana is still on the table next turn. Reading
      Seething Song as a permanent rock is how a spellslinger deck got measured as a mana
      engine; that bug was in the engine, and nothing would have caught the same bug had it
      been in the page's copy instead. Now both copies are held to each other. */
@@ -595,7 +595,7 @@ ok("the page and the simulation agree about what a card IS, card for card", () =
   assert.equal(creature.length, 0, `creature differs on ${creature.length} cards, e.g. ${creature.slice(0, 3).join(" | ")}`);
   assert.equal(basic.length, 0, `basic land differs on ${basic.length} cards, e.g. ${basic.slice(0, 3).join(" | ")}`);
 
-  /* HOW MUCH a ramp spell ramps is a judgement only the engine makes: rampAmount decides
+  /* HOW MUCH a ramp spell ramps is a judgment only the engine makes: rampAmount decides
      how many mana a rock adds to the pool, and the page never shows a number for it. So
      there is nothing to compare -- which is the right answer, not a gap. This tripwire
      fires if the page ever grows its own copy, because then there would be. */

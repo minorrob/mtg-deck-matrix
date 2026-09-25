@@ -29,7 +29,7 @@ for (const s of STEPS) {
 /* The records step writes the graph's card block through build-card-records.mjs, whose registered producer is the graph tool; that is the one shared file. */
 ok(STEPS.find((s) => s.id === "records").writes.includes("data/graph.json"), "the records step says it touches the graph's card block");
 
-/* The specification's order: 1 universe, 2 flavour names, 3 graph, 4 ranks; then the record set, the strategies, the manifest. */
+/* The specification's order: 1 universe, 2 flavor names, 3 graph, 4 ranks; then the record set, the strategies, the manifest. */
 eq(STEPS.map((s) => s.id), ["universe", "flavor", "graph", "ranks", "records", "strategies", "manifest"], "the plan is the specification's order");
 ok(STEPS.find((s) => s.id === "graph").long, "the graph step is marked long");
 for (const id of ["universe", "flavor", "graph", "records"]) ok(STEPS.find((s) => s.id === id).count?.mustNotShrink, `${id} must not shrink`);
@@ -45,7 +45,7 @@ for (const n of NEVER) ok(![...ALLOWED].some((f) => f === n || f.startsWith(n)),
 ok(NEVER.includes("data/live-state.json") && NEVER.includes("data/deck-ratings.json") && NEVER.includes("sim/"), "the library, the scores and the sweep are off limits");
 
 /* The bump: exactly the named URL, every occurrence, by one. */
-eq(bumpText("a data/graph.json?v=17 b data/graph.json?v=17 c data/graph-played.json?v=2", "data/graph.json"), {out: "a data/graph.json?v=18 b data/graph.json?v=18 c data/graph-played.json?v=2", n: 2}, "bumps the file named and not its neighbour");
+eq(bumpText("a data/graph.json?v=17 b data/graph.json?v=17 c data/graph-played.json?v=2", "data/graph.json"), {out: "a data/graph.json?v=18 b data/graph.json?v=18 c data/graph-played.json?v=2", n: 2}, "bumps the file named and not its neighbor");
 eq(bumpText("x crankmagic-app.js?v=165 y", "crankmagic-app.js").out, "x crankmagic-app.js?v=166 y");
 eq(bumpText("nothing here", "data/cards.json").n, 0);
 

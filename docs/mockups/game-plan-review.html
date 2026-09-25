@@ -290,7 +290,7 @@ actual measured scores and actual contents, read out of <code>data/deck-ratings.
 <thead><tr><th style="width:74px">Tier</th><th style="width:150px">Resolved by</th><th>How</th><th style="width:150px">Coverage</th></tr></thead>
 <tbody>
 <tr><td><span class="pill p-code2">1 · rules</span></td><td>the referee, always</td>
-  <td>zones, turn structure, mana and colour identity, casting cost and commander tax, summoning sickness,
+  <td>zones, turn structure, mana and color identity, casting cost and commander tax, summoning sickness,
   attacking and blocking, first/double strike, flying, menace, trample, deathtouch, lifelink, vigilance, haste,
   lethal damage, the legend rule, commander damage, 0 life</td><td class="muted">every card</td></tr>
 <tr><td><span class="pill p-code">2 · shapes</span></td><td>the referee, from <code>card-classify.js</code></td>
@@ -312,7 +312,7 @@ why an opponent here plays like it read the deck rather than like it skimmed a l
 <div class="grid2">
 <div>
 <h4>What goes in — assembled by code</h4>
-<pre><b>COMMANDER</b>   <i>name · colour identity · cost · oracle · its 3 strategies</i>
+<pre><b>COMMANDER</b>   <i>name · color identity · cost · oracle · its 3 strategies</i>
 <b>THE HUNDRED</b> <i>by Primary Purpose, with mana value and a
              one-line effect from the classifier</i>
 <b>LOOPS</b>       <i>every cycle of ≤4 cards, each step named, with the
@@ -421,7 +421,7 @@ can paste them back to me.</p>
 
 <footer>
   <p><b>CrankMagic · the game.</b> This page is a local review copy of <code>docs/crankmagic-game-plan.md</code>.
-  Deck names, commanders, colour identities, measured scores, land counts, curves, role coverage and readiness
+  Deck names, commanders, color identities, measured scores, land counts, curves, role coverage and readiness
   figures are read from the committed <code>data/deck-ratings.json</code>, <code>data/live-state.json</code> and
   <code>data/cards.json</code> as of this build — they are your decks, not examples. Everything about the game
   itself is a proposal. Nothing here has been built.</p>
@@ -535,7 +535,7 @@ const RAIL = [
   ['G0','The lobby','Pick your deck, seat 1–3 opponents from your decks / an Archidekt link / a paste / a generated deck, set the bracket and cap, validate every seat, read the pod balance. No game yet.',[['p-code','no AI'],['p-code','no board']],false],
   ['G1','The call','crankmagic-claude.js — the key pane, one call shape, the cache layout, structured outputs, the cost meter, and a fixture mode that answers from recorded JSON so every later suite runs offline and free.',[['p-model','the API']],false],
   ['G2','The playbook','The deck brief from the graph, the playbook back, cached per deck and bracket, editable, with a heuristic fallback that needs no key.',[['p-model','Sonnet']],false],
-  ['G3a','The board — zones and turns','Tier 1, part one: zones, turn structure, mana and colour identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games.',[['p-warn','long pole']],true],
+  ['G3a','The board — zones and turns','Tier 1, part one: zones, turn structure, mana and color identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games.',[['p-warn','long pole']],true],
   ['G3b','The board — combat','Declare attackers and blockers, the combat keywords, damage, commander damage, and the loss conditions.',[['p-warn','long pole']],true],
   ['G4','The table','The play space canvas becomes the game table: four seats, your hand, each battlefield, the stack, life totals, the log. You play all four seats by hand — this is what proves the board is real.',[['p-code','no AI']],false],
   ['G5','The pilot','A seat played from its playbook with tier-2 effects, deterministically. The game is now playable against opponents with no API calls at all.',[['p-ok','playable']],false],
@@ -585,7 +585,7 @@ el('questions').innerHTML = QS.map(q =>
       + '<span><span class="ot">'+o[0]+'</span><br><span class="od">'+o[1]+'</span></span></label>').join('')
   + '</div></div>').join('');
 
-function summarise(){
+function summarize(){
   const lines = QS.map(q=>{
     const hit = document.querySelector('input[name="'+q.id+'"]:checked');
     return q.ask + '\n  → ' + (hit ? q.opts[Number(hit.value)][0] : '(not answered)');
@@ -593,21 +593,21 @@ function summarise(){
   el('answers').value = 'CrankMagic — the game: my five decisions\n\n' + lines.join('\n\n')
     + '\n\n(from docs/mockups/game-plan-review.html)';
 }
-el('questions').addEventListener('change', summarise);
+el('questions').addEventListener('change', summarize);
 el('recBtn').addEventListener('click', ()=>{
   QS.forEach(q=>{ const i = q.opts.findIndex(o=>o[2]); if(i>=0)
     document.querySelector('input[name="'+q.id+'"][value="'+i+'"]').checked = true; });
-  summarise(); el('said').textContent = 'All five set to my recommendation.';
+  summarize(); el('said').textContent = 'All five set to my recommendation.';
 });
 el('clearBtn').addEventListener('click', ()=>{
   document.querySelectorAll('#questions input').forEach(i=>i.checked=false);
-  summarise(); el('said').textContent = '';
+  summarize(); el('said').textContent = '';
 });
 el('copyBtn').addEventListener('click', async ()=>{
-  summarise();
+  summarize();
   try { await navigator.clipboard.writeText(el('answers').value); el('said').textContent = 'Copied — paste it back to me.'; }
   catch(e){ el('answers').select(); el('said').textContent = 'Select-all and copy from the box below.'; }
 });
-summarise();
+summarize();
 </script>
 </body></html>

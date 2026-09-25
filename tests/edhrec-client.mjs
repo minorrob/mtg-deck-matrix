@@ -156,4 +156,4 @@ const topSynergy = [...index.cards.values()]
   .filter((e) => e.tags.highSynergy).sort((a, b) => (b.synergy || 0) - (a.synergy || 0))[0];
 console.log(`edhrec-client: ${checks} checks passed · ${index.cards.size} cards from ${index.rows} rows ` +
   `across ${index.lists} lists · top synergy "${topSynergy ? topSynergy.name : "?"}" ` +
-  `at ${topSynergy ? (topSynergy.synergy * 100).toFixed(0) + "%" : "?"} above the colour baseline`);
+  `at ${topSynergy ? (topSynergy.synergy * 100).toFixed(0) + "%" : "?"} above the color baseline`);

@@ -248,7 +248,7 @@ licensing problem, not a design one.
 | **Celestial** | deep indigo, a slow star field, a faint ecliptic band |
 | **Parchment** | warm paper with a soft grain, for reading at a desk |
 
-The "MtG themed" request is best served by the app's own five-colour palette used abstractly —
+The "MtG themed" request is best served by the app's own five-color palette used abstractly —
 a quiet WUBRG rosette watermark — rather than anything from the game's art. Whatever the canvas,
 the three zones keep their own opaque surfaces, so the cards' contrast never depends on which
 background is chosen.
@@ -484,7 +484,7 @@ Six pull requests. Each is merged green before the next starts, and each is usab
 
 ### PR 1 — The board
 
-The layout and the surfaces, with no behaviour change to the model.
+The layout and the surfaces, with no behavior change to the model.
 
 - Three zones with three surfaces: source shelves left and right, the play space in the middle,
   the destination band along the bottom (§2.11).
@@ -495,7 +495,7 @@ The layout and the surfaces, with no behaviour change to the model.
 - **Lock pile placement** beside the status-order select; unlocked gives free placement with
   remembered positions and a *Tidy up* (§2.13).
 - Glossary definitions on hover for every *Group piles by* label and every status name, with the
-  missing terms written (the glossary is `data/commander-glossary.json`; Card type, Colour,
+  missing terms written (the glossary is `data/commander-glossary.json`; Card type, Color,
   Primary Purpose, Role, Mechanic, Mana value and Price band need entries).
 - **The render change of §3.1**: the board is built once and thereafter mutated. It belongs here
   because it is what makes the table respond at the speed of a hand, and retrofitting it later
@@ -607,7 +607,7 @@ Escape ran twenty handlers and the last one to finish redrew the table through *
 filters — the table could come back scoped to something the reader had left behind. And the
 grouping row was `left:50%` with a translate back, which centres it but leaves an absolutely
 positioned box shrinking to fit only the space from its left edge to the mat's right edge: three
-labelled selects were laying out in half the table and wrapping to two lines on a mat wide enough
+labeled selects were laying out in half the table and wrapping to two lines on a mat wide enough
 for one. Both fixed here.
 
 ### PR 4 — Shelf mode — **built, 15 September**
@@ -708,7 +708,7 @@ been green in some time, and every failure was a step pointing at something that
 
 | Step | Was | Now |
 |---|---|---|
-| *Start from a card you already play* | the bare `#cm-graph-query` input, which collapses to nothing while the graph loads | the labelled search box around it |
+| *Start from a card you already play* | the bare `#cm-graph-query` input, which collapses to nothing while the graph loads | the labeled search box around it |
 | *The report is where the detail lives* | two buttons that do not exist on a deck with no runs yet | falls back to the history panel itself |
 | *The shape, before any simulation* | the deck's Overview, where the curve is not | the deck's **Cards** tab, where it is |
 | *And what to do about it* | the Overview again | the **Guide** tab, where the recommendations live |

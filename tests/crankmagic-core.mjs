@@ -49,7 +49,7 @@ const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:
   eq(low.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length,0);
   const mid=D.build({commanders:[leader],cards:[leader,basic,...gc,...bulk],definition:{...definition,bracketCeiling:3}});
   ok(mid.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length<=3&&mid.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length>=1);
-  // mono-colour lands are mostly basics: nonbasic lands are capped
+  // mono-color lands are mostly basics: nonbasic lands are capped
   const utility=Array.from({length:30},(_,i)=>C.normalize({name:'Utility Land '+i,typeLine:'Land',manaValue:0,colorIdentity:[],legalities:{commander:'legal'},oracleText:'{T}: Add {C}.',price:.5,edhrecRank:50+i}));
   const mono=D.build({commanders:[leader],cards:[leader,basic,...utility,...bulk],definition});
   ok(mono.slots.filter(r=>utility.some(c=>c.id===r.cardId)).reduce((n,r)=>n+r.quantity,0)<=14);
@@ -66,7 +66,7 @@ assert.throws(()=>run('editDeck',{deckId:'deckA',commanders:[pool[1].id]}),/revi
 run('acquire',{lot:{id:'incoming1',cardId:basic.id,quantity:1,source:'ordered',channel:'trade'}});ok(M.eligibility(state,state.lots.find(l=>l.id==='incoming1'),{includeOrdered:true}).eligible);eq(state.lots.find(l=>l.id==='incoming1').channel,'trade');
 // WATCHED is a card under consideration, not a copy: counted on its own, never eligible for a build, never
 // reservable to a slot; it becomes owned by the same correction as an order arriving, and
-// a wanted card nobody wants any more is cancelled like any pending acquisition.
+// a wanted card nobody wants any more is canceled like any pending acquisition.
 {const before=M.counters(state);run('acquire',{lot:{id:'want1',cardId:pool[2].id,quantity:2,source:'watching'}});const after=M.counters(state);eq(after.watching,before.watching+2);eq(after.toBuy,before.toBuy);eq(after.owned,before.owned);
  const want=state.lots.find(l=>l.id==='want1');eq(want.location,null);eq(M.eligibility(state,want,{includeOrdered:true}),{eligible:false,reason:'Watching, not acquired'});
  const slotA=state.decks[0].slots.find(r=>r.cardId===basic.id);assert.throws(()=>run('allocate',{lotId:'want1',deckId:'deckA',slotId:slotA.id,quantity:1}),/not a copy/);checks++;
@@ -118,7 +118,7 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  // and nothing else, so a pasted list or an import carrying the name printed on the card
  // missed locally and fell through to Scryfall -- which answers, but only online. A reader
  // at a convention with no signal, typing what is in their hand, got nothing. All three
- // now read the flavour name too, from the table the app already ships.
+ // now read the flavor name too, from the table the app already ships.
  eq(cat.exact('SpongeBob SquarePants').name,'Jodah, the Unifier');
  eq((await cat.resolve('SpongeBob SquarePants')).name,'Jodah, the Unifier');
  eq(cat.get('SpongeBob SquarePants').name,'Jodah, the Unifier');
@@ -126,17 +126,17 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  // An oracle name always wins: an alias may never shadow a card that really has that name.
  cat.add({name:'SpongeBob SquarePants',typeLine:'Creature',colorIdentity:[],legalities:{commander:'legal'},verified:true});
  eq(cat.exact('SpongeBob SquarePants').typeLine,'Creature');
- // similar() matched only the FIRST flavour name while search() matched every one of them.
+ // similar() matched only the FIRST flavor name while search() matched every one of them.
  {const two=cat.add({name:'Two Faced',typeLine:'Creature — Test',oracleText:'Text',colorIdentity:['U'],legalities:{commander:'legal'},flavorNames:['Alias One','Alias Two']});
   ok(cat.similar(two,{query:'alias two'}).length>=0);
   eq(cat.search('alias two').map(c=>c.name),['Two Faced']);}
  // and the shipped table means the app knows that offline, on the first keystroke
  {const table=JSON.parse(await readFile(new URL('../data/flavor-names.json',import.meta.url),'utf8'));
-  ok(table.cards.length>300,`only ${table.cards.length} flavour names shipped`);
+  ok(table.cards.length>300,`only ${table.cards.length} flavor names shipped`);
   const universe=JSON.parse(await readFile(new URL('../data/commander-universe.json',import.meta.url),'utf8'));
   const known=new Set(universe.cards.map(r=>String(r[0]).toLowerCase()));
   const orphans=table.cards.filter(([,name])=>!known.has(String(name).toLowerCase()));
-  eq(orphans.slice(0,3).map(r=>r[1]),[],`${orphans.length} flavour names point at cards the universe does not carry`);
+  eq(orphans.slice(0,3).map(r=>r[1]),[],`${orphans.length} flavor names point at cards the universe does not carry`);
   const sponge=table.cards.find(([flavor])=>flavor==='SpongeBob SquarePants');
   ok(sponge&&sponge[1]==='Jodah, the Unifier','the card in the report must be in the table');
   const bigger=table.cards.find(([flavor])=>/Bigger Boat/.test(flavor));
@@ -149,7 +149,7 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
 }
 {// A replacement is FOR a card. The picker used to offer the catalog's most popular cards,
  // which suggested The Restoration of Eiganjo for Abrade; similar() ranks by likeness to
- // the card being replaced and refuses anything outside the deck's colour identity.
+ // the card being replaced and refuses anything outside the deck's color identity.
  const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
  const cat=await C.create({client:{},fetchImpl,urls:{universe:'u/universe.json',cards:'u/cards.json',facts:'u/facts.json',ranks:null,graph:'u/graph.json'},savedCards:{}});
  const make=(name,o)=>cat.add({name,typeLine:'Instant',colorIdentity:['R'],legalities:{commander:'legal'},verified:true,price:1,...o});
@@ -161,7 +161,7 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  const ranked=cat.similar(abrade,{colors:['R'],limit:10});
  const names=ranked.map(r=>r.card.name);
  ok(!names.includes('Abrade'));// a card is not its own replacement
- ok(!names.includes('The Restoration of Eiganjo'));// out of colour identity
+ ok(!names.includes('The Restoration of Eiganjo'));// out of color identity
  ok(names.includes('Sol Ring'));// colourless is legal in every deck
  eq(names[0],'Cut Down');// same job, same money
  ok(names.indexOf('Cut Down')<names.indexOf('Vandalblast'),'a $22 answer to a 28c slot must not lead');

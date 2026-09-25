@@ -187,7 +187,7 @@ Items 1, 3, 4, 5, 6 are visual and need Rob's eyes or a screenshot pass — the 
 | B.1 | Forge card resolver | `game/contracts/forge-card-index.mjs`. Reads every script Forge ships and indexes its `Name:` lines. Ladder: exact → front face → normalized, so a list pasted without accents resolves while two different cards can never collapse. Both faces and the joined `A // B` form are indexed. |
 | B.2 | Make 4.1 blocking | An unresolved card now throws in `prepareSeat`, carrying `{name, quantity, reason, suggestions}` through both the host API and the guest gateway. No `deckVersion`, so the seat cannot Ready Up. `CRANKMAGIC_FORGE_ROOT` overrides the checkout path. |
 | B.3 | Force Prompt on the lobby path | `createLocalTableRuntime` exposes `nudge(seatId)`; the endpoint asks the table before the solo runner. |
-| B.4 | Host force-advance | `POST /api/table/force-advance {seatId}`. Takes a legal action from the pilots' own enumerator, prefers a required draw or acknowledgement, journals every use to `force-advance.ndjson`. Host-only — a test asserts it is absent from the guest route table. |
+| B.4 | Host force-advance | `POST /api/table/force-advance {seatId}`. Takes a legal action from the pilots' own enumerator, prefers a required draw or acknowledgment, journals every use to `force-advance.ndjson`. Host-only — a test asserts it is absent from the guest route table. |
 | B.5 | Pre-flight doctor | `node game/tools/doctor.mjs` and `GET /api/doctor`. The launcher will not report "Ready to play" over a blocking problem. Distinguishes fail / warn / **skip**, because a skipped check is not evidence that anything passed. |
 
 Five new suites, 90 total, `./runtests.sh` exit 0. **Everything here is proven against fixtures, not against Forge** — see §12.
@@ -302,7 +302,7 @@ bash runtests.sh -q
 ```
 
 Expect the last line to read `92 suites passed.` On Windows, `browser-geometry` and `page-budget`
-may fail at a Unix-oriented Playwright import before any assertion — a known checkout artefact, not
+may fail at a Unix-oriented Playwright import before any assertion — a known checkout artifact, not
 a regression. Anything else red, stop and send it.
 
 **2 — Can this computer host tonight?**

@@ -49,7 +49,7 @@ clean: nothing uncommitted, nothing in flight, no background process left on the
    grow by two if a later journey deck has a doable row; the tick itself was walked on D2 and
    is held by the unit suite. The Tabletop's boundary class is `.cm-tt-mat`, the role lens's
    `.cm-lens-head`, the node pop-up's `.cm-graph-pop`, the trade page's `.cm-trade-grid` (the
-   inventory plan's catalogue carries all of them).
+   inventory plan's catalog carries all of them).
 
 **Gates and the sandbox, as they are now.** `GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash
 runtests.sh -q` runs **58 suites** (the README states the count; `tests/refresh.mjs` and the
@@ -92,7 +92,7 @@ only shared record.
 | Session | Ran | Shipped | Left open |
 |---|---|---|---|
 | A — `session_01JxaMVGPFVWfBLPd3PXM1PR` (since 23 Aug, the long one) | 23 Aug → 11 Sep 04:10, then 12 Sep 20:12 → 14 Sep 15:10 (closed) | #133, #152–#168, #169–#204 | the inventory plan (#204) for a separate session; the persistent-app decisions; the model-influence scope, on Rob's call |
-| B — `session_01JomnBiZWAGVBCFXBt3QbQk` (Opus, opened when Rob said "merge #133 then I'll switch to Opus") | 11 Sep 04:15 → 12 Sep 19:44 | #134–#151, `tools/screens.mjs`, the `docs/screens/*` sets | **Licensing**: its analysis recommended a proprietary licence (BSL or dual-licence), `data/` scoped out of the grant, a Wizards Fan Content disclaimer, and it is waiting for a go-ahead to write `LICENSE`, `NOTICE` and a README section. No `LICENSE` file exists today. |
+| B — `session_01JomnBiZWAGVBCFXBt3QbQk` (Opus, opened when Rob said "merge #133 then I'll switch to Opus") | 11 Sep 04:15 → 12 Sep 19:44 | #134–#151, `tools/screens.mjs`, the `docs/screens/*` sets | **Licensing**: its analysis recommended a proprietary license (BSL or dual-license), `data/` scoped out of the grant, a Wizards Fan Content disclaimer, and it is waiting for a go-ahead to write `LICENSE`, `NOTICE` and a README section. No `LICENSE` file exists today. |
 
 A session resuming from a compaction summary sees only its own recent window. Session A's
 summaries of 12–13 September never contained session B's work, which is how a question
@@ -113,7 +113,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #156 | Stand-ins: a copy in the box that the list does not call for fills a seat | A |
 | #157 | In box means the box: physical counts everywhere, and a How-it-works page | A |
 | #158 | Reserved, Owned, Substitutes, In Physical Deck: schema 2 and the six state decisions | A |
-| #159 | Share menu (Subscribe, e-mail, QR), Deck Lab starting points, card pop-up rows, Ready to add | A |
+| #159 | Share menu (Subscribe, email, QR), Deck Lab starting points, card pop-up rows, Ready to add | A |
 | #160 | Simulation reports carry their hundred: file with the source deck, spin off a variant | A |
 | #161 | "Physical deck" wording; Ready to add in place of the pull sheet | A |
 | #162 | Option A of the simplification plan: the name is the heading, one primary action, six filters, glossary terms on request | A |
@@ -147,7 +147,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #191 | Tabletop TB3, drag to a pile: the drop-target contract `CrankTabletop.accepts(pile, rows)` (pure; an action, its words, or why not), the drag with its badge and green/red targets, every drop the row menu's own command through the receipt (Bench ↔ Physical deck, Ordered, Watched, Reserved, Substitute, release to To buy, file in a group, reserve for a deck pile), ghosts becoming copies, *Move to…* for a phone; journeys: Bench → box → Bench with the tallies, a requirement onto Ordered | A |
 | #192 | Tabletop TB4, polish: the card size remembered per device, the status piles' order (workflow / fullest first) as a preference, the keyboard (arrows among piles and cards, Enter opens or chooses, Space ticks, PageUp/PageDown turn), *Print* of the whole pile as a numbered list (`printSheet`, pure); the tabletop plan is complete, the leftovers listed in it | A |
 | #193 | The sweep the retired pages left behind: fourteen modules no page served and no tool read (the old screens admin-menu, build-panel, import-panel, deck-page and the libraries only they drove) and their ten suites gone; xlsx-writer, deck-sources, data-integrity, assignment-model, card-link and user-state trimmed to what still exists; README 55 suites; the inventory regenerated | A |
-| #194 | The refresh skill (backlog #167): `tools/refresh.mjs` runs the registry's generators in the specification's order (universe, flavour names, graph, ranks, records, strategies, manifest), refuses a shrink and a dirty tree, bumps `?v=` only for the served data files that changed with the cascade, and proves the result with every producer's `--check`, the asset manifest, the README count and `runtests.sh`; `.claude/skills/crankmagic-refresh/SKILL.md` is the judgment around it; `tests/refresh.mjs` holds the plan to the registry; the specification updated to ten files and the runner | A |
+| #194 | The refresh skill (backlog #167): `tools/refresh.mjs` runs the registry's generators in the specification's order (universe, flavor names, graph, ranks, records, strategies, manifest), refuses a shrink and a dirty tree, bumps `?v=` only for the served data files that changed with the cascade, and proves the result with every producer's `--check`, the asset manifest, the README count and `runtests.sh`; `.claude/skills/crankmagic-refresh/SKILL.md` is the judgment around it; `tests/refresh.mjs` holds the plan to the registry; the specification updated to ten files and the runner | A |
 | #195 | Publish the To Trade list (backlog #200): `crankmagic-trade.js` — the copies offered for Sell / Trade and the To Trade group as one link that is the list (deflate-raw, base64url, in the hash), the `#trade` page a visitor opens with pictures and an Ask-by-mail per card or for the ticked ones, *Publish your To Trade list* on the Share menu with the publisher's name, contact and note remembered; QR when it fits; no server | A |
 | #196 | Fix: a library saved before schema 3 could be read but never saved — `collection-repository.js` applied every command to the raw stored copy while reading it migrated, so every save failed with *Unsupported collection schema* (Rob's boot toast and the strategy tick); commit and undo now migrate first, and the first save stores the migrated copy; journey seeds a schema-2 library in IndexedDB and saves through it | A |
 | #197 | Trace pane (Rob, 14 September): the Speed control on the transport line; each strategy tick carries what it lights on its own, so unticking one is legible (a card stays lit while any ticked strategy reaches it); *Reset to the commander's own* clears the ticks saved with the deck; a tick on every row and *Add ticked to a group* files the cards as planned entries (new group by default, named from the deck); journeys +8 | A |
@@ -183,7 +183,7 @@ suites** (the README states the count and `tests/data-integrity.mjs` checks it);
 `tests/uat/crankmagic-journeys.mjs` is at **180 checks** (Scryfall stubbed since #175; the offline step is the one live-network step); the geometry and page-budget suites
 run in the browser and fail on a clipped wordmark. Walks in the sandbox show **no card art**:
 `tests/uat/scryfall-stub.mjs` answers every image with a one-pixel PNG, so panes and nodes
-fall back to their placeholder colours. That is the harness, not the app.
+fall back to their placeholder colors. That is the harness, not the app.
 
 **Housekeeping still open:** the `docs/screens/*` sets are from 8–12 September (refresh with
 `tools/screens.mjs <name>` or remove the folder); `prototype/slot-ladder.html` is the last
@@ -297,8 +297,8 @@ standing instruction is **merge any clear fix directly** rather than queuing it.
 | Directed graph relations (causes→triggers, makes→multiplies, grants→extends) and hover-to-name | `crankmagic-graph.js`, `card-classify.js` |
 | Lowest-cost paper printing, fetched live when a card is inspected | `card-catalog.js` |
 | iPhone share fix; Send Feedback button | `crankmagic-app.js` |
-| Collection: colour grouping, inline row actions, like-for-like replacement with a side-by-side compare | `crankmagic-collection.js` |
-| Flavour names — 513 of them, so "SpongeBob SquarePants" finds Jodah offline | `data/flavor-names.json`, `tools/flavor-names.mjs` |
+| Collection: color grouping, inline row actions, like-for-like replacement with a side-by-side compare | `crankmagic-collection.js` |
+| Flavor names — 513 of them, so "SpongeBob SquarePants" finds Jodah offline | `data/flavor-names.json`, `tools/flavor-names.mjs` |
 | Three-way filters (include / exclude / off) on Discover and the graph | `crankmagic-facets.js`, `crankmagic-discover.js` |
 | Deck Lab: opens fresh, a Clear button, skippable archive and delete confirmations | `crankmagic-lab.js`, `crankmagic-decks.js` |
 | **Deck Lab loop rebuilt** — see below | `crankmagic-lab.js`, `crankmagic-sim.js`, `sim-engine.js`, `deck-measure.js` |

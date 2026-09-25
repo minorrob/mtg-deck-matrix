@@ -15,7 +15,7 @@ seen; the six live decks are the fixtures the tests use, nothing more.
 
 Rob's own framing is the right one: the feature does two things. **(1) It produces the list
 of cards that most raise the deck's potency around its commander, inside the deck's
-definition** (colour identity, bracket, cap, per-card cap, the owner's mechanics). **(2) It
+definition** (color identity, bracket, cap, per-card cap, the owner's mechanics). **(2) It
 animates how that list was chosen and how the cards interrelate**, so the builder understands
 the deck rather than receiving it. The second is the reason people will enjoy the first.
 
@@ -44,7 +44,7 @@ the commander rather than about filling role slots, which is the Lab's weakest p
   loop-backs, with ownership on every row. Both are the same function with a different card
   set; the pane offers both ("This deck" · "What it could be").
 - **Keep the definition as the fence.** Every card the pool trace lights must pass the
-  deck's colour identity, bracket ceiling and caps *before* it is placed; a card that fails
+  deck's color identity, bracket ceiling and caps *before* it is placed; a card that fails
   is not lit and is listed under "would help, outside the definition" so the builder can
   widen the fence knowingly. This is what makes the list "within the confines of the deck
   definition" rather than a wish list.
@@ -112,7 +112,7 @@ on the committed live state before any canvas draws it.
 - Order within a ring is by join strength then name, so the animation is the same every time.
 
 **Score.** `Σ over lit cards of ringWeight × (1 + loopBacks) × strategiesServed`, ring weights
-3 · 2 · 1. It is a heuristic and is labelled one; Phase T2 calibrates the weights against the
+3 · 2 · 1. It is a heuristic and is labeled one; Phase T2 calibrates the weights against the
 simulator's measured scores on the 50 variants and the six live decks, and the pane shows
 the trace score beside the measured score so the two are never confused.
 
@@ -152,7 +152,7 @@ Sources, in order of authority:
 
 Shipped as `data/commander-strategies.json` (one entry per commander in the graph that has
 at least one derived strategy; the derivation tool is `tools/commander-strategies.mjs`, run
-with the graph amplifiers), plus the strategy catalogue itself (`crankmagic-strategies.js`,
+with the graph amplifiers), plus the strategy catalog itself (`crankmagic-strategies.js`,
 ~12 tuples to start: untap loop, copy loop, blink loop, sacrifice supply, ETB payoff, death
 payoff, counters and proliferate, team quality, stat payoff, tutor chain, recursion loop,
 extra turns). The deck's own strategies default to the intersection of the commander's and
@@ -182,9 +182,9 @@ they cost nothing until Trace needs them.
 - Add `serves: string[]` — the strategy ids a join advances, computed from the same term
   pairs (an `untap → tap-ability` pair serves *untap-loop*; a `creature-etb` trigger serves
   *ETB payoff*). Cheap: a lookup on the pair's term keys at draw time, like `kind`.
-- Add `strength` in 0–1 (score normalised over the pair's kinds) so beam width and pane order
+- Add `strength` in 0–1 (score normalized over the pair's kinds) so beam width and pane order
   come from one number, and a `returns` flag when the target is already lit.
-- Export the kind → colour/priority table from the graph module so beams, chips and the
+- Export the kind → color/priority table from the graph module so beams, chips and the
   pop-up agree without a renderer-side switch.
 
 **Nodes (`positions()` and the walk).**
@@ -271,7 +271,7 @@ pairs the trace orders the way the simulator did):*
 way more often than not (a Base rung is a cheap, creature-dense shell with more serving joins
 than the Max rung's Game Changers and mana). So, as the plan's rule says, the weights did not
 change the claim: the number is shown as a **cohesion score** — how much of the deck the
-commander's strategies reach and how tightly it loops — labelled a heuristic, with the
+commander's strategies reach and how tightly it loops — labeled a heuristic, with the
 measured score beside it and a line under the list saying it is not power (ρ 0.2). The plan
 formula stays, since no alternative did better than noise. What would make the number
 predictive is outside this plan: a per-card value the walk does not have (the simulator's
@@ -294,7 +294,7 @@ grouped ring → strategy with the join that lit each card, its Primary Purpose 
 loop-backs, the strategy ticks (the offered set inline, the rest behind +n) persisted as
 `definition.strategies` through `editDeck`, the transport (Play/Pause, Step, Back, End, speed),
 the two worlds — This deck, and What it could be over the library, the deck's linked options
-and the commander's two hundred most-played neighbours inside the colour identity and the
+and the commander's two hundred most-played neighbours inside the color identity and the
 per-card cap, with "Would help, outside the definition" beneath; a pool row is *Add to deck*
 on a draft and *Link as option* (the lens's uncommitted option) on a finalized deck. The unlit
 sentence with *Open them in List*; the list as CSV; `Trace` in the deck page's hero row;
@@ -304,7 +304,7 @@ score is large by construction (three hundred cards, many loops) and is not comp
 deck's.*
 
 **T4 — the Lab seed (after T3 has been used for a week).** `draft-builder.js` gains a
-trace-seeded mode: the same pool trace, over the whole legal catalogue inside the
+trace-seeded mode: the same pool trace, over the whole legal catalog inside the
 definition, seeds the 99 — ring 1 and ring 2 first, then payoffs, then roles to the rules
 minimums — and the Lab's report shows the trace score of the draft beside its measured
 score. The Lab plays the animation of the seed it just built, which is the moment the two
@@ -312,7 +312,7 @@ halves of the idea meet.
 
 *Shipped in #188, on Rob's instruction to complete the plan rather than wait the week. The
 Lab's Starting point gains **Seed the draft from the trace** (on by default): a pool trace from
-the commander over the legal catalog inside the definition — colour identity, per-card cap,
+the commander over the legal catalog inside the definition — color identity, per-card cap,
 legality — beamed to 60 · 40 · 30 new cards per ring so ring 2 stays quick, turned into a
 bonus per card (`CrankTrace.seedFrom`: ring 1 300, ring 2 200, ring 3 100, +20 per loop-back)
 that joins the builder's score; the roles still fill to their targets and every cap holds. The
@@ -334,7 +334,7 @@ in its own note.*
    home (§1). **Yes / no.**
 2. *Strategies ticked per deck persist in the deck definition* (so a trace run twice agrees
    with itself and the Lab seed can read it). **Recommended yes.**
-3. *The trace score is shown beside the measured score, labelled a heuristic*, and never in
+3. *The trace score is shown beside the measured score, labeled a heuristic*, and never in
    the tile or the ribbon until calibration (T2) says it tracks the simulator. **Recommended.**
 4. *Ghost the hundred by default* (the evaluation reading) rather than a truly blank canvas;
    "Blank canvas" as the toggle. **Recommended ghosted.**

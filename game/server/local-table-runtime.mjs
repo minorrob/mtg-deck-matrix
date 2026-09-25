@@ -21,7 +21,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   const catalog={decks:setupCatalog().decks.filter(d=>d.source==='preloaded'&&d.ok).map(({id,name,commander,cost,gameChangers})=>({id,name,commander,cost,gameChangers}))};
   const activeFile=resolve(directory,'active.json');let activePod=restoredPod;saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:false});let timer,runtime,pilotRunner;
   /* One pod for both the countdown spawn and the launch that waits on it, so the engine is asked
-     to start exactly one match and the second call recognises the first. */
+     to start exactly one match and the second call recognizes the first. */
   function buildPod({table,decks,launchId,matchId}){
     const finalSeats=table.seats.map(seat=>{const snapshot=decks[seat.deckVersion]?.snapshot;return snapshot?{...snapshot,name:seat.name}:null;});if(finalSeats.some(s=>!s))throw Error('A validated seat deck is missing');
     const pod={...lobby,schema:'CommanderPodPack@1',matchId,seats:finalSeats,podHash:sha256(canonical({seed:lobby.seed,launchId,matchId,seats:finalSeats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))}))};
@@ -98,7 +98,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     async rematch(accept){const result=await broker.rematch({seatId:0},{accept});if(result.table.phase==='selecting'){for(const seat of result.table.seats.filter(s=>s.kind==='ai'))await broker.ready({seatId:seat.seatId},{ready:true});}await scheduleIfReady();return broker.hostView();},
     report(){return broker.report({seatId:0});},feedback(input){return broker.feedback({seatId:0},input);},
     async start(){
-      const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a cancelled countdown or launch failure. */}},delay);
+      const table=await broker.beginCountdown(),delay=Math.max(0,table.countdownAt-clock());clearTimeout(timer);timer=setTimeout(async()=>{try{await launchWhenDue();}catch{/* Lobby polling reports a canceled countdown or launch failure. */}},delay);
       // Not awaited: the countdown is the player-facing clock and must not wait on the engine.
       // A failure here surfaces at tick, where the table can report it.
       broker.prelaunch().catch(()=>{});

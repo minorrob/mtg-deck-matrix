@@ -14,7 +14,7 @@ lenses — and how do we strengthen scalability and flexibility?* §3 answers it
 
 ## 1. E0 — what the inventory found (14 September)
 
-36 tracked artefacts under `data/` and `sim/`: 28 JSON, 8 workbooks and documents, 57.4 MB.
+36 tracked artifacts under `data/` and `sim/`: 28 JSON, 8 workbooks and documents, 57.4 MB.
 
 | Finding | Measured | Why it matters |
 |---|---|---|
@@ -41,7 +41,7 @@ lens never stores a fact. Applied to CrankMagic there are exactly four records:
 
 | Record | One producer | Today's copies (to become lenses) |
 |---|---|---|
-| **Card** — identity (`oracleId`, name, folded name, flavor names, faces), printings (set, collector, image, price snapshot with its date), facts (type line, rules text, cost, colours, keywords, P/T, rarity, legalities, Game Changer), derived terms (roles, mechanics, tribes, causes, triggers, produces, requires, multiplies, grants, extends, wants, makes, stats, purpose), rank | one builder, one file set, one stamp | `cards.json`, `card-facts.json`, `graph.json` cards, `state.cards`, the classifier at render, `commander-universe.json`'s identities |
+| **Card** — identity (`oracleId`, name, folded name, flavor names, faces), printings (set, collector, image, price snapshot with its date), facts (type line, rules text, cost, colors, keywords, P/T, rarity, legalities, Game Changer), derived terms (roles, mechanics, tribes, causes, triggers, produces, requires, multiplies, grants, extends, wants, makes, stats, purpose), rank | one builder, one file set, one stamp | `cards.json`, `card-facts.json`, `graph.json` cards, `state.cards`, the classifier at render, `commander-universe.json`'s identities |
 | **Library** — the user's decks, slots, lots, groups, games, reports, preferences | the command log (`collection-model.js` `apply`) | already one record; its `cards` map becomes references to Card by `oracleId` plus the user's own fields (printing, paid) |
 | **Deck definition and its measurements** — the definition, rung lists, ratings, guides, swaps | the Lab and the simulator | `deck-ratings.json`, `simulation-summary.json`, `deck-guides.json`, `deck-swaps.json`, `lenses.json`, `data/archive/*` |
 | **Co-play** — EDHREC ranks, themes and the 701,916 pairs | `tools/commander-ranks.mjs`, the graph builder | `commander-ranks.json`, `graph.json` `played` |
@@ -129,7 +129,7 @@ library and the graph, and a backup that is the user's, not the catalog's.
    deck page's Reserved pill had drifted to the watch tone).*
 8. **One groupings module** (`crankmagic-groupings.js`) for the sheet's *Group rows by*,
    the list's bands and the Tabletop's dropdown. *Shipped in #182: `crankmagic-groupings.js`
-   (choices, colour piles, label and order) with the caller's column reader passed in.*
+   (choices, color piles, label and order) with the caller's column reader passed in.*
 9. **`crankmagic-rules.js` absorbs the literals**: `GC_LIMIT` per bracket, the "cheap line"
    (`/^D[56]/` in `crankmagic-decks.js`), the composition type order, the loop-length cap;
    deck art moves to the deck definition or the commander's record. *Shipped in #182:
@@ -157,7 +157,7 @@ and the plans that follow.
     the name as the fallback, written once (`owns(state)` and the two personal facets), and
     Discover's focus-by-card, deck pick, gold band and loop list read it; `reconcileCards`
     fills a reference that lacks the record's oracle id, and the app names those at boot. A
-    lot or slot reaches the id through its `cardId`, which is the normalised form: "every lot
+    lot or slot reaches the id through its `cardId`, which is the normalized form: "every lot
     carries it" is read as every library card identity carries it.*
 13. **Posting lists for the facets.** `narrowedCounts` scans 31,830 cards per dialog; a
     Map term → Set of ids built once at load makes every count proportional to the selection

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* A Scryfall dump for every card the Load Live file names, in the shape build-live-state.mjs
  * takes with --scryfall: a JSON object keyed by exact card name, holding raw Scryfall card
- * objects. The bundled catalog knows every Commander-legal card by name, colour and type,
+ * objects. The bundled catalog knows every Commander-legal card by name, color and type,
  * but for a couple of hundred of Rob's cards it has no rules text, price or image; this
  * fills them in so the library the app loads is complete offline.
  *

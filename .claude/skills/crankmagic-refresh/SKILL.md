@@ -1,6 +1,6 @@
 ---
 name: crankmagic-refresh
-description: Refresh CrankMagic's committed card data — the Commander universe, flavour names, the graph corpus, EDHREC ranks, the Card records with prices, commander strategies, the manifest — in the order the specification requires, bump the ?v= a browser needs, prove it with the suites, and open the pull request. Use when a set is released, prices are stale, or the user asks to refresh the data.
+description: Refresh CrankMagic's committed card data — the Commander universe, flavor names, the graph corpus, EDHREC ranks, the Card records with prices, commander strategies, the manifest — in the order the specification requires, bump the ?v= a browser needs, prove it with the suites, and open the pull request. Use when a set is released, prices are stale, or the user asks to refresh the data.
 ---
 
 # Refreshing CrankMagic's data
@@ -49,7 +49,7 @@ end and is only for a dry run you will follow with a full one.
 
 - runs each step and stops at the first failure, leaving that step's output in the tree for
   you to inspect (`git status`, `git diff --stat`) or discard (`git checkout -- <file>`);
-- refuses a shrink: the universe, the flavour names, the graph and the record set grow by a
+- refuses a shrink: the universe, the flavor names, the graph and the record set grow by a
   set's worth and never shrink. A smaller count means a query changed meaning. Discard the
   run and look at the tool before running again — never commit a shrink;
 - bumps `?v=` only for the served data files that actually changed, moves the cascade
@@ -81,7 +81,7 @@ Never skip, disable or quarantine a suite to get a refresh through.
 One commit, on the branch, with the counts in the message:
 
 ```
-Data refresh <YYYY-MM-DD>: universe 31,830 → 32,190, flavour names 513 → 520, graph 31,830 → 32,190, ranks 1,000, records 2,131, strategies 2,746 → 2,790
+Data refresh <YYYY-MM-DD>: universe 31,830 → 32,190, flavor names 513 → 520, graph 31,830 → 32,190, ranks 1,000, records 2,131, strategies 2,746 → 2,790
 
 - tools/refresh.mjs, every step; the graph step reused graph/.cache
 - ?v= bumped: commander-universe 3 → 4, flavor-names 3 → 4, graph 17 → 18, graph-played 2 → 3, cards 7 → 8, card-facts 4 → 5, commander-strategies 1 → 2; the cascade

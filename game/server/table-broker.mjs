@@ -137,7 +137,7 @@ export class TableBroker{
     this.#state.launchPlan={launchId:randomUUID(),matchId:randomUUID()};this.#save();return table;
   }
   /* Spawn the engine during the countdown. Nothing here changes the table: if the countdown is
-     cancelled the position is discarded, and a spawn that fails still fails loudly at tick. */
+     canceled the position is discarded, and a spawn that fails still fails loudly at tick. */
   async prelaunch(){
     const plan=this.#state.launchPlan;
     if(this.#state.table.phase!=='countdown'||!plan||plan.prepared||typeof this.#prepareEngine!=='function')return null;

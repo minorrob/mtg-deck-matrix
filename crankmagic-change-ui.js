@@ -37,7 +37,7 @@ function readingHTML(label,j,sub){const t=j.tally,bad=new Set(j.warnings.map(w=>
 views.change=async params=>{const d=M.deck(C.state,params.get('deck')||'');if(!CH())throw Error('The Change List module is not loaded.');
   if(done.deckId!==d.id)done={deckId:d.id,rows:new Map()};
   /* A row ticked this sitting stays on the sheet, greyed and first, once the library no longer
-     lists it; a tick whose review was cancelled is still live and draws as live. */
+     lists it; a tick whose review was canceled is still live and draws as live. */
   const p=C.changePlan(d),keys=new Set(p.rows.map(keyOf)),finished=[...done.rows.values()].filter(r=>!keys.has(keyOf(r)));
   const rows=[...finished.map(r=>({...r,done:true})),...p.rows],doable=p.rows.filter(r=>r.available).length,waiting=p.rows.filter(r=>!r.available).length;
   const rd=p.readings,formula=rd.list.land.says;

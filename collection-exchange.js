@@ -50,7 +50,7 @@
       if(Object.keys(item).length>1)edits.push(item);
     }return {baseRevision:s.revision,edits};
   }
-  /* A RECEIPT, AS PASTED. An order confirmation from TCGplayer or a local store's e-mail is
+  /* A RECEIPT, AS PASTED. An order confirmation from TCGplayer or a local store's email is
      lines of "1 Sol Ring $1.57", "Sol Ring x2 ... $3.14", "2x Sol Ring — $3.14" or a CSV with
      a name and a price column; nothing about it is a schema. This pulls (name, quantity, price)
      out of each line that has a name and a money figure, takes the LAST dollar figure on the

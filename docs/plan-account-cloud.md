@@ -80,11 +80,11 @@ as pending and refuses to be written out.
 The Worker checks the address again and deletes nothing without it; the page stops syncing first and signs out
 after, so the library is not uploaded straight back. Their device's own library stays theirs.
 
-**Rob's step, only when asked** (the dialog and the privacy page tell people to e-mail admin@crankmagic.com):
+**Rob's step, only when asked** (the dialog and the privacy page tell people to email admin@crankmagic.com):
 remove their address from the **Invited** policy of the "CrankMagic accounts" Access application, and revoke
 their session under Zero Trust → My Team → Users. Until then they can still sign in, and signing in again
-starts an empty account. When the request comes by e-mail instead, do the same, and ask them to use Delete
-account in Settings first; if they cannot, delete their rows by e-mail address in the D1 console.
+starts an empty account. When the request comes by email instead, do the same, and ask them to use Delete
+account in Settings first; if they cannot, delete their rows by email address in the D1 console.
 
 ## Next
 

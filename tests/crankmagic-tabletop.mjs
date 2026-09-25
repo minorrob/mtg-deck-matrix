@@ -59,7 +59,7 @@ for (const [key] of T.GROUPINGS) {
   ok(g.groupPiles.every((p, i, a) => i === 0 || a[i - 1].order.localeCompare(p.order) <= 0 || (a[i - 1].order === p.order && a[i - 1].label.localeCompare(p.label) <= 0)), `${key}: piles in order`);
 }
 const color = T.table(rows, {...opts, groupBy: "color"});
-ok(color.groupPiles.map((p) => p.label).every((l) => G.COLOR_PILE.includes(l)), "colour piles are the list's seven words");
+ok(color.groupPiles.map((p) => p.label).every((l) => G.COLOR_PILE.includes(l)), "color piles are the list's seven words");
 ok(color.groupPiles.findIndex((p) => p.label === "White") < color.groupPiles.findIndex((p) => p.label === "Green"), "in WUBRG order");
 const mv = T.table(rows, {...opts, groupBy: "mv"});
 ok(mv.groupPiles.map((p) => p.label).join(",").startsWith("0,1,2") && mv.groupPiles.some((p) => p.label === "7+"), `mana value piles count up (${mv.groupPiles.map((p) => p.label).join(", ")})`);

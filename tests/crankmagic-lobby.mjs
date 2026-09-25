@@ -1,7 +1,7 @@
 /* THE LOBBY (docs/crankmagic-game-plan.md §5.1, PR G0), on the committed live library.
  *
  * Everything the lobby decides is arithmetic over card lists, so it is held here to the six real
- * decks rather than to made-up ones: a hundred is a hundred, a colour identity is the commander's,
+ * decks rather than to made-up ones: a hundred is a hundred, a color identity is the commander's,
  * and the Game Changer cap is the published bracket's. Two facts about Rob's library are pinned
  * deliberately — all six decks are inside every bracket's cap today, so the cap only ever bites on
  * an imported list, and the day that stops being true this suite says so rather than the lobby
@@ -53,13 +53,13 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   for (const deck of decks) {
     const s = seatOf(deck), check = L.validate(s, {bracket: 3});
     eq(check.size, 100, `${deck.name} is a hundred`);
-    ok(check.identityChecked, `${deck.name}'s colours are checked, not assumed`);
-    eq(check.issues.filter((i) => i.code === "identity"), [], `${deck.name} is inside its commander's colour identity`);
+    ok(check.identityChecked, `${deck.name}'s colors are checked, not assumed`);
+    eq(check.issues.filter((i) => i.code === "identity"), [], `${deck.name} is inside its commander's color identity`);
     ok(check.ok, `${deck.name} can sit at a bracket 3 table${check.ok ? "" : ": " + check.issues.map((i) => i.why).join(" ")}`);
   }
   /* THE ZERO THAT MATTERS (game plan §2). Every one of Rob's decks carries no Game Changers, so
      the cap only bites on an imported list. The day one of them does, this fails and the lobby's
-     behaviour changes with it — which is the point of pinning it. */
+     behavior changes with it — which is the point of pinning it. */
   const carried = decks.map((d) => L.gameChangerCount(seatOf(d)));
   eq(carried, decks.map(() => 0), `no deck in the library carries a Game Changer (${decks.map((d) => d.name).join(", ")})`);
   ok(decks.every((d) => L.validate(seatOf(d), {bracket: 1}).ok), "so every one of them sits at bracket 1 as well");
@@ -74,21 +74,21 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
 
   const headless = L.seat(Object.assign({}, base, {commanders: []}));
   ok(L.validate(headless, {bracket: 3}).issues.some((i) => i.code === "commander"), "a deck with no commander cannot sit");
-  eq(L.validate(headless, {bracket: 3}).identityChecked, false, "and its colours are not checked, because there is nothing to check them against");
+  eq(L.validate(headless, {bracket: 3}).identityChecked, false, "and its colors are not checked, because there is nothing to check them against");
 
   const doubled = L.seat(Object.assign({}, base, {cards: base.cards.map((c, i) => (i === 0 && !c.basic ? Object.assign({}, c, {quantity: 2}) : c))}));
   const dupe = L.validate(doubled, {bracket: 3}).issues.find((i) => i.code === "duplicates");
   ok(!base.cards[0].basic ? dupe && /one of each/.test(dupe.why) : true, "two of a non-basic is named");
 
-  /* Colour identity: a card the commander's colours do not cover, named. */
+  /* Color identity: a card the commander's colors do not cover, named. */
   const colors = [...L.identity(base)];
   const off = "WUBRG".split("").find((x) => !colors.includes(x));
   if (off) {
-    const intruder = L.seat(Object.assign({}, base, {cards: base.cards.slice(1).concat([{name: "Off-colour card", quantity: 1, colorIdentity: [off]}])}));
+    const intruder = L.seat(Object.assign({}, base, {cards: base.cards.slice(1).concat([{name: "Off-color card", quantity: 1, colorIdentity: [off]}])}));
     const issue = L.validate(intruder, {bracket: 3}).issues.find((i) => i.code === "identity");
-    ok(issue && /Off-colour card/.test(issue.why), "a card outside the commander's colours is named by card");
-    eq(issue.cards, ["Off-colour card"], "and the issue carries the card list for the screen");
-  } else ok(true, "this deck is five colours, so nothing is off-colour");
+    ok(issue && /Off-color card/.test(issue.why), "a card outside the commander's colors is named by card");
+    eq(issue.cards, ["Off-color card"], "and the issue carries the card list for the screen");
+  } else ok(true, "this deck is five colors, so nothing is off-color");
 }
 
 /* ---- the Game Changer cap, and the two ways forward ---- */
@@ -205,7 +205,7 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   eq(fitted.slots.reduce((n, r) => n + r.quantity, 0), 100, "the fit keeps the ninety-nine at ninety-nine");
   ok(fitted.estimatedPrice <= 400 + 1e-6, `and inside the budget ($${fitted.estimatedPrice.toFixed(2)} of $400)`);
   ok(fitted.notes.some((n) => /Fitted to bracket 3/.test(n)), "the notes say it was fitted rather than merely capped");
-  /* Brackets 1 and 2 allow none, so fitting them is a no-op rather than a licence. */
+  /* Brackets 1 and 2 allow none, so fitting them is a no-op rather than a license. */
   const none = B.build({commanders: [commander], cards: catalog, definition: {...definition, bracketCeiling: 2, fitBracket: true}});
   eq(none.gameChangers, 0, "bracket 2 allows none, and fitting it still carries none");
   eq(none.bracketFit, null, "there is no allowance to fit, so nothing is reported");
@@ -293,7 +293,7 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   const ls = L.listSeat(parsed, {name: "Pasted", kind: "paste", exact});
   eq([ls.kind, ls.name, L.size(ls)], ["paste", "Pasted", 100]);
   eq(ls.commanders[0].name, "Chulane, Teller of Tales");
-  ok(ls.commanders[0].colorIdentity.length >= 1 && ls.commanders[0].cardId, "the commander's colours and id came from the catalog");
+  ok(ls.commanders[0].colorIdentity.length >= 1 && ls.commanders[0].cardId, "the commander's colors and id came from the catalog");
   ok(/No measured score/.test(ls.scoreWhy), "and it says the simulator has not played it");
 
   /* a seat from a host catalog entry, with rows and without */
@@ -301,7 +301,7 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   eq([L.size(meta), meta.deckId, meta.commanders[0].name], [100, "deck:live:D6", "Krenko, Mob Boss"]);
   const bare = L.catalogMetaSeat({id: "x", commander: "Krenko, Mob Boss"}, {exact});
   eq(L.size(bare), 100, "with no rows the seat is still a hundred");
-  ok(bare.cards.every((c) => c.basic), "and it is basics in the commander's colours");
+  ok(bare.cards.every((c) => c.basic), "and it is basics in the commander's colors");
   assert.throws(() => L.catalogMetaSeat({id: "y"}), /no commander/); checks++;
 
   /* the strip and backfill */
@@ -325,8 +325,8 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   if (off) {
     const intruder = L.seat({...base, cards: base.cards.slice(2).concat([{name: "Off A", quantity: 1, colorIdentity: [off]}, {name: "Off B", quantity: 1, colorIdentity: [off]}])});
     const r = L.conform(intruder, {bracket: 3});
-    ok(L.validate(r.seat, {bracket: 3}).ok && !r.seat.cards.some((c) => /^Off /.test(c.name)), "off-colour cards are stripped and the seat backfilled");
-  } else ok(true, "this deck is five colours, so nothing is off-colour");
+    ok(L.validate(r.seat, {bracket: 3}).ok && !r.seat.cards.some((c) => /^Off /.test(c.name)), "off-color cards are stripped and the seat backfilled");
+  } else ok(true, "this deck is five colors, so nothing is off-color");
 
   /* names against the catalog: what Ready Up checks */
   const rough = {commanders: [{name: "Krenko, Mob Boss"}], cards: [{name: "Sol Ring", quantity: 1}, {name: "Not A Card", quantity: 1}, {name: "not a card", quantity: 1}, {name: "Mountain", quantity: 97}]};
@@ -343,7 +343,7 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   const tc = L.typeCounts(mine, look);
   eq(tc.reduce((n, b) => n + b[1], 0), 100);
   ok(tc.find((b) => b[0] === "Land")[1] > 20, "a real deck has lands");
-  ok(tc.every((b) => /^#[0-9a-f]{6}$/.test(b[2])), "each bucket carries its bar colour");
+  ok(tc.every((b) => /^#[0-9a-f]{6}$/.test(b[2])), "each bucket carries its bar color");
 
   /* the rules line */
   eq(L.rulesSummary(L.bracketOf(3), ""), "Bracket 3 · Upgraded. Cap: 3 Game Changers. Same rules for every seat.");

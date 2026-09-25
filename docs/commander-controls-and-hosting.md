@@ -20,7 +20,7 @@ Dice are numerical state indicators, not random rolls. Engine-required die rolls
 
 The engine publishes seat-scoped legal actions and pending choices at every decision revision. Buttons are derived from that feed, never from keyword text alone. Static card definitions support explanation and telemetry; current effects, timing, priority, costs, control and targets determine legality.
 
-- Drag a hand card onto the mat to begin Play land / Cast, then choose face, mode, X, targets and other required choices. Spells appear on the stack until resolution; lands use their legal special action. A failed or cancelled draft returns to the hand without state mutation.
+- Drag a hand card onto the mat to begin Play land / Cast, then choose face, mode, X, targets and other required choices. Spells appear on the stack until resolution; lands use their legal special action. A failed or canceled draft returns to the hand without state mutation.
 - Right-click a permanent for named abilities such as **Tap: Add G**, **Tap, pay 4: Proliferate**, or **Sacrifice: Draw a card**. Touch and keyboard users get the same menu through an Actions button. A generic Tap command cannot bypass an ability's cost or timing.
 - Show relevant unavailable actions with precise reasons: not enough available mana, already tapped, summoning sickness, no legal target, timing restriction, or another player's decision. Disabled explanations must be accessible by keyboard/touch as well as hover.
 - Combat presents attackers, each defender, blockers and any allocation/ordering choices required by the pinned engine. Tapping itself does not declare an attack. Show vigilance and attack taxes accurately.

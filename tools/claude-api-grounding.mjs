@@ -32,7 +32,7 @@ const iName = F.indexOf("name"), iCi = F.indexOf("ci"), iCmd = F.indexOf("comman
 
 const byName = new Map(universe.cards.map((c) => [c[iName].toLowerCase(), c]));
 
-/* The whole gate. Four questions, no network, no model, no judgement calls. */
+/* The whole gate. Four questions, no network, no model, no judgment calls. */
 function gate(name, { identity = "", inDeck = [] } = {}) {
   const card = byName.get(String(name).trim().toLowerCase());
   if (!card) return { ok: false, why: "not a Commander-legal card" };

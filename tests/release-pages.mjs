@@ -107,7 +107,7 @@ eq([...referencesOf("a.js", "const u = `assets/mana/${symbol}.svg`;", have)].sor
 eq([...referencesOf("a.js", "/* see docs/plan.md */ // and docs/plan.md\nfetch('data/cards.json?v=3')", have)], ["data/cards.json"], "a file named in a comment is not a reference; one fetched is");
 eq([...referencesOf("index.html", '<meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/mana/W.svg">', have)], ["assets/mana/W.svg"], "an absolute link to the app's own address is its own file");
 
-/* PRIVACY, TERMS, AND ONE PUBLIC ADDRESS (Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail"). */
+/* PRIVACY, TERMS, AND ONE PUBLIC ADDRESS (Rob, 2026-09-24: "I don't want just anyone to see my personal email"). */
 ok(built.has("privacy.html") && built.has("terms.html"), "the privacy policy and the terms of use are published");
 for (const p of PAGES) {
   const footer = (/<footer class="cm-legal"[\s\S]*?<\/footer>/.exec(built.get(p).toString("utf8")) || [""])[0];

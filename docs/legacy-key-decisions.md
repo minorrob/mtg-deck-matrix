@@ -85,7 +85,7 @@ the live backup:
 | `comments` | Notes typed against cards | 0 here | deck/slot notes | **Migrate** |
 | *view state* | `rankStages`, `compareFilters`, `shopFilters`, `cardFilters`, `liveFilters`, `liveOpenDecks`, `lineupHistory`, `liveTransfers`, `buyMode`, `compareLibrary`, `deckRung`, `*Seed` markers | — | — | **Drop** — they describe an interface that no longer exists |
 
-## The one judgement call worth arguing about
+## The one judgment call worth arguing about
 
 Migrating `owned`, `boughtQuantities` and `found` means importing an ownership claim the
 old app inferred partly from deck quantities — which is the exact bug

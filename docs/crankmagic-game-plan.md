@@ -137,7 +137,7 @@ are strong (reading card text, judgment under uncertainty) and code where code i
 
 | Tier | Who resolves it | How | Coverage |
 |---|---|---|---|
-| **1 — The rules** | the referee, always | zones, turn structure, priority (simplified, §8), mana and colour identity, casting cost and commander tax, summoning sickness, attacking and blocking, first/double strike, flying, menace, trample, deathtouch, lifelink, vigilance, haste, lethal damage, the legend rule, commander damage, 0 life | every card |
+| **1 — The rules** | the referee, always | zones, turn structure, priority (simplified, §8), mana and color identity, casting cost and commander tax, summoning sickness, attacking and blocking, first/double strike, flying, menace, trample, deathtouch, lifelink, vigilance, haste, lethal damage, the legend rule, commander damage, 0 life | every card |
 | **2 — The shapes** | the referee, from `card-classify.js` | the effect vocabulary the classifier already extracts — draw N, ramp N, destroy target, exile, wrath, make N tokens, counter target spell, gain N, mill N, tutor, untap, blink, copy, extra turn, damage N — executed deterministically | the large majority of cards in a typical deck |
 | **3 — The rest** | the adjudicator (Haiku), validated by the referee | the card's oracle text, the board, and a delta schema; every returned delta checked against tier 1 | everything else, including cards printed after the catalog was baked |
 
@@ -161,7 +161,7 @@ Entered from the play-space table: **Play a game** beside the canvas chooser.
    - **one of your decks** — the fastest way to test a matchup you actually own;
    - **an Archidekt link** — `deck-sources.js` already loads these by URL with full oracle data on
      arrival, no name matching and no second round trip;
-   - **a Moxfield/Deckstats paste** — the same module recognises the link and asks for the export,
+   - **a Moxfield/Deckstats paste** — the same module recognizes the link and asks for the export,
      because Moxfield answers a deck API request with 403 to a server and a browser alike;
    - **a generated deck** — the Lab's draft builder plus the simulator, seeded from a commander, a
      bracket and a budget. This is the "or it generates its own deck using the simulator" arm.
@@ -182,7 +182,7 @@ to the six committed decks — and `crankmagic-game.js` is the screen, reached f
 sidebar. What shipped, and the three places the plan met the code:
 
 - **One seat shape, four sources.** A library deck, an Archidekt link, a paste and a generated
-  list all normalise to `{commanders, cards, score}` before anything looks at them, so `validate`,
+  list all normalize to `{commanders, cards, score}` before anything looks at them, so `validate`,
   `trim`, the pod read and the seating are one implementation rather than four.
 - **The score is the deck's own measured run, not a ratings file.** The plan said "each deck's
   measured score"; the ratings file is keyed to six commanders by name, which would have scored a
@@ -196,7 +196,7 @@ sidebar. What shipped, and the three places the plan met the code:
   not. The read compares you to the rest of the pod, so a 100 against three 60s reads *you are the
   deck to beat, by 40*.
 - **Trim is a swap, not a cut.** Dropping the excess Game Changers leaves ninety-nine, which is not
-  a legal deck, so each one is replaced by a basic in the colour the deck leans on hardest. The
+  a legal deck, so each one is replaced by a basic in the color the deck leans on hardest. The
   order is the measured delta where the sweep measured one, else the least-played by EDHREC rank,
   else alphabetically — and the receipt says which rule decided and that a basic is plainly worse
   than what it replaced. It changes the seat, never the deck in the library.
@@ -219,7 +219,7 @@ check says so rather than the lobby quietly refusing a seat.
 Assembled by code from what the repo already computes, **not** by pasting a hundred card texts:
 
 ```
-COMMANDER   name · colour identity · mana cost · oracle text · its 3 strategies (crankmagic-strategies)
+COMMANDER   name · color identity · mana cost · oracle text · its 3 strategies (crankmagic-strategies)
 THE HUNDRED by Primary Purpose, with mana value and a one-line effect from the classifier
 LOOPS       every cycle of ≤4 cards through the deck (crankmagic-loops), each step named,
             with the pieces that are missing and the tutors that find them
@@ -335,7 +335,7 @@ Each of these is a PR that ships something true on its own.
 | **G0 — The lobby** ✅ | Pick your deck, seat 1–3 opponents from your decks / an Archidekt link / a paste / a generated deck, set the bracket and Game Changer cap, validate every seat, read the pod's measured balance. No game yet. **Built 15 September** — `crankmagic-lobby.js`, `crankmagic-game.js`, `tests/crankmagic-lobby.mjs`; §5.1 records what met the code. | no | no |
 | **G1 — The call** | `crankmagic-claude.js`: the key pane (bring-your-own, in the browser), one call shape, the cache layout, structured outputs, the cost meter and the per-game cap, and a **fixture mode** that answers from recorded JSON so every later suite runs offline and free. **Unblocked by §9.** | — | no |
 | **G2 — The playbook** | `crankmagic-playbook.js`: the deck brief from the graph (§5.2), the playbook back (§5.3), cached per deck and bracket, editable, with a heuristic fallback that needs no key. | yes | no |
-| **G3a — The board: zones and turns** | `crankmagic-board.js` tier 1, part one: zones, turn structure, mana and colour identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games. **Constraint from §9:** no rule may be spelled inline in the turn loop — each is a named, replaceable step the loop calls, so a stricter engine can take them one at a time later. | no | — |
+| **G3a — The board: zones and turns** | `crankmagic-board.js` tier 1, part one: zones, turn structure, mana and color identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games. **Constraint from §9:** no rule may be spelled inline in the turn loop — each is a named, replaceable step the loop calls, so a stricter engine can take them one at a time later. | no | — |
 | **G3b — The board: combat** | Declare attackers and blockers, the combat keywords, damage, commander damage, and the loss conditions. | no | — |
 | **G4 — The table** | The play space canvas becomes the game table: four seats, your hand, each battlefield, the stack, life totals, the log. **You play all four seats by hand.** This is what proves the board is real. | no | yes |
 | **G5 — The pilot** | `crankmagic-pilot.js`: a seat played from its playbook with tier-2 effects, deterministically. The game is now playable against opponents with **no API calls at all**. | no | yes |
@@ -427,7 +427,7 @@ The seat carries both in its name — *Krenko, Mob Boss (generated · bracket 3 
 has to remember what a generated opponent was built under.
 
 **What is now unblocked:** G1 (the key pane and the call shape), G2 (the playbook), and the spend
-and record behaviour G6 and G7 depend on. G3's "stricter later" constraint is written into its
+and record behavior G6 and G7 depend on. G3's "stricter later" constraint is written into its
 row in §7.
 
 ---

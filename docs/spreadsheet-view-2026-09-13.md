@@ -18,7 +18,7 @@ plan as written, and this note says what shipped and where it differs.*
   tests), `plan(state, edit)` (a typed number turned into commands, with `review` and the
   notes the dialog shows) and two commands: `target` (a card's count in a deck's list, on a
   draft or a finalized deck; a finalized list may leave 100 and the deck reads *In progress*
-  until it is back; the copies rule, the colour identity and the commander are the limits)
+  until it is back; the copies rule, the color identity and the commander are the limits)
   and `assign` (how many copies are reserved to the slot and how many of those are in the
   box; takes free copies first, then copies reserved to other decks or sitting in other
   boxes — which stay where they physically are until pulled — then records a newly owned
@@ -87,7 +87,7 @@ are left out.
 
 | Column | Meaning in the model | Master column |
 |---|---|---|
-| Card | name, colour pips, type on hover; click opens the card | A |
+| Card | name, color pips, type on hover; click opens the card | A |
 | Own | Σ owned copies, anywhere | P |
 | Ordered | Σ `ordered` + `incoming` copies | S |
 | To buy | Σ shortfall over finalized decks' committed slots (derived; read-only) | Q |
@@ -132,7 +132,7 @@ saying so; never place in a box a copy not reserved to that deck.
 
 ### Filters and scope
 
-The toolbar's search and Group-by work unchanged (group by colour, type, or by deck, which
+The toolbar's search and Group-by work unchanged (group by color, type, or by deck, which
 here means "rows this deck lists"). Two filters are specific to the Spreadsheet: **Short
 only** (rows where any deck's A < T) and **Boxed ≠ assigned** (rows where a deck's ▣ < A —
 the pull list). The deck scope (`?deck=`) limits the columns to that one deck plus Own /

@@ -58,7 +58,7 @@ Rob's Discover walk, plus the groundwork the later phases read.
 - **The picture grows with the pane.** `--cm-art-w` is 42 % of the divider's pane width,
   clamped 150–255 px (70 % larger at most); 50 % of the pane in presentation mode; fixed on a
   phone.
-- **The loop catalogue.** `docs/crankmagic-loop-patterns.md`: eleven patterns with their general
+- **The loop catalog.** `docs/crankmagic-loop-patterns.md`: eleven patterns with their general
   characteristic and their signature in the classifier's vocabulary, the missing terms, and the
   detection rule the next two phases implement.
 
@@ -139,7 +139,7 @@ The original sketch, kept for the record:
   pop-up.
 - A cycle finder over the cards on the canvas (or a deck's set): directed cycles of length 2–4
   over causes→triggers, produces→requires and the three new edges, kept when every cost on the
-  cycle is covered by a product on it; payoffs attached as in the catalogue. Pure, in a module
+  cycle is covered by a product on it; payoffs attached as in the catalog. Pure, in a module
   a Node test can drive (`tests/crankmagic-graph.mjs`), acceptance on the committed live state:
   the D6 loop (Krenko, Thornbite Staff, Bombardment / Prospector, payoffs Purphoros, Impact
   Tremors, Shared Animosity) and the Niv-Mizzet + Curiosity two-node cycle.
@@ -181,7 +181,7 @@ classify as removal), so D6 reads "12 / 8" plain, D5 "5 / 8" and "0 / 2" in the 
 treatment, D4's ramp "13 / 10". `tests/crankmagic-lens.mjs` pins the rules on the live state
 and the swap: an uncommitted `option` on the chosen slot, the hundred unchanged, no copy
 reserved. Candidates come from the bench, the orders, the buy list, the linked upgrades and the
-commander's co-play neighbours, inside the colour identity, never a card already in the
+commander's co-play neighbours, inside the color identity, never a card already in the
 hundred.*
 
 ## Data: the Master's columns (optional, any time after B)

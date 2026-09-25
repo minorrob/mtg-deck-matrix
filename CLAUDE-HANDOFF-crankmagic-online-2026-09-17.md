@@ -35,7 +35,7 @@
 
 1. **UAT before prod** — no merge to `main` / Pages without browser UAT.
 2. **No stubs as ready** — temporary/half-baked/docs-only = first-look draft only; temporary branch only.
-3. American English (Colors not Colours).
+3. American English (Colors not Colors).
 4. Concise UI copy; no large AI-flavored text blocks / em dashes.
 5. Buttons in a **row**; group extras under one menu — don’t stack into empty space.
 6. Seat content stays **inside** its seat container.

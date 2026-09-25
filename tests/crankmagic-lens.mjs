@@ -52,13 +52,13 @@ const loop6 = Lens.lens(state, D6, "Loop", deps);
 ok(loop6.min === null && loop6.under === false && loop6.have.some((h) => h.name === "Thornbite Staff"), "Loop has no minimum and Thornbite Staff is one of D6's loop pieces");
 ok(loop6.have.every((h) => h.roles.every((r) => ["untap", "copy", "blink", "sac-outlet"].includes(r))), "a lens row's roles are only the lens's own");
 
-/* Candidates: never a card already in the hundred, always in the role, inside the colours. */
+/* Candidates: never a card already in the hundred, always in the role, inside the colors. */
 const main6 = new Set(D6.slots.filter((r) => r.purpose === "main").map((r) => r.cardId));
 ok(rem6.candidates.length > 0, `D6 removal has candidates (${rem6.candidates.length})`);
 ok(rem6.candidates.every((c) => !main6.has(c.cardId)), "no candidate is already in the hundred");
 ok(rem6.candidates.every((c) => c.roles.includes("removal")), "every candidate carries the role");
 const krenko = cardOf(D6.commanders[0]);
-ok(rem6.candidates.every((c) => (cardOf(c.cardId).colorIdentity || []).every((x) => krenko.colorIdentity.includes(x))), "every candidate is inside the commander's colour identity");
+ok(rem6.candidates.every((c) => (cardOf(c.cardId).colorIdentity || []).every((x) => krenko.colorIdentity.includes(x))), "every candidate is inside the commander's color identity");
 ok(rem6.candidates.every((c) => ["bench", "ordered", "buy", "upgrade", "played"].every((s) => c.sources.includes(s) || true) && c.sources.length >= 1), "every candidate names where it comes from");
 ok(rem6.candidates.some((c) => c.sources.includes("bench")) , "the bench supplies some");
 /* Ranking: co-play first (none here), then owned before ordered before not owned, then price. */
@@ -73,12 +73,12 @@ const withCo = Lens.lens(state, D6, "Removal", coDeps);
 eq(withCo.candidates[0].cardId, last.cardId, "a card the commander's real decks run ranks first, whatever the ownership");
 eq(withCo.candidates[0].coPlay, {inclusion: 0.4, synergy: 0.1, decks: 1000}, "and carries the co-play figures");
 ok(first.cardId !== last.cardId && withCo.candidates.some((c) => c.cardId === first.cardId), "the rest keep their order beneath it");
-/* A neighbour the co-play row names that is not in the library arrives through byOracle. */
+/* A neighbor the co-play row names that is not in the library arrives through byOracle. */
 const outsider = records.find((c) => (c.roles || []).includes("removal") && (c.colorIdentity || []).every((x) => x === "R") && !Object.values(state.cards).some((s) => s.name === c.name));
 if (outsider) {
   const far = Lens.lens(state, D6, "Removal", {...deps, coPlay: () => new Map([[outsider.oracleId, {inclusion: 0.2, synergy: 0, decks: 10}]])});
   const row = far.candidates.find((c) => c.name === outsider.name);
-  ok(row && row.sources.includes("played") && row.owned === "none", `${outsider.name}: a co-play neighbour outside the library is a candidate, not owned`);
+  ok(row && row.sources.includes("played") && row.owned === "none", `${outsider.name}: a co-play neighbor outside the library is a candidate, not owned`);
 }
 /* Determinism. */
 eq(JSON.stringify(Lens.lens(state, D6, "Removal", deps)), JSON.stringify(rem6), "the same inputs give the same rows");
