@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CrankMagic — Full wireframe pack 2026-09-24</title>
+<style>
+:root{--bg:#f2f2f2;--panel:#fff;--ink:#1a1a1a;--muted:#666;--line:#333;--soft:#bbb;--chip:#e8e8e8;--annot:#777;--focus:#000;--banner:#ddd;--ship:#2f6f4e}
+*{box-sizing:border-box}html,body{margin:0;padding:0;font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 10px;cursor:pointer}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}button.ghost{background:transparent}
+button.active{outline:2px solid var(--focus);outline-offset:1px;background:#eee}button.danger{border-color:#822;color:#822}
+.annot{font-size:12px;color:var(--annot);font-style:italic;margin:4px 0 0}
+.tag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--soft);padding:1px 5px;color:var(--muted);background:var(--chip);vertical-align:middle;margin-left:4px}
+.tag.shipped{border-color:#888}.tag.planned{border-style:dashed}.tag.live{border-color:var(--ship);color:#244;background:#e8f2ec}
+.phase-banner{background:var(--banner);border-bottom:2px solid var(--line);padding:8px 14px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.brand{display:inline-flex;align-items:center;gap:8px;font-weight:700}.brand .mark{width:22px;height:22px;background:var(--ink);border:1px solid var(--line);display:inline-block}
+.topnav{display:flex;gap:0;border-bottom:2px solid var(--line);background:var(--panel);position:sticky;top:42px;z-index:15}
+.topnav a{flex:1;text-align:center;padding:12px 8px;text-decoration:none;color:var(--ink);border-right:1px solid var(--soft);font-weight:600}
+.topnav a:last-child{border-right:0}.topnav a.on{background:#e5e5e5;box-shadow:inset 0 -3px 0 var(--ink)}
+.switcher{padding:8px 14px;border-bottom:1px solid var(--soft);background:#ebebeb}
+.switcher .sw-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+.switcher label{font-size:12px;color:var(--muted);margin-right:4px;font-weight:700}
+.switcher .grp-label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:6px 0 3px}
+.switcher .grp-btns{display:flex;flex-wrap:wrap;gap:4px}.switcher button{font-size:11px;padding:3px 7px}
+.switcher.collapsed .grp{display:none}.switcher.collapsed .sw-head{margin:0}
+main{padding:14px;max-width:1100px;margin:0 auto}.screen{display:none}.screen.on{display:block}
+.screen-title{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0 0 8px;font-size:18px}
+.route{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);background:#eee;padding:2px 6px;border:1px solid var(--soft)}
+.box{border:1px solid var(--line);background:var(--panel);padding:10px;margin-bottom:10px;position:relative}
+.box.dashed{border-style:dashed;background:#fafafa}
+.region-label{position:absolute;top:-8px;left:8px;background:var(--panel);padding:0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.row{display:flex;gap:10px;flex-wrap:wrap}.col{flex:1;min-width:180px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:720px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.tile{border:1px solid var(--line);padding:10px;min-height:72px;background:#f7f7f7}.tile h4{margin:0 0 4px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chip{border:1px solid var(--line);padding:4px 8px;background:var(--chip);font-size:12px;border-radius:999px}.chip.on{background:#ddd;font-weight:600}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:10px;flex-wrap:wrap}
+.tabs span{padding:8px 12px;border:1px solid var(--line);border-bottom:0;margin-right:2px;background:#eee;font-size:13px}.tabs span.on{background:var(--panel);font-weight:700}
+.fake-table{width:100%;border-collapse:collapse;font-size:13px}.fake-table th,.fake-table td{border:1px solid var(--soft);padding:6px 8px;text-align:left}.fake-table th{background:#ececec}
+.banner-fidelity{border:2px solid var(--line);background:#eaeaea;padding:8px 10px;margin-bottom:10px;font-size:13px}
+.score-block{border:2px solid var(--line);padding:16px;text-align:center;font-size:28px;font-weight:700;background:#f9f9f9}
+.seat{border:1px solid var(--line);padding:10px;background:#f6f6f6;min-height:90px}.seat.ready{background:#e8e8e8}
+.countdown{font-size:22px;font-weight:700;text-align:center;border:2px dashed var(--line);padding:12px;margin-top:8px}
+.empty{border:2px dashed var(--soft);padding:24px;text-align:center;color:var(--muted);background:#fafafa}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}.actions.row-lock{flex-wrap:nowrap;overflow-x:auto}
+.defect{border:2px solid #822;background:#f8ecec;padding:8px 10px;margin:8px 0;font-size:13px}.defect strong{color:#822}
+.phone{max-width:390px;margin:0 auto;border:2px solid var(--line);background:#fff;min-height:640px}
+.phone .ph-bar{background:#111;color:#fff;padding:6px 10px;font-size:11px;display:flex;justify-content:space-between}
+.phone .ph-nav{display:flex;border-bottom:1px solid var(--line)}
+.phone .ph-nav a{flex:1;text-align:center;padding:10px 4px;font-size:12px;font-weight:600;text-decoration:none;color:var(--ink);border-right:1px solid var(--soft)}.phone .ph-nav a.on{background:#e5e5e5}
+.phone .ph-body{padding:10px}
+.phone .sticky-actions{position:sticky;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid var(--line);padding:8px;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto}
+.art{border:1px solid var(--line);background:#ddd;display:flex;align-items:center;justify-content:center;color:#555;font-size:12px}
+.art.lg{width:200px;height:280px}.art.md{width:120px;height:168px}.art.sm{width:72px;height:100px}
+.bar-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px}.bar{height:10px;background:#ccc;flex:1}.bar>i{display:block;height:100%;background:#555}
+.overlay-demo{border:2px dashed var(--line);background:rgba(0,0,0,.08);padding:20px;min-height:200px}
+.modal{max-width:520px;margin:20px auto;background:var(--panel);border:2px solid var(--line);padding:14px}.modal h3{margin:0 0 8px}
+.modal .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
+.toast{display:inline-block;background:#222;color:#fff;padding:8px 14px;border-radius:2px;font-size:13px}
+.banner-err{background:#f8ecec;border:1px solid #822;color:#411;padding:8px 10px;margin-bottom:10px}
+.legend{margin-top:24px;padding:10px;border:1px solid var(--soft);font-size:12px;color:var(--muted);background:#fafafa;max-width:1100px;margin-left:auto;margin-right:auto}
+footer.note{margin:20px 14px 40px;max-width:1100px;margin-left:auto;margin-right:auto;font-size:12px;color:var(--muted)}
+.shell-rail{width:180px;border-right:1px solid var(--line);padding:12px;background:#f7f7f7;min-height:360px}
+.shell-main{flex:1;padding:12px;min-width:0}.shell-wrap{display:flex;border:1px solid var(--line);background:var(--panel);min-height:380px}
+.shell-wrap.dark{background:#1a1815;color:#f5f0e8;border-color:#3a342c}.shell-wrap.dark .shell-rail{background:#231f1b;border-color:#3a342c;color:#f5f0e8}
+.shell-wrap.dark .tile{background:#2d2823;border-color:#3a342c;color:#f5f0e8}.shell-wrap.light{background:#f5f0e6}
+.menu-panel{border:1px solid var(--line);background:#fff;width:240px;padding:0}
+.menu-panel button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);border-radius:0;background:#fff;padding:10px 12px}
+.menu-panel button:hover{background:#eee}
+.graph-canvas{border:1px solid var(--line);background:radial-gradient(circle at 40% 40%,#e8e8e8,#fafafa);min-height:320px;position:relative}
+.node{position:absolute;border:2px solid var(--line);border-radius:50%;background:#fff;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:10px;text-align:center}
+.node.focus{width:64px;height:64px;font-weight:700;background:#ddd}
+.inspect{border:1px solid var(--line);padding:10px;background:#fff;min-height:320px}
+.counts{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.count-tile{border:1px solid var(--line);padding:8px;text-align:center;background:#f7f7f7}
+.count-tile .n{font-size:20px;font-weight:700}.count-tile .l{font-size:11px;color:var(--muted)}
+
+.tile.dashed,.box.dashed{border-style:dashed}
+.region-label{position:absolute;top:-8px;left:8px;background:var(--panel);padding:0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="phase-banner">
+  <div class="brand"><span class="mark"></span>
+    <div><strong>CrankMagic full wireframes</strong> — structural pack for Trey (Robert Minor).
+      Gray-box IA · tip <code>8e9ddfd · 2026-09-24</code> · play=coming-soon · accounts=on.
+      Not Astra Satoshi skin. Not live chrome pixels.</div>
+  </div>
+  <div>
+    <span class="tag shipped">shipped</span>
+    <span class="tag live">live</span>
+    <span class="tag planned">planned</span>
+    · 59 screens · US English
+  </div>
+</div>
+<nav class="topnav" aria-label="Product jobs">
+  <a href="#decks-hub" data-nav="decks" class="on">Decks</a>
+  <a href="#library-list" data-nav="library">Library</a>
+  <a href="#explore-chooser" data-nav="explore">Explore</a>
+  <a href="#play-coming-soon" data-nav="play">Play</a>
+</nav>
+  <div class="switcher" id="screen-switcher">
+    <div class="sw-head"><label>Screen:</label>
+      <button type="button" id="sw-toggle" class="ghost">Collapse / expand list</button>
+      <span class="annot" style="display:inline;margin:0">Designer-only — not end-user UI</span></div>
+    <div class="grp"><div class="grp-label">Shell</div><div class="grp-btns">
+<button type="button" data-screen="shell-dark">App shell</button>
+<button type="button" data-screen="shell-light">App shell</button>
+<button type="button" data-screen="global-menu">Global Menu</button>
+<button type="button" data-screen="help-panel">Help ? panel (page-scoped)</button>
+<button type="button" data-screen="loading">Loading / Opening your lib…</button>
+<button type="button" data-screen="mobile-decks">Mobile shell</button>
+<button type="button" data-screen="mobile-library">Mobile shell</button>
+<button type="button" data-screen="mobile-explore">Mobile shell</button>
+<button type="button" data-screen="mobile-deck-detail">Mobile shell</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Decks</div><div class="grp-btns">
+<button type="button" data-screen="decks-hub-empty">Decks hub</button>
+<button type="button" data-screen="decks-hub">Decks hub</button>
+<button type="button" data-screen="new-deck-chooser">New deck</button>
+<button type="button" data-screen="new-deck-create">New deck</button>
+<button type="button" data-screen="new-deck-import">New deck</button>
+<button type="button" data-screen="new-deck-lab">New deck</button>
+<button type="button" data-screen="deck-overview">Deck detail</button>
+<button type="button" data-screen="deck-hundred">Deck</button>
+<button type="button" data-screen="deck-upgrades">Deck</button>
+<button type="button" data-screen="deck-explore">Deck</button>
+<button type="button" data-screen="deck-acquire">Deck</button>
+<button type="button" data-screen="ready-to-add">Ready to add</button>
+<button type="button" data-screen="make-the-change">Make the change</button>
+<button type="button" data-screen="edit-card-list">Edit card list</button>
+<button type="button" data-screen="deck-more-menu">Deck options / More menu</button>
+<button type="button" data-screen="measure-report">Measure report chrome</button>
+<button type="button" data-screen="log-a-game">Log a game</button>
+<button type="button" data-screen="export-print">Export / print / backup-fr…</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Library</div><div class="grp-btns">
+<button type="button" data-screen="library-empty">Library</button>
+<button type="button" data-screen="library-list">Library</button>
+<button type="button" data-screen="library-sheet">Library</button>
+<button type="button" data-screen="library-table">Library</button>
+<button type="button" data-screen="library-to-buy">Library</button>
+<button type="button" data-screen="library-orders">Library</button>
+<button type="button" data-screen="filters-dialog">Filters dialog</button>
+<button type="button" data-screen="columns-dialog">Columns dialog</button>
+<button type="button" data-screen="add-cards">Add cards / Add copies</button>
+<button type="button" data-screen="card-popup">Card popup</button>
+<button type="button" data-screen="backup-dialog">Backup dialog</button>
+<button type="button" data-screen="restore-dialog">Restore dialog</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Explore</div><div class="grp-btns">
+<button type="button" data-screen="explore-chooser">Explore entry chooser</button>
+<button type="button" data-screen="explore-graph">Explore scoped graph</button>
+<button type="button" data-screen="explore-filters">Explore filters / lens / r…</button>
+<button type="button" data-screen="explore-add-wanted">Add / Wanted from Explore</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Play</div><div class="grp-btns">
+<button type="button" data-screen="play-coming-soon">Play</button>
+<button type="button" data-screen="play-lobby">Play setup / lobby (planned)</button>
+<button type="button" data-screen="play-countdown">Play countdown / readiness…</button>
+<button type="button" data-screen="play-table">Table / board chrome (plan…</button>
+<button type="button" data-screen="game-history">Game history</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Accounts</div><div class="grp-btns">
+<button type="button" data-screen="account-signin">Account / sign-in entry</button>
+<button type="button" data-screen="settings">Settings</button>
+</div></div>
+    <div class="grp"><div class="grp-label">Dialogs</div><div class="grp-btns">
+<button type="button" data-screen="confirm-receipt">Receipt / confirm dialog</button>
+<button type="button" data-screen="toast-error">Toast / error banner pattern</button>
+<button type="button" data-screen="empty-cta-honesty">Empty CTA honesty patterns</button>
+<button type="button" data-screen="library-more-menu">Library More menu</button>
+<button type="button" data-screen="status-change-menu">Status change menu</button>
+<button type="button" data-screen="confirm-delete">Confirm delete / clear</button>
+<button type="button" data-screen="commander-zoom">Commander card zoom</button>
+<button type="button" data-screen="invite-share">Invite / share</button>
+<button type="button" data-screen="glossary">Glossary</button>
+</div></div>
+  </div>
+<main>
+    <section id="shell-dark" class="screen on" data-nav="decks">
+      <h2 class="screen-title">App shell — dark theme <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks</span></h2>
+      <p class="annot">Purpose: Brass & Slate default. Rail + job nav.</p>
+
+<div class="shell-wrap dark"><div class="shell-rail"><div class="brand"><span class="mark"></span> CrankMagic</div>
+<div style="margin-top:14px"><div style="padding:8px;background:#2d2823;font-weight:700">Decks</div>
+<div style="padding:6px 8px 6px 18px;font-size:13px">· Atraxa…</div>
+<div style="padding:8px">Library</div><div style="padding:8px">Explore</div><div style="padding:8px">Play</div></div>
+<div style="margin-top:24px;font-size:12px;opacity:.7">Menu ▾ · Theme: Dark</div></div>
+<div class="shell-main"><div class="tile">Main content region (Decks hub)</div>
+<p class="annot">Dark = Brass &amp; Slate. Primary buttons = black here (brass in live skin).</p></div></div>
+<div class="actions"><button type="button" data-goto="shell-light">Switch to light</button><button type="button" data-goto="global-menu">Open Menu</button></div>
+    </section>
+    <section id="shell-light" class="screen" data-nav="decks">
+      <h2 class="screen-title">App shell — light theme <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks</span></h2>
+      <p class="annot">Purpose: Felt & Cream. Theme toggle in Menu.</p>
+
+<div class="shell-wrap light"><div class="shell-rail" style="background:#fffdf8"><div class="brand"><span class="mark"></span> CrankMagic</div>
+<div style="margin-top:14px"><div style="padding:8px;background:#ece5d7;font-weight:700">Decks</div>
+<div style="padding:8px">Library</div><div style="padding:8px">Explore</div><div style="padding:8px">Play</div></div>
+<div style="margin-top:24px;font-size:12px;color:var(--muted)">Menu ▾ · Theme: Light</div></div>
+<div class="shell-main"><div class="tile" style="background:#fffdf8">Main content region</div>
+<p class="annot">Light = Felt &amp; Cream. Same IA; theme from Menu.</p></div></div>
+<div class="actions"><button type="button" data-goto="shell-dark">Switch to dark</button></div>
+    </section>
+    <section id="global-menu" class="screen" data-nav="decks">
+      <h2 class="screen-title">Global Menu <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Menu</span></h2>
+      <p class="annot">Purpose: Account, theme, backup, help, sign in.</p>
+
+<div class="row"><div class="box" style="flex:1"><span class="region-label">Chrome</span>
+<div class="row" style="justify-content:space-between;align-items:center"><div class="brand"><span class="mark"></span> CrankMagic</div>
+<button type="button" class="primary">Menu ▾</button></div></div>
+<div class="menu-panel"><button type="button" data-goto="account-signin">Account / Sign in</button><button type="button" data-goto="shell-light">Theme: Light / Dark</button><button type="button" data-goto="backup-dialog">Back up now</button><button type="button" data-goto="restore-dialog">Restore backup…</button><button type="button" data-goto="help-panel">Help</button><button type="button" data-goto="settings">Settings</button><button type="button" data-goto="glossary">Glossary</button></div>
+</div>
+<p class="annot">Accounts = on (CF Access). Guest local workshop still works without sign-in.</p>
+    </section>
+    <section id="help-panel" class="screen" data-nav="decks">
+      <h2 class="screen-title">Help ? panel (page-scoped) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">?</span></h2>
+      <p class="annot">Purpose: Page-relevant help; closable.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Help — Decks</h3><button type="button" class="ghost">✕</button></div>
+<p>This page lists your personal decks. Use <strong>New deck</strong> to Create, Import, or run Lab.</p>
+<ul style="font-size:13px;margin:8px 0;padding-left:18px">
+<li>Overview shows progress and NEXT.</li><li>The hundred is the 100-card list.</li><li>Acquire feeds Library To buy.</li></ul>
+<p class="annot">Help is page-scoped (CW-XC-11). Close via ✕, Escape, or backdrop.</p><div class="modal-foot"><button type="button" class="primary" data-goto="decks-hub">Got it</button></div></div></div>
+    </section>
+    <section id="loading" class="screen" data-nav="decks">
+      <h2 class="screen-title">Loading / Opening your library <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">settle</span></h2>
+      <p class="annot">Purpose: Wait past this before judging empty (CW-XC-17).</p>
+
+<div class="box" style="min-height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+<div style="font-size:16px;font-weight:600">Opening your library…</div>
+<div class="annot">Settle / paint race — do not judge empty before this clears (CW-XC-17).</div>
+<div style="margin-top:16px;width:180px;height:6px;background:#ddd;overflow:hidden"><div style="width:55%;height:100%;background:#444"></div></div></div>
+    </section>
+    <section id="mobile-decks" class="screen" data-nav="decks">
+      <h2 class="screen-title">Mobile shell — Decks hub (~390) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks</span></h2>
+      <p class="annot">Purpose: Phone rail collapses to top row.</p>
+<div class="phone"><div class="ph-bar"><span>9:41</span><span>~390</span></div><div class="ph-nav"><a href="#mobile-decks" class="on">Decks</a><a href="#mobile-library" class="">Library</a><a href="#mobile-explore" class="">Explore</a><a href="#play-coming-soon" class="">Play</a></div><div class="ph-body">
+<div class="row" style="justify-content:space-between;align-items:center"><strong>Decks</strong>
+<button type="button" class="primary" data-goto="new-deck-chooser">+ New</button></div>
+<div class="tile" style="margin-top:10px"><h4>Atraxa, Praetors' Voice</h4><div>84 / 100</div></div>
+<div class="tile" style="margin-top:8px"><h4>Quintorius…</h4><div>100 / 100</div></div></div></div>
+    </section>
+    <section id="mobile-library" class="screen" data-nav="library">
+      <h2 class="screen-title">Mobile shell — Library (~390) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards</span></h2>
+      <p class="annot">Purpose: Tabs + sticky primary.</p>
+<div class="phone"><div class="ph-bar"><span>9:41</span><span>~390</span></div><div class="ph-nav"><a href="#mobile-decks" class="">Decks</a><a href="#mobile-library" class="on">Library</a><a href="#mobile-explore" class="">Explore</a><a href="#play-coming-soon" class="">Play</a></div><div class="ph-body">
+<div class="chips"><span class="chip on">Library</span><span class="chip">To buy</span><span class="chip">Orders</span></div>
+<div class="chips"><span class="chip on">List</span><span class="chip">Sheet</span><span class="chip">Table</span></div>
+<div class="tile">Sol Ring · Owned · D1</div><div class="tile" style="margin-top:6px">Arcane Signet · Bench</div></div><div class="sticky-actions actions row-lock"><button type="button" class="primary" data-goto="add-cards">Add cards</button><button type="button" data-goto="library-more-menu">More ▾</button></div></div>
+    </section>
+    <section id="mobile-explore" class="screen" data-nav="explore">
+      <h2 class="screen-title">Mobile shell — Explore chooser (~390) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#discover</span></h2>
+      <p class="annot">Purpose: Doors stack; roles wrap.</p>
+<div class="phone"><div class="ph-bar"><span>9:41</span><span>~390</span></div><div class="ph-nav"><a href="#mobile-decks" class="">Decks</a><a href="#mobile-library" class="">Library</a><a href="#mobile-explore" class="on">Explore</a><a href="#play-coming-soon" class="">Play</a></div><div class="ph-body">
+<strong>Start anywhere</strong>
+<div class="tile" style="margin-top:8px">From a deck gap</div>
+<div class="tile" style="margin-top:6px">From a commander</div>
+<div class="tile" style="margin-top:6px">From a card</div>
+<div class="chips"><span class="chip">Removal</span><span class="chip">Ramp</span><span class="chip">Draw</span></div></div></div>
+    </section>
+    <section id="mobile-deck-detail" class="screen" data-nav="decks">
+      <h2 class="screen-title">Mobile shell — Deck detail FIXED (~390) <span class="tag planned">planned</span> <span class="route">#decks?deck=</span></h2>
+      <p class="annot">Purpose: Sticky actions ROW fixed; UAT CW-MOB-02 clip annotated.</p>
+
+<div class="defect"><strong>UAT defect CW-MOB-02 (S2):</strong> Live sticky action bar clipped “Log a game” at ~390px.
+This wireframe shows the <em>fixed</em> layout — actions stay in one horizontal <strong>row</strong> with scroll if needed; never stack into empty clipped columns.</div>
+<div class="phone"><div class="ph-bar"><span>9:41</span><span>~390</span></div><div class="ph-nav"><a href="#mobile-decks" class="on">Decks</a><a href="#mobile-library" class="">Library</a><a href="#mobile-explore" class="">Explore</a><a href="#play-coming-soon" class="">Play</a></div><div class="ph-body">
+<div class="art md" style="margin:0 auto">Commander art</div>
+<h3 style="margin:8px 0 4px;text-align:center">Atraxa, Praetors' Voice</h3>
+<div class="tabs"><span class="on">Overview</span><span>100</span><span>Upgrades</span></div>
+<div class="tile">NEXT: fill removal · Open buy list</div></div><div class="sticky-actions actions row-lock"><button type="button" class="primary">Buy list · 13</button><button type="button" data-goto="log-a-game">Log a game</button><button type="button" data-goto="make-the-change">Make the change</button><button type="button" data-goto="deck-more-menu">More ▾</button></div></div>
+<p class="annot">All primary actions remain tappable; overflow scrolls horizontally inside the sticky bar.</p>
+    </section>
+    <section id="decks-hub-empty" class="screen" data-nav="decks">
+      <h2 class="screen-title">Decks hub — empty <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks</span></h2>
+      <p class="annot">Purpose: Honest empty; do not label restore as Import a backup.</p>
+
+<div class="box"><span class="region-label">Toolbar</span>
+<div class="row" style="align-items:center;justify-content:space-between">
+<div class="brand"><span class="mark"></span> <strong>Your decks</strong></div>
+<button type="button" class="primary" data-goto="new-deck-chooser">+ New deck</button></div></div>
+<div class="box dashed"><span class="region-label">Empty state</span>
+<div class="empty"><div>No personal decks yet</div>
+<p class="annot">Sample tiles below do not create Owned copies.</p>
+<div class="actions" style="justify-content:center">
+<button type="button" class="primary" data-goto="new-deck-chooser">New deck</button>
+<button type="button" class="ghost" data-goto="restore-dialog">Restore backup…</button>
+<button type="button" class="ghost" data-goto="glossary">Open glossary</button></div></div>
+<div class="defect" style="margin-top:10px"><strong>Honesty:</strong> Do not label restore as “Import a backup” (CW-XC-15). True decklist import lives under New deck → Import.</div>
+<div class="tile" style="margin-top:10px"><h4>Sample: Example Commander <span class="tag planned">sample</span></h4>
+<div class="annot">Read-only demo hundred — not your library</div></div></div>
+    </section>
+    <section id="decks-hub" class="screen" data-nav="decks">
+      <h2 class="screen-title">Decks hub — with decks <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks</span></h2>
+      <p class="annot">Purpose: Tiles grid; New deck primary.</p>
+
+<div class="box"><span class="region-label">Toolbar</span>
+<div class="row" style="align-items:center;justify-content:space-between">
+<div><strong>Your decks</strong> <span class="annot" style="display:inline">Two decks, one playable.</span></div>
+<div class="actions" style="margin:0"><button type="button" class="ghost">Compare</button>
+<button type="button" class="primary" data-goto="new-deck-chooser">+ New deck</button></div></div></div>
+<div class="grid3">
+<div class="tile"><div class="art" style="height:120px;margin-bottom:8px">Art crop</div>
+<h4>Atraxa, Praetors' Voice</h4><div>84 / 100 · gaps 16</div>
+<div class="annot">UAT-CW-2026-09-24-Atraxa · Ready? no</div>
+<div class="actions"><button type="button" data-goto="deck-overview">Open</button></div></div>
+<div class="tile"><div class="art" style="height:120px;margin-bottom:8px">Art crop</div>
+<h4>Quintorius, Loremaster</h4><div>100 / 100 · owned 72</div>
+<div class="actions"><button type="button" data-goto="deck-overview">Open</button></div></div>
+<div class="tile" style="border-style:dashed;display:flex;align-items:center;justify-content:center">
+<button type="button" class="ghost" data-goto="new-deck-chooser">+ New deck</button></div></div>
+    </section>
+    <section id="new-deck-chooser" class="screen" data-nav="decks">
+      <h2 class="screen-title">New deck — path chooser <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">New deck</span></h2>
+      <p class="annot">Purpose: Create / Import / Lab — Lab wizard-only.</p>
+
+<div class="box"><span class="region-label">Wizard chrome</span>
+<div class="row" style="justify-content:space-between;align-items:center"><strong>Create a deck</strong>
+<button type="button" class="ghost" data-goto="decks-hub">Cancel</button></div></div>
+<div class="grid3">
+<div class="box"><span class="region-label">Path 1</span><h3 style="margin:4px 0 8px">Create</h3>
+<div class="annot">Pick commander → constraints → draft</div>
+<div class="actions"><button type="button" class="primary" data-goto="new-deck-create">Continue</button></div></div>
+<div class="box"><span class="region-label">Path 2</span><h3 style="margin:4px 0 8px">Import</h3>
+<div class="annot">Paste / upload list — do not infer Owned</div>
+<div class="actions"><button type="button" class="primary" data-goto="new-deck-import">Continue</button></div></div>
+<div class="box dashed"><span class="region-label">Path 3</span><h3 style="margin:4px 0 8px">Lab <span class="tag planned">planned</span></h3>
+<div class="annot">Guided / experimental. Wizard-only — not a top-nav peer.</div>
+<div class="actions"><button type="button" data-goto="new-deck-lab">Continue</button></div></div></div>
+    </section>
+    <section id="new-deck-create" class="screen" data-nav="decks">
+      <h2 class="screen-title">New deck — Create (commander) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Create</span></h2>
+      <p class="annot">Purpose: Commander search then Create draft.</p>
+
+<div class="box"><span class="region-label">Create path</span>
+<div class="row" style="justify-content:space-between"><strong>Pick a commander</strong>
+<button type="button" class="ghost" data-goto="new-deck-chooser">Back</button></div>
+<div style="margin-top:8px"><input style="width:100%" placeholder="Search commanders…" value="Atraxa" /></div>
+<div class="grid3" style="margin-top:10px">
+<div class="tile"><div class="art sm" style="margin:0 auto 6px">Art</div><strong>Atraxa, Praetors' Voice</strong><div class="annot">WUBG</div>
+<div class="actions"><button type="button" class="primary">Select</button></div></div>
+<div class="tile"><div class="art sm" style="margin:0 auto 6px">Art</div><strong>Atraxa, Grand Unifier</strong><div class="annot">WUBG</div></div>
+<div class="tile"><div class="art sm" style="margin:0 auto 6px">Art</div><strong>Another match</strong></div></div>
+<div class="actions" style="margin-top:12px">
+<button type="button" class="primary" data-goto="deck-overview">Create draft</button>
+<button type="button" class="ghost" data-goto="new-deck-chooser">Cancel</button></div></div>
+    </section>
+    <section id="new-deck-import" class="screen" data-nav="decks">
+      <h2 class="screen-title">New deck — Import <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Import</span></h2>
+      <p class="annot">Purpose: Paste/upload list; do not infer Owned.</p>
+
+<div class="box"><span class="region-label">Import path</span>
+<div class="row" style="justify-content:space-between"><strong>Import a decklist</strong>
+<button type="button" class="ghost" data-goto="new-deck-chooser">Back</button></div>
+<p class="annot">Paste or upload. Importing a list does not mark cards Owned in Library.</p>
+<textarea style="width:100%;min-height:140px;margin-top:8px" placeholder="1 Sol Ring&#10;1 Arcane Signet&#10;…"></textarea>
+<div class="row" style="margin-top:8px;gap:8px"><button type="button">Upload file…</button>
+<span class="annot">.txt / .csv / Moxfield-ish</span></div>
+<div class="actions"><button type="button" class="primary" data-goto="deck-overview">Import → hub</button></div></div>
+    </section>
+    <section id="new-deck-lab" class="screen" data-nav="decks">
+      <h2 class="screen-title">New deck — Lab / Build from Commander <span class="tag planned">planned</span> <span class="route">Lab</span></h2>
+      <p class="annot">Purpose: Guided generation; wizard-only.</p>
+
+<div class="box dashed"><span class="region-label">Lab</span>
+<div class="row" style="justify-content:space-between"><strong>Lab / Build from Commander</strong>
+<button type="button" class="ghost" data-goto="new-deck-chooser">Back</button></div>
+<p class="annot">Guided generation from a commander seed. Partial on live — treat as planned depth.</p>
+<div class="grid2" style="margin-top:10px"><div class="tile">Commander: [picker]</div><div class="tile">Budget / bracket / themes</div></div>
+<div class="tile" style="margin-top:8px;min-height:80px">[Lab run panel / orbs stub]</div>
+<div class="actions"><button type="button" class="primary" data-goto="deck-overview">Run lab → hub</button></div></div>
+    </section>
+    <section id="deck-overview" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck detail — Overview <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks?deck=&amp;tab=overview</span></h2>
+      <p class="annot">Purpose: Commander art large, type bars, NEXT, action row + More.</p>
+
+<div class="box"><span class="region-label">Deck header</span>
+<div class="row"><div class="art lg">Commander art<br/>(large, readable)</div>
+<div class="col"><div class="annot">DECKS ›</div>
+<h3 style="margin:4px 0">Atraxa, Praetors' Voice</h3>
+<div>WUBG · Bracket 3 · 84 / 100</div>
+<div class="chips"><span class="chip">Proliferate</span><span class="chip">Counters</span></div>
+<div class="actions">
+<button type="button" class="primary" data-goto="deck-acquire">Buy list · 13</button>
+<button type="button" data-goto="log-a-game">Log a game</button>
+<button type="button" data-goto="make-the-change">Make the change</button>
+<button type="button" data-goto="measure-report">Measure</button>
+<button type="button" data-goto="deck-more-menu">More ▾</button></div>
+<p class="annot">Action row = horizontal row (layout lock). Group secondary under More.</p>
+</div></div></div>
+<div class="tabs"><span class="on" >Overview</span><span class="" data-goto="deck-hundred" style="cursor:pointer">The hundred</span><span class="" data-goto="deck-upgrades" style="cursor:pointer">Upgrades</span><span class="" data-goto="deck-explore" style="cursor:pointer">Explore</span><span class="" data-goto="deck-acquire" style="cursor:pointer">Acquire</span></div>
+<div class="box" style="background:#ececec"><span class="region-label">NEXT</span>
+<div style="font-size:16px;font-weight:600">Fill removal — you are short 2 of 8.</div>
+<div class="actions"><button type="button" class="primary" data-goto="deck-acquire">Open the buy list →</button></div></div>
+<div class="grid2">
+<div class="box"><span class="region-label">Progress</span>
+<div>100 / in the box target · owned linked 60 · gaps 16 · substitutes 8</div>
+<div class="bar-row"><span>Inbox</span><div class="bar"><i style="width:70%"></i></div></div>
+<div class="bar-row"><span>Buy</span><div class="bar"><i style="width:20%"></i></div></div></div>
+<div class="box"><span class="region-label">By card type</span>
+<div class="bar-row"><span>Creature</span><div class="bar"><i style="width:40%"></i></div><span>28</span></div>
+<div class="bar-row"><span>Instant</span><div class="bar"><i style="width:18%"></i></div><span>12</span></div>
+<div class="bar-row"><span>Land</span><div class="bar"><i style="width:36%"></i></div><span>36</span></div></div></div>
+<div class="actions"><button type="button" data-goto="ready-to-add">Ready to add</button>
+<button type="button" data-goto="deck-hundred">The hundred</button>
+<button type="button" data-goto="mobile-deck-detail">Mobile FIXED layout</button>
+<button type="button" data-goto="commander-zoom">Commander zoom</button></div>
+    </section>
+    <section id="deck-hundred" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck · The hundred <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks?deck=&amp;tab=hundred</span></h2>
+      <p class="annot">Purpose: List/table of 100 slots.</p>
+
+<div class="box"><span class="region-label">Deck chrome</span><strong>Atraxa</strong> · The hundred
+<div class="actions"><button type="button" class="primary" data-goto="edit-card-list">Edit card list</button>
+<button type="button" data-goto="status-change-menu">Card status ▾</button>
+<button type="button" data-goto="deck-more-menu">More ▾</button></div></div>
+<div class="tabs"><span class="" data-goto="deck-overview" style="cursor:pointer">Overview</span><span class="on" >The hundred</span><span class="" data-goto="deck-upgrades" style="cursor:pointer">Upgrades</span><span class="" data-goto="deck-explore" style="cursor:pointer">Explore</span><span class="" data-goto="deck-acquire" style="cursor:pointer">Acquire</span></div>
+<div class="box"><span class="region-label">Slot list</span>
+<div class="row" style="justify-content:space-between"><span>100 cards</span>
+<button type="button" class="ghost" data-goto="library-list">Open in Library →</button></div>
+<table class="fake-table"><thead><tr><th>Card</th><th>Type</th><th>MV</th><th>Status</th><th>Purpose</th></tr></thead>
+<tbody><tr><td>Sol Ring</td><td>Artifact</td><td>1</td><td>In box</td><td>Ramp</td></tr>
+<tr><td>Counterspell</td><td>Instant</td><td>2</td><td>To buy</td><td>Interaction</td></tr>
+<tr><td>…</td><td colspan="4" class="annot">Full hundred — page grows; no inner scroll</td></tr></tbody></table></div>
+    </section>
+    <section id="deck-upgrades" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck · Upgrades <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks?deck=&amp;tab=upgrades</span></h2>
+      <p class="annot">Purpose: Promote / decline swaps.</p>
+
+<div class="tabs"><span class="" data-goto="deck-overview" style="cursor:pointer">Overview</span><span class="" data-goto="deck-hundred" style="cursor:pointer">The hundred</span><span class="on" >Upgrades</span><span class="" data-goto="deck-explore" style="cursor:pointer">Explore</span><span class="" data-goto="deck-acquire" style="cursor:pointer">Acquire</span></div>
+<div class="box"><span class="region-label">Upgrade path</span>
+<div class="actions"><button type="button" class="primary">Promote ticked (0)</button>
+<button type="button">Link an upgrade…</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>☐</th><th>Candidate</th><th>Replaces</th><th>Why</th><th>$</th></tr></thead>
+<tbody><tr><td>☐</td><td>Rhystic Study</td><td>Read the Bones</td><td>Draw engine</td><td>$42</td></tr>
+<tr><td>☐</td><td>Smothering Tithe</td><td>Land Tax</td><td>Ramp</td><td>$28</td></tr></tbody></table></div>
+    </section>
+    <section id="deck-explore" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck · Explore (deck-scoped) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks?deck=&amp;tab=explore</span></h2>
+      <p class="annot">Purpose: Deck-scoped loops / open Discover.</p>
+
+<div class="tabs"><span class="" data-goto="deck-overview" style="cursor:pointer">Overview</span><span class="" data-goto="deck-hundred" style="cursor:pointer">The hundred</span><span class="" data-goto="deck-upgrades" style="cursor:pointer">Upgrades</span><span class="on" >Explore</span><span class="" data-goto="deck-acquire" style="cursor:pointer">Acquire</span></div>
+<div class="box"><span class="region-label">Deck-scoped Explore</span>
+<div>Context: this deck · weakest role: Removal</div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-graph">Open Discover with this deck</button>
+<button type="button" data-goto="explore-graph">Trace</button></div>
+<div class="tile" style="margin-top:10px"><strong>Loop:</strong> Proliferate payoffs · 6 cards</div>
+<div class="tile" style="margin-top:6px"><strong>Loop:</strong> Budget substitutes · 5 cards</div></div>
+    </section>
+    <section id="deck-acquire" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck · Acquire <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#decks?deck=&amp;tab=acquire</span></h2>
+      <p class="annot">Purpose: Wanted / To buy for this deck.</p>
+
+<div class="tabs"><span class="" data-goto="deck-overview" style="cursor:pointer">Overview</span><span class="" data-goto="deck-hundred" style="cursor:pointer">The hundred</span><span class="" data-goto="deck-upgrades" style="cursor:pointer">Upgrades</span><span class="" data-goto="deck-explore" style="cursor:pointer">Explore</span><span class="on" >Acquire</span></div>
+<div class="box"><span class="region-label">Acquire</span>
+<div class="actions"><button type="button" class="primary" data-goto="library-to-buy">Buy list · 13</button>
+<button type="button" data-goto="library-orders">View orders</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>Card</th><th>Role</th><th>Status</th><th>$</th></tr></thead>
+<tbody><tr><td>Counterspell</td><td>Interaction</td><td>To buy</td><td>$1.20</td></tr>
+<tr><td>Cyclonic Rift</td><td>Board wipe</td><td>Wanted</td><td>$28</td></tr></tbody></table>
+<p class="annot">Wanted = intent; To buy = shopping queue. Do not merge.</p></div>
+    </section>
+    <section id="ready-to-add" class="screen" data-nav="decks">
+      <h2 class="screen-title">Ready to add <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#pull?deck=</span></h2>
+      <p class="annot">Purpose: Owned copies ready to put in the box.</p>
+
+<div class="box"><span class="region-label">Ready to add</span>
+<div class="row" style="justify-content:space-between"><div><strong>Ready to add</strong> · Atraxa · 6 owned copies on the bench</div>
+<button type="button" class="ghost" data-goto="deck-overview">Back to deck</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>☐</th><th>Card</th><th>Where</th><th>Action</th></tr></thead>
+<tbody><tr><td>☐</td><td>Sol Ring</td><td>Bench</td><td><button type="button">Add to box</button></td></tr>
+<tr><td>☐</td><td>Arcane Signet</td><td>Bench</td><td><button type="button">Add to box</button></td></tr></tbody></table>
+<div class="actions"><button type="button" class="primary" data-goto="confirm-receipt">Add ticked → receipt</button>
+<button type="button" data-goto="make-the-change">Make the change</button></div></div>
+    </section>
+    <section id="make-the-change" class="screen" data-nav="decks">
+      <h2 class="screen-title">Make the change <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#change?deck=</span></h2>
+      <p class="annot">Purpose: Commit adds/removes with receipt.</p>
+
+<div class="box"><span class="region-label">Make the change</span>
+<strong>Commit adds and removes</strong>
+<p class="annot">Shows receipt before destructive commit (pattern 4b).</p>
+<div class="grid2"><div class="tile"><strong>Add</strong><div>Sol Ring · Arcane Signet</div></div>
+<div class="tile"><strong>Remove</strong><div>Weak cantrip X</div></div></div>
+<div class="actions"><button type="button" class="primary" data-goto="confirm-receipt">Review receipt</button>
+<button type="button" class="ghost" data-goto="deck-overview">Cancel</button></div></div>
+    </section>
+    <section id="edit-card-list" class="screen" data-nav="decks">
+      <h2 class="screen-title">Edit card list <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Edit card list</span></h2>
+      <p class="annot">Purpose: Tune / add / swap from The hundred.</p>
+
+<div class="box"><span class="region-label">Edit card list</span>
+<div class="row" style="justify-content:space-between"><strong>Tune the hundred</strong>
+<button type="button" class="ghost" data-goto="deck-hundred">Done</button></div>
+<div style="margin-top:8px"><input style="width:100%" placeholder="Add card by name…" /></div>
+<div class="actions"><button type="button" class="primary">Add</button>
+<button type="button" data-goto="status-change-menu">Swap…</button>
+<button type="button" data-goto="confirm-delete">Remove selected</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>☐</th><th>Card</th><th>Qty</th><th></th></tr></thead>
+<tbody><tr><td>☐</td><td>Sol Ring</td><td>1</td><td><button type="button" class="ghost">⋯</button></td></tr></tbody></table></div>
+    </section>
+    <section id="deck-more-menu" class="screen" data-nav="decks">
+      <h2 class="screen-title">Deck options / More menu <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">More</span></h2>
+      <p class="annot">Purpose: Measure, export, archive, delete, help.</p>
+
+<div class="row"><div class="box" style="flex:1"><span class="region-label">Deck page</span>
+<div class="actions"><button type="button" class="primary">More ▾</button></div>
+<p class="annot">Expanded menu — each item must open something real (CW-DECK-05).</p></div>
+<div class="menu-panel"><button type="button" data-goto="measure-report">Measure</button><button type="button" data-goto="export-print">Export / print</button><button type="button" data-goto="export-print">Backup this deck</button><button type="button" data-goto="ready-to-add">Ready to add</button><button type="button" data-goto="make-the-change">Make the change</button><button type="button" data-goto="help-panel">Help ?</button><button type="button" data-goto="confirm-delete">Archive / delete…</button></div>
+</div>
+    </section>
+    <section id="measure-report" class="screen" data-nav="decks">
+      <h2 class="screen-title">Measure report chrome <span class="tag planned">planned</span> <span class="route">Measure</span></h2>
+      <p class="annot">Purpose: Fidelity notice ABOVE score.</p>
+
+<div class="box"><span class="region-label">Mode</span>
+<div class="chips"><span class="chip on">Preview</span><span class="chip">Published 120k</span></div>
+<p class="annot">Preview = fast / local. Published = larger corpus — label both.</p></div>
+<div class="banner-fidelity"><strong>Fidelity notice</strong> — This score comes from a <em>simulation model</em>, not a full Magic rules engine.
+Use it to compare lists under the same protocol — not as table truth.</div>
+<div class="score-block">Score / win share stub
+<div style="font-size:13px;font-weight:400;color:var(--muted);margin-top:6px">(banner stays above this block)</div></div>
+<div class="grid2" style="margin-top:10px">
+<div class="box"><span class="region-label">Evidence</span><div class="annot">Seeds · opponents · protocol · caveats</div></div>
+<div class="box"><span class="region-label">Next</span>
+<div class="actions"><button type="button" data-goto="deck-hundred">Refine hundred</button>
+<button type="button" data-goto="explore-graph">Explore gaps</button></div></div></div>
+    </section>
+    <section id="log-a-game" class="screen" data-nav="decks">
+      <h2 class="screen-title">Log a game <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Log a game</span></h2>
+      <p class="annot">Purpose: Dialog: result, opponents, notes.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Log a game</h3><button type="button" class="ghost">✕</button></div>
+<div class="grid2" style="margin-top:8px">
+<div>Result<br/><select><option>Win</option><option>Loss</option><option>Draw</option></select></div>
+<div>Bracket<br/><select><option>3</option><option>2</option><option>4</option></select></div>
+<div>Opponents<br/><input placeholder="Names…" style="width:100%"/></div>
+<div>Date<br/><input type="date" style="width:100%"/></div></div>
+<div style="margin-top:8px">Notes<br/><textarea style="width:100%;min-height:60px"></textarea></div><div class="modal-foot"><button type="button" class="ghost" data-goto="deck-overview">Cancel</button><button type="button" class="primary" data-goto="deck-overview">Save</button></div></div></div>
+    </section>
+    <section id="export-print" class="screen" data-nav="decks">
+      <h2 class="screen-title">Export / print / backup-from-deck <span class="tag shipped">shipped</span><span class="tag planned">planned</span> <span class="route">Export</span></h2>
+      <p class="annot">Purpose: List export, print, deck-scoped backup.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Export / print</h3><button type="button" class="ghost">✕</button></div>
+<div class="tile" style="margin-top:8px">Plain text list</div>
+<div class="tile" style="margin-top:6px">CSV</div>
+<div class="tile" style="margin-top:6px">Print-friendly view</div>
+<div class="tile dashed" style="margin-top:6px;border-style:dashed">Backup this deck only <span class="tag planned">planned</span></div><div class="modal-foot"><button type="button" class="primary">Download</button><button type="button" class="ghost" data-goto="deck-overview">Close</button></div></div></div>
+    </section>
+    <section id="library-empty" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — empty <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards</span></h2>
+      <p class="annot">Purpose: Clear empty + Add cards path.</p>
+
+<div class="box"><span class="region-label">Toolbar</span>
+<div class="row" style="justify-content:space-between;align-items:center"><strong>Library</strong>
+<div class="actions" style="margin:0"><button type="button" data-goto="library-more-menu">More ▾</button>
+<button type="button" class="primary" data-goto="add-cards">Add cards</button></div></div></div>
+<div class="empty"><div>No cards in your library yet</div>
+<p class="annot">Fresh profile — no fake inventory (CW-LIB-08).</p>
+<div class="actions" style="justify-content:center">
+<button type="button" class="primary" data-goto="add-cards">Add cards</button>
+<button type="button" data-goto="restore-dialog">Restore backup…</button></div></div>
+    </section>
+    <section id="library-list" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — List view <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards?view=list</span></h2>
+      <p class="annot">Purpose: Default ownership list.</p>
+
+<div class="box"><span class="region-label">Head</span>
+<div class="row" style="justify-content:space-between;align-items:center">
+<div><strong>Library</strong> <span class="annot" style="display:inline">866 copies · 329 on the bench</span></div>
+<div class="actions" style="margin:0">
+<button type="button" data-goto="new-deck-import">Import list</button>
+<button type="button" data-goto="library-more-menu">More ▾</button>
+<button type="button" class="primary" data-goto="add-cards">Add cards</button></div></div></div>
+<div class="row" style="justify-content:space-between;align-items:center">
+<div class="chips"><span class="chip on">Library</span><span class="chip" data-goto="library-to-buy" style="cursor:pointer">To buy 101</span>
+<span class="chip" data-goto="library-orders" style="cursor:pointer">Orders 2</span></div>
+<div class="chips"><span class="chip on">List</span><span class="chip" data-goto="library-sheet" style="cursor:pointer">Sheet</span>
+<span class="chip" data-goto="library-table" style="cursor:pointer">Table</span></div></div>
+<div class="counts" style="margin:10px 0">
+<div class="count-tile"><div class="n">866</div><div class="l">Owned</div></div>
+<div class="count-tile"><div class="n">120</div><div class="l">In box</div></div>
+<div class="count-tile"><div class="n">329</div><div class="l">Bench</div></div>
+<div class="count-tile"><div class="n">101</div><div class="l">To buy</div></div>
+<div class="count-tile"><div class="n">2</div><div class="l">Ordered</div></div>
+<div class="count-tile"><div class="n">40</div><div class="l">Wanted</div></div>
+<div class="count-tile"><div class="n">15</div><div class="l">Subs</div></div></div>
+<div class="box"><span class="region-label">Filters</span>
+<div class="row"><input placeholder="Search…" style="flex:1"/><button type="button" data-goto="filters-dialog">More filters</button>
+<button type="button" data-goto="columns-dialog">Columns</button></div></div>
+<div class="box"><span class="region-label">List</span>
+<table class="fake-table"><thead><tr><th>Card</th><th>Status</th><th>Deck</th><th>Qty</th><th></th></tr></thead>
+<tbody><tr><td><button type="button" class="ghost" data-goto="card-popup">Sol Ring</button></td><td>In box</td><td>D1</td><td>1</td><td><button type="button" data-goto="status-change-menu">⋯</button></td></tr>
+<tr><td><button type="button" class="ghost" data-goto="card-popup">Arcane Signet</button></td><td>Bench</td><td>—</td><td>2</td><td><button type="button">⋯</button></td></tr></tbody></table></div>
+    </section>
+    <section id="library-sheet" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — Sheet view <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards?view=sheet</span></h2>
+      <p class="annot">Purpose: Spreadsheet; numeric cells editable.</p>
+
+<div class="chips"><span class="chip">List</span><span class="chip on">Sheet</span><span class="chip">Table</span></div>
+<div class="box"><span class="region-label">Sheet (spreadsheet)</span>
+<p class="annot">Numeric cells editable in place (Own, Ordered, Bench, Buy, deck T/A). Dashed border at rest; brass ring on focus.</p>
+<table class="fake-table"><thead><tr><th>Card</th><th>Own</th><th>Bench</th><th>Buy</th><th>D1 T</th><th>D1 A</th></tr></thead>
+<tbody><tr><td>Sol Ring</td><td style="border-style:dashed">1</td><td style="border-style:dashed">0</td><td style="border-style:dashed">0</td><td>1</td><td>1</td></tr>
+<tr><td>Arcane Signet</td><td style="border-style:dashed">2</td><td style="border-style:dashed">1</td><td style="border-style:dashed">0</td><td>1</td><td>0</td></tr></tbody></table>
+<p class="annot">Moves that pull from another deck open the receipt dialog first.</p></div>
+    </section>
+    <section id="library-table" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — Table view <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards?view=table</span></h2>
+      <p class="annot">Purpose: Dense table of same records.</p>
+
+<div class="chips"><span class="chip">List</span><span class="chip">Sheet</span><span class="chip on">Table</span></div>
+<div class="box"><span class="region-label">Dense table</span>
+<table class="fake-table"><thead><tr><th>Card</th><th>Type · MV</th><th>Status</th><th>Deck</th><th>Qty</th><th>Paid</th><th>Verb</th></tr></thead>
+<tbody><tr><td>Sol Ring</td><td>Artifact · 1</td><td>In box</td><td>D1</td><td>1</td><td>$0.50</td><td>⋯</td></tr>
+<tr><td>Cyclonic Rift</td><td>Instant · 2</td><td>To buy</td><td>D1</td><td>0</td><td>—</td><td>Bought</td></tr></tbody></table></div>
+    </section>
+    <section id="library-to-buy" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — To buy <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards?tab=buy</span></h2>
+      <p class="annot">Purpose: Shopping queue (not Wanted).</p>
+
+<div class="chips"><span class="chip" data-goto="library-list" style="cursor:pointer">Library</span><span class="chip on">To buy 101</span>
+<span class="chip" data-goto="library-orders" style="cursor:pointer">Orders</span></div>
+<div class="box"><span class="region-label">Shopping queue</span>
+<p class="annot">To buy ≠ Wanted. Wanted is intent; this is the buy queue.</p>
+<table class="fake-table"><thead><tr><th>Card</th><th>Deck</th><th>$</th><th></th></tr></thead>
+<tbody><tr><td>Cyclonic Rift</td><td>Atraxa</td><td>$28</td><td><button type="button" class="primary">Ordered…</button></td></tr>
+<tr><td>Counterspell</td><td>Atraxa</td><td>$1.20</td><td><button type="button">Ordered…</button></td></tr></tbody></table></div>
+    </section>
+    <section id="library-orders" class="screen" data-nav="library">
+      <h2 class="screen-title">Library — Orders <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#cards?tab=orders</span></h2>
+      <p class="annot">Purpose: In-flight orders.</p>
+
+<div class="chips"><span class="chip" data-goto="library-list" style="cursor:pointer">Library</span>
+<span class="chip" data-goto="library-to-buy" style="cursor:pointer">To buy</span><span class="chip on">Orders 2</span></div>
+<div class="box"><span class="region-label">In flight</span>
+<table class="fake-table"><thead><tr><th>Order</th><th>Cards</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
+<tbody><tr><td>#12</td><td>3</td><td>Card Kingdom</td><td>Shipped</td><td><button type="button">Arrived</button></td></tr>
+<tr><td>#13</td><td>1</td><td>TCGPlayer</td><td>Pending</td><td><button type="button">⋯</button></td></tr></tbody></table></div>
+    </section>
+    <section id="filters-dialog" class="screen" data-nav="library">
+      <h2 class="screen-title">Filters dialog <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Filters</span></h2>
+      <p class="annot">Purpose: Apply / clear filters.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Filters</h3><button type="button" class="ghost">✕</button></div>
+<div class="grid2" style="margin-top:8px">
+<div>Status<br/><select style="width:100%"><option>Any</option><option>Owned</option><option>To buy</option></select></div>
+<div>Deck<br/><select style="width:100%"><option>Any</option><option>Atraxa</option></select></div>
+<div>Purpose<br/><select style="width:100%"><option>Any</option><option>Ramp</option></select></div>
+<div>Color<br/><select style="width:100%"><option>Any</option></select></div></div><div class="modal-foot"><button type="button">Clear</button><button type="button" class="primary" data-goto="library-list">Apply</button></div></div></div>
+    </section>
+    <section id="columns-dialog" class="screen" data-nav="library">
+      <h2 class="screen-title">Columns dialog <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Columns</span></h2>
+      <p class="annot">Purpose: Show/hide columns.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Columns</h3><button type="button" class="ghost">✕</button></div>
+<div class="chips" style="margin-top:8px">
+<span class="chip on">Card</span><span class="chip on">Status</span><span class="chip on">Deck</span>
+<span class="chip on">Qty</span><span class="chip">Paid</span><span class="chip">Source</span><span class="chip">Purpose</span></div><div class="modal-foot"><button type="button">Reset</button><button type="button" class="primary" data-goto="library-list">Done</button></div></div></div>
+    </section>
+    <section id="add-cards" class="screen" data-nav="library">
+      <h2 class="screen-title">Add cards / Add copies <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Add cards</span></h2>
+      <p class="annot">Purpose: Search + qty + Owned status.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Add cards</h3><button type="button" class="ghost">✕</button></div>
+<input style="width:100%;margin-top:8px" placeholder="Search card name…" />
+<div class="tile" style="margin-top:8px"><strong>Sol Ring</strong> · Artifact
+<div class="row" style="margin-top:6px;align-items:center">Qty <input value="1" style="width:48px"/> Status
+<select><option>Owned</option><option>Wanted</option><option>To buy</option></select></div></div><div class="modal-foot"><button type="button" class="ghost" data-goto="library-list">Cancel</button><button type="button" class="primary" data-goto="library-list">Add copies</button></div></div></div>
+    </section>
+    <section id="card-popup" class="screen" data-nav="library">
+      <h2 class="screen-title">Card popup <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Card</span></h2>
+      <p class="annot">Purpose: Large readable art + text + actions.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Card</h3><button type="button" class="ghost">✕</button></div>
+<div class="row" style="margin-top:10px"><div class="art lg">Large art<br/>readable name/type</div>
+<div class="col"><strong style="font-size:18px">Sol Ring</strong><div>Artifact · {1}</div>
+<div class="annot" style="font-style:normal;margin-top:8px">{T}: Add {C}{C}.</div>
+<div class="chips"><span class="chip">Ramp</span><span class="chip">In D1 · physical deck</span></div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-add-wanted">Add and/or buy ▾</button>
+<button type="button" data-goto="status-change-menu">Status ▾</button>
+<button type="button" data-goto="explore-graph">Explore</button></div></div></div><div class="modal-foot"></div></div></div>
+    </section>
+    <section id="backup-dialog" class="screen" data-nav="library">
+      <h2 class="screen-title">Backup dialog <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Back up now</span></h2>
+      <p class="annot">Purpose: Download library backup.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Back up now</h3><button type="button" class="ghost">✕</button></div><p>Download a JSON backup of your library and decks.</p><div class="modal-foot"><button type="button" class="primary">Download backup</button><button type="button" class="ghost" data-goto="library-list">Cancel</button></div></div></div>
+    </section>
+    <section id="restore-dialog" class="screen" data-nav="library">
+      <h2 class="screen-title">Restore dialog <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Restore</span></h2>
+      <p class="annot">Purpose: Honest label: Restore backup — NOT Import a backup.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Restore backup</h3><button type="button" class="ghost">✕</button></div>
+<div class="defect"><strong>Label honesty:</strong> This restores a library backup. It is <em>not</em> “Import a backup” for decklists.
+Decklist import lives under New deck → Import (CW-XC-15).</div>
+<div class="tile" style="margin-top:8px;border-style:dashed">[Drop backup JSON / choose file]</div><div class="modal-foot"><button type="button" class="primary" data-goto="confirm-receipt">Review restore</button><button type="button" class="ghost" data-goto="decks-hub-empty">Cancel</button></div></div></div>
+    </section>
+    <section id="explore-chooser" class="screen" data-nav="explore">
+      <h2 class="screen-title">Explore entry chooser <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#discover</span></h2>
+      <p class="annot">Purpose: Deck gap / commander / card + roles.</p>
+
+<div class="box"><span class="region-label">Head</span><div class="annot">EXPLORE</div>
+<h3 style="margin:4px 0">Every card is joined to the cards it works with. Start anywhere.</h3>
+<div class="annot">Catalog claim ~31,830 cards (live UAT).</div>
+<input style="width:100%;margin-top:8px" placeholder="Find any card…" /></div>
+<div class="grid3">
+<div class="box"><span class="region-label">Door A</span><h3 style="margin:4px 0">From a deck gap</h3>
+<div class="annot">Deck + weakest role</div>
+<div class="tile" style="margin-top:6px">Atraxa · Removal · 6 of 8</div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-graph">Enter</button></div></div>
+<div class="box"><span class="region-label">Door B</span><h3 style="margin:4px 0">From a commander</h3>
+<div class="annot">Browse / compare from seed</div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-graph">Enter</button></div></div>
+<div class="box"><span class="region-label">Door C</span><h3 style="margin:4px 0">From a card</h3>
+<div class="annot">Related loops / substitutes</div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-graph">Enter</button></div></div></div>
+<div class="box"><span class="region-label">Or read by role</span>
+<div class="chips"><span class="chip">Removal</span><span class="chip">Ramp</span><span class="chip">Draw</span>
+<span class="chip">Board wipe</span><span class="chip">Protection</span></div></div>
+    </section>
+    <section id="explore-graph" class="screen" data-nav="explore">
+      <h2 class="screen-title">Explore scoped graph <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#discover?deck=</span></h2>
+      <p class="annot">Purpose: Canvas + inspect panel.</p>
+
+<div class="box"><span class="region-label">Scope bar</span>
+<div class="row" style="justify-content:space-between;align-items:center">
+<div>Context: Deck gap · Atraxa · role: Removal</div>
+<div class="actions" style="margin:0"><button type="button" class="ghost" data-goto="explore-chooser">Change task</button>
+<button type="button" data-goto="explore-filters">Filters</button></div></div></div>
+<div class="grid2">
+<div class="graph-canvas"><span class="region-label" style="position:absolute;top:4px;left:8px">Graph canvas</span>
+<div class="node focus" style="left:40%;top:35%">Focus</div>
+<div class="node" style="left:20%;top:20%">Card A</div>
+<div class="node" style="left:65%;top:25%">Card B</div>
+<div class="node" style="left:55%;top:60%">Card C</div>
+<div style="position:absolute;bottom:8px;left:8px;font-size:11px;color:var(--muted)">Navigate · Inspect · Select</div></div>
+<div class="inspect"><span class="region-label">Inspect</span>
+<div class="art md" style="margin-bottom:8px">Card art<br/>large enough</div>
+<strong>Counterspell</strong><div>Instant · {U}{U}</div>
+<div class="chips"><span class="chip">Interaction</span></div>
+<div class="actions"><button type="button" class="primary" data-goto="explore-add-wanted">Add and/or buy ▾</button>
+<button type="button" data-goto="card-popup">Inspect card</button></div>
+<p class="annot">Keep interactive graph; co-play load may blank briefly on live (CW-EXP-03) — show loading honesty.</p></div></div>
+    </section>
+    <section id="explore-filters" class="screen" data-nav="explore">
+      <h2 class="screen-title">Explore filters / lens / roles <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Filters</span></h2>
+      <p class="annot">Purpose: Lens, roles, facets.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Explore filters / lens</h3><button type="button" class="ghost">✕</button></div>
+<div class="chips" style="margin-top:8px"><span class="chip on">Mechanics &amp; roles</span><span class="chip">EDHREC co-play</span></div>
+<div class="chips"><span class="chip on">Loops only</span><span class="chip">Owned</span><span class="chip">Not owned</span></div>
+<div>Roles<br/><div class="chips"><span class="chip on">Removal</span><span class="chip">Ramp</span><span class="chip">Draw</span></div></div><div class="modal-foot"><button type="button">Clear</button><button type="button" class="primary" data-goto="explore-graph">Apply</button></div></div></div>
+    </section>
+    <section id="explore-add-wanted" class="screen" data-nav="explore">
+      <h2 class="screen-title">Add / Wanted from Explore <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Add and/or buy</span></h2>
+      <p class="annot">Purpose: Functional or honestly gated.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Add and/or buy</h3><button type="button" class="ghost">✕</button></div>
+<div class="tile" style="margin-top:8px">Mark Wanted (intent)</div>
+<div class="tile" style="margin-top:6px">Add to To buy (shopping queue)</div>
+<div class="tile" style="margin-top:6px">Add Owned copy to Library</div>
+<div class="tile" style="margin-top:6px">Reserve for deck: Atraxa</div><div class="modal-foot"><button type="button" class="primary" data-goto="library-to-buy">Confirm</button><button type="button" class="ghost" data-goto="explore-graph">Cancel</button></div></div></div>
+    </section>
+    <section id="play-coming-soon" class="screen" data-nav="play">
+      <h2 class="screen-title">Play — Coming Soon (live) <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">#game</span></h2>
+      <p class="annot">Purpose: Honest Coming Soon shell.</p>
+
+<div class="box" style="min-height:260px;text-align:center;padding:40px 20px">
+<span class="region-label">Live honesty</span>
+<h3 style="margin:0 0 8px">Play — Coming Soon</h3>
+<p>Online multiplayer and the Forge table are not available on this deploy.</p>
+<p class="annot">Meta: crankmagic-play = coming-soon · tip 8e9ddfd · 2026-09-24. Do not present a live board.</p>
+<div class="actions" style="justify-content:center">
+<button type="button" data-goto="play-lobby">View planned lobby (design)</button>
+<button type="button" data-goto="game-history">Game history</button>
+<button type="button" class="ghost" data-goto="decks-hub">Back to Decks</button></div></div>
+    </section>
+    <section id="play-lobby" class="screen" data-nav="play">
+      <h2 class="screen-title">Play setup / lobby (planned) <span class="tag planned">planned</span> <span class="route">#game lobby</span></h2>
+      <p class="annot">Purpose: Seats, decks, prepare, invite.</p>
+
+<div class="box dashed"><span class="region-label">Planned — table-first lobby</span>
+<p class="annot">Not live. Seats → decks → prepare → invite → Ready → auto countdown.</p>
+<div class="row" style="justify-content:space-between">
+<div>Table rules: Bracket 3 · Cap $225 · AI default on</div>
+<button type="button" data-goto="invite-share">Host tools ▾</button></div></div>
+<div class="grid2">
+<div class="seat"><strong>Seat 2</strong><div>Empty · mist</div>
+<div class="actions"><button type="button" data-goto="invite-share">Invite</button></div></div>
+<div class="seat"><strong>Seat 3</strong><div>AI · pending deck</div></div>
+<div class="seat"><strong>Seat 4</strong><div>Human · invite sent</div></div>
+<div class="seat ready"><strong>Seat 1 · You (Host)</strong><div>Atraxa · Ready ✓</div>
+<div class="actions"><button type="button">Change deck</button><button type="button">Not ready</button></div></div></div>
+<div class="box" style="margin-top:10px;text-align:center">Launches when all four are ready · 2 to go
+<div class="actions" style="justify-content:center"><button type="button" data-goto="play-countdown">Simulate all ready</button></div></div>
+    </section>
+    <section id="play-countdown" class="screen" data-nav="play">
+      <h2 class="screen-title">Play countdown / readiness (planned) <span class="tag planned">planned</span> <span class="route">countdown</span></h2>
+      <p class="annot">Purpose: Auto-launch when all ready.</p>
+
+<div class="box"><span class="region-label">Readiness</span>
+<div>All seats ready · Forge gate: Ready</div>
+<div class="countdown">Countdown: 10… 9… 8… → Table</div>
+<div class="actions" style="justify-content:center">
+<button type="button" class="primary" data-goto="play-table">Enter table</button>
+<button type="button" class="ghost" data-goto="play-lobby">Cancel</button></div></div>
+    </section>
+    <section id="play-table" class="screen" data-nav="play">
+      <h2 class="screen-title">Table / board chrome (planned) <span class="tag planned">planned</span> <span class="route">table</span></h2>
+      <p class="annot">Purpose: High-level 2x2 mats, center counter.</p>
+
+<div class="box dashed"><span class="region-label">Planned — high level only</span>
+<p class="annot">Play surface = 100% window. Rail hidden (☰ overlay). Right panel closed by default.</p>
+<div style="border:1px solid var(--line);padding:8px;margin-bottom:8px;font-size:12px">
+Turn 3 · Seat 1 · Phase: Main <strong>brass</strong> · Next: declare attackers ·
+<button type="button" class="primary" style="padding:2px 8px">Pass priority</button>
+<button type="button" style="padding:2px 8px">Skip to end</button>
+· History ▾ · Tools ▾ · Panel ▸</div>
+<div class="grid2">
+<div class="tile" style="min-height:100px">Seat 2 board 16:9</div>
+<div class="tile" style="min-height:100px">Seat 3 board</div>
+<div class="tile" style="min-height:100px">Seat 4 board</div>
+<div class="tile" style="min-height:100px;background:#e8e8e8">Seat 1 · You · hand strip</div></div>
+<div style="text-align:center;margin:10px 0;font-size:12px">[Center life counter disc]</div></div>
+    </section>
+    <section id="game-history" class="screen" data-nav="play">
+      <h2 class="screen-title">Game history <span class="tag planned">planned</span> <span class="route">History</span></h2>
+      <p class="annot">Purpose: Past games / log list.</p>
+
+<div class="box"><span class="region-label">Game history</span>
+<div class="row" style="justify-content:space-between"><strong>Past games</strong>
+<button type="button" data-goto="log-a-game">Log a game</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>Date</th><th>Deck</th><th>Result</th><th>Bracket</th><th>Notes</th></tr></thead>
+<tbody><tr><td>2026-09-20</td><td>Quintorius</td><td>Win</td><td>3</td><td>Long game</td></tr>
+<tr><td>—</td><td colspan="4" class="annot">Empty → CTA Log a game</td></tr></tbody></table></div>
+    </section>
+    <section id="account-signin" class="screen" data-nav="decks">
+      <h2 class="screen-title">Account / sign-in entry <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Account</span></h2>
+      <p class="annot">Purpose: CF Access; guest local still works.</p>
+
+<div class="box"><span class="region-label">Account</span>
+<h3 style="margin:4px 0">Sign in</h3>
+<p>Cloudflare Access when you want a cloud account. Guest / local workshop still works without signing in.</p>
+<div class="actions"><button type="button" class="primary">Continue to Cloudflare Access</button>
+<button type="button" class="ghost" data-goto="decks-hub">Keep working as guest</button></div>
+<p class="annot">accounts=on · CW-ACC-01/02. Do not invent credentials in UAT.</p></div>
+    </section>
+    <section id="settings" class="screen" data-nav="decks">
+      <h2 class="screen-title">Settings <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Settings</span></h2>
+      <p class="annot">Purpose: Theme, prefs if distinct from Menu.</p>
+
+<div class="box"><span class="region-label">Settings</span>
+<div class="tile">Theme: Dark / Light <button type="button" data-goto="shell-light">Toggle</button></div>
+<div class="tile" style="margin-top:6px">Preferences (compact tables, default Library view)</div>
+<div class="tile" style="margin-top:6px">Data: Back up / Restore
+<div class="actions"><button type="button" data-goto="backup-dialog">Back up</button>
+<button type="button" data-goto="restore-dialog">Restore…</button></div></div></div>
+    </section>
+    <section id="confirm-receipt" class="screen" data-nav="decks">
+      <h2 class="screen-title">Receipt / confirm dialog <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Review</span></h2>
+      <p class="annot">Purpose: Before destructive commits.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Review before commit</h3><button type="button" class="ghost">✕</button></div>
+<p class="annot">Receipt pattern (4b) — any deck / reservation / money change shows this first.</p>
+<table class="fake-table"><thead><tr><th>Change</th><th>Card</th><th>From</th><th>To</th></tr></thead>
+<tbody><tr><td>Add to box</td><td>Sol Ring</td><td>Bench</td><td>D1 inbox</td></tr>
+<tr><td>Remove</td><td>Weak cantrip</td><td>D1</td><td>Bench</td></tr></tbody></table><div class="modal-foot"><button type="button" class="ghost">Cancel</button><button type="button" class="primary" data-goto="toast-error">Confirm changes</button></div></div></div>
+    </section>
+    <section id="toast-error" class="screen" data-nav="decks">
+      <h2 class="screen-title">Toast / error banner pattern <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">toast</span></h2>
+      <p class="annot">Purpose: Transient success / error.</p>
+
+<div class="box"><span class="region-label">Patterns</span>
+<div class="banner-err"><strong>Error:</strong> Could not save — check connection and try again.</div>
+<div style="margin:16px 0"><span class="toast">Saved · 2 cards added to Atraxa</span></div>
+<p class="annot">Toasts are transient; error banners persist until dismissed or next navigation.</p>
+<div class="actions"><button type="button" data-goto="deck-overview">Continue</button></div></div>
+    </section>
+    <section id="empty-cta-honesty" class="screen" data-nav="decks">
+      <h2 class="screen-title">Empty CTA honesty patterns <span class="tag shipped">shipped</span><span class="tag planned">planned</span> <span class="route">empty</span></h2>
+      <p class="annot">Purpose: No dead stubs; label restore honestly.</p>
+
+<div class="box"><span class="region-label">Standing rule CW-XC-15</span>
+<p>Nothing on screen is non-functional. Empty CTAs must do what they say.</p>
+<div class="grid2">
+<div class="tile"><strong>Good</strong><div>New deck → wizard</div>
+<div>Restore backup… → restore dialog</div><div>Import (in wizard) → decklist import</div></div>
+<div class="tile" style="border-color:#822"><strong>Bad (defect)</strong>
+<div>“Import a backup” wired to restore</div><div>Dead stubs presented as ready</div>
+<div>Play board without Coming Soon</div></div></div>
+<div class="actions"><button type="button" data-goto="decks-hub-empty">See Decks empty</button>
+<button type="button" data-goto="restore-dialog">See Restore label</button></div></div>
+    </section>
+    <section id="library-more-menu" class="screen" data-nav="library">
+      <h2 class="screen-title">Library More menu <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">More</span></h2>
+      <p class="annot">Purpose: Import list, backup, columns, help.</p>
+
+<div class="row"><div class="box" style="flex:1"><span class="region-label">Library</span>
+<button type="button" class="primary">More ▾</button></div>
+<div class="menu-panel"><button type="button" data-goto="new-deck-import">Import list</button><button type="button" data-goto="backup-dialog">Back up now</button><button type="button" data-goto="restore-dialog">Restore backup…</button><button type="button" data-goto="columns-dialog">Columns</button><button type="button" data-goto="filters-dialog">Filters</button><button type="button" data-goto="help-panel">Help</button></div>
+</div>
+    </section>
+    <section id="status-change-menu" class="screen" data-nav="library">
+      <h2 class="screen-title">Status change menu <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Status</span></h2>
+      <p class="annot">Purpose: Owned / Reserved / To buy / Ordered / Bench.</p>
+
+<div class="row"><div class="box" style="flex:1"><span class="region-label">Row / card</span>
+Sol Ring · <button type="button" class="primary">Status ▾</button></div>
+<div class="menu-panel"><button type="button">In box (physical deck)</button><button type="button">Bench / Ready to add</button><button type="button">Reserved</button><button type="button">To buy</button><button type="button">Ordered</button><button type="button">Wanted</button><button type="button">Substitute</button><button type="button" data-goto="confirm-delete">Remove…</button></div>
+</div>
+    </section>
+    <section id="confirm-delete" class="screen" data-nav="decks">
+      <h2 class="screen-title">Confirm delete / clear <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Delete</span></h2>
+      <p class="annot">Purpose: Destructive confirm.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Confirm delete</h3><button type="button" class="ghost">✕</button></div>
+<p>Delete deck <strong>UAT-CW-2026-09-24-Atraxa</strong>? This cannot be undone from the UI.</p><div class="modal-foot"><button type="button" class="ghost">Cancel</button><button type="button" class="danger">Delete deck</button></div></div></div>
+    </section>
+    <section id="commander-zoom" class="screen" data-nav="decks">
+      <h2 class="screen-title">Commander card zoom <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">zoom</span></h2>
+      <p class="annot">Purpose: Full card art readable.</p>
+
+<div class="overlay-demo" style="text-align:center">
+<div class="art lg" style="margin:0 auto;width:280px;height:390px">Full commander card<br/>zoom — name &amp; rules readable</div>
+<div class="actions" style="justify-content:center;margin-top:12px">
+<button type="button" class="primary" data-goto="deck-overview">Close</button></div></div>
+    </section>
+    <section id="invite-share" class="screen" data-nav="play">
+      <h2 class="screen-title">Invite / share <span class="tag planned">planned</span> <span class="route">Invite</span></h2>
+      <p class="annot">Purpose: Email / QR for Play seat.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Invite to seat</h3><button type="button" class="ghost">✕</button></div>
+<p class="annot">Planned Play workshop — email or QR.</p>
+<input style="width:100%" placeholder="friend@example.com" />
+<div class="tile" style="margin-top:8px;min-height:80px;text-align:center">[QR placeholder]</div><div class="modal-foot"><button type="button" class="primary">Send invite</button><button type="button" class="ghost" data-goto="play-lobby">Cancel</button></div></div></div>
+    </section>
+    <section id="glossary" class="screen" data-nav="decks">
+      <h2 class="screen-title">Glossary <span class="tag shipped">shipped</span><span class="tag live">live</span> <span class="route">Glossary</span></h2>
+      <p class="annot">Purpose: Wanted != To buy != Orders.</p>
+<div class="overlay-demo"><div class="modal"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Glossary</h3><button type="button" class="ghost">✕</button></div>
+<table class="fake-table" style="margin-top:8px"><thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+<tbody><tr><td>Wanted</td><td>Intent to acquire — not yet in the shopping queue</td></tr>
+<tr><td>To buy</td><td>Shopping queue</td></tr>
+<tr><td>Orders</td><td>In-flight purchases</td></tr>
+<tr><td>Bench</td><td>Owned, ready to add to a deck box</td></tr>
+<tr><td>The hundred</td><td>The 100-card Commander list</td></tr>
+<tr><td>Acquire</td><td>Deck tab feeding Wanted / To buy</td></tr></tbody></table><div class="modal-foot"><button type="button" class="primary" data-goto="decks-hub">Close</button></div></div></div>
+    </section>
+</main>
+<div class="legend">
+  <strong>Wireframe legend:</strong> solid boxes = primary regions · dashed = empty / secondary / planned ·
+  12px italic = purpose annotations · black primary = brass/primary in live skin ·
+  top nav = product jobs (Decks · Library · Explore · Play) ·
+  <strong>Screen switcher = designer-only</strong> (not end-user UI) ·
+  tags: shipped / live / planned · layout lock: action buttons stay in a <em>row</em>.
+  Grounded in Phase 0 pack + UAT gallery Wireframes.dc + cloud UAT 2026-09-24.
+</div>
+<footer class="note">
+  CrankMagic full IA pack · /workspace/wireframes-2026-09-24-full/ · self-contained · file:// OK · no React/dc-import ·
+  live: https://crankmagic.com/ · repo context: github.com/minorrob/mtg-deck-matrix
+</footer>
+
+<script>
+(function(){
+  var screens=document.querySelectorAll('.screen');
+  var buttons=document.querySelectorAll('.switcher button[data-screen]');
+  var navLinks=document.querySelectorAll('.topnav a');
+  function show(id){
+    var found=false;
+    screens.forEach(function(s){var on=s.id===id;s.classList.toggle('on',on);if(on)found=true;});
+    if(!found){show('decks-hub');return;}
+    buttons.forEach(function(b){b.classList.toggle('active',b.getAttribute('data-screen')===id);});
+    var screen=document.getElementById(id);
+    var nav=screen?screen.getAttribute('data-nav'):'decks';
+    navLinks.forEach(function(a){a.classList.toggle('on',a.getAttribute('data-nav')===nav);});
+    if(history.replaceState)history.replaceState(null,'','#'+id); else location.hash=id;
+    var ab=document.querySelector('.switcher button[data-screen="'+id+'"]');
+    if(ab)ab.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
+  buttons.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-screen'));});});
+  navLinks.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();show((a.getAttribute('href')||'').replace(/^#/,'')||'decks-hub');});});
+  document.body.addEventListener('click',function(e){var el=e.target.closest('[data-goto]');if(!el)return;e.preventDefault();show(el.getAttribute('data-goto'));});
+  var tog=document.getElementById('sw-toggle');
+  if(tog)tog.addEventListener('click',function(){document.getElementById('screen-switcher').classList.toggle('collapsed');});
+  function fromHash(){var id=(location.hash||'#decks-hub').replace(/^#/,'');show(id||'decks-hub');}
+  window.addEventListener('hashchange',fromHash);fromHash();
+})();
+</script>
+
+</body>
+</html>

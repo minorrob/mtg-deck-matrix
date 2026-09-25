@@ -1,0 +1,56 @@
+id,domain,viewport,title,expected,result,severity,notes
+CW-XC-01,XC,both,Top-level nav loads views,Decks/Library/Explore/Play render within settle,Pass,S1,All four nav targets painted; Play is Coming Soon shell
+CW-XC-02,XC,both,Deep link by hash,#decks #cards #discover #game paint,Pass,S2,Direct hash loads matched click-nav
+CW-XC-03,XC,both,Back and forward,History without blank frame,Pass,S2,decks↔cards history OK
+CW-XC-04,XC,both,Reload holds position,Reload keeps hash view,Pass,S2,#discover survived reload
+CW-XC-05,XC,both,No pageerrors / console errors,Zero workshop-breaking errors,Partial,S2,No pageerror; CF Access login CSP blocks data: SVG img (accounts page only); one console CSP noise
+CW-XC-06,XC,both,No failed critical requests,Shell/CSS/JS/catalog OK,Pass,S2,No app-shell 4xx observed in walks
+CW-XC-07,XC,both,US English on screen,No UK forms in chrome,Pass,S4,Spot-check Decks/Library/Explore/Play/dialogs — no UK hits
+CW-XC-08,XC,both,Theme switch,Light/dark toggle works,Pass,S3,toggle-theme control clicked both viewports
+CW-XC-09,XC,desktop,Geometry / H-scroll @1280,No harmful horizontal scroll,Pass,S2,scrollWidth=clientWidth=1280
+CW-XC-09,XC,mobile,Geometry / H-scroll @390,No page-wide H-scroll,Partial,S2,document scrollWidth OK; deck detail sticky action bar clips Log a game (see CW-MOB-02)
+CW-XC-10,XC,both,Tap targets,Primary ≥~32px,Partial,S3,Primary New deck / nav OK; some chrome icons/chips smaller — see MOB notes
+CW-XC-11,XC,both,Help ? opens,Page-relevant help,Pass,S3,? present on Decks/deck pages; dialog closable
+CW-XC-12,XC,both,Dialogs close Escape/X,Closable,Pass,S3,Wizard/import/add/account dismissed via X and Escape
+CW-XC-13,XC,both,Dialogs non-empty,Opened dialogs have content,Pass,S2,New deck paths/commander/name; Import; Add copies; Account CF login
+CW-XC-14,XC,both,Deploy meta matches mandate,8e9ddfd · 2026-09-24; play coming-soon; accounts on,Pass,S2,HTML meta exact match
+CW-XC-15,XC,both,No non-functional controls,Standing rule,Partial,S2,Play honestly Coming Soon. Empty-decks CTA Import a backup uses data-action=restore (label mismatch). Compare selected correctly disabled with 0 selection
+CW-XC-16,XC,both,Play nav honesty,Coming-soon labeled; no board walk,Pass,S2,"Coming Soon" + Go to your decks; no lobby/Forge walked
+CW-XC-17,XC,both,Settle past Opening your library,Loader clears,Pass,S3,Initial load settled; Explore co-play 20MB load can leave blank main if read early
+CW-XC-18,XC,both,Card images readable,Art large enough,Pass,S3,Atraxa commander art on deck page large/legible; Sol Ring add dialog OK
+CW-DECK-01,DECK,both,Decks list / empty state,Honest empty + CTAs then list after create,Pass,S1,Empty: Build it. Make it yours. / New deck; after create shows deck card
+CW-DECK-02,DECK,both,Subnav / deck chrome,Deck appears in list/subnav,Pass,S2,Sidebar shows UAT deck (truncated); main card shows full name
+CW-DECK-03,DECK,both,New deck E2E,Wizard Create→commander→Create draft UAT-…,Pass,S1,Created UAT-CW-2026-09-24-Atraxa (Atraxa; deathtouch; Defining)
+CW-DECK-04,DECK,both,Deck detail page,Header/commander/counts/actions,Pass,S1,Edit card list / Finalize / Log a game / Measure / More; tabs Overview/hundred/Upgrades/Explore/Acquire
+CW-DECK-05,DECK,both,Deck options / More,Menu opens something real,Partial,S2,More control present; not every item fully exercised
+CW-DECK-06,DECK,both,Type / color bars,Mana/type summary,Pass,S3,WUBRG symbols on deck card + detail; progress/cost widgets
+CW-DECK-07,DECK,both,Edit / tune path,Editor reachable,Pass,S2,Edit card list primary CTA present and clickable
+CW-DECK-08,DECK,both,Import entry,Opens import flow,Pass,S2,New deck→Import path: ownership kinds + paste/upload; also Library Import list
+CW-DECK-09,DECK,both,Lab / Build from Commander,#lab or Lab entry,Partial,S2,#lab reachable; deep Lab steps not fully walked this pass
+CW-DECK-10,DECK,both,Measure / sim,Produces output if present,Partial,S3,Measure button on deck detail; full report not asserted
+CW-DECK-11,DECK,both,Export / print,If present,Partial,S3,share-export exists in Menu (often hidden until Menu open); not fully verified download
+CW-DECK-12,DECK,both,How a deck explainer,Link works,Pass,S4,How a deck comes together link present on Decks
+CW-LIB-01,LIB,both,Library tabs,Library/To buy/Orders render,Pass,S1,Tabs + counts (0/0/0 empty); Dues also in sidebar
+CW-LIB-02,LIB,both,List/Sheet/Table views,Each renders,Pass,S2,All three view toggles switched with screenshots
+CW-LIB-03,LIB,both,Status filters,Filter/clear,Partial,S3,Add-copies status Owned exercised; chip filters not exhaustively cleared
+CW-LIB-04,LIB,both,Text search,Search updates,Partial,S3,Add-card typeahead Sol Ring worked; ambient library search partial
+CW-LIB-05,LIB,both,Filters/Columns dialogs,Open/apply/clear,N/A,S3,Not distinctly opened this pass
+CW-LIB-06,LIB,both,Acquire/wanted/status,Status change,Pass,S2,Add copies of Sol Ring with Owned qty → Add copies
+CW-LIB-07,LIB,both,Card popup from library,Readable art+text,Pass,S2,Add copies dialog; commander art on deck page
+CW-LIB-08,LIB,both,Empty library honesty,Clear empty/add path,Pass,S2,0 copies; Add cards CTA
+CW-LIB-09,LIB,both,Backup control,Download/dialog,Pass,S3,Back up now → CrankMagic-backup-2026-09-24.json (desktop)
+CW-EXP-01,EXP,both,Explore entry/chooser,Entry points render,Pass,S1,Three doors + OR READ BY ROLE chips; 31,830 cards claim
+CW-EXP-02,EXP,both,Catalog count claim,Plausible count,Pass,S3,31,830 cards shown
+CW-EXP-03,EXP,both,From commander/card entry,Scoped explore,Partial,S2,Chooser OK; scoped graph sometimes blocked by co-play 20MB load lag
+CW-EXP-04,EXP,both,Graph hover/click inspect,Inspectable,Partial,S2,Canvas click attempted; full node inspect not confirmed under load lag
+CW-EXP-05,EXP,both,Filters/lens/roles,Observable,Pass,S3,Role chips Removal/Board wipe/Protection/Loop/Tutor/Ramp/Draw visible with counts
+CW-EXP-06,EXP,both,Wanted/add from explore,Labeled or gated,Partial,S2,Not fully exercised from graph this pass
+CW-ACC-01,ACC,both,Account/sign-in surface,Visible when accounts=on,Pass,S2,Menu → Cloudflare Access login (Google / Email code)
+CW-ACC-02,ACC,both,Guest/local path for create,Create without sign-in OR clear gate,Pass,S1,New deck E2E succeeded locally without signing in; Accounts optional
+CW-ACC-03,ACC,both,Settings if present,Real options,Partial,S3,Menu exposes backup/restore/theme/export/history; dedicated Settings page not isolated
+CW-MOB-01,MOB,mobile,Nav chrome @390×844,Main pages reachable,Pass,S1,Top Decks/Library/Explore/Play + hamburger
+CW-MOB-02,MOB,mobile,No harmful overflow,Content not clipped,Fail,S2,Deck detail bottom sticky actions clip "Log a game" at right edge
+CW-MOB-03,MOB,mobile,Tap targets,Primary tappable,Pass,S2,New deck / nav / Edit card list large enough
+CW-MOB-04,MOB,mobile,Readability,Readable without zoom,Partial,S2,Card art excellent; NEXT grey-on-grey and clipped actions hurt; sidebar truncation N/A (top nav)
+CW-MOB-05,MOB,mobile,Critical paths,Deck/library/explore,Pass,S1,New deck E2E + library tabs/views + explore chooser on mobile
+CW-MOB-06,MOB,mobile,Dialogs fit viewport,Not cut off,Pass,S3,New deck wizard and Add copies fit 390 width

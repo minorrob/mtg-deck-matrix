@@ -13,7 +13,8 @@ become small WebPs -- 26MB of source would otherwise land in a repository that s
 import sys
 from PIL import Image
 
-SRC = "C:/Users/robmi/CrankMagic/art"   # the sources moved here; see art/README.md
+import os
+SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "design", "art-source")   # see design/art-source/README.md
 OUT = sys.argv[1]
 
 

@@ -263,7 +263,7 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
 {
   const {execFileSync} = await import("node:child_process");
   const UK = /\b(colour|colours|coloured|centre|centred|recognise|recognised|recognises|normalise|normalised|honour|honours|favour|favourite|grey|licence|organise|organised|analyse|cancelled|behaviour|catalogue|towards|defence|programme|artefact|artefacts|initialise|serialise|customise|minimise|optimise|summarise|visualise|prioritise|realise|utilise|authorise|neighbour|flavour|labour|humour|theatre|metre|litre|manoeuvre|jewellery|travelling|modelling|labelled|signalling|fulfil|enrol|instalment|skilful|ageing|judgement|acknowledgement|amongst|whilst)\b/gi;
-  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
+  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */);
   let total = 0; const byFile = [];
   for (const f of tracked) { const n = (readFileSync(path.join(ROOT, f), "utf8").match(UK) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
@@ -274,6 +274,9 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
      keep their spelling (Gandalf the Grey, Ultramarines Honour Guard). Lower it whenever a change
      takes it lower, the way the hex ceiling works. What is left is legacy prose in comments and
      documents. */
+  /* An archived UAT run under docs/uat/<run>/ is someone else's record, kept verbatim like a designer's
+     handoff (design_handoff_ above): Grok Bot's harness carries a UK-word list because it checks the app
+     for them. Our own prose, docs/uat/*.md included, still counts. */
   const CEILING = 530;
   ok(total <= CEILING, `UK spellings in tracked files: ${total}, ceiling ${CEILING} (only goes down). Files: ${byFile.slice(0, 8).join(", ")}`);
   /* and nothing written today carries one */

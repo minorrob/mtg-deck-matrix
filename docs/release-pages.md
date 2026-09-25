@@ -4,8 +4,9 @@
 documents — built from one commit of `main` by `tools/release-pages.mjs`, committed to the `release/pages`
 branch, and served by **Cloudflare at https://crankmagic.com/**: the Worker `crankmagic`, every page served as a
 file and its script run for `/api/*` only (the account cloud, `docs/plan-account-cloud.md`), answering on crankmagic.com alone. It is deployed with `wrangler deploy` from the very folder the
-acceptance walk passed on — wrangler lives in `C:\Users\robmi\CrankMagic\workbench\cloudflare` (outside the
-repo, which has no dependencies) and was signed in to Rob's Cloudflare account by Rob on 2026-09-24.
+acceptance walk passed on. Wrangler is not a dependency of this repository, which has none: it is installed
+on the machine that deploys, as "Tooling on a fresh machine" below says, and it is signed in to Rob's
+Cloudflare account by Rob (first on 2026-09-24).
 Play's tab says *Coming Soon*. Rob, 2026-09-24: *"the CrankMagic build minus the
 Play option (on that tab it should say 'Coming Soon'). I want to use everything else that exists in
 CrankMagic today as a production release."*
@@ -35,14 +36,18 @@ PAGE_BUDGET_REQUIRED=1 GEOMETRY_REQUIRED=1 bash runtests.sh -q
 git fetch origin
 node tools/release-pages.mjs --out <empty folder>
 
-# 3. serve it at a *.localhost name (the web copy, and a secure context) and walk the four journeys
-node <any static server> <folder> 8790
-UAT_BASE=http://crankmagic.localhost:8790 UAT_LIVE_NETWORK=1 UAT_SHOTS=<folder> node tests/uat/release-acceptance.mjs
+# 3. serve it at a *.localhost name (the web copy, and a secure context) and walk the four journeys,
+#    then the first-look list (#372), which the redesign must not undo
+node tools/serve-folder.mjs <folder> 8790
+UAT_BASE=http://crankmagic.localhost:8790 UAT_STATIC=1 UAT_LIVE_NETWORK=1 UAT_SHOTS=<shots> node tests/uat/release-acceptance.mjs
+UAT_BASE=http://crankmagic.localhost:8790 UAT_LIVE_NETWORK=1 node tests/uat/first-look.mjs
 
-# 4. commit the same build to release/pages (the record), push it, and deploy the tested folder
-node tools/release-pages.mjs --commit
+# 4. commit the same build to release/pages (the record), push it, and deploy the tested folder.
+#    Staging first: the same steps with --profile cloud-staging, from its own folder.
+#    A production deploy is Rob's go, asked for in the conversation, every time.
+node tools/release-pages.mjs --ref origin/main --commit
 git push origin release/pages
-cd <folder> && C:/Users/robmi/CrankMagic/workbench/cloudflare/wrangler.cmd deploy
+cd <folder> && npx --yes wrangler@4.139.0 deploy
 
 # 5. walk the live site
 UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
@@ -77,3 +82,20 @@ read.
 - **`tests/uat/crankmagic-journeys.mjs` predates the deck-page redesign (V.4b).** On `main` and on the
   release alike it now runs through deck creation, assembly, backup and restore, Build's draft, Log a game
   and a filed report, then stops at the old Overview's checks (`#cm-sec-glance`). It is not in the gate.
+
+## Tooling on a fresh machine
+
+Nothing outside this repository is needed to build, walk, release or deploy. What a machine needs:
+
+| | |
+| --- | --- |
+| **Node 22 or later**, with npm | The gate, the builder, the walks. On Personal-HP, Node comes from the Codex runtime and is not on PATH: `export PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH"`. |
+| **Python 3.12** | For the few Python suites in the gate. On Personal-HP it is `$HOME/AppData/Local/Programs/Python/Python312`. |
+| **Playwright and Chrome** | For the browser suites and the walks. Install with `npm install --prefix <folder> playwright`; set `UAT_PLAYWRIGHT=<folder>/node_modules/playwright/index.js` and `UAT_CHROME=<chrome.exe>`. CI installs its own. |
+| **Wrangler 4.139.0** | Either `npx --yes wrangler@4.139.0 <command>` each time, or `npm install --prefix <folder> wrangler@4.139.0` with `WRANGLER=<folder>/node_modules/wrangler/bin/wrangler.js` (which `tests/uat/cloud-e2e.mjs` needs). **Rob signs it in** with `wrangler login`: the OAuth token lives in the machine's user profile and never in the repository. |
+| **gh**, signed in as Rob | Pull requests, merges, the repository's settings. The repository is **private** since 2026-09-25. |
+
+Everything else a release needs is in the repository: `tools/release-pages.mjs` (the builder and its
+profiles, with the Worker names, the D1 ids and the Access audiences), `cloud/` (the Worker and its
+migrations), `tools/serve-folder.mjs` (the local host for a walk), `tools/bump-pins.mjs` (the `?v=` pins a
+changed file needs), and the walks in `tests/uat/`.

@@ -52,7 +52,8 @@ any provider. Prices checked 2026-09-24.
 
 **What Rob does himself** (an agent never creates accounts, enters payment details, passwords or keys):
 created the Cloudflare account and registered crankmagic.com; **signed wrangler in on Personal-HP
-(2026-09-24)** — `C:\Users\robmi\CrankMagic\workbench\cloudflare`, OAuth, revocable with `wrangler logout` —
+(2026-09-24)** — OAuth, revocable with `wrangler logout`; installing it on another machine is
+`docs/release-pages.md`, "Tooling on a fresh machine" —
 which lets a session deploy Workers, attach custom domains and create D1 databases; later, any payment (Workers
 Paid), the Anthropic key (`wrangler secret put`, typed by him), the Zero Trust sign-in settings (outside
 wrangler's reach) and the AI allowlist. **What the session does**: the code, the configuration, the deploys,
