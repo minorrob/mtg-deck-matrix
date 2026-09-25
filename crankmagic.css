@@ -2752,3 +2752,25 @@ button.cm-building { pointer-events: none; }
 #cm-dialog .cm-gloss-row{display:contents}
 #cm-dialog .cm-gloss-term{justify-self:start;padding:2px 9px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:700;background:color-mix(in oklab,var(--tone,var(--v-muted)) 18%,transparent);color:var(--v-ink)}
 @media(max-width:560px){#cm-dialog .cm-glossary{grid-template-columns:1fr;gap:4px}#cm-dialog .cm-gloss-row>span:last-child{margin-bottom:8px}}
+/* SETTINGS (r3, 70-settings): five cards in two columns, one on a phone. Appearance's choices are
+   pressable chips whose pressed state is aria-pressed; the danger zone sits apart, at the foot of Data. */
+#matrix-v2 .cm-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+#matrix-v2 .cm-settings-card{border:1px solid var(--v-line);border-radius:var(--v-radius-card);background:var(--v-panel);padding:18px 20px;min-width:0}
+#matrix-v2 .cm-settings-card h2{margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-settings-card p{margin:0 0 10px}
+#matrix-v2 .cm-settings-label{margin:14px 0 8px!important;font-size:12px;font-weight:700;color:var(--v-muted)}
+#matrix-v2 .cm-settings-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+#matrix-v2 .cm-settings-stack{display:grid;gap:8px;margin-bottom:10px}
+#matrix-v2 .cm-settings-stack .v-button{width:100%;justify-content:center}
+#matrix-v2 .cm-chip-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-settings-cap{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:10px}
+#matrix-v2 .cm-settings-cap label{display:grid;gap:6px;font-size:13px;font-weight:600}
+#matrix-v2 .cm-settings-cap input{width:9em}
+#matrix-v2 .cm-settings-danger{margin-top:16px;padding-top:12px;border-top:1px solid color-mix(in oklab,var(--st-remove) 45%,var(--v-line))}
+#matrix-v2 .cm-settings-danger .v-button{width:100%;justify-content:center}
+#matrix-v2 .cm-settings-links{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+#matrix-v2 .cm-settings .cm-data-dates p{display:flex;justify-content:space-between;gap:12px;margin:0 0 4px;font-size:13px}
+@media(max-width:760px){#matrix-v2 .cm-settings{grid-template-columns:1fr}}
+/* REDUCE MOTION, the reader's own switch (Settings › Appearance). crankmagic-app.js writes it on <html>;
+   the scripts that animate ask CrankMotion. This stills every transition and animation at once. */
+html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=reduce] *::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}

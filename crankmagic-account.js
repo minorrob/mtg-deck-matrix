@@ -140,7 +140,19 @@
     if (who.email && !out) {out = document.createElement("div"); out.id = "cm-account-out"; out.innerHTML = `<hr><button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`; menu.append(out);}
     if (!who.email && out) out.remove();
     chip();
+    settings();
   }
+  /* Settings › Account (r3, 70-settings) says the same in full, with Sign out beside it. */
+  function settings() {
+    const box = C.$("#cm-settings-account");
+    if (!box) return;
+    if (!who.checked) {box.innerHTML = `<p class="cm-muted">Checking whether you are signed in…</p>`; return;}
+    box.innerHTML = who.email
+      ? `<p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status cm-muted">${e(status)}</p>` : ""}`
+        + `<div class="cm-settings-row">${button("Sync now", "account-sync")}${button("Sign out", "account-sign-out")}</div>`
+      : `<p>Signed out. Sign in and the library saves itself to the cloud and follows you to any device you sign in on.</p><div class="cm-settings-row">${button("Sign in", "account-sign-in", {}, true)}</div>`;
+  }
+  C.drawAccount = settings;
   function chip() {
     const button = C.$("#cm-user-functions");
     if (!button) return;

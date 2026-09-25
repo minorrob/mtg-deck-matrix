@@ -325,7 +325,7 @@
      only, sixty at most in motion and the rest fading; reduced motion skips it. Resolves when
      the caller may redraw. */
   function recombine(host, keep) {
-    const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = globalThis.CrankMotion ? CrankMotion.reduced() : typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     const cards = [...host.querySelectorAll(".cm-tt-grid .cm-tt-card[data-record]")].filter((el) => !keep.has(el.dataset.record));
     const home = host.querySelector(".cm-tt-home");
     if (reduced || !cards.length || !home) return Promise.resolve();

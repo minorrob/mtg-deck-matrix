@@ -101,7 +101,7 @@ function workingHTML(d){
    cap, the cap itself, and the lines paid over the 110% cap. Every figure is the model's
    (readiness) or the rules module's, so the card agrees with the Shop strip and the Orders
    tab by construction: the same lots, the same prices. */
-function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??(R?R.RULES.deckCap:null),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
+function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??C.deckCap(),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
   const pct=cap>0?r.marketValue/cap*100:null,tone=pct===null?'':pct>100?' cm-over':pct>90?' cm-near':'';
   const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id),overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
   const dear=perCard!==null?d.slots.filter(x=>x.purpose==='main'&&C.card(x.cardId).price>perCard).length:0,gc=gcCount(d);
@@ -258,7 +258,7 @@ function compositionHTML(cards,curve,max,types){return cards.length?`<div class=
    not. Every one is the rules module's or readiness's, so the cards agree with the Shop strip and
    the Orders tab by construction. */
 function costOf(d){
-  const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??(R?R.RULES.deckCap:null),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
+  const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??C.deckCap(),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
   const pct=cap>0?r.marketValue/cap*100:null;
   const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id);
   const overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
@@ -676,10 +676,10 @@ actions['wizard-lab']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   go('lab');
 };
-actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.deckCap:225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
+actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.deckCap()??225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
        ever over anything. The form shows the standing figures as placeholders and writes them
        on save when the field is left empty; Finalize's "remove the price caps" clears them. */
-      budget:data.budget===''?(C.RULES?C.RULES.deckCap:null):Number(data.budget),perCardCap:data.perCardCap===''?(C.RULES?C.RULES.perCardMax:null):Number(data.perCardCap)}}));};
+      budget:data.budget===''?C.deckCap():Number(data.budget),perCardCap:data.perCardCap===''?(C.RULES?C.RULES.perCardMax:null):Number(data.perCardCap)}}));};
 /* ATTACHING AN EXISTING GROUP IS THE OTHER ROAD IN: you uploaded a sheet, the cards are in a
    group, and now you want a deck around them. So attaching offers to bring the group's cards
    across as the deck's list -- offered only where it cannot destroy anything, on a draft
