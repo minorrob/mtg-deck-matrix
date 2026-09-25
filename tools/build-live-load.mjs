@@ -83,8 +83,24 @@ const marketPriceOf=(lookup,name,fallback)=>{const c=lookup(name),p=Number(c&&c.
 
    Ordered and $ Each have no home in the star tables yet, so they are read from the wide
    Master sheet, where both are plain values. */
+/* v25 AND LATER: THE STAR TABLES FOLDED BACK INTO ONE WIDE SHEET. Trey's v25 has no master_main,
+   master_target, master_actuals or master_decks. Its Master sheet opens on "Card ID" and carries every
+   column the first three did -- Own, In Deck, In Bench, Buy Count, Ordered, $ Each, the metadata, and a
+   D<n>-T and D<n>-A pair per deck -- as plain cached values. So those three are read from Master, and
+   the deck list from deck_strategies (Deck ID, Commander), with each deck's name from the committed
+   file. The deck count is still discovered from the D<n>-T columns. */
+const FOLDED=new Set(['master_main','master_target','master_actuals']);
+function widestar(workbook){
+  const rows=sheet(workbook,'Master');if(!rows)return false;
+  const h=rows.find(r=>String(r[0]||'').trim()==='Card ID');
+  return Boolean(h&&h.some(x=>/^D\d+-T$/.test(String(x??'').trim())));
+}
 function starTable(workbook,name,{required=true}={}){
-  const rows=sheet(workbook,name);
+  let rows=sheet(workbook,name);
+  if(!rows&&FOLDED.has(name)&&widestar(workbook))rows=sheet(workbook,'Master');
+  if(!rows&&name==='master_decks'){const s=starTable(workbook,'deck_strategies',{required:false});
+    if(s&&widestar(workbook)){const head=['Deck','Commander','Name'];
+      return {head,rows:s.rows.map(r=>[String(s.get(r,'Deck ID')||'').trim(),s.get(r,'Commander'),null]),get:(r,n)=>{const i=head.indexOf(n);return i<0?null:r[i];}};}}
   if(!rows){ensure(!required,`The workbook has no ${name} sheet.`);return null;}
   const h=rows.findIndex(r=>String(r[0]||'').trim()==='Card ID'||String(r[0]||'').trim()==='Deck'||String(r[0]||'').trim()==='Deck ID');
   ensure(h>=0,`${name}: no header row.`);
@@ -232,7 +248,7 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   const canon=name=>{const c=lookup(name);if(!c){unresolved.add(name);return name;}return c.name;};
   /* A workbook that carries master_main is read through its star schema: dynamic decks,
      no formula cells, and the metadata the app mirrors. */
-  if(sheet(workbook,'master_main')){
+  if(sheet(workbook,'master_main')||widestar(workbook)){
     const out=await importStarWorkbook(workbook,{prior,now,lookup,canon,notes});
     ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}.`);
     return out;
