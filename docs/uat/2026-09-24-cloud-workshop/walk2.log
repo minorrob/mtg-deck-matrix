@@ -1,0 +1,91 @@
+[desktop] after create {"text":"Choose your commander\n‹\nCard name or a Scryfall link\nY'shtola, Night's Blessed\nCreature\nEdgar Markov\nCreature\nThe Ur-Dragon\nCreature\nAtraxa, Praetors' Voice\ndeathtouch\nKrenko, Mob Boss\ntap-ability\nVivi Ornitier\nCreature\nSauron, the Dark Lord\nCreature\nKaalia of the Vast\nCreature\nTeval, the Balanced Scale\nCreature\nFire Lord Azula\nCreature\nMs. Bumbleflower\nCreature\nPantlaza, Sun-Favored\nCreature\nLathril, Blade of the Elves\nCreature\nGiada, Font of Hope\nflying\nThe Wise Mothman\nCreature\nJodah, the Unifier\nCreature\nToph, the First Metalbender\nCreature\nNekusar, the Mindrazer\nCreature\nYuriko, the Tiger's Shadow\ncommander ninjutsu\nKenrith, the Returned King\nCreature\nCloud, Ex-SOLDIER\nCreature\nHearthhull, the Worldseed\nArtifact\nKefka, Court Mage
+[desktop] after pick {"text":"Name your new deck\n×\nDeck name\n*\nCore mechanic\nCancel\nCreate draft","inputs":[{"type":"text","ph":"","name":"name","value":"Atraxa, Praetors' Voice deck"},{"type":"text","ph":"","name":"mechanic","value":"deathtouch"}],"actions":[{"t":"×","a":"close"},{"t":"Cancel","a":"close"},{"t":"Create draft","a":""}]}
+[desktop] try button:has-text("Create") text=Create draft vis=true
+[desktop] found deck? true Skip to content
+CrankMagic
+Ⅱ
+Decks
+UAT-CW-2026-09-24-Atraxa
+How a deck comes together
+Library
+Explore
+Play
+Your cards. Your library.
+
+Saved in this browser. Export a backup to keep a copy elsewhere.
+
+Card data 5 days old.
+
+Back up now ↗
+Menu
+Decks
+?
+
+One deck, no playable.
+
+New deck
+Compare selected
+⋯
+Defining
+UAT-CW-2026-09-24-ATRAXA
+Atraxa, Praetors' Voice
+
+deathtouch
+
+1 not yet reserved
+B2
++
+Ne
+desktop locator.click: Error: strict mode violation: locator('[data-action="new-deck"]') resolved to 2 elements:
+    1) <button type="button" data-action="new-deck" class="v-button primary">New deck</button> aka getByRole('button', { name: 'New deck' })
+    2) <a href="#new" class="cm-deck-new" data-action="new-deck">…</a> aka getByRole('link', { name: 'New deck' })
+
+Call log:
+  - waiting for locator('[data-action="new-deck"]')
+
+    at createDeck (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:206:50)
+    at async run (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:381:14)
+    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:395:17
+[mobile] after create {"text":"Choose your commander\n‹\nCard name or a Scryfall link\nY'shtola, Night's Blessed\nCreature\nEdgar Markov\nCreature\nThe Ur-Dragon\nCreature\nAtraxa, Praetors' Voice\ndeathtouch\nKrenko, Mob Boss\ntap-ability\nVivi Ornitier\nCreature\nSauron, the Dark Lord\nCreature\nKaalia of the Vast\nCreature\nTeval, the Balanced Scale\nCreature\nFire Lord Azula\nCreature\nMs. Bumbleflower\nCreature\nPantlaza, Sun-Favored\nCreature\nLathril, Blade of the Elves\nCreature\nGiada, Font of Hope\nflying\nThe Wise Mothman\nCreature\nJodah, the Unifier\nCreature\nToph, the First Metalbender\nCreature\nNekusar, the Mindrazer\nCreature\nYuriko, the Tiger's Shadow\ncommander ninjutsu\nKenrith, the Returned King\nCreature\nCloud, Ex-SOLDIER\nCreature\nHearthhull, the Worldseed\nArtifact\nKefka, Court Mage
+[mobile] after pick {"text":"Name your new deck\n×\nDeck name\n*\nCore mechanic\nCancel\nCreate draft","inputs":[{"type":"text","ph":"","name":"name","value":"Atraxa, Praetors' Voice deck"},{"type":"text","ph":"","name":"mechanic","value":"deathtouch"}],"actions":[{"t":"×","a":"close"},{"t":"Cancel","a":"close"},{"t":"Create draft","a":""}]}
+[mobile] try button:has-text("Create") text=Create draft vis=true
+[mobile] found deck? true Skip to content
+Decks
+Library
+Explore
+Play
+☰
+Decks
+?
+
+One deck, no playable.
+
+New deck
+Compare selected
+⋯
+Defining
+UAT-CW-2026-09-24-ATRAXA
+Atraxa, Praetors' Voice
+
+deathtouch
+
+1 not yet reserved
+B2
++
+New deck
+How a deck comes together
+Show archived
+
+CrankMagic is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved or endorsed by Wizards. Portions of th
+mobile locator.click: Error: strict mode violation: locator('[data-action="new-deck"]') resolved to 2 elements:
+    1) <button type="button" data-action="new-deck" class="v-button primary">New deck</button> aka getByRole('button', { name: 'New deck' })
+    2) <a href="#new" class="cm-deck-new" data-action="new-deck">…</a> aka getByRole('link', { name: 'New deck' })
+
+Call log:
+  - waiting for locator('[data-action="new-deck"]')
+
+    at createDeck (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:206:50)
+    at async run (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:381:14)
+    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:396:16
+DESKTOP ok false null
+MOBILE ok false null

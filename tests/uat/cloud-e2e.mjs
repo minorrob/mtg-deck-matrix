@@ -25,7 +25,10 @@ import {build, worktreeSource, ROOT} from "../../tools/release-pages.mjs";
 
 const require = createRequire(import.meta.url);
 const {chromium} = require(process.env.UAT_PLAYWRIGHT || "playwright");
-const WRANGLER = process.env.WRANGLER || "C:/Users/robmi/CrankMagic/workbench/cloudflare/node_modules/wrangler/bin/wrangler.js";
+/* Wrangler is not a dependency of this repository (it has none). WRANGLER names an installed copy's
+   bin/wrangler.js: docs/release-pages.md, "Tooling on a fresh machine". */
+const WRANGLER = process.env.WRANGLER;
+if (!WRANGLER) { console.error("cloud-e2e: set WRANGLER to an installed wrangler's bin/wrangler.js (docs/release-pages.md, Tooling on a fresh machine)"); process.exit(2); }
 const PORT = Number(process.env.E2E_PORT || 8796), BASE = `http://crankmagic.localhost:${PORT}`;
 const TEAM = "e2e.cloudflareaccess.com", AUD = "e2e-audience", EMAIL = "rob@e2e.test";
 let checks = 0;

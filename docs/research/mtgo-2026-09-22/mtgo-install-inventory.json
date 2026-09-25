@@ -1,0 +1,653 @@
+﻿{
+    "root":  "C:\\Users\\robmi\\AppData\\Local\\Apps\\2.0\\YYYK3GG3.XYE\\YK24YWC4.J0W\\mtgo..tion_a2d3b1cd60f98833_0003.0004_4ab1fa350e6a2ff6",
+    "version":  "3.4.158.4700",
+    "scenes":  [
+                   {
+                       "bytes":  36864,
+                       "name":  "AdminScene.dll"
+                   },
+                   {
+                       "bytes":  616960,
+                       "name":  "CollectionAndDeckEditorScene.dll"
+                   },
+                   {
+                       "bytes":  186368,
+                       "name":  "DraftScene.dll"
+                   },
+                   {
+                       "bytes":  1583104,
+                       "name":  "DuelScene.dll"
+                   },
+                   {
+                       "bytes":  15360,
+                       "name":  "HelpScene.dll"
+                   },
+                   {
+                       "bytes":  102912,
+                       "name":  "HomeScene.dll"
+                   },
+                   {
+                       "bytes":  166400,
+                       "name":  "LoginScene.dll"
+                   },
+                   {
+                       "bytes":  494080,
+                       "name":  "PlayScene.dll"
+                   },
+                   {
+                       "bytes":  846336,
+                       "name":  "SettingsScene.dll"
+                   },
+                   {
+                       "bytes":  114176,
+                       "name":  "StoreScene.dll"
+                   },
+                   {
+                       "bytes":  158208,
+                       "name":  "TradeScene.dll"
+                   }
+               ],
+    "majors":  [
+                   {
+                       "bytes":  6684,
+                       "name":  "AdminScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  36864,
+                       "name":  "AdminScene.dll"
+                   },
+                   {
+                       "bytes":  2541,
+                       "name":  "AdminScene.manifest"
+                   },
+                   {
+                       "bytes":  67072,
+                       "name":  "AdminScene.pdb"
+                   },
+                   {
+                       "bytes":  226137088,
+                       "name":  "Card.dll"
+                   },
+                   {
+                       "bytes":  14536,
+                       "name":  "CardManager.cdf-ms"
+                   },
+                   {
+                       "bytes":  685568,
+                       "name":  "CardManager.dll"
+                   },
+                   {
+                       "bytes":  5591,
+                       "name":  "CardManager.manifest"
+                   },
+                   {
+                       "bytes":  1355264,
+                       "name":  "CardManager.pdb"
+                   },
+                   {
+                       "bytes":  11336,
+                       "name":  "CollectionAndDeckEditorScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  616960,
+                       "name":  "CollectionAndDeckEditorScene.dll"
+                   },
+                   {
+                       "bytes":  4381,
+                       "name":  "CollectionAndDeckEditorScene.manifest"
+                   },
+                   {
+                       "bytes":  441856,
+                       "name":  "CollectionAndDeckEditorScene.pdb"
+                   },
+                   {
+                       "bytes":  7968,
+                       "name":  "DraftScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  186368,
+                       "name":  "DraftScene.dll"
+                   },
+                   {
+                       "bytes":  3056,
+                       "name":  "DraftScene.manifest"
+                   },
+                   {
+                       "bytes":  169472,
+                       "name":  "DraftScene.pdb"
+                   },
+                   {
+                       "bytes":  13600,
+                       "name":  "DuelScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  1583104,
+                       "name":  "DuelScene.dll"
+                   },
+                   {
+                       "bytes":  5154,
+                       "name":  "DuelScene.manifest"
+                   },
+                   {
+                       "bytes":  1705472,
+                       "name":  "DuelScene.pdb"
+                   },
+                   {
+                       "bytes":  5896,
+                       "name":  "FlsClient.cdf-ms"
+                   },
+                   {
+                       "bytes":  83456,
+                       "name":  "FlsClient.dll"
+                   },
+                   {
+                       "bytes":  2258,
+                       "name":  "FlsClient.manifest"
+                   },
+                   {
+                       "bytes":  196096,
+                       "name":  "FlsClient.pdb"
+                   },
+                   {
+                       "bytes":  5816,
+                       "name":  "HelpScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  15360,
+                       "name":  "HelpScene.dll"
+                   },
+                   {
+                       "bytes":  2173,
+                       "name":  "HelpScene.manifest"
+                   },
+                   {
+                       "bytes":  34304,
+                       "name":  "HelpScene.pdb"
+                   },
+                   {
+                       "bytes":  9740,
+                       "name":  "HomeScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  102912,
+                       "name":  "HomeScene.dll"
+                   },
+                   {
+                       "bytes":  3767,
+                       "name":  "HomeScene.manifest"
+                   },
+                   {
+                       "bytes":  142848,
+                       "name":  "HomeScene.pdb"
+                   },
+                   {
+                       "bytes":  10588,
+                       "name":  "LoginScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  166400,
+                       "name":  "LoginScene.dll"
+                   },
+                   {
+                       "bytes":  4200,
+                       "name":  "LoginScene.manifest"
+                   },
+                   {
+                       "bytes":  261632,
+                       "name":  "LoginScene.pdb"
+                   },
+                   {
+                       "bytes":  14666360,
+                       "name":  "MTGO.exe"
+                   },
+                   {
+                       "bytes":  836436,
+                       "name":  "MTGO.exe.cdf-ms"
+                   },
+                   {
+                       "bytes":  15106,
+                       "name":  "MTGO.exe.config"
+                   },
+                   {
+                       "bytes":  465672,
+                       "name":  "MTGO.exe.manifest"
+                   },
+                   {
+                       "bytes":  11984,
+                       "name":  "PlayScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  494080,
+                       "name":  "PlayScene.dll"
+                   },
+                   {
+                       "bytes":  4518,
+                       "name":  "PlayScene.manifest"
+                   },
+                   {
+                       "bytes":  753152,
+                       "name":  "PlayScene.pdb"
+                   },
+                   {
+                       "bytes":  10808,
+                       "name":  "SettingsScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  846336,
+                       "name":  "SettingsScene.dll"
+                   },
+                   {
+                       "bytes":  4249,
+                       "name":  "SettingsScene.manifest"
+                   },
+                   {
+                       "bytes":  577024,
+                       "name":  "SettingsScene.pdb"
+                   },
+                   {
+                       "bytes":  7200,
+                       "name":  "StoreScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  114176,
+                       "name":  "StoreScene.dll"
+                   },
+                   {
+                       "bytes":  2726,
+                       "name":  "StoreScene.manifest"
+                   },
+                   {
+                       "bytes":  69120,
+                       "name":  "StoreScene.pdb"
+                   },
+                   {
+                       "bytes":  11740,
+                       "name":  "TradeScene.cdf-ms"
+                   },
+                   {
+                       "bytes":  158208,
+                       "name":  "TradeScene.dll"
+                   },
+                   {
+                       "bytes":  4490,
+                       "name":  "TradeScene.manifest"
+                   },
+                   {
+                       "bytes":  271872,
+                       "name":  "TradeScene.pdb"
+                   },
+                   {
+                       "bytes":  3352,
+                       "name":  "WotC.Common.cdf-ms"
+                   },
+                   {
+                       "bytes":  3028,
+                       "name":  "WotC.Common.Client.cdf-ms"
+                   },
+                   {
+                       "bytes":  12288,
+                       "name":  "WotC.Common.Client.dll"
+                   },
+                   {
+                       "bytes":  1031,
+                       "name":  "WotC.Common.Client.manifest"
+                   },
+                   {
+                       "bytes":  30208,
+                       "name":  "WotC.Common.Client.pdb"
+                   },
+                   {
+                       "bytes":  188928,
+                       "name":  "WotC.Common.dll"
+                   },
+                   {
+                       "bytes":  1194,
+                       "name":  "WotC.Common.manifest"
+                   },
+                   {
+                       "bytes":  513536,
+                       "name":  "WotC.Common.pdb"
+                   },
+                   {
+                       "bytes":  3360,
+                       "name":  "WotC.MtGO.Client.Common.cdf-ms"
+                   },
+                   {
+                       "bytes":  2936,
+                       "name":  "WotC.MtGO.Client.Common.Collections.cdf-ms"
+                   },
+                   {
+                       "bytes":  13312,
+                       "name":  "WotC.MtGO.Client.Common.Collections.dll"
+                   },
+                   {
+                       "bytes":  1025,
+                       "name":  "WotC.MtGO.Client.Common.Collections.manifest"
+                   },
+                   {
+                       "bytes":  38400,
+                       "name":  "WotC.MtGO.Client.Common.Collections.pdb"
+                   },
+                   {
+                       "bytes":  6200,
+                       "name":  "WotC.MtGO.Client.Common.Diagnostics.cdf-ms"
+                   },
+                   {
+                       "bytes":  111104,
+                       "name":  "WotC.MtGO.Client.Common.Diagnostics.dll"
+                   },
+                   {
+                       "bytes":  2341,
+                       "name":  "WotC.MtGO.Client.Common.Diagnostics.manifest"
+                   },
+                   {
+                       "bytes":  265728,
+                       "name":  "WotC.MtGO.Client.Common.Diagnostics.pdb"
+                   },
+                   {
+                       "bytes":  20480,
+                       "name":  "WotC.MtGO.Client.Common.dll"
+                   },
+                   {
+                       "bytes":  1174,
+                       "name":  "WotC.MtGO.Client.Common.manifest"
+                   },
+                   {
+                       "bytes":  62976,
+                       "name":  "WotC.MtGO.Client.Common.pdb"
+                   },
+                   {
+                       "bytes":  5500,
+                       "name":  "WotC.MtGO.Client.Model.Admin.cdf-ms"
+                   },
+                   {
+                       "bytes":  10240,
+                       "name":  "WotC.MtGO.Client.Model.Admin.dll"
+                   },
+                   {
+                       "bytes":  2049,
+                       "name":  "WotC.MtGO.Client.Model.Admin.manifest"
+                   },
+                   {
+                       "bytes":  22016,
+                       "name":  "WotC.MtGO.Client.Model.Admin.pdb"
+                   },
+                   {
+                       "bytes":  7176,
+                       "name":  "WotC.MtGO.Client.Model.Chat.cdf-ms"
+                   },
+                   {
+                       "bytes":  103936,
+                       "name":  "WotC.MtGO.Client.Model.Chat.dll"
+                   },
+                   {
+                       "bytes":  2778,
+                       "name":  "WotC.MtGO.Client.Model.Chat.manifest"
+                   },
+                   {
+                       "bytes":  308736,
+                       "name":  "WotC.MtGO.Client.Model.Chat.pdb"
+                   },
+                   {
+                       "bytes":  13692,
+                       "name":  "WotC.MtGO.Client.Model.Core.cdf-ms"
+                   },
+                   {
+                       "bytes":  574976,
+                       "name":  "WotC.MtGO.Client.Model.Core.dll"
+                   },
+                   {
+                       "bytes":  5372,
+                       "name":  "WotC.MtGO.Client.Model.Core.manifest"
+                   },
+                   {
+                       "bytes":  1115648,
+                       "name":  "WotC.MtGO.Client.Model.Core.pdb"
+                   },
+                   {
+                       "bytes":  5144,
+                       "name":  "WotC.MtGO.Client.Model.Data.cdf-ms"
+                   },
+                   {
+                       "bytes":  21504,
+                       "name":  "WotC.MtGO.Client.Model.Data.dll"
+                   },
+                   {
+                       "bytes":  1945,
+                       "name":  "WotC.MtGO.Client.Model.Data.manifest"
+                   },
+                   {
+                       "bytes":  56832,
+                       "name":  "WotC.MtGO.Client.Model.Data.pdb"
+                   },
+                   {
+                       "bytes":  4604,
+                       "name":  "WotC.MtGO.Client.Model.Help.cdf-ms"
+                   },
+                   {
+                       "bytes":  9728,
+                       "name":  "WotC.MtGO.Client.Model.Help.dll"
+                   },
+                   {
+                       "bytes":  1714,
+                       "name":  "WotC.MtGO.Client.Model.Help.manifest"
+                   },
+                   {
+                       "bytes":  24064,
+                       "name":  "WotC.MtGO.Client.Model.Help.pdb"
+                   },
+                   {
+                       "bytes":  5488,
+                       "name":  "WotC.MtGO.Client.Model.Home.cdf-ms"
+                   },
+                   {
+                       "bytes":  8704,
+                       "name":  "WotC.MtGO.Client.Model.Home.dll"
+                   },
+                   {
+                       "bytes":  2039,
+                       "name":  "WotC.MtGO.Client.Model.Home.manifest"
+                   },
+                   {
+                       "bytes":  19968,
+                       "name":  "WotC.MtGO.Client.Model.Home.pdb"
+                   },
+                   {
+                       "bytes":  10740,
+                       "name":  "WotC.MtGO.Client.Model.Play.cdf-ms"
+                   },
+                   {
+                       "bytes":  13403648,
+                       "name":  "WotC.MtGO.Client.Model.Play.dll"
+                   },
+                   {
+                       "bytes":  4236,
+                       "name":  "WotC.MtGO.Client.Model.Play.manifest"
+                   },
+                   {
+                       "bytes":  1897984,
+                       "name":  "WotC.MtGO.Client.Model.Play.pdb"
+                   },
+                   {
+                       "bytes":  8568,
+                       "name":  "WotC.MtGO.Client.Model.Reference.cdf-ms"
+                   },
+                   {
+                       "bytes":  232448,
+                       "name":  "WotC.MtGO.Client.Model.Reference.dll"
+                   },
+                   {
+                       "bytes":  3315,
+                       "name":  "WotC.MtGO.Client.Model.Reference.manifest"
+                   },
+                   {
+                       "bytes":  585216,
+                       "name":  "WotC.MtGO.Client.Model.Reference.pdb"
+                   },
+                   {
+                       "bytes":  6764,
+                       "name":  "WotC.MtGO.Client.Model.Session.cdf-ms"
+                   },
+                   {
+                       "bytes":  23552,
+                       "name":  "WotC.MtGO.Client.Model.Session.dll"
+                   },
+                   {
+                       "bytes":  2572,
+                       "name":  "WotC.MtGO.Client.Model.Session.manifest"
+                   },
+                   {
+                       "bytes":  34304,
+                       "name":  "WotC.MtGO.Client.Model.Session.pdb"
+                   },
+                   {
+                       "bytes":  8540,
+                       "name":  "WotC.MtGO.Client.Model.Settings.cdf-ms"
+                   },
+                   {
+                       "bytes":  67072,
+                       "name":  "WotC.MtGO.Client.Model.Settings.dll"
+                   },
+                   {
+                       "bytes":  3332,
+                       "name":  "WotC.MtGO.Client.Model.Settings.manifest"
+                   },
+                   {
+                       "bytes":  167424,
+                       "name":  "WotC.MtGO.Client.Model.Settings.pdb"
+                   },
+                   {
+                       "bytes":  7176,
+                       "name":  "WotC.MtGO.Client.Model.Store.cdf-ms"
+                   },
+                   {
+                       "bytes":  72192,
+                       "name":  "WotC.MtGO.Client.Model.Store.dll"
+                   },
+                   {
+                       "bytes":  2780,
+                       "name":  "WotC.MtGO.Client.Model.Store.manifest"
+                   },
+                   {
+                       "bytes":  167424,
+                       "name":  "WotC.MtGO.Client.Model.Store.pdb"
+                   },
+                   {
+                       "bytes":  6752,
+                       "name":  "WotC.MtGO.Client.Model.Trade.cdf-ms"
+                   },
+                   {
+                       "bytes":  61952,
+                       "name":  "WotC.MtGO.Client.Model.Trade.dll"
+                   },
+                   {
+                       "bytes":  2580,
+                       "name":  "WotC.MtGO.Client.Model.Trade.manifest"
+                   },
+                   {
+                       "bytes":  204288,
+                       "name":  "WotC.MtGO.Client.Model.Trade.pdb"
+                   },
+                   {
+                       "bytes":  2112,
+                       "name":  "WotC.MTGO.Common.GameServer.Attribute.cdf-ms"
+                   },
+                   {
+                       "bytes":  6656,
+                       "name":  "WotC.MTGO.Common.GameServer.Attribute.dll"
+                   },
+                   {
+                       "bytes":  668,
+                       "name":  "WotC.MTGO.Common.GameServer.Attribute.manifest"
+                   },
+                   {
+                       "bytes":  28160,
+                       "name":  "WotC.MTGO.Common.GameServer.Attribute.pdb"
+                   }
+               ],
+    "shiny":  [
+
+              ],
+    "folders":  {
+                    "Policies":  {
+                                     "top":  [
+                                                 "PrizeEligibility.rtf",
+                                                 "PlayerRewardsEligibility.rtf",
+                                                 "MailingListOption.rtf"
+                                             ],
+                                     "bytes":  88652,
+                                     "count":  3
+                                 },
+                    "Resources":  {
+                                      "top":  [
+                                                  "Magic Online Game Guide.rtf",
+                                                  "Report Issue.rtf",
+                                                  "Player Code of Conduct.rtf",
+                                                  "CreditsUB.rtf"
+                                              ],
+                                      "bytes":  800248,
+                                      "count":  4
+                                  },
+                    "EULA":  {
+                                 "top":  [
+                                             "EULA_en.rtf"
+                                         ],
+                                 "bytes":  4924082,
+                                 "count":  1
+                             },
+                    "x64":  {
+                                "top":  [
+                                            "p4bridge.dll",
+                                            "SQLite.Interop.dll"
+                                        ],
+                                "bytes":  10139640,
+                                "count":  2
+                            },
+                    "Audio":  {
+                                  "top":  [
+                                              "CLIENT_STARTUP.wav",
+                                              "TOURNAMENT_BEGIN.wav",
+                                              "GAME_BEGIN.wav",
+                                              "GAME_END.wav",
+                                              "DESTROY_NONCREATURE.wav",
+                                              "PRODUCT_GRANTED.wav",
+                                              "PLAYER_LOSE_LIFE.wav",
+                                              "PLANESWALKER_LOSE_LOYALTY.wav",
+                                              "DESTROY_PLANESWALKER.wav",
+                                              "DISCARD_CREATURE.wav"
+                                          ],
+                                  "bytes":  34741340,
+                                  "count":  98
+                              },
+                    "Images":  {
+                                   "top":  [
+                                               "DefaultPlayLobby.png",
+                                               "Login_Graphic.png",
+                                               "Home_Image.png",
+                                               "EmblemDefaultArt.jpg",
+                                               "Splash.png",
+                                               "MOL_icon.png",
+                                               "StoreDefaultArt.png",
+                                               "DefaultArt.jpg",
+                                               "DefaultArt.png"
+                                           ],
+                                   "bytes":  1482190,
+                                   "count":  9
+                               },
+                    "x86":  {
+                                "top":  [
+                                            "p4bridge.dll",
+                                            "SQLite.Interop.dll"
+                                        ],
+                                "bytes":  8162808,
+                                "count":  2
+                            },
+                    "Logs":  {
+                                 "top":  [
+                                             "mtgo.log"
+                                         ],
+                                 "bytes":  7819926,
+                                 "count":  1
+                             }
+                }
+}

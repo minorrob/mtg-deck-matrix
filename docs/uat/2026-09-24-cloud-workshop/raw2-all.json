@@ -1,0 +1,28 @@
+{
+  "desktop": {
+    "ok": false,
+    "deck": null,
+    "notes": [
+      "locator.click: Error: strict mode violation: locator('[data-action=\"new-deck\"]') resolved to 2 elements:\n    1) <button type=\"button\" data-action=\"new-deck\" class=\"v-button primary\">New deck</button> aka getByRole('button', { name: 'New deck' })\n    2) <a href=\"#new\" class=\"cm-deck-new\" data-action=\"new-deck\">…</a> aka getByRole('link', { name: 'New deck' })\n\nCall log:\n  - waiting for locator('[data-action=\"new-deck\"]')\n\n    at createDeck (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:206:50)\n    at async run (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:381:14)\n    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:395:17"
+    ],
+    "playText": "",
+    "geo": {},
+    "uk": [],
+    "consoleErrs": [],
+    "pageErrs": [],
+    "failedReqs": []
+  },
+  "mobile": {
+    "ok": false,
+    "deck": null,
+    "notes": [
+      "locator.click: Error: strict mode violation: locator('[data-action=\"new-deck\"]') resolved to 2 elements:\n    1) <button type=\"button\" data-action=\"new-deck\" class=\"v-button primary\">New deck</button> aka getByRole('button', { name: 'New deck' })\n    2) <a href=\"#new\" class=\"cm-deck-new\" data-action=\"new-deck\">…</a> aka getByRole('link', { name: 'New deck' })\n\nCall log:\n  - waiting for locator('[data-action=\"new-deck\"]')\n\n    at createDeck (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:206:50)\n    at async run (/workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:381:14)\n    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk2.mjs:396:16"
+    ],
+    "playText": "",
+    "geo": {},
+    "uk": [],
+    "consoleErrs": [],
+    "pageErrs": [],
+    "failedReqs": []
+  }
+}

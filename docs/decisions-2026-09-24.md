@@ -187,7 +187,7 @@ order and the proposed pivot gate are in **`docs/handoff-2026-09-24-direction.md
 ## 12. The web app after accounts: the list from the first look at crankmagic.com
 
 Rob, the evening the account cloud went live, walking the production site (with Grok Bot's UAT of
-the same build beside it, `workbench/uat-2026-09-24-cloud-workshop/`). The calls, as he made them:
+the same build beside it, `docs/uat/2026-09-24-cloud-workshop/`). The calls, as he made them:
 
 - **Headings are Satoshi.** *"Use the Satoshi header font (H1, H2, H3, etc.) instead of the current
   header fonts in our design guide."* Display is Satoshi 700 through `--font-display` and

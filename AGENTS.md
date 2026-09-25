@@ -116,5 +116,16 @@ the rule's shape rather than that feature's:
 ## Where things are on Personal-HP
 
 `C:\Users\robmi\CrankMagic\` — `repo` (this clone), `forge`, `runtime`, `workbench`, `archive`.
-Forge and the JDK are found through `CRANKMAGIC_FORGE_ROOT` and `CRANKMAGIC_JDK_ROOT`. Nothing
+Forge and the JDK are found through `CRANKMAGIC_FORGE_ROOT` and `CRANKMAGIC_JDK_ROOT`.
+**Nothing outside this repository is needed for the plan to 100% (`docs/plan-to-100.md`).**
+`forge` and `runtime` serve only the frozen local host and Forge's tools, which M9 retires.
+`workbench` and `archive` are history, and what the plans cite from them was brought in on 2026-09-25:
+- the UAT runs, now under `docs/uat/`;
+- the MTGO research, now `docs/research/mtgo-2026-09-22/`;
+- the art sources, now `design/art-source/`;
+- the audio pack's notes, now `docs/audio-pack/`;
+- the engine's first inventory, now `docs/engine/`.
+
+The Comprehensive Rules text is Wizards'. It is fetched from its official address and is not committed
+(`game/tools/check-citations.mjs`). Nothing
 git touches lives in a synced folder. `node game/tools/preflight.mjs` is the one-command gate.

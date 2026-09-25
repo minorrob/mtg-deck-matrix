@@ -1,0 +1,82 @@
+[desktop] goto https://crankmagic.com/
+[desktop] meta version=8e9ddfd · 2026-09-24 play=coming-soon accounts=on
+[desktop] CW-XC-14 → Pass · Deploy meta matches mandate · {"version":"8e9ddfd · 2026-09-24","play":"coming-soon","accounts":"on","title":"CrankMagic · Commander workshop","hash":"","href":"https://crankmagic.com/"}
+[desktop] CW-XC-17 → Pass · Settle past Opening your library · landed
+[desktop] CW-DECK-01 → Pass · Decks list / empty state · Skip to content CrankMagicⅡ DecksHow a deck comes togetherLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy else
+[desktop] CW-LIB-01 → Pass · Library tabs chrome · Skip to content CrankMagicⅡ DecksLibraryLibrary0To buy0Orders0SheetExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy el
+[desktop] CW-LIB-08 → Pass · Empty library honesty · Skip to content CrankMagicⅡ DecksLibraryLibrary0To buy0Orders0SheetExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy el
+[desktop] CW-EXP-01 → Pass · Explore entry / chooser · Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.Card data 5 days ol
+[desktop] CW-EXP-02 → Pass · Catalog count claim · 31,830 cards
+[desktop] CW-XC-16 → Pass · Play nav honesty (coming-soon) · hash=#game; sample=Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.
+[desktop] CW-XC-01 → Pass · Top-level nav loads views · nav sweep completed
+[desktop] CW-XC-02 → Pass · Deep link by hash · decks/cards/discover/game
+[desktop] CW-XC-03 → Pass · Back and forward · backOk=true fwdOk=true hash=#cards
+[desktop] CW-XC-04 → Pass · Reload holds position · hash=#discover
+[desktop] CW-XC-08 → Pass · Theme switch · clicked theme control
+[desktop] CW-XC-11 → N/A · Help ? opens · no help control on decks
+[desktop] CW-XC-12 → Partial · Dialog close · exercised via dismiss elsewhere
+[desktop] CW-ACC-01 → Pass · Account / sign-in surface · Close Take another tour Back Next
+[desktop] CW-LIB-09 → Pass · Backup control · download=CrankMagic-backup-2026-09-24.json
+[desktop] New deck wizard opened
+[desktop] CW-DECK-03 → Partial · New deck E2E · wizard open but no search input found
+[desktop] CW-ACC-02 → Partial · Guest/local path · wizard UI unexpected
+[desktop] CW-DECK-08 → Pass · Import entry · Restore a full backup×Restore replaces this browser’s current library after checksum and schema validation. Export the current library first if you want to keep
+[desktop] CW-DECK-09 → Pass · Lab via #lab · Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.Card data 13 days o
+[desktop] CW-DECK-05 → N/A · Deck options menu · no options control
+[desktop] CW-DECK-06 → Partial · Type / color bars · Skip to content CrankMagicⅡ DecksHow a deck comes togetherLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy else
+[desktop] CW-DECK-10 → N/A · Measure / sim · not found
+[desktop] FATAL locator.click: Element is not visible
+Call log:
+  - waiting for locator('button:has-text("Export"), button:has-text("Print"), [data-action*="export"]').first()
+    - locator resolved to <button data-action="share-export">E-mail the export…</button>
+  - attempting click action
+    - scrolling into view if needed
+
+    at runViewport (/workspace/uat-2026-09-24-cloud-workshop/walk.mjs:691:25)
+    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk.mjs:1055:17
+[desktop] CW-XC-01 → Fail · Session fatal · locator.click: Element is not visible
+Call log:
+  - waiting for locator('button:has-text("Export"), button:has-text("Print"), [data-action*="export"]').first()
+
+[mobile] goto https://crankmagic.com/
+[mobile] meta version=8e9ddfd · 2026-09-24 play=coming-soon accounts=on
+[mobile] CW-XC-14 → Pass · Deploy meta matches mandate · {"version":"8e9ddfd · 2026-09-24","play":"coming-soon","accounts":"on","title":"CrankMagic · Commander workshop","hash":"","href":"https://crankmagic.com/"}
+[mobile] CW-XC-17 → Pass · Settle past Opening your library · landed
+[mobile] CW-DECK-01 → Pass · Decks list / empty state · Skip to content CrankMagicⅡ DecksHow a deck comes togetherLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy else
+[mobile] CW-LIB-01 → Pass · Library tabs chrome · Skip to content CrankMagicⅡ DecksLibraryLibrary0To buy0Orders0SheetExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy el
+[mobile] CW-LIB-08 → Pass · Empty library honesty · Skip to content CrankMagicⅡ DecksLibraryLibrary0To buy0Orders0SheetExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy el
+[mobile] CW-EXP-01 → Pass · Explore entry / chooser · Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.Card data 5 days ol
+[mobile] CW-EXP-02 → Pass · Catalog count claim · 31,830 cards
+[mobile] CW-XC-16 → Pass · Play nav honesty (coming-soon) · hash=#game; sample=Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.
+[mobile] CW-XC-01 → Pass · Top-level nav loads views · nav sweep completed
+[mobile] CW-XC-02 → Pass · Deep link by hash · decks/cards/discover/game
+[mobile] CW-XC-03 → Pass · Back and forward · backOk=true fwdOk=true hash=#cards
+[mobile] CW-XC-04 → Pass · Reload holds position · hash=#discover
+[mobile] CW-XC-08 → Pass · Theme switch · clicked theme control
+[mobile] CW-XC-11 → N/A · Help ? opens · no help control on decks
+[mobile] CW-XC-12 → Partial · Dialog close · exercised via dismiss elsewhere
+[mobile] CW-ACC-01 → Pass · Account / sign-in surface · Close Take another tour Back Next
+[mobile] CW-LIB-09 → Partial · Backup control · clicked; no download event
+[mobile] New deck wizard opened
+[mobile] CW-DECK-03 → Partial · New deck E2E · wizard open but no search input found
+[mobile] CW-ACC-02 → Partial · Guest/local path · wizard UI unexpected
+[mobile] CW-DECK-08 → Pass · Import entry · Restore a full backup×Restore replaces this browser’s current library after checksum and schema validation. Export the current library first if you want to keep
+[mobile] CW-DECK-09 → Pass · Lab via #lab · Skip to content CrankMagicⅡ DecksLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy elsewhere.Card data 13 days o
+[mobile] CW-DECK-05 → N/A · Deck options menu · no options control
+[mobile] CW-DECK-06 → Partial · Type / color bars · Skip to content CrankMagicⅡ DecksHow a deck comes togetherLibraryExplorePlay Your cards. Your library.Saved in this browser. Export a backup to keep a copy else
+[mobile] CW-DECK-10 → N/A · Measure / sim · not found
+[mobile] FATAL locator.click: Element is not visible
+Call log:
+  - waiting for locator('button:has-text("Export"), button:has-text("Print"), [data-action*="export"]').first()
+    - locator resolved to <button data-action="share-export">E-mail the export…</button>
+  - attempting click action
+    - scrolling into view if needed
+
+    at runViewport (/workspace/uat-2026-09-24-cloud-workshop/walk.mjs:691:25)
+    at async file:///workspace/uat-2026-09-24-cloud-workshop/walk.mjs:1056:16
+[mobile] CW-XC-01 → Fail · Session fatal · locator.click: Element is not visible
+Call log:
+  - waiting for locator('button:has-text("Export"), button:has-text("Print"), [data-action*="export"]').first()
+
+DONE desktop cases 25 mobile 25
+createdDeck desktop null mobile null
