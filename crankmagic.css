@@ -282,6 +282,9 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-deck-hero-card img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:14px;transform:rotate(-3deg);transition:transform .3s ease;box-shadow:0 30px 60px -20px color-mix(in oklab,var(--tint,var(--v-line)) 60%,var(--poster-ground))}
 #matrix-v2 .cm-deck-hero-card img:hover{transform:rotate(0deg) scale(1.03)}
 #matrix-v2 .cm-deck-hero-copy h1{font-size:clamp(34px,4.4vw,56px);line-height:1.02;letter-spacing:-.015em;margin:6px 0 12px}
+/* The deck title is a hero (r3, "Type (final)"): Young Serif where it is 48px or larger, which its clamp reaches
+   from about 1091px; below that it stays the Satoshi 900 heading every other page title is. */
+@media (min-width:1100px){#matrix-v2 .cm-deck-hero .cm-deck-hero-copy h1{font-family:var(--font-hero);font-weight:400;letter-spacing:-.015em}}
 #matrix-v2 .cm-deck-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
 #matrix-v2 .cm-deck-hero .cm-deck-actions{margin:18px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 #matrix-v2 .cm-deck-hero .cm-deck-work{display:contents}
