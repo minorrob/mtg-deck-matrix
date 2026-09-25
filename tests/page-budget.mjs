@@ -110,7 +110,9 @@ function measure(boundarySel) {
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     const el = n.parentElement;
     if (!el || !before(el) || el.closest(skip) || !visible(el)) continue;
-    const w = (n.textContent.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) || []).length;
+    /* A figure is one word however many digits it has: "1,024" split at its comma counted as two, so
+       a library growing past a thousand cards pushed a page over budget with no word added. */
+    const w = (n.textContent.match(/[\p{L}\p{N}](?:[\p{L}\p{N}'’-]|[,.](?=\p{N}))*/gu) || []).length;
     words += w;
     if (el.closest(explainers)) explainer += w;
   }

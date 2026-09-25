@@ -4,8 +4,8 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 7,
- "savedAt": "2026-09-19T22:40:37Z",
- "workbook": "Treys_MtG_Master_-_v22_-_For_Live_Load.xlsx",
+ "savedAt": "2026-09-25T14:41:49Z",
+ "workbook": "Treys_MtG_Master_-_v25.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
  "decks": [
   {
@@ -4644,6 +4644,10 @@
     1
    ],
    [
+    "April O'Neil, Kunoichi Trainee",
+    1
+   ],
+   [
     "Arbaaz Mir",
     1
    ],
@@ -4657,10 +4661,14 @@
    ],
    [
     "Ascendant Dustspeaker",
-    1
+    2
    ],
    [
     "Ashling, Rekindled // Ashling, Rimebound",
+    1
+   ],
+   [
+    "Assert Perfection",
     1
    ],
    [
@@ -4688,6 +4696,10 @@
     2
    ],
    [
+    "Aziza, Mage Tower Captain",
+    1
+   ],
+   [
     "Balefire Liege",
     1
    ],
@@ -4700,6 +4712,10 @@
     1
    ],
    [
+    "Bebop, Warthog Warrior",
+    1
+   ],
+   [
     "Biblioplex Tomekeeper",
     3
    ],
@@ -4709,6 +4725,10 @@
    ],
    [
     "Bilbo's Deadly Slice",
+    1
+   ],
+   [
+    "Bile-Vial Boggart",
     1
    ],
    [
@@ -4772,11 +4792,23 @@
     2
    ],
    [
+    "Burning Curiosity",
+    1
+   ],
+   [
+    "Campus Composer // Aqueous Aria",
+    1
+   ],
+   [
     "Cast Out",
     1
    ],
    [
     "Cathar Commando",
+    1
+   ],
+   [
+    "Champion of the Weird",
     1
    ],
    [
@@ -4852,6 +4884,10 @@
     1
    ],
    [
+    "Death in the Family",
+    1
+   ],
+   [
     "Deepchannel Duelist",
     1
    ],
@@ -4869,7 +4905,7 @@
    ],
    [
     "Dreaded Bat-Cloud",
-    2
+    1
    ],
    [
     "Drogskol Shieldmate",
@@ -4932,6 +4968,14 @@
     2
    ],
    [
+    "Environmental Scientist",
+    1
+   ],
+   [
+    "EPF Point Squad",
+    1
+   ],
+   [
     "Esgaroth Garrison",
     2
    ],
@@ -4976,6 +5020,10 @@
     2
    ],
    [
+    "Feed the Flames",
+    1
+   ],
+   [
     "Feisty Spikeling",
     1
    ],
@@ -4996,12 +5044,16 @@
     1
    ],
    [
+    "Flamebraider",
+    1
+   ],
+   [
     "Flamekin Gildweaver",
     1
    ],
    [
     "Flaring Cinder",
-    2
+    3
    ],
    [
     "Foggy Swamp Vinebender",
@@ -5016,16 +5068,16 @@
     1
    ],
    [
+    "Fractal Mascot",
+    1
+   ],
+   [
     "Front Porch Sentries",
     5
    ],
    [
     "Fynn, the Fangbearer",
-    1
-   ],
-   [
-    "Fynn, the Fangbearer",
-    1
+    2
    ],
    [
     "Gandalf, Goblins' Bane // Flameshape",
@@ -5037,6 +5089,10 @@
    ],
    [
     "Gathering of Darkness",
+    1
+   ],
+   [
+    "General Traag, Heart of Stone",
     1
    ],
    [
@@ -5064,11 +5120,23 @@
     1
    ],
    [
+    "Glamermite",
+    1
+   ],
+   [
+    "Glen Elendra Guardian",
+    1
+   ],
+   [
     "Glider Kids",
     1
    ],
    [
     "Glóin the Mighty // Easy Pickings",
+    1
+   ],
+   [
+    "Glorious Decay",
     1
    ],
    [
@@ -5085,7 +5153,7 @@
    ],
    [
     "Goldmeadow Nomad",
-    2
+    3
    ],
    [
     "Gollum, Riddle Master",
@@ -5100,6 +5168,10 @@
     1
    ],
    [
+    "Gravelgill Scoundrel",
+    1
+   ],
+   [
     "Grazing Gladehart",
     1
    ],
@@ -5108,7 +5180,15 @@
     1
    ],
    [
+    "Great Forest Druid",
+    1
+   ],
+   [
     "Gristle Glutton",
+    2
+   ],
+   [
+    "Guac & Marshmallow Pizza",
     1
    ],
    [
@@ -5220,6 +5300,10 @@
     1
    ],
    [
+    "Landscape Painter // Vibrant Idea",
+    1
+   ],
+   [
     "Large Bear",
     1
    ],
@@ -5228,7 +5312,15 @@
     1
    ],
    [
+    "Leonardo, Leader in Blue",
+    1
+   ],
+   [
     "Little Bear",
+    1
+   ],
+   [
+    "Lofty Dreams",
     1
    ],
    [
@@ -5252,6 +5344,10 @@
     1
    ],
    [
+    "Lys Alana Dignitary",
+    1
+   ],
+   [
     "Mage Tower Referee",
     1
    ],
@@ -5269,7 +5365,7 @@
    ],
    [
     "Masterful Flourish",
-    1
+    2
    ],
    [
     "Meandering Towershell",
@@ -5281,7 +5377,7 @@
    ],
    [
     "Merrow Skyswimmer",
-    2
+    3
    ],
    [
     "Mica, Reader of Ruins",
@@ -5364,6 +5460,10 @@
     1
    ],
    [
+    "Noxious Newt",
+    1
+   ],
+   [
     "Octopus Form",
     1
    ],
@@ -5396,12 +5496,16 @@
     1
    ],
    [
+    "Page, Loose Leaf",
+    1
+   ],
+   [
     "Patient Instructor",
     2
    ],
    [
     "Perfect Intimidation",
-    1
+    2
    ],
    [
     "Pest Mascot",
@@ -5501,6 +5605,10 @@
    ],
    [
     "Retched Wretch",
+    2
+   ],
+   [
+    "Retro-Mutation",
     1
    ],
    [
@@ -5517,6 +5625,10 @@
    ],
    [
     "Rocketeer Boostbuggy",
+    1
+   ],
+   [
+    "Rooftop Percher",
     1
    ],
    [
@@ -5572,8 +5684,12 @@
     1
    ],
    [
-    "Silvergill Peddler",
+    "Shredder's Revenge",
     1
+   ],
+   [
+    "Silvergill Peddler",
+    2
    ],
    [
     "Simic Signet",
@@ -5581,6 +5697,10 @@
    ],
    [
     "Skyshroud Claim",
+    1
+   ],
+   [
+    "Sleight of Hand",
     1
    ],
    [
@@ -5593,6 +5713,10 @@
    ],
    [
     "Smuggler's Copter",
+    1
+   ],
+   [
+    "Snooping Page",
     1
    ],
    [
@@ -5613,6 +5737,14 @@
    ],
    [
     "Spirit of Resilience",
+    1
+   ],
+   [
+    "Splinter, Hamato Yoshi",
+    1
+   ],
+   [
+    "Squawkroaster",
     1
    ],
    [
@@ -5641,6 +5773,10 @@
    ],
    [
     "Stir Up Trouble",
+    1
+   ],
+   [
+    "Stockman, Mad Fly-entist",
     1
    ],
    [
@@ -5673,10 +5809,14 @@
    ],
    [
     "Swamp",
-    51
+    52
    ],
    [
     "Sylvan Brushstrider",
+    1
+   ],
+   [
+    "Tackle Artist",
     1
    ],
    [
@@ -5712,6 +5852,10 @@
     1
    ],
    [
+    "Thirst for Identity",
+    1
+   ],
+   [
     "Thirsting Shade",
     1
    ],
@@ -5728,7 +5872,15 @@
     1
    ],
    [
+    "Thoughtweft Charge",
+    1
+   ],
+   [
     "Thoughtweft Imbuer",
+    1
+   ],
+   [
+    "Thoughtweft Lieutenant",
     1
    ],
    [
@@ -5756,6 +5908,10 @@
     1
    ],
    [
+    "Titan's Grave",
+    1
+   ],
+   [
     "Tithe Taker",
     1
    ],
@@ -5769,6 +5925,10 @@
    ],
    [
     "Tranquil Expanse",
+    1
+   ],
+   [
+    "Triceraton Commander",
     1
    ],
    [
@@ -5909,6 +6069,10 @@
    ],
    [
     "Zetalpa, Primal Dawn",
+    1
+   ],
+   [
+    "Zoo Escapees",
     1
    ]
   ]
@@ -6607,7 +6771,6 @@
   "Foggy Swamp Vinebender": 0.11,
   "Follow the Lumarets": 0.11,
   "Freyalise, Llanowar's Fury": 4.47,
-  "Fynn, the Fangbearer": 0.3,
   "Germination Practicum": 9.48,
   "Giant Growth": 0.28,
   "Gilt-Leaf's Embrace": 0.13,
@@ -6663,6 +6826,7 @@
   "Treefolk Umbra": 0.19,
   "Troll Negotiations": 0.14,
   "Unforgiving Aim": 0.17,
+  "Fynn, the Fangbearer": 0.3,
   "Wall of Mulch": 0.26,
   "Warg Tactics": 0.19,
   "Wayward Swordtooth": 3.98,
@@ -7193,7 +7357,41 @@
   "Winnowing": 0.29,
   "Yip Yip!": 0.21,
   "Zack Fair": 0.26,
-  "Zetalpa, Primal Dawn": 0.31
+  "Zetalpa, Primal Dawn": 0.31,
+  "Rooftop Percher": 0.25,
+  "Glen Elendra Guardian": 0.37,
+  "Gravelgill Scoundrel": 0.14,
+  "Lofty Dreams": 0.19,
+  "Thirst for Identity": 0.24,
+  "Champion of the Weird": 0.31,
+  "Feed the Flames": 0.09,
+  "Flamebraider": 0.17,
+  "Squawkroaster": 0.09,
+  "Assert Perfection": 0.16,
+  "Thoughtweft Charge": 0.12,
+  "Thoughtweft Lieutenant": 0.19,
+  "Sleight of Hand": 0.33,
+  "Campus Composer // Aqueous Aria": 0.16,
+  "Landscape Painter // Vibrant Idea": 0.15,
+  "Tackle Artist": 0.08,
+  "Environmental Scientist": 0.18,
+  "Aziza, Mage Tower Captain": 0.25,
+  "Fractal Mascot": 0.11,
+  "Snooping Page": 0.16,
+  "Page, Loose Leaf": 0.23,
+  "April O'Neil, Kunoichi Trainee": 0.14,
+  "Leonardo, Leader in Blue": 0.18,
+  "Retro-Mutation": 0.15,
+  "Stockman, Mad Fly-entist": 0.12,
+  "Bebop, Warthog Warrior": 0.12,
+  "Death in the Family": 0.18,
+  "Shredder's Revenge": 0.16,
+  "Splinter, Hamato Yoshi": 0.28,
+  "General Traag, Heart of Stone": 0.12,
+  "Guac & Marshmallow Pizza": 0.21,
+  "Zoo Escapees": 0.1,
+  "EPF Point Squad": 0.11,
+  "Triceraton Commander": 1.09
  },
  "metadata": {
   "Adventurous Eater // Have a Bite": {
@@ -7249,9 +7447,9 @@
    "type": "Creature",
    "bracket": "B2",
    "mv": 1,
-   "description": "Bile-Vial Boggart {B} — Creature — Goblin Assassin (1/1)\nWhen this creature dies, put a -1/-1 counter on up to one target creature.",
+   "description": "When this creature dies, put a -1/-1 counter on up to one target creature.\n(1/1)",
    "purpose": "Removal",
-   "primary": "When this creature dies, put a -1/-1 counter on up to one target creature"
+   "primary": "When it dies, put a -1/-1 counter on up to one target creature"
   },
   "Blight Pile": {
    "color": "B",
@@ -9262,16 +9460,6 @@
    "secondary": "-2: destroys target artifact or enchantment",
    "tertiary": "-6: draws a card per green creature you control"
   },
-  "Fynn, the Fangbearer": {
-   "color": "G",
-   "type": "Legendary Creature",
-   "bracket": "B3",
-   "mv": 2,
-   "description": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)\nWhenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters. (A player with ten or more poison counters loses the game.)\n(1/3)",
-   "purpose": "Utility Creature",
-   "primary": "Deathtouch",
-   "secondary": "Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters"
-  },
   "Garruk's Uprising": {
    "color": "G",
    "type": "Enchantment",
@@ -9892,6 +10080,16 @@
    "primary": "Destroy target creature with flying",
    "secondary": "Or destroy target enchantment",
    "tertiary": "Or create a 2/2 Elf creature token"
+  },
+  "Fynn, the Fangbearer": {
+   "color": "G",
+   "type": "Legendary Creature",
+   "bracket": "B3",
+   "mv": 2,
+   "description": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)\nWhenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters. (A player with ten or more poison counters loses the game.)\n(1/3)",
+   "purpose": "Utility Creature",
+   "primary": "Deathtouch",
+   "secondary": "Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters"
   },
   "Vorinclex, Monstrous Raider": {
    "color": "G",
@@ -16581,6 +16779,345 @@
    "description": "Make a Stand {2}{W} — Instant\nCreatures you control get +1/+0 and gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)",
    "purpose": "Protection",
    "primary": "Creatures you control get +1/+0 and gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)"
+  },
+  "Rooftop Percher": {
+   "color": "C",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 5,
+   "description": "Rooftop Percher {5} — Creature — Shapeshifter (3/3)\nChangeling (This card is every creature type.)\nFlying\nWhen this creature enters, exile up to two target cards from graveyards. You gain 3 life.",
+   "purpose": "Lifegain",
+   "primary": "Changeling",
+   "secondary": "Flying",
+   "tertiary": "When this creature enters, exile up to two target cards from graveyards. You gain 3 life"
+  },
+  "Glen Elendra Guardian": {
+   "color": "U",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "Glen Elendra Guardian {2}{U} — Creature — Faerie Wizard (3/4)\nFlash\nFlying\nThis creature enters with a -1/-1 counter on it.\n{1}{U}, Remove a counter from this creature: Counter target noncreature spell. Its controller draws a card.",
+   "purpose": "Interaction",
+   "primary": "Flash",
+   "secondary": "Flying",
+   "tertiary": "This creature enters with a -1/-1 counter on it"
+  },
+  "Gravelgill Scoundrel": {
+   "color": "U",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Gravelgill Scoundrel {1}{U} — Creature — Merfolk Rogue (1/3)\nVigilance\nWhenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn.",
+   "purpose": "Evasion / Beater",
+   "primary": "Vigilance",
+   "secondary": "Whenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn"
+  },
+  "Lofty Dreams": {
+   "color": "U",
+   "type": "Enchantment",
+   "bracket": "B2",
+   "mv": 5,
+   "description": "Lofty Dreams {3}{U}{U} — Enchantment — Aura\nConvoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nEnchant creature\nWhen this Aura enters, draw a card.\nEnchanted creature gets +2/+2 and has flying.",
+   "purpose": "Card Draw",
+   "primary": "Convoke",
+   "secondary": "Enchant creature",
+   "tertiary": "When this Aura enters, draw a card"
+  },
+  "Thirst for Identity": {
+   "color": "U",
+   "type": "Instant",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "Thirst for Identity {2}{U} — Instant\nDraw three cards. Then discard two cards unless you discard a creature card.",
+   "purpose": "Card Draw",
+   "primary": "Draw three cards. Then discard two cards unless you discard a creature card"
+  },
+  "Champion of the Weird": {
+   "color": "B",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 4,
+   "description": "Champion of the Weird {3}{B} — Creature — Goblin Berserker (5/5)\nAs an additional cost to cast this spell, behold a Goblin and exile it. (Exile a Goblin you control or a Goblin card from your hand.)\nPay 1 life, Blight 2: Target opponent blights 2. Activate only as a sorcery.\nWhen this creature leaves the battlefield, return the exiled card to its owner's hand.",
+   "purpose": "Value Engine",
+   "primary": "As an additional cost to cast this spell, behold a Goblin and exile it",
+   "secondary": "Pay 1 life, Blight 2: Target opponent blights 2. Activate only as a sorcery",
+   "tertiary": "When this creature leaves the battlefield, return the exiled card to its owner's hand"
+  },
+  "Feed the Flames": {
+   "color": "R",
+   "type": "Instant",
+   "bracket": "B2",
+   "mv": 4,
+   "description": "Feed the Flames {3}{R} — Instant\nFeed the Flames deals 5 damage to target creature. If that creature would die this turn, exile it instead.",
+   "purpose": "Removal",
+   "primary": "Feed the Flames deals 5 damage to target creature. If that creature would die this turn, exile it instead"
+  },
+  "Flamebraider": {
+   "color": "R",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Flamebraider {1}{R} — Creature — Elemental Bard (2/2)\n{T}: Add two mana in any combination of colors. Spend this mana only to cast Elemental spells or activate abilities of Elemental sources.",
+   "purpose": "Mana Rock",
+   "primary": "{T}: Add two mana in any combination of colors. Spend this mana only to cast Elemental spells or activate abilities of Elemental sources"
+  },
+  "Squawkroaster": {
+   "color": "R",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 4,
+   "description": "Squawkroaster {3}{R} — Creature — Elemental (*/4)\nDouble strike\nVivid — Squawkroaster's power is equal to the number of colors among permanents you control.",
+   "purpose": "Beater",
+   "primary": "Double strike",
+   "secondary": "Vivid — Squawkroaster's power is equal to the number of colors among permanents you control"
+  },
+  "Assert Perfection": {
+   "color": "G",
+   "type": "Sorcery",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Assert Perfection {1}{G} — Sorcery\nTarget creature you control gets +1/+0 until end of turn. It deals damage equal to its power to up to one target creature an opponent controls.",
+   "purpose": "Removal",
+   "primary": "Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to up to one target creature an opponent controls"
+  },
+  "Thoughtweft Charge": {
+   "color": "G",
+   "type": "Instant",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Thoughtweft Charge {1}{G} — Instant\nTarget creature gets +3/+3 until end of turn. If a creature entered the battlefield under your control this turn, draw a card.",
+   "purpose": "Combat Trick",
+   "primary": "Target creature gets +3/+3 until end of turn. If a creature entered the battlefield under your control this turn, draw a card"
+  },
+  "Thoughtweft Lieutenant": {
+   "color": "Multi",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Thoughtweft Lieutenant {G}{W} — Creature — Kithkin Soldier (2/2)\nWhenever this creature or another Kithkin you control enters, target creature you control gets +1/+1 and gains trample until end of turn.",
+   "purpose": "Lord / Anthem",
+   "primary": "Whenever this creature or another Kithkin you control enters, target creature you control gets +1/+1 and gains trample until end of turn"
+  },
+  "Sleight of Hand": {
+   "color": "U",
+   "type": "Sorcery",
+   "bracket": "B2",
+   "mv": 1,
+   "description": "Sleight of Hand {U} — Sorcery\nLook at the top two cards of your library. Put one of them into your hand and the other on the bottom of your library.",
+   "purpose": "Card Selection",
+   "primary": "Look at the top two cards of your library. Put one of them into your hand and the other on the bottom of your library"
+  },
+  "Campus Composer // Aqueous Aria": {
+   "color": "U",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 4,
+   "description": "Campus Composer {3}{U} — Creature — Merfolk Bard (3/4)\nWard {2}\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nAqueous Aria {4}{U} — Sorcery\nCreate a 3/3 blue and red Elemental creature token with flying.",
+   "purpose": "Card Draw",
+   "primary": "Ward {2}",
+   "secondary": "This creature enters prepared. Create a 3/3 blue and red Elemental creature token with flying"
+  },
+  "Landscape Painter // Vibrant Idea": {
+   "color": "U",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Landscape Painter {1}{U} — Creature — Merfolk Wizard (2/1)\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nVibrant Idea {4}{U} — Sorcery\nDraw two cards.",
+   "purpose": "Card Draw",
+   "primary": "This creature enters prepared. Draw two cards"
+  },
+  "Tackle Artist": {
+   "color": "R",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 4,
+   "description": "Tackle Artist {3}{R} — Creature — Orc Sorcerer (4/3)\nTrample\nOpus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead.",
+   "purpose": "Beater / Spells-matter",
+   "primary": "Trample",
+   "secondary": "Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, put two +1/+1 counters on this creature instead"
+  },
+  "Environmental Scientist": {
+   "color": "G",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Environmental Scientist {1}{G} — Creature — Human Druid (2/2)\nWhen this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+   "purpose": "Ramp",
+   "primary": "When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle"
+  },
+  "Aziza, Mage Tower Captain": {
+   "color": "Multi",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Aziza, Mage Tower Captain {R}{W} — Legendary Creature — Djinn Sorcerer (2/2)\nWhenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.",
+   "purpose": "Value Engine",
+   "primary": "Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy"
+  },
+  "Fractal Mascot": {
+   "color": "Multi",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 6,
+   "description": "Fractal Mascot {4}{G}{U} — Creature — Fractal Elk (6/6)\nTrample\nWhen this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+   "purpose": "Beater / Tempo",
+   "primary": "Trample",
+   "secondary": "When this creature enters, tap target creature an opponent controls. Put a stun counter on it"
+  },
+  "Snooping Page": {
+   "color": "Multi",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "Snooping Page {1}{W}{B} — Creature — Human Cleric (2/3)\nRepartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn.\nWhenever this creature deals combat damage to a player, you draw a card and lose 1 life.",
+   "purpose": "Evasion / Spells-matter",
+   "primary": "Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn",
+   "secondary": "Whenever this creature deals combat damage to a player, you draw a card and lose 1 life"
+  },
+  "Page, Loose Leaf": {
+   "color": "C",
+   "type": "Legendary Artifact Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Page, Loose Leaf {2} — Legendary Artifact Creature — Construct (0/2)\n{T}: Add {C}.\nGrandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.",
+   "purpose": "Ramp",
+   "primary": "{T}: Add {C}",
+   "secondary": "Grandeur — Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order"
+  },
+  "April O'Neil, Kunoichi Trainee": {
+   "color": "W",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "April O'Neil, Kunoichi Trainee {1}{W} — Legendary Creature — Human Ninja (2/2)\nWhen April O'Neil enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)\nApril O'Neil can't be blocked by creatures with power 3 or greater.",
+   "purpose": "Card Selection",
+   "primary": "When April O'Neil enters, scry 2",
+   "secondary": "April O'Neil can't be blocked by creatures with power 3 or greater"
+  },
+  "Leonardo, Leader in Blue": {
+   "color": "W",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 1,
+   "description": "Leonardo, Leader in Blue {W} — Legendary Creature — Mutant Ninja Turtle (2/1)\nSneak {3}{W}{W} (You may cast this spell for {3}{W}{W} if you also return an unblocked attacker you control to hand during the declare blockers step. He enters tapped and attacking.)\nWhen Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn.\n{1}{W}: Leonardo gains first strike until end of turn.",
+   "purpose": "Evasion / Tempo",
+   "primary": "Sneak {3}{W}{W}",
+   "secondary": "When Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn",
+   "tertiary": "{1}{W}: Leonardo gains first strike until end of turn"
+  },
+  "Retro-Mutation": {
+   "color": "U",
+   "type": "Enchantment",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "Retro-Mutation {2}{U} — Enchantment — Aura\nFlash\nEnchant creature\nEnchanted creature is a Turtle with base power and toughness 0/1. It can't attack and loses all abilities. (It also loses all other creature types.)",
+   "purpose": "Removal",
+   "primary": "Flash",
+   "secondary": "Enchant creature",
+   "tertiary": "Enchanted creature is a Turtle with base power and toughness 0/1. It can't attack and loses all abilities"
+  },
+  "Stockman, Mad Fly-entist": {
+   "color": "U",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 5,
+   "description": "Stockman, Mad Fly-entist {4}{U} — Legendary Creature — Insect Mutant Scientist (3/4)\nFlying\nWhen Stockman enters, draw a card, then discard a card.\nIslandcycling {2} ({2}, Discard this card: Search your library for an Island card, reveal it, put it into your hand, then shuffle.)",
+   "purpose": "Card Selection / Land Cycling",
+   "primary": "Flying",
+   "secondary": "When Stockman enters, draw a card, then discard a card",
+   "tertiary": "Islandcycling {2}"
+  },
+  "Bebop, Warthog Warrior": {
+   "color": "B",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 5,
+   "description": "Bebop, Warthog Warrior {4}{B} — Legendary Creature — Boar Mutant Warrior (5/4)\nMenace (This creature can't be blocked except by two or more creatures.)\nRhinos you control have menace.\nSwampcycling {2} ({2}, Discard this card: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle.)",
+   "purpose": "Evasion / Land Cycling",
+   "primary": "Menace",
+   "secondary": "Rhinos you control have menace",
+   "tertiary": "Swampcycling {2}"
+  },
+  "Death in the Family": {
+   "color": "B",
+   "type": "Instant",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Death in the Family {1}{B} — Instant\nExile target creature with mana value 3 or less.",
+   "purpose": "Removal",
+   "primary": "Exile target creature with mana value 3 or less"
+  },
+  "Shredder's Revenge": {
+   "color": "B",
+   "type": "Sorcery",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "Shredder's Revenge {2}{B} — Sorcery\nChoose one —\n• Target player discards two cards.\n• Target player draws two cards and loses 2 life.",
+   "purpose": "Discard / Card Draw",
+   "primary": "Choose one —",
+   "secondary": "• Target player discards two cards",
+   "tertiary": "• Target player draws two cards and loses 2 life"
+  },
+  "Splinter, Hamato Yoshi": {
+   "color": "B",
+   "type": "Legendary Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Splinter, Hamato Yoshi {1}{B} — Legendary Creature — Mutant Ninja Rat (1/3)\nSneak {B} (You may cast this spell for {B} if you also return an unblocked attacker you control to hand during the declare blockers step. He enters tapped and attacking.)\nMenace (This creature can't be blocked except by two or more creatures.)\nOther Ninjas you control get +1/+1.",
+   "purpose": "Lord / Tribal",
+   "primary": "Sneak {B}",
+   "secondary": "Menace",
+   "tertiary": "Other Ninjas you control get +1/+1"
+  },
+  "General Traag, Heart of Stone": {
+   "color": "R",
+   "type": "Legendary Artifact Creature",
+   "bracket": "B2",
+   "mv": 5,
+   "description": "General Traag, Heart of Stone {3}{R}{R} — Legendary Artifact Creature — Elemental Soldier (4/3)\nTrample\nWhen General Traag enters, you may sacrifice another artifact. When you do, General Traag deals 4 damage to target creature.",
+   "purpose": "Removal / Beater",
+   "primary": "Trample",
+   "secondary": "When General Traag enters, you may sacrifice another artifact. When you do, General Traag deals 4 damage to target creature"
+  },
+  "Guac & Marshmallow Pizza": {
+   "color": "G",
+   "type": "Artifact",
+   "bracket": "B2",
+   "mv": 1,
+   "description": "Guac & Marshmallow Pizza {G} — Artifact — Food\nFlash\nWhen this artifact enters, target creature gets +2/+2 until end of turn. Untap it.\n{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+   "purpose": "Lifegain",
+   "primary": "Flash",
+   "secondary": "When this artifact enters, target creature gets +2/+2 until end of turn. Untap it",
+   "tertiary": "{2}, {T}, Sacrifice this artifact: You gain 3 life"
+  },
+  "Zoo Escapees": {
+   "color": "G",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Zoo Escapees {1}{G} — Creature — Boar Rhino (2/2)\nWhen this creature leaves the battlefield, create a Mutagen token. (It's an artifact with \"{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.\")",
+   "purpose": "Token Producer",
+   "primary": "When this creature leaves the battlefield, create a Mutagen token"
+  },
+  "EPF Point Squad": {
+   "color": "Multi",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 3,
+   "description": "EPF Point Squad {1}{R/W}{R/W} — Creature — Human Soldier (2/1)\nAlliance — Whenever another creature you control enters, put a +1/+1 counter on this creature.",
+   "purpose": "Counters Payoff",
+   "primary": "Alliance — Whenever another creature you control enters, put a +1/+1 counter on this creature"
+  },
+  "Triceraton Commander": {
+   "color": "W",
+   "type": "Creature",
+   "bracket": "B2",
+   "mv": 2,
+   "description": "Triceraton Commander {X}{X}{W}{W} — Creature — Dinosaur Soldier (2/2)\nFlying\nWhen this creature enters, create X 2/2 white Dinosaur Soldier creature tokens.\nWhenever this creature attacks, Dinosaurs you control other than this creature get +1/+1 and gain flying until end of turn.",
+   "purpose": "Token Producer",
+   "primary": "Flying",
+   "secondary": "When this creature enters, create X 2/2 white Dinosaur Soldier creature tokens",
+   "tertiary": "Whenever this creature attacks, Dinosaurs you control other than this creature get +1/+1 and gain flying until end of turn"
   }
  },
  "upgrades": [

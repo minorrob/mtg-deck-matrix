@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {importWorkbook} from '../tools/build-live-load.mjs';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
 
@@ -143,4 +145,29 @@ eq(M.fingerprint(saved.state.decks[0]),M.fingerprint(real.state.decks[0]));
 assert.deepEqual(M.counters(saved.state),M.counters(real.state));checks++;
 assert.deepEqual(saved.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']),real.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']));checks++;
 eq(L.PASSWORD,'treycmload1');
+/* v25: THE STAR TABLES FOLDED BACK INTO ONE WIDE SHEET (Rob, 2026-09-25). Trey's v25 has no
+   master_main, master_target, master_actuals or master_decks: its Master sheet opens on "Card ID" and
+   carries every column they did. The builder reads it through the same star path, and what it builds
+   has to agree with the workbook's own totals row -- the Own, In Deck, In Bench, Buy Count and Ordered
+   sums Excel computed, not this code. Needs openpyxl, like tests/generators.mjs's workbook check. */
+{
+  let python=true;try{execFileSync('python3',['-c','import openpyxl'],{stdio:'ignore'});}catch{python=false;}
+  if(!python)console.log('live-load: the v25 workbook checks are SKIPPED (no openpyxl)');
+  else{
+    const book='data/source/Treys_MtG_Master_-_v25.xlsx';
+    const rows=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
+    const h=rows.findIndex(r=>r[0]==='Card ID'),H=rows[h],sums=rows[h-1],total=name=>Number(sums[H.indexOf(name)]);
+    const {doc,built}=await importWorkbook(book,{prior:JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'))});
+    const n=list=>list.reduce((a,r)=>a+r[1],0),boxes=Object.values(doc.owned.inDeck).reduce((a,l)=>a+n(l),0);
+    eq(doc.decks.length,H.filter(x=>/^D\d+-T$/.test(String(x))).length);
+    eq(doc.decks.map(d=>d.id).join(),'D1,D2,D3,D4,D5,D6,D7');
+    eq(boxes,total('In Deck'));
+    eq(n(doc.owned.bench),total('In Bench'));
+    eq(boxes+n(doc.owned.bench),total('Own'));
+    eq(n(doc.buy),total('Buy Count'));
+    eq(n(doc.ordered),total('Ordered'));
+    eq(M.counters(built.state).owned,total('Own'));
+    ok(doc.decks.every(d=>n(d.cards)===100));
+  }
+}
 console.log(`live-load: ${checks} checks passed; the hand-written file rebuilds a validated library, and the committed file loads clean.`);
