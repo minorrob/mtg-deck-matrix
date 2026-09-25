@@ -635,7 +635,7 @@ function tabletop(params,shop=false){
    terms, Explore connections for the card on Explore. Nothing here is fetched: what the catalog
    has cached is what shows, and Inspect card fetches the rest. */
 function tabletopDetail(r){const c=C.card(r.cardId)||r.card||{};const pt=c.power!==null&&c.power!==undefined&&c.power!==''?`${c.power}/${c.toughness}`:'';
-  return `<p class="cm-tt-info-line">${C.mana(c.manaCost)}${pt?` <b>${e(pt)}</b>`:''}${c.rarity?` <span class="cm-tt-muted">${e(String(c.rarity).replace(/^\w/,x=>x.toUpperCase()))}</span>`:''}${c.setName?` <span class="cm-tt-muted">· ${e(c.setName)}</span>`:''}</p><p>${C.glossary.html(c.typeLine||'')}</p><div class="cm-oracle">${C.glossary.html(c.oracleText||'Full rules text has not been cached for this card; Inspect card fetches it.')}</div>${C.priceBlock(c)}<div class="cm-actions">${b('Inspect card','card',{card:r.cardId},false,{cls:'compact'})}${b('Explore connections','discover-card',{card:r.cardId},false,{cls:'compact'})}</div>`;}
+  return `<p class="cm-tt-info-line">${C.mana(c.manaCost,c.typeLine)}${pt?` <b>${e(pt)}</b>`:''}${c.rarity?` <span class="cm-tt-muted">${e(String(c.rarity).replace(/^\w/,x=>x.toUpperCase()))}</span>`:''}${c.setName?` <span class="cm-tt-muted">· ${e(c.setName)}</span>`:''}</p><p>${C.glossary.html(c.typeLine||'')}</p><div class="cm-oracle">${C.glossary.html(c.oracleText||'Full rules text has not been cached for this card; Inspect card fetches it.')}</div>${C.priceBlock(c)}<div class="cm-actions">${b('Inspect card','card',{card:r.cardId},false,{cls:'compact'})}${b('Explore connections','discover-card',{card:r.cardId},false,{cls:'compact'})}</div>`;}
 /* A DROP IS A PROPOSAL (Rob, 14 September; plan §2.6–2.8). Every one of these seven used to open
    a receipt and write a revision on the spot, so trying an arrangement out cost forty
    confirmations and forty undos. `accepts()` still decides red or green at the moment of the
@@ -978,7 +978,7 @@ const bandRow=band=>{const open=!collapsed.has(band.label),copies=band.rows.redu
 const primaryPurpose=c=>{const CL=globalThis.MtgCardClassify;const p=CL&&CL.purposeOf?CL.purposeOf(c):null;return p&&p.label?p.label:'';};
 const rowMark=c=>/\bLand\b/.test(c.typeLine||'')&&!(c.manaCost||'').trim()
   ? `<span class="cm-row-land" aria-label="Land">L</span>`
-  : ((c.manaCost||'').trim() ? `<span class="cm-row-mana">${C.mana(c.manaCost)}</span>` : '');
+  : ((c.manaCost||'').trim() ? `<span class="cm-row-mana">${C.mana(c.manaCost,c.typeLine)}</span>` : '');
 const rowHTML=r=>`<tr class="cm-row-card${isPicked(r)?' cm-row-ticked':''}" data-record="${e(r.recordId)}" data-action="card" data-card="${e(r.cardId)}">${ticks?`<td class="cm-tick-cell">${pickable(r)?`<input type="checkbox" class="cm-row-tick" data-record="${e(r.recordId)}"${isPicked(r)?' checked':''} aria-label="Tick ${e(r.card.name)}">`:''}</td>`:''}${shown.map(([k])=>`<td class="cm-col-${k}${canEdit(r,k)?' cm-cell-live':''}">${k==='name'?`${rowMark(r.card)}<button class="cm-card-name" data-action="card" data-card="${e(r.cardId)}"><span data-art="${e(r.card.image||'')}">${e(r.card.name)}${(tight||r.kind==='fold')&&r.quantity>1?` <em>×${r.quantity}</em>`:''}</span></button>${tight?(shop?`<span class="cm-row-primary">${primary(r)}</span>`:''):`<small>${r.kind==='fold'?foldCaption(r):`${primaryPurpose(r.card)?`<span class="cm-purpose-chip">${e(primaryPurpose(r.card))}</span>`:''}${/^(Bracket option|Upgrade)$/.test(value(r,'purpose'))?` <span class="cm-muted">${e(value(r,'purpose'))}</span>`:''}${r.kind==='option'?' <span class="cm-muted">Uncommitted suggestion</span>':''}`}</small>`}`:cell(r,k)}</td>`).join('')}<td class="cm-row-actions-cell">${r.kind==='fold'?`${!tight?primary(r):''}<span class="cm-muted cm-fold-note">${r.parts} records</span>`:`${!tight?primary(r):''}<button class="v-button compact cm-row-actions" data-action="row-actions" data-record="${e(r.recordId)}" aria-haspopup="menu" aria-label="Actions" title="Actions">⋯</button>`}</td></tr>`;
 const allFolded=bands.length>0&&bands.every(band=>collapsed.has(band.label));
 const foldAll=groupBy&&bands.length?` · <button type="button" class="cm-text-button" data-groups="${allFolded?'expand':'collapse'}">${allFolded?'Expand all groups':'Collapse all groups'}</button>`:'';
@@ -1502,21 +1502,36 @@ actions['export-view']=()=>{const shop=buyTab(),chosen=shop?shopSelected:selecte
 
 /* A HOVER PREVIEW INSTEAD OF A 26px THUMBNAIL. The thumbnails in every row were too small to
    read and set the row height; the art now appears beside the name while the pointer rests
-   on it. One element, moved rather than made, and never on a touch screen. */
-(function(){if(matchMedia('(hover:none)').matches)return;let box=null,img=null,timer=null,token=0;
+   on it. One element, moved rather than made, and never on a touch screen. The same art
+   answers a name in a deck's hundred, and it is drawn at twice its first size, where the
+   card can actually be read (Rob, 24 September). It is a feature like the rest, so it has the
+   app's C: a deck-list name carries no picture of its own and is looked up through C.card, and
+   as a bare function outside the feature list that lookup threw "C is not defined". */
+(globalThis.CrankFeatures ||= []).push(function(C){const NAMES='.cm-table .cm-card-name,.cm-deck-list .cm-card-name';if(matchMedia('(hover:none)').matches)return;let box=null,img=null,timer=null,token=0,armed=null;
   const ensure=()=>{if(box)return;box=document.createElement('div');box.className='cm-hover-art';box.hidden=true;box.innerHTML='<span class="cm-spinner" aria-hidden="true"></span><img alt="">';img=box.querySelector('img');img.addEventListener('load',()=>box.classList.remove('is-loading'));img.addEventListener('error',()=>{box.classList.remove('is-loading');box.hidden=true;});document.body.append(box);};
-  const hide=()=>{clearTimeout(timer);token++;if(box)box.hidden=true;};
-  const place=name=>{const r=name.getBoundingClientRect();box.style.left=Math.min(innerWidth-190,r.right+12)+'px';box.style.top=Math.max(8,Math.min(innerHeight-260,r.top-40))+'px';};
+  const hide=()=>{clearTimeout(timer);timer=null;armed=null;token++;if(box)box.hidden=true;};
+  /* Beside the name, on its right when there is room and its left when there is not, and never
+     off the top or the foot of the window. Beside the WORDS, that is: a name in a deck's hundred
+     is a button as wide as its row, and measured by the button the art was pushed to the far
+     side of the page. */
+  const place=name=>{const range=document.createRange();range.selectNodeContents(name);const t=range.getBoundingClientRect(),b=name.getBoundingClientRect(),r=t.width?t:b,w=box.offsetWidth||360,h=box.offsetHeight||502;box.style.left=(r.right+12+w<=innerWidth-8?r.right+12:Math.max(8,r.left-w-12))+'px';box.style.top=Math.max(8,Math.min(innerHeight-h-8,r.top-h/3))+'px';};
   /* The image is fetched when the row does not carry one yet -- a spinner stands in until it
      lands -- and the address is kept on the row so the next hover is instant. */
-  document.addEventListener('mouseover',ev=>{const name=ev.target.closest('.cm-table .cm-card-name');if(!name)return hide();clearTimeout(timer);const my=++token;
-    timer=setTimeout(async()=>{ensure();place(name);box.hidden=false;box.classList.add('is-loading');img.removeAttribute('src');
-      let src=name.querySelector('[data-art]')?.dataset.art||'';
-      if(!src){const id=name.closest('tr')?.dataset.card,c=id?(C.card(id)||C.catalog.get(id)):null;
-        try{const full=c?await C.catalog.details(c,{onFail:()=>{}}):null;src=(full&&full.image)||(c&&c.image)||'';}catch{src=(c&&c.image)||'';}
+  const arm=name=>{clearTimeout(timer);armed=name;const my=++token;
+    timer=setTimeout(async()=>{timer=null;ensure();box.hidden=false;place(name);box.classList.add('is-loading');img.removeAttribute('src');
+      const holder=name.querySelector('[data-art]')||name;let src=holder.dataset.art||'';
+      /* A picture the record already knows is shown at once; only a card without one waits on
+         the catalog for it. */
+      if(!src){const id=name.dataset.card||name.closest('tr')?.dataset.card,c=id?(C.card(id)||C.catalog.get(id)):null;
+        src=(c&&c.image)||'';
+        if(!src){try{const full=c?await C.catalog.details(c,{onFail:()=>{}}):null;src=(full&&full.image)||'';}catch{src='';}}
         if(my!==token)return;
         if(!src){box.classList.remove('is-loading');box.hidden=true;return;}
-        const holder=name.querySelector('[data-art]');if(holder)holder.dataset.art=src;}
-      img.src=src;if(img.complete&&img.naturalWidth)box.classList.remove('is-loading');},160);});
-  document.addEventListener('mouseout',ev=>{if(ev.target.closest('.cm-table .cm-card-name'))hide();});
-  window.addEventListener('scroll',hide,{passive:true});})();
+        holder.dataset.art=src;}
+      img.src=src;if(img.complete&&img.naturalWidth)box.classList.remove('is-loading');},160);};
+  document.addEventListener('mouseover',ev=>{const name=ev.target.closest(NAMES);if(!name)return hide();if(name!==armed)arm(name);});
+  /* A scroll hides the picture, and the pointer is often still resting on a name when it stops;
+     moving within that name fires no mouseover, so the picture never came back. A move does. */
+  document.addEventListener('mousemove',ev=>{if(armed)return;const name=ev.target.closest(NAMES);if(name)arm(name);},{passive:true});
+  document.addEventListener('mouseout',ev=>{const name=ev.target.closest(NAMES);if(name&&!(ev.relatedTarget&&name.contains(ev.relatedTarget)))hide();});
+  window.addEventListener('scroll',hide,{passive:true});});

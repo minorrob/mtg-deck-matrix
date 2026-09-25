@@ -80,7 +80,7 @@
   let selection = {};
   let mode = 'all';            // within a facet: 'all' picks must match, or 'any'
   let depth = 2, breadth = 12; // the graph's reach, remembered like the filters
-  let gmode = 'navigate';      // what a tap on the canvas does: navigate, inspect or select
+  let gmode = 'inspect';       // what a tap on the canvas does: inspect (the default), navigate or select
   let picked = new Set();      // card ids ticked on the canvas, or in the List tab
   /* THE PANE HAS TWO TABS. Card Info is the pane as it was; List is every card the focus
      reaches at the widest depth and breadth, whatever the sliders say -- the sliders shape
@@ -182,13 +182,6 @@
     }
     
     if (C.route().view !== 'discover') return;
-    /* The pairs are the weight of the graph and this is the one page that draws them, so
-       they load here, once, with a line that says so -- not at install for every visitor. */
-    if (!(loaded.played && loaded.played.length) && C.catalog.loadPlayed) {
-      const status = C.main.querySelector('[role=status]'); if (status) status.textContent = 'Loading the co-play links — about 20 MB, kept for next time…';
-      try { await C.catalog.loadPlayed(); } catch (error) { C.notice('The co-play links could not be loaded, so the graph draws the rules-derived joins only. ' + error.message, true); }
-      if (C.route().view !== 'discover') return;
-    }
 
     /* The graph plus anything in the library it does not know about -- a card imported
        from a link, or one printed after the graph snapshot -- shaped like a graph row. */
@@ -291,7 +284,7 @@
               <h1 class="cm-explore-title">Every card is joined to the cards it works with. Start anywhere.</h1>
               <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString()} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
             </div>
-            <label class="cm-explore-search">Find any card<input id="cm-entry-query" placeholder="Find any card…" data-action="explore-from-card-input"><kbd>/</kbd></label>
+            <form class="cm-explore-search" role="search"><label class="cm-visually-hidden" for="cm-entry-query">Find any card</label><input id="cm-entry-query" name="q" type="search" placeholder="Find any card…" autocomplete="off"><button type="submit" class="v-button">Find</button></form>
           </header>
           <div class="cm-explore-doors">
             <button type="button" class="cm-explore-door" style="--door:var(--st-buy)" data-action="explore-from-deck">
@@ -372,14 +365,25 @@
         });
       };
 
-      actions['explore-from-card'] = () => {
+      /* THE SEARCH AT THE TOP RIGHT FINDS A CARD (Rob, 24 September: "a weird command-prompt-looking
+         almost-box ... I can click it. I can't do anything else with it"). It was an input with no
+         handler behind it and a "/" key hint that no key answered. What is typed there opens the
+         same card picker as the From a card door, already searching for it. */
+      const fromCard = (query = '') => {
         C.cardPicker('Explore from a card', async (c) => {
           if (!C.state.cards[c.id]) await C.commit({type: 'cards', cards: [c]}, {renderView: false});
           saveRecentScope({type: 'card', id: c.name, label: c.name});
           C.$('#cm-dialog').close();
           C.go('discover', {card: c.name});
         });
+        const input = document.getElementById('cm-card-query');
+        if (input && query) { input.value = query; input.dispatchEvent(new Event('input', {bubbles: true})); }
       };
+      actions['explore-from-card'] = () => fromCard();
+      C.main.querySelector('.cm-explore-search')?.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        fromCard(String(new FormData(ev.currentTarget).get('q') || '').trim());
+      });
 
       actions['explore-recent'] = (el) => {
         try {
@@ -396,6 +400,17 @@
       };
 
       return () => {};
+    }
+
+    /* The co-play pairs are the weight of the graph and the canvas is the one thing that draws
+       them, so they load here, once, when a graph is actually opened -- not for the chooser, which
+       used to sit blank behind this line until all of them had arrived (UAT 2026-09-24, CW-EXP-03).
+       They come from crankmagic.com with the rest of the site; the browser keeps them after. */
+    if (!(loaded.played && loaded.played.length) && C.catalog.loadPlayed) {
+      const status = C.main.querySelector('[role=status]'); if (status) status.textContent = 'Loading the co-play links…';
+      try { await C.catalog.loadPlayed(); } catch (error) { C.notice('The co-play links could not be loaded, so the graph draws the rules-derived joins only. ' + error.message, true); }
+      if (C.route().view !== 'discover') return;
+      if (!(data.played && data.played.length) && loaded.played && loaded.played.length) data.played = loaded.played;
     }
 
     const wanted = C.catalog.get(params.get('card'));
@@ -453,7 +468,7 @@
       <div class="cm-graph-grid cm-graph-grid-tall">
         <div class="cm-graph-col">
           <div class="cm-graph-box">
-            <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. In Navigate a tap re-centres on a card; in Inspect a tap opens its terms; in Select a tap ticks it for a group. A tap on a line opens why two cards are joined. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
+            <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. In Navigate a tap re-centers on a card; in Inspect a tap opens its terms; in Select a tap ticks it for a group. A tap on a line opens why two cards are joined. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
           <div class="cm-graph-modes" role="group" aria-label="What a tap on the graph does">${[['navigate', 'Navigate'], ['inspect', 'Inspect'], ['select', 'Select']].map(([m, label]) => `<button type="button" class="v-button${gmode === m ? ' is-on' : ''}" data-action="graph-mode" data-mode="${m}" aria-pressed="${gmode === m}">${label}</button>`).join('')}<details class="cm-inline-menu cm-hint cm-graph-hint"><summary class="cm-hint-btn" aria-label="How the graph works" title="How the graph works">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body"><p id="cm-graph-mode-hint">${modeHint(gmode)}</p><p>Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset · zoom in to label the focus's connections and name the outer rings. With a mouse: wheel to zoom, arrow keys / + / − / 0.</p><p>A gold band around a card means you own a copy.</p></div></details><span class="cm-graph-back" id="cm-graph-back"></span></div>
             <div class="cm-graph-reach">
           <label>Depth <output id="cm-depth-out">${depth}</output><input type="range" id="cm-depth" min="1" max="3" step="1" value="${depth}" aria-label="How many hops from the focused card"></label>
@@ -666,7 +681,7 @@
         pop.innerHTML = `<header><strong>${e(hit.card.name)}</strong><button type="button" class="cm-pop-close" data-action="graph-pop-close" aria-label="Close">×</button></header>
           <div class="cm-pop-body"><div class="cm-pop-side">${b('Focus here', 'graph-card', {id: hit.card.id}, true, {cls: 'compact'})}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)}, false, {cls: 'compact'})}<button type="button" class="v-button compact${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button>${buyMenu(hit.card, rec)}</div>
           <div class="cm-pop-art">${image ? `<img src="${e(image)}" alt="" loading="lazy">` : `<div class="cm-pop-noart" aria-hidden="true">${e(initials)}</div>`}</div><div class="cm-pop-meta">
-          <p class="cm-pop-type">${rec.manaCost ? C.mana(rec.manaCost) : ''}<span class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</span></p>
+          <p class="cm-pop-type">${rec.manaCost ? C.mana(rec.manaCost, rec.typeLine || hit.card.type || '') : ''}<span class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</span></p>
           ${facts.length ? `<p class="cm-pop-facts">${facts.join(' · ')}</p>` : ''}
           ${holdingsHTML(CrankCatalog.key(hit.card.name))}
           ${p ? `<div class="cm-term-chips">${termChip(p.key, p.value, p)}</div>` : ''}
@@ -1148,7 +1163,7 @@
         for (const value of t[group] || []) chips.push(termChip(key, value, purpose));
       }
       const img = rec.image || c.image || '';
-      const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
+      const cost = rec.manaCost ? C.mana(rec.manaCost, rec.typeLine || c.type || '') : '';
       /* LOOPS THIS CARD IS IN. Over the deck's own cards when a deck is picked, else over what is
          on the canvas. The mount's cached relation does the pair scoring, so the world's ids
          must be the mount's -- both worlds are. Cached per focus and world, because the pane is
