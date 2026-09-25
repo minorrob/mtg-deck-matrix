@@ -11,10 +11,14 @@
  *   3. On an archived deck the menu offers Restore and a red Delete deck….
  *   4. On a phone the action bar is one row that scrolls sideways: every label whole, Make the change
  *      included, and the hero no longer repeats it.
+ *   5. (R3.5b, 30-measure-report) A filed Measure opens as a report: the fidelity notice ABOVE the score,
+ *      computed from the report's own facts (unread cards: Medium; a changed list: Low), the score of 100,
+ *      and the score's own breakdown as the checks. Export report downloads the report itself.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
 
 let checks = 0;
@@ -88,6 +92,54 @@ try {
   ok(archived.includes("Restore as draft") && archived.includes("Delete deck…") && !archived.includes("Archive") && !archived.includes("Measure"), `an archived deck offers Restore and Delete, not Archive or Measure: ${archived.slice(0, 9).join(" | ")}`);
   ok(await page.$eval(".cm-menu:popover-open [data-action=delete-deck]", (b) => b.classList.contains("cm-danger")), "and Delete deck… is red");
   await page.keyboard.press("Escape");
+
+  /* 5. The Measure report. Reports are built by the app's own CrankSim.packFor and filed through the
+     repository, as Measure files them; a real Measure takes minutes, and what is under test is the view. */
+  const OTHER = "deck:live:D5";
+  const file = (fingerprintOf, read) => page.evaluate(async ([id, fingerprintOf, read]) => {
+    const r = await CrankRepository.open();
+    try {
+      const s = await r.getState(), d = s.decks.find((x) => x.id === id);
+      const list = d.slots.filter((x) => x.purpose === "main").map((x) => ({cardId: x.cardId, quantity: x.quantity}));
+      const report = CrankSim.packFor({hash: fingerprintOf === "current" ? CrankCollection.fingerprint(d, s) : "a-list-this-deck-no-longer-holds",
+        score: 78.4, se: 1.3, winRate: 0.31, games: 4000, elapsedMs: 9000, measuredAt: "2026-09-25T20:40:00Z",
+        scoreParts: [{label: "Wins games", reads: "wins 31.0% of games against a 25% share of a four-player pod", points: 30.1, max: 35},
+          {label: "Casts its spells", reads: "mana screwed in 7.0% of games, against a 10.0% target", points: 14.2, max: 20},
+          {label: "Has answers when it needs them", reads: "an answer in hand on 38.0% of turns, against a 40.0% target", points: 14.3, max: 15}]},
+        {protocol: "published", coverage: {known: read}});
+      report.list = list; report.commanders = [...d.commanders];
+      await r.commit({id: crypto.randomUUID(), type: "report", deckId: id, report}, s.revision);
+      return (await r.getState()).reports.at(-1).id;
+    } finally { r.close(); }
+  }, [OTHER, fingerprintOf, read]);
+  const current = await file("current", 98), stale = await file("stale", 100);
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}`);
+  await page.locator("#cm-sec-reports").waitFor({timeout: 30000});
+  await page.locator("#cm-sec-reports").getByRole("link", {name: "Open report"}).last().click();
+  await page.locator(".cm-report-checks").waitFor();
+  ok(page.url().includes(`report=${encodeURIComponent(current)}`) || page.url().includes(`report=${encodeURIComponent(stale)}`), "the deck's Reports list opens a report by its own address");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}&report=${encodeURIComponent(current)}`);
+  await page.locator(".cm-report-checks").waitFor();
+  eq(await page.locator("#cm-main h1").textContent(), "Measure", "the report is titled Measure");
+  const order = await page.evaluate(() => { const f = document.querySelector(".cm-fidelity"), sc = document.querySelector(".cm-report-score"); return {before: Boolean(f.compareDocumentPosition(sc) & Node.DOCUMENT_POSITION_FOLLOWING), above: f.getBoundingClientRect().bottom <= sc.getBoundingClientRect().top}; });
+  ok(order.before && order.above, `the fidelity notice sits above the score: ${JSON.stringify(order)}`);
+  const fidelity = await page.locator(".cm-fidelity").innerText();
+  ok(/Fidelity: Medium/.test(fidelity) && /2 cards the engine could not read/.test(fidelity), `two unread cards make it Medium, and it says so: ${fidelity.split("\n").slice(0, 2).join(" / ")}`);
+  ok(/What any Measure is/.test(fidelity), "and the measurement's own limits sit under the notice");
+  eq([await page.locator(".cm-report-number").textContent(), await page.locator(".cm-report-score").getByText("of 100").count()], ["78", 1], "the score reads 78 of 100");
+  eq(await page.$$eval(".cm-report-checks tbody tr", (rows) => rows.map((r) => [r.querySelector("th").textContent, r.lastElementChild.textContent])),
+    [["Wins games", "30.1 of 35"], ["Casts its spells", "14.2 of 20"], ["Has answers when it needs them", "14.3 of 15"]], "the checks are the score's own breakdown, points of the points possible");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", {name: "Export report"}).click();
+  const saved = JSON.parse(readFileSync(await (await download).path(), "utf8"));
+  eq([saved.id, saved.metrics.score.value, saved.kind], [current, 78.4, "report"], "Export report downloads the report itself");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}&report=${encodeURIComponent(stale)}`);
+  await page.locator(".cm-fidelity").waitFor();
+  const low = await page.locator(".cm-fidelity").innerText();
+  ok(/Fidelity: Low/.test(low) && /list has changed/.test(low), `a report of a list the deck no longer holds is Low, and says why: ${low.split("\n").slice(0, 2).join(" / ")}`);
+  await page.getByRole("link", {name: "Back to deck"}).click();
+  await page.locator(".cm-deck-hero h1").waitFor();
+  ok(!/report=/.test(page.url()), "Back to deck returns to the deck");
   await context.close();
 
   /* 4. A phone: one row, sideways, every label whole. */

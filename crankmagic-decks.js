@@ -43,11 +43,51 @@ function historyHTML(d){
 }
 /* ALL REPORTS attached to this deck (Hosted Play + Measure + imported). Simple list for
    deck overview, no Measure wizard chrome. */
+/* THE MEASURE REPORT (r3, 30-measure-report; R3.5b). One filed measurement, read the way the design draws it:
+   what the number can be trusted for FIRST, then the number, then what made it.
+
+   The fidelity notice is computed from the report's own facts, never asserted: the cards the engine could
+   not read (they played as blanks), the cards that win in a way the engine does not model, whether the
+   deck's list has changed since, and whether a different engine generation measured it. None of those is
+   a high-fidelity measurement; the list changing or the engine changing makes it a low one, because the
+   number no longer describes this deck under this model. Every measurement also carries its own limits --
+   sampled opponents, no real stack -- which sit under the notice, not hidden behind the score.
+
+   The checks are the score's own breakdown (sim-engine's scoreParts): each part's reading against the
+   engine's stated target, and the points it earned of the points it could. Nothing here is recomputed. */
+function fidelityOf(r,d){
+  const m=r.metrics||{},list=Array.isArray(r.list)?r.list:[],total=list.reduce((n,x)=>n+(Number(x.quantity)||1),0)||null;
+  const read=m.cardsTheEngineCouldRead?.value,unread=total&&Number.isFinite(read)?Math.max(0,total-read):0;
+  const unwatched=m.winPathsTheEngineCannotWatch?.value||0,names=(r.unwatchedWinCards||[]).slice(0,4);
+  const generation=globalThis.CrankSim&&CrankSim.ENGINE_GENERATION,engine=r.versions&&r.versions.engine;
+  const reasons=[];
+  if(r.deckFingerprint!==M.fingerprint(d,C.state))reasons.push({severe:true,text:'The deck’s list has changed since this was measured. Measure again for the hundred it holds now.'});
+  if(generation&&engine&&engine!==generation)reasons.push({severe:true,text:`Measured by engine ${engine}; the app now runs ${generation}. Scores from different engines are not comparable.`});
+  if(unread)reasons.push({text:`${unread} card${unread===1?'':'s'} the engine could not read played as blanks.`});
+  if(unwatched)reasons.push({text:`${unwatched} card${unwatched===1?' wins':'s win'} in a way the engine does not model${names.length?`: ${names.join(', ')}`:''}. A deck built on ${unwatched===1?'it':'them'} is described less well by this score.`});
+  return {level:!reasons.length?'high':reasons.some(x=>x.severe)?'low':'medium',reasons};
+}
+function reportView(d,id){
+  const r=C.state.reports.find(x=>x.id===id&&x.deckId===d.id);
+  const back=`<a class="v-button" href="#decks?deck=${encodeURIComponent(d.id)}">Back to deck</a>`;
+  if(!r){C.main.innerHTML=`<a class="cm-crumb" href="#decks?deck=${encodeURIComponent(d.id)}">Decks › ${e(deckNumberOff(d.name))}</a>`+C.pageHead('Measure',back)+note('That report is not in this library. It may have been measured on another device, or deleted with an older version of the deck.',true);return;}
+  const m=r.metrics||{},score=m.score?.value,se=m.scoreStandardError?.value,f=fidelityOf(r,d),parts=r.scoreParts||[];
+  const LEVEL={high:'High',medium:'Medium',low:'Low'};
+  const fact=[Number.isFinite(se)?`± ${se.toFixed(1)}`:'',m.winRate?.value!=null?`wins ${m.winRate.value}% of games`:'',r.run?.games?`${r.run.games.toLocaleString('en-US')} games`:''].filter(Boolean).join(' · ');
+  C.main.innerHTML=`<a class="cm-crumb" href="#decks?deck=${encodeURIComponent(d.id)}">Decks › ${e(deckNumberOff(d.name))}</a>`
+    +C.pageHead('Measure',back+b('Export report','report-export',{deck:d.id,report:r.id}),'deck',`<p class="cm-decks-summary">How this list played under the simulation model, measured ${e(when(r.run?.measuredAt||r.importedAt))}.</p>`)
+    +`<section class="cm-fidelity cm-fidelity-${f.level}" aria-label="Fidelity"><h2>Fidelity: ${LEVEL[f.level]}</h2>${f.reasons.length?`<ul>${f.reasons.map(x=>`<li>${e(x.text)}</li>`).join('')}</ul>`:'<p>The list is the one measured, every card was read, and nothing in it wins in a way the engine cannot watch.</p>'}`
+    +`${(r.limits||[]).length?`<details><summary>What any Measure is, and is not</summary><ul>${r.limits.map(x=>`<li>${e(x)}</li>`).join('')}</ul></details>`:''}</section>`
+    +`<div class="cm-report-grid"><section class="v-panel cm-report-score"><h2>Score</h2><p class="cm-report-number">${Number.isFinite(score)?e(String(Math.round(score))):'—'}</p><p>of 100</p>${fact?`<p class="cm-muted">${e(fact)}</p>`:''}</section>`
+    +`<section class="v-panel cm-report-checks"><h2>What made the number</h2>${parts.length?`<table><thead><tr><th scope="col">Check</th><th scope="col">What it read</th><th scope="col">Points</th></tr></thead><tbody>${parts.map(p=>`<tr><th scope="row">${e(p.label)}</th><td>${e(p.reads)}</td><td>${e(String(p.points))} of ${e(String(p.max))}</td></tr>`).join('')}</tbody></table>`:'<p class="cm-muted">This report carries no breakdown of its score (it was filed before reports did).</p>'}</section></div>`;
+}
+actions['report-export']=el=>{const d=M.deck(C.state,el.dataset.deck),r=C.state.reports.find(x=>x.id===el.dataset.report);if(!r)throw Error('That report is not in this library.');
+  C.download(`CrankMagic-measure-${deckNumberOff(d.name).replace(/[^\w-]+/g,'-')}-${M.today()}.json`,JSON.stringify(r,null,2));};
 function reportsHTML(d){
   const allReports=C.state.reports.filter(r=>r.deckId===d.id);
   if(!allReports.length)return '';
   const fp=M.fingerprint(d,C.state);
-  return `<section class="v-panel cm-reports" id="cm-sec-reports"><h2>Reports</h2><p class="cm-muted">${allReports.length} report${allReports.length===1?'':'s'} attached to this deck. Reports from simulations, play sessions, or imported data.</p><ul class="cm-reports-list">${allReports.slice().reverse().map(r=>`<li><strong>${e(r.protocol||'Unknown protocol')}</strong> · ${e(when(r.importedAt))} · ${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}${r.origin?` · <span class="cm-muted">${e(r.origin)}</span>`:''}</li>`).join('')}</ul></section>`;
+  return `<section class="v-panel cm-reports" id="cm-sec-reports"><h2>Reports</h2><p class="cm-muted">${allReports.length} report${allReports.length===1?'':'s'} attached to this deck. Reports from simulations, play sessions, or imported data.</p><ul class="cm-reports-list">${allReports.slice().reverse().map(r=>`<li><strong>${e(r.protocol||'Unknown protocol')}</strong> · ${e(when(r.importedAt))} · ${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}${r.origin?` · <span class="cm-muted">${e(r.origin)}</span>`:''} · <a href="#decks?deck=${encodeURIComponent(d.id)}&amp;report=${encodeURIComponent(r.id)}">Open report</a></li>`).join('')}</ul></section>`;
 }
 /* NO ART, NO EMPTY PANEL. A deck whose commander has no cached picture used to be a dark
    rectangle with text at the bottom; the commander's initials, faint, in the deck's own two
@@ -112,7 +152,7 @@ function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.d
   const owned=lots.filter(l=>l.source==='owned'),estimated=owned.filter(l=>!Number.isFinite(l.paid)||l.paidSource==='catalog'),paidOrList=owned.reduce((n,l)=>n+(Number.isFinite(l.paid)?l.paid:(C.card(l.cardId)?.price||0))*l.quantity,0);
   return `<section class="cm-deck-summary${tone}" aria-label="Deck progress and cost"><div class="cm-summary-col"><h3>Progress</h3><div class="cm-summary-figures">${fig(r.sleeved,'Physical deck','','inbox')}${r.standIns||r.remove?fig(r.standIns,`of them substitute${r.standIns===1?'':'s'}${r.remove?` · ${r.remove} to take out`:''}`,'','standin'):''}${fig(pullCount(r),'Ready to add','','pull')}${fig(r.ordered,'Ordered','','ordered')}${fig(r.toBuy,d.status==='draft'?'Not yet reserved':'To buy','','buy')}${fig(`${gc} / ${GC_LIMIT}`,'Game Changers')}</div>${C.readinessBar(r)}</div><div class="cm-summary-col cm-summary-cost"><h3>Cost</h3><div class="cm-summary-figures">${fig(C.money(r.costToFinish),'$ to finish')}${fig((estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100),'Paid so far','','',estimated.length?`${estimated.reduce((n,l)=>n+l.quantity,0)} owned cop${estimated.reduce((n,l)=>n+l.quantity,0)===1?'y has':'ies have'} no recorded price and count at list price. Set Paid on a row in Cards to replace the estimate.`:'')}${fig(C.money(r.marketValue),`Market value${pct!==null?` · ${Math.round(pct)}% of cap`:''}`)}${fig(cap===null?'—':C.money(cap),'Cap')}${fig(overCap,`line${overCap===1?'':'s'} over the 110% cap`,overCap?'cm-amber':'')}${dear?fig(dear,`card${dear===1?'':'s'} over ${C.money(perCard)}`,'cm-amber'):''}</div>${cap>0?`<div class="cm-budget-bar" role="img" aria-label="Market value ${Math.round(pct)}% of the cap"><i style="width:${Math.min(100,pct)}%"></i></div>`:''}</div></section>`;}
 actions.jump=el=>{const t=document.getElementById(el.dataset.target);if(!t)return;const bar=document.querySelector('.cm-jump'),top=t.getBoundingClientRect().top+scrollY-((bar?bar.getBoundingClientRect().height:0)+(matchMedia('(max-width:760px)').matches?54:0)+10);scrollTo({top,behavior:'smooth'});};
-views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}await overview(found);return;}const decks=C.state.decks.filter(d=>(showArchived||!d.archived)&&(C.showLobbyDecks||!M.isLobbyDeck(d))),lobbyHidden=C.state.decks.filter(d=>!d.archived&&M.isLobbyDeck(d)).length,picks=[...(C.comparePicks||[])].filter(id=>C.state.decks.some(d=>d.id===id));
+views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}if(params.get('report')){reportView(found,params.get('report'));return;}await overview(found);return;}const decks=C.state.decks.filter(d=>(showArchived||!d.archived)&&(C.showLobbyDecks||!M.isLobbyDeck(d))),lobbyHidden=C.state.decks.filter(d=>!d.archived&&M.isLobbyDeck(d)).length,picks=[...(C.comparePicks||[])].filter(id=>C.state.decks.some(d=>d.id===id));
 /* THE SHOWCASE. The page opens on cards, not on a sentence: a fan of the reader's own
    commanders when they have decks, and three well-known ones while they do not. The fan
    is decoration -- it never claims a holding. */
@@ -890,7 +930,7 @@ actions['report-spinoff']=async el=>{const d=M.deck(C.state,el.dataset.deck),r=C
   actions.close();go('decks',{deck:id});};
 actions['measure-deck']=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!C.measureDeck)throw Error('Measure is not loaded.');
   const say=t=>{const pill=$('#cm-deck-sim-status');if(pill){pill.hidden=false;pill.textContent=t;}};say('Starting…');
-  try{const {report,result}=await C.measureDeck(d.id,say);C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString('en-US')} games in ${(result.elapsedMs/1000).toFixed(1)}s. Filed under Simulation history.`);}
+  try{const {report,result}=await C.measureDeck(d.id,say);const filed=C.state.reports.filter(x=>x.deckId===d.id).at(-1);if(filed)go('decks',{deck:d.id,report:filed.id});C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString('en-US')} games in ${(result.elapsedMs/1000).toFixed(1)}s. The report is open; it is also filed under Reports on the deck.`);}
   catch(err){say(err.message);throw err;}};
 actions['advice-request']=el=>{const d=M.deck(C.state,el.dataset.deck);C.download('CrankMagic-advice-request.json',JSON.stringify({format:'crankmagic-advice-request',version:1,deckFingerprint:M.fingerprint(d,C.state),definition:d.definition,deckName:d.name,cards:d.slots.map(r=>({name:C.card(r.cardId).name,quantity:r.quantity,purpose:r.purpose,oracleText:C.card(r.cardId).oracleText})),responseContract:{kind:'advice',deckFingerprint:'Copy the exact supplied fingerprint',text:'Explain strategy, sequencing, weaknesses and proposed replacements. Do not invent Measure results.'}},null,2));};
 actions['import-evidence']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Import versioned report or advice',`<div class="cm-full">${note('Accepts a JSON object with kind (report or advice), deckFingerprint, and protocol for reports or text for advice. Imported material is labeled and never executed.')}<label>JSON file<input name="file" type="file" accept=".json" required></label></div>`,async(_,formEl)=>{const file=formEl.elements.file.files[0];if(file.size>10000000)throw Error('Limit evidence packs to 10 MB.');const data=CrankEvidence.validate(JSON.parse(await file.text()));const known=[M.fingerprint(d,C.state),...d.versions.map(v=>M.fingerprint(v,C.state))];if(!known.includes(data.deckFingerprint))throw Error('This pack does not match any retained version of this deck. Its original version must be present before importing.');if(!['report','advice'].includes(data.kind))throw Error('Set kind to report or advice.');if(data.kind==='report'&&(!data.protocol||typeof data.metrics!=='object'||!data.versions))throw Error('Reports need protocol, versions and metrics provenance.');await commit({type:data.kind,deckId:d.id,[data.kind]:data});},'Import pack');};
