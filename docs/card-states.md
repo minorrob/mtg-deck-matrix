@@ -90,8 +90,17 @@ Explore's Add dialog can also put a card straight on the **Bench**.
 
 1. **This definition and its code.** `cardState` and the vocabulary in the model, and the suite that pins
    every mapping. No screen and no data changes. *(This PR.)*
-2. **Every screen reads it.** The pills, the Library's count cards (which become the stages), the filters,
-   the To buy tab and Explore's Add dialog.
+2. **Every screen reads it**, in two PRs.
+   - **2a, the Library.** Every row carries its state. The Status pill is the state's word, with two badges:
+     *To add* for an owned target not yet in its box, and *In D2 · reserved for D7* for a substitute
+     reserved elsewhere. The Library's count cards become two rows of four: the stages, then Owned split
+     by where it is, with a caption that states the sum. The Filters dialog's status chips are the states,
+     plus *Not yet in the box*. Sorting and grouping by status follow the lifecycle. The head's Bench is
+     the state's (695, where it said 811, because a substitute in a deck's box is not on the Bench). The
+     To buy tab and its count hold the To Buy list beside the decks' needs; the two overlap until step 3
+     de-duplicates them.
+   - **2b, the rest.** The Table view's piles, the deck page's pills, Ready to add, the exports, and
+     Explore's Add dialog, whose "Wanted" choice becomes "To buy".
 3. **Storage and migration.**
    - A copy's stage gains *To buy*, so a card no deck needs can be To buy: R3.7b, absorbed here.
    - The To Buy list moves to To buy, de-duplicated against the decks' own needs.

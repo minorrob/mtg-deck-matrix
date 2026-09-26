@@ -36,8 +36,6 @@
 #cm-roster-table tbody td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;vertical-align:middle;padding-top:10px;padding-bottom:10px}
 /* The ticks, the pips and the row's one verb are the cells that must not be squeezed to nothing. */
 #cm-roster-table tbody td:first-child,#cm-roster-table tbody td:last-child{max-width:none;overflow:visible}
-@media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:640px){.cm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 
 /* THE LOBBY AS A TABLE (V.5a, DELTA-play-and-implementation.md section B). Four quadrants in the
@@ -1722,7 +1720,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-stats-row .cm-stat{min-width:0;box-sizing:border-box;padding:10px 12px 9px;border-radius:var(--v-radius-card);background:var(--v-bg);border:1px solid var(--color-raised);border-top:3px solid var(--st,var(--color-line))}
 .cm-stats-row .cm-stat strong{display:block;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--v-ink)}
 .cm-stats-row .cm-stat span{display:block;margin-top:3px;font-size:12px;color:var(--color-muted);white-space:nowrap}
-.cm-stat-plan{--st:var(--st-reserved)}.cm-stat-have{--st:var(--st-inbox)}.cm-stat-subs{--st:var(--st-standin)}.cm-stat-physical{--st:var(--st-physical)}.cm-stat-coming{--st:var(--st-ordered)}.cm-stat-missing{--st:var(--st-buy)}.cm-stat-considering{--st:var(--st-watch,var(--v-line))}
+.cm-stat-plan{--st:var(--st-reserved)}.cm-stat-bench{--st:var(--st-pull)}.cm-stat-have{--st:var(--st-inbox)}.cm-stat-subs{--st:var(--st-standin)}.cm-stat-physical{--st:var(--st-physical)}.cm-stat-coming{--st:var(--st-ordered)}.cm-stat-missing{--st:var(--st-buy)}.cm-stat-considering{--st:var(--st-watch,var(--v-line))}
 /* THE ROSTER USES THE WIDTH IT HAS: the deck name on one line, the card name with room. */
 #matrix-v2 .cm-table td.cm-col-deck,#matrix-v2 .cm-table th.cm-col-deck{white-space:nowrap}
 #matrix-v2 .cm-table td.cm-col-name,#matrix-v2 .cm-table th.cm-col-name{min-width:190px}
@@ -2103,7 +2101,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
    short bar on the card's top edge now, the way the Explore doors carry theirs; the figure and
    its label stand in the card with room on every side; and the caption under the row spans it
    instead of taking the first card's column. */
-.cm-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:stretch;margin:4px 0 8px}
+.cm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;margin:4px 0 8px}
 .cm-kpi{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;padding:18px 16px 14px;min-width:0;min-height:84px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);color:var(--color-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
 .cm-kpi:before{content:"";position:absolute;left:16px;top:-1px;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--st,var(--color-line))}
 .cm-kpi strong{font-family:var(--v-display);font-weight:var(--display-weight);font-size:28px;line-height:1;font-variant-numeric:tabular-nums;color:var(--st,var(--v-ink))}
@@ -2820,8 +2818,8 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* THE LIBRARY (r3, R3.6). The count cards wrap on narrower screens instead of clipping their figures
    (700 read as "70" at 390px); the Filters dialog is chips in labeled rows with two ranges under them;
    the Columns dialog is one list of rows, each with a grip, its box and two arrows. */
-@media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:640px){.cm-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.cm-kpi{min-height:0;padding:14px 12px 10px}.cm-kpi strong{font-size:24px}}
+/* Two rows of four at every width (the stages, then where an owned card is); a phone tightens each card. */
+@media(max-width:640px){.cm-kpi{min-height:0;padding:12px 8px 8px;gap:6px}.cm-kpi strong{font-size:20px}.cm-kpi span{font-size:11px}}
 #cm-dialog.cm-filters-dialog{width:min(640px,calc(100vw - 32px))}
 #matrix-v2 .cm-filters-form{display:grid;gap:14px}
 #matrix-v2 .cm-fd-group,#matrix-v2 .cm-fd-range{border:0;margin:0;padding:0;min-width:0}

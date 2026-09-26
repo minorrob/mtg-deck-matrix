@@ -67,7 +67,10 @@ const PAGES = [
      phone, where the strip's own words are counted too), Sheet 46 -> 60, Orders 24 -> 35, Table
      44 -> 61. Controls and explainer words do not move -- the seven count chips became seven
      count tiles one for one, and no explainer was added. */
-  ["cards", "Cards · Library", "#cm-roster-table table", [84, 27, 16], [84, 27, 16]],
+  /* Card states (docs/card-states.md, Rob, 2026-09-26): the seven count tiles became eight -- the four stages,
+     then Owned split four ways -- so controls rise by that one tile, 27 -> 28. The caption states the sum's rule
+     rather than repeating the figures above it, so the word budget does not move. */
+  ["cards", "Cards · Library", "#cm-roster-table table", [84, 28, 16], [84, 28, 16]],
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [51, 18, 8], [51, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [60, 16, 20], [60, 16, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],

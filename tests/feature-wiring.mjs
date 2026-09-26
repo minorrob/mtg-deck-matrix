@@ -210,10 +210,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const css = read("crankmagic.css"), col = read("crankmagic-collection.js");
   /* By content, not by the first .cm-kpis in the file: the narrow breakpoints override the
      column count, and matching the first rule found the four-column phone one. */
-  const tiles = (css.match(/\.cm-kpis\{[^}]*grid-template-columns:repeat\(7,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
-  ok(tiles, "the counts are seven equal tiles");
+  /* The card states (docs/card-states.md, 2026-09-26): eight tiles in two rows of four, the stages over where an owned card is. */
+  const tiles = (css.match(/\.cm-kpis\{display:grid;[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
+  ok(tiles, "the counts are two rows of four equal tiles");
+  ok(/STAT_FIGURES=\[\['watching','Watching'[^\n]*\['upgrade','Upgrade'/.test(col), "the stages, then Bench, Target, Substitute, Upgrade");
   ok(/gap:8px/.test(tiles), `at the guide's gap (found ${tiles || "no rule"})`);
-  ok(/cm-kpi-caption/.test(col), "and one caption line states the equation the seven make");
+  ok(/cm-kpi-caption">[^`]*Owned = Bench \+ Target \+ Substitute \+ Upgrade/.test(col), "and one caption line states the equation: Owned = Bench + Target + Substitute + Upgrade");
   ok(/font-family:var\(--v-display\)/.test((css.match(/\.cm-kpi strong\{[^}]*\}/) || [""])[0]), "the figure is in the display face");
   /* The head's summary sentence, through the same pageHead the deck pages use. */
   ok(/cm-cards-summary/.test(col), "the Library head carries its summary sentence");
