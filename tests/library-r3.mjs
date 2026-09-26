@@ -29,6 +29,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
+import {createRequire} from "node:module";
+const M = createRequire(import.meta.url)("../collection-model.js");
 
 let checks = 0;
 const ok = (cond, msg) => { checks++; assert.ok(cond, msg); };
@@ -61,8 +63,17 @@ try {
   const figures = () => page.$$eval(".cm-kpi", (ks) => ks.map((k) => ({label: k.querySelector("span").textContent.trim(), n: Number(k.querySelector("strong").textContent.replace(/,/g, ""))})));
   const copiesShown = () => page.$eval("#cm-roster-table", (t) => { const m = (t.querySelector(".cm-paging span, .cm-status-line")?.textContent || "").match(/([\d,]+) cop(?:y|ies)/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
   const cardsBefore = await figures(), recordsBefore = await records(page);
-  eq(cardsBefore.map((f) => f.label), ["Watching", "To buy", "Ordered", "Owned", "Bench", "Target", "Substitute", "Upgrade"], "eight count cards: the stages, then where an owned card is (docs/card-states.md)");
+  eq(cardsBefore.map((f) => f.label), ["Watching", "To buy", "Ordered", "Owned", "Bench", "To add", "Target", "Substitute"], "eight count cards: the stages, then where an owned card is (docs/card-states.md)");
   eq(cardsBefore[3].n, cardsBefore[4].n + cardsBefore[5].n + cardsBefore[6].n + cardsBefore[7].n, "and the second row adds up to Owned");
+  /* The caption divides To buy by role (Rob, 2026-09-26), judged by the model on the stored library. */
+  {
+    const stored = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return await r.getState(); } finally { r.close(); } });
+    const read = M.stateReader(stored), buys = M.projection(stored).map(read).filter((x) => x.stage === "buy");
+    const recs = M.projection(stored);
+    const up = recs.filter((r) => { const x = read(r); return x.stage === "buy" && x.role === "upgrade"; }).reduce((n, r) => n + r.quantity, 0);
+    const res = recs.filter((r) => { const x = read(r); return x.stage === "buy" && x.role === "reserved"; }).reduce((n, r) => n + r.quantity, 0);
+    ok(buys.length > 0 && (await page.locator(".cm-kpi-caption").innerText()).includes(`To buy: ${up.toLocaleString("en-US")} upgrade${up === 1 ? "" : "s"}, ${res.toLocaleString("en-US")} reserved`), `the caption divides To buy into ${up} upgrades and ${res} reserved, as the model does`);
+  }
   for (const [i, f] of cardsBefore.entries()) {
     await page.locator(".cm-kpi").nth(i).click();
     await page.waitForFunction((n) => { const t = document.querySelector("#cm-roster-table .cm-paging span, #cm-roster-table .cm-status-line"); return t && /cop(y|ies)/.test(t.textContent); }, null);
@@ -87,20 +98,21 @@ try {
   ok(nameFirst.length > 20 && nameFirst.every(Boolean), `in every row the card's name comes before its mana (${nameFirst.filter(Boolean).length} of ${nameFirst.length})`);
 
   /* 9. The card states on the rows (docs/card-states.md): every pill is a word from the vocabulary, the Filters
-     dialog offers the states, and "Not yet in the box" finds exactly the owned targets Ready to add lists. */
-  const VOCAB = ["Watching", "To buy", "Ordered", "Bench", "Target", "Substitute", "Upgrade"];
+     dialog offers the states and the two roles outside a box, and "To add" finds exactly the owned copies Ready to add
+     lists, each wearing its role. */
+  const VOCAB = ["Watching", "To buy", "Ordered", "Bench", "To add", "Target", "Substitute"];
   const pills = await page.$$eval("#cm-roster-table td.cm-col-status .cm-pill", (ps) => ps.map((p) => p.textContent.trim()));
   ok(pills.length > 20 && pills.every((p) => VOCAB.includes(p)), `every Status pill is a card-state word: ${[...new Set(pills.filter((p) => !VOCAB.includes(p)))].join(", ")}`);
   await page.getByRole("button", {name: /^Filters/}).click();
   await opened(page, "Filters");
-  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Watching", "To buy", "Ordered", "Owned (any)", "Bench", "Target", "Substitute", "Upgrade", "Not yet in the box"], "the Filters dialog's Status chips are the card states");
-  await page.locator("[data-fd=status][data-value=to-add]").click();
+  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Watching", "To buy", "Ordered", "Owned (any)", "Bench", "To add", "Target", "Substitute", "Upgrade", "Reserved"], "the Filters dialog's Status chips are the card states");
+  await page.locator("[data-fd=status][data-value='To add']").click();
   await page.locator("#cm-fd-show").click();
-  await page.waitForFunction(() => /Not yet in the box/.test(document.getElementById("cm-filter-chips")?.textContent || ""));
-  const toAdd = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => ({pill: tr.querySelector("td.cm-col-status .cm-pill")?.textContent.trim(), badge: !!tr.querySelector(".cm-badge-toadd"), q: Number(tr.querySelector("td.cm-col-quantity")?.textContent.trim() || 1)})));
+  await page.waitForFunction(() => /Status: To add/.test(document.getElementById("cm-filter-chips")?.textContent || ""));
+  const toAdd = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => ({pill: tr.querySelector("td.cm-col-status .cm-pill")?.textContent.trim(), badge: !!tr.querySelector(".cm-badge-upgrade, .cm-badge-reserved"), q: Number(tr.querySelector("td.cm-col-quantity")?.textContent.trim() || 1)})));
   {
     const st = await stateOf(page), five = st.lots.filter((l) => l.source === "owned" && l.allocation && !(l.location?.kind === "deck" && l.location.deckId === l.allocation.deckId) && !(l.location?.kind === "deck")).reduce((n, l) => n + l.quantity, 0);
-    ok(toAdd.length > 0 && toAdd.every((r) => r.pill === "Target" && r.badge), "Not yet in the box shows owned targets, each wearing To add");
+    ok(toAdd.length > 0 && toAdd.every((r) => r.pill === "To add" && r.badge), "To add shows owned copies waiting outside their box, each wearing its role (Upgrade or Reserved)");
     eq(toAdd.reduce((n, r) => n + r.q, 0), five, `and exactly the ${five} copies reserved for a deck and not in any deck's box, judged from the stored lots`);
   }
   await page.locator("#cm-filter-chips [data-action=clear-filters]").click();

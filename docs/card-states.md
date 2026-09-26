@@ -28,20 +28,33 @@ Each record has exactly one stage, and the stages come in this order:
 ### 2. Deck and role: who it is for
 
 A record can be for a deck at any stage, not only when owned: "To buy for D6" and "Watching for D2 as
-an upgrade" are both states. With a deck, it has one role:
+an upgrade" are both states. With a deck, it has one role, and which roles are open depends on whether
+the card is in the deck's box (Rob, 2026-09-26):
 
-| Role | Means |
-| --- | --- |
-| **Target** | The card the deck's list calls for. |
-| **Substitute** | Standing in, in the deck's box, for a target not yet owned. |
-| **Upgrade** | Lined up to replace a card in the list. |
+| Role | In the box? | Means |
+| --- | --- | --- |
+| **Target** | Yes | The list's own card, in its seat. |
+| **Substitute** | Yes | Holding a seat for a Target not yet in the box. |
+| **Upgrade** | No | Planned to replace a card that is in the box: the substitute holding its seat, or the list card an upgrade option would swap out. |
+| **Reserved** | No | Takes an empty seat: nothing in the box holds it. |
+
+A card outside the box is an **Upgrade** when a substitute is recorded as holding its seat, or when the box
+is already full; it is **Reserved** when its seat is empty. An upgrade option, and an entry in a deck's own
+collection group (a candidate for that deck), is always an Upgrade.
 
 An owned card for no deck is on the **Bench**.
 
+### Playable and complete
+
+A deck is **playable** when nothing for it is Reserved: every one of its seats holds a card, the list's own
+or a substitute. It is **complete** when every seat holds the list's own card: no Substitutes, no Upgrades
+left to make. The model's `readiness(...).playable` (all the list's cards in the box) and "nothing Reserved"
+are the same test, and `tests/card-states.mjs` holds them to each other deck by deck.
+
 ### 3. Two facts, not states
 
-- **In the box**: an owned target or substitute is physically in the deck's box. An owned target that is
-  not yet in the box is what *Ready to add* lists.
+- **In the box**: an owned target or substitute is physically in the deck's box. An owned card for a deck
+  that is not yet in the box is **To add**, and it is what *Ready to add* lists.
 - **For trade**: the copy is offered for sale or trade, or held for a pending deal.
 
 Collection groups are tags, not states. A group says where a card is filed, not how far along it is.
@@ -49,8 +62,10 @@ Collection groups are tags, not states. A group says where a card is filed, not 
 ## The one word on a pill
 
 - While a card is not owned, the pill names its stage: *Watching*, *To buy*, *Ordered*.
-- Once owned, the pill says where the card is: *Bench*, or its role (*Target*, *Substitute*, *Upgrade*).
-- The deck and the in-the-box fact sit beside the pill.
+- Once owned, the pill says where the card is: *Bench*; *To add* (for a deck, not in its box yet); or its role
+  in the box, *Target* or *Substitute*.
+- A card for a deck that is not in its box wears its role beside the pill: *Upgrade* or *Reserved*. The deck
+  sits beside it too.
 
 ## Today's labels, mapped
 
@@ -60,27 +75,30 @@ pins each one.
 | Old label | State | Rob's library |
 | --- | --- | --- |
 | Physical deck | Owned, deck, Target, in the box | 577 copies |
-| Reserved | Owned, deck, Target, not in the box | 5 copies |
+| Reserved | Owned, deck, not in the box: **To add**, and an Upgrade (the box is full) | 5 copies |
 | Substitute | Owned, deck, Substitute (in the box) | 123 copies |
 | Reserved, and physically standing in another deck | Owned, that other deck, Substitute, *reserved for* its own deck | included above |
 | Bench | Owned, no deck | 695 copies |
 | Watched (an owned Bench copy shortlisted for a deck) | Owned, no deck; the shortlist is a tag | — |
 | Ordered | Ordered, deck if reserved | 6 copies |
 | Watched (a watched copy) | Watching | 0 |
-| To buy (a deck's unmet need) | To buy, deck, Target (or Upgrade, for a committed upgrade) | 111 copies |
+| To buy (a deck's unmet need) | To buy, deck, **Upgrade** (every box is full, so each replaces the substitute in its seat) | 111 copies |
 | **Wanted** (the To Buy list) | **To buy**, no deck (decision 1) | 101 entries |
-| Draft list | Watching, that deck, Target; finalizing the deck turns these into To buy | 0 |
+| Draft list | Watching, that deck, Reserved (a draft has an empty box); finalizing the deck turns these into To buy | 0 |
 | Suggestion (an option) | Watching, deck, Upgrade | 0 on decks |
-| Planned (entries in other groups) | Watching, with the group as a tag | 124 entries |
+| Planned (entries in other groups) | Watching, with the group as a tag | 111 entries (Upgrade Path) |
+| Planned (entries in a deck's own group) | Watching, that deck, Upgrade: a candidate for it | 13 entries (D4 7, D6 6) |
 
-The 124 Planned entries are 111 in the Upgrade Path group and 13 in deck groups.
+None of Rob's decks has an empty seat, so nothing is Reserved and all seven are playable. None is complete.
 
 ## Rob's four decisions (2026-09-26)
 
 1. The To Buy list (101 cards) is **To buy**, not Watching.
 2. **In the box** stays, as a yes-or-no fact on owned targets and substitutes.
-3. The 111 **Upgrade Path** entries become upgrade options on their own decks (Watching, deck, Upgrade).
-   Their deck and the card each replaces are read from their notes ("D2 · replaces Foraging Wickermaw").
+3. ~~The 111 **Upgrade Path** entries become upgrade options on their own decks.~~ Revised the same day: each
+   entry is already a Target its deck's list needs, and the card it "replaces" is the Substitute holding that
+   seat. So the rebuild records each substitute's seat from the notes ("D2 · replaces Foraging Wickermaw") and
+   removes the entries. Rob does not need the short-term and long-term flags.
 4. **Ordered** is "bought, not yet in hand". They are one state.
 
 Also from Rob (R3.7, 2026-09-25): a card no deck needs can be **To buy**, and it shows on the To buy tab.
@@ -109,15 +127,24 @@ Explore's Add dialog can also put a card straight on the **Bench**.
        choices, where it had one "Wanted".
      - A watched copy is Watching, so it leaves the To buy tab.
    - **2c, the Table view, Ready to add and the exports.**
-     - The Table view's status piles are the card states: Target, *To add*, Substitute, Upgrade, Ordered,
-       To buy, Watching. The Bench keeps its own place on the back row. Each pile takes the drops its old
+     - The Table view's status piles are the card states: Target, *To add*, Substitute, Ordered, To buy,
+       Watching. The Bench keeps its own place on the back row. Each pile takes the drops its old
        label took; the To buy pile releases a reserved copy or files a watched copy or planned entry on
        the To Buy list. The Table's own Status dropdown offers the same words, and staged moves name them.
      - Ready to add names a waiting copy *To add*, with where to find it ("To add · Bench").
      - The Excel export's Library, Allocations and Acquisition queue sheets gain a **State** column beside
        Placement, which stays for the sheets and scripts that read it.
-3. **Storage and migration.**
-   - A copy's stage gains *To buy*, so a card no deck needs can be To buy: R3.7b, absorbed here.
-   - The To Buy list moves to To buy, de-duplicated against the decks' own needs.
-   - The Upgrade Path entries become upgrade options on their decks.
-   - This runs as one versioned migration, with the old library kept as a backup.
+3. **The four roles, and the rebuilt library** (Rob, 2026-09-26, "Go"), in two PRs.
+   - **3a, the roles.** Target and Substitute in the box; Upgrade and Reserved outside it, decided by the
+     deck's seats (`seats` and `stateReader` in the model). The pills: Bench, *To add*, Target, Substitute
+     once owned, with Upgrade or Reserved beside a card outside its box. The Library's second row of count
+     cards is Bench, To add, Target, Substitute, and the caption divides To buy into upgrades and reserved.
+     The deck page says whether the deck plays and why ("Playable: every seat holds a card · 15 upgrades to
+     make"). The Filters dialog adds Upgrade and Reserved; the workbook's State column reads "To buy ·
+     upgrade". The Table view has no Upgrade pile: Upgrade is a role, not a place.
+   - **3b, the rebuilt backup.** `data/live-state.json` rebuilt from the v25 workbook with each substitute's
+     seat recorded from the Upgrade Path notes, the 111 Upgrade Path entries and the 101 duplicate To Buy
+     list entries removed. Rob has not restored v25, so no library changes in place and no in-app tidy is
+     needed.
+   - **R3.7b needs no storage change.** A card no deck needs goes on the To Buy list, which the To buy tab
+     shows, and Bought moves it to the Bench (the entry-buy path).

@@ -36,39 +36,59 @@
        stage   -- watching, buy (To buy), ordered, owned: one line, in that order. The catalog, the
                   universe of every card, is the stage before them and has no record.
        deck    -- the deck the record is for, at any stage, or none; owned with none is the Bench.
-       role    -- with a deck: target (the card its list calls for), substitute (standing in for a
-                  target not yet owned), upgrade (lined up to replace a card).
+       role    -- with a deck. In the box: target (the list's own card, in its seat) or substitute
+                  (holding a seat for a target not yet in the box). Not in the box (Rob, 2026-09-26):
+                  upgrade (planned to replace a card that is in the box -- the substitute holding its
+                  seat, or the list card an upgrade swaps out) or reserved (it takes an empty seat).
+     A deck is playable when no record for it is reserved: every one of its seats holds a card.
      And two facts that are not states: inBox (an owned target or substitute is physically in the
-     deck's box; an owned target not yet in it is what Ready to add lists) and trade (offered for
-     sale or trade). Collection groups are tags, not states. cardState reads any row the screens
-     draw -- a copy (lot), a deck's unmet need, a draft deck's list row, an uncommitted option, a
-     group entry -- and nothing else spells a state. */
+     deck's box; an owned card for a deck not yet in it is what Ready to add lists) and trade (offered
+     for sale or trade). Collection groups are tags, not states, except a deck's own group, whose
+     entries are candidates for that deck. cardState reads any row the screens draw -- a copy (lot),
+     a deck's unmet need, a draft deck's list row, an uncommitted option, a group entry -- and nothing
+     else spells a state. Which not-in-box role a record has depends on the deck's box, so the library
+     is read once into seats, and stateReader(library) gives the cardState a screen uses. */
   const STAGES=[{id:'watching',label:'Watching',owned:false},{id:'buy',label:'To buy',owned:false},{id:'ordered',label:'Ordered',owned:false},{id:'owned',label:'Owned',owned:true}];
-  const ROLES=[{id:'target',label:'Target'},{id:'substitute',label:'Substitute'},{id:'upgrade',label:'Upgrade'}];
-  const roleOf=purpose=>purpose==='main'?'target':'upgrade';
+  const ROLES=[{id:'target',label:'Target'},{id:'substitute',label:'Substitute'},{id:'upgrade',label:'Upgrade'},{id:'reserved',label:'Reserved'}];
   const WANT_LIST='group:to-buy';
-  function cardState(r){
+  /* A deck's seats: full when the app calls it playable (all its list's cards are in the box, as the list's
+     own cards or substitutes); held, the seats a substitute in the box is recorded as holding. */
+  function seats(s){
+    const decks=new Map(),groups=new Map();
+    for(const d of s.decks||[]){
+      const box=(s.lots||[]).filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id);
+      decks.set(d.id,{full:readiness(s,d).playable,held:new Set(box.filter(l=>l.standInFor&&l.allocation?.deckId!==d.id).map(l=>l.standInFor))});
+      if(d.groupId&&!d.archived)groups.set(d.groupId,d.id);
+    }
+    return {decks,groups};
+  }
+  function cardState(r,ctx=null){
     const none={deckId:'',role:'',inBox:false,trade:'',reservedFor:''};
-    if(r.kind==='need')return {...none,stage:'buy',deckId:r.deckId,role:roleOf(r.purpose)};
-    if(r.kind==='draft')return {...none,stage:'watching',deckId:r.deckId,role:'target'};
-    if(r.kind==='option')return {...none,stage:'watching',deckId:r.deckId,role:roleOf(r.purpose)};
-    if(r.kind==='entry')return {...none,stage:r.groupId===WANT_LIST?'buy':'watching'};
+    /* Not in the box: an upgrade when its seat is held -- a substitute is recorded in it, or the box is full --
+       and reserved when its seat is empty. Without the library's seats, a list card reads as reserved. */
+    const outOfBox=(deckId,slotId,purpose)=>{if(purpose&&purpose!=='main')return 'upgrade';const d=ctx&&ctx.decks.get(deckId);return d&&(d.full||d.held.has(slotId))?'upgrade':'reserved';};
+    if(r.kind==='need')return {...none,stage:'buy',deckId:r.deckId,role:outOfBox(r.deckId,r.slotId,r.purpose)};
+    if(r.kind==='draft')return {...none,stage:'watching',deckId:r.deckId,role:outOfBox(r.deckId,r.slotId,r.purpose)};
+    if(r.kind==='option')return {...none,stage:'watching',deckId:r.deckId,role:'upgrade'};
+    if(r.kind==='entry'){const deckId=ctx&&ctx.groups.get(r.groupId)||'';return {...none,stage:r.groupId===WANT_LIST?'buy':'watching',deckId,role:deckId?'upgrade':''};}
     if(r.kind!=='lot')throw Error('cardState reads copies, needs, draft rows, options and group entries, not '+r.kind+'.');
     const stage=r.source==='owned'?'owned':r.source==='ordered'?'ordered':'watching',loc=r.location||{},trade=r.offer&&r.offer!=='none'?r.offer:'';
     /* A copy physically in a deck other than the one it is reserved for is that deck's substitute. */
     if(stage==='owned'&&loc.kind==='deck'&&loc.deckId&&(!r.allocation||r.allocation.deckId!==loc.deckId))return {...none,stage,deckId:loc.deckId,role:'substitute',inBox:true,trade,reservedFor:r.allocation?.deckId||''};
-    if(r.allocation)return {...none,stage,deckId:r.allocation.deckId,role:roleOf(r.purpose||'main'),inBox:stage==='owned'&&loc.kind==='deck'&&loc.deckId===r.allocation.deckId,trade};
+    if(r.allocation){const inBox=stage==='owned'&&loc.kind==='deck'&&loc.deckId===r.allocation.deckId;return {...none,stage,deckId:r.allocation.deckId,role:inBox?'target':outOfBox(r.allocation.deckId,r.allocation.slotId,r.purpose||'main'),inBox,trade};}
     return {...none,stage,trade};
   }
+  const stateReader=s=>{const ctx=seats(s);return r=>cardState(r,ctx);};
   /* The one word a pill carries: the stage while a card is not owned; once owned, where it is -- the
-     Bench, or its role in a deck. */
+     Bench, To add (for a deck, not in its box yet), or its role in the box. A record for a deck that is
+     not in the box also wears its role, Upgrade or Reserved, beside the pill. */
   const stageLabel=id=>STAGES.find(x=>x.id===id)?.label||id;
   const roleLabel=id=>ROLES.find(x=>x.id===id)?.label||'';
-  const stateLabel=st=>st.stage!=='owned'?stageLabel(st.stage):st.deckId?roleLabel(st.role):'Bench';
+  const stateLabel=st=>st.stage!=='owned'?stageLabel(st.stage):!st.deckId?'Bench':st.inBox?roleLabel(st.role):'To add';
   /* The pill words in lifecycle order, and the tone each is painted: the stages a card passes through
      before it is owned, then where an owned card is. Sorting and grouping by state read this order. */
-  const STATE_LABELS=['Watching','To buy','Ordered','Bench','Target','Substitute','Upgrade'];
-  const STATE_TONES={Watching:'watch','To buy':'buy',Ordered:'ordered',Bench:'pull',Target:'inbox',Substitute:'standin',Upgrade:'reserved'};
+  const STATE_LABELS=['Watching','To buy','Ordered','Bench','To add','Target','Substitute'];
+  const STATE_TONES={Watching:'watch','To buy':'buy',Ordered:'ordered',Bench:'pull','To add':'reserved',Target:'inbox',Substitute:'standin',Upgrade:'reserved',Reserved:'buy'};
   const stateOrder=label=>{const i=STATE_LABELS.indexOf(label);return i<0?STATE_LABELS.length:i;};
   const stateTone=label=>STATE_TONES[label]||'draft';
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
@@ -687,5 +707,5 @@
     return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });
