@@ -46,7 +46,9 @@ const PAGES = [
   /* R3.8, the landing page (INTAKE row R3.8, 2026-09-26): measured up to the four doors, so it counts the header,
      the hero and Step one -- 92 words and 10 controls, every one of them the design's own copy. A landing page
      speaks more than a working page before its first list; the budget holds it at what it says today. */
-  ["welcome", "Landing", ".cm-landing-doors", [95, 10, 2], [95, 10, 2]],
+  /* R3.10a: Import from Archidekt joins Step one's "Or:" row, the design's own first entry there
+     ("Import from Archidekt · Upload a CSV · Start from a precon"); 10 → 11 controls, words unchanged. */
+  ["welcome", "Landing", ".cm-landing-doors", [95, 11, 2], [95, 11, 2]],
   /* Deck page (14 September): Make the change (n) joins the hero for a final deck — the change
      list Rob asked for needs a way in from the deck itself; 44 → 48 words, 14 → 15 controls. */
   /* Track V.4b: the Gallery hero carries the deck's strategy sentence from deck.notes, which the

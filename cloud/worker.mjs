@@ -12,9 +12,12 @@
  *   POST /api/library/kept         file this device's version without moving the head (the losing side of a choice)
  *   GET  /api/library/history      the versions held, newest first, without their bodies
  *   GET  /api/library/versions/:id one version with its body
+ *   GET  /api/import/archidekt?id=N a public Archidekt deck, trimmed to what the importer reads; no sign-in, nothing
+ *                                  stored (import.mjs, R3.10a)
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
+import {archidekt, ImportError} from "./import.mjs";
 
 const HEADERS = {
   "content-type": "application/json; charset=utf-8",
@@ -59,6 +62,18 @@ export async function handle(request, env, deps = {}) {
   const url = new URL(request.url), path = url.pathname, method = request.method;
   const ms = () => deps.now ?? Date.now();
   if (await overLimit(env.LIMIT_IP, request.headers.get("cf-connecting-ip"))) return tooMany("this network");
+  /* IMPORT BY LINK needs no account: a first visit can start from a deck it already has. It is still the app's
+     alone -- a custom header a page elsewhere cannot send without a preflight this Worker never answers, and the
+     Origin, when there is one, this site -- and it writes nothing, so it is answered before anyone is asked who
+     they are. Signed-out visitors reach it only once Access lets /api/import/* through (a Bypass policy, Rob's
+     dashboard step at release; docs/plan-account-cloud.md). */
+  if (path === "/api/import/archidekt") {
+    const origin = request.headers.get("origin");
+    if (method !== "GET") return reply(405, {error: "Import is a GET."});
+    if (request.headers.get("x-crankmagic") !== "import" || (origin && origin !== url.origin)) return reply(403, {error: "That request did not come from CrankMagic."});
+    try {return reply(200, {deck: await archidekt(url.searchParams.get("id"), {fetchImpl: deps.fetchImpl || fetch})});}
+    catch (error) {if (error instanceof ImportError) return reply(error.status, {error: error.message}); throw error;}
+  }
   let who;
   try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
   catch (error) {

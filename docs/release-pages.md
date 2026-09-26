@@ -53,6 +53,14 @@ cd <folder> && npx --yes wrangler@4.139.0 deploy
 UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
 ```
 
+**Once, before the first release that carries R3.10a (Rob, in the Cloudflare dashboard).** Import by link
+(`GET /api/import/archidekt`, `cloud/import.mjs`) needs no account, but Access guards all of `/api/*` with the
+Invited policy, so until Access lets that one path through, only a signed-in person can import a deck by its
+link; everyone else is told to export the list and paste it, which always works. To open it to a first visit,
+add a self-hosted Access application for `crankmagic.com/api/import/*` (and `staging.crankmagic.com/api/import/*`)
+with one **Bypass** policy for **Everyone**. The Worker still refuses any request that did not come from the
+app, holds each network to the rate limit, and stores nothing.
+
 `tests/uat/release-acceptance.mjs` is Rob's confirmation, as he worded it: *"testing the full deck creation,
 testing, exploring and acquiring capabilities."* On a fresh library it drafts a deck in Build, measures it
 with the real simulator (the one step no other suite runs), saves and finalizes it, follows a card in

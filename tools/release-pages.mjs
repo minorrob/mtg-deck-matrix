@@ -71,8 +71,8 @@ const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
 const RELEASE = {
   play: "coming-soon",
   /* The browser reaches outside data only where plan-data-sync §0 allows it: Scryfall's API, and nothing else.
-     Archidekt is left out of every release: its only caller is Play's deck import, which no release carries,
-     and R3.10 brings Archidekt links back through a Worker route. The frozen local host keeps it until M9. */
+     Archidekt is not in any page's policy since R3.10a: a deck link comes through the Worker's /api/import/archidekt,
+     so the browser never reaches it. It stays on this list so a release refuses it should it ever come back. */
   dropConnect: ["http://127.0.0.1:8768", "https://*.trycloudflare.com", "https://archidekt.com"],
   host: "cloudflare",
   /* Rob, 2026-09-24: "I do want the analytics." Cloudflare Web Analytics' automatic setup injects its

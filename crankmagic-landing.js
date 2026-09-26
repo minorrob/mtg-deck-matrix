@@ -6,7 +6,7 @@
  *
  * WHAT IT PROMISES (M1·2): accounts are invite-only, so the page says Sign in and "Start without an account",
  * never "Start free" or "Free account". Step one takes a commander's name or a pasted list, or a CSV (M1·4);
- * Archidekt links and precons come in R3.10 and are not offered until they work. Play is Coming soon, with no
+ * an Archidekt link comes through the app's own importer (R3.10a); precons come in R3.10b. Play is Coming soon, with no
  * mailing list (M1·5).
  *
  * WHAT IT LOADS: nothing of its own. The commander art is three small images already in assets/, and the
@@ -61,7 +61,7 @@
     <form class="cm-landing-start" id="cm-landing-start">
       <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>Step one: start your first deck</strong></div>
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
-      <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
+      <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>
@@ -87,7 +87,8 @@
     /* A single line is a commander to search for; more than one is a list, and goes where lists go -- the same rule
        as the card picker's search. An input keeps one line, so a pasted list is caught on its way in. */
     const lines = (text) => String(text || "").split(/\r?\n/).filter((l) => l.trim()).length;
-    const start = (text) => lines(text) > 1 ? C.startDeck.list(text) : C.startDeck.commander(text);
+    /* A deck site's link goes to the importer, not to the name search. */
+    const start = (text) => lines(text) > 1 ? C.startDeck.list(text) : C.startDeck.isLink(text) ? C.startDeck.link(text) : C.startDeck.commander(text);
     const run = (fn) => Promise.resolve().then(fn).catch((err) => C.notice(err.message, true));
     const onSubmit = (ev) => {ev.preventDefault(); run(() => start(input.value));};
     const onPaste = (ev) => {const text = ev.clipboardData?.getData("text") || ""; if (lines(text) < 2) return; ev.preventDefault(); run(() => C.startDeck.list(text));};
