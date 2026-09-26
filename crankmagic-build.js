@@ -9,8 +9,8 @@
  *                                drafts a preview (C.labStart); nothing is saved until Save this deck, as ever
  *
  * THE STRATEGY STEP IS DATA, NOT A LIST (the design's "Lab strategy"). Its chips are read off the commander:
- * CrankStrategies.optionsFor over data/commander-strategies.json (rules text, then how decks and guides name it; colors
- * only when neither has anything), each with a fit label, the top fit preselected, a skeleton while the file loads,
+ * CrankStrategies.optionsFor over data/commander-strategies.json (rules text, then how decks and guides name it, ties to
+ * the more distinctive; colors only when neither has anything), each with a fit label, the top fit preselected, a skeleton while the file loads,
  * and a different commander recomputes them. The file is fetched when the step first opens, once.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
@@ -54,7 +54,7 @@
       <label class="cm-build-avoid">Anything to include or avoid<textarea name="restrictions" rows="3" maxlength="1000" placeholder="No infinite combos; keep it under three mana on average…">${e(w.restrictions)}</textarea></label>
       <div class="cm-form-footer">${b("Back", "build-step", {to: "commander"})}${b("Next: Budget", "build-step", {to: "budget"}, true)}</div>`);
     let options = [];
-    try { options = CrankStrategies.optionsFor({entry: await strategyEntry(c), colorIdentity: c.colorIdentity || []}); }
+    try { options = CrankStrategies.optionsFor({entry: await strategyEntry(c), colorIdentity: c.colorIdentity || [], counts: strategyData.perStrategy}); }
     catch (error) { options = CrankStrategies.optionsFor({entry: null, colorIdentity: c.colorIdentity || []}); C.notice(`${error.message} Showing what its colors suggest instead.`, true); }
     const box = d.querySelector("#cm-build-chips");
     if (!box || !box.isConnected || w.commander !== c) return;  /* the reader moved on while it loaded */
