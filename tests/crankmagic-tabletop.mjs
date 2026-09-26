@@ -47,7 +47,7 @@ eq(t.ghosts, rows.filter((r) => T.isGhost(r)).length, "ghost rows are counted on
 /* TB5: the piles a card can be dropped on are marked; the rest are readings of a plan. */
 eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,Ordered,Watched,Wanted,To buy", "seven status piles take a drop, in workflow order");
 ok(t.statusPiles.filter((p) => p.target === false).every((p) => /^(Draft list|Suggestion|Planned|Unassigned)$/.test(p.label)), "the readings are Draft list, Suggestion, Planned and Unassigned");
-eq(T.TARGET.size, 7); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 680, "the stage's full size is Scryfall's normal print");
+eq(T.TARGET.size, 10, "the seven old status piles and the card states' Target, To add and Watching (docs/card-states.md) take a drop"); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 680, "the stage's full size is Scryfall's normal print");
 ok(t.statusPiles.every((p) => !p.count || (p.top && p.top.card)), "a pile with cards has a top card to show");
 ok(t.statusPiles.every((p) => p.rows.every((r, i, a) => i === 0 || String(a[i - 1].card.name).localeCompare(String(r.card.name)) <= 0)), "a pile's rows are by name");
 

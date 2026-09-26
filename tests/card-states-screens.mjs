@@ -65,6 +65,29 @@ try {
   ok(chips.every(([l]) => ["Owned", "To add", "Option", "Pinned", ...M.STATE_LABELS].includes(l)), "and every chip is a card-state word");
   await page.keyboard.press("Escape");
 
+  /* 4. The Table view (step 2c): its status piles are the card states, each counting the copies the model puts in it,
+     and "To add" is the pile Ready to add empties. Its own Status dropdown offers the same words. */
+  await page.goto(`${base}/index.html#cards?view=tabletop`);
+  await page.locator("[data-pile^='status:']").first().waitFor({timeout: 30000});
+  const piles = Object.fromEntries(await page.$$eval("[data-pile^='status:']", (ps) => ps.map((x) => { const m = x.getAttribute("aria-label").match(/^(.*), ([\d,]+) cards?$/); return m ? [m[1], Number(m[2].replace(/,/g, ""))] : [x.getAttribute("aria-label"), -1]; })));
+  const all = [...M.projection(st), ...st.groups.flatMap((g) => g.entries.map((r) => ({...r, kind: "entry", groupId: g.id})))].map((r) => ({r, s: M.cardState(r)}));
+  const n = (f) => all.filter(({s}) => f(s)).reduce((k, {r}) => k + r.quantity, 0);
+  const own = (f) => n((s) => s.stage === "owned" && f(s));
+  const pileWant = {"Target": own((s) => s.role === "target" && s.inBox), "To add": own((s) => s.role === "target" && !s.inBox), "Substitute": own((s) => s.role === "substitute"), "Ordered": n((s) => s.stage === "ordered"), "To buy": n((s) => s.stage === "buy"), "Watching": n((s) => s.stage === "watching")};
+  for (const k of Object.keys(pileWant)) if (!pileWant[k]) delete pileWant[k];
+  eq(piles, pileWant, "the Table view's status piles are the card states, each counting what the model puts in it");
+  eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Owned (any)", "Target", "To add", "Substitute", "Upgrade", "Bench", "Ordered", "To buy", "Watching"], "and its Status dropdown offers the same words");
+
+  /* 5. Ready to add: a copy waiting outside its box wears "To add", with where to find it. */
+  /* A deck whose waiting copy sits on the Bench, which is the group that wears this pill. */
+  const PULL = st.decks.find((d) => !d.archived && waitingIn(d.id).some((l) => l.location?.kind !== "deck"))?.id;
+  ok(PULL, "some deck has a copy waiting on the Bench, so the check below can fail");
+  await page.goto(`${base}/index.html#pull?deck=${encodeURIComponent(PULL)}`);
+  await page.waitForTimeout(1500);
+  /* The waiting copies' pills: the Bench group's, which used to read "Bench · <box>". */
+  const pullPills = await page.$$eval(".cm-pill", (ps) => ps.map((p) => p.textContent.trim()).filter((t) => /^(Bench|To add)\b/.test(t)));
+  ok(pullPills.some((t) => /^To add · /.test(t)) && !pullPills.some((t) => /^Bench · /.test(t)), `Ready to add names each waiting copy "To add", then where it is, where it said "Bench": ${pullPills.slice(0, 3).join(" | ")}`);
+
   /* 3. The ladder. */
   await page.goto(`${base}/index.html#how`);
   await page.locator(".cm-how-ladder li").first().waitFor({timeout: 30000});

@@ -86,6 +86,10 @@ const groupOrder=(r,key)=>G.order(r,key,value,statusRank);
    caption says so. What a card counts is what its click shows (Rob, 2026-09-25): both ask the model's
    cardState, so a figure and the rows under it cannot disagree. */
 const STATE_KINDS=['lot','need','draft','option','entry'];
+/* The Table view's status piles, in the order a deck is finished: what is in a deck, what waits to go in, then the
+   Bench, then what is not held yet. */
+const TABLE_PILES=[['target','Target'],['toadd','To add'],['substitute','Substitute'],['upgrade','Upgrade'],['bench','Bench'],['ordered','Ordered'],['buy','To buy'],['watching','Watching']].map(([id,label],order)=>({id,label,tone:label==='To add'?'reserved':M.stateTone(label),order}));
+const tablePile=r=>{if(!STATE_KINDS.includes(r.kind))return r.status;const st=stateOfRow(r);return st.stage==='owned'&&st.role==='target'&&!st.inBox?'To add':M.stateLabel(st);};
 const stateOfRow=r=>r.state||(STATE_KINDS.includes(r.kind)?M.cardState(r):{stage:'',deckId:'',role:'',inBox:false});
 const owned=(r,f)=>{const st=stateOfRow(r);return st.stage==='owned'&&f(st);};
 const KPI_TEST={
@@ -511,19 +515,20 @@ function scoreboard(model){
 function tabletop(params,shop=false){
   const TT=globalThis.CrankTabletop,tab=shop?'buy':'library';
   C.main.innerHTML=cardsHead(params,tab,'tabletop')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],['owned','Owned (any)'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any color'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}${b('Back to Play Space','tt-rest')}</div>`
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],['owned','Owned (any)'],...TABLE_PILES.map(x=>[x.label==='To add'?'to-add':x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any color'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}${b('Back to Play Space','tt-rest')}</div>`
    +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
     /* The library's rows, and then the cards sent over from Discover -- minus any the library
        already holds a record of, because a card is never both a copy you have and a card you are
        considering; the copy is the truer row and it is already on the table. */
-    /* The Table view keeps the old status labels until its piles move to the card states (docs/card-states.md, step 2b). */
-    const base=rows(params,shop).filter(r=>matches(r)).map(r=>({...r,status:statusOf(r),stateLabel:undefined}));
+    /* THE TABLE'S PILES ARE THE CARD STATES (docs/card-states.md, step 2c): one pile per state word, and "To add"
+       for an owned target still outside its box -- the pile Ready to add empties. */
+    const base=rows(params,shop).filter(r=>matches(r)).map(r=>({...r,status:tablePile(r)}));
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString('en-US')} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString('en-US')} rows) · Bench ${model.bench.count.toLocaleString('en-US')} · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -711,7 +716,7 @@ function tabletopDrop(pileId,ids){
      the card is being considered FOR — that is what turns it Watched rather than loose. */
   if(action==='hold'){const P=ttModel&&ttModel.play;if(!P||!P.deck)throw Error('Pick a deck at the top of the table first; the middle holds cards you are considering for a deck.');
     ttUI.drawAt=0;
-    return stageRows(rows,{action:'hold',arg:P.deck.groupId,deckId:P.deck.id,deckName:P.deck.name,to:TT.HAND,toStatus:'Watched'});}
+    return stageRows(rows,{action:'hold',arg:P.deck.groupId,deckId:P.deck.id,deckName:P.deck.name,to:TT.HAND,toStatus:'Watching'});}
   /* A TRAY EDITS THE DECK (plan §2.3), so unlike the middle it says so before it is staged: the
      receipt at Confirm names the list change, and this is where a reader can still say no. */
   if(action==='tray'){const P=ttModel&&ttModel.play;if(!P||!P.deck)throw Error('Pick a deck at the top of the table first; a tray reserves copies for the deck being calibrated.');
@@ -722,7 +727,7 @@ function tabletopDrop(pileId,ids){
     form(`Tray ${n}: reserve for ${d.name}`,
       note(`${names}. ${adds?`${adds} of these ${adds===1?'is':'are'} not on ${d.name}'s list yet, so confirming adds ${adds===1?'it':'them'} — the list goes from ${target} to ${after}${after>100?`, ${after-100} over a hundred`:''}.`:`Every one of these is already on ${d.name}'s list; confirming reserves your copies for the seats they fill.`}`,after>100)
       +note('Staged, not saved: this joins the sitting and is written when you confirm.'),
-      ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'Reserved'}),'Stage the move');return;}
+      ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'To add'}),'Stage the move');return;}
   /* A DECK'S OWN PILE (Rob, 15 September). The deck is known, so there is no form to fill: one
      `place` reserves the copy for the seat it fills and records it as physically in that box,
      which is what "reserved and in physical deck" means in the model's own words. A copy the list
@@ -779,7 +784,7 @@ function shelfGroup(pile){
 function fileInGroup(rows,g,tray){
   for(const r of rows)ttUI.hand.delete(r.recordId);saveHand();
   return stageRows(rows,r=>r.kind==='catalog'
-    ?{action:'plan',arg:g.id,to:g.name,toStatus:'Planned',tray}
+    ?{action:'plan',arg:g.id,to:g.name,toStatus:'Watching',tray}
     :{action:'group',arg:g.id,to:g.name,toStatus:'',tray});
 }
 function sheet(params){
