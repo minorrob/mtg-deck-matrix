@@ -13,8 +13,8 @@
  * (<meta name="crankmagic-play" content="cloud">) and accounts are on; no release is, and releases leave this
  * file out with the rest of Play (tools/release-pages.mjs, PLAY). Anywhere else it says Coming Soon.
  *
- * The board comes next: while a game is on, this page says so and carries End game (two taps, Rob's rule
- * against accidental clicks) and Concede.
+ * While a game is on, the page is the board (crankmagic-board.js), which carries End game (two taps, Rob's
+ * rule against accidental clicks) and Concede in its Tools. Once it is over, the lobby says so here.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, button: b, actions, views} = C;
@@ -38,6 +38,8 @@
     return value;
   }
   const tableUrl = (id) => `/api/tables/${encodeURIComponent(id)}`;
+  /* The board sends End game and Concede through the same door, then has the lobby read the table again. */
+  C.tableApi = {api, tableUrl, refresh: (id) => refresh(id)};
   const inviteLink = (id, code) => `${location.origin}${location.pathname}#table/${id}/${code}`;
 
   /* A library deck as the table takes it: its name, its commander(s), and every other card by name. */
@@ -117,6 +119,8 @@
   }
   function draw(t) {
     current = t;
+    /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
+    if (C.board && C.board.wants(t)) return C.board.show(t);
     const art = C.seatArt;
     const seats = ORDER.map(([corner, i]) => {
       const s = t.seats[i];
@@ -162,7 +166,7 @@
       }
       loop();
     })();
-    return () => {stop = true; clearTimeout(timer); clearInterval(clock);};
+    return () => {stop = true; clearTimeout(timer); clearInterval(clock); if (C.board) C.board.close();};
   };
   function showError(error, id) {
     const signIn = error.signedOut ? b("Sign in", "account-sign-in", {}, true) : "";

@@ -166,8 +166,8 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
       if (route === "POST /table/start") {await t.start(email, now); await this.schedule(); return reply(200, {table: await t.view(email)});}
       if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
-      if (route === "POST /table/end") {const view = await t.endGame(email, now); await this.schedule(); await this.load(); this.broadcast(); return reply(200, {table: view});}
-      if (route === "POST /table/concede") {const view = await t.concede(email, now); await this.schedule(); await this.load(); this.broadcast(); return reply(200, {table: view});}
+      if (route === "POST /table/end") {const room = await this.load(); const view = await t.endGame(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
+      if (route === "POST /table/concede") {const room = await this.load(); const view = await t.concede(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
       if (route === "GET /connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         const {room, seatId} = await t.room(email);
@@ -192,9 +192,17 @@ export class GameTable extends GameRoom {
 
   /** The countdown's end, or a dropped player's time running out. Whatever has not run out waits for the next alarm. */
   async alarm() {
+    const room = await this.load();
     await this.table.tick(this.now());
     await this.schedule();
-    if (await this.load()) this.broadcast();
+    await this.share(room);
+  }
+
+  /** Everyone's view after a change, from the room it was made in. A game that just ended is no longer the
+   *  table's current one, and its players are still owed the view that says it is over. */
+  async share(room) {
+    this.room = (await this.load()) || room;
+    if (this.room) this.broadcast();
   }
 
   /** A seat's socket opened: if they had dropped, their clock stops and everyone's view is fresh. */
