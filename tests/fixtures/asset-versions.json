@@ -102,8 +102,8 @@
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 41,
-      "sha": "e08e1769a0885732"
+      "version": 42,
+      "sha": "2f93eab24bd7e389"
     },
     "collection-repository.js": {
       "version": 4,
@@ -122,8 +122,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 341,
-      "sha": "67b8c6981e528436"
+      "version": 342,
+      "sha": "5521b096ca14916d"
     },
     "crankmagic-assets.js": {
       "version": 31,
@@ -266,8 +266,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 338,
-      "sha": "a131a9d569a66b63"
+      "version": 339,
+      "sha": "0451b39f189f1b86"
     },
     "crankmagic-tabletop.js": {
       "version": 21,
