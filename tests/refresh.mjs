@@ -29,8 +29,8 @@ for (const s of STEPS) {
 /* The records step writes the graph's card block through build-card-records.mjs, whose registered producer is the graph tool; that is the one shared file. */
 ok(STEPS.find((s) => s.id === "records").writes.includes("data/graph.json"), "the records step says it touches the graph's card block");
 
-/* The specification's order: 1 universe, 2 flavor names, 3 graph, 4 ranks; then the record set, the strategies, the manifest. */
-eq(STEPS.map((s) => s.id), ["universe", "flavor", "graph", "ranks", "records", "strategies", "manifest"], "the plan is the specification's order");
+/* The specification's order: 1 universe, 2 flavor names, 3 graph, 4 ranks; then the record set, the strategies, the precons (held to the new universe), the manifest. */
+eq(STEPS.map((s) => s.id), ["universe", "flavor", "graph", "ranks", "records", "strategies", "precons", "manifest"], "the plan is the specification's order");
 ok(STEPS.find((s) => s.id === "graph").long, "the graph step is marked long");
 for (const id of ["universe", "flavor", "graph", "records"]) ok(STEPS.find((s) => s.id === id).count?.mustNotShrink, `${id} must not shrink`);
 
