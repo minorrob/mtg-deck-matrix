@@ -22,7 +22,7 @@
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
   const ORDER = [["br", 0], ["bl", 1], ["tr", 2], ["tl", 3]];   /* the quadrant corners the local table uses, seat 1 first */
-  let current = null, confirmEnd = false;
+  let current = null;
   /* How far the table's clock is from this device's: the countdown is the server's, read in its own time. */
   let skew = 0;
   const tableNow = () => Date.now() + skew;
@@ -107,15 +107,9 @@
       <div class="cm-table-launch-row" id="cm-table-launch">${launch}</div>
     </section>`;
   }
-  function gamePanel(t) {
-    const you = t.seats.find((s) => s.you);
-    const left = you && !you.occupied;
-    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>${t.phase === "rematch" ? "The game is over" : "The game is on"}</h2>
-      <p class="cm-muted">${t.phase === "rematch" ? "Its record is kept." : left ? "You have left this game; the others play on." : "The board opens here next. Until then, this is where you leave the game."}</p>
-      ${t.phase === "playing" && !left ? `<div class="cm-actions">${confirmEnd
-        ? `${b("End for everyone · keep the record", "table-end", {confirm: "1"}, true)}${b("Keep playing", "table-end-cancel")}`
-        : b("End game", "table-end")}${b("Concede", "table-concede")}</div>` : ""}
-    </section>`;
+  /* After the game: the board is put away and the lobby says so. (While it is on, the page is the board.) */
+  function gamePanel() {
+    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
   }
   function draw(t) {
     current = t;
@@ -129,7 +123,7 @@
       return art.quadrant(corner, s.you ? "is-you" : "", [], state, inner);
     }).join("");
     C.main.innerHTML = C.pageHead("Play", "", "", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
-      + (t.phase === "playing" || t.phase === "rematch" ? gamePanel(t) : "")
+      + (t.phase === "rematch" ? gamePanel() : "")
       + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
     art.startSeas();
   }
@@ -244,14 +238,4 @@
   actions["table-ready"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/ready`, {ready: el.dataset.ready === "1"}); await refresh(current.tableId);};
   actions["table-start"] = async () => {await api("POST", `${tableUrl(current.tableId)}/start`); await refresh(current.tableId);};
   actions["table-cancel"] = async () => {await api("POST", `${tableUrl(current.tableId)}/cancel`); await refresh(current.tableId);};
-
-  /* ---- leaving the game in play: End game takes a second tap (Rob, 2026-09-26) ---- */
-  actions["table-end"] = async (el) => {
-    if (el.dataset.confirm !== "1") {confirmEnd = true; draw(current); return;}
-    confirmEnd = false;
-    await api("POST", `${tableUrl(current.tableId)}/end`);
-    await refresh(current.tableId);
-  };
-  actions["table-end-cancel"] = () => {confirmEnd = false; draw(current);};
-  actions["table-concede"] = async () => {await api("POST", `${tableUrl(current.tableId)}/concede`); await refresh(current.tableId);};
 });

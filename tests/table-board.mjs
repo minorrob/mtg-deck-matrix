@@ -50,8 +50,11 @@ const deck = (who, land) => ({name: `${who}'s deck`, commander: [`${who} General
 let queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const writes = [];
+/* A person's table reads can be held, so the room's socket is the only way news can reach them. */
+const held = {};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
+  if (method === "GET" && held[email]) await held[email].promise;
   if (method !== "GET") writes.push({path: url.pathname, header: req.headers()["x-crankmagic"], type: req.headers()["content-type"]});
   const m = /^\/api\/tables\/([a-z0-9]+)(?:\/([a-z]+))?$/.exec(url.pathname);
   if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
@@ -174,6 +177,11 @@ try {
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}']`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
+  /* With the land down there are two things to do, pass or tap it for mana: Pass priority passes. */
+  ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, the panel offers its mana");
+  await active.page.click("[data-action=board-pass]");
+  await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`));
+  eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Pass priority hands priority on, and taps nothing");
   await other.page.click(`.cm-board-tile[data-seat='${1 - activeSeat}']`);
 
   /* REFUSED: an answer to a question already gone is refused, in words, and the board takes the room's view. */
@@ -223,9 +231,11 @@ try {
   }
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
+  let release; held[MAYA] = {promise: new Promise((r) => {release = r;})};
   await dropSocket(ROB);
-  await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/);
-  ok(true, "Maya is told at once that Rob dropped, and until when");
+  await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/, 10000);
+  ok(true, "Maya is told at once that Rob dropped, and until when, by the room over her socket (her table reads held)");
+  delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-board-strip") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
   ok(routes[ROB].length === 2, "Rob's board opens a new socket by itself, and the room sends his view again");
   await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});

@@ -40,7 +40,6 @@
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
-  const dismissed = new Set();   /* tables whose finished game this page has already put away */
 
   /* ---- the socket ---- */
   function connect() {
@@ -294,7 +293,7 @@
       if (!socket && status !== "reconnecting") connect();
     },
     /** Whether the board is what this table's page should show. */
-    wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view && !dismissed.has(t.tableId));},
+    wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
     close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false;},
   };
 
@@ -346,7 +345,7 @@
   };
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
-  actions["board-leave"] = async () => {const id = tableId; dismissed.add(id); C.board.close(); await tableApi().refresh(id);};
+  actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
   document.addEventListener("input", (event) => {
     const i = event.target && event.target.dataset && event.target.dataset.boardAmount;
     if (i === undefined || !view || !view.decision) return;
