@@ -41,7 +41,7 @@ const records = (page) => page.$eval("#cm-roster-table", (t) => { const m = (t.q
 const promised = (page) => page.$eval("#cm-fd-show", (b) => { const m = b.textContent.match(/Show ([\d,]+) records?/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
 const heads = (page) => page.$$eval(".cm-table thead th[class*=cm-col-]", (ths) => ths.map((th) => [...th.classList].find((c) => c.startsWith("cm-col-")).slice(7)));
 /* The library as stored, judged here in Node: the page's security policy (rightly) refuses eval. */
-const stateOf = (page) => page.evaluate(async () => { const r = await CrankRepository.open(); try { const s = await r.getState(); return {cards: s.cards, lots: s.lots, decks: s.decks.map((d) => ({id: d.id, name: d.name, archived: !!d.archived})), preferences: s.preferences}; } finally { r.close(); } });
+const stateOf = (page) => page.evaluate(async () => { const r = await CrankRepository.open(); try { const s = await r.getState(); return {cards: s.cards, lots: s.lots, decks: s.decks.map((d) => ({id: d.id, name: d.name, archived: !!d.archived})), preferences: s.preferences, groups: s.groups}; } finally { r.close(); } });
 const opened = async (page, name) => { await page.locator("#cm-dialog[open]").waitFor(); eq(await page.locator("#cm-dialog-title").textContent(), name, `the dialog is ${name}`); };
 const settle = (page) => page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-table"));
 
@@ -61,7 +61,8 @@ try {
   const figures = () => page.$$eval(".cm-kpi", (ks) => ks.map((k) => ({label: k.querySelector("span").textContent.trim(), n: Number(k.querySelector("strong").textContent.replace(/,/g, ""))})));
   const copiesShown = () => page.$eval("#cm-roster-table", (t) => { const m = (t.querySelector(".cm-paging span, .cm-status-line")?.textContent || "").match(/([\d,]+) cop(?:y|ies)/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
   const cardsBefore = await figures(), recordsBefore = await records(page);
-  eq(cardsBefore.map((f) => f.label), ["Reserved", "Owned", "Substitutes", "Physical Deck", "Ordered", "To Buy", "Watched"], "seven count cards");
+  eq(cardsBefore.map((f) => f.label), ["Watching", "To buy", "Ordered", "Owned", "Bench", "Target", "Substitute", "Upgrade"], "eight count cards: the stages, then where an owned card is (docs/card-states.md)");
+  eq(cardsBefore[3].n, cardsBefore[4].n + cardsBefore[5].n + cardsBefore[6].n + cardsBefore[7].n, "and the second row adds up to Owned");
   for (const [i, f] of cardsBefore.entries()) {
     await page.locator(".cm-kpi").nth(i).click();
     await page.waitForFunction((n) => { const t = document.querySelector("#cm-roster-table .cm-paging span, #cm-roster-table .cm-status-line"); return t && /cop(y|ies)/.test(t.textContent); }, null);
@@ -76,13 +77,57 @@ try {
   /* Two figures judged from the library as stored, not from the page's rule. */
   {
     const st = await stateOf(page), sum = (f) => st.lots.filter(f).reduce((n, l) => n + l.quantity, 0);
-    eq(cardsBefore[1].n, sum((l) => l.source === "owned" && !!l.allocation), "Owned is the owned copies a deck has reserved");
-    eq(cardsBefore[4].n, sum((l) => l.source === "ordered"), "Ordered is the copies on order");
+    eq(cardsBefore[3].n, sum((l) => l.source === "owned"), "Owned is every owned copy");
+    eq(cardsBefore[4].n, sum((l) => l.source === "owned" && !l.allocation && l.location?.kind !== "deck"), "the Bench is the owned copies no deck reserves and no deck box holds");
+    eq(cardsBefore[2].n, sum((l) => l.source === "ordered"), "Ordered is the copies on order");
   }
 
   /* 8. The name first, then its mana (Rob, 2026-09-25: "Put the card name first then mana symbols"). */
   const nameFirst = await page.$$eval("#cm-roster-table tr[data-card] td.cm-col-name", (tds) => tds.map((td) => { const n = td.querySelector(".cm-card-name"), m = td.querySelector(".cm-row-mana, .cm-row-land"); return !m || !!(n.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING); }));
   ok(nameFirst.length > 20 && nameFirst.every(Boolean), `in every row the card's name comes before its mana (${nameFirst.filter(Boolean).length} of ${nameFirst.length})`);
+
+  /* 9. The card states on the rows (docs/card-states.md): every pill is a word from the vocabulary, the Filters
+     dialog offers the states, and "Not yet in the box" finds exactly the owned targets Ready to add lists. */
+  const VOCAB = ["Watching", "To buy", "Ordered", "Bench", "Target", "Substitute", "Upgrade"];
+  const pills = await page.$$eval("#cm-roster-table td.cm-col-status .cm-pill", (ps) => ps.map((p) => p.textContent.trim()));
+  ok(pills.length > 20 && pills.every((p) => VOCAB.includes(p)), `every Status pill is a card-state word: ${[...new Set(pills.filter((p) => !VOCAB.includes(p)))].join(", ")}`);
+  await page.getByRole("button", {name: /^Filters/}).click();
+  await opened(page, "Filters");
+  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Watching", "To buy", "Ordered", "Owned (any)", "Bench", "Target", "Substitute", "Upgrade", "Not yet in the box"], "the Filters dialog's Status chips are the card states");
+  await page.locator("[data-fd=status][data-value=to-add]").click();
+  await page.locator("#cm-fd-show").click();
+  await page.waitForFunction(() => /Not yet in the box/.test(document.getElementById("cm-filter-chips")?.textContent || ""));
+  const toAdd = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => ({pill: tr.querySelector("td.cm-col-status .cm-pill")?.textContent.trim(), badge: !!tr.querySelector(".cm-badge-toadd"), q: Number(tr.querySelector("td.cm-col-quantity")?.textContent.trim() || 1)})));
+  {
+    const st = await stateOf(page), five = st.lots.filter((l) => l.source === "owned" && l.allocation && !(l.location?.kind === "deck" && l.location.deckId === l.allocation.deckId) && !(l.location?.kind === "deck")).reduce((n, l) => n + l.quantity, 0);
+    ok(toAdd.length > 0 && toAdd.every((r) => r.pill === "Target" && r.badge), "Not yet in the box shows owned targets, each wearing To add");
+    eq(toAdd.reduce((n, r) => n + r.q, 0), five, `and exactly the ${five} copies reserved for a deck and not in any deck's box, judged from the stored lots`);
+  }
+  await page.locator("#cm-filter-chips [data-action=clear-filters]").click();
+  await settle(page);
+  /* The To buy tab holds the To Buy list beside the decks' needs. */
+  await page.goto(`${base}/index.html#cards?tab=buy`);
+  await settle(page);
+  {
+    const st = await stateOf(page), list = st.groups.find((g) => g.id === "group:to-buy").entries.reduce((n, r) => n + r.quantity, 0);
+    const tabN = await page.$eval(".cm-cards-tabs [data-tab=buy] small", (x) => Number(x.textContent.replace(/,/g, "")));
+    const needs = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return CrankCollection.projection(await r.getState()).filter((x) => x.kind === "need").reduce((n, x) => n + x.quantity, 0); } finally { r.close(); } });
+    eq(tabN, needs + list, `the To buy tab counts the decks' ${needs} needed copies and the To Buy list's ${list}`);
+    /* Grouped by deck, the list sits in the no-deck group, on a later page: turn pages until it shows. */
+    let found = false;
+    for (let i = 0; i < 10 && !found; i++) {
+      /* A list entry, alone or folded with the list's other copies of the same card (a fold for no deck ends in "|"). */
+      found = await page.evaluate(() => [...document.querySelectorAll("#cm-roster-table tr[data-record]")].some((t) => t.dataset.record.startsWith("entry:group:to-buy") || (t.dataset.record.startsWith("fold:") && t.dataset.record.endsWith("|"))));
+      if (found) break;
+      const next = page.locator("#cm-roster-table [data-page='1']").first();
+      if (!(await next.count()) || await next.isDisabled()) break;
+      await next.click();
+      await page.waitForTimeout(300);
+    }
+    ok(found, "and lists its entries");
+  }
+  await page.goto(LIB);
+  await settle(page);
 
   /* 1. Filters. */
   const all = await records(page);
@@ -285,7 +330,7 @@ try {
      overflowing figure is wider than the room the card gives it. */
   const kpis = await small.$$eval(".cm-kpi", (ks) => ks.map((k) => { const s = k.querySelector("strong"), r = k.getBoundingClientRect(), cs = getComputedStyle(k), range = document.createRange(); range.selectNodeContents(s); const t = range.getBoundingClientRect();
     return {text: s.textContent, fits: t.left >= r.left + parseFloat(cs.paddingLeft) - 1 && t.right <= r.right - parseFloat(cs.paddingRight) + 1, left: r.left, right: r.right}; }));
-  ok(kpis.length === 7 && kpis.every((k) => k.fits && k.left >= 0 && k.right <= 390), `on a phone every count card shows its whole figure: ${JSON.stringify(kpis.filter((k) => !(k.fits && k.left >= 0 && k.right <= 390)))}`);
+  ok(kpis.length === 8 && kpis.every((k) => k.fits && k.left >= 0 && k.right <= 390), `on a phone every count card shows its whole figure: ${JSON.stringify(kpis.filter((k) => !(k.fits && k.left >= 0 && k.right <= 390)))}`);
   await small.locator(".cm-kpi").nth(1).click();
   /* Measure once the scroll has come to rest: the same scrollY twice, a quarter second apart. */
   for (let last = -1, i = 0; i < 40; i++) { await small.waitForTimeout(250); const y = await small.evaluate(() => scrollY); if (y === last && y > 0) break; last = y; }
