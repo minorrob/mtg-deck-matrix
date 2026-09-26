@@ -127,8 +127,8 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
     page.on("pageerror", (e) => errors.push(e.message));
     if (stub) await stub(page);
     try {
-      await page.goto(`${base}/index.html`);
-      await page.getByRole("heading", {name: "Build it. Make it yours."}).waitFor({timeout: 60000});
+      await page.goto(`${base}/index.html#decks`);
+      await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
 
       for (const [hash, label] of pages) {
         await page.goto(`${base}/index.html#${hash}`);

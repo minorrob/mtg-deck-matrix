@@ -105,8 +105,8 @@ export async function openBrowser({name, flag}) {
 /* Load the committed live library the way a reader does: Menu → Restore from a
    backup file → the file → validate → RESTORE. The page is then the six real decks. */
 export async function loadLiveState(page, base) {
-  await page.goto(`${base}/index.html`);
-  await page.getByRole("heading", {name: "Build it. Make it yours."}).waitFor({timeout: 60000});
+  await page.goto(`${base}/index.html#decks`);
+  await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
   await page.getByRole("button", {name: "Menu", exact: true}).click();
   await page.getByRole("button", {name: "Restore from a backup file", exact: true}).click();
   await page.getByLabel("CrankMagic JSON backup").setInputFiles(path.join(ROOT, "data", "live-state.json"));

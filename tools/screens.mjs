@@ -47,8 +47,8 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto(`${base}/index.html`);
-    await page.getByRole("heading", {name: "Build it. Make it yours."}).waitFor({timeout: 60000});
+    await page.goto(`${base}/index.html#decks`);
+    await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
     // Load Live, the way the reader does it: User Functions -> Restore -> the committed file.
     await page.getByRole("button", {name: "User Functions", exact: true}).click();
     await page.getByRole("button", {name: "Restore from a backup file", exact: true}).click();

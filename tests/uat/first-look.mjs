@@ -42,8 +42,8 @@ async function session(viewport, tag) {
   const page = await context.newPage();
   const errors = []; page.on("pageerror", (e) => errors.push(e.message));
   const shot = (n) => SHOTS ? page.screenshot({path: path.join(SHOTS, `${tag}-${n}.png`)}) : null;
-  await page.goto(`${BASE}/index.html`);
-  await page.getByRole("heading", {name: "Build it. Make it yours."}).waitFor({timeout: 60000});
+  await page.goto(`${BASE}/index.html#decks`);
+  await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
   return {context, page, errors, shot};
 }
 async function restore(page) {
