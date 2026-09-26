@@ -31,6 +31,24 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
+/* The rules panel as read: the contrast of its text on its own ground (WCAG, alpha flattened), and whether its
+   heading, rules and launch row each sit inside it without overlapping (they did not, with the app's panel
+   ground under the table's ink: dark on dark, and the heading cut off at 390). */
+const panelReading = (page) => page.evaluate(() => {
+  const panel = document.querySelector(".cm-table-center");
+  const rgb = (c) => (c.match(/[\d.]+/g) || []).map(Number);
+  const lum = ([r, g, b]) => [r, g, b].map((v) => {v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;}).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const ground = rgb(getComputedStyle(panel).backgroundColor);
+  const worst = Math.min(...[...panel.querySelectorAll("h2, dt, dd")].map((el) => {
+    const [r, g, b, a = 1] = rgb(getComputedStyle(el).color), ink = [r, g, b].map((v, i) => v * a + ground[i] * (1 - a));
+    const [hi, lo] = [lum(ink), lum(ground)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  }));
+  const box = panel.getBoundingClientRect(), parts = [".cm-table-head", ".cm-table-rules", ".cm-table-launch-row"].map((q) => panel.querySelector(q).getBoundingClientRect());
+  const inside = parts.every((r) => r.top >= box.top - 0.5 && r.bottom <= box.bottom + 0.5);
+  const apart = parts.every((r, i) => i === 0 || r.top >= parts[i - 1].bottom - 0.5);
+  return {worst: Math.round(worst * 10) / 10, inside, apart};
+});
 
 /* THE SERVER, HERE: one GameTable object per table. Every card is playable except one, so a refusal by name
    can be seen; the engine's own cards stand in for the rest (a vanilla creature). */
@@ -107,6 +125,8 @@ try {
   eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allInnerTexts(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
   ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
+  const wide = await panelReading(rob.page);
+  ok(wide.worst >= 4.5 && wide.inside && wide.apart, `the rules read at 1400: contrast ${wide.worst}, inside ${wide.inside}, apart ${wide.apart}`);
   await shot(rob.page, "lobby-new-1400");
 
   /* DECK: one the engine cannot play is refused, naming its card; then a playable one. */
@@ -174,6 +194,8 @@ try {
   }
   await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-ready]").click();
   await waitText(maya.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
+  const narrow = await panelReading(maya.page);
+  ok(narrow.worst >= 4.5 && narrow.inside && narrow.apart, `and at 390: contrast ${narrow.worst}, heading, rules and launch row inside the panel and apart (${narrow.inside}, ${narrow.apart})`);
   await shot(maya.page, "lobby-guest-390");
 
   /* START: Rob readies, starts; the countdown; Cancel; Start; the game is on. */
