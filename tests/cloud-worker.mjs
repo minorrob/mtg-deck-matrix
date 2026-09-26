@@ -238,4 +238,55 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq(api.status, 401, "and /api/* is still the API's, which wants a signed-in person");
 }
 
+/* IMPORT BY LINK (R3.10a): a public Archidekt deck, fetched by the Worker and trimmed, with no sign-in, nothing
+   stored, and only the app able to ask. The network is a stand-in that records what was asked of it. */
+{
+  const {DECK_BYTES, DECK_ROWS} = await import("../cloud/import.mjs");
+  const Sources = (await import("../deck-sources.js")).default;
+  const raw = {id: 123, name: "Krenko's Mob", owner: {username: "someone", id: 9, email: "someone@example.com", avatar: "x"}, private: false,
+    categories: [{name: "Commander", includedInDeck: true}, {name: "Maybeboard", includedInDeck: false}],
+    cards: [
+      {quantity: 1, categories: ["Commander"], label: "", card: {id: 1, edition: {editioncode: "ddt"}, uid: "u1", prices: {tcg: 1.5, ck: 2, cm: 9}, oracleCard: {name: "Krenko, Mob Boss", manaCost: "{2}{R}{R}", text: "{T}: Create X 1/1 red Goblin creature tokens.", keywords: [], colorIdentity: ["Red"], cmc: 4, types: ["Creature"], subTypes: ["Goblin", "Warrior"], superTypes: ["Legendary"], gameChanger: false, uid: "o1"}}},
+      {quantity: 30, categories: ["Land"], label: "", card: {prices: {tcg: 0.1}, oracleCard: {name: "Mountain", manaCost: "", text: "", colorIdentity: [], cmc: 0, types: ["Land"], subTypes: ["Mountain"], superTypes: ["Basic"]}}},
+      {quantity: 1, categories: ["Maybeboard"], label: "", card: {oracleCard: {name: "Goblin Matron", types: ["Creature"], colorIdentity: ["Red"]}}},
+    ]};
+  const asked = [];
+  const upstream = (make) => async (url, init) => { asked.push({url, init}); return make(url, init); };
+  const nothingStored = new Proxy({}, {get() { throw Error("the import touched the database"); }});
+  const importEnv = {DB: nothingStored};  /* no Access settings either: the route must not need them */
+  const imp = async (query, {headers = {"x-crankmagic": "import"}, method = "GET", fetch = upstream(() => new Response(JSON.stringify(raw), {headers: {"content-type": "application/json"}})), envFor = importEnv} = {}) => {
+    const response = await handle(new Request(`https://crankmagic.test/api/import/archidekt${query}`, {method, headers}), envFor, {fetchImpl: fetch, now: clock});
+    return {status: response.status, cache: response.headers.get("cache-control"), json: await response.json()};
+  };
+  const good = await imp("?id=123");
+  eq(good.status, 200, "a public deck by its number: 200, with no sign-in and no Access settings");
+  eq([asked.at(-1).url, asked.at(-1).init.redirect], ["https://archidekt.com/api/decks/123/", "error"], "the Worker builds the address itself, Archidekt's API and nothing else, and follows no redirect");
+  eq(good.cache, "no-store", "and the answer is not cached");
+  const deck = good.json.deck;
+  ok(!JSON.stringify(deck).includes("someone@example.com") && deck.owner.id === undefined && deck.cards[0].card.edition === undefined && deck.cards[0].card.prices.cm === undefined, "only what the importer reads comes back: no owner's email or id, no edition, no other vendors' prices");
+  const fromRaw = Sources.fromArchidekt(raw, {url: "u"}), fromTrim = Sources.fromArchidekt(deck, {url: "u"});
+  eq([fromTrim.name, fromTrim.commander, fromTrim.total, fromTrim.cards.map((c) => [c.name, c.quantity, c.card.typeLine, c.card.colorIdentity.join(""), c.card.price])],
+    [fromRaw.name, fromRaw.commander, fromRaw.total, fromRaw.cards.map((c) => [c.name, c.quantity, c.card.typeLine, c.card.colorIdentity.join(""), c.card.price])],
+    "and the app's importer reads the trimmed deck exactly as it reads Archidekt's own: the commander, the counts, the types, the prices, the maybeboard left out");
+  eq((await imp("?id=123", {headers: {}})).status, 403, "without the app's header: 403, so a page elsewhere cannot use the Worker as its fetcher");
+  eq((await imp("?id=123", {headers: {"x-crankmagic": "import", origin: "https://evil.example"}})).status, 403, "from another site's origin: 403");
+  eq((await imp("?id=123", {method: "POST"})).status, 405, "anything but GET: 405");
+  for (const q of ["", "?id=abc", "?id=1/../../users", "?id=12345678901", "?id=-4"]) eq((await imp(q)).status, 400, `not a deck number (${q || "none"}): 400, and nothing is asked of Archidekt`);
+  const n = asked.length;
+  eq((await imp("?id=9", {fetch: upstream(() => new Response("nope", {status: 404}))})).json.error, "Archidekt has no public deck 9. A private deck cannot be read by link; export its list and paste it.", "no such public deck: says so, and what to do instead");
+  eq(asked.length, n + 1, "and exactly one request went out");
+  eq((await imp("?id=9", {fetch: upstream(() => new Response("{}", {status: 500}))})).status, 502, "Archidekt failing: 502");
+  eq((await imp("?id=9", {fetch: upstream(() => { const e = Error("slow"); e.name = "TimeoutError"; throw e; })})).status, 504, "Archidekt too slow: 504");
+  eq((await imp("?id=9", {fetch: upstream(() => new Response("<html>", {status: 200}))})).status, 502, "an answer that is not a deck: 502");
+  eq((await imp("?id=9", {fetch: upstream(() => new Response("{}", {headers: {"content-length": String(DECK_BYTES + 1)}}))})).status, 413, "a body that says it is too large: refused before it is read");
+  const flood = new ReadableStream({pull(c) { c.enqueue(new Uint8Array(256 * 1024).fill(32)); }});
+  eq((await imp("?id=9", {fetch: upstream(() => new Response(flood))})).status, 413, "a body that never says its size is cut off at the limit, not read to the end");
+  eq((await imp("?id=9", {fetch: upstream(() => new Response(JSON.stringify({cards: Array.from({length: DECK_ROWS + 1}, () => ({quantity: 1, card: {oracleCard: {name: "X"}}}))})))})).status, 413, `more than ${DECK_ROWS} rows: 413`);
+  const counter = (allowed) => { const seen = new Map(); return {limit: async ({key}) => { seen.set(key, (seen.get(key) ?? 0) + 1); return {success: seen.get(key) <= allowed}; }}; };
+  const limited = {...importEnv, LIMIT_IP: counter(1)};
+  const once = await handle(new Request("https://crankmagic.test/api/import/archidekt?id=123", {headers: {"x-crankmagic": "import", "cf-connecting-ip": "203.0.113.5"}}), limited, {fetchImpl: upstream(() => new Response(JSON.stringify(raw))), now: clock});
+  const twice = await handle(new Request("https://crankmagic.test/api/import/archidekt?id=123", {headers: {"x-crankmagic": "import", "cf-connecting-ip": "203.0.113.5"}}), limited, {fetchImpl: upstream(() => new Response(JSON.stringify(raw))), now: clock});
+  eq([once.status, twice.status], [200, 429], "and the per-network rate limit holds it like every other request");
+}
+
 console.log(`cloud-worker: ${checks} checks passed — Access tokens verified, writes from the app only, the head moves only from where a device left it, nothing crosses between people.`);

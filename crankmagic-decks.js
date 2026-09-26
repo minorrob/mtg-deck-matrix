@@ -550,6 +550,10 @@ actions['new-deck']=()=>{
         <strong>Import</strong>
         <span>Upload or paste a decklist</span>
       </button>
+      <button type="button" class="cm-wizard-path" data-action="import-archidekt">
+        <strong>From a link</strong>
+        <span>A public deck on Archidekt</span>
+      </button>
       <button type="button" class="cm-wizard-path" data-action="wizard-load">
         <strong>Load</strong>
         <span>Start from one of your own decks</span>
@@ -741,7 +745,23 @@ function deckFromImport(gid){
 }
 /* The landing page's Step one (R3.8) starts a deck the two ways the wizard does: from a commander, with the name
    typed there already searched, or from a pasted list or a file, read by the app's own import. */
-C.startDeck={commander:query=>commanderDeck(undefined,String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport})};
+/* A DECK BY ITS LINK (R3.10a): the deck comes through the app's own importer (cloud/import.mjs) and becomes a list,
+   commander first, in the same import the paste path opens, so it is read against the catalog and reviewed before
+   anything is saved. A Moxfield or Deckstats link, or an importer out of reach, is answered with the paste path. */
+function listOf(deck){const lead=new Set(deck.commander||[]);const rows=[...deck.cards].sort((a,b)=>(lead.has(b.name)?1:0)-(lead.has(a.name)?1:0));return rows.map(r=>`${r.quantity} ${r.name}`).join('\n');}
+async function deckFromLink(url){
+  const S=globalThis.MtgDeckSources;
+  if(!S)throw Error('The deck-link reader is not loaded. Reload the page, or paste the list instead.');
+  const out=await S.load(String(url||'').trim());
+  if(out.error)throw Error(out.advice?`${out.error} ${out.advice}`:out.error);
+  const warn=(out.deck.warnings||[]).join(' ');
+  if(warn)C.notice(`${out.deck.name}: ${warn}`);
+  return C.importList({name:out.deck.name||'New deck list',text:listOf(out.deck),after:deckFromImport});
+}
+C.startDeck={commander:query=>commanderDeck(undefined,String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport}),link:deckFromLink,
+  /* True for a link to a deck site the app knows: Step one sends it here rather than searching for it as a name. */
+  isLink:text=>!!(globalThis.MtgDeckSources&&MtgDeckSources.identify(String(text||'').trim()))};
+actions['import-archidekt']=()=>{actions.close();return form('Import from Archidekt',f('Deck link','url','','required maxlength="300" placeholder="archidekt.com/decks/123456" inputmode="url" autocomplete="off"')+note('A public deck. It comes in as a list you review before anything is saved, read against the card catalog. Private decks, and Moxfield or Deckstats links, cannot be read this way: export the list there and paste it.'),v=>deckFromLink(v.url),'Import deck');};
 /* IMPORT PATH: file/paste import */
 actions['wizard-import']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */

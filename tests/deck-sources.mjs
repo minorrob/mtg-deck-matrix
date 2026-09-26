@@ -139,19 +139,31 @@ check("a Moxfield link is answered with the path that works", () => {
   assert.equal(mox.deck, undefined, "and no half-built deck is handed back");
 });
 
+/* R3.10a: the link goes to the app's own Worker route, never to archidekt.com from the page. */
+let askedFor = null, askedWith = null;
 const stubbed = await Sources.load("https://archidekt.com/decks/1", {
-  fetchImpl: async () => ({ok: true, status: 200, json: async () => fixture})
+  fetchImpl: async (url, init) => { askedFor = url; askedWith = init; return {ok: true, status: 200, json: async () => ({deck: fixture})}; }
 });
 check("a good response comes back as a deck", () => {
   assert.equal(stubbed.deck.commander[0], "Thelon of Havenwood");
   assert.equal(stubbed.deck.sourceUrl, "https://archidekt.com/decks/1");
 });
+check("and it was asked of the app's own importer, with the app's header", () => {
+  assert.equal(askedFor, "/api/import/archidekt?id=1");
+  assert.equal(askedWith.headers["x-crankmagic"], "import");
+});
 
 const missing = await Sources.load("https://archidekt.com/decks/999999999", {
-  fetchImpl: async () => ({ok: false, status: 404})
+  fetchImpl: async () => ({ok: false, status: 404, json: async () => ({error: "Archidekt has no public deck 999999999. A private deck cannot be read by link; export its list and paste it."})})
 });
-check("a private or deleted deck is named as such", () => {
-  assert.match(missing.error, /no deck|private/i);
+check("a private or deleted deck is named as such, in the importer's words", () => {
+  assert.match(missing.error, /no public deck 999999999.*paste/i);
+});
+const walled = await Sources.load("https://archidekt.com/decks/1", {fetchImpl: async () => ({type: "opaqueredirect", ok: false, status: 0})});
+const bare = await Sources.load("https://archidekt.com/decks/1", {fetchImpl: async () => ({ok: false, status: 404, json: async () => { throw SyntaxError("<html>"); }})});
+check("where the importer cannot be reached (a sign-in wall, a copy with no Worker), the paste path is named", () => {
+  assert.match(walled.error, /not reachable from here.*paste/i);
+  assert.match(bare.error, /not reachable from here.*paste/i);
 });
 
 const dead = await Sources.load("https://archidekt.com/decks/1", {
