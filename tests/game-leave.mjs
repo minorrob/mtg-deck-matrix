@@ -18,6 +18,7 @@ import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engin
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {gameOver, concede} from "../game/engine/rules/sba.mjs";
+import {attackers} from "../game/engine/rules/combat.mjs";
 import {beginMulligans, mulligansDone} from "../game/engine/rules/mulligan.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
@@ -88,6 +89,15 @@ ok(conceded >= 300, `the engine took ${conceded} concessions at random points in
 ok(whilePriority > 10 && whileAsked > 0, `including ${whilePriority} by the player holding priority and ${whileAsked} by a player being asked a question`);
 eq(ended, 240, "and in every game, once everyone else had conceded, the last player standing won (CR 104.2a)");
 assert.throws(() => {const s = engineGame("x"); concede(s, 1); concede(s, 1);}, /already left/); checks += 1;
+{
+  /* A departed active player declares no attack, even with a creature under their control (CR 800.4). */
+  const s = engineGame("attack");
+  const id = addObject(s, {card: "Loaned Bear", types: ["Creature"], power: 2, toughness: 2, owner: 1, controller: 0}, "battlefield");
+  s.turn = 3; s.activePlayer = 0; s.objects[id].controlledSinceTurn = 1;
+  eq(attackers.open(s), true, "an active player with a creature that can attack is asked to declare attackers");
+  s.awaiting = null; s.players[0].lost = true;
+  eq(attackers.open(s), false, "the same player, having left the game, is asked nothing");
+}
 
 /* 2. THE ROOM. */
 const DEFS = new Map();
@@ -98,7 +108,9 @@ const deck = (tag) => ({commander: [def(`General ${tag}`, {types: ["Creature"], 
 const POD = {seats: [{seatId: "s0", name: "Rob", pilot: "human", ...deck("a")}, {seatId: "s1", name: "Maya", pilot: "human", ...deck("b")}, {seatId: "s2", name: "Bot", pilot: "house", ...deck("c")}]};
 const answerer = (seed) => {const p = randomLegalPilot(createRng(seed)); return (d) => {const a = p.answer(d); return {kind: "answer", choiceId: d.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {}), ...(a.value !== undefined ? {value: a.value} : {})};};};
 async function stepRoom(room, n, people) {
-  for (let i = 0; i < n && room.waitingOn; i += 1) {const who = room.waitingOn, v = room.view(who); await room.act(who, {actionId: randomUUID(), revision: v.revision, ...people(v.decision)});}
+  for (let i = 0; i < n && room.waitingOn; i += 1) {
+    const who = room.waitingOn, v = room.view(who);
+    if (v.departures[who]) assert.fail(`the room asked ${who}, who has left the game, to decide`); await room.act(who, {actionId: randomUUID(), revision: v.revision, ...people(v.decision)});}
 }
 {
   /* Leaving before the first turn: the hand is kept for them, and they concede as the game begins. */
@@ -210,15 +222,25 @@ async function playingTable(storage = memoryStorage()) {
   eq(alarmsSet.at(-1), clock + 10000, "the alarm is set for the countdown");
   clock += 10000; await object.alarm();
   eq(alarmsSet.at(-1), null, "the game started, and with no clock running the alarm is cleared");
-  const sock = (seatId) => {const s = {tags: null, frames: [], closed: false, send(f) {this.frames.push(JSON.parse(f));}, close() {this.closed = true;}}; object.room = null; return s;};
+  const sock = () => ({tags: null, frames: [], closed: false, send(f) {this.frames.push(JSON.parse(f));}, close() {this.closed = true;}});
   const rob = sock(), maya = sock();
   await object.load(); object.accept(rob, "s0"); object.accept(maya, "s1");
   maya.closed = true; await object.webSocketClose(maya, 1001);
   const told = rob.frames.find((f) => f.type === "away");
   eq([told && told.seatId, told && told.until], ["s1", clock + AWAY_LIMIT], "when Maya's socket closes, Rob is told who dropped and until when");
   eq(alarmsSet.at(-1), clock + AWAY_LIMIT, "and the alarm is set for her time running out");
-  const back = sock(); await object.load(); object.accept(back, "s1"); await object.returned("s1");
-  eq(alarmsSet.at(-1), null, "she reconnects in time: the alarm is cleared");
+  /* She comes back through the real route: the platform's socket pieces stood in for, as Node has neither. */
+  const back = sock();
+  object.socketPair = () => [{}, back];
+  object.upgraded = () => ({status: 101});
+  const reconnect = await object.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": MAYA}}));
+  eq([reconnect.status, back.frames[0].view.seatId], [101, "s1"], "she reconnects to her own seat");
+  eq(alarmsSet.at(-1), null, "in time: her clock stops and the alarm is cleared");
+  /* Two sockets for one seat (a phone and a laptop): closing one is not dropping. */
+  const second = sock(); object.accept(second, "s1");
+  const before = rob.frames.length;
+  second.closed = true; await object.webSocketClose(second, 1001);
+  eq([rob.frames.slice(before).some((f) => f.type === "away"), alarmsSet.at(-1)], [false, null], "with another of her sockets still open, closing one starts no clock");
   back.closed = true; await object.webSocketClose(back, 1001);
   clock += AWAY_LIMIT; await object.alarm();
   eq((await object.load()).view("s0").departures, {s1: "timed-out"}, "the alarm at five minutes concedes her");

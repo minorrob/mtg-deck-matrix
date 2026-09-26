@@ -67,9 +67,9 @@ export class GameRoom {
       if (request.method === "GET" && url.pathname === "/connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         room.view(seatId);  /* refuses a seat that is not at this table before a socket exists */
-        const pair = new WebSocketPair();
+        const pair = this.socketPair();
         this.accept(pair[1], seatId);
-        return new Response(null, {status: 101, webSocket: pair[0]});
+        return this.upgraded(pair[0]);
       }
       return reply(404, {error: "No such endpoint."});
     } catch (error) {
@@ -77,6 +77,10 @@ export class GameRoom {
       throw error;
     }
   }
+
+  /* The platform's two WebSocket pieces, named so a test in Node (which has neither) can stand in for them. */
+  socketPair() {return new WebSocketPair();}
+  upgraded(client) {return new Response(null, {status: 101, webSocket: client});}
 
   /** A seat's socket joins the room, tagged with its seat, and is sent that seat's view at once. */
   accept(socket, seatId) {
@@ -167,10 +171,10 @@ export class GameTable extends GameRoom {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         const {room, seatId} = await t.room(email);
         this.room = room;
-        const pair = new WebSocketPair();
+        const pair = this.socketPair();
         this.accept(pair[1], seatId);
         await this.returned(seatId);
-        return new Response(null, {status: 101, webSocket: pair[0]});
+        return this.upgraded(pair[0]);
       }
       return reply(404, {error: "No such endpoint."});
     } catch (error) {
