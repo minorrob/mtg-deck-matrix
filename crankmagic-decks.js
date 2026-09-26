@@ -715,7 +715,8 @@ actions['load-choose']=async el=>{
 actions['wizard-create']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   const sources=filledGroups();
-  if(!sources.length)return commanderDeck();
+  /* From a commander is the Build wizard (R3.11): Commander → Strategy → Budget → Review. */
+  if(!sources.length)return C.build.start();
   const road=(how,groupId)=>{
     const g=groupId?C.state.groups.find(x=>x.id===groupId):null;
     if(how!=='group')return g?`Continue opens the commander picker. The deck is filed in ${g.name} and draws from it.`
@@ -730,7 +731,7 @@ actions['wizard-create']=()=>{
     +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
     +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
     v=>{
-      if(v.how!=='group')return commanderDeck(v.groupId||undefined);
+      if(v.how!=='group')return v.groupId?commanderDeck(v.groupId):C.build.start();
       if(v.groupId)return groupDeck(v.groupId);
       if(!C.importList)throw Error('The import module is not loaded, so a list cannot be read in. Start from a commander, or reload the page.');
       return C.importList({name:'New deck list',after:gid=>groupDeck(gid)});
@@ -762,7 +763,7 @@ async function deckFromLink(url){
   if(warn)C.notice(`${out.deck.name}: ${warn}`);
   return C.importList({name:out.deck.name||'New deck list',text:listOf(out.deck),after:deckFromImport});
 }
-C.startDeck={commander:query=>commanderDeck(undefined,String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport}),link:deckFromLink,
+C.startDeck={commander:query=>C.build.start(String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport}),link:deckFromLink,
   /* True for a link to a deck site the app knows: Step one sends it here rather than searching for it as a name. */
   isLink:text=>!!(globalThis.MtgDeckSources&&MtgDeckSources.identify(String(text||'').trim()))};
 /* START FROM A PRECON (R3.10b): every Commander precon Wizards has published (data/precons.json, from MTGJSON by

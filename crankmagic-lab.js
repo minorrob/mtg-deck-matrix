@@ -29,6 +29,17 @@ let preview=null;          // the drafted list that is not yet a deck
 let shownLimit=45;         // how many picker rows are drawn before "Show more"
 let pickerColors=[];       // the picker's color-identity filter
 let runner=null;
+let autoDraft=false;       // set by C.labStart: the Build wizard's Review hands over and the Lab drafts at once
+/* THE BUILD WIZARD'S WAY IN (R3.11): Commander → Strategy → Budget → Review ends here. The Lab takes the commander, the
+   strategies ticked, the price cap and what to include or avoid, as if they had been entered on this page, and drafts
+   the 99 as a preview -- nothing is saved to Decks until Save this deck, as ever. */
+C.labStart=({commander,strategies=[],budget=null,restrictions=''}={})=>{
+  if(!commander)throw Error('Choose a commander first.');
+  leader=commander;partner=null;mode='commander';deckId='';groupId='';draftName='';
+  definition=M.defaultDefinition({...definition,budget:Number.isFinite(budget)&&budget>0?budget:null,strategies:[...strategies],restrictions:String(restrictions||'').slice(0,1000)});
+  preview=null;autoDraft=true;
+  if(C.route().view==='lab')C.render();else C.go('lab');
+};
 const choices=CrankCatalog.MECHANICS.map(([label])=>label);
 const STEPS=['User Input Captured','Initial 99 Cards Chosen','Measure & 99 Refined','Measure loops complete','Measurement Report','Completed Deck'];
 const COLORS=[['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green']];
@@ -284,6 +295,7 @@ views.lab=async()=>{
     <div id="cm-lab-selected"></div>
     <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.usDate(C.catalog.rankDate)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
     <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing deck</summary><p class="cm-start-pick">Start from a deck you already have<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived&&(C.showLobbyDecks||!M.isLobbyDeck(x))).map(x=>[x.id,x.name])],deckId,mode==='list'?'required':'')}<div id="cm-list-commander">${listCommanderField()}</div><div id="cm-list-source">${listSourceField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create a deck','new-deck')}${b('Import a list','import-list')}</div></details>
+    ${definition.strategies?.length&&globalThis.CrankStrategies?`<p class="cm-lab-strategies" id="cm-lab-strategies"><strong>Strategies</strong> ${definition.strategies.map(id=>`<span class="cm-chip">${e(CrankStrategies.labelOf(id))}</span>`).join(' ')} <span class="cm-muted">chosen in Build a deck; the draft seeds from them</span></p>`:''}
     <details class="cm-lab-section" id="cm-lab-definition"><summary class="cm-section-heading">Deck Definition</summary><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
     <div class="cm-form-grid">${f('Deck name','deckName',draftName,'placeholder="Named for you if you leave it blank"')}${s('Primary play style','mechanic',[['','Open to exploration'],...choices],definition.mechanics[0]||'')}${s('Base bracket','baseBracket',[1,2,3,4,5],definition.baseBracket)}${s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],definition.bracketCeiling)}${f('Total deck price cap ($)','budget',definition.budget??'','type="number" min="0" step="0.01" placeholder="No cap"')}${f('Per-card cap ($)','perCardCap',definition.perCardCap??'','type="number" min="0" step="0.01" placeholder="No cap"')}${s('Play style','playStyle',['Balanced','Aggressive','Reactive','Value engine','Combo'],definition.playStyle)}${s('Speed','speed',[1,2,3,4,5],definition.speed)}${s('Competitiveness','competitiveness',[1,2,3,4,5],definition.competitiveness)}${s('Saltiness','saltiness',[[1,'1 · Extremely friendly'],[2,'2 · Friendly'],[3,'3 · Assertive'],[4,'4 · Disruptive'],[5,'5 · Any legal winning mechanic']],definition.saltiness)}<label class="cm-checkbox"><input name="inDeck" type="checkbox" ${includeInDeck?'checked':''}>Consider cards currently In deck</label><label class="cm-checkbox"><input name="reserved" type="checkbox" ${includeReserved?'checked':''}>Consider unlocked reserved copies</label><label class="cm-full">Restrictions and preferences<textarea name="restrictions">${e(definition.restrictions)}</textarea></label></div>
     ${note('A total price cap is planned, not merely obeyed: basics do the cheap work, no single card takes more than a few times an even share of the cap, and the list always completes or says what cap would complete it. Unknown prices are excluded when a cap is set. Bracket ceiling limits Game Changers (none below 3, three at 3). Play style, speed and saltiness still require your review: Measure scores a finished list, it does not yet refine one against these inputs.')}</details>
@@ -521,7 +533,7 @@ views.lab=async()=>{
   /* Read the whole form once, into the module state the next render rebuilds it from. */
   function readForm(){
     const v=Object.fromEntries(new FormData(lab));
-    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
+    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade},/* no control on this page sets them: the Build wizard's, kept */...(Array.isArray(definition.strategies)&&definition.strategies.length?{strategies:[...definition.strategies]}:{})});
     /* The existing-deck select keeps its value when the reader switches back to the commander road; it only means something on the list road. */
     deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';seedFromTrace=!!v.traceSeed;includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
@@ -965,6 +977,8 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       C.notice(score+' The draft it measured was discarded before it finished, so the report was not kept.',true);
     }catch(err){const el=$('#cm-lab-sim-status');if(el)el.textContent=err.message;throw err;}
   };
+  /* Arriving from the Build wizard (C.labStart): draft at once, with what it chose. */
+  if(autoDraft){autoDraft=false;queueMicrotask(()=>runDraft().catch(err=>C.notice(err.message,true)));}
 };
 
 /* THE RUN PANE. Its state is read, not set: a step lights up because a preview, a report or
