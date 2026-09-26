@@ -51,9 +51,11 @@ check("the right-hand column mirrors its header", () => {
 // height, and an empty seat shows the same frame dashed with a "?" in it. The README puts it
 // "at the foot the commander card -- full quadrant height minus the label row (488:680 ...), in
 // the outer corner".
-check("a seated quadrant draws its commander card at 488:680", () => {
-  assert.match(css, /\.cm-seat-card\{[^}]*aspect-ratio:488\/680/,
-    "the quadrant's commander card should carry the card aspect 488:680");
+/* R3.9: every card surface is 5:7 through one token, --card-ratio. The seat card is the one surface still sized
+   by height: the table is a stage of fixed proportion, and the quadrant's height is what the card must fit. */
+check("a seated quadrant draws its commander card at 5:7", () => {
+  assert.match(css, /\.cm-seat-card\{[^}]*aspect-ratio:var\(--card-ratio\)/,
+    "the quadrant's commander card should carry the card aspect, --card-ratio (5:7)");
   assert.ok(/\.cm-seat-card\{[^}]*height:/.test(css),
     "the card is sized from the quadrant's height, not from its width");
 });

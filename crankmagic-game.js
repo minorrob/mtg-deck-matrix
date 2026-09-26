@@ -1903,10 +1903,8 @@ actions["lobby-email-invite"] = async (el) => {
     const seatArt = img || el;
     const r = seatArt.getBoundingClientRect();
     const card = pop.querySelector(".cm-lobby-art-pop-card");
-    if (card && r.width) {
-      card.style.width = Math.round(r.width * 1.5) + "px";
-      card.style.height = Math.round(r.height * 1.5) + "px";
-    }
+    /* By its width alone: the CSS's 5:7 gives the height (R3.9). */
+    if (card && r.width) card.style.width = Math.round(r.width * 1.5) + "px";
   };
   actions["lobby-art-close"] = () => {
     document.querySelectorAll(".cm-lobby-art-pop").forEach((n) => n.remove());

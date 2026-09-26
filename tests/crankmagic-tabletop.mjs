@@ -47,7 +47,7 @@ eq(t.ghosts, rows.filter((r) => T.isGhost(r)).length, "ghost rows are counted on
 /* TB5: the piles a card can be dropped on are marked; the rest are readings of a plan. */
 eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,Ordered,Watched,Wanted,To buy", "seven status piles take a drop, in workflow order");
 ok(t.statusPiles.filter((p) => p.target === false).every((p) => /^(Draft list|Suggestion|Planned|Unassigned)$/.test(p.label)), "the readings are Draft list, Suggestion, Planned and Unassigned");
-eq(T.TARGET.size, 10, "the seven old status piles and the card states' Target, To add and Watching (docs/card-states.md) take a drop"); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 680, "the stage's full size is Scryfall's normal print");
+eq(T.TARGET.size, 10, "the seven old status piles and the card states' Target, To add and Watching (docs/card-states.md) take a drop"); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 683, "the stage's full size is Scryfall's normal print's width, 5:7 like every card (R3.9)");
 ok(t.statusPiles.every((p) => !p.count || (p.top && p.top.card)), "a pile with cards has a top card to show");
 ok(t.statusPiles.every((p) => p.rows.every((r, i, a) => i === 0 || String(a[i - 1].card.name).localeCompare(String(r.card.name)) <= 0)), "a pile's rows are by name");
 
@@ -112,7 +112,7 @@ eq(T.layout(hundred, {width: 1400, size: "L", rowsFit: 2}).cols, 7, "seven acros
 eq(T.layout(hundred, {width: 1400, size: "S", rowsFit: 2}).cols, 14, "fourteen across at S on 1400");
 /* Each size is the first cut's, about a third larger (Rob, 24 September), and still the card's shape. */
 eq([T.SIZES.S.w, T.SIZES.M.w, T.SIZES.L.w], [83, 125, 182], "S, M and L are each about 30% larger than 64, 96 and 140");
-ok(["S", "M", "L"].every((k) => Math.abs(T.SIZES[k].w / T.SIZES[k].h - 63 / 88) < 0.02), "and every size keeps the card's proportions");
+eq(["S", "M", "L"].map((k) => T.SIZES[k].h), ["S", "M", "L"].map((k) => Math.round(T.SIZES[k].w * 7 / 5)), "and every size is 5:7 by its width (R3.9), to the pixel");
 eq(T.layout({kind: "status", label: "Watched", rows: []}, {width: 960}).label, "Nothing on this pile");
 eq(T.layout({kind: "status", label: "Physical deck", count: 12, rows: [mk("A", 1, {quantity: 10}), mk("B", 2, {quantity: 2})]}, {width: 960}).label, "1–2 of 2 · 12 copies", "the strip counts rows, and copies when they differ");
 ok(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards.every((c, i, a) => i === 0 || a[i - 1].index + 1 === c.index), "cards carry their index in the pile");
