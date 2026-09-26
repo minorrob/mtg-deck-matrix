@@ -29,6 +29,42 @@
   const statusByLabel=new Map(STATUS.map(s=>[s.label,s]));
   /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry in To Buy is Wanted (the want list), other entries Planned, then the copy's own source or placement. */
   const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?(r.groupId==='group:to-buy'?'Wanted':'Planned'):r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement==='Bench'&&r.shortlistedFor?'Watched':r.placement;
+  /* THE CARD STATE, ONE TAXONOMY (Rob, 2026-09-26; docs/card-states.md is the definition and this is
+     its code). Every record a screen shows answers three questions, and the old status label answered
+     them in one word, which is how "Watched" came to mean both a card you are thinking about and an
+     owned card on the Bench shortlisted for a deck:
+       stage   -- watching, buy (To buy), ordered, owned: one line, in that order. The catalog, the
+                  universe of every card, is the stage before them and has no record.
+       deck    -- the deck the record is for, at any stage, or none; owned with none is the Bench.
+       role    -- with a deck: target (the card its list calls for), substitute (standing in for a
+                  target not yet owned), upgrade (lined up to replace a card).
+     And two facts that are not states: inBox (an owned target or substitute is physically in the
+     deck's box; an owned target not yet in it is what Ready to add lists) and trade (offered for
+     sale or trade). Collection groups are tags, not states. cardState reads any row the screens
+     draw -- a copy (lot), a deck's unmet need, a draft deck's list row, an uncommitted option, a
+     group entry -- and nothing else spells a state. */
+  const STAGES=[{id:'watching',label:'Watching',owned:false},{id:'buy',label:'To buy',owned:false},{id:'ordered',label:'Ordered',owned:false},{id:'owned',label:'Owned',owned:true}];
+  const ROLES=[{id:'target',label:'Target'},{id:'substitute',label:'Substitute'},{id:'upgrade',label:'Upgrade'}];
+  const roleOf=purpose=>purpose==='main'?'target':'upgrade';
+  const WANT_LIST='group:to-buy';
+  function cardState(r){
+    const none={deckId:'',role:'',inBox:false,trade:'',reservedFor:''};
+    if(r.kind==='need')return {...none,stage:'buy',deckId:r.deckId,role:roleOf(r.purpose)};
+    if(r.kind==='draft')return {...none,stage:'watching',deckId:r.deckId,role:'target'};
+    if(r.kind==='option')return {...none,stage:'watching',deckId:r.deckId,role:roleOf(r.purpose)};
+    if(r.kind==='entry')return {...none,stage:r.groupId===WANT_LIST?'buy':'watching'};
+    if(r.kind!=='lot')throw Error('cardState reads copies, needs, draft rows, options and group entries, not '+r.kind+'.');
+    const stage=r.source==='owned'?'owned':r.source==='ordered'?'ordered':'watching',loc=r.location||{},trade=r.offer&&r.offer!=='none'?r.offer:'';
+    /* A copy physically in a deck other than the one it is reserved for is that deck's substitute. */
+    if(stage==='owned'&&loc.kind==='deck'&&loc.deckId&&(!r.allocation||r.allocation.deckId!==loc.deckId))return {...none,stage,deckId:loc.deckId,role:'substitute',inBox:true,trade,reservedFor:r.allocation?.deckId||''};
+    if(r.allocation)return {...none,stage,deckId:r.allocation.deckId,role:roleOf(r.purpose||'main'),inBox:stage==='owned'&&loc.kind==='deck'&&loc.deckId===r.allocation.deckId,trade};
+    return {...none,stage,trade};
+  }
+  /* The one word a pill carries: the stage while a card is not owned; once owned, where it is -- the
+     Bench, or its role in a deck. */
+  const stageLabel=id=>STAGES.find(x=>x.id===id)?.label||id;
+  const roleLabel=id=>ROLES.find(x=>x.id===id)?.label||'';
+  const stateLabel=st=>st.stage!=='owned'?stageLabel(st.stage):st.deckId?roleLabel(st.role):'Bench';
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
   const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
   const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
@@ -645,5 +681,5 @@
     return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,stateLabel,stageLabel,roleLabel,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });
