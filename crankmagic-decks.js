@@ -554,6 +554,10 @@ actions['new-deck']=()=>{
         <strong>From a link</strong>
         <span>A public deck on Archidekt</span>
       </button>
+      <button type="button" class="cm-wizard-path" data-action="start-precon">
+        <strong>From a precon</strong>
+        <span>One of Wizards' Commander decks</span>
+      </button>
       <button type="button" class="cm-wizard-path" data-action="wizard-load">
         <strong>Load</strong>
         <span>Start from one of your own decks</span>
@@ -761,6 +765,40 @@ async function deckFromLink(url){
 C.startDeck={commander:query=>commanderDeck(undefined,String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport}),link:deckFromLink,
   /* True for a link to a deck site the app knows: Step one sends it here rather than searching for it as a name. */
   isLink:text=>!!(globalThis.MtgDeckSources&&MtgDeckSources.identify(String(text||'').trim()))};
+/* START FROM A PRECON (R3.10b): every Commander precon Wizards has published (data/precons.json, from MTGJSON by
+   tools/build-precons.mjs), fetched only when the picker opens. A choice becomes a list, commander first, in the same
+   import the paste path opens, so it is read against the catalog and reviewed before anything is saved. */
+let preconCache=null;
+async function precons(){
+  if(preconCache)return preconCache;
+  const A=globalThis.CrankAssets,r=await fetch(A.precons).catch(()=>null);
+  if(!r||!r.ok)throw Error('The list of precons could not be loaded. Check the connection and try again, or paste a list instead.');
+  return preconCache=A.expect(await r.json(),'precons');
+}
+const usDate=d=>new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])=>`${q} ${n}`)).join('\n');
+async function preconPicker(){
+  const data=await precons(),today=new Date().toISOString().slice(0,10);
+  const d=modal('Start from a precon',`<label>Search<input id="cm-precon-q" type="search" placeholder="A deck, a commander or a set code" autocomplete="off"></label><p class="cm-muted" id="cm-precon-n" aria-live="polite"></p><ul class="cm-precon-list" id="cm-precon-list"></ul>`);
+  const q=d.querySelector('#cm-precon-q'),list=d.querySelector('#cm-precon-list'),n=d.querySelector('#cm-precon-n');
+  const draw=()=>{
+    const t=q.value.trim().toLowerCase(),hits=data.decks.filter(p=>!t||[p.name,p.code,...p.commander.map(c=>c.name)].some(x=>x.toLowerCase().includes(t)));
+    n.textContent=`${hits.length.toLocaleString('en-US')} of ${data.decks.length.toLocaleString('en-US')} Commander precons, newest first`;
+    list.innerHTML=hits.slice(0,60).map(p=>`<li><button type="button" class="cm-precon" data-action="precon-start" data-precon="${e(p.id)}"><strong>${e(p.name)}</strong><span class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span><span class="cm-muted">${e(p.code)} · ${p.releaseDate>today?'Releases ':''}${e(usDate(p.releaseDate))}</span></button></li>`).join('')
+      +(hits.length>60?`<li class="cm-muted">${(hits.length-60).toLocaleString('en-US')} more: narrow the search.</li>`:'')+(hits.length?'':'<li class="cm-muted">No precon matches that. Try a commander\'s name or a set code.</li>');
+  };
+  q.addEventListener('input',draw);draw();q.focus();
+}
+actions['start-precon']=()=>{actions.close();return preconPicker();};
+actions['precon-start']=async el=>{
+  const p=(await precons()).decks.find(x=>x.id===el.dataset.precon);
+  if(!p)throw Error('That precon is not in the list any more. Reload the page.');
+  actions.close();
+  C.importList({name:p.name,text:preconText(p),after:deckFromImport});
+  /* A card banned since it was printed, or one too new for the card list, is said before the review shows it. */
+  if(p.notInUniverse)C.notice(`${p.name}: ${p.notInUniverse.length} of its cards ${p.notInUniverse.length===1?'is':'are'} not in the Commander card list today (${p.notInUniverse.slice(0,3).join(', ')}${p.notInUniverse.length>3?', …':''}): banned since it was printed, or too new. The review shows ${p.notInUniverse.length===1?'it':'them'}.`);
+};
+C.startDeck.precon=preconPicker;
 actions['import-archidekt']=()=>{actions.close();return form('Import from Archidekt',f('Deck link','url','','required maxlength="300" placeholder="archidekt.com/decks/123456" inputmode="url" autocomplete="off"')+note('A public deck. It comes in as a list you review before anything is saved, read against the card catalog. Private decks, and Moxfield or Deckstats links, cannot be read this way: export the list there and paste it.'),v=>deckFromLink(v.url),'Import deck');};
 /* IMPORT PATH: file/paste import */
 actions['wizard-import']=()=>{

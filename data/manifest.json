@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-26T13:08:33.991Z",
+ "generatedAt": "2026-09-26T15:56:28.737Z",
  "generator": "tools/data-manifest.mjs",
- "count": 21,
+ "count": 22,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -89,6 +89,17 @@
    "bytes": 628875,
    "sha256": "0d8b82f743e811ace1fea8d68ad3c63d60363d69c558de0185ef8b1b890e53b1",
    "version": 4,
+   "served": true,
+   "cache": "on demand"
+  },
+  {
+   "file": "data/precons.json",
+   "schema": "precons@1",
+   "stamp": "2026-09-26T15:51:20.842Z",
+   "generator": "tools/build-precons.mjs",
+   "bytes": 407850,
+   "sha256": "a41c3b7967b5a6247ca08641e49909f81c814becb1fbf9754ebaed39fc7965de",
+   "version": 1,
    "served": true,
    "cache": "on demand"
   },

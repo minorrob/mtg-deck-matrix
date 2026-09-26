@@ -32,6 +32,7 @@ EDHREC are public and free; the only cost is politeness (100 ms between requests
 | `data/card-facts.json` | 485 KB | The name-keyed lens of the record set the simulator, the guides and the picture pop-ups read. | `tools/build-card-records.mjs` (with `cards.json`) | With `cards.json` |
 | `data/graph-played.json` | 21 MB (on demand) | EDHREC co-play for every legal commander, split from `graph.json` so the terms load first. | `tools/graph-amplifiers.mjs` (with `graph.json`) | With `graph.json` |
 | `data/commander-strategies.json` | 629 KB | The strategies each legal commander offers, derived from the graph's terms and the live decks' definitions. | `tools/commander-strategies.mjs` | With `graph.json` |
+| `data/precons.json` | 408 KB (on demand) | Every Commander precon's hundred, from Wizards' decklists via MTGJSON, for Start from a precon; each name held to the universe. | `tools/build-precons.mjs` | When a precon is announced; with the universe |
 | `data/deck-ratings.json` | 401 KB | Measured scores for the published ladders. | `tools/sim/` sweep | The engine generation changes |
 | `data/deck-guides.json` | 7 KB | Hand-written how-to-play guides. | By hand; the rest are generated at read time by `guide-measured.js` | Never automatically |
 
@@ -47,9 +48,10 @@ EDHREC are public and free; the only cost is politeness (100 ms between requests
 4. commander-ranks.mjs           popularity, which orders every picker
 5. build-card-records.mjs --refresh   the record set's prices, legality, text and images
 6. commander-strategies.mjs      what each commander offers, from the refreshed terms
-7. data-manifest.mjs, data-inventory.mjs   what the files now are
-8. asset-versions.mjs --update   so browsers actually fetch what changed
-9. runtests.sh                   every suite (the README says how many), several of which read these files directly
+7. build-precons.mjs             every Commander precon from MTGJSON, its names held to the new universe
+8. data-manifest.mjs, data-inventory.mjs   what the files now are
+9. asset-versions.mjs --update   so browsers actually fetch what changed
+10. runtests.sh                   every suite (the README says how many), several of which read these files directly
 ```
 
 `node tools/refresh.mjs` is 1–9 in that order with the proof at the end; `--plan` prints
@@ -97,14 +99,17 @@ node tools/commander-ranks.mjs
 node tools/build-card-records.mjs --refresh
 node tools/commander-strategies.mjs
 
-# 7. what the files now are
+# 7. the precons, held to the refreshed universe
+node tools/build-precons.mjs
+
+# 8. what the files now are
 node tools/data-manifest.mjs && node tools/data-inventory.mjs
 
-# 8. bump every ?v= for the files that changed, in every page that names them,
+# 9. bump every ?v= for the files that changed, in every page that names them,
 #    then record the new hashes (tools/refresh.mjs does the bumps for you)
 node tests/asset-versions.mjs --update
 
-# 9. prove it
+# 10. prove it
 bash runtests.sh -q
 ```
 

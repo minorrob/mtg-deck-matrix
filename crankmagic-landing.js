@@ -6,7 +6,7 @@
  *
  * WHAT IT PROMISES (M1·2): accounts are invite-only, so the page says Sign in and "Start without an account",
  * never "Start free" or "Free account". Step one takes a commander's name or a pasted list, or a CSV (M1·4);
- * an Archidekt link comes through the app's own importer (R3.10a); precons come in R3.10b. Play is Coming soon, with no
+ * an Archidekt link comes through the app's own importer (R3.10a), and a precon is one of Wizards' (R3.10b). Play is Coming soon, with no
  * mailing list (M1·5).
  *
  * WHAT IT LOADS: nothing of its own. The commander art is three small images already in assets/, and the
@@ -61,7 +61,7 @@
     <form class="cm-landing-start" id="cm-landing-start">
       <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>Step one: start your first deck</strong></div>
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
-      <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
+      <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>

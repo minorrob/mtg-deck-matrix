@@ -3006,3 +3006,10 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    normal print or half the screen) and the inspector's picture. */
 .cm-inspector{grid-template-columns:minmax(150px,calc(230px * var(--card-scale,1))) minmax(0,1fr)}
 @media(max-width:760px){.cm-inspector-art{max-width:min(100%,calc(200px * var(--card-scale,1)))}}
+/* Start from a precon (R3.10b): one row per deck, name then commander and colors, then set and date. */
+.cm-precon-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;max-height:min(60vh,520px);overflow:auto}
+#matrix-v2 .cm-precon{display:grid;gap:2px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);color:var(--v-ink);font:inherit;cursor:pointer;min-height:0}
+#matrix-v2 .cm-precon:hover,#matrix-v2 .cm-precon:focus-visible{border-color:var(--v-accent)}
+.cm-precon strong{font-size:14px}
+.cm-precon-lead{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.cm-precon span.cm-muted{font-size:12px}
