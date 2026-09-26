@@ -217,6 +217,20 @@
     if (!d || view.status === "finished") return "";
     const opt = (o, extra = "") => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${e(o.label)}</button>`;
     let body = "", foot = "";
+    if (d.kind === "priority") {
+      /* Pass is the strip's; the panel is what else you can do, one button per kind of thing, the same land
+         four times over being one "Play Forest" (tapping a card in the hand plays that very one). */
+      const seen = new Map();
+      for (const o of d.options) {
+        if (o.act === "pass") continue;
+        const key = `${o.act}|${o.label}`;
+        if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
+      }
+      if (!seen.size) return "";
+      const verb = {"play-land": "Play", cast: "Cast", "activate-mana": "Tap for mana:"};
+      body = [...seen.values()].map(({o, n}) => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(`${verb[o.act] || ""} ${o.label}`.trim())}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+      return `<section class="cm-board-decision" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
+    }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
     else if (d.mode === "ack") foot = b("OK", "board-confirm", {}, true, {disabled: sending});
     else if (d.mode === "many") {
