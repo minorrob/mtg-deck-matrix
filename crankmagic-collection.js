@@ -420,9 +420,9 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
-/* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;localStorage.removeItem('cm-tabletop-bench');const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
+const ttUI={open:null,from:null,page:0,ticked:new Set(),selection:new Set(),stageWidth:0,canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
+/* The Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library; so is the card size, the app's one scale (C.cardScale). */
+try{localStorage.removeItem('cm-tabletop-bench');/* The picture's old named steps carry over once, as a width. */const w=Number(localStorage.getItem('cm-tabletop-stage-w'))||{L:220,XL:244,XXL:366,full:488}[localStorage.getItem('cm-tabletop-stage')]||0;if(w)ttUI.stageWidth=w;localStorage.removeItem('cm-tabletop-stage');const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
   /* Shelf mode's hand and its tray bindings are the same kind of fact: about this screen, not
      about the library. Nothing here is a staged move, so nothing here is written to the sitting. */
   const h=JSON.parse(localStorage.getItem('cm-tabletop-hand')||'[]');if(Array.isArray(h))ttUI.hand=new Set(h.filter(x=>typeof x==='string').slice(0,200));
@@ -433,7 +433,7 @@ let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count
 let ttModel=null;
 /* The one keydown and the one resize the table has attached, so a redraw replaces them rather
    than stacking another pair on top (see the note where they are registered). */
-let ttKey=null,ttResize=null,ttEscShielded=false;
+let ttKey=null,ttResize=null,ttScale=null,ttEscShielded=false;
 /* THE PLAY SPACE'S TWO QUESTIONS (plan §2.1, §2.3, §2.14), answered here because only this view
    knows the sandbox and the model. crankmagic-tabletop.js lays the middle out; it does not decide
    what is in your hand or do the arithmetic on the scoreboard.
@@ -554,7 +554,6 @@ function tabletop(params,shop=false){
           async v=>{await C.commit({type:'createGroup',groupId:'group:'+C.uid(),name:(v.name||'').trim()||'New group'},{renderView:false});draw();},'Make the group');return;}
         if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
       onPage:n=>{ttUI.page=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-grid .cm-tt-card[data-tt=card]')?.focus?.({preventScroll:true}));},
-      onSize:s=>{ttUI.size=s;ttUI.page=0;try{localStorage.setItem('cm-tabletop-size',s);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=size][data-size=${s}]`)?.focus?.({preventScroll:true}));},
       onStatusOrder:v=>{tabletopStatusOrder=v==='count'?'count':'workflow';C.commit({type:'preferences',values:{tabletopStatusOrder}},{renderView:false}).catch(()=>{});draw();},
       onPrint:pileId=>{const pile=TT.findPile(model,pileId);if(!pile)return;document.querySelectorAll('.cm-tt-printsheet').forEach(x=>x.remove());const wrap=document.createElement('div');wrap.innerHTML=TT.printSheet(pile,{describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')}),library:'CrankMagic'});const sheet=wrap.firstElementChild;document.body.append(sheet);document.body.classList.add('cm-tt-printing');
         const done=()=>{document.body.classList.remove('cm-tt-printing');sheet.remove();removeEventListener('afterprint',done);};addEventListener('afterprint',done);setTimeout(()=>{if(sheet.isConnected)done();},60000);
@@ -589,7 +588,7 @@ function tabletop(params,shop=false){
       /* The table's own words go through the glossary, so "Primary Purpose" and "Price band" can
          be asked about where they are read rather than in a help panel. */
       term:text=>C.glossary?C.glossary.label(text):e(text),
-      onStageSize:z=>{ttUI.stageSize=z;try{localStorage.setItem('cm-tabletop-stage',z);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=stage-size][data-size=${z}]`)?.focus?.({preventScroll:true}));},
+      onStageWidth:w=>{ttUI.stageWidth=TT.stageWidth(w);try{localStorage.setItem('cm-tabletop-stage-w',String(ttUI.stageWidth));}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt-stage]')?.focus?.({preventScroll:true}));},
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
       onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
       /* THE PLAY SPACE (plan §2.1, §2.3, §2.4). Stepping the draw pile moves an index and
@@ -621,7 +620,7 @@ function tabletop(params,shop=false){
         return {status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:where,
           ownership:`${o.owned}/${o.wanted}`,
           ownershipWhy:`You own ${o.owned} of the ${o.wanted} cop${o.wanted===1?'y':'ies'} ${where?'the '+where+' list calls for':'your lists call for'}.`};}
-    },{...ttUI,deck:params.get('deck')||'',viewportHeight:innerHeight,score:scoreboard(model)});
+    },{...ttUI,scale:C.cardScale()/100,scaleSlider:C.cardScaleSlider(),deck:params.get('deck')||'',viewportHeight:innerHeight,score:scoreboard(model)});
   };
   draw();
   const host=C.main;
@@ -639,7 +638,10 @@ function tabletop(params,shop=false){
      Escape ran twenty handlers, each redrawing through ITS OWN captured `params`: the last one to
      run won, so the table could come back scoped to a filter the reader had left behind. Only the
      current pair stands now, and the previous pair goes when it does. */
-  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);ttEscShielded=false;
+  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);document.removeEventListener('cm-card-scale',ttScale);ttEscShielded=false;
+  /* THE CARD-SIZE SLIDER (AGENTS.md, "Sizes are sliders, never steps"): dragging it moves the drawer's cards through the CSS, and letting go redraws the table around the new size, with the slider still in hand. */
+  const onScale=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){document.removeEventListener('cm-card-scale',onScale);return;}if(ev.detail.live){TT.liveScale($('#cm-tt-host'),ev.detail.scale/100);return;}ttUI.page=0;draw();queueMicrotask(()=>$('#cm-tt-host [data-card-scale]')?.focus?.({preventScroll:true}));};
+  ttScale=onScale;document.addEventListener('cm-card-scale',onScale);
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
   const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape')return;if(ttEscShielded){ttEscShielded=false;return;}if(ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
   ttKey=onKey;addEventListener('keydown',onKey);

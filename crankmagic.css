@@ -1443,7 +1443,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-table td{height:56px;vertical-align:middle}
 #matrix-v2 .cm-table td.cm-row-actions-cell{vertical-align:middle}
 #matrix-v2 .cm-table td:first-child small{display:inline-block;margin:0 0 0 8px;padding:1px 7px;border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:10.5px;line-height:1.5;max-width:none;vertical-align:middle}
-.cm-hover-art{position:fixed;z-index:70;width:360px;aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel)}
+.cm-hover-art{position:fixed;z-index:70;width:clamp(240px,calc(360px * var(--card-scale,1)),min(488px,45vw));aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel)}
 #matrix-v2 .cm-cell-edit{box-shadow:none;border-bottom:1px dotted var(--v-field-line);border-radius:0;padding-right:16px;position:relative}
 #matrix-v2 .cm-cell-edit::after{content:'\270E';position:absolute;right:2px;top:1px;font-size:11px;color:var(--v-accent);opacity:0}
 #matrix-v2 .cm-cell-edit:hover{background:none;border-bottom-color:var(--v-accent)}
@@ -1562,7 +1562,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-deck-hero .cm-deck-actions{margin-bottom:0;gap:8px}
 @media(max-width:760px){.cm-deck-summary{grid-template-columns:1fr}.cm-summary-col+.cm-summary-col{border-left:0;border-top:1px solid var(--color-raised)}}
 /* HOVER ART is a box now: the picture, and a spinner while it is on its way. */
-.cm-hover-art{position:fixed;z-index:70;width:360px;aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel);overflow:hidden}
+.cm-hover-art{position:fixed;z-index:70;width:clamp(240px,calc(360px * var(--card-scale,1)),min(488px,45vw));aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel);overflow:hidden}
 .cm-hover-art img{display:block;width:100%;height:100%;object-fit:cover;transition:opacity .15s}
 .cm-hover-art.is-loading img{opacity:0}
 .cm-hover-art .cm-spinner{display:none;position:absolute;inset:0;margin:auto;width:30px;height:30px;border:3px solid #ffffff2e;border-top-color:var(--color-accent);border-radius:50%;animation:cm-spin .8s linear infinite}
@@ -2034,11 +2034,11 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-strip{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:color-mix(in srgb,var(--v-bg) 82%,transparent);border:1px solid var(--color-raised);border-radius:var(--v-radius);padding:5px 10px;font-size:12px;color:var(--color-ink);min-height:36px}
 .cm-tt-strip-title{flex:1 1 auto;min-width:160px}.cm-tt-strip button{min-height:26px;padding:2px 9px;font-size:12px;background:var(--v-panel);color:var(--v-ink);border:1px solid var(--color-raised);border-radius:var(--v-radius);cursor:pointer}
 .cm-tt-strip button[disabled]{opacity:.4;cursor:default}.cm-tt-strip button[aria-pressed=true]{background:var(--color-money);color:color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border-color:var(--color-money)}.cm-tt-strip .cm-tt-primary{background:var(--v-line);border-color:var(--v-line);color:#fff}
-.cm-tt-seg{display:inline-flex;gap:2px}.cm-tt-pager{display:inline-flex;gap:6px;align-items:center}
+.cm-tt-pager{display:inline-flex;gap:6px;align-items:center}
 .cm-tt-grid{position:absolute;left:0;right:0}.cm-tt-grid .cm-tt-card{position:absolute;cursor:pointer;transition:box-shadow .15s}.cm-tt-grid .cm-tt-card:hover{box-shadow:0 6px 16px #000c,0 0 0 2px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 72%,var(--v-ink)) 53%,transparent)}
 .cm-tt-grid .cm-tt-card:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}.cm-tt-empty{margin:20px 16px;color:var(--color-muted);font-size:13px}
-.cm-tt-card.is-S{width:83px}.cm-tt-card.is-M{width:125px}.cm-tt-card.is-M .cm-tt-name{font-size:10px;left:5px;right:5px;bottom:6px}.cm-tt-card.is-ghost.is-M:after{font-size:9px;line-height:14px}
-.cm-tt-card.is-L{width:182px;border-radius:var(--v-radius)}.cm-tt-card.is-L .cm-tt-name{font-size:12px;left:7px;right:7px;bottom:8px}.cm-tt-card.is-ghost.is-L:after,.cm-tt-card.is-ghost.cm-tt-solo:after{font-size:10px;line-height:16px;padding:1px 7px}
+.cm-tt-card.is-fan{width:182px}
+.cm-tt-card.is-fan{border-radius:var(--v-radius)}.cm-tt-card.is-fan .cm-tt-name{font-size:12px;left:7px;right:7px;bottom:8px}.cm-tt-card.is-ghost.is-fan:after,.cm-tt-card.is-ghost.cm-tt-solo:after{font-size:10px;line-height:16px;padding:1px 7px}
 .cm-tt-tick{position:absolute;right:4px;top:4px;width:16px;height:16px;border-radius:4px;border:1px solid var(--color-muted);background:color-mix(in srgb,var(--v-bg) 80%,transparent);cursor:pointer;z-index:2}
 .cm-tt-tick:after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
 .cm-tt-card.is-ticked .cm-tt-tick{background:var(--color-money);border-color:var(--color-money)}.cm-tt-card.is-ticked .cm-tt-tick:after{opacity:1}.cm-tt-card.is-ticked{box-shadow:0 3px 8px #000a,0 0 0 2px var(--color-money)}
@@ -2115,13 +2115,17 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* TB5 (Rob, 14 September): the whole picture on every card with a caption under it in a laid-out grid;
    ghosts read at full strength behind a gold dashed frame and wear their status; the readings of a plan
    are chips, not piles; the Bench ledge folds; one card on the stage at the size you choose, with its facts. */
-/* An open pile's card is its picture and, under it, its name: the box is the width at 5:7 plus the caption, so the
-   picture (:before, inset above the caption) is a whole card face, never a crop. SIZES in crankmagic-tabletop.js
-   carries the same heights. */
-.cm-tt-grid .cm-tt-card{height:calc(83px * 7 / 5 + 14px)}.cm-tt-grid .cm-tt-card.is-M{height:calc(125px * 7 / 5 + 18px)}.cm-tt-grid .cm-tt-card.is-L{height:calc(182px * 7 / 5 + 20px)}
-.cm-tt-grid .cm-tt-card:before{bottom:14px}.cm-tt-grid .cm-tt-card.is-M:before{bottom:18px}.cm-tt-grid .cm-tt-card.is-L:before{bottom:20px}
+/* AN OPEN PILE'S CARDS ARE ONE POINT ON A SCALE (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): 125px wide at
+   100%, times --card-scale, 5:7, with the name in a caption under the picture that never drops below 16px tall or
+   10px type. Each card is placed by its index, so dragging the card-size slider moves them all without a redraw.
+   crankmagic-tabletop.js cardGeom carries the same arithmetic. */
+.cm-tt-grid{--tt-s:var(--card-scale,1);--tt-w:calc(125px * var(--tt-s));--tt-gap:calc(12px * var(--tt-s));--tt-cap:max(16px,calc(18px * var(--tt-s)))}
+.cm-tt-grid.is-drawer{height:calc(var(--tt-w) * 7 / 5 + var(--tt-cap));width:calc(var(--n,1) * (var(--tt-w) + var(--tt-gap)) - var(--tt-gap))}
+.cm-tt-grid .cm-tt-card{width:var(--tt-w);height:calc(var(--tt-w) * 7 / 5 + var(--tt-cap));left:calc(var(--i,0) * (var(--tt-w) + var(--tt-gap)));top:0}
+.cm-tt-grid .cm-tt-card:before{bottom:var(--tt-cap)}
 .cm-tt-grid .cm-tt-name{display:block;left:0;right:0;bottom:0;height:14px;line-height:14px;font-size:8px;text-align:center;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--v-bg);color:var(--color-ink)}
-.cm-tt-grid .cm-tt-card.is-M .cm-tt-name{height:18px;line-height:18px;font-size:10px}.cm-tt-grid .cm-tt-card.is-L .cm-tt-name{height:20px;line-height:20px;font-size:11px}
+.cm-tt-grid .cm-tt-card .cm-tt-name{height:var(--tt-cap);line-height:var(--tt-cap);font-size:max(10px,calc(10px * var(--tt-s)))}
+.cm-tt-grid .cm-tt-card.is-ghost:after{font-size:max(10px,calc(9px * var(--tt-s)));line-height:1.5}
 .cm-tt-grid .cm-tt-card.no-art:before{background:linear-gradient(160deg,var(--v-panel),var(--v-bg))}
 .cm-tt-readings{position:absolute;left:16px;right:16px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:11px;color:var(--color-muted);z-index:2}
 #matrix-v2 .cm-tt-chip.cm-tt-reading,.cm-tt-chip.cm-tt-reading{background:linear-gradient(var(--v-ink),var(--v-muted))}
@@ -2987,3 +2991,18 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-inspector-art>img{aspect-ratio:var(--card-ratio);object-fit:cover}
 .cm-swap-card>img{aspect-ratio:var(--card-ratio);object-fit:cover}
 #matrix-v2 .cm-commander>img{min-height:0;aspect-ratio:var(--card-ratio);object-fit:cover}
+/* THE SIZE SLIDER (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): the label, the scale's two ends, the thumb,
+   and the value. Used for the card size (Settings, the Table view's drawer) and the stage's picture size. */
+.cm-size-slider{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--v-muted);min-width:0;flex-wrap:nowrap}
+.cm-size-label{color:var(--v-ink);font-weight:600;white-space:nowrap}
+.cm-size-end{font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#matrix-v2 .cm-size-slider input[type=range]{flex:1 1 140px;min-width:90px;width:180px;accent-color:var(--v-accent);margin:0;padding:0;min-height:24px}
+.cm-size-slider output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums;color:var(--v-ink);font-weight:600}
+.cm-tt-drawer-head .cm-size-slider input[type=range]{width:140px;flex-basis:120px}
+@media(max-width:760px){.cm-tt-drawer-head .cm-size-slider .cm-size-end{display:none}.cm-tt-drawer-head .cm-size-slider input[type=range]{width:110px;min-width:80px}}
+/* While a size is dragged, what waits for the redraw fades rather than overlapping. */
+.cm-tt-mat.is-sizing>:not(.cm-tt-backrow),.cm-tt-stage.is-sizing .cm-tt-info{opacity:.2;transition:opacity .15s}
+/* The card size scales the two places a card is looked at closely, inside what fits: the hover preview (never past the
+   normal print or half the screen) and the inspector's picture. */
+.cm-inspector{grid-template-columns:minmax(150px,calc(230px * var(--card-scale,1))) minmax(0,1fr)}
+@media(max-width:760px){.cm-inspector-art{max-width:min(100%,calc(200px * var(--card-scale,1)))}}

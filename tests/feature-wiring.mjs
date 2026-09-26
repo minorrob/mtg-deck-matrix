@@ -327,6 +327,13 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
     .filter((f) => f && !/^(docs|design|data|tests|game|tools|graph|sim)\//.test(f));
   const foreign = shipped.filter((f) => /\bEUR\b|\bGBP\b|\beur\b|\btix\b|€|£|¥/.test(read(f)));
   ok(foreign.length === 0, `nothing that ships carries another currency (${shipped.length} files read): ${foreign.join(", ")}`);
+  /* SIZES ARE SLIDERS, NEVER STEPS (AGENTS.md; Rob, 2026-09-26). No size is picked from S / M / L or a row of size
+     buttons in anything that ships, the Play game's pages included: a size control is an <input type="range">,
+     proved at both ends by tests/card-size.mjs. */
+  const ui = execFileSync("git", ["ls-files", "--", "game/ui/*.mjs", "game/ui/*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter(Boolean);
+  const STEPS = /\[\s*['"]S['"]\s*,\s*['"]M['"]\s*,\s*['"]L['"]\s*\]|data-size=|role="group"[^>]*aria-label="[^"]*\bsize\b|aria-label="[^"]*\bsize\b"[^>]*role="group"/i;
+  const stepped = [...shipped, ...ui].filter((f) => STEPS.test(read(f)));
+  ok(stepped.length === 0, `no size is picked from steps in anything that ships (${shipped.length + ui.length} files read): ${stepped.join(", ")}`);
 }
 
 console.log(`feature-wiring: ${checks} checks passed — ${features.length} feature files read; dialogs bound, help entries titled, dates local, compare picks in memory.`);

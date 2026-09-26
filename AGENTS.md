@@ -89,6 +89,24 @@ Designers get the same rule, as a table of what to write and what never to, in *
 `tests/feature-wiring.mjs` holds all three: no formatter without `'en-US'`, no raw date field printed
 into a page, and no other currency in anything that ships.
 
+## Sizes are sliders, never steps
+
+Rob, 2026-09-26, and not for the first time: *"anywhere that SML is used, instead it should be the dragging slider
+on the scale where you are simply ensuring that we make the minimum on the scale and the maximum, if chosen, still
+legible and fit properly within the design and framework ... this may ... be different between mobile and
+desktop."*
+
+- **A size the reader picks is a continuous slider** (`<input type="range">`), never S / M / L, never a row of
+  size buttons or named steps (Card · Larger · Large · Full), anywhere: cards, pictures, text, tables, the Play
+  table. A design that draws steps is built as a slider.
+- **The ends are the design's job.** The smallest size keeps every word on the thing legible (no text under
+  10px), and the largest fits the screen and the layout around it without sideways scroll or overlap. The range
+  may differ between a phone and a desktop, and is clamped when the window changes size.
+- **Dragging previews live; letting go saves.** A size is a fact about the screen, so it is remembered per
+  device (`localStorage`), not in the library.
+- **Proved at both ends.** A suite drags each slider to its minimum and its maximum, at 1400 and at 390 wide,
+  and measures legibility and fit. `tests/feature-wiring.mjs` refuses a size picker built from buttons.
+
 ## Decisions inside the game belong to the players
 
 Rob, 2026-09-23: *"any decisions that takes place within the game the players should be given that
