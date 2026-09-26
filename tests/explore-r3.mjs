@@ -89,7 +89,7 @@ try {
 
   /* 3a. To buy: on the To Buy list, nothing bought. */
   const copiesOf = (state, id) => state.lots.filter((l) => l.cardId === id).reduce((n, l) => ({all: n.all + l.quantity, bench: n.bench + (l.source === "owned" && l.location?.kind === "bench" && !l.allocation ? l.quantity : 0), reserved: n.reserved + (l.allocation ? l.quantity : 0)}), {all: 0, bench: 0, reserved: 0});
-  const had = copiesOf(st0, idOf(st0, CARD));
+  let had = copiesOf(st0, idOf(st0, CARD));
   ok(!st0.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === idOf(st0, CARD)), `${CARD} is not on the To Buy list yet`);
   await addFor(page, CARD);
   await put(page, "buy");
@@ -100,6 +100,25 @@ try {
   ok(elves, `${CARD} is in the library's cards now`);
   ok(st.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === elves), "To buy put it on the To Buy list");
   eq(copiesOf(st, elves), had, "and bought nothing: the copies are as they were");
+  /* R3.7b: a card no deck needs shows on the To buy tab as a To Buy list entry, and Bought on it puts an owned copy
+     on the Bench and takes the entry off the list, in one step. */
+  {
+    await page.goto(`${base}/index.html#cards?tab=buy&card=${encodeURIComponent(elves)}`);
+    await page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-table, #cm-roster-table .cm-status-line"));
+    const row = page.locator(`#cm-roster-table tr[data-record^="entry:group:to-buy"][data-card="${elves}"]`).first();
+    ok(await row.count(), "the To Buy list entry is on the To buy tab");
+    eq(await row.locator(".cm-pill").first().innerText(), "To buy", "and wears To buy, for no deck");
+    await row.locator("[data-action=shop-buy]").click();
+    /* The stored library, polled from here: the page's CSP forbids eval, and the buy is one batch, so the copy and the
+       entry change together. */
+    for (let i = 0; i < 60; i++) { st = await stateOf(page); if (st.lots.filter((l) => l.cardId === elves).length !== st0.lots.filter((l) => l.cardId === elves).length) break; await page.waitForTimeout(250); }
+    const after = copiesOf(st, elves);
+    eq([after.all - had.all, after.bench - had.bench, after.reserved - had.reserved], [1, 1, 0], "Bought put one owned copy on the Bench, reserved for no deck");
+    ok(!st.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === elves), "and took the entry off the To Buy list");
+    had = after;
+    await page.goto(`${base}/index.html#discover?deck=${encodeURIComponent(D6)}`);
+    await page.locator(".cm-card-view-buy [data-action=add-buy]").waitFor({timeout: 60000});
+  }
 
   /* 3a'. Watching: a watched copy, nothing bought, not on the To Buy list. */
   const WATCH = "Birds of Paradise";

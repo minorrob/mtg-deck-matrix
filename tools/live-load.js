@@ -15,9 +15,13 @@
  *                        copies the list does not call for stay in the physical deck as substitutes
  *   owned.bench          owned copies on the bench; reserved to whichever deck still needs them
  *   ordered              copies in flight; reserved after owned copies, never located
- *   buy                  the outstanding shopping list, filed under the To Buy group with prices
- *   upgrades             ceiling cards, filed under an "Upgrade Path" group AND attached to the
- *                        deck slot each one replaces, as an uncommitted upgrade option
+ *   buy                  the outstanding shopping list. What the decks need is already To buy (their
+ *                        unfilled seats); only copies beyond that are filed under the To Buy group
+ *   upgrades             a card coming in for another. When the card is on the deck's list and the
+ *                        one it replaces is a substitute in the box, the substitute records the seat
+ *                        it holds (standInFor): the upgrade IS that seat's need, so nothing else is
+ *                        filed. When the replaced card is on the list, it is attached to that slot
+ *                        as an uncommitted upgrade option
  *   decks[].options      cards in the hundred flagged Option: the first to come out when a swap
  *                        is needed. A flag on the slot, nothing else changes
  *   decks[].planned      cards meant to come INTO the deck that are not in its hundred yet:
@@ -139,31 +143,25 @@
       try{run({type:'finalize',deckId});}catch(err){issues.push(`${d.name} stays a draft: ${err.message}`);}
       for(const o of d.options||[]){const {card,why}=listed(o,d.id+'.options');run({type:'flag',deckId,slotId:slotOf[d.id].get(idOf(card)),option:true,why});}
     }
-    /* Upgrades: the group Rob asked for, and the linked option the deck page already knows. */
-    if(doc.upgrades.length){
-      run({type:'createGroup',groupId:GROUP_UPGRADES,name:'Upgrade Path'});
-      const entries=[];
-      for(const u of doc.upgrades){
-        const noteText=[u.deck,u.replaces?`replaces ${u.replaces}`:'',u.tier!==undefined?`tier ${u.tier}`:'',Number.isFinite(u.price)?`$${u.price.toFixed(2)}`:'',u.why||''].filter(Boolean).join(' · ');
-        entries.push({cardId:idOf(u.card),quantity:1,notes:noteText});
-        const deckId=deckIds[u.deck],replaces=u.replaces?slotOf[u.deck].get(idOf(u.replaces)):null;
-        /* A REPLACED CARD THAT IS IN THE BOX BUT NOT IN THE TARGET IS THE NORMAL CASE, not a
-           problem to report. Once the workbook's target columns describe the state AFTER the
-           upgrades are bought, the temporary card has already left the hundred while it is
-           still physically sleeved -- which is exactly what an upgrade is: the target names
-           the card coming in, the actuals name the card it comes in for. Only a replaced card
-           that is in neither the target nor the box is worth a word. */
-        if(!replaces){
-          const inBox=(doc.owned.inDeck[u.deck]||[]).some(([n])=>fold(n)===fold(u.replaces||''));
-          if(!inBox)issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is in neither that deck's target nor its box, so it is filed in the group only.`);
-          continue;}
-        try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText,tier:Number.isInteger(u.tier)?u.tier:null,why:u.why||'',price:Number.isFinite(u.price)?u.price:null}});}
-        catch(err){issues.push(`Upgrade ${u.card} (${u.deck}) could not be attached to its slot: ${err.message}`);}
-      }
-      run({type:'groupEntries',groupId:GROUP_UPGRADES,replace:true,entries});
-    }
-    if(doc.buy.length&&s.groups.some(g=>g.id===GROUP_TO_BUY)){
-      run({type:'groupEntries',groupId:GROUP_TO_BUY,replace:true,entries:doc.buy.map(([name,qty,price])=>({cardId:idOf(name),quantity:qty,notes:Number.isFinite(price)?`$${price.toFixed(2)} each`:''}))});
+    /* Upgrades (Rob, 2026-09-26: "A card is an upgrade if it is planned to replace a deck card").
+       THE USUAL CASE IS A SEAT. The workbook's target names the card coming in; the box still holds
+       the temporary card it comes in for, which the list no longer calls for -- a substitute. So the
+       upgrade is already that seat's To buy need, and what the file adds is which substitute holds
+       the seat: recorded on the substitute's copy once the copies exist (seatsHeld, below). Nothing
+       is filed in a group; the Upgrade Path group and its duplicate entries are gone.
+       THE OTHER CASE IS AN OPTION: the replaced card is on the list, so the upgrade is attached to
+       that slot as an uncommitted option, the deck page's Upgrade Path. Anything else is reported. */
+    const seatsHeld=[];
+    for(const u of doc.upgrades){
+      const deckId=deckIds[u.deck],replaces=u.replaces?slotOf[u.deck].get(idOf(u.replaces)):null,seat=slotOf[u.deck].get(idOf(u.card));
+      if(!replaces){
+        const inBox=(doc.owned.inDeck[u.deck]||[]).some(([n])=>fold(n)===fold(u.replaces||''));
+        if(seat&&inBox)seatsHeld.push({deck:u.deck,slotId:seat,cardId:idOf(u.replaces),card:u.card,replaces:u.replaces});
+        else issues.push(`Upgrade ${u.card} (${u.deck}): ${seat?`"${u.replaces||'(none)'}" is in neither that deck's target nor its box`:`it is not on the deck's list and "${u.replaces||'(none)'}" is not either`}, so it is left out.`);
+        continue;}
+      const noteText=[u.deck,`replaces ${u.replaces}`,u.tier!==undefined?`tier ${u.tier}`:'',Number.isFinite(u.price)?`$${u.price.toFixed(2)}`:''].filter(Boolean).join(' · ');
+      try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText,tier:Number.isInteger(u.tier)?u.tier:null,why:u.why||'',price:Number.isFinite(u.price)?u.price:null}});}
+      catch(err){issues.push(`Upgrade ${u.card} (${u.deck}) could not be attached to its slot: ${err.message}`);}
     }
     /* Copies. Built directly, then validated as a whole: eight hundred commands that each
        clone the library would spend seconds proving what one validation proves. */
@@ -213,6 +211,19 @@
         }
       }
     }
+    /* Which seat each substitute holds, from the upgrades above. One copy per upgrade: a substitute
+       lot of two is split so each copy names its own seat. */
+    let seatsRecorded=0;
+    for(const p of seatsHeld){
+      const deckId=deckIds[p.deck];
+      /* A copy in the box the list does not call for: unreserved, or reserved for another deck while it
+         stands here (the model's "reserved for" substitute). Unreserved first. */
+      const l=state.lots.filter(l=>l.cardId===p.cardId&&l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===deckId&&l.allocation?.deckId!==deckId&&!l.standInFor).sort((a,b)=>(a.allocation?1:0)-(b.allocation?1:0))[0];
+      if(!l){issues.push(`Upgrade ${p.card} (${p.deck}): no copy of ${p.replaces} is left in the box to hold its seat.`);continue;}
+      let part=l;
+      if(l.quantity>1){part={...Model.clone(l),id:'lot:live:'+(++serial),quantity:1};l.quantity-=1;state.lots.push(part);}
+      part.standInFor=p.slotId;part.notes=`Substitute in ${p.deck}: holds the seat of ${p.card}.`;seatsRecorded++;
+    }
     /* Planned cards. A copy that is already free -- ordered and unreserved, or spare on the
        bench -- is filed in the deck's group and stands for the plan; what no copy covers is
        a Planned entry in that group, with the owner's reason as its note. */
@@ -233,15 +244,18 @@
       }
     }
     state.revision=s.revision+1;state.updatedAt=stamp;state.createdAt=state.createdAt||stamp;
-    Model.validate(state);
-    /* The file's shopping list against the model's own arithmetic. */
-    const wanted=new Map();for(const [name,qty] of doc.buy)wanted.set(idOf(name),(wanted.get(idOf(name))||0)+qty);
+    /* The file's shopping list against the model's own arithmetic. What the decks are short of is
+       already To buy, as their needs; a list that says less is reported. Copies beyond the needs are
+       a card no deck calls for (R3.7), and those alone are filed on the To Buy list, with the price. */
+    const wanted=new Map(),priceOf=new Map();for(const [name,qty,price] of doc.buy){wanted.set(idOf(name),(wanted.get(idOf(name))||0)+qty);if(Number.isFinite(price))priceOf.set(idOf(name),price);}
     const needed=new Map();for(const deck of state.decks.filter(d=>d.status==='final'))for(const r of deck.slots.filter(r=>r.committed)){const k=shortfall(deck,r);if(k)needed.set(r.cardId,(needed.get(r.cardId)||0)+k);}
-    for(const [cardId,qty] of needed)if((wanted.get(cardId)||0)!==qty)issues.push(`${state.cards[cardId].name}: the decks still need ${qty} but the buy list says ${wanted.get(cardId)||0}.`);
-    for(const [cardId,qty] of wanted)if(!needed.has(cardId))issues.push(`${state.cards[cardId].name}: on the buy list (${qty}) but no finalized deck is short of it.`);
+    for(const [cardId,qty] of needed)if((wanted.get(cardId)||0)<qty)issues.push(`${state.cards[cardId].name}: the decks still need ${qty} but the buy list says ${wanted.get(cardId)||0}.`);
+    const wantList=state.groups.find(g=>g.id===GROUP_TO_BUY);
+    if(wantList){wantList.entries=[];for(const [cardId,qty] of wanted){const extra=qty-(needed.get(cardId)||0);if(extra>0)wantList.entries.push({id:'entry:live:'+(++entrySerial),cardId,quantity:extra,purpose:'main',committed:true,printing:{},replaces:'',targetBracket:null,pinned:false,option:false,optionWhy:'',tier:null,why:'',price:null,notes:priceOf.has(cardId)?`$${priceOf.get(cardId).toFixed(2)} each`:''});}}
+    Model.validate(state);
     const counters=Model.counters(state),readiness=state.decks.map(d=>({deck:d.name,status:d.status,...Model.readiness(state,d)}));
     const options=doc.decks.reduce((n,d)=>n+(d.options||[]).length,0);
-    return {state,issues,summary:{decks:state.decks.length,cards:Object.keys(state.cards).length,lots:state.lots.length,...counters,upgrades:doc.upgrades.length,buyRows:doc.buy.length,options,planned:plannedCount,readiness}};
+    return {state,issues,summary:{decks:state.decks.length,cards:Object.keys(state.cards).length,lots:state.lots.length,...counters,upgrades:doc.upgrades.length,seatsRecorded,toBuyEntries:wantList?wantList.entries.length:0,buyRows:doc.buy.length,options,planned:plannedCount,readiness}};
   }
   return {FORMAT,VERSION,PASSWORD,GROUP_UPGRADES,check,names,build,fold,front,completeBasic};
 });

@@ -229,7 +229,7 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
          standing in only where the catalog has none. The column is what the list was
          drafted with, not a market price. */
       tier:status==='LT'?3:2,price:marketPriceOf(lookup,card[upId].name,cash(up.get(r,'Price')))??0,origin:'workbook',
-      why:status==='LT'?'Long-term replacement for a temporary card.':'Short-term replacement for a temporary card.'});
+      why:''});
   }
 
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',

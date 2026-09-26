@@ -2877,6 +2877,9 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* CARD STATES, THE TWO ROLES OUTSIDE THE BOX (docs/card-states.md): an upgrade replaces a card in the box; a reserved card fills an empty seat, which keeps the deck from being playable. */
 #matrix-v2 .cm-badge-upgrade{background:color-mix(in oklab,var(--st-reserved) 22%,transparent);color:var(--v-ink)}
 #matrix-v2 .cm-badge-reserved{background:color-mix(in oklab,var(--st-buy) 26%,transparent);color:var(--v-ink)}
+/* The Status cell carries the state's pill and, outside a box, its role badge (Upgrade or Reserved): it wraps the
+   badge under the pill rather than cutting it to an ellipsis like the table's other cells. */
+#cm-roster-table tbody td.cm-col-status{white-space:normal;line-height:1.9}
 #matrix-v2 .cm-deck-playable{margin:4px 0 12px;font-size:14px;color:var(--v-muted)}
 #matrix-v2 .cm-deck-playable b{color:var(--v-ink)}
 #matrix-v2 .cm-deck-playable.is-short b{color:var(--st-buy)}

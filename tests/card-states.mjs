@@ -85,9 +85,16 @@ eq(copies((s) => s.stage === "ordered"), 6, "6 ordered");
 eq(copies((s, r) => s.stage === "buy" && r.kind === "need"), 111, "111 copies to buy for decks");
 eq(copies((s, r) => s.stage === "buy" && r.kind === "need" && s.role === "upgrade"), 111, "and all 111 are upgrades: every deck's box is full, so each replaces the substitute holding its seat");
 eq(copies((s) => s.role === "reserved"), 0, "nothing is reserved: no deck has an empty seat");
-eq(count((s, r) => s.stage === "buy" && r.kind === "entry"), 101, "the 101 on the To Buy list are To buy (Rob's decision 1)");
-eq(count((s, r) => r.kind === "entry" && r.groupId === "group:live:upgrades" && s.stage === "watching" && !s.deckId), 111, "the 111 Upgrade Path entries are Watching, no deck, until the rebuild records their seats and removes them");
-eq(count((s, r) => r.kind === "entry" && r.groupId !== M.WANT_LIST && r.groupId !== "group:live:upgrades" && s.stage === "watching" && !!s.deckId && s.role === "upgrade"), 13, "the 13 entries in D4's and D6's own groups are Watching upgrades for their decks");
+/* The rebuilt library (step 3b): the To Buy list duplicated the decks' needs and is empty; the Upgrade Path is gone,
+   because each of its entries was a need whose seat a substitute holds, and that seat is now on the substitute. */
+eq(count((s, r) => r.kind === "entry" && r.groupId === M.WANT_LIST), 0, "the To Buy list holds nothing the decks already need: none today");
+ok(!live.groups.some((g) => g.id === "group:live:upgrades"), "there is no Upgrade Path group");
+eq(copies((s) => s.stage === "buy"), 111, "so To buy is the decks' 111 needs, each counted once");
+eq(copies((s) => s.stage === "watching"), 13, "and Watching is the 13 candidates in the decks' own groups");
+const seated = M.projection(live).filter((r) => r.kind === "lot" && r.standInFor);
+eq(seated.length, 111, "111 substitutes record the seat they hold, one per upgrade");
+eq(new Set(M.projection(live).filter((r) => r.kind === "need").map((r) => r.slotId)), new Set(seated.map((r) => r.standInFor)), "and the seats they hold are exactly the seats To buy fills");
+eq(count((s, r) => r.kind === "entry" && r.groupId !== M.WANT_LIST && s.stage === "watching" && !!s.deckId && s.role === "upgrade"), 13, "the 13 entries in D4's and D6's own groups are Watching upgrades for their decks");
 eq(copies((s) => s.stage === "owned"), 1400, "and every owned copy is counted once: 577 + 5 + 123 + 695 = 1,400");
 /* PLAYABLE (Rob, 2026-09-26): a deck plays when none of its records is reserved -- every seat holds a card. The
    model's own flag and the roles agree, deck by deck. */
@@ -109,7 +116,8 @@ for (const r of records) {
   assert.fail(`old status ${old} and new state ${JSON.stringify(pick(st))} disagree for ${r.recordId || r.id}`);
 }
 checks++;
-eq(Object.keys(differ).sort(), ["Wanted"].concat(differ["Watched (owned, shortlisted)"] ? ["Watched (owned, shortlisted)"] : []).sort(), `old and new agree on every record except Rob's decisions: ${JSON.stringify(differ)}`);
+/* The rebuilt library has no To Buy list entries, so "Wanted" differs only where one is added; the table above holds that mapping. */
+ok(Object.keys(differ).every((k) => k === "Wanted" || k === "Watched (owned, shortlisted)"), `old and new agree on every record except Rob's decisions: ${JSON.stringify(differ)}`);
 /* 5. The workbook export's State column (step 2c): the same words, counted the same, on the Library sheet. */
 {
   const E = require("../collection-exchange.js"), book = E.workbook(live), lib = book.sheets.find((x) => x.name === "Library");

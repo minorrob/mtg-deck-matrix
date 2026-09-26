@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 7,
- "savedAt": "2026-09-25T14:41:49Z",
+ "savedAt": "2026-09-26T12:53:06Z",
  "workbook": "Treys_MtG_Master_-_v25.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
  "decks": [
@@ -17128,7 +17128,7 @@
    "tier": 3,
    "price": 0.21,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17137,7 +17137,7 @@
    "tier": 3,
    "price": 1.11,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17146,7 +17146,7 @@
    "tier": 3,
    "price": 0.26,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17155,7 +17155,7 @@
    "tier": 3,
    "price": 0.23,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17164,7 +17164,7 @@
    "tier": 3,
    "price": 0.26,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17173,7 +17173,7 @@
    "tier": 3,
    "price": 0.57,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17182,7 +17182,7 @@
    "tier": 3,
    "price": 0.29,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17191,7 +17191,7 @@
    "tier": 3,
    "price": 0.59,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17200,7 +17200,7 @@
    "tier": 3,
    "price": 2.18,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17209,7 +17209,7 @@
    "tier": 3,
    "price": 0.74,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17218,7 +17218,7 @@
    "tier": 3,
    "price": 0.23,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17227,7 +17227,7 @@
    "tier": 3,
    "price": 0.33,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17236,7 +17236,7 @@
    "tier": 3,
    "price": 0.39,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17245,7 +17245,7 @@
    "tier": 3,
    "price": 0.59,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17254,7 +17254,7 @@
    "tier": 3,
    "price": 1.53,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17263,7 +17263,7 @@
    "tier": 3,
    "price": 0.36,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17272,7 +17272,7 @@
    "tier": 3,
    "price": 0.57,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17281,7 +17281,7 @@
    "tier": 3,
    "price": 2.53,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17290,7 +17290,7 @@
    "tier": 3,
    "price": 12.68,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17299,7 +17299,7 @@
    "tier": 3,
    "price": 1.27,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17308,7 +17308,7 @@
    "tier": 3,
    "price": 0.33,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17317,7 +17317,7 @@
    "tier": 3,
    "price": 0.59,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17326,7 +17326,7 @@
    "tier": 3,
    "price": 0.56,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17335,7 +17335,7 @@
    "tier": 3,
    "price": 0.59,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17344,7 +17344,7 @@
    "tier": 3,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17353,7 +17353,7 @@
    "tier": 3,
    "price": 2.1,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17362,7 +17362,7 @@
    "tier": 3,
    "price": 0.26,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17371,7 +17371,7 @@
    "tier": 3,
    "price": 0.99,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17380,7 +17380,7 @@
    "tier": 3,
    "price": 0.27,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17389,7 +17389,7 @@
    "tier": 3,
    "price": 0.29,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17398,7 +17398,7 @@
    "tier": 3,
    "price": 0.27,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17407,7 +17407,7 @@
    "tier": 3,
    "price": 0.6,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17416,7 +17416,7 @@
    "tier": 3,
    "price": 1.68,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17425,7 +17425,7 @@
    "tier": 3,
    "price": 0.6,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17434,7 +17434,7 @@
    "tier": 3,
    "price": 0.31,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D1",
@@ -17443,7 +17443,7 @@
    "tier": 3,
    "price": 0.67,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17452,7 +17452,7 @@
    "tier": 3,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D1",
@@ -17461,7 +17461,7 @@
    "tier": 3,
    "price": 8.1,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17470,7 +17470,7 @@
    "tier": 3,
    "price": 0.61,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17479,7 +17479,7 @@
    "tier": 3,
    "price": 0.61,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17488,7 +17488,7 @@
    "tier": 3,
    "price": 0.26,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17497,7 +17497,7 @@
    "tier": 3,
    "price": 0.38,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17506,7 +17506,7 @@
    "tier": 3,
    "price": 0.57,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D1",
@@ -17515,7 +17515,7 @@
    "tier": 3,
    "price": 0.87,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17524,7 +17524,7 @@
    "tier": 3,
    "price": 1.44,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17533,7 +17533,7 @@
    "tier": 3,
    "price": 3.54,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17542,7 +17542,7 @@
    "tier": 3,
    "price": 1.08,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17551,7 +17551,7 @@
    "tier": 3,
    "price": 0.35,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17560,7 +17560,7 @@
    "tier": 3,
    "price": 3.52,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D1",
@@ -17569,7 +17569,7 @@
    "tier": 3,
    "price": 0.47,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17578,7 +17578,7 @@
    "tier": 3,
    "price": 1.19,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17587,7 +17587,7 @@
    "tier": 3,
    "price": 0.24,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17596,7 +17596,7 @@
    "tier": 3,
    "price": 0.12,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17605,7 +17605,7 @@
    "tier": 3,
    "price": 8.96,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17614,7 +17614,7 @@
    "tier": 3,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17623,7 +17623,7 @@
    "tier": 3,
    "price": 0.34,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17632,7 +17632,7 @@
    "tier": 3,
    "price": 0.37,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17641,7 +17641,7 @@
    "tier": 3,
    "price": 0.34,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17650,7 +17650,7 @@
    "tier": 3,
    "price": 2.12,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17659,7 +17659,7 @@
    "tier": 3,
    "price": 4.4,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17668,7 +17668,7 @@
    "tier": 3,
    "price": 1.4,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17677,7 +17677,7 @@
    "tier": 3,
    "price": 3.33,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17686,7 +17686,7 @@
    "tier": 3,
    "price": 0.41,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17695,7 +17695,7 @@
    "tier": 3,
    "price": 0.24,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17704,7 +17704,7 @@
    "tier": 3,
    "price": 2.5,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17713,7 +17713,7 @@
    "tier": 3,
    "price": 0.25,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17722,7 +17722,7 @@
    "tier": 3,
    "price": 0.34,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17731,7 +17731,7 @@
    "tier": 3,
    "price": 1.7,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17740,7 +17740,7 @@
    "tier": 3,
    "price": 4.55,
    "origin": "workbook",
-   "why": "Long-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17749,7 +17749,7 @@
    "tier": 2,
    "price": 0.35,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17758,7 +17758,7 @@
    "tier": 2,
    "price": 1.16,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17767,7 +17767,7 @@
    "tier": 2,
    "price": 1.27,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17776,7 +17776,7 @@
    "tier": 2,
    "price": 0.39,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17785,7 +17785,7 @@
    "tier": 2,
    "price": 0.35,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17794,7 +17794,7 @@
    "tier": 2,
    "price": 12.11,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17803,7 +17803,7 @@
    "tier": 2,
    "price": 5.42,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17812,7 +17812,7 @@
    "tier": 2,
    "price": 0.45,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17821,7 +17821,7 @@
    "tier": 2,
    "price": 12.95,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17830,7 +17830,7 @@
    "tier": 2,
    "price": 5.17,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17839,7 +17839,7 @@
    "tier": 2,
    "price": 0.99,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -17848,7 +17848,7 @@
    "tier": 2,
    "price": 5.12,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17857,7 +17857,7 @@
    "tier": 2,
    "price": 5.23,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17866,7 +17866,7 @@
    "tier": 2,
    "price": 2.85,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17875,7 +17875,7 @@
    "tier": 2,
    "price": 0.24,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -17884,7 +17884,7 @@
    "tier": 2,
    "price": 3.54,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17893,7 +17893,7 @@
    "tier": 2,
    "price": 0.29,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17902,7 +17902,7 @@
    "tier": 2,
    "price": 8.65,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17911,7 +17911,7 @@
    "tier": 2,
    "price": 0.3,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17920,7 +17920,7 @@
    "tier": 2,
    "price": 15.05,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17929,7 +17929,7 @@
    "tier": 2,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17938,7 +17938,7 @@
    "tier": 2,
    "price": 2.28,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -17947,7 +17947,7 @@
    "tier": 2,
    "price": 2.94,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17956,7 +17956,7 @@
    "tier": 2,
    "price": 0.59,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -17965,7 +17965,7 @@
    "tier": 2,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -17974,7 +17974,7 @@
    "tier": 2,
    "price": 15.05,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D1",
@@ -17983,7 +17983,7 @@
    "tier": 2,
    "price": 4.51,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -17992,7 +17992,7 @@
    "tier": 2,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -18001,7 +18001,7 @@
    "tier": 2,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -18010,7 +18010,7 @@
    "tier": 2,
    "price": 0.81,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -18019,7 +18019,7 @@
    "tier": 2,
    "price": 3.58,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -18028,7 +18028,7 @@
    "tier": 2,
    "price": 0.27,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D6",
@@ -18037,7 +18037,7 @@
    "tier": 2,
    "price": 0.47,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D3",
@@ -18046,7 +18046,7 @@
    "tier": 2,
    "price": 0.23,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D2",
@@ -18055,7 +18055,7 @@
    "tier": 2,
    "price": 1.47,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D7",
@@ -18064,7 +18064,7 @@
    "tier": 2,
    "price": 0.28,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -18073,7 +18073,7 @@
    "tier": 2,
    "price": 0.63,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D4",
@@ -18082,7 +18082,7 @@
    "tier": 2,
    "price": 0.33,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -18091,7 +18091,7 @@
    "tier": 2,
    "price": 0.33,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -18100,7 +18100,7 @@
    "tier": 2,
    "price": 0.15,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -18109,7 +18109,7 @@
    "tier": 2,
    "price": 0.32,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   },
   {
    "deck": "D5",
@@ -18118,7 +18118,7 @@
    "tier": 2,
    "price": 5.45,
    "origin": "workbook",
-   "why": "Short-term replacement for a temporary card."
+   "why": ""
   }
  ]
 }
