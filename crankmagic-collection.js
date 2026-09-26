@@ -52,7 +52,7 @@ function rows(params,shop){const st=lens();let all=M.projection(st);for(const d 
    own rows -- in the table and on the Tabletop's ledge alike. The To buy tab drops them again a
    line below, because money is not the question there. */
   if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck')||(r.kind==='lot'&&r.source==='owned'&&r.placement==='Bench'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));/* The To buy tab holds every To buy record (docs/card-states.md) -- a deck's need and the To Buy list alike -- beside what is ordered. A watched copy is Watching, not To buy, so it stays on the Library tab. */
-  if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source==='ordered'||r.kind==='entry'&&r.groupId===M.WANT_LIST);for(const r of all){r.status=statusOf(r);r.state=M.cardState(r);r.stateLabel=M.stateLabel(r.state);}
+  if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source==='ordered'||r.kind==='entry'&&r.groupId===M.WANT_LIST);const read=M.stateReader(st);for(const r of all){r.status=statusOf(r);r.state=read(r);r.stateLabel=M.stateLabel(r.state);}
   /* A row already reads as the sitting would leave it -- it came from the pending library. The
      mark is so a reader can tell which of those readings is theirs and not yet saved. */
   const sb=C.sandbox;if(sb&&sb.open){const touched=sb.cards;for(const r of all)if(touched.has(r.cardId))r.pending=true;}
@@ -82,36 +82,39 @@ const groupOrder=(r,key)=>G.order(r,key,value,statusRank);
 /* The figures follow the rows the page shows, so filtering to a deck counts that deck: same rows, same question. */
 /* THE COUNT CARDS ARE THE CARD STATES (docs/card-states.md; Rob, 2026-09-26). The top row is the stages every
    card passes through -- Watching, To buy, Ordered, Owned -- and the row under it splits Owned by where it is:
-   the Bench, or a deck as its Target, a Substitute or an Upgrade, so the second row adds up to Owned and the
-   caption says so. What a card counts is what its click shows (Rob, 2026-09-25): both ask the model's
-   cardState, so a figure and the rows under it cannot disagree. */
+   the Bench, To add (for a deck, not in its box yet), or in a deck's box as its Target or a Substitute, so the
+   second row adds up to Owned and the caption says so, and says how the To buy cards divide: upgrades, which
+   replace a card in a box, and reserved, which fill an empty seat. What a card counts is what its click shows
+   (Rob, 2026-09-25): both ask the model's cardState, so a figure and the rows under it cannot disagree. */
 const STATE_KINDS=['lot','need','draft','option','entry'];
-/* The Table view's status piles, in the order a deck is finished: what is in a deck, what waits to go in, then the
-   Bench, then what is not held yet. */
-const TABLE_PILES=[['target','Target'],['toadd','To add'],['substitute','Substitute'],['upgrade','Upgrade'],['bench','Bench'],['ordered','Ordered'],['buy','To buy'],['watching','Watching']].map(([id,label],order)=>({id,label,tone:label==='To add'?'reserved':M.stateTone(label),order}));
-const tablePile=r=>{if(!STATE_KINDS.includes(r.kind))return r.status;const st=stateOfRow(r);return st.stage==='owned'&&st.role==='target'&&!st.inBox?'To add':M.stateLabel(st);};
 const stateOfRow=r=>r.state||(STATE_KINDS.includes(r.kind)?M.cardState(r):{stage:'',deckId:'',role:'',inBox:false});
 const owned=(r,f)=>{const st=stateOfRow(r);return st.stage==='owned'&&f(st);};
+/* The Table view's status piles, in the order a deck is finished: what is in a deck, what waits to go in, then the
+   Bench, then what is not held yet. */
+const TABLE_PILES=[['target','Target'],['toadd','To add'],['substitute','Substitute'],['bench','Bench'],['ordered','Ordered'],['buy','To buy'],['watching','Watching']].map(([id,label],order)=>({id,label,tone:M.stateTone(label),order}));
+const tablePile=r=>STATE_KINDS.includes(r.kind)?M.stateLabel(stateOfRow(r)):r.status;
 const KPI_TEST={
   watching:r=>stateOfRow(r).stage==='watching',
   buy:r=>stateOfRow(r).stage==='buy',
   ordered:r=>stateOfRow(r).stage==='ordered',
   owned:r=>owned(r,()=>true),
   bench:r=>owned(r,st=>!st.deckId),
-  target:r=>owned(r,st=>st.role==='target'),
-  substitute:r=>owned(r,st=>st.role==='substitute'),
-  upgrade:r=>owned(r,st=>st.role==='upgrade')};
-const STAT_FIGURES=[['watching','Watching','considering'],['buy','To buy','missing'],['ordered','Ordered','coming'],['owned','Owned','have'],['bench','Bench','bench'],['target','Target','physical'],['substitute','Substitute','subs'],['upgrade','Upgrade','plan']];
+  toadd:r=>owned(r,st=>!!st.deckId&&!st.inBox),
+  target:r=>owned(r,st=>st.inBox&&st.role==='target'),
+  substitute:r=>owned(r,st=>st.role==='substitute')};
+const STAT_FIGURES=[['watching','Watching','considering'],['buy','To buy','missing'],['ordered','Ordered','coming'],['owned','Owned','have'],['bench','Bench','bench'],['toadd','To add','plan'],['target','Target','physical'],['substitute','Substitute','subs']];
 function statsHTML(shown,scoped){
-  const t=Object.fromEntries(STAT_FIGURES.map(([k])=>[k,0]));let toAdd=0,offered=0;
+  const t=Object.fromEntries(STAT_FIGURES.map(([k])=>[k,0]));let upgrades=0,reserved=0,offered=0;
   for(const r of shown){
     for(const k in KPI_TEST)if(KPI_TEST[k](r))t[k]+=r.quantity;
-    if(owned(r,st=>st.role==='target'&&!st.inBox))toAdd+=r.quantity;
-    if(owned(r,st=>!!st.trade))offered+=r.quantity;
+    const st=stateOfRow(r);
+    if(st.stage==='buy'&&st.role==='upgrade')upgrades+=r.quantity;
+    if(st.stage==='buy'&&st.role==='reserved')reserved+=r.quantity;
+    if(owned(r,x=>!!x.trade))offered+=r.quantity;
   }
   const n=v=>v.toLocaleString('en-US');
   /* The figures as two rows of chips that filter the page: a click keeps the rows that card counts, a second click lets them all back. */
-  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const on=filter.kpi===k;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-kpi="${k}" aria-pressed="${on}" title="${on?'Show every state':`Show only ${l}`}"><strong>${n(t[k])}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${scoped?'Counting the rows this view shows. ':''}Owned = Bench + Target + Substitute + Upgrade${toAdd?` · ${n(toAdd)} to add`:''}${offered?` · ${n(offered)} for trade`:''}</p></div>`;
+  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const on=filter.kpi===k;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-kpi="${k}" aria-pressed="${on}" title="${on?'Show every state':`Show only ${l}`}"><strong>${n(t[k])}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${scoped?'Counting the rows this view shows. ':''}Owned = Bench + To add + Target + Substitute · To buy: ${n(upgrades)} upgrade${upgrades===1?'':'s'}, ${n(reserved)} reserved${offered?` · ${n(offered)} for trade`:''}</p></div>`;
 }
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
@@ -135,7 +138,7 @@ function batchBar(){
   if(!n)return '';
   return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Set status','batch-status',{},true,{caret:'down'})}${b('Ordered…','batch-order')}${b('Bought in store','batch-store')}${b('Arrived','batch-arrived')}${b('Add to a group','batch-group')}${b('Put in a physical deck','batch-place')}${b('Move physically to Bench','batch-bench')}${b('Release reservation → To buy','batch-release')}${b('Flag ▾','batch-flag')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
 }
-function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!fl.kpi||!!KPI_TEST[fl.kpi]?.(r))&&(!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?stateOfRow(r).stage==='owned':fl.status==='to-add'?owned(r,st=>st.role==='target'&&!st.inBox):r.stateLabel===fl.status||(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
+function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!fl.kpi||!!KPI_TEST[fl.kpi]?.(r))&&(!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?stateOfRow(r).stage==='owned':fl.status==='upgrade'||fl.status==='reserved'?(st=>!!st.deckId&&!st.inBox&&st.role===fl.status)(stateOfRow(r)):fl.status==='to-add'?owned(r,st=>!!st.deckId&&!st.inBox):r.stateLabel===fl.status||(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
 /* SHOPPING A CONVENTION FLOOR. On a phone the Shop page is not a spreadsheet to study; it
    is a list held in one hand at a booth while the seller waits. So under 640px the page
    head, the six-stat ribbon and the Columns control all go, the three page buttons fold
@@ -935,11 +938,11 @@ const cell=(r,k)=>{
      because the row came from the pending library; the mark is what tells a reader that this
      particular reading is theirs and is not written down yet. */
   const pendingBadge=stateCol&&r.pending?` <span class="cm-badge cm-badge-pending" title="Staged on the table and not saved yet — Review and confirm writes it.">Staged</span>`:'';
-  /* THE STATE'S TWO FACTS, BESIDE ITS PILL (docs/card-states.md): an owned target not yet in its deck's box is
-     what Ready to add lists; a substitute reserved for another deck says which. The legacy Allocation column
-     keeps its own badge. */
+  /* BESIDE THE PILL (docs/card-states.md): a card for a deck that is not in its box wears its role -- Upgrade, it
+     replaces a card that is in the box; Reserved, it takes an empty seat -- and a substitute reserved for another
+     deck says which. The legacy Allocation column keeps its own badge. */
   const st=k==='status'&&!mixed?stateOfRow(r):null,deckName=id=>{const d=id&&C.state.decks.find(x=>x.id===id);return d?shortDeck(d):'';};
-  const stateBadge=!st?'':st.stage==='owned'&&st.role==='target'&&!st.inBox?` <span class="cm-badge cm-badge-toadd" title="Reserved for ${e(deckName(st.deckId))}, not in its box yet: Ready to add lists it">To add</span>`
+  const stateBadge=!st?'':st.deckId&&!st.inBox&&(st.role==='upgrade'||st.role==='reserved')?` <span class="cm-badge cm-badge-${st.role}" title="${st.role==='upgrade'?`Replaces a card in ${e(deckName(st.deckId))}'s box`:`Takes an empty seat in ${e(deckName(st.deckId))}: the deck is short until it is in`}">${st.role==='upgrade'?'Upgrade':'Reserved'}</span>`
     :st.role==='substitute'&&st.reservedFor?` <span class="cm-badge cm-badge-standin" title="Standing in, in ${e(deckName(st.deckId))}; reserved for ${e(deckName(st.reservedFor))}">In ${e(deckName(st.deckId))} · reserved for ${e(deckName(st.reservedFor))}</span>`:'';
   const standInBadge=k==='status'?stateBadge:stateCol&&r.standIn&&r.placement!=='Substitute'?` <span class="cm-badge cm-badge-standin" title="Physically in ${e(M.deck(C.state,r.standInDeckId).name)}, a substitute there until a real copy takes its seat">Substitute in ${e(M.deck(C.state,r.standInDeckId).name)}</span>`:'';
   if(stateCol&&(r.option||r.pinned))return (mixed?body:C.pill(body,C.pillKind(value(r,k),r.placement)))+standInBadge+pendingBadge+(r.option?` <span class="cm-badge cm-badge-option" title="${e(r.optionWhy||'First candidate to swap out')}">Option</span>`:'')+(r.pinned?' <span class="cm-badge" title="Pinned: kept whatever the Lab or a swap suggests">Pinned</span>':'');
@@ -1113,8 +1116,9 @@ actions['tt-rest']=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.cl
    itself when one of them is set, so a filter never acts from behind a closed fold. */
 const FILTER_TYPES=['Creature','Instant','Sorcery','Artifact','Enchantment','Land','Planeswalker','Battle'];
 const FILTER_COLORS=[['W','W','White'],['U','U','Blue'],['B','B','Black'],['R','R','Red'],['G','G','Green'],['C','Colorless','Colorless']];
-/* The card states (docs/card-states.md): the stages, then where an owned card is, then the one fact a reader filters for -- a target not yet in its box. */
-const FILTER_STATUSES=['Watching','To buy','Ordered',['owned','Owned (any)'],'Bench','Target','Substitute','Upgrade',['to-add','Not yet in the box']];
+/* The card states (docs/card-states.md): the stages, then where an owned card is, then the two roles a card for a
+   deck has while it is not in the box -- an upgrade replaces a card in the box, a reserved card takes an empty seat. */
+const FILTER_STATUSES=['Watching','To buy','Ordered',['owned','Owned (any)'],'Bench','To add','Target','Substitute',['upgrade','Upgrade'],['reserved','Reserved']];
 const MORE_FILTERS=['subtype','mechanic','mana','flag','offer'];
 actions['roster-filters']=()=>{const r=C.route(),params=new URLSearchParams(r.params),shop=buyTab(),tab=shop?'buy':'library',tight=compactShop(shop);
   const draft={...filter},deckNow=params.get('deck')||'';let deck=deckNow,grouping=shop?shopGroupBy:groupBy;
@@ -1177,7 +1181,7 @@ actions['roster-columns']=()=>{const shop=buyTab(),current=withStatus(shop?shopS
    them, and the Filters button says how many are on. */
 const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',priceMin:'Min price',price:'Max price',kpi:'Count',mana:'Mana',flag:'Slot flag',group:'Group'};
 const activeFilters=()=>Object.entries(filter).filter(([k,v])=>v!==''&&k!=='group');
-function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v==='to-add'?'Not yet in the box':v):k==='kpi'?(STAT_FIGURES.find(([id])=>id===v)||[,v])[1]:k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
+function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Owned':v==='to-add'?'To add':v==='upgrade'?'Upgrade':v==='reserved'?'Reserved':v):k==='kpi'?(STAT_FIGURES.find(([id])=>id===v)||[,v])[1]:k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
   return `<div class="cm-fchips">${on.map(([k,v])=>`<button type="button" class="cm-fchip" data-action="clear-filter" data-key="${e(k)}" aria-label="Remove filter ${e(FILTER_NAMES[k]||k)}">${e(FILTER_NAMES[k]||k)}: <strong>${e(label(k,v))}</strong> <span aria-hidden="true">✕</span></button>`).join('')}<button type="button" class="cm-text-button" data-action="clear-filters">Clear all</button></div>`;}
 actions['clear-filter']=el=>{filter[el.dataset.key]='';page=0;C.render();};
 /* The folded row's caption: how many copies, for which decks. */

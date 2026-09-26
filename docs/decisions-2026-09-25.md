@@ -57,7 +57,7 @@ a secret, a purchase, an invitation, a file only he has) stay his, and the table
 | M8 | Exit criteria | **50 games** with zero engine exceptions and zero leaks | — |
 | M8 | The game night | Open | **Rob** |
 | M9 | Deleting `forge`, `runtime` and the two variables | **At cutover** | **Rob** |
-| R3.7 / cards | One card-state taxonomy (`docs/card-states.md`): stage (Watching, To buy, Ordered, Owned), deck and role (Target, Substitute, Upgrade), in the box, for trade | **Approved 2026-09-26**: the To Buy list is To buy; in the box stays; Upgrade Path entries become upgrade options on their decks; Ordered is bought-not-in-hand | — |
+| R3.7 / cards | One card-state taxonomy (`docs/card-states.md`): stage (Watching, To buy, Ordered, Owned), deck and role (Target, Substitute, Upgrade), in the box, for trade | **Approved 2026-09-26**: the To Buy list is To buy; in the box stays; Ordered is bought-not-in-hand. **Revised the same day:** roles outside a box are Upgrade (replaces a card in the box) and Reserved (an empty seat); a deck is playable when nothing is Reserved; the Upgrade Path entries record their substitutes' seats and go; no short/long-term flags; the backup is rebuilt, not migrated in place | — |
 | Any time | The cloud's Cloudflare token expires **2026-10-25** | **Renew it before then** | **Rob** |
 | Any time | www, SPF/DKIM/DMARC, GitHub Pro, the Cloudflare MCP, the 15 kept branches, sharing the architecture page | Open | **Rob** |
 

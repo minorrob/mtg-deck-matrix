@@ -213,9 +213,9 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   /* The card states (docs/card-states.md, 2026-09-26): eight tiles in two rows of four, the stages over where an owned card is. */
   const tiles = (css.match(/\.cm-kpis\{display:grid;[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
   ok(tiles, "the counts are two rows of four equal tiles");
-  ok(/STAT_FIGURES=\[\['watching','Watching'[^\n]*\['upgrade','Upgrade'/.test(col), "the stages, then Bench, Target, Substitute, Upgrade");
+  ok(/STAT_FIGURES=\[\['watching','Watching'[^\n]*\['toadd','To add'[^\n]*\['substitute','Substitute'/.test(col), "the stages, then Bench, To add, Target, Substitute");
   ok(/gap:8px/.test(tiles), `at the guide's gap (found ${tiles || "no rule"})`);
-  ok(/cm-kpi-caption">[^`]*Owned = Bench \+ Target \+ Substitute \+ Upgrade/.test(col), "and one caption line states the equation: Owned = Bench + Target + Substitute + Upgrade");
+  ok(/cm-kpi-caption">[^`]*Owned = Bench \+ To add \+ Target \+ Substitute · To buy: /.test(col), "and one caption line states the equation, Owned = Bench + To add + Target + Substitute, and how To buy divides");
   ok(/font-family:var\(--v-display\)/.test((css.match(/\.cm-kpi strong\{[^}]*\}/) || [""])[0]), "the figure is in the display face");
   /* The head's summary sentence, through the same pageHead the deck pages use. */
   ok(/cm-cards-summary/.test(col), "the Library head carries its summary sentence");

@@ -2874,3 +2874,9 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-advanced-tools-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
 /* CARD STATES (docs/card-states.md): the "To add" fact beside a Target pill, in the Bench-to-box color Ready to add uses. */
 #matrix-v2 .cm-badge-toadd{background:color-mix(in oklab,var(--st-pull) 22%,transparent);color:var(--v-ink)}
+/* CARD STATES, THE TWO ROLES OUTSIDE THE BOX (docs/card-states.md): an upgrade replaces a card in the box; a reserved card fills an empty seat, which keeps the deck from being playable. */
+#matrix-v2 .cm-badge-upgrade{background:color-mix(in oklab,var(--st-reserved) 22%,transparent);color:var(--v-ink)}
+#matrix-v2 .cm-badge-reserved{background:color-mix(in oklab,var(--st-buy) 26%,transparent);color:var(--v-ink)}
+#matrix-v2 .cm-deck-playable{margin:4px 0 12px;font-size:14px;color:var(--v-muted)}
+#matrix-v2 .cm-deck-playable b{color:var(--v-ink)}
+#matrix-v2 .cm-deck-playable.is-short b{color:var(--st-buy)}
