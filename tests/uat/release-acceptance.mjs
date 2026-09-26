@@ -58,8 +58,8 @@ const noticeMatching = (re, timeout = 60000) => page.waitForFunction((source) =>
 const library = () => page.evaluate(async () => {const r = await CrankRepository.open(); try {return await r.getState();} finally {r.close();}});
 
 try {
-  await page.goto(`${BASE}/index.html`);
-  await page.getByRole("heading", {name: "Build it. Make it yours."}).waitFor({timeout: 60000});
+  await page.goto(`${BASE}/index.html#decks`);
+  await page.getByRole("heading", {name: /^(Decks|Build it\. Make it yours\.)$/}).first().waitFor({timeout: 60000});
   ok((await library()).decks.length === 0, "the release opens on a fresh, empty library");
 
   if (RELEASE) {

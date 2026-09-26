@@ -197,6 +197,8 @@
     try {const me = await api("GET", "/api/me"); who = {checked: true, email: me.email};}
     catch {who = {checked: true, email: null};}
     draw();
+    /* Signed-in people skip the landing page (R3.8, M1·3): their library is on its way from the cloud. */
+    if (who.email && C.route().view === "welcome") C.go("decks");
     if (!who.email) return;
     setInterval(chip, 30000);
     C.repo.subscribe((message) => {if (message && message.revision && !running) soon();});

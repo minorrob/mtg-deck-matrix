@@ -198,8 +198,10 @@ const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Sh
   +`<div class="cm-decks-order"><label class="cm-decks-sort">Sort<select id="cm-decks-sort" aria-label="Sort decks">${SORTS.map(([k,label])=>`<option value="${k}"${k===sort?' selected':''}>${e(label)}</option>`).join('')}</select></label>`
   +`<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div></div>`;
 const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k===stage)||[,''])[1].toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
+/* NO DECKS YET (r3 wireframe, decks-hub-empty): the page is still Decks, and the panel says the three honest ways
+   in -- a commander, a list, a backup file you saved. The welcome and its slogan are the landing page's now (R3.8). */
 C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+bar
-  :`<section class="cm-showcase"><div><h1>Build it.<br><span>Make it yours.</span></h1><div class="cm-actions">${b('New deck','new-deck',{},true)}${b('Restore a backup','restore')}</div><p class="cm-sub">${howLink}</p></div>${fan}</section>`)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
+  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
    a tick and the Compare button rather than a link to find in each footer. The mana pips sit
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
@@ -504,8 +506,8 @@ actions.deck=el=>go('decks',{deck:el.dataset.deck});actions['deck-cards']=el=>go
    pick a commander and the ninety-nine come later. From what you already have, the group is
    the deck: it names its own commander -- the one Commander-legal card in it -- and the deck
    is created attached to that group, so the thing it draws from is set from the first day. */
-function commanderDeck(groupId){
-  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck']()});
+function commanderDeck(groupId,query=''){
+  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck'](),query});
 }
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
 const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
@@ -731,18 +733,20 @@ actions['wizard-create']=()=>{
   });
   return wiz;
 };
+/* After a list is imported for a new deck: the deck, when the list names a commander to lead it. */
+function deckFromImport(gid){
+  const g=C.state.groups.find(x=>x.id===gid);
+  if(g&&groupRows(g).length)return groupDeck(gid);
+  C.notice('Import completed. Create a deck from the imported cards in the Cards page.');
+}
+/* The landing page's Step one (R3.8) starts a deck the two ways the wizard does: from a commander, with the name
+   typed there already searched, or from a pasted list or a file, read by the app's own import. */
+C.startDeck={commander:query=>commanderDeck(undefined,String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport})};
 /* IMPORT PATH: file/paste import */
 actions['wizard-import']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   if(!C.importList)throw Error('The import module is not loaded. Reload the page.');
-  C.importList({name:'New deck list',back:()=>actions['new-deck'](),after:gid=>{
-    const g=C.state.groups.find(x=>x.id===gid);
-    if(g){
-      const rows=groupRows(g);
-      if(rows.length)return groupDeck(gid);
-    }
-    C.notice('Import completed. Create a deck from the imported cards in the Cards page.');
-  }});
+  C.importList({name:'New deck list',back:()=>actions['new-deck'](),after:deckFromImport});
 };
 /* LAB PATH: navigate to Lab for auto-build */
 actions['wizard-lab']=()=>{

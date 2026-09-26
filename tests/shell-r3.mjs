@@ -217,7 +217,7 @@ try {
   const phone = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true, serviceWorkers: "block"});
   const small = await phone.newPage();
   if (stub) await stub(small);
-  await small.goto(`${base}/index.html`);
+  await small.goto(`${base}/index.html#decks`);
   await menuButton(small).waitFor({timeout: 60000});
   eq(await small.$eval("#cm-user-functions .cm-chip-text", (t) => getComputedStyle(t).display), "none", "on a phone the chip's words give way to its mark");
   const chipBox = await menuButton(small).boundingBox();

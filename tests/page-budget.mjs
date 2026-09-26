@@ -43,6 +43,10 @@ const PAGES = [
      control more than the old head had room for and one word more, both the design's own; the budget rises
      to exactly what it draws and no further. The explainer budget does not move. */
   ["decks", "Decks", ".cm-deck-grid", [25, 9, 4], [25, 9, 4]],
+  /* R3.8, the landing page (INTAKE row R3.8, 2026-09-26): measured up to the four doors, so it counts the header,
+     the hero and Step one -- 92 words and 10 controls, every one of them the design's own copy. A landing page
+     speaks more than a working page before its first list; the budget holds it at what it says today. */
+  ["welcome", "Landing", ".cm-landing-doors", [95, 10, 2], [95, 10, 2]],
   /* Deck page (14 September): Make the change (n) joins the hero for a final deck — the change
      list Rob asked for needs a way in from the deck itself; 44 → 48 words, 14 → 15 controls. */
   /* Track V.4b: the Gallery hero carries the deck's strategy sentence from deck.notes, which the

@@ -79,7 +79,7 @@ async function device(name) {
   const {stubNetwork} = await import("./scryfall-stub.mjs"); await stubNetwork(page, []);
   return page;
 }
-const open = async (page) => {await page.goto(`${BASE}/index.html`); await page.getByRole("heading", {name: /Build it\. Make it yours\.|Decks/}).first().waitFor({timeout: 60000});};
+const open = async (page) => {await page.goto(`${BASE}/index.html#decks`); await page.getByRole("heading", {name: /Build it\. Make it yours\.|Decks/}).first().waitFor({timeout: 60000});};
 const decks = (page) => page.evaluate(async () => {const r = await CrankRepository.open(); try {return (await r.getState()).decks.map((d) => d.name).sort();} finally {r.close();}});
 const cloud = (page, path) => page.evaluate(async (p) => (await fetch(p, {cache: "no-store"})).json(), path);
 const until = async (what, fn, timeout = 30000) => {const end = Date.now() + timeout; for (;;) {const v = await fn(); if (v) return v; if (Date.now() > end) throw Error(`timed out waiting for ${what}`); await new Promise((r) => setTimeout(r, 500));}};
