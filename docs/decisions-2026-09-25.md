@@ -50,7 +50,10 @@ a secret, a purchase, an invitation, a file only he has) stay his, and the table
 | M4 | The storage adapter and house pilot before phase 3 | **Yes** | — |
 | M5 | Who plays v1 | **The accounts' invite list** | — |
 | M5 | Workers Paid ($5 a month) | **Buy it when the engine's CPU per request passes the free plan's 10 ms** | **Rob** buys |
-| M5 | Guest and host journeys; where "End current game" lives | Open | **Rob** |
+| M5 | A table invite to someone not on the accounts' invite list | **Rob, 2026-09-26: refused with instructions.** They are told to ask Rob to add them; the table's link never adds anyone to the list | — |
+| M5 | Where "End current game" lives during a live match, and who may use it | **Rob, 2026-09-26: in the Tools menu, and any human at the table can end the game for everyone** (not host-only, no vote). Concede stays beside it for leaving alone | — |
+| M5 | A human who drops mid-game and does not come back | **Rob, 2026-09-26: auto-concede after a timeout.** The game pauses at their next required decision, shows everyone the clock, and restores their seat if they return in time | — |
+| M5 | Guest and host journeys | Drafted as phone-screen previews for Rob to approve (the "Table Journeys" page, 2026-09-26); three details open: the timeout (draft 5 minutes), a second-tap confirm on End game (draft yes), and whether a timeout concession counts as a loss | **Rob** |
 | M6 | The AI allowlist, the key, spend caps, the privacy wording | Open | **Rob** |
 | M7 | The 200-card sample's spend and the provider's terms | Open | **Rob** |
 | M8 | The agents' access | **Four Access service tokens, staging only** | **Rob** creates them |
