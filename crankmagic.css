@@ -3037,3 +3037,30 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-build-review dt{color:var(--v-muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:2px}
 .cm-build-review dd{margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .cm-lab-strategies{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px}
+
+/* R3.12 MOBILE (INTAKE row R3.12; wireframes mobile-decks, mobile-library, mobile-explore, mobile-deck-detail). The
+   rail is already a top row and Explore's doors already stack; these are the three places a phone still read as a
+   squeezed desktop.
+   DECKS: the tiles stack, one to a row, as landscape posters. Two 3:4 columns at 390 left each tile 173px wide, which
+   cut "5 to buy · 3 ready to add" to "5 to buy · 3 ready t…" and the names to three lines. */
+@media(max-width:560px){
+  .cm-deck-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+  .cm-deck-tile{aspect-ratio:16/10}
+  .cm-deck-tile .cm-deck-art{transform:scale(1.25);object-position:50% 18%}
+  .cm-deck-new{aspect-ratio:auto;min-height:88px;flex-direction:row}
+  .cm-deck-new span{font-size:24px}
+}
+@media(max-width:760px){
+  /* DECK DETAIL: the commander's card leads, but at the card size, not at 220px -- which filled the phone's first
+     screen with the picture before the deck's name. Its width follows the one card-size slider (Settings ›
+     Appearance), so the ends of the phone's range, 60% and 130%, are 79px and 172px: legible, and both leave the
+     name in the first screen. */
+  #matrix-v2 .cm-deck-hero-card{max-width:none;width:calc(132px * var(--card-scale,1))}
+  /* LIBRARY: its actions are one row at the foot that scrolls sideways, Add cards first, as the deck page's are
+     (wireframe mobile-library: "Tabs + sticky primary"). At the head they took two rows above the tabs. */
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more]){position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;background:color-mix(in srgb,var(--v-bg) 95%,transparent);border-top:1px solid var(--color-line);backdrop-filter:blur(10px)}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])::-webkit-scrollbar{display:none}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])>*{flex:0 0 auto;white-space:nowrap}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])>[data-action=add-card]{order:-1}
+  #cm-main:has(.cm-page-head [data-action=roster-more]){padding-bottom:96px}
+}
