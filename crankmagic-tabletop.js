@@ -297,10 +297,11 @@
      rules text is still legible to Scryfall's normal print (488), 5:7, narrowed to the mat where the mat is narrower. */
   const STAGE = {min: 220, max: 488, def: 244};
   const stageWidth = (v, room = Infinity) => { const n = Number(v); const hi = Math.max(STAGE.min, Math.min(STAGE.max, room)); return Math.min(hi, Math.max(STAGE.min, Number.isFinite(n) && n > 0 ? n : STAGE.def)); };
-  /* The drawer's height: its head, the card and its caption, its padding. On a phone the head (the pile's name, the
-     card-size slider, the pager, Print and close) wraps to three lines, and the rail makes room for all three, or the
-     drawer would cut the bottom off every card in it. */
-  const railHeight = (g, narrow) => Math.max(narrow ? 172 : 176, (narrow ? 118 : 34) + g.h + g.cap + 30);
+  /* The drawer's height: its head, the card and its caption, its padding. The head (the pile's name, the card-size
+     slider, the pager, Print, close, and Select when cards are ticked) is one line on a desktop and wraps to three or
+     four on a phone, so its height is measured once it is drawn (ui.headH) rather than guessed; until then a phone
+     assumes three lines. A drawer shorter than its head and card would cut the bottom off every card in it. */
+  const railHeight = (g, narrow, headH = 0) => Math.max(narrow ? 172 : 176, (headH ? headH + 2 : narrow ? 118 : 34) + g.h + g.cap + 30);
   const mvOf = (r) => { const v = r && r.card ? r.card.manaValue : null; const n = v === null || v === undefined || v === "" ? NaN : Number(v); return Number.isFinite(n) ? n : 99; };
   const nameOf = (r) => String((r && r.card && r.card.name) || "");
   const orderedAt = (r) => String((r && r.order && (r.order.placed || r.order.date || r.order.orderedAt)) || (r && (r.orderedAt || r.createdAt)) || "");
@@ -633,7 +634,7 @@
        own padding. With a pile open the row grows to whatever the card size needs. */
     const rail = model.bench, open = mode === "open" && openPile;
     const drawSz = cardGeom(ui.scale);
-    const railH = open ? railHeight(drawSz, narrow) : (narrow ? 172 : 176);
+    const railH = open ? railHeight(drawSz, narrow, ui.headH) : (narrow ? 172 : 176);
     /* The Bench container carries no heading: its pile's placard already names it, and a second
        label over one pile is the kind of thing that makes a board feel wordy. */
     const benchHTML = `<div class="cm-tt-rail">${pile(rail, 0, 0, "bench", true)}</div>`;
@@ -887,6 +888,9 @@
     }
     const legend = `${model.total.toLocaleString('en-US')} cards on the table · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     paint(host, `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`);
+    /* The drawer's head as drawn: if its height is not the one the rail was made for, the host redraws once with it. */
+    const drawnHead = open && host.querySelector(".cm-tt-drawer:not(.is-shut) .cm-tt-drawer-head");
+    if (drawnHead && hooks.onHeadHeight) { const hh = Math.ceil(drawnHead.getBoundingClientRect().height); if (hh && Math.abs(hh - (ui.headH || 0)) > 2) queueMicrotask(() => hooks.onHeadHeight(hh)); }
     /* Clicks, keys and the context menu, delegated once per draw. The selects are assigned as
        PROPERTIES rather than added as listeners: a select that survives a patch (§3.1) would
        otherwise collect one handler per redraw, which is the listener-stacking bug PR 3b found
@@ -1069,7 +1073,8 @@
   function liveScale(host, scale) {
     const mat = host && host.querySelector(".cm-tt-mat"), rail = host && host.querySelector(".cm-tt-backrow");
     if (!mat || !rail || !host.querySelector(".cm-tt-drawer:not(.is-shut)")) return;
-    rail.style.height = railHeight(cardGeom(scale), host.clientWidth < 760) + "px";
+    const head = host.querySelector(".cm-tt-drawer-head");
+    rail.style.height = railHeight(cardGeom(scale), host.clientWidth < 760, head ? Math.ceil(head.getBoundingClientRect().height) : 0) + "px";
     mat.classList.add("is-sizing");
   }
   return {CARD, cardGeom, scaleOf, railHeight, liveScale, stageWidth, GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, SENT, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};

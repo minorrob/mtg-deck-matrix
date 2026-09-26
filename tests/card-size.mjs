@@ -52,6 +52,8 @@ const measure = (page) => page.evaluate(() => {
     clearBelow: below.every((r) => r.top >= rail.bottom - 1),
     sideways: document.documentElement.scrollWidth - innerWidth,
     head: (() => { const r = document.querySelector(".cm-tt-drawer-head [data-card-scale]").getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })(),
+    /* Nothing in the drawer's head sits on anything else: the close button once floated over the title and the slider. */
+    overlaps: (() => { const els = [...document.querySelectorAll(".cm-tt-drawer-head > *")].filter((el) => el.offsetWidth).map((el) => [el.className || el.tagName, el.getBoundingClientRect()]); const hit = []; for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) { const [a, r] = els[i], [b, q] = els[j]; if (r.left < q.right - 1 && q.left < r.right - 1 && r.top < q.bottom - 1 && q.top < r.bottom - 1) hit.push(`${a} × ${b}`); } return hit; })(),
   };
 });
 
@@ -80,6 +82,7 @@ try {
     eq(m.w, 75, `${tag}: at 60% an open pile's card is 75px wide`);
     ok(m.fonts.length && m.fonts.every((f) => f >= 10), `${tag}: and every caption is 10px or larger (${Math.min(...m.fonts)}px)`);
     ok(m.inside && m.clearBelow && m.sideways <= 0 && m.head, `${tag}: and it fits: cards whole in the drawer, nothing below overlapped, no sideways scroll, the slider on screen (${JSON.stringify(m)})`);
+    eq(m.overlaps, [], `${tag}: and nothing in the drawer's head sits on anything else`);
 
     /* 4. Dragging previews live: the same slider, the cards already bigger, nothing saved until it is let go. */
     await page.$eval(".cm-tt-drawer-head [data-card-scale]", (el) => { el.dataset.probe = "same"; });

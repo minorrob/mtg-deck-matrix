@@ -588,6 +588,8 @@ function tabletop(params,shop=false){
       /* The table's own words go through the glossary, so "Primary Purpose" and "Price band" can
          be asked about where they are read rather than in a help panel. */
       term:text=>C.glossary?C.glossary.label(text):e(text),
+      /* The drawer's head, measured as drawn: the rail is made to hold it and a whole card. */
+      onHeadHeight:h=>{ttUI.headH=h;draw();},
       onStageWidth:w=>{ttUI.stageWidth=TT.stageWidth(w);try{localStorage.setItem('cm-tabletop-stage-w',String(ttUI.stageWidth));}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt-stage]')?.focus?.({preventScroll:true}));},
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
       onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
