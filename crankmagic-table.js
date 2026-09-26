@@ -97,7 +97,8 @@
       const why = t.blockers.length ? (waiting ? `Waiting on ${waiting} seat${waiting === 1 ? "" : "s"}.` : t.blockers[0].reason + ".") : "Everyone is ready.";
       launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}">${e(t.launchError || why)}</p>${t.youAreHost ? b("Start", "table-start", {}, !t.blockers.length, {cls: "compact"}) : ""}`;
     } else launch = `<p class="cm-table-launch">${e(t.phase === "playing" ? "The game is on." : t.phase === "rematch" ? "The game is over." : "Starting…")}</p>`;
-    return `<section class="cm-table-center v-panel" aria-label="Table rules">
+    return `<section class="cm-table-center" aria-label="Table rules">
+      <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
       <div class="cm-table-head"><h2>Table rules</h2><span class="cm-table-setby-top">set by the host</span></div>
       <dl class="cm-table-rules"><div><dt>Starting life</dt><dd>40</dd></div><div><dt>Seats</dt><dd>${t.seats.length}</dd></div><div><dt>Invitations last</dt><dd>a day</dd></div><div><dt>A dropped player has</dt><dd>5 minutes</dd></div></dl>
       <div class="cm-table-launch-row" id="cm-table-launch">${launch}</div>

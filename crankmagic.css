@@ -3085,4 +3085,4 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-table-game{margin:0 0 14px}
 /* On a phone the seats stack, and a seat's content is laid over its sea, so a stacked seat has no height of
    its own: it takes one here, enough for the label bar, the commander's card and its controls. */
-@media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}}
+@media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}.cm-cloud-table .cm-table-center{max-height:none}}
