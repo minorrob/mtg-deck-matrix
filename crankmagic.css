@@ -2872,3 +2872,5 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    Filters · lens pressed while open. */
 #matrix-v2 .cm-crumbs{margin:0 0 4px}
 #matrix-v2 .cm-advanced-tools-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+/* CARD STATES (docs/card-states.md): the "To add" fact beside a Target pill, in the Bench-to-box color Ready to add uses. */
+#matrix-v2 .cm-badge-toadd{background:color-mix(in oklab,var(--st-pull) 22%,transparent);color:var(--v-ink)}

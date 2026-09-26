@@ -8,7 +8,7 @@
  *   2. Add and/or buy is one dialog, opened from the card pane and from every list row's caret. Its
  *      choices are kept distinct and each says where the card lands; the button says what it will do.
  *   3. Each choice lands where it says, judged from the stored library, not from the page:
- *      Wanted puts it on the want list (the To Buy group) and buys nothing; On the Bench records
+ *      Watching records a watched copy; To buy puts it on the To Buy list and buys nothing; On the Bench records
  *      owned copies reserved for no deck; a draft deck takes it into its list; a finished deck
  *      opens the swap and links it as an upgrade option, its hundred unchanged; a collection group
  *      plans it there.
@@ -71,14 +71,15 @@ try {
   const focusName = await pane.getAttribute("data-card");
   await pane.click();
   await opened(page, `Add ${focusName}`);
-  eq(await page.$$eval("#cm-dialog .cm-add-choice b", (bs) => bs.map((b) => b.textContent)), ["Into a deck", "Wanted", "On the Bench", "Into a collection group"], "four choices, kept distinct");
+  eq(await page.$$eval("#cm-dialog .cm-add-choice b", (bs) => bs.map((b) => b.textContent)), ["Into a deck", "Watching", "To buy", "On the Bench", "Into a collection group"], "five choices, kept distinct, in the card states' words (docs/card-states.md)");
   eq(await page.$eval("#cm-dialog input[name=put]:checked", (i) => i.value), "deck", "a graph opened from a deck starts on Into a deck");
   eq(await page.$eval("#cm-dialog select[name=deck]", (s) => s.value), D6, "with that deck chosen");
   const links = await page.$$eval("#cm-dialog .cm-add-head a", (as) => as.map((a) => [a.textContent, a.href, a.target]));
   ok(links.length === 2 && /TCGplayer/.test(links[0][0]) && /Card Kingdom/.test(links[1][0]) && links.every((l) => l[2] === "_blank"), "the two vendors sit beside the price, each in a new tab");
   ok(decodeURIComponent(links[1][1]).includes(focusName), "and Card Kingdom searches for this card");
   eq(await submitText(page), d6.status === "draft" ? "Add to deck" : "Choose the swap…", "the button says what Into a deck will do for this deck");
-  await put(page, "wanted"); eq(await submitText(page), "Remember it", "Wanted: Remember it");
+  await put(page, "watching"); eq(await submitText(page), "Watch it", "Watching: Watch it");
+  await put(page, "buy"); eq(await submitText(page), "Add to To buy", "To buy: Add to To buy");
   await put(page, "bench"); eq(await submitText(page), "Add to the Bench", "On the Bench: Add to the Bench");
   await put(page, "group"); eq(await submitText(page), "Add to group", "a group: Add to group");
   await page.locator("#cm-dialog select[name=deck]").selectOption(D6);
@@ -86,19 +87,41 @@ try {
   await page.keyboard.press("Escape");
   await closed(page);
 
-  /* 3a. Wanted: on the want list, nothing bought. */
+  /* 3a. To buy: on the To Buy list, nothing bought. */
   const copiesOf = (state, id) => state.lots.filter((l) => l.cardId === id).reduce((n, l) => ({all: n.all + l.quantity, bench: n.bench + (l.source === "owned" && l.location?.kind === "bench" && !l.allocation ? l.quantity : 0), reserved: n.reserved + (l.allocation ? l.quantity : 0)}), {all: 0, bench: 0, reserved: 0});
   const had = copiesOf(st0, idOf(st0, CARD));
-  ok(!st0.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === idOf(st0, CARD)), `${CARD} is not on the want list yet`);
+  ok(!st0.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === idOf(st0, CARD)), `${CARD} is not on the To Buy list yet`);
   await addFor(page, CARD);
-  await put(page, "wanted");
+  await put(page, "buy");
   await page.locator("#cm-dialog [type=submit]").click();
   await closed(page);
   let st = await stateOf(page);
   const elves = idOf(st, CARD);
   ok(elves, `${CARD} is in the library's cards now`);
-  ok(st.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === elves), "Wanted put it on the want list, the To Buy group");
+  ok(st.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === elves), "To buy put it on the To Buy list");
   eq(copiesOf(st, elves), had, "and bought nothing: the copies are as they were");
+
+  /* 3a'. Watching: a watched copy, nothing bought, not on the To Buy list. */
+  const WATCH = "Birds of Paradise";
+  const watchedBefore = st.lots.filter((l) => l.cardId === idOf(st, WATCH) && l.source === "watching").length;
+  ok(watchedBefore === 0, `${WATCH} is not watched yet`);
+  await addFor(page, WATCH);
+  await put(page, "watching");
+  await page.locator("#cm-dialog [type=submit]").click();
+  await closed(page);
+  st = await stateOf(page);
+  const birds = idOf(st, WATCH), watched = st.lots.filter((l) => l.cardId === birds && l.source === "watching");
+  eq(watched.map((l) => l.quantity), [1], "Watching recorded one watched copy");
+  ok(!st.groups.find((g) => g.id === "group:to-buy").entries.some((r) => r.cardId === birds), "and did not put it on the To Buy list");
+  /* Watching is not To buy: the watched copy stays off the To buy tab (docs/card-states.md). */
+  await page.goto(`${base}/index.html#cards?tab=buy`);
+  await page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-table, #cm-roster-table .cm-status-line"));
+  const onBuyTab = await page.evaluate((id) => [...document.querySelectorAll("#cm-roster-table tr[data-card]")].some((t) => t.dataset.card === id), birds);
+  await page.goto(`${base}/index.html#cards?tab=buy&card=${encodeURIComponent(birds)}`);
+  await page.waitForFunction(() => document.querySelector("#cm-roster-table .cm-table, #cm-roster-table .cm-status-line"));
+  eq([onBuyTab, await page.locator("#cm-roster-table tr[data-card]").count()], [false, 0], "and a watched copy is not on the To buy tab");
+  await page.goto(`${base}/index.html#discover?deck=${encodeURIComponent(D6)}`);
+  await page.locator(".cm-card-view-buy [data-action=add-buy]").waitFor({timeout: 60000});
 
   /* 3b. On the Bench: owned copies, reserved for no deck. */
   await addFor(page, CARD);
@@ -158,7 +181,7 @@ try {
   const rowName = await caret.getAttribute("data-card");
   await caret.click();
   await opened(page, `Add ${rowName}`);
-  eq(await page.$$eval("#cm-dialog .cm-add-choice b", (bs) => bs.length), 4, "a list row's caret opens the same dialog, for its own card");
+  eq(await page.$$eval("#cm-dialog .cm-add-choice b", (bs) => bs.length), 5, "a list row's caret opens the same dialog, for its own card");
   await page.keyboard.press("Escape");
   await context.close();
 } finally {

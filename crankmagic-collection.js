@@ -51,8 +51,8 @@ function rows(params,shop){const st=lens();let all=M.projection(st);for(const d 
    I already own that could go in it". A Bench row names no deck, so it is kept beside the deck's
    own rows -- in the table and on the Tabletop's ledge alike. The To buy tab drops them again a
    line below, because money is not the question there. */
-  if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck')||(r.kind==='lot'&&r.source==='owned'&&r.placement==='Bench'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));/* The To buy tab holds every To buy record (docs/card-states.md): a deck's need and the To Buy list alike, beside what is ordered or watched. */
-  if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned'||r.kind==='entry'&&r.groupId===M.WANT_LIST);for(const r of all){r.status=statusOf(r);r.state=M.cardState(r);r.stateLabel=M.stateLabel(r.state);}
+  if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck')||(r.kind==='lot'&&r.source==='owned'&&r.placement==='Bench'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));/* The To buy tab holds every To buy record (docs/card-states.md) -- a deck's need and the To Buy list alike -- beside what is ordered. A watched copy is Watching, not To buy, so it stays on the Library tab. */
+  if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source==='ordered'||r.kind==='entry'&&r.groupId===M.WANT_LIST);for(const r of all){r.status=statusOf(r);r.state=M.cardState(r);r.stateLabel=M.stateLabel(r.state);}
   /* A row already reads as the sitting would leave it -- it came from the pending library. The
      mark is so a reader can tell which of those readings is theirs and not yet saved. */
   const sb=C.sandbox;if(sb&&sb.open){const touched=sb.cards;for(const r of all)if(touched.has(r.cardId))r.pending=true;}

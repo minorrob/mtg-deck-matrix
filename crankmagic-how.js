@@ -10,7 +10,8 @@ const STEPS=[
   {n:4,title:'Acquire',href:'#cards?tab=buy',text:'Buy or order what you don’t own, inside the budget.'},
   {n:5,title:'Assemble',href:'#cards',text:'Add the cards you own to the physical deck. Substitutes hold seats until the real ones arrive.'},
   {n:6,title:'Play',href:'#decks',text:'All 100 in the physical deck: the deck is done. Log your games.'}];
-const LADDER=[['Watched','Considering it. No copy yet.'],['To Buy','A deck\u2019s list claims it. Nothing fills the claim yet.'],['Ordered','Paid for, or a trade arranged.'],['Owned','In hand: on the Bench, or reserved and ready to add.'],['Physical Deck','Sleeved in the deck.']];
+/* The card states (docs/card-states.md): the four stages, then the one fact that finishes a deck -- its target in the box. */
+const LADDER=[['Watching','Looked at, not decided. No copy yet.'],['To buy','Decided: on your To Buy list, or a deck\u2019s list needs it.'],['Ordered','Bought, not yet in hand.'],['Owned','In hand: on the Bench, or in a deck as its Target, a Substitute or an Upgrade.'],['In the box','A deck\u2019s Target, sleeved in its box.']];
 views.how=async()=>{
   C.main.innerHTML=C.pageHead('How a deck comes together',`<a class="v-button" href="#decks">Back to Decks</a>`)
    +`<ol class="cm-how-flow" aria-label="The six steps">

@@ -770,9 +770,10 @@
         : '';
     }
     /* ADD AND/OR BUY, ONE DIALOG (r3, wireframe 52; INTAKE R3.7). The choices are kept distinct, each
-       saying where the card lands: into a deck (a draft's list, or a finished deck's upgrade option,
-       whose swap is chosen next), Wanted (the want list: the To Buy group, nothing bought), On the
-       Bench (a copy you own, reserved for no deck), or a collection group. The vendors sit beside the
+       saying where the card lands, in the card states' words (docs/card-states.md): into a deck (a
+       draft's list, or a finished deck's upgrade option, whose swap is chosen next), Watching (a watched
+       copy: looked at, not decided), To buy (the To Buy list, on the To buy tab), On the Bench (a copy
+       you own, reserved for no deck), or a collection group. The vendors sit beside the
        price. The pane's button and every list row's caret open the same dialog. */
     function buyMenu(c, rec, compact = false) {
       return compact
@@ -794,7 +795,8 @@
         `<div class="cm-full cm-add-head">${img ? `<img src="${e(img)}" alt="" loading="lazy">` : '<div class="cm-add-art"></div>'}<div><b>${e(name)}</b><small>${price ? `Best price ${e(C.money(price))} · ` : ''}<a href="${e(buy)}" target="_blank" rel="noopener">TCGplayer ↗</a> · <a href="${e(kingdom)}" target="_blank" rel="noopener">Card Kingdom ↗</a></small></div></div>`
         + `<fieldset class="cm-full cm-add-put"><legend>Put it</legend>`
         + (decks.length ? choice('deck', 'Into a deck', e(deckWhy(decks[0])), C.select('Deck', 'deck', decks.map((d) => [d.id, d.name]), decks[0].id), !!scoped) : '')
-        + choice('wanted', 'Wanted', 'Remember it: your want list (the To Buy group). Nothing is bought.', '', !scoped || !decks.length)
+        + choice('watching', 'Watching', 'Remember it: looked at, not decided. Nothing is bought.', '', !scoped || !decks.length)
+        + choice('buy', 'To buy', 'Decided: on your To Buy list and the To buy tab.')
         + choice('bench', 'On the Bench', 'You own it: a copy on the Bench, reserved for no deck.', `<label class="cm-add-qty">Copies<input type="number" name="qty" value="1" min="1" max="1000"></label>`)
         + (groups.length ? choice('group', 'Into a collection group', 'Planned there; planning a card is not owning it.', C.select('Group', 'group', groups.map((g) => [g.id, g.name]), groups[0].id)) : '')
         + `</fieldset>`,
@@ -808,7 +810,13 @@
             setTimeout(() => optionDialog(deck, C.card(card.id) || card, 'Explore'), 0);
             return;
           }
-          if (v.put === 'wanted') return actions['discover-to-group']({dataset: {group: 'group:to-buy', card: name}});
+          if (v.put === 'buy') return actions['discover-to-group']({dataset: {group: C.M.WANT_LIST, card: name}});
+          if (v.put === 'watching') {
+            if (C.state.lots.some((l) => l.cardId === card.id && l.source === 'watching')) throw Error(card.name + ' is already Watching.');
+            await C.commit({type: 'acquire', cards: [card], lot: {cardId: card.id, quantity: 1, source: 'watching', printing: {}}}, {renderView: false});
+            C.notice(`${card.name} is Watching: remembered, nothing bought.`);
+            return;
+          }
           if (v.put === 'group') return actions['discover-to-group']({dataset: {group: v.group, card: name}});
           if (v.put === 'bench') {
             const qty = Math.floor(Number(v.qty));
@@ -825,7 +833,7 @@
         const put = f.querySelector('input[name=put]:checked')?.value, deck = decks.find((d) => d.id === f.querySelector('select[name=deck]')?.value);
         const deckHint = f.querySelector('input[value=deck]')?.closest('label')?.querySelector('small');
         if (deckHint && deck) deckHint.textContent = deckWhy(deck);
-        submit.textContent = put === 'deck' ? (deck && deck.status !== 'draft' ? 'Choose the swap…' : 'Add to deck') : put === 'wanted' ? 'Remember it' : put === 'bench' ? 'Add to the Bench' : put === 'group' ? 'Add to group' : 'Add';
+        submit.textContent = put === 'deck' ? (deck && deck.status !== 'draft' ? 'Choose the swap…' : 'Add to deck') : put === 'watching' ? 'Watch it' : put === 'buy' ? 'Add to To buy' : put === 'bench' ? 'Add to the Bench' : put === 'group' ? 'Add to group' : 'Add';
       };
       /* Touching a choice's own field picks that choice. */
       f.addEventListener('input', (ev) => { const row = ev.target.closest('.cm-add-choice'); if (row && ev.target.name !== 'put') row.querySelector('input[name=put]').checked = true; say(); });

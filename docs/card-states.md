@@ -99,8 +99,17 @@ Explore's Add dialog can also put a card straight on the **Bench**.
      the state's (695, where it said 811, because a substitute in a deck's box is not on the Bench). The
      To buy tab and its count hold the To Buy list beside the decks' needs; the two overlap until step 3
      de-duplicates them.
-   - **2b, the rest.** The Table view's piles, the deck page's pills, Ready to add, the exports, and
-     Explore's Add dialog, whose "Wanted" choice becomes "To buy".
+   - **2b, the deck page, the inspector, the ladder, Explore.**
+     - The deck page's hundred wears a card-state pill per slot: Watching on a draft list, To buy, Ordered,
+       or Target, with *To add* beside a Target whose owned copy waits outside the box.
+     - The card inspector's Status chips count the card's records by state, and its Assignment chips name
+       each deck with the state's word.
+     - How a deck comes together climbs Watching, To buy, Ordered, Owned, then *In the box*.
+     - Explore's Add dialog offers **Watching** (a watched copy) and **To buy** (the To Buy list) as two
+       choices, where it had one "Wanted".
+     - A watched copy is Watching, so it leaves the To buy tab.
+   - **2c, the Table view, Ready to add and the exports.** The Table view's piles, which still group by
+     the old labels, and the Excel and CSV status columns.
 3. **Storage and migration.**
    - A copy's stage gains *To buy*, so a card no deck needs can be To buy: R3.7b, absorbed here.
    - The To Buy list moves to To buy, de-duplicated against the decks' own needs.
