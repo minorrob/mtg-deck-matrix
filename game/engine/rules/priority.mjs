@@ -96,7 +96,11 @@ export function passPriority(state, effect = null) {
   }
 
   const events = resolveTop(state, effect);
-  /* CR 117.3b. The ACTIVE player, whoever happened to pass last. */
-  grantPriority(state, state.activePlayer);
+  /* CR 117.3b. The ACTIVE player, whoever happened to pass last -- or, when the active player has left the
+     game (conceded, CR 104.3a), the next player in turn order still in it (CR 800.4), since what is left on
+     the stack still has to resolve. */
+  const order2 = priorityOrder(state);
+  if (order2.length === 0) {state.priorityPlayer = null; return {outcome: "resolved", events};}
+  grantPriority(state, state.players[state.activePlayer].lost ? order2[0] : state.activePlayer);
   return {outcome: "resolved", events};
 }

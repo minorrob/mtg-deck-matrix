@@ -8,14 +8,14 @@
  *
  *   POST /api/tables                         a new table; you host it, in seat 1
  *   GET  /api/tables/:id                     the table as you see it
- *   POST /api/tables/:id/invite|uninvite|join|deck|ready|start|cancel
+ *   POST /api/tables/:id/invite|uninvite|join|deck|ready|start|cancel|end|concede
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
  *
  * A table's invitation link is `https://<site>/#table/<id>/<code>`: the code rides in the fragment, which a
  * browser never sends, so it is in no server's logs until the invited person posts it to /join.
  */
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
-const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "ready", "start", "cancel"]);
+const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "ready", "start", "cancel", "end", "concede"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
 const newTableId = () => crypto.randomUUID().replace(/-/g, "");

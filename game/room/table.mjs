@@ -27,6 +27,8 @@ import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 
 export const TABLE_SCHEMA = "CrankTable@1";
 export const INVITE_TTL = 24 * 3600 * 1000;
+/* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
+export const AWAY_LIMIT = 5 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
 const KEY = "table";
 
@@ -74,6 +76,24 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
   const needHost = (email) => {if (!isHost(email)) throw new TableError(403, "Only the host can do that.");};
   const needSeat = (email) => {const s = seatOf(email); if (s === null) throw new TableError(403, "You do not have a seat at this table."); return s;};
 
+  /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
+  async function leaveSeat(seat, why, now) {
+    const current = await api.currentRoom();
+    if (!current) throw new TableError(409, "No game is being played at this table.");
+    try {await current.leave(seatName(seat), why);} catch (error) {throw new TableError(error.status || 409, error.message);}
+    step({type: "concede", seatId: seat}, now);
+    if (record.away) delete record.away[seat];
+    await settle(now);
+  }
+  /* When the game in the room is over, the table moves on to the rematch question. */
+  async function settle(now) {
+    if (record.lifecycle.phase === "playing" && room && room.status === "finished") {
+      step({type: "completed", matchId: record.lifecycle.matchId}, now);
+      record.away = {};
+    }
+    await save();
+  }
+
   const api = {
     /** A new table, the host in seat 1. Seats after the first are a person to invite or an AI. */
     async create({tableId, host, hostName, seats, settings = {}}) {
@@ -85,7 +105,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
         lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, ...settings}}),
-        members: {0: host}, invites: [], decks: {}, matches: [],
+        members: {0: host}, invites: [], decks: {}, matches: [], away: {},
       };
       await save();
       return api.view(host);
@@ -168,6 +188,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     /** When the countdown has run out: launch the room with each seat's deck. Nothing happens early. */
     async tick(now, {storageForRoom = storage} = {}) {
       await load();
+      for (const [seat, until] of Object.entries(record.away || {})) {
+        if (until <= now && record.lifecycle.phase === "playing") await leaveSeat(Number(seat), "timed-out", now);
+      }
       const t = record.lifecycle;
       if (t.phase !== "countdown" || now < t.countdownAt) return null;
       const matchId = `${record.tableId}g${t.generation + 1}`;
@@ -185,6 +208,55 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       }
       await save();
       return record.lifecycle.phase === "playing" ? matchId : null;
+    },
+
+    /* ---- leaving a game in play (Rob, 2026-09-26) ---- */
+
+    /** Any person at the table ends the game for everyone; the record says it ended early. */
+    async endGame(email, now) {
+      await load();
+      const seat = needSeat(email);
+      const current = await api.currentRoom();
+      if (!current) throw new TableError(409, "No game is being played at this table.");
+      if (record.lifecycle.seats[seat].conceded) throw new TableError(409, "You have left this game.");
+      try {await current.end(seatName(seat));} catch (error) {throw new TableError(error.status || 409, error.message);}
+      await settle(now);
+      return api.view(email);
+    },
+    /** A person leaves the game in play by conceding; play goes on without them. */
+    async concede(email, now) {
+      await load();
+      const seat = needSeat(email);
+      await leaveSeat(seat, "conceded", now);
+      return api.view(email);
+    },
+
+    /** A seat's last connection closed. While a game is on, their five minutes start. */
+    async dropped(seat, now) {
+      await load();
+      const s = record.lifecycle.seats[seat];
+      if (!s || !s.occupied || s.kind !== "human" || !s.connected) return;
+      step({type: "disconnect", seatId: seat}, now);
+      record.away = record.away || {};
+      if (record.lifecycle.phase === "playing") record.away[seat] = now + AWAY_LIMIT;
+      await save();
+    },
+    /** They came back in time: their seat is as they left it. */
+    async back(seat, now) {
+      await load();
+      const s = record.lifecycle.seats[seat];
+      if (!s || !s.occupied || s.connected) return;
+      step({type: "reconnect", seatId: seat}, now);
+      if (record.away) delete record.away[seat];
+      await save();
+    },
+
+    /** When the object should next wake: the countdown's end, or the first dropped player's time running out. */
+    async nextAlarm() {
+      await load();
+      const times = Object.values(record.away || {});
+      if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
+      return times.length ? Math.min(...times) : null;
     },
 
     /** The room of the game being played, whoever asks (the object's own sockets), or null. */
@@ -205,16 +277,17 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     },
 
     /** The table as one person sees it: every seat's state, but only their own deck's cards. */
-    async view(email) {
+    async view(email, {any = false} = {}) {
       await load();
-      const mine = seatOf(email);
-      if (mine === null && !isHost(email)) throw new TableError(403, "You do not have a seat at this table.");
+      const mine = email === null ? null : seatOf(email);
+      if (!any && mine === null && !isHost(email)) throw new TableError(403, "You do not have a seat at this table.");
       const t = record.lifecycle;
       return {
         schema: TABLE_SCHEMA, tableId: record.tableId, phase: t.phase, revision: t.revision,
         youAreHost: isHost(email), yourSeat: mine,
         countdownAt: t.countdownAt, launchError: t.launchError, matchId: t.phase === "playing" ? t.matchId : null,
         blockers: countdownBlockers(t).map(({seatId, reason}) => ({seatId, reason})),
+        away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
           seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine,

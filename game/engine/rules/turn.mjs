@@ -184,7 +184,8 @@ function cleanup(state, events) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
   const player = state.players[state.activePlayer];
-  const over = cardsIn(state, "hand", state.activePlayer).length - (player.maxHandSize ?? 7);
+  /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
+  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - (player.maxHandSize ?? 7);
   if (over > 0) state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over};
   void events;
 }
@@ -311,7 +312,7 @@ function arrive(state, events) {
     playerTurn: {playerId: state.activePlayer, name: state.players[state.activePlayer].name},
   }));
   if (state.phase === "UNTAP") untap(state, events);
-  if (state.phase === "DRAW" && !skipsFirstDraw(state)) draw(state, state.activePlayer, events);
+  if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) draw(state, state.activePlayer, events);
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */
   if (state.phase === "COMBAT_DECLARE_ATTACKERS") attackers.open(state);

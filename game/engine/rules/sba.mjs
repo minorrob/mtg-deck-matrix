@@ -83,6 +83,7 @@ export function dealCommanderDamage(state, player, sourceId, amount, {combat = t
    is the one reported, because the board shows one. */
 function lossReason(state, player) {
   if (player.lost) return null;
+  if (player.conceded === true) return "conceded";                        /* CR 104.3a */
   if (player.life <= 0) return "life";                                    /* CR 704.5a */
   if (player.drewFromEmpty === true) return "empty-library";              /* CR 704.5b */
   if (player.poison >= POISON_TO_LOSE) return "poison";                   /* CR 704.5c */
@@ -216,6 +217,38 @@ export function checkStateBasedActions(state) {
   if (outcome && !state.outcomeReported) {
     state.outcomeReported = true;
     events.push(event("GameEventGameOutcome", state, outcome));
+  }
+  return events;
+}
+
+/**
+ * A player concedes (CR 104.3a: at any time) and leaves the game as any player who loses does (CR 800.4a),
+ * through the state-based actions above, so their permanents go with them and turn order and priority skip
+ * them from then on.
+ *
+ * WHAT THEY WERE DOING GOES WITH THEM. A decision they were being asked is withdrawn: a player who has left
+ * has no discard to make and no attack to declare. If they held priority it passes to the next player still
+ * in the game, and the round of passes starts again (CR 117.4 counts passes in succession, and the player
+ * who would have passed is gone).
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function concede(state, playerId) {
+  const player = state.players[playerId];
+  if (!player) throw new Error("There is no such player to concede");
+  if (player.lost) throw new Error("That player has already left the game");
+  player.conceded = true;
+  if (state.awaiting && state.awaiting.player === playerId) state.awaiting = null;
+  const events = checkStateBasedActions(state);
+  if (state.priorityPlayer === playerId) {
+    const count = state.players.length;
+    let next = null;
+    for (let step = 1; step < count && next === null; step += 1) {
+      const at = (playerId + step) % count;
+      if (!state.players[at].lost) next = at;
+    }
+    state.priorityPlayer = gameOver(state) ? null : next;
+    state.passes = 0;
   }
   return events;
 }
