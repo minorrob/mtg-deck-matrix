@@ -25,9 +25,20 @@ Card names are the one exception: a card is printed with its name, so "Gandalf t
 first handoffs arrived in UK spelling. Both were caught and removed. The EUR switch was built into a
 recommendation before anyone asked why. Don't draw either.
 
+## Sizes are sliders, never steps
+
+Rob, 2026-09-26: anywhere a reader picks a size, draw **a slider** (drag to any point on a scale), never
+S · M · L or a row of named sizes. Draw both ends: the smallest must keep every word legible and the largest
+must still fit the screen and the layout. Say the range for a phone and for a desktop if they differ.
+
+| | Draw | Never |
+| --- | --- | --- |
+| Card size, picture size, text size | A slider with its minimum and maximum marked, and the current value | S · M · L chips, "Card / Larger / Large / Full" buttons, a size dropdown |
+
 ## Where the rest of the rules live
 
 - `AGENTS.md`, "The United States, always": the same rule for the code, and the tests that hold it
+- `AGENTS.md`, "Sizes are sliders, never steps": the slider rule for the code, and the suite that drags each slider to both ends
   (`tests/feature-wiring.mjs` fails on any UK spelling, any "e-mail", any other currency, and any number or
   date not formatted as `en-US`).
 - `docs/design/README.md`: where a handoff lands and how it is taken in.

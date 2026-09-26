@@ -5,8 +5,8 @@
    draws.
 
    The design also drew a second-currency switch. It is not here and never will be: prices are US dollars, only
-   (AGENTS.md, "The United States, always"). Card size waits for R3.9's pass over every card surface, and
-   Delete account is drawn by crankmagic-account.js, which alone knows whether anyone is signed in. */
+   (AGENTS.md, "The United States, always"). Card size is a slider, never S, M or L (R3.9b; AGENTS.md, "Sizes are sliders, never
+   steps"), remembered on this device; Delete account is drawn by crankmagic-account.js, which alone knows whether anyone is signed in. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {esc:e,button:b,actions,views,notice,commit}=C;
 const money=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const card=(id,title,body,cls='')=>`<section class="cm-settings-card${cls?' '+cls:''}" aria-labelledby="cm-settings-h-${id}"><h2 id="cm-settings-h-${id}">${e(title)}</h2>${body}</section>`;
@@ -22,6 +22,8 @@ views.settings=async()=>{
    +card('account','Account',`<div id="cm-settings-account"><p class="cm-muted">Signing in is not offered on this copy of CrankMagic, so the library has no cloud copy here. Save a backup file below to keep an extra one.</p></div>`)
    +card('appearance','Appearance',
       `<p class="cm-settings-label">Theme</p><div class="cm-settings-row" role="group" aria-label="Theme">${THEMES.map(([k,label])=>`<button type="button" class="v-button cm-chip-toggle" data-action="set-theme" data-theme-choice="${k}" aria-pressed="${k===choice}">${e(label)}</button>`).join('')}</div>`
+      +`<p class="cm-settings-label">Card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false})}</div>`
+      +`<p class="cm-muted">The Table view's cards, the hover preview and the card inspector's picture. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
       +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-motion" aria-pressed="${still}">Reduce motion</button></div>`
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)

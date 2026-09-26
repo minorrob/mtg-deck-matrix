@@ -93,12 +93,15 @@ try {
     await page.goto(`${base}/index.html#cards?view=tabletop`);
     await page.locator("[data-pile^='status:']").first().waitFor({timeout: 30000});
     await expect57(page, ".cm-tt-pile:not(.is-empty) .cm-tt-stack > .cm-tt-card", `${tag}: the Table view's piles`);
-    for (const size of ["S", "M", "L"]) {
-      if (!(await page.locator(".cm-tt-grid .cm-tt-card").count())) { await page.locator("[data-pile='status:Target'], [data-pile^='status:']").first().click(); await page.locator(".cm-tt-grid .cm-tt-card").first().waitFor({timeout: 30000}); }
-      await page.$eval(`[data-tt=size][data-size=${size}]`, (b) => b.click());  /* the drawer slides in; a real click waits on it forever */
-      await page.locator(`.cm-tt-grid .cm-tt-card.is-${size}`).first().waitFor({timeout: 30000});
-      const faces = await page.$$eval(`.cm-tt-grid .cm-tt-card.is-${size}`, (els) => els.slice(0, 12).map((el) => { const b = getComputedStyle(el, "::before"); return [el.offsetWidth, el.offsetHeight - parseFloat(b.bottom) - parseFloat(b.top)]; }));
-      ok(faces.length > 0 && faces.every(is57), `${tag}: an open pile's pictures at size ${size} are whole 5:7 faces, not crops (${faces.slice(0, 2).map(([w, h]) => `${w}×${Math.round(h)}`).join(", ")})`);
+    /* The card size is a slider (R3.9b): the open pile's pictures at its two ends. */
+    await page.$eval("[data-pile^='status:']:not(.is-empty)", (b) => b.click());
+    await page.locator(".cm-tt-grid .cm-tt-card").first().waitFor({timeout: 30000});
+    for (const end of ["min", "max"]) {
+      await page.$eval("[data-card-scale]", (el, end) => { el.value = el[end]; el.dispatchEvent(new Event("input", {bubbles: true})); el.dispatchEvent(new Event("change", {bubbles: true})); }, end);
+      await page.waitForTimeout(600);
+      await page.locator(".cm-tt-grid .cm-tt-card").first().waitFor({timeout: 30000});
+      const faces = await page.$$eval(".cm-tt-grid .cm-tt-card", (els) => els.slice(0, 12).map((el) => { const b = getComputedStyle(el, "::before"); return [el.offsetWidth, el.offsetHeight - parseFloat(b.bottom) - parseFloat(b.top)]; }));
+      ok(faces.length > 0 && faces.every(is57), `${tag}: an open pile's pictures at the card size's ${end === "min" ? "smallest" : "largest"} are whole 5:7 faces, not crops (${faces.slice(0, 2).map(([w, h]) => `${w}×${Math.round(h)}`).join(", ")})`);
     }
     await page.$eval(".cm-tt-grid .cm-tt-card", (c) => c.click());
     await page.locator(".cm-tt-solo").waitFor({timeout: 30000});

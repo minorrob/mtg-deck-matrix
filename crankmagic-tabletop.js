@@ -286,15 +286,22 @@
   }
 
   /* ------------------------------------------------------------------ TB2: lay out, page, select */
-  /* Each a third larger than the first cut (Rob, 24 September: "about 30% larger ... same for
-     medium, same for small"). The piles on the mat keep their own 64px; these are an open pile's. */
-  /* R3.9: every card is 5:7 by its width, so h is w × 7 / 5, rounded (the CSS draws the same, plus the caption). */
-  const SIZES = {S: {w: 83, h: 116, gap: 10, cap: 14}, M: {w: 125, h: 175, gap: 12, cap: 18}, L: {w: 182, h: 255, gap: 14, cap: 20}};
-  /* The one card on the stage: the picture at the size the reader chose, up to Scryfall's
-     normal print's width (488), 5:7 like every card (R3.9), narrowed to the mat where the mat is narrower. */
-  const STAGE = {L: {w: 140, h: 196}, XL: {w: 244, h: 342}, XXL: {w: 366, h: 512}, full: {w: 488, h: 683}};
-  const stageOf = (s) => (STAGE[s] ? s : "XL");
-  const sizeOf = (s) => (SIZES[s] ? s : "M");
+  /* AN OPEN PILE'S CARD IS ONE POINT ON A SCALE (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): 125px wide
+     at 100%, times the reader's card size, 5:7, with its name in a caption under it that never drops below 16px
+     tall, so its words stay at 10px or more. The CSS draws the same from --card-scale; this is the arithmetic the
+     layout and the tests read. The piles on the mat keep their own 64px. */
+  const CARD = {w: 125, gap: 12, cap: 18, capMin: 16, scaleMin: 0.6, scaleMax: 1.6};
+  const scaleOf = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.min(CARD.scaleMax, Math.max(CARD.scaleMin, n)) : 1; };
+  function cardGeom(scale = 1) { const s = scaleOf(scale), w = CARD.w * s; return {scale: s, w, h: w * 7 / 5, gap: CARD.gap * s, cap: Math.max(CARD.capMin, CARD.cap * s)}; }
+  /* The one card on the stage: the picture at the width the reader drags it to, from the smallest at which its
+     rules text is still legible to Scryfall's normal print (488), 5:7, narrowed to the mat where the mat is narrower. */
+  const STAGE = {min: 220, max: 488, def: 244};
+  const stageWidth = (v, room = Infinity) => { const n = Number(v); const hi = Math.max(STAGE.min, Math.min(STAGE.max, room)); return Math.min(hi, Math.max(STAGE.min, Number.isFinite(n) && n > 0 ? n : STAGE.def)); };
+  /* The drawer's height: its head, the card and its caption, its padding. The head (the pile's name, the card-size
+     slider, the pager, Print, close, and Select when cards are ticked) is one line on a desktop and wraps to three or
+     four on a phone, so its height is measured once it is drawn (ui.headH) rather than guessed; until then a phone
+     assumes three lines. A drawer shorter than its head and card would cut the bottom off every card in it. */
+  const railHeight = (g, narrow, headH = 0) => Math.max(narrow ? 172 : 176, (headH ? headH + 2 : narrow ? 118 : 34) + g.h + g.cap + 30);
   const mvOf = (r) => { const v = r && r.card ? r.card.manaValue : null; const n = v === null || v === undefined || v === "" ? NaN : Number(v); return Number.isFinite(n) ? n : 99; };
   const nameOf = (r) => String((r && r.card && r.card.name) || "");
   const orderedAt = (r) => String((r && r.order && (r.order.placed || r.order.date || r.order.orderedAt)) || (r && (r.orderedAt || r.createdAt)) || "");
@@ -310,15 +317,15 @@
   /* One page of a laid-out pile: as many columns as the width holds at the card size, `rowsFit`
      rows to a page, the page clamped; `label` is the page strip's words. Pure, so the test can
      hold the pages to the pile. */
-  function layout(pile, {width = 960, size = "M", page = 0, rowsFit = 3, inset = 16} = {}) {
-    const sz = SIZES[sizeOf(size)], rows = pileOrder(pile), total = rows.length, copies = Number(pile && pile.count) || rows.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
+  function layout(pile, {width = 960, scale = 1, page = 0, rowsFit = 3, inset = 16} = {}) {
+    const sz = cardGeom(scale), rows = pileOrder(pile), total = rows.length, copies = Number(pile && pile.count) || rows.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
     const cols = Math.max(1, Math.floor((width - inset * 2 + sz.gap) / (sz.w + sz.gap)));
     const perPage = cols * Math.max(1, rowsFit | 0), pages = Math.max(1, Math.ceil(total / perPage));
     const p = Math.min(Math.max(0, page | 0), pages - 1), from = p * perPage, to = Math.min(total, from + perPage);
     const pitch = sz.h + sz.cap + sz.gap;  /* the picture, its caption, the gap */
     const cards = rows.slice(from, to).map((row, i) => ({row, x: inset + (i % cols) * (sz.w + sz.gap), y: Math.floor(i / cols) * pitch, index: from + i}));
     const lines = Math.max(1, Math.ceil(cards.length / cols));
-    return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
+    return {cards, cols, lines, perPage, pages, page: p, from, to, total, scale: sz.scale, w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString('en-US')}–${to.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}${copies !== total ? ` · ${copies.toLocaleString('en-US')} copies` : ""}` : "Nothing on this pile"};
   }
   const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
@@ -508,7 +515,7 @@
      cards in rows and columns on the stage with a page strip, the other group piles as a shelf
      of placards along the back, the status piles still down front); a SELECTION (the chosen
      cards on the center of the stage, large, with their facts beneath). Clicks reach the
-     caller through hooks: onOpen(pileId|null), onPage(n), onSize(S|M|L), onTick(recordId),
+     caller through hooks: onOpen(pileId|null), onPage(n), onStageWidth(px), onTick(recordId),
      onSelect([recordId]), onClear(), onMenu(recordId, element), onGroupBy(key),
      onDrop(pileId, [recordId]) when the selection is dropped on an accepting pile,
      onMoveTo([recordId], element) for the Move to… button, and for the play space (PR 3b)
@@ -626,8 +633,8 @@
        A flow pile is 126px including its placard; the container adds a heading, a gap and its
        own padding. With a pile open the row grows to whatever the card size needs. */
     const rail = model.bench, open = mode === "open" && openPile;
-    const drawSz = SIZES[sizeOf(ui.size)];
-    const railH = open ? Math.max(narrow ? 172 : 176, 34 + drawSz.h + drawSz.cap + 30) : (narrow ? 172 : 176);
+    const drawSz = cardGeom(ui.scale);
+    const railH = open ? railHeight(drawSz, narrow, ui.headH) : (narrow ? 172 : 176);
     /* The Bench container carries no heading: its pile's placard already names it, and a second
        label over one pile is the kind of thing that makes a board feel wordy. */
     const benchHTML = `<div class="cm-tt-rail">${pile(rail, 0, 0, "bench", true)}</div>`;
@@ -638,8 +645,9 @@
        recombine and every selector that knew where a pile's cards were still find them. */
     let drawerHTML;
     if (open) {
-      const l = layout(openPile, {width: 40 * (drawSz.w + drawSz.gap), size: ui.size, page: ui.page, rowsFit: 1, inset: 0});
-      const sizeSeg = `<span class="cm-tt-seg" role="group" aria-label="Card size">${["S", "M", "L"].map((k) => `<button type="button" data-tt="size" data-size="${k}" aria-pressed="${l.size === k ? "true" : "false"}" title="Card size ${k}">${k}</button>`).join("")}</span>`;
+      const l = layout(openPile, {width: 40 * (drawSz.w + drawSz.gap), scale: drawSz.scale, page: ui.page, rowsFit: 1, inset: 0});
+      /* The card size is the app's one scale (Settings shows the same slider); the host draws it. */
+      const sizeSeg = ui.scaleSlider || "";
       const pager = l.pages > 1 ? `<span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">&#8249;</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">&#8250;</button></span>` : "";
       /* The head keeps the laid-out pile's own strip classes: it is the same strip, moved, and the
          journeys, the CSS and anyone reading this file already know where a pile's title, its
@@ -649,7 +657,9 @@
         + `<button type="button" class="cm-tt-drawer-print" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button>`
         + `<button type="button" class="cm-tt-back cm-tt-drawer-shut" data-tt="open" data-pile="${esc(openPile.id)}" title="Close ${esc(openPile.label)}" aria-label="Close ${esc(openPile.label)}">&#215;</button>`;
       const body = l.cards.length
-        ? `<div class="cm-tt-grid is-drawer" style="height:${drawSz.h + drawSz.cap}px;width:${l.cards.length ? l.cards[l.cards.length - 1].x + drawSz.w : 0}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size !== "S", style: `left:${x}px;top:0;`})).join("")}</div>`
+        /* Placed by the CSS from --card-scale and each card's place in the row, so dragging the slider moves them
+           live without a redraw; a card wider than Scryfall's small print (146px) asks for the normal one. */
+        ? `<div class="cm-tt-grid is-drawer" style="--n:${l.cards.length}" data-cols="${l.cols}">${l.cards.map(({row}, i) => cardFace(row, {ghost: isGhost(row), tick: true, checked: ticked.has(row.recordId), big: drawSz.w > 146, style: `--i:${i};`})).join("")}</div>`
         : `<p class="cm-tt-play-invite">Nothing on this pile.</p>`;
       drawerHTML = `<div class="cm-tt-drawer"><span class="cm-tt-strip is-top cm-tt-drawer-head">${head}</span><div class="cm-tt-drawer-strip">${body}</div></div>`;
     } else {
@@ -838,12 +848,15 @@
            chose, its facts beside it from the same record the inspector reads, and Previous /
            Next through the pile it came from — pick a deck, pick a card, read it, file it, next. */
         const r = selected[0], say = hooks.describe || ((x) => ({status: x.status || "", price: x.card && x.card.price != null ? "$" + Number(x.card.price).toFixed(2) : "", deck: ""})), d = say(r) || {};
-        const Z = STAGE[stageOf(ui.stageSize)], w = Math.min(Z.w, width - 32), h = Math.round(w * 7 / 5);
+        const room = width - 32, w = Math.round(stageWidth(ui.stageWidth, room)), h = Math.round(w * 7 / 5);
         const side = width - w - 48 >= 300, panelW = side ? width - w - 48 : width - 32, panelH = side ? h : 380;  /* under the picture on a phone: tall enough for the facts and the two buttons */
         const from = homeId ? findPile(model, homeId) : null, order = from ? pileOrder(from) : [], at = order.findIndex((x) => x.recordId === r.recordId);
         const prev = at > 0 ? order[at - 1] : null, next = at >= 0 && at < order.length - 1 ? order[at + 1] : null;
         const caption = `<ul class="cm-tt-captions"><li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${d.ownership ? ` <span class="cm-tt-own"${d.ownershipWhy ? ` title="${esc(d.ownershipWhy)}"` : ""}>${esc(d.ownership)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li></ul>`;
-        const sizeSeg = `<span class="cm-tt-seg" role="group" aria-label="Picture size">${[["L", "Card"], ["XL", "Larger"], ["XXL", "Large"], ["full", "Full"]].map(([k, l]) => `<button type="button" data-tt="stage-size" data-size="${k}" aria-pressed="${stageOf(ui.stageSize) === k ? "true" : "false"}" title="Picture ${k === "full" ? "at full size" : "size " + k}">${l}</button>`).join("")}</span>`;
+        /* PICTURE SIZE IS A SLIDER (AGENTS.md, "Sizes are sliders, never steps"): from the smallest width at which
+           the rules text reads to the full print or the mat, whichever is narrower, shown as a share of the full print. */
+        const hi = Math.round(Math.max(STAGE.min, Math.min(STAGE.max, room))), pct = (v) => Math.round(v / STAGE.max * 100) + "%";
+        const sizeSeg = `<label class="cm-size-slider"><span class="cm-size-label">Picture size</span><span class="cm-size-end" aria-hidden="true">${pct(STAGE.min)}</span><input type="range" min="${STAGE.min}" max="${hi}" step="1" value="${w}" data-tt-stage aria-valuetext="${pct(w)}"><span class="cm-size-end" aria-hidden="true">${pct(hi)}</span><output>${pct(w)}</output></label>`;
         const stepBtn = (row, dir, label) => `<button type="button" data-tt="step" data-record="${esc(row ? row.recordId : "")}" ${row ? "" : "disabled"} aria-label="${dir} card in ${esc(from ? from.label : "the pile")}">${label}</button>`;
         const actH = narrow ? 176 : width < 1180 ? 84 : 48;  /* the action row wraps to four lines on a phone, two on a narrow mat */
         stageH = (side ? h : h + 12 + panelH) + 24 + actH;
@@ -851,10 +864,10 @@
       } else {
         /* The selection (plan §2.2): on the center of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
-        const L = SIZES.L, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
+        const L = {w: 182}, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
         const fanW = L.w + step * (n - 1), x0 = Math.max(16, (width - fanW) / 2);
         const say = hooks.describe || ((r) => ({status: r.status || "", price: r.card && r.card.price != null ? "$" + Number(r.card.price).toFixed(2) : "", deck: ""}));
-        const fan = selected.map((r, i) => { const d = say(r) || {}; return cardFace(r, {ghost: isGhost(r), size: "L", big: true, cls: "cm-tt-chosen", style: `left:${Math.round(x0 + i * step)}px;top:${Math.round(Math.abs(i - (n - 1) / 2) * 6)}px;transform:rotate(${((i - (n - 1) / 2) * 3).toFixed(1)}deg);z-index:${i + 1};`}) + ""; }).join("");
+        const fan = selected.map((r, i) => { const d = say(r) || {}; return cardFace(r, {ghost: isGhost(r), size: "fan", big: true, cls: "cm-tt-chosen", style: `left:${Math.round(x0 + i * step)}px;top:${Math.round(Math.abs(i - (n - 1) / 2) * 6)}px;transform:rotate(${((i - (n - 1) / 2) * 3).toFixed(1)}deg);z-index:${i + 1};`}) + ""; }).join("");
         const captions = `<ul class="cm-tt-captions">${selected.map((r) => { const d = say(r) || {}; return `<li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${d.ownership ? ` <span class="cm-tt-own"${d.ownershipWhy ? ` title="${esc(d.ownershipWhy)}"` : ""}>${esc(d.ownership)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li>`; }).join("")}</ul>`;
         const from = homeId ? findPile(model, homeId) : null;
         const capH = Math.min(6, n) * 24 + 16;
@@ -875,6 +888,9 @@
     }
     const legend = `${model.total.toLocaleString('en-US')} cards on the table · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     paint(host, `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`);
+    /* The drawer's head as drawn: if its height is not the one the rail was made for, the host redraws once with it. */
+    const drawnHead = open && host.querySelector(".cm-tt-drawer:not(.is-shut) .cm-tt-drawer-head");
+    if (drawnHead && hooks.onHeadHeight) { const hh = Math.ceil(drawnHead.getBoundingClientRect().height); if (hh && Math.abs(hh - (ui.headH || 0)) > 2) queueMicrotask(() => hooks.onHeadHeight(hh)); }
     /* Clicks, keys and the context menu, delegated once per draw. The selects are assigned as
        PROPERTIES rather than added as listeners: a select that survives a patch (§3.1) would
        otherwise collect one handler per redraw, which is the listener-stacking bug PR 3b found
@@ -890,6 +906,17 @@
        that was not a pile shut the drawer, and the reader had to go and find the pile again. The
        drag stamps when it ended; a click landing within a few frames of that is the tail of the
        gesture and is swallowed here rather than acted on. */
+    /* The picture-size slider: dragging resizes the card on the stage in place, and the facts beside it wait; letting
+       go keeps the width and redraws around it. */
+    host.oninput = (ev) => {
+      const el = ev.target.closest && ev.target.closest("[data-tt-stage]"); if (!el) return;
+      const w = Math.round(Number(el.value)), h = Math.round(w * 7 / 5), stage = host.querySelector(".cm-tt-stage.is-solo");
+      for (const box of host.querySelectorAll(".cm-tt-fanL.is-solo, .cm-tt-solo")) { box.style.width = w + "px"; box.style.height = h + "px"; }
+      if (stage) stage.classList.add("is-sizing");
+      const out = el.parentElement.querySelector("output"); if (out) out.textContent = Math.round(w / STAGE.max * 100) + "%";
+      el.setAttribute("aria-valuetext", Math.round(w / STAGE.max * 100) + "%");
+    };
+    host.onchange = (ev) => { const el = ev.target.closest && ev.target.closest("[data-tt-stage]"); if (el && hooks.onStageWidth) hooks.onStageWidth(Math.round(Number(el.value))); };
     let draggedAt = 0;
     host.onclick = (ev) => {
       if (draggedAt && performance.now() - draggedAt < 400) { draggedAt = 0; ev.stopPropagation(); return; }
@@ -899,7 +926,6 @@
       if (kind === "open") { hooks.onOpen && hooks.onOpen(t.dataset.pile === homeId && mode !== "selected" ? null : t.dataset.pile); }
       else if (kind === "back") { hooks.onOpen && hooks.onOpen(t.dataset.pile); }
       else if (kind === "page") { hooks.onPage && hooks.onPage(Number(t.dataset.page)); }
-      else if (kind === "size") { hooks.onSize && hooks.onSize(t.dataset.size); }
       else if (kind === "tick") { ev.stopPropagation(); hooks.onTick && hooks.onTick(t.closest(".cm-tt-card").dataset.record); }
       else if (kind === "card") { const id = t.dataset.record; if (ev.shiftKey) { hooks.onTick && hooks.onTick(id); return; } const ids = new Set(ticked); ids.add(id); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
       else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
@@ -917,7 +943,6 @@
       else if (kind === "print") { hooks.onPrint && hooks.onPrint(t.dataset.pile); }
       /* A deck's pile filters the table to that deck (and with it, puts the middle into that
          deck's play space); Select all sends an empty id, which clears the filter. */
-      else if (kind === "stage-size") { hooks.onStageSize && hooks.onStageSize(t.dataset.size); }
       else if (kind === "step") { if (t.dataset.record) hooks.onStep && hooks.onStep(t.dataset.record); }
       /* The play space (PR 3b). Stepping the draw pile is a view change and never leaves the
          module's caller a decision; the other three are the caller's, because they unstage. */
@@ -1043,5 +1068,14 @@
     return {width, height, piles: sN + gN + 1, readings: readings.length, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, SENT, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};
+  /* While the card-size slider is dragged the drawer's cards follow the CSS; its rail grows or shrinks with them, and
+     what sits below waits, faded, for the redraw that letting go brings. */
+  function liveScale(host, scale) {
+    const mat = host && host.querySelector(".cm-tt-mat"), rail = host && host.querySelector(".cm-tt-backrow");
+    if (!mat || !rail || !host.querySelector(".cm-tt-drawer:not(.is-shut)")) return;
+    const head = host.querySelector(".cm-tt-drawer-head");
+    rail.style.height = railHeight(cardGeom(scale), host.clientWidth < 760, head ? Math.ceil(head.getBoundingClientRect().height) : 0) + "px";
+    mat.classList.add("is-sizing");
+  }
+  return {CARD, cardGeom, scaleOf, railHeight, liveScale, stageWidth, GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, SENT, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};
 });

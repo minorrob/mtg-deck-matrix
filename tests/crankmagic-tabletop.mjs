@@ -47,7 +47,7 @@ eq(t.ghosts, rows.filter((r) => T.isGhost(r)).length, "ghost rows are counted on
 /* TB5: the piles a card can be dropped on are marked; the rest are readings of a plan. */
 eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,Ordered,Watched,Wanted,To buy", "seven status piles take a drop, in workflow order");
 ok(t.statusPiles.filter((p) => p.target === false).every((p) => /^(Draft list|Suggestion|Planned|Unassigned)$/.test(p.label)), "the readings are Draft list, Suggestion, Planned and Unassigned");
-eq(T.TARGET.size, 10, "the seven old status piles and the card states' Target, To add and Watching (docs/card-states.md) take a drop"); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 683, "the stage's full size is Scryfall's normal print's width, 5:7 like every card (R3.9)");
+eq(T.TARGET.size, 10, "the seven old status piles and the card states' Target, To add and Watching (docs/card-states.md) take a drop"); 
 ok(t.statusPiles.every((p) => !p.count || (p.top && p.top.card)), "a pile with cards has a top card to show");
 ok(t.statusPiles.every((p) => p.rows.every((r, i, a) => i === 0 || String(a[i - 1].card.name).localeCompare(String(r.card.name)) <= 0)), "a pile's rows are by name");
 
@@ -102,26 +102,38 @@ eq(T.pileOrder({kind: "group", label: "Creature", rows: [mk("Zed", 3), mk("Abe",
 eq(T.pileOrder({kind: "bench", label: "Bench", rows: [mk("Zed", 1), mk("Abe", 5)]}).map((r) => r.card.name), ["Abe", "Zed"], "the Bench by name");
 eq(T.pileOrder({kind: "status", label: "Ordered", rows: [mk("Late", 1, {order: {placed: "2026-09-10"}}), mk("Early", 9, {order: {placed: "2026-08-01"}})]}).map((r) => r.card.name), ["Early", "Late"], "Ordered by order date");
 const hundred = {kind: "status", label: "Physical deck", rows: Array.from({length: 100}, (_, i) => mk("Card " + String(i).padStart(3, "0"), i % 8))};
-let l = T.layout(hundred, {width: 960, size: "M", page: 0, rowsFit: 3});
-eq([l.cols, l.perPage, l.pages, l.from, l.to, l.cards.length, l.label], [6, 18, 6, 0, 18, 18, "1\u201318 of 100"], "six across at M on 960, three rows to a page");
-l = T.layout(hundred, {width: 960, size: "M", page: 99, rowsFit: 3});
+let l = T.layout(hundred, {width: 960, scale: 1, page: 0, rowsFit: 3});
+eq([l.cols, l.perPage, l.pages, l.from, l.to, l.cards.length, l.label], [6, 18, 6, 0, 18, 18, "1\u201318 of 100"], "six across at 100% on 960, three rows to a page");
+l = T.layout(hundred, {width: 960, scale: 1, page: 99, rowsFit: 3});
 eq([l.page, l.from, l.to, l.cards.length, l.label, l.lines], [5, 90, 100, 10, "91\u2013100 of 100", 2], "a page past the end clamps to the last");
-eq(T.layout(hundred, {width: 390, size: "M", rowsFit: 4}).cols, 2, "two across on a phone at M");
-eq(T.layout(hundred, {width: 390, size: "S", rowsFit: 4}).cols, 3, "three across on a phone at S");
-eq(T.layout(hundred, {width: 1400, size: "L", rowsFit: 2}).cols, 7, "seven across at L on 1400");
-eq(T.layout(hundred, {width: 1400, size: "S", rowsFit: 2}).cols, 14, "fourteen across at S on 1400");
-/* Each size is the first cut's, about a third larger (Rob, 24 September), and still the card's shape. */
-eq([T.SIZES.S.w, T.SIZES.M.w, T.SIZES.L.w], [83, 125, 182], "S, M and L are each about 30% larger than 64, 96 and 140");
-eq(["S", "M", "L"].map((k) => T.SIZES[k].h), ["S", "M", "L"].map((k) => Math.round(T.SIZES[k].w * 7 / 5)), "and every size is 5:7 by its width (R3.9), to the pixel");
+/* THE CARD SIZE IS A SCALE, NOT THREE STEPS (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): 125px at 100%,
+   from 60% to 160%, 5:7 at every point, the caption never under 16px so its words stay at 10px. */
+eq(T.layout(hundred, {width: 390, scale: 1, rowsFit: 4}).cols, 2, "two across on a phone at 100%");
+eq(T.layout(hundred, {width: 390, scale: 0.6, rowsFit: 4}).cols, 4, "four across on a phone at the smallest");
+eq(T.layout(hundred, {width: 1400, scale: 1.6, rowsFit: 2}).cols, 6, "six across at the largest on 1400");
+eq(T.layout(hundred, {width: 1400, scale: 0.6, rowsFit: 2}).cols, 16, "sixteen across at the smallest on 1400");
+eq([T.CARD.scaleMin, T.CARD.scaleMax], [0.6, 1.6], "the scale runs from 60% to 160%");
+eq([T.cardGeom(0.1).scale, T.cardGeom(9).scale, T.cardGeom("x").scale], [0.6, 1.6, 1], "and clamps to its ends; a value that is not a number is 100%");
+for (const s of [0.6, 0.73, 1, 1.28, 1.6]) {
+  const g = T.cardGeom(s);
+  ok(Math.abs(g.w / g.h - 5 / 7) < 1e-9 && g.w === 125 * s, `at ${Math.round(s * 100)}% the card is ${g.w}px wide and 5:7`);
+  ok(g.cap >= 16, `and its caption is ${g.cap}px tall, room for 10px words`);
+}
+ok(T.cardGeom(1.6).cap > T.cardGeom(1).cap, "a bigger card carries a bigger caption");
 eq(T.layout({kind: "status", label: "Watched", rows: []}, {width: 960}).label, "Nothing on this pile");
 eq(T.layout({kind: "status", label: "Physical deck", count: 12, rows: [mk("A", 1, {quantity: 10}), mk("B", 2, {quantity: 2})]}, {width: 960}).label, "1–2 of 2 · 12 copies", "the strip counts rows, and copies when they differ");
-ok(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards.every((c, i, a) => i === 0 || a[i - 1].index + 1 === c.index), "cards carry their index in the pile");
-const lm = T.layout(hundred, {width: 960, size: "M", rowsFit: 3}), SM = T.SIZES.M;
+ok(T.layout(hundred, {width: 960, scale: 1, rowsFit: 3}).cards.every((c, i, a) => i === 0 || a[i - 1].index + 1 === c.index), "cards carry their index in the pile");
+const lm = T.layout(hundred, {width: 960, scale: 1, rowsFit: 3}), SM = T.cardGeom(1);
 eq(lm.cards[lm.cols + 1].x, 16 + 1 * (SM.w + SM.gap), "the card after a full row and one starts the second column of the second row");
 eq(lm.cards[lm.cols + 1].y, SM.h + SM.cap + SM.gap, "the second row starts under the first row's caption");
 eq(lm.height, 3 * (SM.h + SM.cap + SM.gap) - SM.gap, "the page's height counts the captions");
-ok(T.SIZES.S.cap < T.SIZES.M.cap && T.SIZES.M.cap < T.SIZES.L.cap, "a bigger card carries a bigger caption");
-eq(T.layout(hundred, {width: 960, size: "nonsense"}).size, "M", "an unknown size is M");
+eq(T.layout(hundred, {width: 960, scale: "nonsense"}).scale, 1, "an unknown scale is 100%");
+/* The drawer makes room for the card and its caption, and on a phone for a head that wraps to three lines. */
+ok(T.railHeight(T.cardGeom(1.6), false) >= 34 + T.cardGeom(1.6).h + T.cardGeom(1.6).cap, "the drawer holds the largest card and its caption");
+ok(T.railHeight(T.cardGeom(1.3), true) - T.railHeight(T.cardGeom(1.3), false) >= 80, "and on a phone, room for its three-line head too");
+/* The picture on the stage is a slider too: from the width at which rules text reads, to the full print or the mat. */
+eq([T.STAGE.min, T.STAGE.max, T.STAGE.def], [220, 488, 244], "the stage's picture runs from 220px to Scryfall's normal print (488px), 244px to start");
+eq([T.stageWidth(100), T.stageWidth(9999), T.stageWidth(300), T.stageWidth(9999, 358), T.stageWidth(0)], [220, 488, 300, 358, 244], "clamped to its ends and to the mat, 244px when unset");
 eq(T.findPile(t, "bench").label, "Bench"); eq(T.findPile(t, t.statusPiles[0].id).label, t.statusPiles[0].label); eq(T.findPile(t, "nope"), null);
 /* TB3: the drop-target contract, on the live library's rows. */
 const pileBy = (label, key) => (key ? T.table(rows, {...opts, groupBy: key}).groupPiles.find((p) => p.label === label) : t.statusPiles.find((p) => p.label === label));

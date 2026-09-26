@@ -107,9 +107,10 @@ try {
     await page.getByRole("button", {name: "Table", exact: true}).click(); await page.waitForTimeout(2500);
     const pile = page.locator("#cm-tt-host .cm-tt-pile").first();
     if (await pile.count()) { await pile.click(); await page.waitForTimeout(1200); }
+    /* Sizes are sliders (AGENTS.md): the card-size slider's two ends and its middle. */
     const sizes = {};
-    for (const k of ["S", "M", "L"]) { const b = page.locator(`#cm-tt-host [data-tt=size][data-size=${k}]`); if (await b.count()) { await b.click(); await page.waitForTimeout(700); sizes[k] = await page.evaluate(() => Math.round(document.querySelector("#cm-tt-host .cm-tt-grid .cm-tt-card")?.getBoundingClientRect().width || 0)); } }
-    verdict("the Table view's S, M and L are 83, 125 and 182 px", sizes.S === 83 && sizes.M === 125 && sizes.L === 182, JSON.stringify(sizes));
+    for (const k of ["min", "100", "max"]) { if (await page.locator("#cm-tt-host [data-card-scale]").count()) { await page.$eval("#cm-tt-host [data-card-scale]", (el, k) => { el.value = k === "min" ? el.min : k === "max" ? el.max : k; el.dispatchEvent(new Event("input", {bubbles: true})); el.dispatchEvent(new Event("change", {bubbles: true})); }, k); await page.waitForTimeout(700); sizes[k] = await page.evaluate(() => Math.round(document.querySelector("#cm-tt-host .cm-tt-grid .cm-tt-card")?.getBoundingClientRect().width || 0)); } }
+    verdict("the Table view's card-size slider runs 75 to 200 px, 125 at 100%", sizes.min === 75 && sizes["100"] === 125 && sizes.max === 200, JSON.stringify(sizes));
 
     await page.goto(`${BASE}/index.html#decks`); await page.waitForTimeout(1000);
     await page.locator(".cm-deck-tile").first().getByRole("button").first().click();
