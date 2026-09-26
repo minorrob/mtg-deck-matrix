@@ -88,7 +88,14 @@
      keeps its own ink in both themes for the same reason the poster pair does -- it sits over
      four colored status elements, and a panel that flipped would be legible over two of them
      and not the other two. */
-  --table-panel:#fbfaf7;--table-ink:#1f1c18;}
+  --table-panel:#fbfaf7;--table-ink:#1f1c18;
+  /* THE BOARD'S FELT AND CARDS (M5, crankmagic-board.js). The same reasoning as the two pairs above: the mat
+     and the cards on it are the table, not the page, and keep their colors in both themes. A card's face and
+     back are the paper; --vital-danger is the handoff's red for a life total in trouble; --on-accent is ink on
+     the brass step chip. */
+  --mat-felt:#2b3a2c;--mat-felt-edge:#141812;--mat-ink:#f3efe6;
+  --card-face:#ece5d6;--card-face-edge:#cfc5b0;--card-back:#3a2f22;--card-back-edge:#2c231a;
+  --vital-danger:#b3261e;--on-accent:#1a1611;}
 #matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(color-mix(in srgb,var(--v-accent) 16%,transparent),#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
 #matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:var(--v-accent)}
