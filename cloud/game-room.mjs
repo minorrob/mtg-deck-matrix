@@ -20,6 +20,7 @@
  *   ws   {type:"view"}        the sender's view again
  */
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
+import {tableOn, TableError} from "../game/room/table.mjs";
 
 /* A Durable Object's storage, as the M4 storage contract (game/engine/storage.mjs): strings in, strings out. */
 export function objectStorage(storage) {
@@ -113,4 +114,62 @@ export class GameRoom {
       try {socket.send(JSON.stringify({type: "view", view: this.room.view(seatId)}));} catch {}
     }
   }
+}
+
+/* THE TABLE AS A DURABLE OBJECT: the lobby (game/room/table.mjs) and, once it launches, its game room, in one
+ * object per table. The Worker's front door (cloud/tables.mjs) has already checked who is asking and passes
+ * their address in `x-crankmagic-email`; the table turns it into a seat, and the room only ever sees "s0".
+ * The countdown runs on the object's alarm, so it ends on time whether or not anyone is connected.
+ *
+ *   POST /table/create {tableId, hostName, seats}    GET /table
+ *   POST /table/invite {seatId} -> {code}            POST /table/uninvite {seatId}
+ *   POST /table/join {code}                          POST /table/deck {seatId, deck}
+ *   POST /table/ready {ready}                        POST /table/start    POST /table/cancel
+ *   GET  /connect (websocket), once the game is on: the seat this address holds
+ */
+export class GameTable extends GameRoom {
+  constructor(ctx, env, options = {}) {
+    super(ctx, env, options);
+    this.now = options.now || (() => Date.now());
+    this.table = tableOn(this.storage, {cards: this.cards, ...(options.random ? {random: options.random} : {})});
+  }
+
+  async load() {
+    this.room = await this.table.currentRoom().catch(() => null);
+    return this.room;
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url), email = (request.headers.get("x-crankmagic-email") || "").toLowerCase();
+    const body = async () => {try {return await request.json();} catch {throw new TableError(400, "That request is not JSON.");}};
+    const t = this.table, now = this.now();
+    try {
+      if (!email) return reply(401, {error: "Sign in to use a table."});
+      const route = `${request.method} ${url.pathname}`;
+      if (route === "POST /table/create") {const b = await body(); return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats})});}
+      if (route === "GET /table") return reply(200, {table: await t.view(email)});
+      if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
+      if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
+      if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
+      if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
+      if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
+      if (route === "POST /table/start") {const at = await t.start(email, now); await this.ctx.storage.setAlarm(at); return reply(200, {table: await t.view(email)});}
+      if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.ctx.storage.deleteAlarm(); return reply(200, {table: view});}
+      if (route === "GET /connect") {
+        if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
+        const {room, seatId} = await t.room(email);
+        this.room = room;
+        const pair = new WebSocketPair();
+        this.accept(pair[1], seatId);
+        return new Response(null, {status: 101, webSocket: pair[0]});
+      }
+      return reply(404, {error: "No such endpoint."});
+    } catch (error) {
+      if (error instanceof TableError || error instanceof RoomError) return reply(error.status, {error: error.message, ...(error.unsupported ? {unsupported: error.unsupported} : {})});
+      throw error;
+    }
+  }
+
+  /** The countdown's end. If a seat unreadied or the host canceled, the table is no longer counting and nothing starts. */
+  async alarm() {await this.table.tick(this.now());}
 }
