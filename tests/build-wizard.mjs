@@ -136,6 +136,8 @@ try {
   await page.waitForFunction(() => location.hash.startsWith("#lab"), null, {timeout: 30000});
   await page.locator("#cm-lab-strategies").waitFor({timeout: 60000});
   eq((await page.locator("#cm-lab-strategies .cm-chip").allInnerTexts()), [want[0].label], "the Lab shows the strategy it was handed");
+  const [list, below] = await page.$$eval("#cm-lab-results, #cm-lab-commander > .cm-actions", (els) => els.map((x) => x.getBoundingClientRect().toJSON()));
+  ok(list.height > 0 && list.bottom <= below.top + 1, `the Build page's Matching commanders sits in its form, not over the buttons below it (list ends ${Math.round(list.bottom)}, buttons start ${Math.round(below.top)})`);
   /* The draft runs by itself: poll the stored state until it holds a preview (up to three minutes). */
   let preview = null;
   for (const until = Date.now() + 180000; Date.now() < until; await page.waitForTimeout(2000)) { const p = (await stateOf(page)).preferences.labPreview; if (p && p.slots && p.slots.length > 50) { preview = p; break; } }

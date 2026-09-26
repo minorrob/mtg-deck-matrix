@@ -2720,6 +2720,9 @@ button.cm-building { pointer-events: none; }
    the dialog grows to fit it and stops scrolling. */
 #cm-dialog.cm-picker-dialog{width:min(980px,calc(100vw - 24px))}
 #cm-dialog.cm-picker-dialog .cm-commander-results{position:static;width:auto;max-height:calc(100dvh - 360px);overflow:auto}
+/* The same leak on the Build page (R3.11): its Matching commanders list is a section of the form, not a dropdown, and
+   the lobby's rule hung it over the actions and the chosen commander below it. Back into flow. */
+#cm-lab-results.cm-commander-results{position:static;width:auto;max-height:300px;overflow:auto}
 
 /* THE LOCAL COPY: a game host, not the workshop. Rob, 2026-09-24: "don't show any of the left side
    bar. It is completely not required in the local version for the user to see and try to use in
