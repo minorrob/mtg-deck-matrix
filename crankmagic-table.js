@@ -66,7 +66,8 @@
     const pseudo = s.deck ? {name: s.deck.name, commanders: (s.deck.commander || []).map((name) => ({name}))} : null;
     const away = (t.away || []).find((a) => a.seatId === s.seatId);
     const line = away ? `Dropped · back by ${new Date(away.until).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
-      : s.deck ? `${s.deck.name}${s.you && s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
+      /* The table sends a card count for your own seat only; nobody sees another seat's cards. */
+      : s.deck ? `${s.deck.name}${s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
       : s.occupied ? (s.you ? "Choose a deck." : "Choosing a deck")
       : s.invited ? "Invitation sent · waiting on them" : s.kind === "ai" ? "No deck yet" : "Invite someone";
     const controls = [];
