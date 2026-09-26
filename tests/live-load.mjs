@@ -37,6 +37,7 @@ eq(L.names(doc()).length,45);// leader, 40 filler, Mountain, Shiny Upgrade, the 
 {const missing=doc();missing.owned.bench.push(['Nonexistent Card',1]);assert.throws(()=>L.build(missing,{Model:M,lookup}),/could not be resolved: Nonexistent Card/);checks++;}
 
 const {state,issues,summary}=L.build(doc(),{Model:M,lookup});
+const slotOfCard=(d,cardId)=>d.slots.find(r=>r.cardId===cardId&&r.purpose==='main').id;
 M.validate(state);checks++;
 eq(issues.length,0);
 const d=state.decks[0];eq(d.status,'final');eq(d.commanders[0],leader.id);
@@ -51,8 +52,8 @@ const r=M.readiness(state,d);eq(r.target,100);eq(r.owned,42+1+19);eq(r.ordered,1
 const filler1=state.lots.filter(l=>l.cardId===filler[1].id);eq(filler1.length,2);eq(filler1.filter(l=>l.allocation).length,1);eq(filler1.find(l=>!l.allocation).quantity,1);
 eq(state.lots.filter(l=>l.cardId===mountain.id&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),70);
 ok(state.lots.find(l=>l.source==='ordered').allocation);
-// the upgrade is filed in its group AND attached to the slot it replaces, uncommitted
-const g=state.groups.find(g=>g.id===L.GROUP_UPGRADES);eq(g.name,'Upgrade Path');eq(g.entries.length,1);ok(/replaces Filler 4 · tier 1 · \$9.50 · Because\./.test(g.entries[0].notes));
+// an upgrade for a card on the list is attached to the slot it replaces, uncommitted; no Upgrade Path group is filed
+ok(!state.groups.some(g=>g.id===L.GROUP_UPGRADES));
 const option=d.slots.find(s=>s.purpose==='upgrade');eq(option.cardId,upgrade.id);eq(option.committed,false);eq(option.tier,1);eq(option.why,'Because.');eq(option.price,9.5);eq(d.slots.find(s=>s.id===option.replaces).cardId,filler[4].id);
 // the deck owns a group with a fixed id, and the app's one-time repair is told it has run
 const own=state.groups.find(g=>g.id==='group:live:D1');eq(own.name,'Goblins');eq(d.groupId,own.id);eq(state.preferences.deckGroups,true);
@@ -62,10 +63,30 @@ const flagged=d.slots.filter(r=>r.option);eq(flagged.length,2);ok(flagged.some(r
 eq(own.entries.length,1);eq(own.entries[0].cardId,planned.id);eq(own.entries[0].notes,'Comes in for a land');
 const filedExtra=state.lots.find(l=>l.cardId===extra.id);eq(filedExtra.source,'ordered');ok(filedExtra.groupIds.includes(own.id));eq(filedExtra.allocation,null);
 eq(summary.options,2);eq(summary.planned,2);
-// the shopping list lands in To Buy with its price, and disagrees with the model out loud
-const toBuy=state.groups.find(g=>g.id==='group:to-buy');eq(toBuy.entries.length,37);eq(toBuy.entries[0].notes,'$0.75 each');
+// the shopping list: what the decks need is already To buy, as their needs, so none of it is filed twice;
+// a list that says less is reported, and copies beyond the needs (a card no deck calls for) go on the To Buy list
+const toBuy=state.groups.find(g=>g.id==='group:to-buy');eq(toBuy.entries.length,0);eq(summary.toBuyEntries,0);
 ok(summary.toBuy===37);
 {const short=doc();short.buy=[['Filler 3',1]];const out=L.build(short,{Model:M,lookup});ok(out.issues.some(x=>/still need/.test(x)));checks++;}
+{const more=doc();more.buy.push(['Planned Piece',2,4],['Filler 5',1,0.75]);const out=L.build(more,{Model:M,lookup});
+ eq(out.issues.length,0);
+ const list=out.state.groups.find(g=>g.id==='group:to-buy').entries;
+ eq(list.length,2);ok(list.some(r=>r.cardId===planned.id&&r.quantity===2&&r.notes==='$4.00 each'));ok(list.some(r=>r.cardId===filler[5].id&&r.quantity===1));
+ const read=M.stateReader(out.state);ok(list.every(r=>{const st=read({...r,kind:'entry',groupId:'group:to-buy'});return st.stage==='buy'&&!st.deckId;}));}
+/* WHICH SEAT A SUBSTITUTE HOLDS (Rob, 2026-09-26). An upgrade whose card is on the list and whose replaced card
+   is a substitute in the box is that seat's need; the substitute's copy records the seat, one copy per upgrade,
+   and a lot of two is split so each names its own. A replaced card not in the box is reported. */
+{const seated=doc();seated.owned.inDeck.D1=seated.owned.inDeck.D1.map(([n,q])=>n==='Shiny Upgrade'?[n,2]:[n,q]);
+ seated.upgrades.push({deck:'D1',card:'Filler 5',replaces:'Shiny Upgrade',tier:2,price:1,why:''},{deck:'D1',card:'Filler 6',replaces:'Shiny Upgrade',tier:2,price:1,why:''});
+ const out=L.build(seated,{Model:M,lookup}),dk=out.state.decks[0];
+ eq(out.issues.length,0);eq(out.summary.seatsRecorded,2);
+ const subs=out.state.lots.filter(l=>l.cardId===upgrade.id);eq(subs.length,2);ok(subs.every(l=>l.quantity===1&&l.location.deckId===dk.id&&!l.allocation));
+ eq(new Set(subs.map(l=>dk.slots.find(r=>r.id===l.standInFor)?.cardId)).size,2);ok(subs.some(l=>dk.slots.find(r=>r.id===l.standInFor).cardId===filler[5].id));
+ ok(subs.every(l=>/holds the seat of Filler [56]/.test(l.notes)));
+ M.validate(out.state);checks++;
+ const rows=M.projection(out.state).filter(r=>r.cardId===upgrade.id);ok(rows.every(r=>r.standInFor));
+ const ctx=M.seats(out.state).decks.get(dk.id);ok(ctx.held.has(slotOfCard(dk,filler[5].id))&&ctx.held.has(slotOfCard(dk,filler[6].id)));
+ const bad=doc();bad.upgrades.push({deck:'D1',card:'Filler 5',replaces:'Ordered Extra'});ok(L.build(bad,{Model:M,lookup}).issues.some(x=>/Filler 5 \(D1\): "Ordered Extra" is in neither/.test(x)));checks++;}
 eq(summary.readiness[0].deck,'Goblins');
 
 /* WHAT WAS PAID IS NOT WHAT THE CARD COSTS. doc.paid carries the workbook's $ Each for the
@@ -113,6 +134,14 @@ eq(real.issues.length,0);
    worth asserting is that every upgrade the file lists survived the build. */
 ok(real.summary.owned>700&&real.summary.toBuy>0);
 eq(real.summary.upgrades,liveDoc.upgrades.length);ok(real.summary.upgrades>0);
+/* Every upgrade in the committed file is a seat a substitute holds (step 3b): each is recorded on its substitute,
+   nothing is filed in an Upgrade Path group, and the To Buy list holds only what no deck needs -- none of it today. */
+eq(real.summary.seatsRecorded,liveDoc.upgrades.length);
+ok(!real.state.groups.some(g=>g.id===L.GROUP_UPGRADES));
+eq(real.summary.toBuyEntries,0);
+{const sat=M.projection(real.state).filter(r=>r.kind==='lot'&&r.standInFor);eq(sat.length,liveDoc.upgrades.length);
+ for(const u of liveDoc.upgrades){const d=real.state.decks.find(d=>d.id==='deck:live:'+u.deck),r=d.slots.find(r=>r.id===sat.find(x=>x.location.deckId===d.id&&real.state.cards[x.cardId].name===u.replaces&&real.state.cards[x.standInForCardId]?.name===u.card)?.standInFor);
+   ok(r&&r.committed,`${u.deck}: ${u.replaces} holds ${u.card}'s seat`);}}
 /* AN UPGRADE COSTS WHAT THE CATALOG SAYS, LIKE THE BUY LIST. master_buy_upgrade carries a
    Price column, and on the short-term rows it is a round figure typed when the list was
    drafted -- Guardian Project at $3.50 against a catalog price of $15.05. The rule is one

@@ -117,7 +117,9 @@ try {
   }
   await page.locator("#cm-filter-chips [data-action=clear-filters]").click();
   await settle(page);
-  /* The To buy tab holds the To Buy list beside the decks' needs. */
+  /* The To buy tab holds the decks' needs, and the To Buy list beside them: what no deck needs (R3.7). The rebuilt
+     library's list is empty -- it only ever repeated the needs -- so a list entry and its Bought are proved in
+     tests/explore-r3.mjs, where one is added. */
   await page.goto(`${base}/index.html#cards?tab=buy`);
   await settle(page);
   {
@@ -125,18 +127,10 @@ try {
     const tabN = await page.$eval(".cm-cards-tabs [data-tab=buy] small", (x) => Number(x.textContent.replace(/,/g, "")));
     const needs = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return CrankCollection.projection(await r.getState()).filter((x) => x.kind === "need").reduce((n, x) => n + x.quantity, 0); } finally { r.close(); } });
     eq(tabN, needs + list, `the To buy tab counts the decks' ${needs} needed copies and the To Buy list's ${list}`);
-    /* Grouped by deck, the list sits in the no-deck group, on a later page: turn pages until it shows. */
-    let found = false;
-    for (let i = 0; i < 10 && !found; i++) {
-      /* A list entry, alone or folded with the list's other copies of the same card (a fold for no deck ends in "|"). */
-      found = await page.evaluate(() => [...document.querySelectorAll("#cm-roster-table tr[data-record]")].some((t) => t.dataset.record.startsWith("entry:group:to-buy") || (t.dataset.record.startsWith("fold:") && t.dataset.record.endsWith("|"))));
-      if (found) break;
-      const next = page.locator("#cm-roster-table [data-page='1']").first();
-      if (!(await next.count()) || await next.isDisabled()) break;
-      await next.click();
-      await page.waitForTimeout(300);
-    }
-    ok(found, "and lists its entries");
+    eq(list, 0, "and the To Buy list repeats none of the needs");
+    /* Each row outside a box wears its role beside the pill, whole: the Status cell wraps rather than cutting it off. */
+    const cut = await page.$$eval("#cm-roster-table td.cm-col-status", (tds) => tds.map((td) => { const c = td.getBoundingClientRect(), b = td.querySelector(".cm-badge-upgrade, .cm-badge-reserved"); if (!b) return null; const r = b.getBoundingClientRect(); return {inside: r.left >= c.left - 0.5 && r.right <= c.right + 0.5 && r.bottom <= c.bottom + 0.5, text: b.textContent}; }).filter(Boolean));
+    ok(cut.length > 0 && cut.every((x) => x.inside && /^(Upgrade|Reserved)$/.test(x.text)), `every role badge on the To buy tab shows whole inside its Status cell (${cut.length})`);
   }
   await page.goto(LIB);
   await settle(page);

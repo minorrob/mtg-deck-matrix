@@ -151,7 +151,7 @@ const compactShop=shop=>!!shop&&PHONE.matches;
 const GROUP_CHOICES=G.CHOICES;
 /* A row is buyable when money would change what it is: a deck requirement nothing fills
    yet, or a copy recorded as watched or ordered. An owned copy is not. */
-const buyable=r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned';
+const buyable=r=>r.kind==='need'||r.kind==='entry'||r.kind==='lot'&&r.source!=='owned';
 /* The five phone columns have about 345px between them, so Type and Rarity print the
    short forms a player already reads on a card: the type's last word (a Legendary
    Creature is a Creature when you are deciding whether to buy it) and rarity's initial,
@@ -1209,7 +1209,7 @@ const sheetPrice=r=>Number.isFinite(r.card.price)&&r.card.price>=0?r.card.price:
    unassigned bench copy is reserved. A copy already in its box has nothing obvious left to do
    and gets no button. The menu keeps everything else, in sections. */
 const shortDeck=d=>{const m=d.name.match(/^(D\d+)\b/);return m?m[1]:d.name.length>18?d.name.slice(0,17)+'…':d.name;};
-function primary(r){if(r.kind==='fold'){const parts=r.partRows;if(parts.every(p=>p.kind==='need'||p.kind==='lot'&&M.PLANNED.includes(p.source)))return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;if(parts.every(p=>p.kind==='lot'&&p.source==='ordered'))return `<button class="v-button primary compact cm-row-buy" data-action="shop-arrive" data-record="${e(r.recordId)}">Arrived</button>`;return '';}
+function primary(r){if(r.kind==='fold'){const parts=r.partRows;if(parts.every(p=>p.kind==='need'||p.kind==='entry'||p.kind==='lot'&&M.PLANNED.includes(p.source)))return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;if(parts.every(p=>p.kind==='lot'&&p.source==='ordered'))return `<button class="v-button primary compact cm-row-buy" data-action="shop-arrive" data-record="${e(r.recordId)}">Arrived</button>`;return '';}
   if(r.kind==='need'||r.kind==='lot'&&M.PLANNED.includes(r.source))return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;
   if(r.kind==='entry')return `<button class="v-button primary compact cm-row-buy" data-action="shop-buy" data-record="${e(r.recordId)}">Bought</button>`;
   if(r.kind==='lot'&&r.source==='ordered')return `<button class="v-button primary compact cm-row-buy" data-action="shop-arrive" data-record="${e(r.recordId)}">Arrived</button>`;

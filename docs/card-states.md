@@ -69,24 +69,24 @@ Collection groups are tags, not states. A group says where a card is filed, not 
 
 ## Today's labels, mapped
 
-These counts are for Rob's library as committed (`data/live-state.json`), and `tests/card-states.mjs`
-pins each one.
+These counts are for Rob's library as committed (`data/live-state.json`, rebuilt in step 3b), and
+`tests/card-states.mjs` pins each one.
 
 | Old label | State | Rob's library |
 | --- | --- | --- |
 | Physical deck | Owned, deck, Target, in the box | 577 copies |
 | Reserved | Owned, deck, not in the box: **To add**, and an Upgrade (the box is full) | 5 copies |
-| Substitute | Owned, deck, Substitute (in the box) | 123 copies |
+| Substitute | Owned, deck, Substitute (in the box); 111 record the seat they hold | 123 copies |
 | Reserved, and physically standing in another deck | Owned, that other deck, Substitute, *reserved for* its own deck | included above |
 | Bench | Owned, no deck | 695 copies |
 | Watched (an owned Bench copy shortlisted for a deck) | Owned, no deck; the shortlist is a tag | — |
 | Ordered | Ordered, deck if reserved | 6 copies |
 | Watched (a watched copy) | Watching | 0 |
-| To buy (a deck's unmet need) | To buy, deck, **Upgrade** (every box is full, so each replaces the substitute in its seat) | 111 copies |
-| **Wanted** (the To Buy list) | **To buy**, no deck (decision 1) | 101 entries |
+| To buy (a deck's unmet need) | To buy, deck, **Upgrade**: each replaces the substitute recorded in its seat | 111 copies |
+| **Wanted** (the To Buy list) | **To buy**, no deck (decision 1): only what no deck needs | 0 entries (the 101 repeated the needs and were removed) |
 | Draft list | Watching, that deck, Reserved (a draft has an empty box); finalizing the deck turns these into To buy | 0 |
 | Suggestion (an option) | Watching, deck, Upgrade | 0 on decks |
-| Planned (entries in other groups) | Watching, with the group as a tag | 111 entries (Upgrade Path) |
+| Planned (entries in other groups) | Watching, with the group as a tag | 0 (the 111 Upgrade Path entries are now the substitutes' seats) |
 | Planned (entries in a deck's own group) | Watching, that deck, Upgrade: a candidate for it | 13 entries (D4 7, D6 6) |
 
 None of Rob's decks has an empty seat, so nothing is Reserved and all seven are playable. None is complete.
@@ -142,9 +142,12 @@ Explore's Add dialog can also put a card straight on the **Bench**.
      The deck page says whether the deck plays and why ("Playable: every seat holds a card · 15 upgrades to
      make"). The Filters dialog adds Upgrade and Reserved; the workbook's State column reads "To buy ·
      upgrade". The Table view has no Upgrade pile: Upgrade is a role, not a place.
-   - **3b, the rebuilt backup.** `data/live-state.json` rebuilt from the v25 workbook with each substitute's
-     seat recorded from the Upgrade Path notes, the 111 Upgrade Path entries and the 101 duplicate To Buy
-     list entries removed. Rob has not restored v25, so no library changes in place and no in-app tidy is
-     needed.
+   - **3b, the rebuilt backup.** `data/live-state.json` rebuilt from the v25 workbook by `tools/live-load.js`:
+     each upgrade whose card is on its deck's list and whose replaced card is a substitute in the box is
+     recorded on that substitute (`standInFor`, one copy per seat), so the 111 Upgrade Path entries and their
+     group are gone; the To Buy list keeps only copies beyond the decks' needs, so its 101 duplicates are gone.
+     The short-term and long-term text is dropped. To buy is now 111 (the needs, once) and Watching 13. Rob
+     has not restored v25, so no library changes in place and no in-app tidy is needed.
    - **R3.7b needs no storage change.** A card no deck needs goes on the To Buy list, which the To buy tab
-     shows, and Bought moves it to the Bench (the entry-buy path).
+     shows, and Bought moves it to the Bench (the entry-buy path). Step 3b found that Bought refused a list
+     entry ("This copy is already recorded as owned"), and fixed it; `tests/explore-r3.mjs` proves the path.
