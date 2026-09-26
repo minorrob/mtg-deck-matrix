@@ -53,7 +53,7 @@ try {
     const first = await rows(page);
     eq(first.map((r) => r.id).slice(0, 5), data.decks.slice(0, 5).map((d) => d.id), "newest first");
     eq(first.length, 60, "sixty at a time, with a word to narrow the search for the rest");
-    const today = new Date().toISOString().slice(0, 10), top = byId.get(first[0].id);
+    const now = new Date(), today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`, top = byId.get(first[0].id);  /* the reader's calendar date, as the app reads it */
     ok(first[0].text.includes(`${top.code} · ${top.releaseDate > today ? "Releases " : ""}${us(top.releaseDate)}`), `each row says its set and a US date: "${first[0].text}"`);
     ok(first.every((r) => r.pips === new Set(byId.get(r.id).commander.flatMap((c) => c.colorIdentity)).size), "and its commander's colors");
 

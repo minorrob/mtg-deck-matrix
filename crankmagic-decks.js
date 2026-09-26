@@ -778,7 +778,7 @@ async function precons(){
 const usDate=d=>new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])=>`${q} ${n}`)).join('\n');
 async function preconPicker(){
-  const data=await precons(),today=new Date().toISOString().slice(0,10);
+  const data=await precons(),today=M.today();  /* the reader's own calendar date: a deck out today is out */
   const d=modal('Start from a precon',`<label>Search<input id="cm-precon-q" type="search" placeholder="A deck, a commander or a set code" autocomplete="off"></label><p class="cm-muted" id="cm-precon-n" aria-live="polite"></p><ul class="cm-precon-list" id="cm-precon-list"></ul>`);
   const q=d.querySelector('#cm-precon-q'),list=d.querySelector('#cm-precon-list'),n=d.querySelector('#cm-precon-n');
   const draw=()=>{
