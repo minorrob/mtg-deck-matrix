@@ -1,6 +1,6 @@
 /* MOBILE (R3.12; INTAKE row R3.12, wireframes mobile-decks, mobile-library, mobile-explore, mobile-deck-detail).
  *
- * Rob's library at 390 × 844, the phone the wireframes draw, in a real page:
+ * Rob's library at 390 × 844, the phone the wireframes draw (and 320, the narrowest), in a real page:
  *
  *   Shell     the rail is a top row: the four pages in one line at the top, and no page scrolls sideways.
  *   Decks     the tiles stack, one to a row, as landscape posters, and every tile's reading is whole.
@@ -70,6 +70,11 @@ try {
   eq(lib.cut, [], "every label whole");
   const pad = await page.$eval("#cm-main", (m) => parseFloat(getComputedStyle(m).paddingBottom));
   ok(pad >= lib.height, `the page makes room for it, so its foot is not under the row (${pad}px for a ${Math.round(lib.height)}px row)`);
+  /* At 320, the narrowest phone the geometry suite walks, the four no longer fit: still one row, scrolled sideways. */
+  await page.setViewportSize({width: 320, height: H}); await page.waitForTimeout(300);
+  const narrow = await footRow(page, ".cm-page-head .cm-actions:has(>[data-action=roster-more])");
+  eq([narrow.lines, narrow.scrolls, narrow.cut], [1, true, []], "at 320, where the four do not fit, it stays one row and scrolls sideways, every label whole");
+  await page.setViewportSize({width: W, height: H}); await page.waitForTimeout(300);
   await page.locator(".cm-page-head [data-action=roster-more]").scrollIntoViewIfNeeded();
   const more = await page.$eval(".cm-page-head [data-action=roster-more]", (x) => x.getBoundingClientRect().toJSON());
   ok(more.left >= 0 && more.right <= W, "and its last button, More, can be brought into view");
