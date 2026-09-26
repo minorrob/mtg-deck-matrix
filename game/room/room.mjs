@@ -29,7 +29,7 @@ import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
 import {legalActions, applyAction} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
-import {gameOver} from "../engine/rules/sba.mjs";
+import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {createRng} from "../engine/rng.mjs";
@@ -108,6 +108,14 @@ function roomOn(storage, matchId, cards) {
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
   let receipts = [];
   const RECEIPTS = 256;
+  /* LEAVING (Rob, 2026-09-26). `leaving`: seats that have left and are yet to be conceded in the engine -- a seat
+     that leaves before the first turn has its opening hand kept for it by the house pilot, and concedes the
+     moment the game begins. `departures`: who left, and why ("conceded", or "timed-out" when a dropped player's
+     five minutes ran out, which their record shows as not finished). `ended`: someone ended the game for
+     everyone. */
+  let leaving = [], departures = {}, ended = null;
+  const finished = () => Boolean(ended) || Boolean(gameOver(state));
+  const pilotFor = (seat) => pilots[seat] || (pilots[seat] = housePilot({seat, cards: facts}));
 
   const write = (events) => {for (const e of events) journal.write(e.kind, e.data);};
   const seatIndex = (seatId) => seats.findIndex((s) => s.seatId === seatId);
@@ -115,11 +123,16 @@ function roomOn(storage, matchId, cards) {
   /* Run the game until a person has to decide, or it is over. AI seats are answered on the way. */
   function drive() {
     for (let steps = 0; steps < DRIVE_LIMIT; steps += 1) {
-      if (gameOver(state)) {pendingSeat = null; pendingActions = null; return;}
+      if (finished()) {pendingSeat = null; pendingActions = null; return;}
+      if (state.stepIndex !== undefined && leaving.length) {
+        for (const seat of leaving) if (!state.players[seat].lost) write(concede(state, seat));
+        leaving = [];
+        continue;
+      }
       if (state.awaiting) {
         const seat = state.awaiting.player, choice = awaitingChoice(state);
-        if (seats[seat].pilot === "house") {
-          const a = pilots[seat].answer(projectFor(state, seat), choice);
+        if (seats[seat].pilot === "house" || leaving.includes(seat)) {
+          const a = pilotFor(seat).answer(projectFor(state, seat), choice);
           write(resolveAwaiting(state, a.indices, a.amounts, rng, a));
           continue;
         }
@@ -133,6 +146,13 @@ function roomOn(storage, matchId, cards) {
       pendingSeat = seat; pendingActions = actions; return;
     }
     throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
+  }
+  /* The open question, withdrawn: the controller keeps its receipts and moves its revision on, so an answer
+     already in flight to the withdrawn question is refused as stale rather than applied to a changed board. */
+  function withdraw() {
+    const point = controller.checkpoint();
+    controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
+    pendingSeat = null; pendingActions = null;
   }
   function apply(seat, action) {
     if (action.kind === "pass") {
@@ -150,13 +170,13 @@ function roomOn(storage, matchId, cards) {
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended}));
   }
 
   const api = {
     matchId,
     get seats() {return seats.map(({seatId, name, pilot}) => ({seatId, name, pilot}));},
-    get status() {return gameOver(state) ? "finished" : "playing";},
+    get status() {return finished() ? "finished" : "playing";},
     get revision() {return controller.revision;},
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
 
@@ -185,7 +205,7 @@ function roomOn(storage, matchId, cards) {
       if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
       const point = await store.latestCheckpoint();
       if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
-      seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || [];
+      seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null;
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);
       journal = createJournal({matchId, seed: point.seed}, point);
@@ -200,17 +220,50 @@ function roomOn(storage, matchId, cards) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       const mine = pendingSeat === seat && controller.pending;
-      const over = gameOver(state);
+      const over = ended ? {winner: null, reason: "ended early"} : gameOver(state);
       return {
         schema: VIEW_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seatId, seat,
         revision: controller.revision,
         status: over ? "finished" : "playing",
-        result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason} : null,
+        result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason, ...(ended ? {endedBy: ended.by} : {})} : null,
+        departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
         decision: mine ? structuredClone(controller.pending) : null,
         state: projectFor(state, seat),
       };
+    },
+
+    /**
+     * A seat leaves the game in play: "conceded" when they choose to, "timed-out" when a dropped player's
+     * time ran out. Whatever was being asked is withdrawn and asked afresh, because the board it was asked
+     * about has changed; the engine concedes them (CR 104.3a) and play goes on without them.
+     */
+    async leave(seatId, why = "conceded") {
+      const seat = seatIndex(seatId);
+      if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
+      if (seats[seat].pilot === "house") throw new RoomError(409, "An AI seat does not leave a game.");
+      if (!["conceded", "timed-out"].includes(why)) throw new RoomError(400, "A seat leaves by conceding or by timing out.");
+      if (finished()) throw new RoomError(409, "This game is over.");
+      if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
+      withdraw();
+      departures[seatId] = why;
+      leaving = [...leaving, seat];
+      drive();
+      await persist();
+      return api;
+    },
+
+    /** Someone at the table ends the game for everyone. Nothing more is played, and the record says it ended early. */
+    async end(seatId) {
+      const seat = seatIndex(seatId);
+      if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
+      if (finished()) throw new RoomError(409, "This game is over.");
+      withdraw();
+      ended = {by: seatId};
+      pendingSeat = null; pendingActions = null;
+      await persist();
+      return api;
     },
 
     /**
@@ -220,7 +273,7 @@ function roomOn(storage, matchId, cards) {
     async act(seatId, request) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
-      if (gameOver(state)) throw new RoomError(409, "This game is over.");
+      if (finished()) throw new RoomError(409, "This game is over.");
       /* A retry of an accepted action is answered from its receipt, whoever is being asked now; the same id
          from another seat, or with other content, is refused. */
       const body = JSON.stringify(request ?? null), actionId = request && request.actionId;

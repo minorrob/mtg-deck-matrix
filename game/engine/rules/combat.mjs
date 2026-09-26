@@ -93,6 +93,8 @@ const defendersFor = (state, player) =>
 export const attackers = {
   /** Whether this step has anything to ask. Called by the turn structure as the step begins. */
   open(state) {
+    /* CR 800.4: an active player who has left the game declares nothing; the turn runs on without them. */
+    if (state.players[state.activePlayer]?.lost) return false;
     const candidates = state.zones.battlefield.filter((id) => canAttack(state, id, state.activePlayer));
     /* CR 508.1: the active player declares attackers whether or not they have any. With no legal
        attacker there is nothing to decide, so nothing is asked and the step simply proceeds. */

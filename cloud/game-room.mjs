@@ -67,9 +67,9 @@ export class GameRoom {
       if (request.method === "GET" && url.pathname === "/connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         room.view(seatId);  /* refuses a seat that is not at this table before a socket exists */
-        const pair = new WebSocketPair();
+        const pair = this.socketPair();
         this.accept(pair[1], seatId);
-        return new Response(null, {status: 101, webSocket: pair[0]});
+        return this.upgraded(pair[0]);
       }
       return reply(404, {error: "No such endpoint."});
     } catch (error) {
@@ -77,6 +77,10 @@ export class GameRoom {
       throw error;
     }
   }
+
+  /* The platform's two WebSocket pieces, named so a test in Node (which has neither) can stand in for them. */
+  socketPair() {return new WebSocketPair();}
+  upgraded(client) {return new Response(null, {status: 101, webSocket: client});}
 
   /** A seat's socket joins the room, tagged with its seat, and is sent that seat's view at once. */
   accept(socket, seatId) {
@@ -125,7 +129,13 @@ export class GameRoom {
  *   POST /table/invite {seatId} -> {code}            POST /table/uninvite {seatId}
  *   POST /table/join {code}                          POST /table/deck {seatId, deck}
  *   POST /table/ready {ready}                        POST /table/start    POST /table/cancel
+ *   POST /table/end      any person ends the game for everyone (the board asks a second tap first)
+ *   POST /table/concede  you leave the game in play
  *   GET  /connect (websocket), once the game is on: the seat this address holds
+ *
+ * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
+ * seat's last socket closes mid-game its clock starts and the others are told who they are waiting for and
+ * until when; a socket back in time stops it; the alarm concedes whoever ran out, recorded as not finished.
  */
 export class GameTable extends GameRoom {
   constructor(ctx, env, options = {}) {
@@ -153,15 +163,18 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
-      if (route === "POST /table/start") {const at = await t.start(email, now); await this.ctx.storage.setAlarm(at); return reply(200, {table: await t.view(email)});}
-      if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.ctx.storage.deleteAlarm(); return reply(200, {table: view});}
+      if (route === "POST /table/start") {await t.start(email, now); await this.schedule(); return reply(200, {table: await t.view(email)});}
+      if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
+      if (route === "POST /table/end") {const view = await t.endGame(email, now); await this.schedule(); await this.load(); this.broadcast(); return reply(200, {table: view});}
+      if (route === "POST /table/concede") {const view = await t.concede(email, now); await this.schedule(); await this.load(); this.broadcast(); return reply(200, {table: view});}
       if (route === "GET /connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         const {room, seatId} = await t.room(email);
         this.room = room;
-        const pair = new WebSocketPair();
+        const pair = this.socketPair();
         this.accept(pair[1], seatId);
-        return new Response(null, {status: 101, webSocket: pair[0]});
+        await this.returned(seatId);
+        return this.upgraded(pair[0]);
       }
       return reply(404, {error: "No such endpoint."});
     } catch (error) {
@@ -170,6 +183,39 @@ export class GameTable extends GameRoom {
     }
   }
 
-  /** The countdown's end. If a seat unreadied or the host canceled, the table is no longer counting and nothing starts. */
-  async alarm() {await this.table.tick(this.now());}
+  /** Set the one alarm to whichever clock runs out first, or clear it. */
+  async schedule() {
+    const next = await this.table.nextAlarm();
+    if (next === null) await this.ctx.storage.deleteAlarm(); else await this.ctx.storage.setAlarm(next);
+  }
+
+  /** The countdown's end, or a dropped player's time running out. Whatever has not run out waits for the next alarm. */
+  async alarm() {
+    await this.table.tick(this.now());
+    await this.schedule();
+    if (await this.load()) this.broadcast();
+  }
+
+  /** A seat's socket opened: if they had dropped, their clock stops and everyone's view is fresh. */
+  async returned(seatId) {
+    await this.table.back(Number(seatId.slice(1)), this.now());
+    await this.schedule();
+    this.broadcast();
+  }
+
+  /** A socket closed. If it was that seat's last, their clock starts, and the others are told until when. */
+  async webSocketClose(socket, code) {
+    try {socket.close(code, "closing");} catch {}
+    const [seatId] = this.ctx.getTags(socket);
+    const open = this.ctx.getWebSockets().filter((s) => s !== socket && this.ctx.getTags(s)[0] === seatId);
+    if (open.length) return;
+    const seat = Number(seatId.slice(1)), now = this.now();
+    await this.table.dropped(seat, now);
+    await this.schedule();
+    const away = (await this.table.view(null, {any: true})).away.find((a) => a.seatId === seat);
+    for (const other of this.ctx.getWebSockets()) {
+      if (other === socket) continue;
+      try {other.send(JSON.stringify({type: "away", seatId, until: away ? away.until : null}));} catch {}
+    }
+  }
 }
