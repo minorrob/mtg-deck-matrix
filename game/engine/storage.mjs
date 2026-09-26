@@ -133,6 +133,20 @@ export function createMatchStore(storage, matchId) {
       return verified(await read(`${root}/checkpoint/${pad(latest.sequence)}`), `checkpoint ${latest.sequence} of ${matchId}`);
     },
 
+    /** Keep only the latest checkpoint. A room checkpoints at every person's decision, and the journal is
+        the history; older checkpoints are dead weight in a Durable Object's storage. */
+    async pruneCheckpoints() {
+      const latest = await read(`${root}/checkpoint/latest`);
+      if (!latest) return 0;
+      const keep = `${root}/checkpoint/${pad(latest.sequence)}`;
+      let removed = 0;
+      for (const key of await storage.list(`${root}/checkpoint/`)) {
+        if (key === keep || key === `${root}/checkpoint/latest`) continue;
+        if (await storage.delete(key)) removed += 1;
+      }
+      return removed;
+    },
+
     /** The card index a match plays with, by the data version it pinned (plan-data-sync §0). */
     async saveCardIndex(version, index) {
       checkKey(String(version));
