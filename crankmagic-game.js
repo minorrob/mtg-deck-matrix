@@ -2376,6 +2376,9 @@ async function lobbyApi(path, {method = 'GET', token, body} = {}) {
 
 
 
+  /* The seat's picture, shared with the cloud table's lobby (crankmagic-table.js), so both tables draw a seat
+     the same way: the quadrant with its sea and fan, the status pill, the commander's card and its detail. */
+  C.seatArt = {quadrant, statusPill, seatFigure, startSeas};
   C.HELP = C.HELP || {};
   /* The "?" reads {title, body}; a bare string here printed "undefined" over the dialog (D2). */
   C.HELP.game = {title: "Play a game", body: `<h3>Games run on your own computer</h3>

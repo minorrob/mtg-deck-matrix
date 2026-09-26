@@ -157,7 +157,8 @@ export class GameTable extends GameRoom {
       if (!email) return reply(401, {error: "Sign in to use a table."});
       const route = `${request.method} ${url.pathname}`;
       if (route === "POST /table/create") {const b = await body(); return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats})});}
-      if (route === "GET /table") return reply(200, {table: await t.view(email)});
+      /* With the table, the object's own time: a countdown is read against the clock that set it, not the device's. */
+      if (route === "GET /table") return reply(200, {table: await t.view(email), now});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
