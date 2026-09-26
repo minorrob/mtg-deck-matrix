@@ -66,7 +66,7 @@ try {
     ok(await page.$eval("#cm-landing-query", (i) => i === document.activeElement), "Start without an account puts the cursor in Step one's box");
     await page.locator("#cm-landing-query").fill("Krenko, Mob Boss");
     await page.locator("#cm-landing-start [type=submit]").click();
-    eq(await dialogTitle(page), "Choose your commander", "a name and Start my deck open the commander picker");
+    eq(await dialogTitle(page), "Build a deck · Commander", "a name and Start my deck open Build a deck at its commander step");
     eq(await page.inputValue("#cm-dialog #cm-card-query"), "Krenko, Mob Boss", "with the name already in its search");
     await page.locator("#cm-dialog [data-pick-card]").first().waitFor({timeout: 30000});
     ok(/Krenko, Mob Boss/.test(await page.locator("#cm-dialog #cm-card-results").innerText()), "and already searched");
@@ -99,7 +99,7 @@ try {
     eq(await page.$$eval(".cm-decks-empty .cm-actions [data-action]", (bs) => bs.map((b) => [b.textContent.trim(), b.dataset.action])),
       [["Start from a commander", "wizard-create"], ["Bring a list", "wizard-import"], ["Restore backup…", "restore"]], "and offers a commander, a list or a backup you saved, in that order");
     await page.locator(".cm-decks-empty [data-action=wizard-create]").click();
-    eq(await dialogTitle(page), "Choose your commander", "Start from a commander opens the commander picker");
+    eq(await dialogTitle(page), "Build a deck · Commander", "Start from a commander opens Build a deck at its commander step");
     await closeDialog(page);
     ok(!/Build it\.|Make it yours/.test(await page.locator("#cm-main").innerText()), "and the slogan is the landing page's alone");
 
