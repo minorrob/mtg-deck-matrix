@@ -119,9 +119,10 @@ const last = calls().at(-2);
 eq(last, {email: "rob@example.com", feature: "explain", model: DEFAULT_MODEL, input_tokens: 900, output_tokens: 300, cost_micros: 900 * 5 + 300 * 25, outcome: "ok"}, "every call is logged: who, what for, the model, the tokens and the cost at list price ($5 and $25 a million)");
 eq(costMicros("claude-sonnet-5", 900, 300), 900 * 2 + 300 * 10, "Claude Sonnet 5 at $2 and $10 a million");
 ok(costMicros("some-new-model", 900, 300) >= costMicros(DEFAULT_MODEL, 900, 300), "a model not in the price list is priced at the dearest rate, so the meter can only read high");
-answer = reply("[[Mountain]] is there.", {model: "claude-opus-4-8", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "fallback_message", model: "claude-opus-4-8", input_tokens: 1000, output_tokens: 100}]}});
+/* A fallback to a model at another price, so an attempt priced at the wrong model's rate shows. */
+answer = reply("[[Mountain]] is there.", {model: "claude-sonnet-5", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "fallback_message", model: "claude-sonnet-5", input_tokens: 1000, output_tokens: 100}]}});
 r = await call();
-eq([r.json.model, calls().at(-1).cost_micros], ["claude-opus-4-8", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-opus-4-8", 1000, 100)], "after a fallback, the answering model is named and each attempt is priced at its own model's rate");
+eq([r.json.model, calls().at(-1).cost_micros], ["claude-sonnet-5", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-sonnet-5", 1000, 100)], "after a fallback, the answering model is named and each attempt is priced at its own model's rate");
 ok(r.json.meter.capCents === 25 && r.json.meter.spentCents > 0, `the answer carries the meter: ${r.json.meter.spentCents}¢ of ${r.json.meter.capCents}¢`);
 answer = reply("", {stop: "refusal"});
 eq((await call()).status, 422, "a refusal that survives the fallback is said plainly");
@@ -129,9 +130,12 @@ eq(calls().at(-1).outcome, "refused", "and logged");
 answer = {status: 529, json: {type: "error", error: {type: "overloaded_error", message: "internal account detail"}}};
 r = await call();
 eq([r.status, /busy/.test(r.json.error), r.text.includes("internal account detail")], [502, true, false], "the provider busy: said plainly, and its own error text is not passed on");
+answer = {status: 500, json: {type: "error", error: {type: "api_error", message: "internal account detail"}}};
+r = await call();
+eq([r.status, /had a problem/.test(r.json.error), r.text.includes("internal account detail")], [502, true, false], "the provider failing: said plainly, and its own error text is not passed on");
 answer = "hang";
 eq((await call()).status, 504, "the provider not answering in time: 504, nothing spent");
-eq(calls().slice(-2).map((c) => [c.outcome, c.cost_micros]), [["error", 0], ["error", 0]], "both logged as errors at no cost");
+eq(calls().slice(-3).map((c) => [c.outcome, c.cost_micros]), [["error", 0], ["error", 0], ["error", 0]], "all three logged as errors at no cost");
 
 /* The caps, read from the log over a rolling 24 hours, before anything is sent. */
 const before = sent.length;
