@@ -3064,3 +3064,25 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
   #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])>[data-action=add-card]{order:-1}
   #cm-main:has(.cm-page-head [data-action=roster-more]){padding-bottom:96px}
 }
+
+/* THE CLOUD TABLE'S LOBBY (M5; crankmagic-table.js). The quadrants, the fan, the pill and the center card are
+   the local table's own; these are only what the cloud lobby adds: a new table's form, the invite dialog with
+   its QR beside the link, the deck list, the countdown's number, and the panel over a game in play. */
+.cm-table-new form{display:grid;gap:12px;max-width:560px}
+.cm-table-new label{display:grid;gap:4px}
+.cm-table-new-seat{display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+@media(max-width:560px){.cm-table-new-seat{grid-template-columns:minmax(0,1fr)}}
+.cm-table-invite{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:start}
+.cm-table-invite label{display:grid;gap:4px}
+.cm-table-invite input{width:100%;box-sizing:border-box}
+.cm-table-invite .cm-qr-code svg{display:block;width:100%;height:auto;border-radius:var(--v-radius);background:#fff}
+@media(max-width:560px){.cm-table-invite{grid-template-columns:minmax(0,1fr)}.cm-table-invite .cm-qr-code{max-width:180px}}
+.cm-table-decks{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px;max-height:min(60vh,520px);overflow:auto}
+.cm-table-deck{appearance:none;width:100%;text-align:left;display:grid;gap:2px;padding:10px 12px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);cursor:pointer;font:inherit}
+.cm-table-deck:hover,.cm-table-deck:focus-visible{border-color:var(--v-accent)}
+.cm-table-count{flex:1 1 auto;margin:0;color:var(--table-ink);font-size:13px}
+.cm-table-count strong{font-size:28px;font-variant-numeric:tabular-nums;margin-left:6px}
+.cm-table-game{margin:0 0 14px}
+/* On a phone the seats stack, and a seat's content is laid over its sea, so a stacked seat has no height of
+   its own: it takes one here, enough for the label bar, the commander's card and its controls. */
+@media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}.cm-cloud-table .cm-table-center{max-height:none}}
