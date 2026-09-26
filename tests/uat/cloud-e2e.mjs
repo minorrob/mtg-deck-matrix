@@ -93,6 +93,9 @@ async function newDeck(page, name) {
   if (await onward.isVisible().catch(() => false)) await onward.click();
   await page.getByLabel("Card name or a Scryfall link").fill("Krenko, Mob Boss");
   await page.locator("[data-pick-card]").filter({has: page.getByText("Krenko, Mob Boss", {exact: true})}).click();
+  /* Build a deck (R3.11): Strategy, Budget, then Review names it. */
+  await page.getByRole("button", {name: "Next: Budget", exact: true}).click();
+  await page.getByRole("button", {name: "Next: Review", exact: true}).click();
   await page.locator("#cm-dialog [name=name]").fill(name);
   await page.getByRole("button", {name: "Create draft", exact: true}).click();
   await page.getByRole("dialog").waitFor({state: "hidden"});

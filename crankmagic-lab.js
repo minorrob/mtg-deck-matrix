@@ -29,6 +29,17 @@ let preview=null;          // the drafted list that is not yet a deck
 let shownLimit=45;         // how many picker rows are drawn before "Show more"
 let pickerColors=[];       // the picker's color-identity filter
 let runner=null;
+let autoDraft=false;       // set by C.labStart: the Build wizard's Review hands over and the Lab drafts at once
+/* THE BUILD WIZARD'S WAY IN (R3.11): Commander → Strategy → Budget → Review ends here. The Lab takes the commander, the
+   strategies ticked, the price cap and what to include or avoid, as if they had been entered on this page, and drafts
+   the 99 as a preview -- nothing is saved to Decks until Save this deck, as ever. */
+C.labStart=({commander,strategies=[],budget=null,restrictions=''}={})=>{
+  if(!commander)throw Error('Choose a commander first.');
+  leader=commander;partner=null;mode='commander';deckId='';groupId='';draftName='';
+  definition=M.defaultDefinition({...definition,budget:Number.isFinite(budget)&&budget>0?budget:null,strategies:[...strategies],restrictions:String(restrictions||'').slice(0,1000)});
+  preview=null;autoDraft=true;
+  if(C.route().view==='lab')C.render();else C.go('lab');
+};
 const choices=CrankCatalog.MECHANICS.map(([label])=>label);
 const STEPS=['User Input Captured','Initial 99 Cards Chosen','Measure & 99 Refined','Measure loops complete','Measurement Report','Completed Deck'];
 const COLORS=[['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green']];
@@ -275,6 +286,7 @@ views.lab=async()=>{
          same thing on both roads: the draft may only use copies you actually have. -->
     <label class="cm-checkbox cm-start-owned"><input name="ownedOnly" type="checkbox" ${pool==='owned'?'checked':''}>Use only cards I own</label>
     <label class="cm-checkbox cm-start-seed" title="The 99 is seeded by a trace from the commander over the legal catalog inside the definition: the cards its strategies reach first, then the roles to their targets."><input name="traceSeed" type="checkbox" ${seedFromTrace?'checked':''}>Seed the draft from the trace</label>
+    ${definition.strategies?.length&&globalThis.CrankStrategies?`<p class="cm-lab-strategies cm-full" id="cm-lab-strategies"><strong>Strategies</strong> ${definition.strategies.map(id=>`<span class="cm-chip">${e(CrankStrategies.labelOf(id))}</span>`).join(' ')} <span class="cm-muted">chosen in Build a deck; the draft seeds from them</span></p>`:''}
     <p class="cm-error cm-full" id="cm-lab-error" hidden role="alert"></p></div>
     <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString('en-US')}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'',`${mode==='commander'?'required ':''}autocomplete="off" placeholder="Name, printed variant name, or a Scryfall link"`)}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
@@ -521,7 +533,7 @@ views.lab=async()=>{
   /* Read the whole form once, into the module state the next render rebuilds it from. */
   function readForm(){
     const v=Object.fromEntries(new FormData(lab));
-    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
+    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade},/* no control on this page sets them: the Build wizard's, kept */...(Array.isArray(definition.strategies)&&definition.strategies.length?{strategies:[...definition.strategies]}:{})});
     /* The existing-deck select keeps its value when the reader switches back to the commander road; it only means something on the list road. */
     deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';seedFromTrace=!!v.traceSeed;includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
@@ -965,6 +977,8 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       C.notice(score+' The draft it measured was discarded before it finished, so the report was not kept.',true);
     }catch(err){const el=$('#cm-lab-sim-status');if(el)el.textContent=err.message;throw err;}
   };
+  /* Arriving from the Build wizard (C.labStart): draft at once, with what it chose. */
+  if(autoDraft){autoDraft=false;queueMicrotask(()=>runDraft().catch(err=>C.notice(err.message,true)));}
 };
 
 /* THE RUN PANE. Its state is read, not set: a step lights up because a preview, a report or
