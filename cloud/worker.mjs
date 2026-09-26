@@ -14,6 +14,8 @@
  *   GET  /api/library/versions/:id one version with its body
  *   GET  /api/import/archidekt?id=N a public Archidekt deck, trimmed to what the importer reads; no sign-in, nothing
  *                                  stored (import.mjs, R3.10a)
+ *   /api/tables/*                  Play's front door: a table's lobby and its game, each table a Durable Object
+ *                                  (tables.mjs, game-room.mjs) -- shut until Play's release binds TABLES
  *   POST /api/ai/explain           a measured score read out loud by the AI, behind its own Access application, an
  *                                  allowlist, the key and the spend caps -- shut until Rob opens each (ai.mjs, M6)
  */
@@ -21,6 +23,7 @@ import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, settings, explain, Closed} from "./ai.mjs";
+import {tables} from "./tables.mjs";
 
 const HEADERS = {
   "content-type": "application/json; charset=utf-8",
@@ -85,6 +88,15 @@ export async function handle(request, env, deps = {}) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  /* PLAY (M5; cloud/tables.mjs): shut until Play's release binds TABLES. Its writes carry their own header, and
+     its WebSocket must come from this site: a socket carries the Access cookie like any request, and a page
+     elsewhere could otherwise open one to someone's seat. */
+  if (path === "/api/tables" || path.startsWith("/api/tables/")) {
+    const origin = request.headers.get("origin");
+    if (method !== "GET" && !fromTheApp(request, url, "play")) return reply(403, {error: "That request did not come from CrankMagic."});
+    if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
+    return tables(request, env, who);
+  }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});

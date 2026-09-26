@@ -103,6 +103,9 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       if(blockers.length)throw Error('Every seat must be ready');
       t.phase='countdown';t.countdownAt=now+10000;break;
     }
+    /* The host's Cancel under the countdown (the approved journeys, 2026-09-26: "The host can cancel").
+       Only a running countdown can be canceled; nobody's readiness changes. */
+    case 'cancel-countdown':if(t.phase!=='countdown')throw Error('No countdown is running');cancel();break;
     case 'tick':
       if(t.phase!=='countdown'||now<t.countdownAt)throw Error('Countdown has not completed');
       if(!launchId)throw Error('Launch identity required');t.phase='starting';t.launchId=launchId;t.generation++;t.countdownAt=null;t.launchError=null;break;
