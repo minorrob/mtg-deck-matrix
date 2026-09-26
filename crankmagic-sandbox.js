@@ -55,7 +55,8 @@
 
   /* The one place a move's destination is spelled, so the pile, the badge and the receipt
      cannot disagree about what a drop meant. */
-  const SOURCE_STATUS = { owned: "Bench", ordered: "Ordered", watching: "Watched" };
+  /* The card state a source change lands a copy in (docs/card-states.md). */
+  const SOURCE_STATUS = { owned: "Bench", ordered: "Ordered", watching: "Watching" };
 
   function memoryStore() {
     const map = new Map();

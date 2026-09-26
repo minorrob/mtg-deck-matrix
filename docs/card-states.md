@@ -108,8 +108,14 @@ Explore's Add dialog can also put a card straight on the **Bench**.
      - Explore's Add dialog offers **Watching** (a watched copy) and **To buy** (the To Buy list) as two
        choices, where it had one "Wanted".
      - A watched copy is Watching, so it leaves the To buy tab.
-   - **2c, the Table view, Ready to add and the exports.** The Table view's piles, which still group by
-     the old labels, and the Excel and CSV status columns.
+   - **2c, the Table view, Ready to add and the exports.**
+     - The Table view's status piles are the card states: Target, *To add*, Substitute, Upgrade, Ordered,
+       To buy, Watching. The Bench keeps its own place on the back row. Each pile takes the drops its old
+       label took; the To buy pile releases a reserved copy or files a watched copy or planned entry on
+       the To Buy list. The Table's own Status dropdown offers the same words, and staged moves name them.
+     - Ready to add names a waiting copy *To add*, with where to find it ("To add · Bench").
+     - The Excel export's Library, Allocations and Acquisition queue sheets gain a **State** column beside
+       Placement, which stays for the sheets and scripts that read it.
 3. **Storage and migration.**
    - A copy's stage gains *To buy*, so a card no deck needs can be To buy: R3.7b, absorbed here.
    - The To Buy list moves to To buy, de-duplicated against the decks' own needs.

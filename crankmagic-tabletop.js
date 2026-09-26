@@ -36,11 +36,13 @@
      row the library has never seen: no copy, no lot, no deck asking for it. It is a ghost like
      every other not-held row, and it says where it came from rather than pretending to a status. */
   const SENT = "Sent from Discover";
-  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", SENT]);
+  /* The card states' words (docs/card-states.md) join the old labels, which the table still reads when a caller
+     passes them: Watching and To buy are not held, and "To add" is an owned target waiting outside its box. */
+  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", "Watching", SENT]);
   /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
      (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
      card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
-  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy"]);
+  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy", "Target", "To add", "Watching"]);
   /* The Card type piles are the eight primary types, a reader's order: an Artifact Creature
      is on the Creature pile, a Legendary Land on the Land pile. The list groups by the whole
      type line (thirty bands on the live library); a table has room for eight piles. */
@@ -223,7 +225,7 @@
        grid is a courtesy, and a card with no picture shows its name in the frame instead. */
     const src = c.image ? (big ? String(c.image) : String(c.image).replace("cards.scryfall.io/normal/", "cards.scryfall.io/small/")) : "";
     const art = src ? `--art:url('${esc(src)}');` : "";
-    const tag = ghost ? ` data-ghost="${esc(GHOST_TAG[row && row.status] || (row && row.status) || "Not held")}"` : "";
+    const tag = ghost ? ` data-ghost="${esc(GHOST_TAG[row && row.status] || (row && row.kind === "draft" ? "Draft" : row && row.kind === "option" ? "Suggested" : "") || (row && row.status) || "Not held")}"` : "";
     return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${src ? "" : " no-art"}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${tag}${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${esc(c.name || "")}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${esc(c.name || "")}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span></div>`;
   };
   /* `count === null` prints the name alone: the New group tile is a door, not a pile, and
@@ -381,18 +383,21 @@
     if (pile.kind === "status") {
       if (cats.length) return no(NOT_HELD);
       switch (pile.label) {
+        case "Target":
         case "Physical deck":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy goes into a physical deck; drop it on the Bench first to record it as owned.");
           return yes("place", "Put in a physical deck", "Asks which deck; a copy the list does not call for is refused unless substitutes are allowed.");
         case "Substitute":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy can stand in for another card.");
           return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Ready to add asks for it back when the real card is ready.");
+        case "To add":
         case "Reserved":
           if (others || plans.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
           return yes("reserve", "Reserve for a deck", "Asks which deck; only a deck whose list calls for the card and still lacks it.");
         case "Ordered":
           if (others) return no(NOT_COPY);
           return yes("source:ordered", "Mark as Ordered", lots.some((r) => r.source === "owned" && (r.allocation || inBox(r))) ? "An owned copy in a box or reserved loses that; asks first." : "A To buy requirement or a draft-list row becomes an ordered copy filed with its deck.");
+        case "Watching":
         case "Watched":
           if (others) return no(NOT_COPY);
           if (plans.some((r) => r.kind === "need")) return no("A To buy requirement cannot be Watched; it is what a deck asks for.");
@@ -404,8 +409,13 @@
           if (plans.some((r) => r.kind === "need")) return no("A To buy requirement is what a deck asks for; Wanted is what you want.");
           return yes("wanted:plan", "Add to your want list", "Files the planned entry or watched copy into the To Buy group — the want list.");
         case "To buy":
-          if (others || plans.length || !lots.length || lots.some((r) => !r.allocation)) return no("To buy is what a deck asks for; only a reserved copy can be released to send its requirement back.");
-          return yes("release", "Release the reservation → To buy", "The copy stays owned in the same place; the deck's requirement returns to To buy.");
+          /* The card states' To buy holds a deck's need and the To Buy list alike (docs/card-states.md). A reserved
+             copy dropped here is released, so its deck's need comes back; anything else not owned joins the list. */
+          if (lots.length && !others && !plans.length && !cats.length && lots.every((r) => r.allocation)) return yes("release", "Release the reservation → To buy", "The copy stays owned in the same place; the deck's requirement returns to To buy.");
+          if (pile.label === "To buy" && !others && !owned.length && !plans.some((r) => r.kind === "need")) {
+            if (plans.length || lots.length) return yes("wanted:plan", "Add to the To Buy list", "Files the planned entry or watched copy into the To Buy list, on the To buy tab.");
+          }
+          return no("To buy takes a reserved copy to release, or a card you do not own for the To Buy list.");
         default:
           return no(`${pile.label} is a reading of a deck's plan, not a place a card can be put.`);
       }

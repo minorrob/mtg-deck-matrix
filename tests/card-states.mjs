@@ -96,4 +96,28 @@ for (const r of records) {
 }
 checks++;
 eq(Object.keys(differ).sort(), ["Wanted"].concat(differ["Watched (owned, shortlisted)"] ? ["Watched (owned, shortlisted)"] : []).sort(), `old and new agree on every record except Rob's decisions: ${JSON.stringify(differ)}`);
+/* 5. The workbook export's State column (step 2c): the same words, counted the same, on the Library sheet. */
+{
+  const E = require("../collection-exchange.js"), book = E.workbook(live), lib = book.sheets.find((x) => x.name === "Library");
+  ok(lib.columns.some((c) => c.key === "state" && c.label === "State"), "the Library sheet has a State column");
+  const q = (f) => lib.rows.filter(f).reduce((n, r) => n + r.quantity, 0);
+  eq([q((r) => r.state === "Target"), q((r) => r.state === "Target · to add"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Ordered")], [577, 5, 123, 695, 6], "and it counts 577 Target, 5 to add, 123 Substitute, 695 Bench, 6 Ordered, as the Library does");
+  ok(["Allocations", "Acquisition queue"].every((n) => book.sheets.find((x) => x.name === n).columns.some((c) => c.key === "state")), "Allocations and the Acquisition queue carry it too");
+}
+/* 6. The Table view's card-state piles take the drops their old labels took (step 2c). */
+{
+  const T = require("../crankmagic-tabletop.js"), pile = (label) => ({kind: "status", label});
+  const benchCopy = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: null, quantity: 1};
+  const reserved = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: {deckId: "d1", slotId: "s"}, quantity: 1};
+  const watched = {kind: "lot", source: "watching", location: null, allocation: null, quantity: 1};
+  const sent = {kind: "catalog", quantity: 1};
+  eq(T.accepts(pile("Target"), [benchCopy]).action, "place", "a Bench copy dropped on Target goes into a deck's box, as on Physical deck");
+  eq(T.accepts(pile("To add"), [benchCopy]).action, "reserve", "dropped on To add it is reserved for a deck, as on Reserved");
+  eq(T.accepts(pile("Watching"), [benchCopy]).action, "source:watching", "dropped on Watching it becomes a watched card, as on Watched");
+  eq(T.accepts(pile("To buy"), [reserved]).action, "release", "a reserved copy dropped on To buy is released, so its deck's need comes back");
+  eq(T.accepts(pile("To buy"), [sent]).ok, false, "a card sent from Explore is refused, as on every status pile: it is not a copy you hold (file it in a group first)");
+  eq(T.accepts(pile("To buy"), [watched]).action, "wanted:plan", "and so does a watched copy");
+  eq(T.accepts(pile("To buy"), [benchCopy]).ok, false, "but an unreserved owned copy is refused: it is not to buy");
+  eq(T.accepts(pile("Upgrade"), [benchCopy]).ok, false, "Upgrade is a reading of a deck's plan, not a place a card is put");
+}
 console.log(`card-states: ${checks} checks passed — one taxonomy (stage, deck and role, in the box, for trade), every old status mapped, Rob's library counted.`);
