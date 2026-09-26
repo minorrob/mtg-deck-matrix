@@ -159,6 +159,14 @@ try {
   const retry = await r2.act(asked, good);
   eq([retry.changed, retry.receipt, hashState(await raw2()), r2.revision], [false, accepted.receipt, after, revision], "a retry returns the same receipt and applies nothing");
   await refuse(notAsked, good, 409, /reused/, "the same action id from another seat is refused");
+  /* The retry arrives late: the room was evicted and woken, and someone else is being asked by now. */
+  let r2b = r2;
+  const next = person("late");
+  for (let i = 0; i < 400 && r2b.waitingOn === asked; i += 1) {const v = r2b.view(asked); await r2b.act(asked, {actionId: randomUUID(), revision: v.revision, ...next(v.decision)});}
+  ok(r2b.waitingOn && r2b.waitingOn !== asked, "play moves on until another seat is asked");
+  r2b = await openRoom({storage: s2, matchId: "m2", cards});
+  const late = await r2b.act(asked, good);
+  eq([late.changed, late.receipt], [false, accepted.receipt], "a retry that arrives after the room was woken, while another seat is asked, still gets its receipt and applies nothing");
   await refuse(asked, {...good, indices: [0, 1]}, 409, /reused/, "and from the same seat with other content");
 
   /* 3. Stored: same seed, same answers, same game; reopened at every tenth decision, still the same game. */
