@@ -288,10 +288,11 @@
   /* ------------------------------------------------------------------ TB2: lay out, page, select */
   /* Each a third larger than the first cut (Rob, 24 September: "about 30% larger ... same for
      medium, same for small"). The piles on the mat keep their own 64px; these are an open pile's. */
-  const SIZES = {S: {w: 83, h: 117, gap: 10, cap: 14}, M: {w: 125, h: 174, gap: 12, cap: 18}, L: {w: 182, h: 255, gap: 14, cap: 20}};
+  /* R3.9: every card is 5:7 by its width, so h is w × 7 / 5, rounded (the CSS draws the same, plus the caption). */
+  const SIZES = {S: {w: 83, h: 116, gap: 10, cap: 14}, M: {w: 125, h: 175, gap: 12, cap: 18}, L: {w: 182, h: 255, gap: 14, cap: 20}};
   /* The one card on the stage: the picture at the size the reader chose, up to Scryfall's
-     normal print (488 × 680), narrowed to the mat where the mat is narrower. */
-  const STAGE = {L: {w: 140, h: 196}, XL: {w: 244, h: 341}, XXL: {w: 366, h: 512}, full: {w: 488, h: 680}};
+     normal print's width (488), 5:7 like every card (R3.9), narrowed to the mat where the mat is narrower. */
+  const STAGE = {L: {w: 140, h: 196}, XL: {w: 244, h: 342}, XXL: {w: 366, h: 512}, full: {w: 488, h: 683}};
   const stageOf = (s) => (STAGE[s] ? s : "XL");
   const sizeOf = (s) => (SIZES[s] ? s : "M");
   const mvOf = (r) => { const v = r && r.card ? r.card.manaValue : null; const n = v === null || v === undefined || v === "" ? NaN : Number(v); return Number.isFinite(n) ? n : 99; };
@@ -837,7 +838,7 @@
            chose, its facts beside it from the same record the inspector reads, and Previous /
            Next through the pile it came from — pick a deck, pick a card, read it, file it, next. */
         const r = selected[0], say = hooks.describe || ((x) => ({status: x.status || "", price: x.card && x.card.price != null ? "$" + Number(x.card.price).toFixed(2) : "", deck: ""})), d = say(r) || {};
-        const Z = STAGE[stageOf(ui.stageSize)], w = Math.min(Z.w, width - 32), h = Math.round(w * 680 / 488);
+        const Z = STAGE[stageOf(ui.stageSize)], w = Math.min(Z.w, width - 32), h = Math.round(w * 7 / 5);
         const side = width - w - 48 >= 300, panelW = side ? width - w - 48 : width - 32, panelH = side ? h : 380;  /* under the picture on a phone: tall enough for the facts and the two buttons */
         const from = homeId ? findPile(model, homeId) : null, order = from ? pileOrder(from) : [], at = order.findIndex((x) => x.recordId === r.recordId);
         const prev = at > 0 ? order[at - 1] : null, next = at >= 0 && at < order.length - 1 ? order[at + 1] : null;
