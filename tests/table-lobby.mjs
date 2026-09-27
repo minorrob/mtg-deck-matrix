@@ -167,6 +167,8 @@ try {
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
   await rob.page.locator("#cm-mat-preview").waitFor();
   eq(await rob.page.locator(".cm-mat-pick").allInnerTexts(), ["Felt", "Forge", "Cavern", "Sea", "Night"], "Choose mat offers the app's own mats");
+  const swatch = await rob.page.evaluate(() => {const r = document.querySelector(".cm-mat-pick .cm-mat-swatch").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)];});
+  ok(swatch[0] >= 140 && Math.abs(swatch[0] / swatch[1] - 16 / 9) < 0.05, `each mat shows as a 16:9 swatch you can see (${swatch.join("×")})`);
   await rob.page.click(".cm-mat-pick[data-mat=forge]");
   eq([await rob.page.getAttribute("#cm-mat-preview", "data-mat"), await rob.page.getAttribute(".cm-mat-pick[data-mat=forge]", "aria-pressed")], ["forge", "true"], "picking one previews the zones over it");
   await shot(rob.page, "choose-mat-1400");

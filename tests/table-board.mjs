@@ -166,6 +166,11 @@ try {
   await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-board-mat")).backgroundImage);
   ok(own[0] === "felt" && own[1] !== robs, "her own board is on felt, and looks it");
+  await serial(() => call("/table/mat", MAYA, {mat: "night"}));
+  await rob.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
+  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat")?.dataset.mat === "night", null, {timeout: 10000});
+  ok(true, "a mat changed mid-game reaches the other board");
+  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   ok(!(await maya.page.content()).includes("Rob Secret"), "and her page holds none of his cards by name");
   await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
 
