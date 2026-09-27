@@ -198,6 +198,7 @@ try {
   const rows = await active.page.locator("#cm-board-history .cm-history-list li").allInnerTexts();
   ok(rows.some((r) => /^Turn 1 · /.test(r)) && rows.some((r) => new RegExp(`${who} drew 7 cards`).test(r)), `History ▾ holds the turns and the opening draws, uncounted cards unnamed (${rows.length} lines)`);
   ok(rows.findIndex((r) => r.includes(`played ${land}`)) < rows.findIndex((r) => /drew 7 cards/.test(r)), "newest first");
+  ok(/Start$/.test(rows.find((r) => /drew 7 cards/.test(r)).trim()), "what happened before turn 1 is marked Start");
   await active.page.fill("#cm-board-history .cm-history-filter", land);
   const shown = await active.page.locator("#cm-board-history .cm-history-list li:not([hidden])").allInnerTexts();
   ok(shown.length >= 1 && shown.every((r) => r.includes(land)), `the filter keeps only the lines that match (${shown.length})`);
