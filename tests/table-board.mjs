@@ -13,6 +13,8 @@
  *             window; a picked card large at the side); ⎋ leaves; the view is remembered on the device.
  *   Hand      the card-size slider and Ctrl −; a card shown large under the pointer, and in Card zoom on a right
  *             click; Show hand: Space fans it, a number holds a card up, Escape puts it back, Enter plays it.
+ *   Coach     the chat panel over the right edge (the shell): prompts, a stub reply that says so, Shift+Enter,
+ *             a draft kept through a view, Clear chat, Escape; from the pane, Tools and Full screen's rail.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
@@ -401,6 +403,53 @@ try {
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }
+
+  /* THE COACH: a chat panel over the right edge; the shell, with a stub reply that says so. */
+  const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
+  const matBefore = await matWidth();
+  await rob.page.click(".cm-board-coach-open");
+  await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.right), innerWidth];});
+  ok(coachBox[0] === 400 && coachBox[1] === coachBox[2] && await matWidth() === matBefore, `the Coach slides over the right edge, 400px, and the mat keeps its width (${matBefore}px)`);
+  ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
+  await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
+  ok(await rob.page.locator(".cm-coach-msg.is-typing").count() === 1, "a suggested prompt is asked, and the Coach shows it is typing");
+  await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
+  const thread = await rob.page.locator(".cm-coach-thread li").allInnerTexts();
+  ok(/^Turn \d+ · /.test(thread[0].trim()) && thread[1].trim() === "What's my best play?" && /not switched on yet/.test(thread[2]), `the thread: a turn divider, the question, and the stub's honest reply (${thread[0].trim()})`);
+  await rob.page.fill(".cm-coach-input", "Who's the threat?");
+  await rob.page.press(".cm-coach-input", "Shift+Enter");
+  await rob.page.type(".cm-coach-input", "and why");
+  ok((await rob.page.inputValue(".cm-coach-input")).includes("\n"), "Shift+Enter is a new line");
+  await rob.page.press(".cm-coach-input", "Enter");
+  await rob.page.locator(".cm-coach-msg.is-you").nth(1).waitFor();
+  eq((await rob.page.locator(".cm-coach-msg.is-you").nth(1).innerText()).trim(), "Who's the threat?\nand why", "Enter sends it");
+  await rob.page.fill(".cm-coach-input", "a draft");
+  await rob.page.focus(".cm-coach-input");
+  const viewsBefore = views(ROB).length;
+  await serial(async () => object.broadcast());
+  await rob.page.waitForTimeout(500);
+  ok(views(ROB).length > viewsBefore && await rob.page.inputValue(".cm-coach-input") === "a draft" && await rob.page.evaluate(() => document.activeElement.matches(".cm-coach-input")), "a view arriving mid-sentence leaves the draft, and the focus, where they were");
+  await shot(rob.page, "coach-1400");
+  await rob.page.click(".cm-coach-more summary");
+  await rob.page.click("[data-action=board-coach-clear]");
+  ok(await rob.page.locator(".cm-coach-msg").count() === 0, "⋯ › Clear chat empties the thread");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator("#cm-board-coach[hidden]").waitFor({state: "attached"});
+  ok(true, "Escape closes the Coach");
+  await rob.page.click("[data-action=board-tools]");
+  await rob.page.click("#cm-board-tools [data-action=board-coach]");
+  await rob.page.locator("#cm-board-coach:not([hidden])").waitFor();
+  await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
+  await rob.page.locator("#cm-board-coach[hidden]").waitFor({state: "attached"});
+  ok(true, "Tools › Recommended actions opens it too, and ✕ closes it");
+  await maya.page.click("[data-action=board-view][data-view=full]");
+  await maya.page.click(".cm-full-rail [aria-label='CrankMagic Coach']");
+  await maya.page.locator("#cm-board-coach:not([hidden])").waitFor();
+  const onTop = await maya.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 60); return !!el && !!el.closest("#cm-board-coach");});
+  ok(onTop, "in Full screen, ✦ in the rail opens it, above the game");
+  await maya.page.keyboard.press("Escape");
+  await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
   const socketsBefore = routes[ROB].length;

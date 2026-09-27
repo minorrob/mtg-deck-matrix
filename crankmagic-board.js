@@ -16,6 +16,8 @@
  *   Card zoom     a card held under the pointer is shown large; a long press or a right click opens it with
  *                 what it can do
  *   card size     the app's slider, in Tools; ⌘/Ctrl + and − step it
+ *   Coach         a chat panel sliding over the right edge (never narrowing the mat): suggested prompts, a composer,
+ *                 turn dividers. The shell only, as the handoff says: its reply says it is not switched on yet.
  *   History       the table's history (game/room/history.mjs: public lines, the same for everyone), newest
  *                 first: a drop-down from the strip with a filter, a band on the Focus mat, a column in Full screen
  *   the mat       the battlefield in groups over the lands; Command and Exile, Library and Graveyard as piles
@@ -25,7 +27,7 @@
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is
  * reopened, backing off to ten seconds, and the room sends the view again the moment it is back.
  *
- * Still to come on this board (the handoff's list): the Coach, and phones.
+ * Still to come on this board (the handoff's list): phones.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
@@ -51,7 +53,11 @@
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null;   /* Full screen: the card shown large in the side column */
   let showing = null, held = null;
-  let historyOpen = false, historyFilter = "";   /* Show hand: null, "fan" or "held"; the card held up */
+  let historyOpen = false, historyFilter = "";
+  /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
+  const coach = {open: false, thread: [], typing: false, timer: null};
+  const COACH_PROMPTS = ["What's my best play?", "Who's the threat?", "Plan my next turn", "Explain the stack"];
+  const COACH_STUB = "I'm not switched on yet. When the Coach arrives, I'll read your board, your hand and the table, and answer here. For now, the History and Table vitals say what has happened.";   /* Show hand: null, "fan" or "held"; the card held up */
 
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
@@ -179,6 +185,7 @@
       : b("End game", "board-end", {}, false, {disabled: over});
     const [lo, hi] = C.cardScaleRange();
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
+      <div class="cm-actions cm-board-menu-row">${b("✦ Recommended actions", "board-coach", {})}</div>
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · applies to mats, piles and hand · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
@@ -268,6 +275,7 @@
     const d = view.decision, priority = d && d.kind === "priority";
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
       <span class="cm-board-tools">${b("☰", "board-history", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="History" title="History" ')}${historyOpen ? historyMenu() : ""}</span>
+      ${b("✦", "board-coach", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="CrankMagic Coach" title="CrankMagic Coach" ')}
       <span class="cm-board-tools">${b("⚙", "board-tools", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Tools" title="Tools" ')}${tools ? toolsMenu() : ""}</span>
       <span class="cm-board-spacer"></span>${b("⎋", "board-view", {view: "focus"}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Leave full screen" title="Leave full screen" ')}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
@@ -424,6 +432,45 @@
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
+  /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
+     while someone types redraw the board and leave the composer, and whatever is in it, alone. */
+  const stepNow = () => {const s = view.state, at = stepAt(s.phase); return s.turn ? `Turn ${s.turn} · ${at < 0 ? "Opening hands" : STEPS[at][0]}` : "Before turn 1";};
+  function coachContext() {return `Sees your board, hand and the table · turn ${view && view.state.turn ? view.state.turn : 0}`;}
+  function drawCoach() {
+    const panel = document.getElementById("cm-board-coach");
+    if (!panel) return;
+    panel.hidden = !coach.open;
+    if (!coach.open) {panel.innerHTML = ""; return;}
+    const keep = panel.querySelector(".cm-coach-input");
+    const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep;
+    const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
+      : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<img class="cm-coach-avatar" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="">` : ""}<p>${e(m.text)}</p></li>`;
+    panel.innerHTML = `<header class="cm-coach-head"><img src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" class="cm-coach-logo">
+        <div><h2>CrankMagic Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
+        <details class="cm-coach-more"><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
+        <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
+      <ol class="cm-coach-thread" aria-live="polite">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
+        ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><img class="cm-coach-avatar" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt=""><p><i></i><i></i><i></i></p></li>` : ""}</ol>
+      <div class="cm-coach-prompts">${COACH_PROMPTS.map((q) => `<button type="button" class="v-button compact" data-action="board-coach-ask" data-q="${e(q)}">${e(q)}</button>`).join("")}</div>
+      <form class="cm-coach-compose" data-coach-form><textarea class="cm-coach-input" rows="1" placeholder="Ask the coach…" aria-label="Ask the coach"></textarea>
+        <button type="submit" class="cm-coach-send" aria-label="Send">➤</button></form>`;
+    const input = panel.querySelector(".cm-coach-input");
+    input.value = typed;
+    if (focused) input.focus();
+    const thread = panel.querySelector(".cm-coach-thread");
+    thread.scrollTop = thread.scrollHeight;
+  }
+  function ask(text) {
+    const q = String(text || "").trim();
+    if (!q || !view) return;
+    const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
+    if (!last || last.divider !== here) coach.thread.push({divider: here});
+    coach.thread.push({from: "you", text: q});
+    coach.typing = true;
+    clearTimeout(coach.timer);
+    coach.timer = setTimeout(() => {coach.typing = false; coach.thread.push({from: "coach", text: COACH_STUB}); drawCoach();}, 700);
+    drawCoach();
+  }
   function banner() {
     if (view.status === "finished") {
       const r = view.result || {}, you = r.winner === view.seatId;
@@ -442,6 +489,8 @@
     const active = document.activeElement;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
     render();
+    const context = document.getElementById("cm-coach-context");
+    if (context && view) context.textContent = coachContext();
     if (caret === null) return;
     const filter = document.querySelector("#cm-board [data-board-history-filter]");
     if (filter) {filter.focus(); filter.setSelectionRange(caret, caret);}
@@ -454,7 +503,8 @@
     if (mode === "full") {host.innerHTML = `${fullView()}${showHand()}${banner()}`; return;}
     if (mode === "table") {host.innerHTML = `${strip()}${tableView()}<div class="cm-board-under">${stack()}${decision()}</div>${hand()}${showHand()}${banner()}`; return;}
     const p = players()[focus] || players()[view.seat];
-    host.innerHTML = `${strip()}<div class="cm-board-body"><nav class="cm-board-pane" aria-label="Boards">${players().map(tile).join("")}</nav>
+    host.innerHTML = `${strip()}<div class="cm-board-body"><nav class="cm-board-pane" aria-label="Boards">${players().map(tile).join("")}
+      <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}">✦ CrankMagic Coach</button></nav>
       <div class="cm-board-main">${mat(p)}${stack()}${decision()}</div></div>${hand()}${showHand()}${banner()}`;
   }
 
@@ -469,14 +519,14 @@
       away.clear();
       for (const a of t.away || []) away.set(a.seatId, a.until);
       if (!document.getElementById("cm-board")) {
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div>`;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside>`;
         draw();
       } else if (JSON.stringify([...away]) !== before) draw();
       if (!socket && status !== "reconnecting") connect();
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
-    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; historyOpen = false; historyFilter = ""; peek(null); leaveFullscreen();},
+    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; historyOpen = false; historyFilter = ""; coach.open = false; coach.thread = []; coach.typing = false; clearTimeout(coach.timer); peek(null); leaveFullscreen();},
   };
 
   /* ---- actions ---- */
@@ -573,6 +623,10 @@
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
     if (event.key === "Escape" && historyOpen) {historyOpen = false; draw(); return;}
+    if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault(); event.target.form.requestSubmit(); return;
+    }
+    if (event.key === "Escape" && coach.open) {actions["board-coach"](); return;}
     if ((event.ctrlKey || event.metaKey) && ["+", "=", "-", "_"].includes(event.key)) {
       event.preventDefault();
       const n = C.setCardScale(C.cardScale() + (event.key === "-" || event.key === "_" ? -10 : 10));
@@ -601,6 +655,15 @@
     }
   });
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; draw();};
+  actions["board-coach"] = () => {coach.open = !coach.open; tools = false; historyOpen = false; draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-coach-ask"] = (el) => ask(el.dataset.q);
+  actions["board-coach-clear"] = () => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); drawCoach();};
+  document.addEventListener("submit", (event) => {
+    if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
+    event.preventDefault();
+    const input = event.target.querySelector(".cm-coach-input"), q = input.value;
+    input.value = ""; ask(q);
+  });
   actions["board-history"] = () => {historyOpen = !historyOpen; tools = false; draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); return;}

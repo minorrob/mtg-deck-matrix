@@ -3271,3 +3271,37 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-board-band h3 .v-button{min-height:0;height:24px;padding:0 8px}
 .cm-full-side .cm-board-band{background:var(--v-panel);border-color:var(--v-line)}
 .cm-board-band li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+/* THE COACH (M5, the handoff's play-coach): a 400px panel over the right edge, above the board in every view,
+   never narrowing the mat. The Coach speaks on a pale aether tint beside the logo; you speak in ink. */
+.cm-board-coach-open{padding:10px;border-radius:var(--v-radius);border:1px solid var(--v-aether);background:color-mix(in srgb,var(--v-aether) 10%,var(--v-panel));color:var(--v-ink);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.cm-board-coach-open[aria-pressed="true"]{background:color-mix(in srgb,var(--v-aether) 22%,var(--v-panel))}
+.cm-board-menu-row{margin-bottom:12px}
+.cm-board-coach{position:fixed;top:0;right:0;bottom:0;z-index:75;width:min(400px,100vw);display:flex;flex-direction:column;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
+.cm-board-coach[hidden]{display:none}
+.cm-coach-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--v-line)}
+.cm-coach-head>div{flex:1 1 auto;min-width:0}
+.cm-coach-head h2{margin:0;font-size:16px}
+.cm-coach-head p{margin:0;font-size:11px}
+.cm-coach-logo{width:26px;height:26px}
+.cm-coach-more{position:relative}
+.cm-coach-more summary{list-style:none;cursor:pointer;padding:4px 8px;color:var(--v-muted)}
+.cm-coach-more>div{position:absolute;right:0;top:100%;z-index:2;padding:8px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line-strong)}
+.cm-coach-thread{flex:1 1 auto;overflow:auto;list-style:none;margin:0;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cm-coach-divider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--v-muted)}
+.cm-coach-divider::before,.cm-coach-divider::after{content:"";flex:1;border-top:1px solid var(--v-line)}
+.cm-coach-msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+.cm-coach-msg p{margin:0;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.cm-coach-msg.is-coach p{background:color-mix(in srgb,var(--v-aether) 14%,var(--v-panel));border:1px solid color-mix(in srgb,var(--v-aether) 35%,transparent)}
+.cm-coach-msg.is-you{align-self:flex-end}
+.cm-coach-msg.is-you p{background:var(--v-ink);color:var(--v-panel)}
+.cm-coach-avatar{width:22px;height:22px;flex:0 0 auto}
+.cm-coach-msg.is-typing p{display:flex;gap:4px;padding:12px}
+.cm-coach-msg.is-typing i{width:6px;height:6px;border-radius:50%;background:var(--v-aether);animation:cm-coach-dot 1s infinite ease-in-out}
+.cm-coach-msg.is-typing i:nth-child(2){animation-delay:.15s}
+.cm-coach-msg.is-typing i:nth-child(3){animation-delay:.3s}
+@keyframes cm-coach-dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.cm-coach-msg.is-typing i{animation:none}}
+.cm-coach-prompts{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px 0}
+.cm-coach-compose{display:flex;align-items:flex-end;gap:8px;padding:10px 16px 16px}
+.cm-coach-input{flex:1 1 auto;min-height:44px;max-height:140px;padding:11px 16px;border-radius:22px;border:1px solid var(--v-line-strong);background:var(--v-bg);color:var(--v-ink);font:inherit;font-size:13px;resize:none}
+.cm-coach-send{width:44px;height:44px;border-radius:50%;border:0;background:var(--v-accent);color:var(--on-accent);font-size:16px;cursor:pointer}
