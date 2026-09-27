@@ -3,7 +3,7 @@
  *   Lines     each engine event the history speaks of becomes the line the board shows; tapping, mana and the
  *             steps of a turn say nothing; a player's draws in a row are one line that counts.
  *   Hidden    a card moving between two hidden zones is never named. Played for real: two people and two house
- *             pilots, twelve turns, and at every decision no seat's history holds, anywhere in any line, the
+ *             pilots, three games (one of thirty turns), and at every decision no seat's history holds, anywhere in any line, the
  *             name of a card that only another seat's hand or a library holds.
  *   Same      every seat is shown the same history; it survives the room being put away and woken.
  *   Room      conceding and End game are lines too; the history keeps its newest 300 lines.
@@ -92,16 +92,20 @@ function person(seed) {
   return (d) => {const a = pilot.answer(d); return {kind: "answer", choiceId: d.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {})};};
 }
 
-let linesRead = 0, viewsRead = 0;
-for (const seed of ["h-1", "h-2", "h-3"]) {
+/* Two short games and a long one: the long one's history outgrows what a view carries (the newest 120), which
+   is where two seats could be shown different ends of it. */
+const TURNS = {"h-1": 12, "h-2": 12, "h-3": 30};
+let linesRead = 0, viewsRead = 0, longest = 0;
+for (const seed of Object.keys(TURNS)) {
   const storage = memoryStorage(), matchId = `hist-${seed}`;
   let room = await startRoom({storage, matchId, cards, pod: POD, seed});
   const people = Object.fromEntries(HUMANS.map((h) => [h, person(`${seed}-${h}`)]));
   for (let n = 0; room.waitingOn; n += 1) {
     const who = room.waitingOn, view = room.view(who);
-    if (view.state.turn > 12) break;
+    if (view.state.turn > TURNS[seed]) break;
     const state = await rawState(storage, matchId);
     const shown = room.seats.map((s) => room.view(s.seatId).history);
+    longest = Math.max(longest, shown[0].length);
     for (const [i, s] of room.seats.entries()) {
       const secret = [...secretsFor(state, i)];
       for (const line of shown[i]) {
@@ -116,10 +120,11 @@ for (const seed of ["h-1", "h-2", "h-3"]) {
     if (n % 25 === 24) room = await openRoom({storage, matchId, cards});
   }
   const h = room.view("rob").history;
-  ok(h.some((l) => l.mark === "turn" && /^Turn 1 · /.test(l.text)) && h.some((l) => / played Grove \d/.test(l.text)) && h.some((l) => / drew (a card|\d+ cards)$/.test(l.text)), `game ${seed}: its history has the turns, the lands played and the draws (${h.length} lines shown)`);
+  ok(h.some((l) => l.mark === "turn" && /^Turn \d+ · /.test(l.text)) && h.some((l) => / played Grove \d/.test(l.text)) && h.some((l) => / drew (a card|\d+ cards)$/.test(l.text)), `game ${seed}: its history has the turns, the lands played and the draws (${h.length} lines shown)`);
   const woken = await openRoom({storage, matchId, cards});
   eq(woken.view("maya").history, room.view("maya").history, `game ${seed}: the history is the same after the room is put away and woken`);
 }
+eq(longest, 120, "the long game's history outgrew a view, which carried its newest 120 lines, the same for every seat");
 ok(linesRead > 10000, `no seat's history named a card only a hidden zone held: ${linesRead} lines read across ${viewsRead} views`);
 
 /* 3. THE ROOM'S OWN LINES: conceding, and End game. */
