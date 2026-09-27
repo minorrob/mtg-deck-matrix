@@ -123,6 +123,7 @@ try {
   await call("/table/deck", ROB, {seatId: 0, deck: deck("Rob", "Forest")});
   await call("/table/deck", MAYA, {seatId: 1, deck: deck("Maya", "Island")});
   await call("/table/ready", ROB, {ready: true}); await call("/table/ready", MAYA, {ready: true});
+  await call("/table/mat", ROB, {mat: "forge"});
   await call("/table/start", ROB, {});
   clock += 10000; await object.alarm();
 
@@ -158,6 +159,18 @@ try {
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
   await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   ok(/Rob's hand · 7/.test(await text(maya.page, ".cm-board-mat")), "Maya can look at Rob's board, and sees his hand as a count");
+  const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
+  ok(mats[0] === "forge" && mats[1], "and it is drawn on Rob's mat, the forge");
+  await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
+  const own = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage];});
+  await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+  const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-board-mat")).backgroundImage);
+  ok(own[0] === "felt" && own[1] !== robs, "her own board is on felt, and looks it");
+  await serial(() => call("/table/mat", MAYA, {mat: "night"}));
+  await rob.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
+  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat")?.dataset.mat === "night", null, {timeout: 10000});
+  ok(true, "a mat changed mid-game reaches the other board");
+  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   ok(!(await maya.page.content()).includes("Rob Secret"), "and her page holds none of his cards by name");
   await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
 

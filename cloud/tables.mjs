@@ -15,7 +15,7 @@
  * browser never sends, so it is in no server's logs until the invited person posts it to /join.
  */
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
-const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "ready", "start", "cancel", "end", "concede"]);
+const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "ready", "mat", "start", "cancel", "end", "concede"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
 const newTableId = () => crypto.randomUUID().replace(/-/g, "");

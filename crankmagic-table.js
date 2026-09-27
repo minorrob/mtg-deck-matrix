@@ -21,6 +21,13 @@
   const cloudPlay = () => document.querySelector('meta[name="crankmagic-play"]')?.content === "cloud"
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
+  /* The app's own mats (game/room/table.mjs, MATS), with their names. The last one chosen is remembered on this
+     device and put on the next table you sit at. */
+  const MATS = [["felt", "Felt"], ["forge", "Forge"], ["cavern", "Cavern"], ["sea", "Sea"], ["night", "Night"]];
+  const MAT_KEY = "cm-mat";
+  const rememberedMat = () => {try {const m = localStorage.getItem(MAT_KEY); return MATS.some(([k]) => k === m) ? m : null;} catch {return null;}};
+  const matApplied = new Set();   /* tables this page has already put the remembered mat on */
+  let matPicked = null;
   const ORDER = [["br", 0], ["bl", 1], ["tr", 2], ["tl", 3]];   /* the quadrant corners the local table uses, seat 1 first */
   let current = null;
   /* How far the table's clock is from this device's: the countdown is the server's, read in its own time. */
@@ -76,6 +83,7 @@
     if (t.phase === "selecting" || t.phase === "countdown") {
       if (s.you) {
         controls.push(b(s.deck ? "Change deck" : "Choose a deck", "table-deck", {seat: String(s.seatId)}, !s.deck, {cls: "compact"}));
+        controls.push(b("Choose mat", "table-mat", {}, false, {cls: "compact"}));
         if (s.deck) controls.push(b(s.ready ? "Not ready" : "Ready", "table-ready", {ready: s.ready ? "" : "1"}, !s.ready, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "ai") {
         controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, !s.deck, {cls: "compact"}));
@@ -85,7 +93,7 @@
       }
     }
     const detail = `${pseudo ? `<p class="cm-seat-name">${e((s.deck.commander || [])[0] || s.deck.name)}</p>` : ""}<p class="cm-seat-line">${e(line)}</p>`;
-    const inner = `<article class="cm-lobby-seat${s.kind === "ai" ? " is-ai" : " is-human"}${s.ready ? " is-ready" : ""}" data-seat="${s.seatId}">
+    const inner = `<article class="cm-lobby-seat${s.kind === "ai" ? " is-ai" : " is-human"}${s.ready ? " is-ready" : ""}" data-seat="${s.seatId}" data-mat="${e(s.mat || "felt")}">
       <header><h3>${e(who)}</h3>${art.statusPill(state, s.ready)}</header>
       ${art.seatFigure(pseudo, detail, controls.length ? `<div class="cm-actions cm-seat-controls">${controls.join("")}</div>` : "")}
     </article>`;
@@ -113,6 +121,7 @@
   }
   function draw(t) {
     current = t;
+    applyRememberedMat(t);
     /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
     if (C.board && C.board.wants(t)) return C.board.show(t);
     const art = C.seatArt;
@@ -128,6 +137,13 @@
     art.startSeas();
   }
 
+  /* Your mat, remembered: the first time this page sees you seated on felt at a table, it puts your last mat there. */
+  function applyRememberedMat(t) {
+    const mine = t.seats.find((s) => s.you), mat = rememberedMat();
+    if (!mine || matApplied.has(t.tableId)) return;
+    matApplied.add(t.tableId);
+    if (mat && mine.mat === "felt" && mat !== "felt") api("POST", `${tableUrl(t.tableId)}/mat`, {mat}).catch(() => {});
+  }
   async function refresh(id) {
     const {table, now} = await api("GET", tableUrl(id));
     if (Number.isFinite(now)) skew = now - Date.now();
@@ -232,6 +248,33 @@
         ? `The table cannot play ${deck.name} yet: ${error.unsupported.length} of its cards are not in the rules engine (${error.unsupported.slice(0, 6).join(", ")}${error.unsupported.length > 6 ? ", …" : ""}).`
         : error.message;
     }
+  };
+
+  /* ---- Choose mat (the handoff's 2b): a strip of the app's mats, the zones previewed over the one picked ---- */
+  function matDialog() {
+    const strip = MATS.map(([k, name]) => `<li><button type="button" class="cm-mat-pick" data-action="table-mat-pick" data-mat="${k}" aria-pressed="${k === matPicked}"><span class="cm-mat-swatch" data-mat="${k}"></span>${e(name)}</button></li>`).join("");
+    return `<ul class="cm-mat-strip" aria-label="Mats">${strip}</ul>
+      <div class="cm-mat-preview cm-mat-swatch" data-mat="${matPicked}" id="cm-mat-preview" aria-label="Preview of the mat">
+        <span>Battlefield</span><span>Lands</span><span>Command</span><span>Exile</span><span>Library</span><span>Graveyard</span></div>
+      <p class="cm-muted cm-mat-note">The app's own mats. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>
+      <div class="cm-form-footer">${b("Use this mat", "table-mat-use", {}, true)}${b("Cancel", "close")}</div>`;
+  }
+  actions["table-mat"] = () => {
+    const mine = current.seats.find((s) => s.you);
+    matPicked = (mine && mine.mat) || "felt";
+    C.modal("Choose mat", matDialog());
+  };
+  actions["table-mat-pick"] = (el) => {
+    matPicked = el.dataset.mat;
+    document.querySelectorAll(".cm-mat-pick").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.mat === matPicked)));
+    const preview = document.getElementById("cm-mat-preview");
+    if (preview) preview.dataset.mat = matPicked;
+  };
+  actions["table-mat-use"] = async () => {
+    await api("POST", `${tableUrl(current.tableId)}/mat`, {mat: matPicked});
+    try {localStorage.setItem(MAT_KEY, matPicked);} catch {}
+    actions.close();
+    await refresh(current.tableId);
   };
 
   /* ---- ready, start, cancel ---- */

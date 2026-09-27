@@ -196,6 +196,8 @@
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
+  /* Each seat's mat, as the table has it (felt when it says nothing). */
+  const matOf = (i) => ((table && table.seats && table.seats[i]) || {}).mat || "felt";
   const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
   const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
   const seatLabel = (p) => (p.playerId === view.seat ? `You · ${p.name}` : p.name);
@@ -234,7 +236,7 @@
     const you = p.playerId === view.seat;
     const h = p.health;
     const damage = Object.entries(h.commanderDamage || {}).filter(([, n]) => n > 0).map(([id, n]) => `${n} from ${e(nameOf(commanderSeat(id) ?? view.seat))}'s commander`).join(" · ");
-    return `<section class="cm-board-mat" aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">
+    return `<section class="cm-board-mat" data-mat="${e(matOf(p.playerId))}" aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">
       <header class="cm-board-mat-head"><h2>${e(you ? `You · ${p.name}` : p.name)}</h2>
         <span class="cm-board-life">${h.life} life · ${h.poison} poison${damage ? ` · ${damage}` : ""}</span>
         ${ribbon(view.state.turnPlayerId === p.playerId)}</header>
@@ -260,7 +262,7 @@
       <div class="cm-board-cards cm-seatboard-lands" aria-label="Lands, ${lands.length}">${lands.map((c) => card(c)).join("")}</div>
       <p class="cm-seatboard-piles">Hand ${z.Hand.count} · Library ${z.Library.count} · Graveyard ${z.Graveyard.count} · Exile ${z.Exile.count}</p></div>`;
     const top = withHead ? head : "";
-    return `<section class="cm-seatboard${you ? " is-you" : ""}${bottom ? " is-bottom" : ""}" data-seat="${i}"${area ? ` style="grid-area:${area}"` : ""} aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${bottom ? body + top : top + body}</section>`;
+    return `<section class="cm-seatboard${you ? " is-you" : ""}${bottom ? " is-bottom" : ""}" data-seat="${i}" data-mat="${e(matOf(i))}"${area ? ` style="grid-area:${area}"` : ""} aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${bottom ? body + top : top + body}</section>`;
   }
   /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left
      (the handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot.
@@ -550,15 +552,17 @@
     /** The table is playing (or just finished): draw the board in the page, and keep the socket open. */
     show(t) {
       if (tableId !== t.tableId) {C.board.close(); tableId = t.tableId; view = null; focus = null; away.clear();}
+      /* The table's list of who is away is the truth; the room's "away" frames only say it sooner. What it says
+         of each seat (away, its mat) is redrawn when it changes. */
+      const said = () => JSON.stringify([[...away], (table && table.seats || []).map((x) => x.mat)]);
+      const before = said();
       table = t;
-      /* The table's list of who is away is the truth; the room's "away" frames only say it sooner. */
-      const before = JSON.stringify([...away]);
       away.clear();
       for (const a of t.away || []) away.set(a.seatId, a.until);
       if (!document.getElementById("cm-board")) {
         C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside>`;
         draw();
-      } else if (JSON.stringify([...away]) !== before) draw();
+      } else if (said() !== before) draw();
       if (!socket && status !== "reconnecting") connect();
     },
     /** Whether the board is what this table's page should show. */
