@@ -11,6 +11,8 @@
  *             Pass priority through the steps into turn 2, both boards following, the step ribbon with them.
  *   Views     Table (both boards, you at the foot, the logo opening Table vitals), Focus, Full screen (the whole
  *             window; a picked card large at the side); ⎋ leaves; the view is remembered on the device.
+ *   Hand      the card-size slider and Ctrl −; a card shown large under the pointer, and in Card zoom on a right
+ *             click; Show hand: Space fans it, a number holds a card up, Escape puts it back, Enter plays it.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
@@ -285,6 +287,79 @@ try {
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
   ok(seenSteps.size >= 3, `Pass priority walks the steps (${[...seenSteps].join(", ")}) into turn 2, on both boards`);
   eq(await rob.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count(), 1, "the step ribbon lights the current step on the active player's own board");
+
+  /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
+  const handWidth = (page) => page.evaluate(() => document.querySelector(".cm-board-hand .cm-bcard").getBoundingClientRect().width);
+  const w100 = await handWidth(rob.page);
+  await rob.page.click("[data-action=board-tools]");
+  ok(/60% – 160%/.test(await text(rob.page, "#cm-board-tools .cm-board-size")), "Tools carries the card-size slider, 60% to 160%");
+  await rob.page.locator("#cm-board-tools [data-card-scale]").fill("140");
+  const w140 = await handWidth(rob.page);
+  ok(Math.abs(w140 / w100 - 1.4) < 0.02, `the slider sizes the hand's cards as it moves (${w100.toFixed(0)}px → ${w140.toFixed(0)}px at 140%)`);
+  await rob.page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await rob.page.keyboard.press("Control+Minus");
+  const w130 = await handWidth(rob.page);
+  ok(Math.abs(w130 / w100 - 1.3) < 0.02, `and Ctrl − steps it down by ten (${w130.toFixed(0)}px at 130%)`);
+  await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
+  await rob.page.click("[data-action=board-tools]");
+
+  /* CARD ZOOM: held under the pointer, a card shows large; a right click opens it with what it can do. */
+  const robCard = rob.page.locator(".cm-board-hand .cm-bcard").first(), robCardName = (await robCard.getAttribute("aria-label")).split(/[,:]/)[0];
+  await robCard.hover();
+  await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
+  const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
+  ok(Math.round(peekWidth) === 320 && (await text(rob.page, "#cm-board-peek")).includes(robCardName), `a card under the pointer shows large, 320px (${robCardName})`);
+  await rob.page.mouse.move(5, 5);
+  await rob.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
+  await robCard.click({button: "right"});
+  await rob.page.locator("#cm-dialog[open] .cm-board-zoom").waitFor();
+  ok((await text(rob.page, "#cm-dialog[open]")).includes(robCardName), "a right click opens it in Card zoom");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
+  await rob.page.evaluate(() => {
+    const el = document.querySelector(".cm-board-hand .cm-bcard"), r = el.getBoundingClientRect();
+    el.dispatchEvent(new PointerEvent("pointerdown", {pointerType: "touch", bubbles: true, clientX: r.left + 10, clientY: r.top + 10}));
+  });
+  await rob.page.locator("#cm-dialog[open] .cm-board-zoom").waitFor({timeout: 3000});
+  ok(true, "a long press opens Card zoom, on a touch screen");
+  await rob.page.keyboard.press("Escape");
+
+  /* SHOW HAND: turn 2's player reaches main 1 and plays a land from the fanned hand, by its number and Enter. */
+  const second = other, secondLand = second === rob ? "Forest" : "Island", secondSeat = second === rob ? 0 : 1;
+  for (let i = 0; i < 30 && !(await second.page.locator(".cm-board-hand .cm-bcard.is-bright").count()); i += 1) {
+    for (const who of [second, active]) {
+      const pass = who.page.locator("[data-action=board-pass]:not([disabled])");
+      if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200);}
+    }
+  }
+  await second.page.evaluate(() => document.activeElement && document.activeElement.blur());
+  for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Equal");   /* 130%: a fan that would not fit at 132px apart */
+  ok(Math.abs(await second.page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--card-scale").trim()) - 1.3) < 0.001, "Ctrl + steps the card size up by ten");
+  await second.page.keyboard.press(" ");
+  await second.page.locator(".cm-hand-show .cm-hand-fan").waitFor();
+  const fanned = await second.page.locator(".cm-hand-slot").count();
+  ok(/Your hand · \d+/.test(await text(second.page, ".cm-hand-show h2")) && fanned === await second.page.locator(".cm-board-hand .cm-bcard").count(), `Space fans the hand over the dimmed board (${fanned} cards)`);
+  const turns = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot")].map((el) => {const m = new DOMMatrix(getComputedStyle(el).transform); return Math.round(Math.atan2(m.b, m.a) * 1800 / Math.PI) / 10;}));
+  ok(turns.every((t, k) => Math.abs(t - (k - (turns.length - 1) / 2) * 5) < 0.2), `each card in the fan is turned 5° from the next (${turns.join("°, ")}°)`);
+  const inside = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot .cm-bcard")].every((el) => {const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth;}));
+  ok(inside, "and the whole fan stays on the screen, at 130% too, the cards drawn closer");
+  await shot(second.page, "hand-fan-" + (second === rob ? "1400" : "1280"));
+  const labels = await second.page.locator(".cm-hand-slot .cm-bcard").evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+  const key = String(labels.findIndex((l) => l.startsWith(secondLand)) + 1);
+  await second.page.keyboard.press(key);
+  await second.page.locator(".cm-hand-show.is-held").waitFor();
+  ok(new RegExp(`Play ${secondLand} · Enter`).test(await text(second.page, ".cm-hand-acts")), `its number holds the ${secondLand} up, with what it can do`);
+  await shot(second.page, "hand-held-" + (second === rob ? "1400" : "1280"));
+  await second.page.keyboard.press("Escape");
+  await second.page.locator(".cm-hand-show:not(.is-held) .cm-hand-fan").waitFor();
+  ok(true, "Escape puts it back in the fan");
+  await second.page.keyboard.press(key);
+  await second.page.keyboard.press("Enter");
+  await second.page.locator(".cm-hand-show").waitFor({state: "detached"});
+  await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
+  await waitText(second.page, ".cm-board-lands", /Lands · 1/);
+  ok((await text(second.page, ".cm-board-lands")).includes(secondLand), "Enter plays it: the hand is put away and the land is down");
+  for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {

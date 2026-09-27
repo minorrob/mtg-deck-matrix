@@ -11,6 +11,11 @@
  *                 as tiles; Full screen: the page given to the game, a slim rail, the others above you
  *   the pane      every seat as a tile with its vitals; a tile puts that seat's board on the mat
  *   vitals        a pill per seat (life, poison, a bar per commander toward 21); any pill opens Table vitals
+ *   Show hand     ✋ or Space: the hand fanned over a dimmed board to contemplate; a card chosen (a click, or its
+ *                 number) is held up with what it can do; Enter does it, Escape puts it back
+ *   Card zoom     a card held under the pointer is shown large; a long press or a right click opens it with
+ *                 what it can do
+ *   card size     the app's slider, in Tools; ⌘/Ctrl + and − step it
  *   the mat       the battlefield in groups over the lands; Command and Exile, Library and Graveyard as piles
  *   the hand      your own, docked over the mat's foot; bright = something you can do with it now
  *   the decision  whatever the room is asking you, in any mode the engine asks in
@@ -18,8 +23,7 @@
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is
  * reopened, backing off to ten seconds, and the room sends the view again the moment it is back.
  *
- * Still to come on this board (the handoff's list): the card-size slider in Tools, Show hand, Card zoom,
- * History, the Coach, and phones.
+ * Still to come on this board (the handoff's list): History, the Coach, and phones.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
@@ -44,6 +48,7 @@
   const VIEW_KEY = "cm-board-view";
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null;   /* Full screen: the card shown large in the side column */
+  let showing = null, held = null;   /* Show hand: null, "fan" or "held"; the card held up */
 
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
@@ -126,15 +131,15 @@
     return pictures.get(name) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
   }
   const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId) : []);
-  function card(c, {where = "mat"} = {}) {
+  function card(c, {where = "mat", action = "board-card"} = {}) {
     if (!c.name) return `<div class="cm-bcard is-back" aria-label="A hidden card"></div>`;
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
     const creature = c.types.includes("Creature") && c.power !== null;
-    const cls = ["cm-bcard", c.tapped ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", where === "hand" && mine && !bright ? "is-dim" : ""].filter(Boolean).join(" ");
+    const cls = ["cm-bcard", c.tapped ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : ""].filter(Boolean).join(" ");
     const marks = [c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     const label = `${c.name}${c.tapped ? ", tapped" : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
-    return `<button type="button" class="${cls}" data-action="board-card" data-card="${c.cardId}" aria-label="${e(label)}"${bright || mode === "full" ? "" : ' aria-disabled="true"'}>
+    return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
       <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
       <img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
@@ -168,7 +173,9 @@
     const end = confirmEnd
       ? `${b("End for everyone · keep the record", "board-end", {confirm: "1"}, true)}${b("Keep playing", "board-end-cancel")}`
       : b("End game", "board-end", {}, false, {disabled: over});
+    const [lo, hi] = C.cardScaleRange();
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
+      <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · applies to mats, piles and hand · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
@@ -341,8 +348,59 @@
     const mine = players()[view.seat];
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
-    return `<section class="cm-board-hand" aria-label="Your hand"><h3>Hand · ${cards.length}${view.decision ? ` <span class="cm-muted">Bright = you can use it now</span>` : ""}</h3>
+    return `<section class="cm-board-hand" aria-label="Your hand"><h3><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button>Hand · ${cards.length}${view.decision ? ` <span class="cm-muted">Bright = you can use it now</span>` : ""}</h3>
       <div class="cm-board-hand-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
+  }
+  /* SHOW HAND (the handoff's two states). Contemplate: the board dims and the hand fans in an arc, 170px cards
+     turned 5° apiece, 132px apart. Held: the card chosen floats at 190px in a brass ring with what it can do,
+     the rest waiting below. Nothing is done until a button (or Enter) says so. */
+  const myHand = () => (players()[view.seat] ? players()[view.seat].zones.Hand.cards : []);
+  function showHand() {
+    if (!showing) return "";
+    const cards = myHand(), n = cards.length;
+    const close = `<button type="button" class="v-button compact cm-hand-close" data-action="board-hand-close" aria-label="Put the hand away">✕</button>`;
+    if (showing === "held") {
+      const c = cards.find((x) => x.cardId === held);
+      if (!c) {showing = "fan"; return showHand();}
+      const opts = optionsFor(c.cardId);
+      const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}${i === 0 ? " · Enter" : ""}</button>`).join("");
+      return `<div class="cm-hand-show is-held" role="dialog" aria-modal="true" aria-label="${e(c.name)}, held">${close}
+        <div class="cm-hand-held">${card(c, {where: "held", action: "board-hand-back"})}</div>
+        <div class="cm-actions cm-hand-acts">${acts || `<span class="cm-muted">Nothing to do with it now.</span>`}${b("Back to hand", "board-hand-back")}</div>
+        <div class="cm-hand-rest">${cards.filter((x) => x.cardId !== held).map((x) => card(x, {where: "rest", action: "board-hand-hold"})).join("")}</div></div>`;
+    }
+    const fan = cards.map((c, k) => {const o = k - (n - 1) / 2; return `<div class="cm-hand-slot" style="--o:${o};--a:${Math.abs(o)}" data-key="${k + 1}">${card(c, {where: "fan", action: "board-hand-hold"})}<span class="cm-hand-key">${k + 1}</span></div>`;}).join("");
+    return `<div class="cm-hand-show" role="dialog" aria-modal="true" aria-label="Your hand">${close}
+      <header><h2>Your hand · ${n}</h2><p class="cm-muted">Hover to read · click to choose · 1–${Math.min(9, n) || 1} keys · Space or ✕ to put it away · bright = castable now</p></header>
+      <div class="cm-hand-fan" style="--gaps:${Math.max(1, n - 1)}">${fan}</div></div>`;
+  }
+  /* CARD ZOOM. A card held under the pointer a moment is shown large (320px) where it does not cover it; a long
+     press, or a right click, opens it with what can be done with it. */
+  function findCard(cardId) {
+    for (const p of players()) for (const c of visibleCards(p)) if (c.cardId === cardId) return c;
+    return null;
+  }
+  function zoom(cardId) {
+    const c = findCard(cardId);
+    if (!c || !c.name) return;
+    const acts = optionsFor(c.cardId).map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("");
+    C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
+  }
+  let peekTimer = null;
+  function peek(el) {
+    clearTimeout(peekTimer);
+    const old = document.getElementById("cm-board-peek");
+    if (!el) {if (old) old.remove(); return;}
+    peekTimer = setTimeout(() => {
+      const c = findCard(Number(el.dataset.card));
+      if (!c || !c.name || !document.getElementById("cm-board")) return;
+      const box = el.getBoundingClientRect(), right = box.left + box.width / 2 < innerWidth / 2;
+      const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
+      div.setAttribute("aria-hidden", "true");
+      div.dataset.side = right ? "right" : "left";
+      div.innerHTML = card(c, {where: "peek", action: "none"});
+      if (!old) document.getElementById("cm-board").append(div);
+    }, 350);
   }
   function banner() {
     if (view.status === "finished") {
@@ -362,11 +420,11 @@
     if (!host) return;
     if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
     host.dataset.view = mode;
-    if (mode === "full") {host.innerHTML = `${fullView()}${banner()}`; return;}
-    if (mode === "table") {host.innerHTML = `${strip()}${tableView()}<div class="cm-board-under">${stack()}${decision()}</div>${hand()}${banner()}`; return;}
+    if (mode === "full") {host.innerHTML = `${fullView()}${showHand()}${banner()}`; return;}
+    if (mode === "table") {host.innerHTML = `${strip()}${tableView()}<div class="cm-board-under">${stack()}${decision()}</div>${hand()}${showHand()}${banner()}`; return;}
     const p = players()[focus] || players()[view.seat];
     host.innerHTML = `${strip()}<div class="cm-board-body"><nav class="cm-board-pane" aria-label="Boards">${players().map(tile).join("")}</nav>
-      <div class="cm-board-main">${mat(p)}${stack()}${decision()}</div></div>${hand()}${banner()}`;
+      <div class="cm-board-main">${mat(p)}${stack()}${decision()}</div></div>${hand()}${showHand()}${banner()}`;
   }
 
   /* ---- what the lobby hands over ---- */
@@ -387,7 +445,7 @@
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
-    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; leaveFullscreen();},
+    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; peek(null); leaveFullscreen();},
   };
 
   /* ---- actions ---- */
@@ -445,8 +503,70 @@
     draw();
   }
   function leaveFullscreen() {if (document.fullscreenElement) document.exitFullscreen().catch(() => {});}
+
+  /* Show hand and Card zoom. */
+  actions["board-show-hand"] = () => {showing = showing ? null : "fan"; held = null; draw();};
+  actions["board-hand-close"] = () => {showing = null; held = null; draw();};
+  actions["board-hand-hold"] = (el) => {held = Number(el.dataset.card); showing = "held"; draw();};
+  actions["board-hand-back"] = () => {held = null; showing = "fan"; draw();};
+  actions["board-hand-do"] = (el) => {const index = Number(el.dataset.index); showing = null; held = null; option(index);};
+  actions["board-zoom-do"] = (el) => {actions.close(); option(Number(el.dataset.index));};
+  document.addEventListener("dblclick", (event) => {if (showing === "held" && event.target.closest && event.target.closest(".cm-hand-held")) actions["board-hand-back"]();});
+  document.addEventListener("pointerover", (event) => {
+    if (event.pointerType !== "mouse" || !document.getElementById("cm-board")) return;
+    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
+    if (el && !el.closest(".cm-board-peek")) peek(el);
+  });
+  document.addEventListener("pointerout", (event) => {if (event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]")) peek(null);});
+  document.addEventListener("contextmenu", (event) => {
+    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
+    if (!el || !view) return;
+    event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
+  });
+  let press = null;
+  document.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse") return;
+    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
+    if (!el || !view) return;
+    const at = [event.clientX, event.clientY];
+    press = {at, timer: setTimeout(() => {press = null; zoom(Number(el.dataset.card));}, 500)};
+  });
+  const unpress = (event) => {if (press && (event.type !== "pointermove" || Math.hypot(event.clientX - press.at[0], event.clientY - press.at[1]) > 10)) {clearTimeout(press.timer); press = null;}};
+  for (const type of ["pointerup", "pointercancel", "pointermove"]) document.addEventListener(type, unpress);
+
+  /* THE BOARD'S KEYS, only while it is on the page and no dialog is open: Space (show hand, when nothing that
+     Space would press has the focus), 1–9 (hold that card), Enter (do the held card's first thing), Escape
+     (back a step: held, fanned, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && mode === "full" && document.getElementById("cm-board") && !document.querySelector("#cm-dialog[open]")) setMode("focus");
+    if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
+    const tag = (document.activeElement && document.activeElement.tagName) || "";
+    const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
+    if ((event.ctrlKey || event.metaKey) && ["+", "=", "-", "_"].includes(event.key)) {
+      event.preventDefault();
+      const n = C.setCardScale(C.cardScale() + (event.key === "-" || event.key === "_" ? -10 : 10));
+      document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {scale: n, live: false}}));
+      if (tools) draw();
+      return;
+    }
+    if (typing) return;
+    if (event.key === " " && (!document.activeElement || document.activeElement === document.body || (showing && document.activeElement.closest(".cm-hand-show")))) {
+      event.preventDefault(); actions["board-show-hand"](); return;
+    }
+    if (showing && /^[1-9]$/.test(event.key)) {
+      const c = myHand()[Number(event.key) - 1];
+      if (c) {held = c.cardId; showing = "held"; draw();}
+      return;
+    }
+    if (showing === "held" && event.key === "Enter") {
+      const first = optionsFor(held)[0];
+      if (first) {event.preventDefault(); showing = null; held = null; option(first.index);}
+      return;
+    }
+    if (event.key === "Escape") {
+      if (showing === "held") {actions["board-hand-back"](); return;}
+      if (showing) {actions["board-hand-close"](); return;}
+      if (mode === "full") setMode("focus");
+    }
   });
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; draw();};
   actions["board-end"] = async (el) => {
