@@ -6,8 +6,11 @@
  * person does goes back as the §12.1 action envelope -- {actionId, revision, kind:"answer", choiceId, ...} --
  * and the room answers with a receipt, a fresh view for everyone, or a refusal carrying the view to redraw.
  *
- *   the strip     Turn · the step · Next · Pass priority · Tools (End game, two taps; Concede)
+ *   the strip     Turn · the step · Next · Pass priority · the view · Tools (End game, two taps; Concede)
+ *   three views   Table: every seat's board at once, you at the bottom right; Focus: one board large, the others
+ *                 as tiles; Full screen: the page given to the game, a slim rail, the others above you
  *   the pane      every seat as a tile with its vitals; a tile puts that seat's board on the mat
+ *   vitals        a pill per seat (life, poison, a bar per commander toward 21); any pill opens Table vitals
  *   the mat       the battlefield in groups over the lands; Command and Exile, Library and Graveyard as piles
  *   the hand      your own, docked over the mat's foot; bright = something you can do with it now
  *   the decision  whatever the room is asking you, in any mode the engine asks in
@@ -15,8 +18,8 @@
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is
  * reopened, backing off to ten seconds, and the room sends the view again the moment it is back.
  *
- * Still to come on this board (the handoff's list): the Table and Full screen views, Table vitals, the
- * card-size slider in Tools, Show hand, Card zoom, History, the Coach, and phones.
+ * Still to come on this board (the handoff's list): the card-size slider in Tools, Show hand, Card zoom,
+ * History, the Coach, and phones.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
@@ -36,6 +39,11 @@
   /* One color per seat, for its commander's damage bar wherever it shows. */
   const SEAT_COLORS = ["var(--st-reserved)", "var(--st-buy)", "var(--st-pull)", "var(--st-standin)"];
   const RETRY_MAX = 10000;
+  /* The three views, and the one this person last chose, remembered on this device. */
+  const VIEWS = [["table", "⊞", "Table"], ["focus", "◧", "Focus"], ["full", "⛶", "Full screen"]];
+  const VIEW_KEY = "cm-board-view";
+  let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
+  let selected = null;   /* Full screen: the card shown large in the side column */
 
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
@@ -100,11 +108,14 @@
     }
     return null;
   }
-  function vitals(p, big = false) {
+  function vitals(p, {big = false, button = true} = {}) {
     const h = p.health, from = Object.entries(h.commanderDamage || {}).map(([id, n]) => ({seat: commanderSeat(id), n}));
     const danger = h.life <= 10 || h.poison >= 7 || from.some((f) => f.n >= 15);
     const bars = from.map((f) => `<i class="cm-vitals-bar" style="--fill:${Math.min(1, f.n / 21)};--seat:${SEAT_COLORS[f.seat ?? 0]}" title="${e(f.seat === null ? "A commander" : nameOf(f.seat))}: ${f.n} of 21"></i>`).join("");
-    return `<span class="cm-vitals${big ? " is-big" : ""}${danger ? " is-danger" : ""}" aria-label="${h.life} life, ${h.poison} poison"><b>${h.life}</b><span class="cm-vitals-poison">☠ ${h.poison}</span>${bars}</span>`;
+    const inner = `<b>${h.life}</b><span class="cm-vitals-poison">☠ ${h.poison}</span>${bars}`, cls = `cm-vitals${big ? " is-big" : ""}${danger ? " is-danger" : ""}`;
+    const label = `${p.playerId === view.seat ? "You" : p.name}: ${h.life} life, ${h.poison} poison`;
+    return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
+      : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
 
   /* A card's picture: the library's own record when it has one by that name, else Scryfall by name. When the
@@ -123,7 +134,7 @@
     const cls = ["cm-bcard", c.tapped ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", where === "hand" && mine && !bright ? "is-dim" : ""].filter(Boolean).join(" ");
     const marks = [c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     const label = `${c.name}${c.tapped ? ", tapped" : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
-    return `<button type="button" class="${cls}" data-action="board-card" data-card="${c.cardId}" aria-label="${e(label)}"${bright ? "" : ' aria-disabled="true"'}>
+    return `<button type="button" class="${cls}" data-action="board-card" data-card="${c.cardId}" aria-label="${e(label)}"${bright || mode === "full" ? "" : ' aria-disabled="true"'}>
       <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
       <img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
@@ -145,8 +156,12 @@
       <span class="cm-board-waiting" role="status" aria-live="polite">${e(waiting)}</span>${conn}
       <span class="cm-board-spacer"></span>
       ${b("Pass priority", "board-pass", {}, true, {cls: "compact", disabled: !priority || sending})}
+      ${switcher()}
       <span class="cm-board-tools">${b("Tools ▾", "board-tools", {}, false, {cls: "compact"})}${tools ? toolsMenu() : ""}</span>
     </header>`;
+  }
+  function switcher(icons = false) {
+    return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ""}>${icons ? icon : `${icon} ${label}`}</button>`).join("")}</span>`;
   }
   function toolsMenu() {
     const over = view.status === "finished", left = !!departed(view.seat);
@@ -157,18 +172,24 @@
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
-  function tile(p) {
-    const i = p.playerId, active = view.state.turnPlayerId === i, deciding = view.waitingOn === `s${i}`;
-    const commander = p.zones.Command.cards.concat(p.zones.Battlefield.cards).find((c) => c.commander);
-    const gone = departed(i), dropped = away.get(i);
-    const flag = gone ? (gone === "timed-out" ? "Timed out · not finished" : "Conceded")
+  const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
+  const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
+  const seatLabel = (p) => (p.playerId === view.seat ? `You · ${p.name}` : p.name);
+  function seatFlag(p) {
+    const i = p.playerId, gone = departed(i), dropped = away.get(i);
+    return gone ? (gone === "timed-out" ? "Timed out · not finished" : "Conceded")
       : p.health.status === "lost" ? "Out of the game"
       : dropped ? `Dropped · back by ${new Date(dropped).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
-      : deciding ? "Deciding" : active ? "● Active" : "";
-    return `<button type="button" class="cm-board-tile${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
-      <span class="cm-board-tile-name">${e(i === view.seat ? `You · ${p.name}` : p.name)}</span>
-      <span class="cm-muted">${e(commander ? commander.name : "")}</span>
-      ${vitals(p)}<span class="cm-board-tile-flag">${e(flag)}</span></button>`;
+      : view.waitingOn === `s${i}` ? "Deciding" : view.state.turnPlayerId === i ? "● Active" : "";
+  }
+  /* A tile is two controls side by side, never one inside the other: the seat (puts its board on the mat) and
+     its vitals (opens Table vitals). */
+  function tile(p) {
+    const i = p.playerId, commander = commanderOf(p);
+    return `<div class="cm-board-tile${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}" data-seat="${i}">
+      <button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
+        <span class="cm-board-tile-name">${e(seatLabel(p))}</span><span class="cm-muted">${e(commander ? commander.name : "")}</span></button>
+      ${vitals(p)}<span class="cm-board-tile-flag">${e(seatFlag(p))}</span></div>`;
   }
   function ribbon(active) {
     const at = stepAt(view.state.phase);
@@ -202,6 +223,74 @@
       ${you ? "" : `<p class="cm-board-their-hand">${e(p.name)}'s hand · ${p.zones.Hand.count}</p>`}
     </section>`;
   }
+  /* ONE SEAT'S BOARD, SMALL: the Table view's four, and the Full screen view's opponents. Its header sits on
+     the board's outer edge (the handoff): name · vitals · commander · flag · Focus. */
+  function seatBoard(p, {area = "", bottom = false} = {}) {
+    const i = p.playerId, you = i === view.seat, field = p.zones.Battlefield.cards, commander = commanderOf(p);
+    const lands = field.filter((c) => c.types.includes("Land")), rest = field.filter((c) => !c.types.includes("Land"));
+    const z = p.zones;
+    const head = `<header class="cm-seatboard-head"><strong>${e(seatLabel(p))}</strong>${vitals(p)}<span class="cm-muted">${e(commander ? commander.name : "")}</span>
+      <span class="cm-board-tile-flag">${e(seatFlag(p))}</span>${b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"})}</header>`;
+    const body = `<div class="cm-seatboard-body"><div class="cm-board-cards">${rest.map((c) => card(c)).join("") || `<span class="cm-board-empty">No permanents yet.</span>`}</div>
+      <div class="cm-board-cards cm-seatboard-lands" aria-label="Lands, ${lands.length}">${lands.map((c) => card(c)).join("")}</div>
+      <p class="cm-seatboard-piles">Hand ${z.Hand.count} · Library ${z.Library.count} · Graveyard ${z.Graveyard.count} · Exile ${z.Exile.count}</p></div>`;
+    return `<section class="cm-seatboard${you ? " is-you" : ""}${bottom ? " is-bottom" : ""}" data-seat="${i}"${area ? ` style="grid-area:${area}"` : ""} aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${bottom ? body + head : head + body}</section>`;
+  }
+  /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left
+     (the handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot.
+     The logo in the middle opens Table vitals. */
+  function tableView() {
+    const ps = players(), n = ps.length;
+    const AREA = n === 2 ? ["b", "a"] : n === 3 ? ["c", "a", "b"] : ["d", "a", "b", "c"];
+    const BOTTOM = n === 2 ? ["b"] : ["c", "d"];
+    const boards = ps.map((p) => {const area = AREA[(p.playerId - view.seat + n) % n]; return seatBoard(p, {area, bottom: BOTTOM.includes(area)});}).join("");
+    return `<div class="cm-board-table" data-seats="${n}">${boards}
+      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt=""></button></div>`;
+  }
+  /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, you across the
+     foot with the step, Next and Pass over your board; at the side, the others' vitals, the card you picked,
+     and what you are being asked. */
+  function fullView() {
+    const s = view.state, me = players()[view.seat], others = players().filter((p) => p.playerId !== view.seat);
+    const at = stepAt(s.phase), step = at < 0 ? "Opening hands" : STEPS[at][0], next = at < 0 ? "" : at + 1 < STEPS.length ? STEPS[at + 1][0] : "Next turn";
+    const d = view.decision, priority = d && d.kind === "priority";
+    const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
+      <span class="cm-board-tools">${b("⚙", "board-tools", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Tools" title="Tools" ')}${tools ? toolsMenu() : ""}</span>
+      <span class="cm-board-spacer"></span>${b("⎋", "board-view", {view: "focus"}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Leave full screen" title="Leave full screen" ')}</nav>`;
+    const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
+      <span class="cm-board-waiting" role="status" aria-live="polite">${e(d ? (sending ? "Sent…" : d.title) : view.waitingOn ? `Waiting on ${seatName(view.waitingOn)}` : "")}</span>
+      ${b("Pass priority", "board-pass", {}, true, {cls: "compact", disabled: !priority || sending})}</div>`;
+    const pick = selected !== null && visibleCards(me).concat(...others.map(visibleCards)).find((c) => c.cardId === selected);
+    const pickPanel = pick ? `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></section>` : "";
+    return `${rail}<div class="cm-full-center">
+        <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => seatBoard(p)).join("")}</div>
+        <div class="cm-full-mine">${pill}${seatBoard(me, {bottom: true})}${hand()}</div></div>
+      <aside class="cm-full-side" aria-label="The table"><div class="cm-full-vitals">${others.map((p) => `<div><span>${e(p.name)}</span>${vitals(p)}</div>`).join("")}<div><span>You</span>${vitals(me)}</div></div>
+        ${pickPanel}${decision()}${stack()}</aside>`;
+  }
+  /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
+     every other seat, "n / 21" with its bar; the commander's own seat reads "—". */
+  function tableVitals() {
+    const ps = players(), head = `<div role="row" class="is-head"><span role="columnheader"></span>${ps.map((p) => `<span role="columnheader">${e(p.playerId === view.seat ? "You" : p.name)}</span>`).join("")}</div>`;
+    const row = (label, cells) => `<div role="row"><span role="rowheader">${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
+    const rows = [row("Life", ps.map((p) => `<b>${p.health.life}</b>`)), row("Poison", ps.map((p) => `${p.health.poison} / 10`))];
+    const known = new Set();
+    for (const src of ps) {
+      const ids = visibleCards(src).filter((c) => c.commander).map((c) => c.cardId);
+      if (!ids.length) continue;
+      ids.forEach((id) => known.add(String(id)));
+      const name = (commanderOf(src) || {}).name || `${src.name}'s commander`;
+      rows.push(row(`From ${name}`, ps.map((t) => {
+        if (t.playerId === src.playerId) return "—";
+        const n = ids.reduce((sum, id) => sum + ((t.health.commanderDamage || {})[id] || 0), 0);
+        return `${n} / 21<i class="cm-vitals-meter" style="--fill:${Math.min(1, n / 21)};--seat:${SEAT_COLORS[src.playerId % 4]}"></i>`;
+      })));
+    }
+    const unknown = [...new Set(ps.flatMap((t) => Object.keys(t.health.commanderDamage || {})))].filter((id) => !known.has(id));
+    for (const id of unknown) rows.push(row("From a commander out of sight", ps.map((t) => `${(t.health.commanderDamage || {})[id] || 0} / 21`)));
+    C.modal("Table vitals", `<div class="cm-table-vitals" role="table" aria-label="Table vitals" style="--cols:${ps.length}">${head}${rows.join("")}</div>
+      <p class="cm-muted">A player loses at 0 life, at 10 poison, or at 21 combat damage from one commander.</p><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
+  }
   function stack() {
     const items = view.state.stack;
     if (!items.length) return "";
@@ -211,6 +300,8 @@
   /* THE DECISION, IN WHATEVER MODE IT COMES. A one-of answers on the tap; a many-of or an order collects,
      then Confirm; damage is shared out by number. The rules on each (how many, which may not repeat) are the
      room's; the board only keeps Confirm off until they can be met, and the room says no if they are not. */
+  const VERB = {"play-land": "Play", cast: "Cast", "activate-mana": "Tap for mana:"};
+  const verbFor = (o) => `${VERB[o.act] || ""} ${o.label}`.trim();
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished") return "";
@@ -226,8 +317,7 @@
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
       if (!seen.size) return "";
-      const verb = {"play-land": "Play", cast: "Cast", "activate-mana": "Tap for mana:"};
-      body = [...seen.values()].map(({o, n}) => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(`${verb[o.act] || ""} ${o.label}`.trim())}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+      body = [...seen.values()].map(({o, n}) => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
       return `<section class="cm-board-decision" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
@@ -271,6 +361,9 @@
     const host = document.getElementById("cm-board");
     if (!host) return;
     if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
+    host.dataset.view = mode;
+    if (mode === "full") {host.innerHTML = `${fullView()}${banner()}`; return;}
+    if (mode === "table") {host.innerHTML = `${strip()}${tableView()}<div class="cm-board-under">${stack()}${decision()}</div>${hand()}${banner()}`; return;}
     const p = players()[focus] || players()[view.seat];
     host.innerHTML = `${strip()}<div class="cm-board-body"><nav class="cm-board-pane" aria-label="Boards">${players().map(tile).join("")}</nav>
       <div class="cm-board-main">${mat(p)}${stack()}${decision()}</div></div>${hand()}${banner()}`;
@@ -287,14 +380,14 @@
       away.clear();
       for (const a of t.away || []) away.set(a.seatId, a.until);
       if (!document.getElementById("cm-board")) {
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="focus"></div>`;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div>`;
         draw();
       } else if (JSON.stringify([...away]) !== before) draw();
       if (!socket && status !== "reconnecting") connect();
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
-    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false;},
+    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; leaveFullscreen();},
   };
 
   /* ---- actions ---- */
@@ -316,7 +409,10 @@
   }
   actions["board-option"] = (el) => option(Number(el.dataset.index));
   actions["board-card"] = (el) => {
-    if (!view || !view.decision || sending) return;
+    if (!view) return;
+    /* Full screen shows a card large at the side, with what can be done with it, before anything is done. */
+    if (mode === "full") {selected = Number(el.dataset.card); draw(); return;}
+    if (!view.decision || sending) return;
     const opts = optionsFor(Number(el.dataset.card));
     if (opts.length === 1) return option(opts[0].index);
     if (opts.length > 1) {document.getElementById("cm-board-decision")?.scrollIntoView({block: "nearest"}); C.notice(`${opts.length} things can be done with this card; choose one.`);}
@@ -335,7 +431,23 @@
     send({indices: picked});
   };
   actions["board-reset"] = () => {picked = []; draw();};
-  actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); draw();};
+  actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode !== "focus") setMode("focus"); else draw();};
+  actions["board-vitals"] = () => {if (view) tableVitals();};
+  actions["board-view"] = (el) => setMode(el.dataset.view);
+  /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. */
+  function setMode(next) {
+    if (!VIEWS.some(([k]) => k === next)) return;
+    mode = next; tools = false; confirmEnd = false;
+    try {localStorage.setItem(VIEW_KEY, mode);} catch {}
+    const host = document.getElementById("cm-board");
+    if (mode === "full" && host && document.fullscreenEnabled && !document.fullscreenElement) host.requestFullscreen().catch(() => {});
+    if (mode !== "full") leaveFullscreen();
+    draw();
+  }
+  function leaveFullscreen() {if (document.fullscreenElement) document.exitFullscreen().catch(() => {});}
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && mode === "full" && document.getElementById("cm-board") && !document.querySelector("#cm-dialog[open]")) setMode("focus");
+  });
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; draw();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); return;}

@@ -9,6 +9,8 @@
  *   Hidden    Maya's frames never carry a card of Rob's hand or library, only its count; nor his hers.
  *   Decide    the opening hand's Keep; a land played from the hand by tapping it (bright = you can use it);
  *             Pass priority through the steps into turn 2, both boards following, the step ribbon with them.
+ *   Views     Table (both boards, you at the foot, the logo opening Table vitals), Focus, Full screen (the whole
+ *             window; a picked card large at the side); ⎋ leaves; the view is remembered on the device.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
@@ -88,9 +90,11 @@ async function dropSocket(email) {
 
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const {browser, base, stub, close} = await openBrowser({name: "table-board", flag: "GEOMETRY_REQUIRED"});
-async function person(email, viewport) {
+async function person(email, viewport, {fullscreen = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  /* A browser that will not give a page the whole screen (a phone's, or one set so): the view must fill the window by itself. */
+  if (!fullscreen) await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
   if (stub) await stub(page);
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
@@ -117,7 +121,7 @@ try {
   clock += 10000; await object.alarm();
 
   const rob = await person(ROB, {width: 1400, height: 900});
-  const maya = await person(MAYA, {width: 1280, height: 800});
+  const maya = await person(MAYA, {width: 1280, height: 800}, {fullscreen: false});
 
   /* OPEN */
   await rob.page.goto(`${base}/index.html#table?id=${TABLE}`);
@@ -146,10 +150,10 @@ try {
   /* HIDDEN: nothing of the other seat's hand or library, in anything the room sent. */
   const leaks = (email, owner) => frames[email].filter((f) => f.includes(`${owner} Secret`)).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
-  await maya.page.click(".cm-board-tile[data-seat='0']");
+  await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   ok(/Rob's hand · 7/.test(await text(maya.page, ".cm-board-mat")), "Maya can look at Rob's board, and sees his hand as a count");
   ok(!(await maya.page.content()).includes("Rob Secret"), "and her page holds none of his cards by name");
-  await maya.page.click(".cm-board-tile[data-seat='1']");
+  await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
 
   /* DECIDE: the active player plays a land by tapping it in the hand. */
   const active = /Turn 1 · You/.test(await text(rob.page, ".cm-board-turn")) ? rob : maya, other = active === rob ? maya : rob;
@@ -174,7 +178,7 @@ try {
   await brightLand.click();
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
   ok(/land drop used/.test(await text(active.page, ".cm-board-lands")), "tapping it plays it: Lands · 1, the land drop used");
-  await other.page.click(`.cm-board-tile[data-seat='${activeSeat}']`);
+  await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
   /* With the land down there are two things to do, pass or tap it for mana: Pass priority passes. */
@@ -182,7 +186,74 @@ try {
   await active.page.click("[data-action=board-pass]");
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`));
   eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Pass priority hands priority on, and taps nothing");
-  await other.page.click(`.cm-board-tile[data-seat='${1 - activeSeat}']`);
+
+  /* THE THREE VIEWS. Table: both boards at once, you at the foot, the logo between them opening Table vitals. */
+  await rob.page.click("[data-action=board-view][data-view=table]");
+  await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
+  const tableGeo = await rob.page.evaluate(() => {
+    const box = (q) => document.querySelector(q).getBoundingClientRect();
+    const mine = box(".cm-seatboard.is-you"), theirs = box(".cm-seatboard:not(.is-you)"), center = box(".cm-board-center");
+    return {mineBelow: mine.top >= theirs.bottom, border: getComputedStyle(document.querySelector(".cm-seatboard.is-you")).borderTopWidth,
+      centerBetween: center.top < mine.top && center.bottom > theirs.bottom, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+  });
+  ok(tableGeo.mineBelow && tableGeo.border === "2px", `Table view: Rob's board at the foot in brass (${tableGeo.border}), Maya's above`);
+  ok(tableGeo.centerBetween && tableGeo.sideways === 0, "the logo sits in the gap between the boards, and nothing scrolls sideways");
+  ok((await text(rob.page, `.cm-seatboard[data-seat='${activeSeat}']`)).includes(land), "the land played is on its owner's board in the Table view too");
+  await shot(rob.page, "board-table-1400");
+  await rob.page.click(".cm-board-center");
+  await rob.page.locator(".cm-table-vitals").waitFor();
+  const vitalsRows = await rob.page.locator(".cm-table-vitals [role=row]").allInnerTexts();
+  const flat = vitalsRows.map((r) => r.replace(/\s+/g, " ").trim());
+  ok(flat[0] === "You Maya" && flat[1] === "Life 40 40" && flat[2] === "Poison 0 / 10 0 / 10", `Table vitals: every seat's life and poison (${flat.slice(0, 3).join(" | ")})`);
+  ok(flat.includes("From Rob General — 0 / 21") && flat.includes("From Maya General 0 / 21 —"), `and each commander's damage to every other seat, its own seat "—" (${flat.slice(3).join(" | ")})`);
+  await shot(rob.page, "table-vitals-1400");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-vitals]").click();
+  await rob.page.locator(".cm-table-vitals").waitFor();
+  ok(true, "any seat's vitals pill opens Table vitals too");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
+  await rob.page.locator(".cm-board-mat").waitFor();
+  ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
+  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+
+  /* Full screen: the page is the game's; a card picked shows large at the side with what it can do; ⎋ leaves. */
+  await maya.page.click("[data-action=board-view][data-view=full]");
+  await maya.page.locator(".cm-full-rail").waitFor();
+  const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
+  ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
+  ok(await maya.page.locator(".cm-full-others .cm-seatboard").count() === 1 && await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").count() === 1, "the other seat across the top, hers across the foot");
+  const firstHand = maya.page.locator(".cm-board-hand .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
+  await firstHand.click();
+  await maya.page.locator(".cm-full-pick").waitFor();
+  ok((await maya.page.getAttribute(".cm-full-pick", "aria-label")) === firstName, `a card picked shows large at the side (${firstName}), and picking it does nothing else`);
+  await shot(maya.page, "board-full-1280");
+  await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
+  await maya.page.locator(".cm-board-strip").waitFor();
+  ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
+  await maya.page.click("[data-action=board-view][data-view=full]");
+  await maya.page.locator(".cm-full-rail").waitFor();
+  const pillClear = await maya.page.evaluate(() => {const pill = document.querySelector(".cm-full-pill").getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return first.top >= pill.bottom;});
+  ok(pillClear, "the step and Pass pill sits over her board without covering its first row");
+  await maya.page.keyboard.press("Escape");
+  await maya.page.locator(".cm-board-strip").waitFor();
+  ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "and so does Escape");
+
+  /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. */
+  await rob.page.click("[data-action=board-view][data-view=full]");
+  await rob.page.waitForFunction(() => document.fullscreenElement && document.fullscreenElement.id === "cm-board", null, {timeout: 10000});
+  await rob.page.click("[aria-label='Leave full screen']");
+  await rob.page.waitForFunction(() => !document.fullscreenElement, null, {timeout: 10000});
+  ok(true, "where the browser allows it, Full screen is the whole screen, and ⎋ gives it back");
+
+  /* The view is remembered on this device: Table, then a reload, and it is still Table. */
+  await rob.page.click("[data-action=board-view][data-view=table]");
+  await rob.page.reload();
+  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+  await rob.page.locator(".cm-board-table").waitFor({timeout: 20000});
+  ok(await rob.page.getAttribute("#cm-board", "data-view") === "table", "the view chosen is the view Rob comes back to");
+  await rob.page.click("[data-action=board-view][data-view=focus]");
+  await other.page.click(`.cm-board-tile[data-seat='${1 - activeSeat}'] [data-action=board-focus]`);
 
   /* REFUSED: an answer to a question already gone is refused, in words, and the board takes the room's view. */
   const {server} = routes[active === rob ? ROB : MAYA].at(-1);
@@ -231,13 +302,14 @@ try {
   }
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
+  const socketsBefore = routes[ROB].length;
   let release; held[MAYA] = {promise: new Promise((r) => {release = r;})};
   await dropSocket(ROB);
   await waitText(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag", /Dropped · back by/, 10000);
   ok(true, "Maya is told at once that Rob dropped, and until when, by the room over her socket (her table reads held)");
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-board-strip") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
-  ok(routes[ROB].length === 2, "Rob's board opens a new socket by itself, and the room sends his view again");
+  ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
   await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
 
