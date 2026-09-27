@@ -3238,9 +3238,11 @@ button.cm-vitals{cursor:pointer}
 .cm-hand-show h2{margin:0;color:var(--mat-ink)}
 .cm-hand-show .cm-muted{color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
 .cm-hand-close{position:absolute;right:20px;top:20px}
-.cm-hand-fan{position:relative;width:100%;height:calc(170px * var(--card-scale,1) * 1.6)}
-.cm-hand-slot{position:absolute;left:50%;top:0;transform:translateX(calc(-50% + var(--o) * 132px * var(--card-scale,1))) translateY(calc(var(--a) * 10px)) rotate(calc(var(--o) * 5deg));transform-origin:50% 120%;transition:transform .2s}
-.cm-hand-slot:hover{z-index:2;transform:translateX(calc(-50% + var(--o) * 132px * var(--card-scale,1))) translateY(-18px) rotate(0deg)}
+/* 132px apart, or closer when a big hand would run off the screen: the fan's two ends stay inside it. The room
+   kept at the sides is a card's width and the swing of its turn, which pivots below the card. */
+.cm-hand-fan{position:relative;width:100%;height:calc(170px * var(--card-scale,1) * 1.6);--step:min(calc(132px * var(--card-scale,1)),calc((100vw - 480px * var(--card-scale,1)) / var(--gaps)))}
+.cm-hand-slot{position:absolute;left:50%;top:0;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(calc(var(--a) * 10px)) rotate(calc(var(--o) * 5deg));transform-origin:50% 120%;transition:transform .2s}
+.cm-hand-slot:hover{z-index:2;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(-18px) rotate(0deg)}
 .cm-hand-slot .cm-bcard{--bc:calc(170px * var(--card-scale,1));cursor:pointer}
 .cm-hand-key{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:12px;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
 .cm-hand-held .cm-bcard{--bc:calc(190px * var(--card-scale,1));box-shadow:0 0 0 3px var(--v-accent),0 24px 60px -20px rgb(0 0 0 / .8);cursor:pointer}

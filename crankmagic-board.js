@@ -372,7 +372,7 @@
     const fan = cards.map((c, k) => {const o = k - (n - 1) / 2; return `<div class="cm-hand-slot" style="--o:${o};--a:${Math.abs(o)}" data-key="${k + 1}">${card(c, {where: "fan", action: "board-hand-hold"})}<span class="cm-hand-key">${k + 1}</span></div>`;}).join("");
     return `<div class="cm-hand-show" role="dialog" aria-modal="true" aria-label="Your hand">${close}
       <header><h2>Your hand · ${n}</h2><p class="cm-muted">Hover to read · click to choose · 1–${Math.min(9, n) || 1} keys · Space or ✕ to put it away · bright = castable now</p></header>
-      <div class="cm-hand-fan">${fan}</div></div>`;
+      <div class="cm-hand-fan" style="--gaps:${Math.max(1, n - 1)}">${fan}</div></div>`;
   }
   /* CARD ZOOM. A card held under the pointer a moment is shown large (320px) where it does not cover it; a long
      press, or a right click, opens it with what can be done with it. */
