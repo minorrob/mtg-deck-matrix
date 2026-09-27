@@ -15,6 +15,8 @@
  *             click; Show hand: Space fans it, a number holds a card up, Escape puts it back, Enter plays it.
  *   Coach     the chat panel over the right edge (the shell): prompts, a stub reply that says so, Shift+Enter,
  *             a draft kept through a view, Clear chat, Escape; from the pane, Tools and Full screen's rail.
+ *   Phones    Focus only: the 52px rail, the 112px seat strip, the pill; a seat tapped and ‹ ›; snapping back when
+ *             asked; ✋ at a readable size; held upright, the surface turned a quarter; back at a desk, the desk board.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
@@ -462,6 +464,69 @@ try {
   ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
   await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
+
+  /* PHONES: Maya's screen becomes a phone held sideways. Focus only: the rail, her board, the seat strip, the pill. */
+  await maya.page.click("[data-action=board-view][data-view=table]");   /* her desk's view, which the phone must leave be */
+  await maya.page.setViewportSize({width: 844, height: 390});
+  await maya.page.locator("#cm-board[data-phone=landscape] .cm-phone-rail").waitFor({timeout: 10000});
+  const phoneGeo = await maya.page.evaluate(() => {
+    const w = (q) => Math.round(document.querySelector(q).getBoundingClientRect().width), board = document.getElementById("cm-board").getBoundingClientRect();
+    return {rail: w(".cm-phone-rail"), seats: w(".cm-phone-seats"), board: [Math.round(board.width), Math.round(board.height)], views: document.querySelectorAll("#cm-board [data-action=board-view]").length,
+      sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth, seatCount: document.querySelectorAll(".cm-phone-seat").length};
+  });
+  ok(phoneGeo.rail === 52 && phoneGeo.seats === 112 && phoneGeo.board[0] === 844 && phoneGeo.board[1] === 390 && phoneGeo.sideways === 0, `on a phone held sideways: the 52px rail, the 112px seat strip, the board the whole screen (${phoneGeo.board.join("×")})`);
+  ok(phoneGeo.views === 0 && phoneGeo.seatCount === 2, "Focus is the only view, and the strip holds every seat");
+  const badge = Number(await text(maya.page, ".cm-phone-badge"));
+  const mayaHand = views(MAYA).at(-1).state.players[1].zones.Hand.count;
+  eq(badge, mayaHand, `✋ carries the hand's count (${badge})`);
+  await maya.page.click(".cm-phone-seat[data-seat='0']");
+  await waitText(maya.page, ".cm-phone-pill", /Viewing Rob/);
+  ok(await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").count() === 1, "a seat tapped puts that board on the screen, and the pill says whose");
+  await maya.page.click(".cm-phone-pill [data-action=board-focus]");
+  await maya.page.locator(".cm-phone-center .cm-seatboard.is-you").waitFor();
+  await maya.page.click("[data-action=board-rotate][data-by='1']");
+  await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").waitFor();
+  ok(true, "My board goes back to hers, and › goes round to the next seat");
+  await maya.page.click("[data-action=board-rotate][data-by='-1']");
+  const askShare = await maya.page.evaluate(() => {const a = document.querySelector(".cm-phone-ask"); return a && a.children.length ? a.getBoundingClientRect().height / innerHeight : 0;});
+  ok(askShare < 0.35, `what she is asked sits over the board's foot without covering most of it (${Math.round(askShare * 100)}% of the height)`);
+  await shot(maya.page, "phone-landscape");
+  /* When the room asks her something, the board snaps back to hers, wherever she was looking. */
+  let snapped = false;
+  for (let i = 0; i < 30 && !snapped; i += 1) {
+    const mayaAsked = await maya.page.locator(".cm-phone-pill [data-action=board-pass]:not([disabled])").count();
+    if (mayaAsked) {await maya.page.click(".cm-phone-pill [data-action=board-pass]"); await maya.page.waitForTimeout(250); continue;}
+    if (!(await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").count())) await maya.page.click(".cm-phone-seat[data-seat='0']");
+    const robPass = rob.page.locator("[data-action=board-pass]:not([disabled])");
+    if (!(await robPass.count())) {await rob.page.waitForTimeout(250); continue;}
+    await robPass.click();
+    await maya.page.waitForTimeout(500);
+    if (await maya.page.locator(".cm-phone-pill [data-action=board-pass]:not([disabled])").count()) snapped = await maya.page.locator(".cm-phone-center .cm-seatboard.is-you").count() === 1;
+  }
+  ok(snapped, "looking at Rob's board when the room asks her, the board snaps back to hers");
+  /* ✋: the hand at a readable size; a card tapped is held up with what it can do; Back to hand. */
+  await maya.page.click(".cm-phone-icon[aria-label='Your hand']");
+  await maya.page.locator("#cm-board .cm-hand-show .cm-hand-fan").waitFor();
+  const phoneCard = await maya.page.evaluate(() => Math.round(document.querySelector(".cm-hand-slot .cm-bcard").getBoundingClientRect().width));
+  ok(phoneCard === 110, `✋ opens the hand over the board, its cards 110px (${phoneCard})`);
+  await maya.page.locator(".cm-hand-slot .cm-bcard").first().click();
+  await maya.page.locator(".cm-hand-show.is-held").waitFor();
+  await shot(maya.page, "phone-hand");
+  await maya.page.click(".cm-hand-acts [data-action=board-hand-back]");
+  await maya.page.click("[data-action=board-hand-close]");
+  /* Held upright, the game surface is turned a quarter: landscape still, no screen asking to turn the phone. */
+  await maya.page.setViewportSize({width: 390, height: 844});
+  await maya.page.locator("#cm-board[data-phone=portrait]").waitFor({timeout: 10000});
+  const upright = await maya.page.evaluate(() => {
+    const r = document.getElementById("cm-board").getBoundingClientRect(), m = new DOMMatrix(getComputedStyle(document.getElementById("cm-board")).transform);
+    return {box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], turn: Math.round(Math.atan2(m.b, m.a) * 180 / Math.PI), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+  });
+  ok(upright.turn === 90 && upright.box.join() === "0,0,390,844" && upright.sideways === 0, `held upright, the surface is turned 90° and still fills the screen (${upright.box.join(",")})`);
+  await shot(maya.page, "phone-upright");
+  await maya.page.setViewportSize({width: 1280, height: 800});
+  await maya.page.locator("#cm-board:not([data-phone]) .cm-board-strip").waitFor({timeout: 10000});
+  ok(await maya.page.getAttribute("#cm-board", "data-view") === "table", "back at a desk, the desk board again, in the view she left it in: seats tapped on the phone changed nothing there");
+  await maya.page.click("[data-action=board-view][data-view=focus]");
 
   /* END: Tools › End game, two taps; both boards say so; back to the table. */
   await maya.page.click("[data-action=board-tools]");

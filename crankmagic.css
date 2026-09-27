@@ -3305,3 +3305,37 @@ button.cm-vitals{cursor:pointer}
 .cm-coach-compose{display:flex;align-items:flex-end;gap:8px;padding:10px 16px 16px}
 .cm-coach-input{flex:1 1 auto;min-height:44px;max-height:140px;padding:11px 16px;border-radius:22px;border:1px solid var(--v-line-strong);background:var(--v-bg);color:var(--v-ink);font:inherit;font-size:13px;resize:none}
 .cm-coach-send{width:44px;height:44px;border-radius:50%;border:0;background:var(--v-accent);color:var(--on-accent);font-size:16px;cursor:pointer}
+/* THE BOARD ON A PHONE (M5, the handoff's "Play on phones"): Focus only, the game surface landscape. A 52px icon
+   rail, your board full-bleed, a 112px seat strip; the pill on top. Held upright, the surface itself is turned a
+   quarter, so there is never a screen asking to turn the phone. */
+.cm-board[data-phone]{position:fixed;inset:0;z-index:60;display:grid;grid-template-columns:52px minmax(0,1fr) 112px;gap:6px;padding:6px;background:var(--v-bg);overflow:hidden;--bc:calc(44px * var(--card-scale,1));--hc:calc(96px * var(--card-scale,1))}
+.cm-board[data-phone="portrait"]{inset:auto;top:0;left:0;width:100vh;height:100vw;transform:translateX(100vw) rotate(90deg);transform-origin:top left}
+.cm-phone-rail{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cm-phone-icon{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font-size:18px;cursor:pointer}
+.cm-phone-badge{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--v-accent);color:var(--on-accent);font-size:11px;font-weight:800;line-height:18px}
+.cm-phone-rail .cm-board-menu{left:calc(100% + 6px);right:auto;top:0;width:min(320px,70vw);max-height:calc(100% - 12px)}
+.cm-phone-center{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.cm-phone-center>.cm-seatboard{flex:1 1 auto;padding-top:46px}
+.cm-phone-pill{position:absolute;left:50%;top:6px;z-index:3;display:flex;align-items:center;gap:8px;padding:3px 4px 3px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);font-size:12px;white-space:nowrap;max-width:calc(100% - 12px)}
+#matrix-v2 .cm-phone-pill .v-button{min-height:0;height:30px;padding:0 12px}
+.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
+.cm-phone-ask:empty{display:none}
+.cm-phone-ask .cm-board-decision,.cm-phone-ask .cm-board-stack{padding:8px 10px}
+.cm-phone-seats{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+.cm-phone-seat{display:grid;gap:0;padding:6px 8px;border-radius:10px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.cm-phone-seat b{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+.cm-phone-seat small{font-size:10px;color:var(--v-accent);min-height:1.2em}
+.cm-phone-seat.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
+.cm-phone-rotate{display:flex;justify-content:space-between;gap:4px;margin-top:auto}
+#matrix-v2 .cm-phone-rotate .v-button{flex:1;min-height:0;height:32px;padding:0}
+.cm-board[data-phone] .cm-hand-fan{display:flex;gap:8px;height:auto;overflow-x:auto;padding:8px 4px}
+.cm-board[data-phone] .cm-hand-slot{position:relative;left:auto;transform:none;flex:0 0 auto}
+.cm-board[data-phone] .cm-hand-slot:hover{transform:none}
+.cm-board[data-phone] .cm-hand-slot .cm-bcard{--bc:calc(110px * var(--card-scale,1))}
+.cm-board[data-phone] .cm-hand-key{display:none}
+.cm-board[data-phone] .cm-hand-held .cm-bcard{--bc:calc(130px * var(--card-scale,1))}
+.cm-board[data-phone] .cm-hand-show{position:absolute;padding:12px;gap:10px}
+/* On a phone, what you are asked is one compact row over the board's foot, not half the screen. */
+.cm-phone-ask .cm-board-decision{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.cm-phone-ask .cm-board-decision h3{margin:0;font-size:12px}
+.cm-phone-ask .cm-board-decision-foot{margin:0}

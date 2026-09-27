@@ -27,7 +27,11 @@
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is
  * reopened, backing off to ten seconds, and the room sends the view again the moment it is back.
  *
- * Still to come on this board (the handoff's list): phones.
+ * PHONES (the handoff's "Play on phones"): Focus only. A 52px icon rail (✋ with the hand's count, History,
+ * Coach, Settings), your board full-bleed, a 112px seat strip (life in bold; tap to look at a board, ‹ › to go
+ * round), and a pill on top: turn, step, Next, Pass, or "Viewing Maya · My board". The game surface is landscape
+ * only, with no screen asking to turn the phone: held upright, the surface is turned a quarter itself. When the
+ * room asks you something, the board snaps back to yours.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
@@ -98,6 +102,8 @@
     const before = view && view.decision && view.decision.id;
     view = next;
     if (focus === null) focus = view.seat;
+    /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
+    if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false;}
     draw();
   }
@@ -244,7 +250,7 @@
   }
   /* ONE SEAT'S BOARD, SMALL: the Table view's four, and the Full screen view's opponents. Its header sits on
      the board's outer edge (the handoff): name · vitals · commander · flag · Focus. */
-  function seatBoard(p, {area = "", bottom = false} = {}) {
+  function seatBoard(p, {area = "", bottom = false, head: withHead = true} = {}) {
     const i = p.playerId, you = i === view.seat, field = p.zones.Battlefield.cards, commander = commanderOf(p);
     const lands = field.filter((c) => c.types.includes("Land")), rest = field.filter((c) => !c.types.includes("Land"));
     const z = p.zones;
@@ -253,7 +259,8 @@
     const body = `<div class="cm-seatboard-body"><div class="cm-board-cards">${rest.map((c) => card(c)).join("") || `<span class="cm-board-empty">No permanents yet.</span>`}</div>
       <div class="cm-board-cards cm-seatboard-lands" aria-label="Lands, ${lands.length}">${lands.map((c) => card(c)).join("")}</div>
       <p class="cm-seatboard-piles">Hand ${z.Hand.count} · Library ${z.Library.count} · Graveyard ${z.Graveyard.count} · Exile ${z.Exile.count}</p></div>`;
-    return `<section class="cm-seatboard${you ? " is-you" : ""}${bottom ? " is-bottom" : ""}" data-seat="${i}"${area ? ` style="grid-area:${area}"` : ""} aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${bottom ? body + head : head + body}</section>`;
+    const top = withHead ? head : "";
+    return `<section class="cm-seatboard${you ? " is-you" : ""}${bottom ? " is-bottom" : ""}" data-seat="${i}"${area ? ` style="grid-area:${area}"` : ""} aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${bottom ? body + top : top + body}</section>`;
   }
   /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left
      (the handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot.
@@ -432,6 +439,29 @@
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
+  /* A PHONE: the shorter side of the screen at most 500px. Held upright, the surface is turned to landscape. */
+  const phone = () => Math.min(innerWidth, innerHeight) <= 500;
+  function phoneView() {
+    const s = view.state, me = players()[view.seat], p = players()[focus] || me, mine = p.playerId === view.seat;
+    const at = stepAt(s.phase), step = at < 0 ? "Opening hands" : STEPS[at][0], next = at < 0 ? "" : at + 1 < STEPS.length ? STEPS[at + 1][0] : "Next turn";
+    const d = view.decision, priority = d && d.kind === "priority";
+    const icon = (glyph, action, label, extra = "") => `<button type="button" class="cm-phone-icon" data-action="${action}" aria-label="${e(label)}" title="${e(label)}">${glyph}${extra}</button>`;
+    const rail = `<nav class="cm-phone-rail" aria-label="Board">
+      ${icon("✋", "board-show-hand", "Your hand", `<span class="cm-phone-badge">${me.zones.Hand.count}</span>`)}
+      <span class="cm-board-tools">${icon("☰", "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
+      ${icon("✦", "board-coach", "CrankMagic Coach")}
+      <span class="cm-board-tools">${icon("⚙", "board-tools", "Settings")}${tools ? toolsMenu() : ""}</span></nav>`;
+    const pill = mine
+      ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
+          ${b("Pass", "board-pass", {}, true, {cls: "compact", disabled: !priority || sending})}</div>`
+      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}</div>`;
+    const seats = [me, ...players().filter((x) => x.playerId !== view.seat)];
+    const strip = `<aside class="cm-phone-seats" aria-label="Seats">
+      ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}">
+        <span>${e(x.playerId === view.seat ? "You" : x.name)}</span><b>${x.health.life}</b><small>${e(seatFlag(x))}</small></button>`).join("")}
+      <div class="cm-phone-rotate">${b("‹", "board-rotate", {by: "-1"}, false, {cls: "compact"})}${b("›", "board-rotate", {by: "1"}, false, {cls: "compact"})}</div></aside>`;
+    return `${rail}<div class="cm-phone-center">${pill}${seatBoard(p, {head: false})}<div class="cm-phone-ask">${decision()}${stack()}</div></div>${strip}`;
+  }
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
   const stepNow = () => {const s = view.state, at = stepAt(s.phase); return s.turn ? `Turn ${s.turn} · ${at < 0 ? "Opening hands" : STEPS[at][0]}` : "Before turn 1";};
@@ -499,6 +529,13 @@
     const host = document.getElementById("cm-board");
     if (!host) return;
     if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
+    if (phone()) {
+      host.dataset.view = "focus";
+      host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
+      host.innerHTML = `${phoneView()}${showHand()}${banner()}`;
+      return;
+    }
+    delete host.dataset.phone;
     host.dataset.view = mode;
     if (mode === "full") {host.innerHTML = `${fullView()}${showHand()}${banner()}`; return;}
     if (mode === "table") {host.innerHTML = `${strip()}${tableView()}<div class="cm-board-under">${stack()}${decision()}</div>${hand()}${showHand()}${banner()}`; return;}
@@ -570,7 +607,19 @@
     send({indices: picked});
   };
   actions["board-reset"] = () => {picked = []; draw();};
-  actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode !== "focus") setMode("focus"); else draw();};
+  actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode !== "focus" && !phone()) setMode("focus"); else draw();};
+  actions["board-rotate"] = (el) => {
+    const n = players().length;
+    if (!n) return;
+    focus = ((focus ?? view.seat) + Number(el.dataset.by) + n) % n;
+    draw();
+  };
+  let lastPhone = null;
+  addEventListener("resize", () => {
+    if (!document.getElementById("cm-board") || !view) return;
+    const now = phone() ? (innerHeight > innerWidth ? "portrait" : "landscape") : "no";
+    if (now !== lastPhone) {lastPhone = now; draw();}
+  });
   actions["board-vitals"] = () => {if (view) tableVitals();};
   actions["board-view"] = (el) => setMode(el.dataset.view);
   /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. */
