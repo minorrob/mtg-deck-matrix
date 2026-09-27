@@ -3254,3 +3254,20 @@ button.cm-vitals{cursor:pointer}
 .cm-board-peek[data-side="left"]{left:24px}
 .cm-board-peek .cm-bcard,.cm-board-zoom .cm-bcard{--bc:calc(320px * var(--card-scale,1));max-width:calc(100vw - 48px)}
 .cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
+/* THE HISTORY ON THE BOARD (M5; the handoff's play-history): a drop-down from the strip, a band on the Focus mat
+   between the two pairs of piles, and a column in Full screen. Newest first; a turn is a divider. */
+.cm-board-history{width:360px;max-height:min(70vh,520px);display:flex;flex-direction:column;gap:8px}
+.cm-board-history h3,.cm-board-band h3{margin:0;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.cm-history-filter{width:100%}
+.cm-history-list,.cm-board-band ol{list-style:none;margin:0;padding:0;overflow:auto;font-size:12px}
+.cm-history-list li,.cm-board-band li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--v-line)}
+.cm-history-list li.is-turn{justify-content:center;font-weight:700;color:var(--v-accent);border-bottom-color:var(--v-accent)}
+.cm-history-list li.is-end,.cm-board-band li.is-end{font-weight:700}
+.cm-history-turn{flex:0 0 auto;color:var(--v-muted);font-variant-numeric:tabular-nums}
+.cm-board-band{grid-column:1 / -1;display:grid;gap:4px;padding:6px 8px;border:1px solid color-mix(in srgb,var(--mat-ink) 30%,transparent);border-radius:10px;min-width:0}
+.cm-board-mat .cm-board-band{color:var(--mat-ink)}
+.cm-board-mat .cm-board-band li{border-bottom-color:color-mix(in srgb,var(--mat-ink) 15%,transparent)}
+.cm-board-mat .cm-history-turn{color:color-mix(in srgb,var(--mat-ink) 60%,transparent)}
+#matrix-v2 .cm-board-band h3 .v-button{min-height:0;height:24px;padding:0 8px}
+.cm-full-side .cm-board-band{background:var(--v-panel);border-color:var(--v-line)}
+.cm-board-band li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}

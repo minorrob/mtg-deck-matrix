@@ -37,6 +37,7 @@ import {createJournal} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot} from "../engine/pilots/house-pilot.mjs";
+import {addToHistory} from "./history.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -44,6 +45,8 @@ export const VIEW_SCHEMA = "CrankRoomView@1";
 const SEAT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const MAX_CARDS = 250;           // a Commander deck is 100; this is only a bound on what a pod may carry
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
+const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
+const HISTORY_VIEW = 120;         // the newest of them, in every view
 
 export class RoomError extends Error {
   constructor(status, message, extra = {}) {super(message); this.status = status; Object.assign(this, extra);}
@@ -114,10 +117,16 @@ function roomOn(storage, matchId, cards) {
      five minutes ran out, which their record shows as not finished). `ended`: someone ended the game for
      everyone. */
   let leaving = [], departures = {}, ended = null;
+  /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
+  let history = [];
+  const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = housePilot({seat, cards: facts}));
 
-  const write = (events) => {for (const e of events) journal.write(e.kind, e.data);};
+  const write = (events) => {
+    const names = seats.map((s) => s.name);
+    for (const e of events) {journal.write(e.kind, e.data); addToHistory(history, e, names);}
+  };
   const seatIndex = (seatId) => seats.findIndex((s) => s.seatId === seatId);
 
   /* Run the game until a person has to decide, or it is over. AI seats are answered on the way. */
@@ -170,7 +179,7 @@ function roomOn(storage, matchId, cards) {
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history}));
   }
 
   const api = {
@@ -205,7 +214,7 @@ function roomOn(storage, matchId, cards) {
       if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
       const point = await store.latestCheckpoint();
       if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
-      seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null;
+      seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);
       journal = createJournal({matchId, seed: point.seed}, point);
@@ -231,6 +240,7 @@ function roomOn(storage, matchId, cards) {
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
         decision: mine ? structuredClone(controller.pending) : null,
         state: projectFor(state, seat),
+        history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
       };
     },
 
@@ -248,6 +258,7 @@ function roomOn(storage, matchId, cards) {
       if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
       withdraw();
       departures[seatId] = why;
+      note(why === "timed-out" ? `${seats[seat].name} ran out of time · not finished` : `${seats[seat].name} conceded`);
       leaving = [...leaving, seat];
       drive();
       await persist();
@@ -261,6 +272,7 @@ function roomOn(storage, matchId, cards) {
       if (finished()) throw new RoomError(409, "This game is over.");
       withdraw();
       ended = {by: seatId};
+      note(`${seats[seat].name} ended the game for everyone · not finished`);
       pendingSeat = null; pendingActions = null;
       await persist();
       return api;
