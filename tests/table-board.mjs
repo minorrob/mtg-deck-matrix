@@ -90,9 +90,11 @@ async function dropSocket(email) {
 
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const {browser, base, stub, close} = await openBrowser({name: "table-board", flag: "GEOMETRY_REQUIRED"});
-async function person(email, viewport) {
+async function person(email, viewport, {fullscreen = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  /* A browser that will not give a page the whole screen (a phone's, or one set so): the view must fill the window by itself. */
+  if (!fullscreen) await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
   if (stub) await stub(page);
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
@@ -119,7 +121,7 @@ try {
   clock += 10000; await object.alarm();
 
   const rob = await person(ROB, {width: 1400, height: 900});
-  const maya = await person(MAYA, {width: 1280, height: 800});
+  const maya = await person(MAYA, {width: 1280, height: 800}, {fullscreen: false});
 
   /* OPEN */
   await rob.page.goto(`${base}/index.html#table?id=${TABLE}`);
@@ -219,7 +221,7 @@ try {
   await maya.page.click("[data-action=board-view][data-view=full]");
   await maya.page.locator(".cm-full-rail").waitFor();
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
-  ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
+  ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
   ok(await maya.page.locator(".cm-full-others .cm-seatboard").count() === 1 && await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").count() === 1, "the other seat across the top, hers across the foot");
   const firstHand = maya.page.locator(".cm-board-hand .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
   await firstHand.click();
@@ -236,6 +238,13 @@ try {
   await maya.page.keyboard.press("Escape");
   await maya.page.locator(".cm-board-strip").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "and so does Escape");
+
+  /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. */
+  await rob.page.click("[data-action=board-view][data-view=full]");
+  await rob.page.waitForFunction(() => document.fullscreenElement && document.fullscreenElement.id === "cm-board", null, {timeout: 10000});
+  await rob.page.click("[aria-label='Leave full screen']");
+  await rob.page.waitForFunction(() => !document.fullscreenElement, null, {timeout: 10000});
+  ok(true, "where the browser allows it, Full screen is the whole screen, and ⎋ gives it back");
 
   /* The view is remembered on this device: Table, then a reload, and it is still Table. */
   await rob.page.click("[data-action=board-view][data-view=table]");
