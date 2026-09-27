@@ -15,7 +15,7 @@
 import assert from "node:assert/strict";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
-import {tableOn, INVITE_TTL} from "../game/room/table.mjs";
+import {tableOn, INVITE_TTL, MATS} from "../game/room/table.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
@@ -70,6 +70,14 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   const late = (await t.invite(ROB, 2, now)).code;
   await refuses(t.join(SAM, late, now + INVITE_TTL + 1), 410, null, "a link used after its day is refused");
   const samLink = (await t.invite(ROB, 2, now)).code;
+
+  /* Mats: every seat starts on felt; a person picks their own from the app's mats, and everyone sees it. */
+  ok((await t.view(MAYA)).seats.every((s) => s.mat === "felt"), "every seat starts on felt");
+  eq((await t.mat(MAYA, "sea")).seats[1].mat, "sea", "Maya picks the sea for her own seat");
+  eq((await t.view(ROB)).seats[1].mat, "sea", "and Rob sees it on her seat");
+  await refuses(t.mat(MAYA, "someone-elses-art"), 400, /no such mat/, "a mat that is not one of the app's is refused");
+  await refuses(t.mat(EVE, "forge"), 403, null, "someone with no seat picks no mat");
+  eq(MATS, ["felt", "forge", "cavern", "sea", "night"], "the app's own mats, drawn by the app: nobody else's art");
 
   /* Decks. */
   await refuses(t.deck(MAYA, 0, deckFor("maya"), now), 403, null, "a person chooses only their own seat's deck");
@@ -197,6 +205,7 @@ function objectCtx() {
   const joined = await call("POST", `/api/tables/${id}/join`, {as: MAYA, body: {code: inv.json.invite.code}});
   eq([joined.status, joined.json.table.yourSeat], [200, 1], "the invited person joins through the door, as themselves");
   eq((await call("POST", `/api/tables/${id}/invite`, {as: MAYA, body: {seatId: 1}})).status, 403, "a guest cannot send invitations");
+  eq((await call("POST", `/api/tables/${id}/mat`, {as: MAYA, body: {mat: "night"}})).json.table.seats[1].mat, "night", "a mat is chosen through the front door too");
   eq((await call("GET", `/api/tables/${id}/connect`, {headers: {upgrade: "websocket", origin: "https://evil.example"}})).status, 403, "a table's socket from another site is refused");
   eq((await call("GET", "/api/tables/NOT-AN-ID")).status, 404, "a malformed table id is no table");
   eq((await call("POST", `/api/tables/${id}/explode`, {body: {}})).status, 404, "an unknown action is 404");

@@ -27,6 +27,9 @@ import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 
 export const TABLE_SCHEMA = "CrankTable@1";
 export const INVITE_TTL = 24 * 3600 * 1000;
+/* THE MATS a seat may play on (the handoff's Choose mat): drawn by the app itself, so nothing here is anyone
+   else's art. A person's own uploaded mats wait on file storage. Felt is where every seat starts. */
+export const MATS = Object.freeze(["felt", "forge", "cavern", "sea", "night"]);
 /* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
@@ -164,6 +167,15 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await save();
       return api.view(email);
     },
+    /** Your seat's mat: cosmetic, so it can change at any point, the game included, and everyone sees it. */
+    async mat(email, mat) {
+      await load();
+      const seat = needSeat(email);
+      if (!MATS.includes(mat)) throw new TableError(400, "There is no such mat.");
+      record.mats = {...(record.mats || {}), [seat]: mat};
+      await save();
+      return api.view(email);
+    },
     async ready(email, ready, now) {
       await load();
       step({type: "ready", seatId: needSeat(email), ready: !!ready}, now);
@@ -290,7 +302,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
           seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
-          invited: s.invited, you: s.seatId === mine,
+          invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length} : {}),
         })),

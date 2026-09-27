@@ -11,6 +11,7 @@
  *   Deck     from your own library; one the engine cannot play is refused naming its cards; nobody sees
  *            another seat's cards.
  *   Start    Ready, Start, the countdown's number, Cancel; then the game is on.
+ *   Mat      Choose mat: the app's own mats, a preview, everyone sees it, remembered for the next table.
  *   Board    once the game is on the page is the board's (tests/table-board.mjs); once over, the lobby says so.
  *   Shut     without the cloud-Play mark the page says Coming Soon; every write carries Play's header.
  *
@@ -162,6 +163,17 @@ try {
   await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Ready/);
   ok(true, "the host chose the AI's deck, and the AI is ready");
 
+  /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
+  await rob.page.locator("#cm-mat-preview").waitFor();
+  eq(await rob.page.locator(".cm-mat-pick").allInnerTexts(), ["Felt", "Forge", "Cavern", "Sea", "Night"], "Choose mat offers the app's own mats");
+  await rob.page.click(".cm-mat-pick[data-mat=forge]");
+  eq([await rob.page.getAttribute("#cm-mat-preview", "data-mat"), await rob.page.getAttribute(".cm-mat-pick[data-mat=forge]", "aria-pressed")], ["forge", "true"], "picking one previews the zones over it");
+  await shot(rob.page, "choose-mat-1400");
+  await rob.page.click("[data-action=table-mat-use]");
+  await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 10000});
+  ok(true, "Use this mat puts it on his seat");
+
   /* INVITE: link, QR, email. */
   await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
   await rob.page.locator("#cm-table-link").waitFor();
@@ -184,6 +196,7 @@ try {
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
   eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").innerText()).trim(), "Seat 2 · You", "Maya lands on her seat, as herself");
   ok(!/\d+ cards/.test(await pageText(maya.page, ".cm-lobby-seat[data-seat='0']")), "she sees Rob's deck by name, never its cards");
+  ok(await maya.page.getAttribute(".cm-lobby-seat[data-seat='0']", "data-mat") === "forge" && !(await maya.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]").count()) && await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-mat]").count() === 1, "she sees Rob's mat, and chooses only her own");
   const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   eq(sideways, 0, "at 390 the lobby does not scroll sideways");
   await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
@@ -227,6 +240,14 @@ try {
   await waitText(rob.page, "#cm-table-game", /The game is over/);
   ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
   await shot(maya.page, "over-390");
+
+  /* The mat is remembered on the device: at Rob's next table his seat is on the forge without his asking. */
+  await rob.page.goto(`${base}/index.html#table`);
+  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
+  await rob.page.click("[data-action=table-create]");
+  await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 15000});
+  ok(true, "at his next table, Rob's seat is on the mat he chose last, without his asking");
 
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the ${writes.length} writes carried Play's header and JSON`);
   await rob.context.close(); await maya.context.close();

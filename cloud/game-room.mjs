@@ -129,6 +129,7 @@ export class GameRoom {
  *   POST /table/invite {seatId} -> {code}            POST /table/uninvite {seatId}
  *   POST /table/join {code}                          POST /table/deck {seatId, deck}
  *   POST /table/ready {ready}                        POST /table/start    POST /table/cancel
+ *   POST /table/mat {mat}   your seat's mat, one of MATS in game/room/table.mjs
  *   POST /table/end      any person ends the game for everyone (the board asks a second tap first)
  *   POST /table/concede  you leave the game in play
  *   GET  /connect (websocket), once the game is on: the seat this address holds
@@ -164,6 +165,7 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
+      if (route === "POST /table/mat") return reply(200, {table: await t.mat(email, String((await body()).mat || ""))});
       if (route === "POST /table/start") {await t.start(email, now); await this.schedule(); return reply(200, {table: await t.view(email)});}
       if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "POST /table/end") {const room = await this.load(); const view = await t.endGame(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}

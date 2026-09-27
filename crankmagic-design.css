@@ -95,7 +95,12 @@
      the brass step chip. */
   --mat-felt:#2b3a2c;--mat-felt-edge:#141812;--mat-ink:#f3efe6;
   --card-face:#ece5d6;--card-face-edge:#cfc5b0;--card-back:#3a2f22;--card-back-edge:#2c231a;
-  --vital-danger:#b3261e;--on-accent:#1a1611;}
+  --vital-danger:#b3261e;--on-accent:#1a1611;
+  /* THE APP'S OWN MATS (M5, Choose mat): drawn in CSS from these, so no mat is anyone else's art. Felt is above. */
+  --mat-forge:#3b2113;--mat-forge-edge:#120a06;--mat-forge-glow:#d9772f;
+  --mat-cavern:#30363c;--mat-cavern-edge:#0f1215;
+  --mat-sea:#0f3d48;--mat-sea-edge:#06161b;--mat-sea-foam:#9fd8e0;
+  --mat-night:#1d1b3d;--mat-night-edge:#07071a;}
 #matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(color-mix(in srgb,var(--v-accent) 16%,transparent),#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
 #matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:var(--v-accent)}

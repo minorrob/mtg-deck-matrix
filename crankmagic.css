@@ -3339,3 +3339,18 @@ button.cm-vitals{cursor:pointer}
 .cm-phone-ask .cm-board-decision{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .cm-phone-ask .cm-board-decision h3{margin:0;font-size:12px}
 .cm-phone-ask .cm-board-decision-foot{margin:0}
+/* THE MATS (M5, the handoff's Choose mat). Every board is drawn on its seat's mat; felt is the default. */
+.cm-mat-swatch{background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%)}
+[data-mat="forge"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--mat-forge-glow) 40%,transparent),transparent 55%),radial-gradient(ellipse at 50% 30%,var(--mat-forge),var(--mat-forge-edge) 80%)}
+[data-mat="cavern"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--mat-ink) 3%,transparent) 0 2px,transparent 2px 9px),linear-gradient(160deg,var(--mat-cavern),var(--mat-cavern-edge))}
+[data-mat="sea"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-radial-gradient(ellipse at 50% 130%,transparent 0 22px,color-mix(in srgb,var(--mat-sea-foam) 9%,transparent) 22px 24px),radial-gradient(ellipse at 50% 30%,var(--mat-sea),var(--mat-sea-edge) 80%)}
+[data-mat="night"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(1.5px 1.5px at 18% 24%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 62% 14%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1.5px 1.5px at 81% 58%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 35% 72%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 90% 30%,var(--mat-ink) 50%,transparent 51%),radial-gradient(ellipse at 50% 30%,var(--mat-night),var(--mat-night-edge) 80%)}
+.cm-mat-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;list-style:none;margin:0}
+.cm-mat-pick{display:grid;gap:4px;flex:0 0 150px;padding:0;border:0;background:none;color:inherit;font:inherit;font-size:12px;font-weight:700;text-align:left;cursor:pointer}
+.cm-mat-pick .cm-mat-swatch{aspect-ratio:16 / 9;border-radius:10px;border:1px solid var(--v-line)}
+.cm-mat-pick[aria-pressed="true"] .cm-mat-swatch{border:2px solid var(--v-accent)}
+.cm-mat-preview{position:relative;aspect-ratio:16 / 9;border-radius:var(--v-radius-card);overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 16% 16%;grid-template-rows:62% minmax(0,1fr);gap:4%;padding:4%;color:var(--mat-ink)}
+.cm-mat-preview span{border:1px solid color-mix(in srgb,var(--mat-ink) 55%,transparent);border-radius:8px;display:flex;align-items:flex-end;padding:4px 6px;font-size:11px;font-style:italic}
+.cm-mat-preview span:nth-child(1){grid-column:1;grid-row:1}
+.cm-mat-preview span:nth-child(2){grid-column:1;grid-row:2}
+.cm-mat-note{margin:8px 0 0;font-size:12px}
