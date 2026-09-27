@@ -229,6 +229,13 @@ try {
   await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
   await maya.page.locator(".cm-board-strip").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
+  await maya.page.click("[data-action=board-view][data-view=full]");
+  await maya.page.locator(".cm-full-rail").waitFor();
+  const pillClear = await maya.page.evaluate(() => {const pill = document.querySelector(".cm-full-pill").getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return first.top >= pill.bottom;});
+  ok(pillClear, "the step and Pass pill sits over her board without covering its first row");
+  await maya.page.keyboard.press("Escape");
+  await maya.page.locator(".cm-board-strip").waitFor();
+  ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "and so does Escape");
 
   /* The view is remembered on this device: Table, then a reload, and it is still Table. */
   await rob.page.click("[data-action=board-view][data-view=table]");

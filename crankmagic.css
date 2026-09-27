@@ -3209,7 +3209,7 @@ button.cm-vitals{cursor:pointer}
 .cm-full-others{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:8px;min-height:0}
 .cm-full-others .cm-seatboard{--bc:calc(40px * var(--card-scale,1))}
 .cm-full-mine{position:relative;display:flex;flex-direction:column;gap:8px;min-height:0}
-.cm-full-mine>.cm-seatboard{flex:1 1 auto;--bc:calc(96px * var(--card-scale,1))}
+.cm-full-mine>.cm-seatboard{flex:1 1 auto;padding-top:52px;--bc:calc(96px * var(--card-scale,1))}   /* room for the pill over it */
 .cm-full-pill{position:absolute;left:50%;top:8px;z-index:3;display:flex;align-items:center;gap:10px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);white-space:nowrap;max-width:calc(100% - 16px)}
 .cm-full-side{display:flex;flex-direction:column;gap:8px;min-width:0;overflow:auto}
 .cm-full-vitals{display:grid;gap:6px;padding:10px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line)}
