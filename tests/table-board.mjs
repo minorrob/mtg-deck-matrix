@@ -466,6 +466,7 @@ try {
   ok(true, "and once he is back, Maya's board stops saying so");
 
   /* PHONES: Maya's screen becomes a phone held sideways. Focus only: the rail, her board, the seat strip, the pill. */
+  await maya.page.click("[data-action=board-view][data-view=table]");   /* her desk's view, which the phone must leave be */
   await maya.page.setViewportSize({width: 844, height: 390});
   await maya.page.locator("#cm-board[data-phone=landscape] .cm-phone-rail").waitFor({timeout: 10000});
   const phoneGeo = await maya.page.evaluate(() => {
@@ -524,7 +525,8 @@ try {
   await shot(maya.page, "phone-upright");
   await maya.page.setViewportSize({width: 1280, height: 800});
   await maya.page.locator("#cm-board:not([data-phone]) .cm-board-strip").waitFor({timeout: 10000});
-  ok(true, "back at a desk, the board is the desktop one again");
+  ok(await maya.page.getAttribute("#cm-board", "data-view") === "table", "back at a desk, the desk board again, in the view she left it in: seats tapped on the phone changed nothing there");
+  await maya.page.click("[data-action=board-view][data-view=focus]");
 
   /* END: Tools › End game, two taps; both boards say so; back to the table. */
   await maya.page.click("[data-action=board-tools]");
