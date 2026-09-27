@@ -243,6 +243,26 @@ try {
   ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
   await shot(maya.page, "over-390");
 
+  /* NOT SIGNED IN: someone opening a table's link without an account is told it is invite-only, and where to go if
+     their address is not on the list; that page says what to do, even on a phone. */
+  {
+    const context = await browser.newContext({viewport: {width: 390, height: 844}, serviceWorkers: "block"});
+    const page = await context.newPage();
+    if (stub) await stub(page);
+    await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html(true)}));
+    await page.route(`${base}/api/**`, (r) => r.fulfill({status: 401, json: {error: "Sign in."}}));
+    await page.goto("about:blank");
+    await page.goto(`${base}/index.html#table/${id}/${"y".repeat(43)}`);
+    await page.locator("#cm-table-invite-only").waitFor({timeout: 30000});
+    ok(/invite-only/.test(await pageText(page, "#cm-table-refused")) && await page.locator("#cm-table-refused [data-action=account-sign-in]").count() === 1 && await page.getAttribute("#cm-table-invite-only a", "href") === "not-invited.html",
+      "signed out, a table's link says Sign in, that it is invite-only, and where to go if you are not on the list");
+    await page.goto(`${base}/not-invited.html`);
+    const refusal = await page.evaluate(() => [document.querySelector("h1").innerText, document.body.innerText.includes("ask Rob to add"), document.documentElement.scrollWidth - document.documentElement.clientWidth]);
+    ok(/not on the invite list/.test(refusal[0]) && refusal[1] && refusal[2] === 0, "and the page it points to says what to do, on a phone without sideways scroll");
+    await shot(page, "not-invited-390");
+    await context.close();
+  }
+
   /* The mat is remembered on the device: at Rob's next table his seat is on the forge without his asking. */
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});

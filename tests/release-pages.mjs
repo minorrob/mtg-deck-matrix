@@ -109,6 +109,13 @@ eq([...referencesOf("index.html", '<meta property="og:image" content="https://mi
 
 /* PRIVACY, TERMS, AND ONE PUBLIC ADDRESS (Rob, 2026-09-24: "I don't want just anyone to see my personal email"). */
 ok(built.has("privacy.html") && built.has("terms.html"), "the privacy policy and the terms of use are published");
+/* The refusal with instructions (Rob, 2026-09-26; docs/play-invites.md): Access sends the uninvited here. */
+{
+  const page = built.has("not-invited.html") ? built.get("not-invited.html").toString("utf8") : "";
+  ok(page && /ask Rob to add/.test(page) && /never adds anyone/.test(page) && page.includes("mailto:admin@crankmagic.com") && page.includes('href="/cdn-cgi/access/logout"'),
+    "not-invited.html is published: ask Rob to add you, a link never adds anyone, the public contact, and sign out");
+  ok(!/<script\b/i.test(page) && /Content-Security-Policy/.test(page) && !/@(gmail|outlook|yahoo|icloud)\./i.test(page), "and it runs no script, carries its policy, and names no personal address");
+}
 for (const p of PAGES) {
   const footer = (/<footer class="cm-legal"[\s\S]*?<\/footer>/.exec(built.get(p).toString("utf8")) || [""])[0];
   ok(['href="privacy.html"', 'href="terms.html"', 'href="mailto:admin@crankmagic.com"'].every((h) => footer.includes(h)), `${p}'s footer links Privacy, Terms and the contact address`);

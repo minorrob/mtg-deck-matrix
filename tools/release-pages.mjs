@@ -57,7 +57,9 @@ export const FIRST_PUBLIC = "https://crankmagic.com/";
 export const RETIRED_PUBLIC = "https://minorrob.github.io/mtg-deck-matrix/";
 export const PAGES = ["index.html", "crankmagic.html"];
 export const PUBLIC_CONTACT = "admin@crankmagic.com";
-export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic-sw.js", ".nojekyll"];
+/* not-invited.html is where Cloudflare Access sends someone not on the invite list (docs/play-invites.md): no page
+   links to it, so it is a root of its own. */
+export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invited.html", "crankmagic-sw.js", ".nojekyll"];
 
 /* Folders that never ship, whatever references them -- and the owner's own collection. data/live-state.json
    and data/live-load.json are Rob's library, which Load Live used to fetch from the site with a password
