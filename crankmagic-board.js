@@ -306,7 +306,7 @@
   }
   /* THE HISTORY, newest first. A turn's line is a divider; the others carry the turn they happened in. */
   const lines = () => [...(view.history || [])].reverse();
-  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">T${l.turn}</span></li>`;
+  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
   const matches = (l) => !historyFilter || l.text.toLowerCase().includes(historyFilter.toLowerCase());
   function historyMenu() {
     const all = lines();
