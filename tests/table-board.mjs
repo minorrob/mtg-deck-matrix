@@ -339,8 +339,8 @@ try {
   await second.page.locator(".cm-hand-show .cm-hand-fan").waitFor();
   const fanned = await second.page.locator(".cm-hand-slot").count();
   ok(/Your hand · \d+/.test(await text(second.page, ".cm-hand-show h2")) && fanned === await second.page.locator(".cm-board-hand .cm-bcard").count(), `Space fans the hand over the dimmed board (${fanned} cards)`);
-  const turns = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot")].map((el) => getComputedStyle(el).transform));
-  ok(new Set(turns).size === turns.length, "each card in the fan sits at its own angle");
+  const turns = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot")].map((el) => {const m = new DOMMatrix(getComputedStyle(el).transform); return Math.round(Math.atan2(m.b, m.a) * 1800 / Math.PI) / 10;}));
+  ok(turns.every((t, k) => Math.abs(t - (k - (turns.length - 1) / 2) * 5) < 0.2), `each card in the fan is turned 5° from the next (${turns.join("°, ")}°)`);
   const inside = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot .cm-bcard")].every((el) => {const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth;}));
   ok(inside, "and the whole fan stays on the screen, at 130% too, the cards drawn closer");
   await shot(second.page, "hand-fan-" + (second === rob ? "1400" : "1280"));
