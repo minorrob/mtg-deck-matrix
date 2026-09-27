@@ -16,6 +16,8 @@
  *   Card zoom     a card held under the pointer is shown large; a long press or a right click opens it with
  *                 what it can do
  *   card size     the app's slider, in Tools; ⌘/Ctrl + and − step it
+ *   History       the table's history (game/room/history.mjs: public lines, the same for everyone), newest
+ *                 first: a drop-down from the strip with a filter, a band on the Focus mat, a column in Full screen
  *   the mat       the battlefield in groups over the lands; Command and Exile, Library and Graveyard as piles
  *   the hand      your own, docked over the mat's foot; bright = something you can do with it now
  *   the decision  whatever the room is asking you, in any mode the engine asks in
@@ -23,7 +25,7 @@
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is
  * reopened, backing off to ten seconds, and the room sends the view again the moment it is back.
  *
- * Still to come on this board (the handoff's list): History, the Coach, and phones.
+ * Still to come on this board (the handoff's list): the Coach, and phones.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
@@ -48,7 +50,8 @@
   const VIEW_KEY = "cm-board-view";
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null;   /* Full screen: the card shown large in the side column */
-  let showing = null, held = null;   /* Show hand: null, "fan" or "held"; the card held up */
+  let showing = null, held = null;
+  let historyOpen = false, historyFilter = "";   /* Show hand: null, "fan" or "held"; the card held up */
 
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
@@ -162,6 +165,7 @@
       <span class="cm-board-spacer"></span>
       ${b("Pass priority", "board-pass", {}, true, {cls: "compact", disabled: !priority || sending})}
       ${switcher()}
+      <span class="cm-board-tools">${b("History ▾", "board-history", {}, false, {cls: "compact"})}${historyOpen ? historyMenu() : ""}</span>
       <span class="cm-board-tools">${b("Tools ▾", "board-tools", {}, false, {cls: "compact"})}${tools ? toolsMenu() : ""}</span>
     </header>`;
   }
@@ -225,6 +229,7 @@
         <div class="cm-board-field">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!creatures.length && !other.length ? `<p class="cm-board-empty">No permanents yet.</p>` : ""}</div>
         <div class="cm-board-lands"><h3>Lands · ${lands.length}${you ? ` <span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}</h3><div class="cm-board-cards">${lands.map((c) => card(c)).join("")}</div></div>
         <div class="cm-board-piles">${pile("Command", p.zones.Command, p.zones.Command.cards[0])}${pile("Exile", p.zones.Exile, p.zones.Exile.cards.at(-1))}
+          ${historyBand(5)}
           ${pile("Library", p.zones.Library, null)}${pile("Graveyard", p.zones.Graveyard, p.zones.Graveyard.cards.at(-1))}</div>
       </div>
       ${you ? "" : `<p class="cm-board-their-hand">${e(p.name)}'s hand · ${p.zones.Hand.count}</p>`}
@@ -262,6 +267,7 @@
     const at = stepAt(s.phase), step = at < 0 ? "Opening hands" : STEPS[at][0], next = at < 0 ? "" : at + 1 < STEPS.length ? STEPS[at + 1][0] : "Next turn";
     const d = view.decision, priority = d && d.kind === "priority";
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
+      <span class="cm-board-tools">${b("☰", "board-history", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="History" title="History" ')}${historyOpen ? historyMenu() : ""}</span>
       <span class="cm-board-tools">${b("⚙", "board-tools", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Tools" title="Tools" ')}${tools ? toolsMenu() : ""}</span>
       <span class="cm-board-spacer"></span>${b("⎋", "board-view", {view: "focus"}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Leave full screen" title="Leave full screen" ')}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
@@ -273,7 +279,7 @@
         <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => seatBoard(p)).join("")}</div>
         <div class="cm-full-mine">${pill}${seatBoard(me, {bottom: true})}${hand()}</div></div>
       <aside class="cm-full-side" aria-label="The table"><div class="cm-full-vitals">${others.map((p) => `<div><span>${e(p.name)}</span>${vitals(p)}</div>`).join("")}<div><span>You</span>${vitals(me)}</div></div>
-        ${pickPanel}${decision()}${stack()}</aside>`;
+        ${pickPanel}${decision()}${stack()}${historyBand(8)}</aside>`;
   }
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
      every other seat, "n / 21" with its bar; the commander's own seat reads "—". */
@@ -297,6 +303,22 @@
     for (const id of unknown) rows.push(row("From a commander out of sight", ps.map((t) => `${(t.health.commanderDamage || {})[id] || 0} / 21`)));
     C.modal("Table vitals", `<div class="cm-table-vitals" role="table" aria-label="Table vitals" style="--cols:${ps.length}">${head}${rows.join("")}</div>
       <p class="cm-muted">A player loses at 0 life, at 10 poison, or at 21 combat damage from one commander.</p><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
+  }
+  /* THE HISTORY, newest first. A turn's line is a divider; the others carry the turn they happened in. */
+  const lines = () => [...(view.history || [])].reverse();
+  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
+  const matches = (l) => !historyFilter || l.text.toLowerCase().includes(historyFilter.toLowerCase());
+  function historyMenu() {
+    const all = lines();
+    return `<div class="cm-board-menu cm-board-history" role="dialog" aria-label="History" id="cm-board-history">
+      <h3>History · newest first</h3>
+      <input type="search" class="cm-history-filter" data-board-history-filter placeholder="Search & filter by card or player…" aria-label="Filter the history" value="${e(historyFilter)}">
+      <ol class="cm-history-list">${all.map((l) => historyRow(l).replace("<li", `<li${matches(l) ? "" : " hidden"}`)).join("") || `<li class="cm-muted">Nothing has happened yet.</li>`}</ol></div>`;
+  }
+  function historyBand(count) {
+    const recent = lines().filter((l) => l.mark !== "turn").slice(0, count);
+    return `<section class="cm-board-band" aria-label="History"><h3>History ${b("⌕", "board-history", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Open the history" title="Open the history" ')}</h3>
+      <ol>${recent.map(historyRow).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
   function stack() {
     const items = view.state.stack;
@@ -415,7 +437,16 @@
     if (gone) return `<p class="cm-board-banner" role="status">You have left this game; the others play on.</p>`;
     return "";
   }
+  /* A view arrives whenever anyone acts; the history's filter keeps its focus and caret through the redraw. */
   function draw() {
+    const active = document.activeElement;
+    const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
+    render();
+    if (caret === null) return;
+    const filter = document.querySelector("#cm-board [data-board-history-filter]");
+    if (filter) {filter.focus(); filter.setSelectionRange(caret, caret);}
+  }
+  function render() {
     const host = document.getElementById("cm-board");
     if (!host) return;
     if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
@@ -445,7 +476,7 @@
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
-    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; peek(null); leaveFullscreen();},
+    close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; historyOpen = false; historyFilter = ""; peek(null); leaveFullscreen();},
   };
 
   /* ---- actions ---- */
@@ -541,6 +572,7 @@
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
+    if (event.key === "Escape" && historyOpen) {historyOpen = false; draw(); return;}
     if ((event.ctrlKey || event.metaKey) && ["+", "=", "-", "_"].includes(event.key)) {
       event.preventDefault();
       const n = C.setCardScale(C.cardScale() + (event.key === "-" || event.key === "_" ? -10 : 10));
@@ -568,7 +600,8 @@
       if (mode === "full") setMode("focus");
     }
   });
-  actions["board-tools"] = () => {tools = !tools; confirmEnd = false; draw();};
+  actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; draw();};
+  actions["board-history"] = () => {historyOpen = !historyOpen; tools = false; draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); return;}
     confirmEnd = false; tools = false;
@@ -578,6 +611,14 @@
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
+  /* The filter hides and shows the rows where they are, so typing keeps its place. */
+  document.addEventListener("input", (event) => {
+    if (!event.target || !event.target.matches || !event.target.matches("[data-board-history-filter]")) return;
+    historyFilter = event.target.value;
+    const rows = event.target.closest(".cm-board-history").querySelectorAll(".cm-history-list li");
+    const all = lines();
+    rows.forEach((row, i) => {if (all[i]) row.hidden = !matches(all[i]);});
+  });
   document.addEventListener("input", (event) => {
     const i = event.target && event.target.dataset && event.target.dataset.boardAmount;
     if (i === undefined || !view || !view.decision) return;

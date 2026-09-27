@@ -189,6 +189,31 @@ try {
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`));
   eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Pass priority hands priority on, and taps nothing");
 
+  /* HISTORY: the table's history, public, newest first; a band on the Focus mat, and History ▾ with a filter. */
+  const who = active === rob ? "Rob" : "Maya";
+  await waitText(other.page, ".cm-board-band", new RegExp(`${who} played ${land}`));
+  ok((await other.page.locator(".cm-board-band li").first().innerText()).includes(`${who} played ${land}`), `the history band on the mat says it, newest first: "${who} played ${land}"`);
+  await active.page.click("[data-action=board-history]");
+  await active.page.locator("#cm-board-history").waitFor();
+  const rows = await active.page.locator("#cm-board-history .cm-history-list li").allInnerTexts();
+  ok(rows.some((r) => /^Turn 1 · /.test(r)) && rows.some((r) => new RegExp(`${who} drew 7 cards`).test(r)), `History ▾ holds the turns and the opening draws, uncounted cards unnamed (${rows.length} lines)`);
+  ok(rows.findIndex((r) => r.includes(`played ${land}`)) < rows.findIndex((r) => /drew 7 cards/.test(r)), "newest first");
+  ok(/Start$/.test(rows.find((r) => /drew 7 cards/.test(r)).trim()), "what happened before turn 1 is marked Start");
+  await active.page.fill("#cm-board-history .cm-history-filter", land);
+  const shown = await active.page.locator("#cm-board-history .cm-history-list li:not([hidden])").allInnerTexts();
+  ok(shown.length >= 1 && shown.every((r) => r.includes(land)), `the filter keeps only the lines that match (${shown.length})`);
+  /* A view arrives while the filter is being typed in: the filter keeps its focus, its words and its caret. */
+  const otherPass = other.page.locator("[data-action=board-pass]:not([disabled])");
+  const before = views(active === rob ? ROB : MAYA).length;
+  if (await otherPass.count()) await otherPass.click();
+  await active.page.waitForTimeout(600);
+  const kept = await active.page.evaluate(() => {const el = document.activeElement; return el && el.matches("[data-board-history-filter]") ? [el.value, el.selectionStart] : null;});
+  ok(views(active === rob ? ROB : MAYA).length > before && kept && kept[0] === land && kept[1] === land.length, `a view arriving mid-filter leaves the filter as it was (${JSON.stringify(kept)})`);
+  await shot(active.page, "board-history-" + (active === rob ? "1400" : "1280"));
+  await active.page.keyboard.press("Escape");
+  await active.page.locator("#cm-board-history").waitFor({state: "detached"});
+  ok(true, "Escape closes it");
+
   /* THE THREE VIEWS. Table: both boards at once, you at the foot, the logo between them opening Table vitals. */
   await rob.page.click("[data-action=board-view][data-view=table]");
   await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
@@ -225,6 +250,7 @@ try {
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
   ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
   ok(await maya.page.locator(".cm-full-others .cm-seatboard").count() === 1 && await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").count() === 1, "the other seat across the top, hers across the foot");
+  ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-full-side .cm-board-band")), "and the history in the side column");
   const firstHand = maya.page.locator(".cm-board-hand .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
   await firstHand.click();
   await maya.page.locator(".cm-full-pick").waitFor();
@@ -402,6 +428,7 @@ try {
   await waitText(rob.page, "#cm-table-game", /The game is over/);
   ok(!(await rob.page.locator("#cm-board").count()), "Back to the table puts the board away, and the lobby says the game is over");
 
+  eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames)`);
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the board's ${writes.length} writes carried Play's header and JSON`);
   await rob.context.close(); await maya.context.close();
 } finally {
