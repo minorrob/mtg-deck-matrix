@@ -11,7 +11,7 @@
  *   Deck     from your own library; one the engine cannot play is refused naming its cards; nobody sees
  *            another seat's cards.
  *   Start    Ready, Start, the countdown's number, Cancel; then the game is on.
- *   Leave    End game asks a second tap, then ends it for everyone; Concede.
+ *   Board    once the game is on the page is the board's (tests/table-board.mjs); once over, the lobby says so.
  *   Shut     without the cloud-Play mark the page says Coming Soon; every write carries Play's header.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
@@ -93,6 +93,7 @@ async function person(email, viewport, {play = true} = {}) {
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
+  await page.routeWebSocket(/\/connect$/, () => {});   /* the board's socket, left quiet: this suite plays no game */
   await page.goto("about:blank");   /* so the next address loads the page afresh, with the marks above */
   return {context, page};
 }
@@ -216,26 +217,20 @@ try {
   await rob.page.locator("#cm-table-seconds").waitFor();
   clock += 10000;
   await tableFor(id).alarm();
-  await waitText(rob.page, "#cm-table-game", /The game is on/);
-  await waitText(maya.page, "#cm-table-game", /The game is on/);
-  ok(true, "when the countdown ends the game is on, on both screens");
+  await rob.page.locator("#cm-board").waitFor({timeout: 20000});
+  await maya.page.locator("#cm-board").waitFor({timeout: 20000});
+  ok(!(await rob.page.locator(".cm-cloud-table").count()), "when the countdown ends the lobby hands both pages to the board (tests/table-board.mjs plays it)");
 
-  /* LEAVE: End game takes a second tap. */
-  await maya.page.click("[data-action=table-end]");
-  await maya.page.locator("[data-action=table-end][data-confirm='1']").waitFor();
-  eq((await maya.page.locator("[data-action=table-end][data-confirm='1']").innerText()).trim(), "End for everyone · keep the record", "End game asks a second tap first, naming what it does");
-  await shot(maya.page, "end-confirm-390");
-  await maya.page.click("[data-action=table-end-cancel]");
-  ok(await maya.page.locator("[data-action=table-end]:not([data-confirm])").count() === 1, "Keep playing takes it back");
-  await maya.page.click("[data-action=table-end]");
-  await maya.page.click("[data-action=table-end][data-confirm='1']");
+  /* AFTER: the game ended (by End game on the board, played in table-board), the lobby says it is over. */
+  await tableFor(id).fetch(new Request("https://table.internal/table/end", {method: "POST", headers: {"content-type": "application/json", "x-crankmagic-email": "maya@example.com"}, body: "{}"}));
   await waitText(maya.page, "#cm-table-game", /The game is over/);
   await waitText(rob.page, "#cm-table-game", /The game is over/);
-  ok(true, "any person ends it for everyone, the guest included");
+  ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
+  await shot(maya.page, "over-390");
 
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the ${writes.length} writes carried Play's header and JSON`);
   await rob.context.close(); await maya.context.close();
 } finally {
   await close();
 }
-console.log(`table-lobby: ${checks} checks passed — the cloud table's lobby in two browsers: host, invite by link and QR, join on a phone, decks from your own library, the countdown and Cancel, and End game's second tap.`);
+console.log(`table-lobby: ${checks} checks passed — the cloud table's lobby in two browsers: host, invite by link and QR, join on a phone, decks from your own library, the countdown and Cancel, the board taking over, and the game over.`);

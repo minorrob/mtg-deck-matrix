@@ -89,7 +89,7 @@ function readPod(pod, cards) {
 /* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included. */
 function priorityChoice(id, actions) {
   return {id, title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority",
-    options: actions.map((a, index) => ({index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), ...(a.objectId !== undefined ? {cardId: a.objectId} : {})}))};
+    options: actions.map((a, index) => ({index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {})}))};
 }
 
 /**

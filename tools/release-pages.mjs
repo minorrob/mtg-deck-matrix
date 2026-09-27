@@ -65,7 +65,7 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "crankmagic
    the two files stay in the repository for the tools that build them and are never served. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
-const PLAY = ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js"];
+const PLAY = ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js"];
 const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {

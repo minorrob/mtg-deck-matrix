@@ -247,6 +247,8 @@ async function playingTable(storage = memoryStorage()) {
   ok(rob.frames.filter((f) => f.type === "view").at(-1).view.departures.s1 === "timed-out", "and Rob's socket is sent the view that shows it");
   const endView = await call("/table/end", ROB, {});
   eq(endView.table.phase, "rematch", "End game over the object ends it");
+  const last = rob.frames.filter((f) => f.type === "view").at(-1).view;
+  eq([last.status, last.result && last.result.reason], ["finished", "ended early"], "and the sockets still open are sent the view that says so, though the table has no game on any more");
 }
 
 console.log(`game-leave: ${checks} checks passed — ${conceded} concessions fuzzed through the engine, End game for everyone by any person, and the five minutes a dropped player has, recorded as not finished.`);
