@@ -3228,3 +3228,27 @@ button.cm-vitals{cursor:pointer}
   .cm-board-table[data-seats="3"]{grid-template-areas:"a" "b" "c"}
   .cm-board-table>.cm-seatboard{aspect-ratio:auto}
 }
+/* SHOW HAND, CARD ZOOM AND THE CARD-SIZE SLIDER ON THE BOARD (M5; the handoff's play-hand-contemplate,
+   play-hand-held and play-card-zoom). The fan's cards are 170px, turned 5° apiece and 132px apart; the held card
+   190px in a 3px brass ring; the zoom 320px. All follow the card-size slider. */
+.cm-board-size{display:grid;gap:4px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--v-line)}
+.cm-board-showhand{width:34px;height:34px;margin-right:8px;border-radius:50%;border:1px solid var(--v-accent);background:color-mix(in srgb,var(--v-accent) 18%,transparent);color:inherit;font-size:16px;cursor:pointer;vertical-align:middle}
+.cm-hand-show{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:rgba(10,9,8,.62);color:var(--mat-ink)}
+.cm-hand-show header{text-align:center}
+.cm-hand-show h2{margin:0;color:var(--mat-ink)}
+.cm-hand-show .cm-muted{color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
+.cm-hand-close{position:absolute;right:20px;top:20px}
+.cm-hand-fan{position:relative;width:100%;height:calc(170px * var(--card-scale,1) * 1.6)}
+.cm-hand-slot{position:absolute;left:50%;top:0;transform:translateX(calc(-50% + var(--o) * 132px * var(--card-scale,1))) translateY(calc(var(--a) * 10px)) rotate(calc(var(--o) * 5deg));transform-origin:50% 120%;transition:transform .2s}
+.cm-hand-slot:hover{z-index:2;transform:translateX(calc(-50% + var(--o) * 132px * var(--card-scale,1))) translateY(-18px) rotate(0deg)}
+.cm-hand-slot .cm-bcard{--bc:calc(170px * var(--card-scale,1));cursor:pointer}
+.cm-hand-key{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:12px;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
+.cm-hand-held .cm-bcard{--bc:calc(190px * var(--card-scale,1));box-shadow:0 0 0 3px var(--v-accent),0 24px 60px -20px rgb(0 0 0 / .8);cursor:pointer}
+.cm-hand-acts{justify-content:center}
+.cm-hand-rest{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.cm-hand-rest .cm-bcard{--bc:calc(72px * var(--card-scale,1));cursor:pointer}
+.cm-board-peek{position:fixed;top:80px;z-index:65;pointer-events:none;filter:drop-shadow(0 20px 40px rgb(0 0 0 / .6))}
+.cm-board-peek[data-side="right"]{right:24px}
+.cm-board-peek[data-side="left"]{left:24px}
+.cm-board-peek .cm-bcard,.cm-board-zoom .cm-bcard{--bc:calc(320px * var(--card-scale,1));max-width:calc(100vw - 48px)}
+.cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
