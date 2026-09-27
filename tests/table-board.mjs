@@ -487,6 +487,8 @@ try {
   await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").waitFor();
   ok(true, "My board goes back to hers, and › goes round to the next seat");
   await maya.page.click("[data-action=board-rotate][data-by='-1']");
+  const askShare = await maya.page.evaluate(() => {const a = document.querySelector(".cm-phone-ask"); return a && a.children.length ? a.getBoundingClientRect().height / innerHeight : 0;});
+  ok(askShare < 0.35, `what she is asked sits over the board's foot without covering most of it (${Math.round(askShare * 100)}% of the height)`);
   await shot(maya.page, "phone-landscape");
   /* When the room asks her something, the board snaps back to hers, wherever she was looking. */
   let snapped = false;

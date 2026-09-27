@@ -3335,3 +3335,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board[data-phone] .cm-hand-key{display:none}
 .cm-board[data-phone] .cm-hand-held .cm-bcard{--bc:calc(130px * var(--card-scale,1))}
 .cm-board[data-phone] .cm-hand-show{position:absolute;padding:12px;gap:10px}
+/* On a phone, what you are asked is one compact row over the board's foot, not half the screen. */
+.cm-phone-ask .cm-board-decision{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.cm-phone-ask .cm-board-decision h3{margin:0;font-size:12px}
+.cm-phone-ask .cm-board-decision-foot{margin:0}
