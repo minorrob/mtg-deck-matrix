@@ -260,6 +260,20 @@ run('game',{gameId:'game:online:match-online-1:0',deckId:'d1',outcome:'win',pod:
 {const g=s.games[s.games.length-1];assert.equal(g.online.matchId,'match-online-1');assert.equal(g.deckVersion,2);checks+=2;}
 expectFailure('game',{deckId:'d2',outcome:'win',online},/does not match/);
 
+// A GAME PLAYED AT A CRANKMAGIC TABLE (M5) is filed once per match and seat, under the deck that seat brought,
+// with the version it was played at when that version is real, and says whether an AI sat in.
+{const d1v=M.deck(s,'d1').version,table={schema:'CrankMagicTableResult@1',tableId:'tbl1',matchId:'tbl1g1',seatId:'s1',ai:true,reason:'ended early',deckVersion:1};
+run('game',{gameId:'game:table:tbl1g1:s1',deckId:'d1',outcome:'unfinished',pod:3,seat:2,table});
+const g=s.games[s.games.length-1];assert.deepEqual([g.id,g.outcome,g.table.ai,g.table.seatId,g.deckVersion],['game:table:tbl1g1:s1','unfinished',true,'s1',1]);checks++;
+expectFailure('game',{gameId:'game:table:tbl1g1:s1',deckId:'d1',outcome:'unfinished',table},/Duplicate record ID/);
+expectFailure('game',{gameId:'game:table:tbl1g1:s0',deckId:'d1',outcome:'win',table},/filed under its match and seat/);
+expectFailure('game',{gameId:'game:table:tbl1g2:s1',deckId:'d1',outcome:'win',table:{...table,matchId:'tbl1g2',ai:'yes'}},/Invalid table result/);
+expectFailure('game',{gameId:'game:table:tbl1g2:s1',deckId:'d1',outcome:'win',table:{...table,matchId:'tbl1g2',schema:'Other@1'}},/Invalid table result/);
+expectFailure('game',{gameId:'game:table:tbl1g2:s1',deckId:'d1',outcome:'win',online,table:{...table,matchId:'tbl1g2'}},/either an online report or a table result/);
+run('game',{gameId:'game:table:tbl1g3:s1',deckId:'d1',outcome:'win',table:{...table,matchId:'tbl1g3',ai:false,deckVersion:d1v+5}});
+assert.equal(s.games[s.games.length-1].deckVersion,d1v,'a version the deck never had is not believed: the current one is kept');checks++;
+M.validate(s);checks++;}
+
 // A planned entry is fulfilled a few copies at a time.
 run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});
 const planned=s.groups.find(g=>g.id==='plans').entries[0].id;

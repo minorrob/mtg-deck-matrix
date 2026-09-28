@@ -106,6 +106,54 @@
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false;}
     draw();
+    fileResult(view);
+  }
+
+  /* ---- the result, back to the library (M5) ----
+     Once the game is over for you (it finished, someone ended it, or you left it), your own seat's result is
+     filed under the deck of your library you brought, once, and syncs with your account like the rest of the
+     library. Only your own seat, into your own library: a guest's game files into the guest's library, and
+     nothing anyone else played ever reaches yours. A timeout or a game ended early is "unfinished" (Rob,
+     2026-09-26); a concession is a loss. */
+  const filed = new Set();
+  function outcomeOf(v) {
+    const gone = (v.departures || {})[v.seatId];
+    if (gone === "conceded") return {outcome: "loss", reason: "conceded"};
+    if (gone === "timed-out") return {outcome: "unfinished", reason: "ran out of time"};
+    if (v.status !== "finished") return null;
+    const r = v.result || {};
+    if (r.endedBy !== undefined || r.reason === "ended early") return {outcome: "unfinished", reason: "ended early"};
+    if (r.winner === v.seatId) return {outcome: "win", reason: r.reason || ""};
+    return r.winner ? {outcome: "loss", reason: r.reason || ""} : {outcome: "draw", reason: r.reason || ""};
+  }
+  async function fileResult(v, tries = 0) {
+    const o = outcomeOf(v), t = table;
+    if (!o || !t || !v.matchId) return;
+    const gameId = `game:table:${v.matchId}:${v.seatId}`;
+    if (filed.has(gameId) && tries === 0) return;
+    filed.add(gameId);
+    if ((C.state.games || []).some((g) => g.id === gameId)) return;
+    const mine = (t.seats || []).find((s) => s.you), source = mine && mine.source;
+    const deck = source && (C.state.decks || []).find((d) => d.id === source.deckId && !d.archived);
+    if (!deck) {
+      if (source) C.notice("This game's result was not filed: the deck you brought is no longer in your library.", true);
+      return;
+    }
+    const ai = v.seats.some((s) => s.pilot === "house");
+    const opponents = (t.seats || []).filter((s) => !s.you && s.occupied !== false && s.deck)
+      .map((s) => `${(s.deck.commander || []).join(" + ") || s.deck.name}${s.kind === "ai" ? " · AI" : ` · ${s.name}`}`).join("; ");
+    try {
+      await C.commit({type: "game", gameId, deckId: deck.id, outcome: o.outcome, playedAt: new Date().toISOString(),
+        pod: v.seats.length, finish: o.outcome === "win" ? 1 : null, turns: v.state && v.state.turn ? v.state.turn : null, seat: v.seat + 1,
+        opponents, notes: `Played at a CrankMagic table${ai ? " with AI seats" : ""}${o.reason ? ` · ${o.reason}` : ""}.`,
+        table: {schema: "CrankMagicTableResult@1", tableId: t.tableId, matchId: v.matchId, seatId: v.seatId, ai, reason: o.reason, deckVersion: source.deckVersion}},
+      {renderView: false});
+      C.notice(`${o.outcome === "win" ? "Your win" : o.outcome === "loss" ? "Your loss" : o.outcome === "draw" ? "The draw" : "This unfinished game"} is filed under ${deck.name}'s record.`);
+    } catch (error) {
+      if (error && error.retryable && tries < 5) {setTimeout(() => fileResult(v, tries + 1), 800); return;}
+      filed.delete(gameId);
+      C.notice(`This game's result was not filed: ${error && error.message ? error.message : "the library did not take it"}.`, true);
+    }
   }
   function send(payload) {
     if (!socket || socket.readyState !== 1) {C.notice("The board is reconnecting; try again in a moment.", true); return;}
@@ -567,6 +615,8 @@
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
+    /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
+    outcomeOf,
     close() {disconnect(); tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; showing = null; held = null; historyOpen = false; historyFilter = ""; coach.open = false; coach.thread = []; coach.typing = false; clearTimeout(coach.timer); peek(null); leaveFullscreen();},
   };
 

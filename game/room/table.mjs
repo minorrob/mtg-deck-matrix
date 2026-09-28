@@ -53,7 +53,17 @@ function readDeck(deck, cards) {
   if (commander.length > 2 || commander.length + list.length === 0 || commander.length + list.length > 250) throw new TableError(400, "That is not a deck a table can hold.");
   const missing = [...new Set([...commander, ...list].filter((n) => !cards(n)))].sort();
   if (missing.length) throw new TableError(422, `The table cannot play ${missing.length === 1 ? "this card" : `these ${missing.length} cards`} yet: ${missing.join(", ")}.`, {unsupported: missing});
-  return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list};
+  return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list, source: readSource(deck.source)};
+}
+
+/* Which deck in the person's own library this was, so the finished game can be filed under it (M5: results
+   back to the library). An id and a version the table never reads, shown back to that seat alone: another
+   seat, the host included, never learns which deck of someone else's library came to the table. */
+function readSource(source) {
+  if (!source || typeof source !== "object") return null;
+  const deckId = clean(source.deckId, 100), version = Number(source.deckVersion);
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,99}$/.test(deckId)) return null;
+  return {deckId, deckVersion: Number.isSafeInteger(version) && version >= 0 ? version : null};
 }
 
 /**
@@ -304,7 +314,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
           seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander} : null,
-          ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length} : {}),
+          ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),
         })),
       };
     },

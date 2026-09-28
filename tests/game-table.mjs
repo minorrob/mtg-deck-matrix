@@ -84,9 +84,23 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   await refuses(t.deck(MAYA, 3, deckFor("maya"), now), 403, null, "and only the host chooses an AI's");
   const bad = await t.deck(MAYA, 1, {name: "x", commander: ["Krenko, Mob Boss"], cards: ["Mountain", "Sol Ring"]}, now).catch((e) => e);
   eq([bad.status, bad.unsupported], [422, ["Krenko, Mob Boss", "Sol Ring"]], "a deck the engine cannot play is refused, naming each card");
-  await t.deck(ROB, 0, deckFor("rob"), now);
-  await t.deck(MAYA, 1, deckFor("maya"), now);
-  const ai = await t.deck(ROB, 3, deckFor("ai"), now);
+  await t.deck(ROB, 0, {...deckFor("rob"), source: {deckId: "deck:rob:1", deckVersion: 4}}, now);
+  await t.deck(MAYA, 1, {...deckFor("maya"), source: {deckId: "deck:maya:7", deckVersion: 2}}, now);
+  const ai = await t.deck(ROB, 3, {...deckFor("ai"), source: {deckId: "deck:rob:9", deckVersion: 1}}, now);
+  /* THE LIBRARY DECK A SEAT BROUGHT (M5, results back to the library): kept so the finished game can be filed
+     under it, and shown back to that seat alone. */
+  const robSees = await t.view(ROB);
+  eq(robSees.seats[0].source, {deckId: "deck:rob:1", deckVersion: 4}, "the host's own seat shows him which of his decks he brought");
+  ok(robSees.seats.filter((x) => x.seatId !== 0).every((x) => !("source" in x)) && !JSON.stringify(robSees).includes("deck:maya:7"),
+    "and no other seat's source reaches him, the host included: not Maya's, not even the AI's he chose");
+  const mayaOwn = await t.view(MAYA);
+  ok(mayaOwn.seats[1].source.deckId === "deck:maya:7" && !JSON.stringify(mayaOwn).includes("deck:rob:"), "Maya sees her own deck's source, and none of Rob's");
+  const odd = tableOn(memoryStorage(), {cards, random});
+  await odd.create({tableId: "oddsource", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "AI"}]});
+  for (const [source, want, why] of [[{deckId: "../etc", deckVersion: 1}, null, "an id that is not an id"], [{deckId: "deck:ok", deckVersion: -2}, {deckId: "deck:ok", deckVersion: null}, "a version that is not a version"], ["deck:ok", null, "a source that is not an object"], [undefined, null, "no source at all"]]) {
+    await odd.deck(ROB, 0, {...deckFor("odd"), source}, now);
+    eq((await odd.view(ROB)).seats[0].source, want, `a source is read, not trusted: ${why}`);
+  }
   eq([ai.seats[3].deck.name, ai.seats[3].ready], ["ai deck", true], "the host brings the AI's deck, and an AI with a deck is ready");
   const mayaSees = await t.view(MAYA);
   eq([mayaSees.seats[0].deck, mayaSees.seats[1].cards], [{name: "rob deck", commander: ["General rob"]}, 99], "she sees the host's deck by name and commander, and her own count");
