@@ -39,3 +39,6 @@ MagicCompRules*.txt
 
 # wrangler (Cloudflare CLI) writes its account cache and scratch files next to where it runs
 .wrangler/
+
+# Worktrees Claude Code agents work in (local only, never part of the repository).
+.claude/worktrees/

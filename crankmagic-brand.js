@@ -118,7 +118,7 @@
  control.addEventListener('click',()=>{paused=!paused;sync();});if(globalThis.CrankMotion)CrankMotion.onChange(sync);else reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);
  const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(block);sizeObserver.observe(word);
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;sync();}).observe(canvas);
- new MutationObserver(()=>{colors();draw(time);}).observe(root,{attributes:true,attributeFilter:['style','data-theme']});
+ new MutationObserver(()=>{colors();draw(time);}).observe(root,{attributes:true,attributeFilter:['style','data-theme','data-palette']});
  // The product is always dark; OS appearance changes do not recolor its mist.
  document.fonts.ready.then(resize);resize();
 })();

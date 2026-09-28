@@ -48,7 +48,8 @@ const have = new Set(data.commanders.map((c) => c.name));
 const unread = universe.cards.filter((c) => c[CMD] && !have.has(c[NAME]) && !c[NAME].includes("//")).sort((a, b) => (a[RANK] || 1e9) - (b[RANK] || 1e9))[0];
 
 const {browser, base, stub, close} = await openBrowser({name: "build-wizard", flag: "GEOMETRY_REQUIRED"});
-const title = (page) => page.locator("#cm-dialog[open] h2").first().innerText();
+/* The title's words, not how a theme sets them (Moss & Iron puts headings in capitals, A1). */
+const title = async (page) => (await page.locator("#cm-dialog[open] h2").first().textContent()).trim();
 const chips = (page) => page.$$eval("#cm-build-chips .cm-build-chip:not(.is-loading)", (bs) => bs.map((b) => [b.querySelector("span").textContent, b.querySelector("small").textContent, b.getAttribute("aria-pressed")]));
 const pickCommander = async (page, name) => {
   await page.locator("#cm-card-query").fill(name);

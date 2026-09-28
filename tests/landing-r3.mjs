@@ -36,7 +36,7 @@ const fresh = async (viewport = {width: 1400, height: 900}, extra = {}) => {
   return {context, page};
 };
 const landing = (page) => page.locator(".cm-landing h1").waitFor({timeout: 60000});
-const dialogTitle = async (page) => { await page.locator("#cm-dialog[open]").waitFor({timeout: 30000}); return (await page.locator("#cm-dialog[open] h2").first().innerText()).trim(); };
+const dialogTitle = async (page) => { await page.locator("#cm-dialog[open]").waitFor({timeout: 30000}); return (await page.locator("#cm-dialog[open] h2").first().textContent()).trim();  /* the words, not their case: a theme may set headings in capitals */ };
 const closeDialog = async (page) => { await page.keyboard.press("Escape"); await page.locator("#cm-dialog[open]").waitFor({state: "detached", timeout: 10000}).catch(() => {}); };
 
 try {
@@ -47,7 +47,7 @@ try {
     page.on("request", (r) => asked.push(new URL(r.url()).pathname));
     await page.goto(`${base}/index.html`);
     await landing(page);
-    eq(await page.locator(".cm-landing h1").innerText(), "Build the deck. Own the cards. Bring it to the table.", "a first visit to / opens the landing page");
+    eq((await page.locator(".cm-landing h1").textContent()).trim(), "Build the deck. Own the cards. Bring it to the table.", "a first visit to / opens the landing page (its words; a theme may set them in capitals)");
     eq(await page.locator(".cm-sidebar").isVisible(), false, "and it stands alone: the app's rail is not drawn");
     await page.waitForTimeout(1500);
     const graph = asked.filter((p) => /graph[^/]*\.json$|\/data\/graph/.test(p));
@@ -95,7 +95,7 @@ try {
     eq(await page.locator(".cm-sidebar").isVisible(), true, "and through a door the app is itself again, rail and all");
 
     /* 7. Decks with no decks. */
-    eq((await page.locator(".cm-decks-empty h2").innerText()).trim(), "No decks yet", "Decks with no decks says so");
+    eq((await page.locator(".cm-decks-empty h2").textContent()).trim(), "No decks yet", "Decks with no decks says so");
     eq(await page.$$eval(".cm-decks-empty .cm-actions [data-action]", (bs) => bs.map((b) => [b.textContent.trim(), b.dataset.action])),
       [["Start from a commander", "wizard-create"], ["Bring a list", "wizard-import"], ["Restore backup…", "restore"]], "and offers a commander, a list or a backup you saved, in that order");
     await page.locator(".cm-decks-empty [data-action=wizard-create]").click();

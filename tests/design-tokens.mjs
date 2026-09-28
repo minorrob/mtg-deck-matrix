@@ -60,6 +60,23 @@ function tokensIn(css, selectorRe) {
   ok(/#matrix-v2\[data-theme="light"\]\{[^}]*color-scheme:light/.test(design), "the light theme flips color-scheme so light-dark() follows it");
 }
 
+/* THE FOUR THEMES (A1, docs/plan-appearance.md). Moss & Iron and Steel & Cobalt each define every color token the
+   handoff names, so a theme never shows a Brass & Slate color through a gap; each sets its own radius and motion; and
+   Moss & Iron's display face is the self-hosted Barlow Condensed, in capitals. */
+{
+  const handoff = tokensIn(read(HANDOFF + "colors.css"), /^:root$/);
+  const named = [...handoff.keys()].filter((k) => /^--(color|mana|st)-/.test(k));
+  for (const theme of ["moss-iron", "steel-cobalt"]) {
+    const t = tokensIn(design, new RegExp(`(?:^|,)\\s*#matrix-v2\\[data-palette="${theme}"\\]\\s*$`));
+    eq(named.filter((k) => !t.has(k)), [], `${theme} defines every color token the handoff names`);
+    ok(["--radius-control", "--radius-card", "--radius-tile", "--shadow-card", "--motion-fast", "--motion-ease"].every((k) => t.has(k)), `${theme} sets its own radius, card shadow and motion`);
+  }
+  const moss = tokensIn(design, /(?:^|,)\s*#matrix-v2\[data-palette="moss-iron"\]\s*$/);
+  eq([moss.get("--display-case"), /Barlow Condensed/.test(moss.get("--font-display") || "")], ["uppercase", true], "Moss & Iron's display face is Barlow Condensed, in capitals");
+  ok([600, 700, 800].every((w) => new RegExp(`font-family:'Barlow Condensed';font-weight:${w};[^}]*assets/crankmagic/barlowcondensed-${w}\\.woff2`).test(design)), "Barlow Condensed is self-hosted at 600, 700 and 800");
+  ok(!/fonts\.googleapis|fonts\.gstatic/.test(design + pageCss + read("index.html")), "and nothing asks Google Fonts for it");
+}
+
 /* The shape and type tokens, by name. */
 {
   const shape = tokensIn(read(HANDOFF + "shape.css"), /^:root$/), type = tokensIn(read(HANDOFF + "typography.css"), /^:root$/);
@@ -184,8 +201,9 @@ function tokensIn(css, selectorRe) {
   ok(page <= CEILING["crankmagic.css"], `crankmagic.css carries ${page} raw hex colors; the ceiling is ${CEILING["crankmagic.css"]} and only goes down`);
   const ui = readdirSync(path.join(ROOT, "game/ui")).filter((f) => f.endsWith(".css")).reduce((n, f) => n + hex(read("game/ui/" + f)), 0);
   ok(ui <= CEILING["game/ui"], `game/ui stylesheets carry ${ui} raw hex colors; the ceiling is ${CEILING["game/ui"]} and only goes down`);
-  /* the design stylesheet's hex live in the two token blocks and the legacy --v- block, nowhere else */
-  const outside = design.replace(/#matrix-v2(\[data-theme="light"\])?\{[^}]*\}/g, "");
+  /* the design stylesheet's hex live in the token blocks -- the two faces of Brass & Slate and, since A1, one block per
+     other theme (#matrix-v2[data-palette="…"]) -- and the legacy --v- block, nowhere else */
+  const outside = design.replace(/#matrix-v2(\[data-(?:theme="light"|palette="[a-z-]+")\])?\{[^}]*\}/g, "");
   const stray = hex(outside);
   ok(stray <= 31, `crankmagic-design.css has ${stray} raw hex colors outside its token blocks (ceiling 31, only goes down)`);
 }

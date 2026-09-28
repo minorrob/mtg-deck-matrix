@@ -1,7 +1,8 @@
 # Appearance: four themes, and a new hero for Decks — the plan
 
-Rob, 2026-09-28: planned here, **not built yet**. It comes after the groups work in
-`docs/plan-groups.md`, or earlier if Rob says so. The design source is Rob's
+Rob, 2026-09-28: planned here. **A1, the four themes, is built** (Rob said "Execute A1" the same day). **A2, the
+hero image, is set aside**: Rob, 2026-09-28, "Forget the image for now. Not important." Section 1 stays as the plan for
+when it comes back. The design source is Rob's
 `DELTA-appearance-palettes.md` (kept beside this plan in `docs/design/2026-09-28-appearance/`).
 Where the two differ, **Rob's words of 2026-09-28 win**: there is no light/dark mode and no
 "Match system", only four themes to pick from.
@@ -90,10 +91,18 @@ Rob wants a profile page later. It is in `BACKLOG.md`, not built now. The theme 
 
 ## 4. The PRs
 
-| PR | What |
-|---|---|
-| A1 | The four themes: tokens, the migration, Settings swatches, Menu › Switch Theme, self-hosted Barlow Condensed, screenshots in all four |
-| A2 | The Decks hero image, once the transparent file is in, or with the keyed-out fallback after Rob sees it |
+| PR | What | State |
+|---|---|---|
+| A1 | The four themes: tokens, the migration, Settings swatches, Menu › Switch Theme, self-hosted Barlow Condensed, screenshots in all four | built |
+| A2 | The Decks hero image, once the transparent file is in, or with the keyed-out fallback after Rob sees it | set aside (Rob, 2026-09-28) |
+
+**How A1 landed.** The tokens stay the app's own names (`--color-*`, `--radius-*`, `--font-display`, `--display-case`), with
+the DELTA's values translated onto them. Brass & Slate is the base block and Felt & Cream its light face, exactly as
+before; Moss & Iron and Steel & Cobalt are `data-palette` blocks, set on `<html>` and `#matrix-v2`, and `index.html` carries
+Moss & Iron before any script runs. Saved values are read, never rewritten: `dark` is Brass & Slate, `light` Felt & Cream,
+`system` or nothing Moss & Iron. Headings, heroes and big figures read `--display-case` and `--hero-weight`, so Moss &
+Iron's are Barlow Condensed capitals. The mist re-reads its colors when the palette changes. Test checks that compare
+a heading's words read its text, not its rendered capitals.
 
 ## 5. Decisions for Rob
 

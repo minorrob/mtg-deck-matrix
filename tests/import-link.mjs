@@ -34,7 +34,7 @@ const fresh = async () => {
   await page.route(`${base}/api/import/archidekt*`, (route) => { const r = route.request(); asked.push({url: r.url(), header: r.headers()["x-crankmagic"]}); const a = answer(); return a.html ? route.fulfill({status: a.status, contentType: "text/html", body: a.html}) : route.fulfill({status: a.status, json: a.json}); });
   return {context, page, asked, outside, answer: (fn) => { answer = fn; }};
 };
-const dialog = async (page) => { await page.locator("#cm-dialog[open]").waitFor({timeout: 30000}); return (await page.locator("#cm-dialog[open] h2").first().innerText()).trim(); };
+const dialog = async (page) => { await page.locator("#cm-dialog[open]").waitFor({timeout: 30000}); return (await page.locator("#cm-dialog[open] h2").first().textContent()).trim(); };  /* the words, not a theme's capitals */
 const closeDialog = async (page) => { await page.keyboard.press("Escape"); await page.waitForTimeout(300); };
 const listIn = (page) => page.$eval("#cm-dialog textarea[name=text]", (t) => t.value);
 const notice = (page) => page.locator("#cm-notice").innerText();

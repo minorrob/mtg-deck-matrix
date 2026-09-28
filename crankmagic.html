@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en" style="color-scheme:dark">
+<html lang="en" style="color-scheme:dark" data-palette="moss-iron" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#10121b">
+  <meta name="theme-color" content="#121511">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="CrankMagic — a private Commander deck workshop and card library. Plan, collect, assemble and explore your cards with local persistence.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://*.trycloudflare.com https://api.scryfall.com; object-src 'none'; base-uri 'self'; form-action 'self'">
@@ -37,8 +37,8 @@
   <meta name="twitter:title" content="CrankMagic">
   <meta name="twitter:description" content="An intelligent MtG: Commander deck creator and card library.">
   <meta name="twitter:image" content="https://crankmagic.com/assets/crankmagic/og-card.jpg">
-  <link rel="stylesheet" href="crankmagic-design.css?v=21">
-  <link rel="stylesheet" href="crankmagic.css?v=243">
+  <link rel="stylesheet" href="crankmagic-design.css?v=22">
+  <link rel="stylesheet" href="crankmagic.css?v=244">
   <script src="lineup-model.js?v=5" defer></script>
   <script src="scryfall-client.js?v=13" defer></script>
   <script src="card-link.js?v=1" defer></script>
@@ -100,18 +100,18 @@
   <script src="crankmagic-tour.js?v=22" defer></script>
   <script src="cloud-sync.js?v=1" defer></script>
   <script src="crankmagic-account.js?v=8" defer></script>
-  <script src="crankmagic-settings.js?v=6" defer></script>
+  <script src="crankmagic-settings.js?v=7" defer></script>
   <script src="crankmagic-landing.js?v=3" defer></script>
-<script src="crankmagic-app.js?v=399" defer></script>
-  <script src="crankmagic-brand.js?v=5" defer></script>
+<script src="crankmagic-app.js?v=401" defer></script>
+  <script src="crankmagic-brand.js?v=6" defer></script>
 </head>
 <body>
-<div id="matrix-v2" aria-label="CrankMagic">
+<div id="matrix-v2" aria-label="CrankMagic" data-palette="moss-iron" data-theme="dark">
   <a class="cm-skip" href="#cm-main">Skip to content</a>
   <div class="cm-layout"><aside class="cm-sidebar">
     <div class="v-brand-block"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2" alt="" width="36" height="36"><div class="v-brand-copy"><div class="v-brand">CrankMagic</div><div class="v-aether-wrap"><canvas class="v-aether" width="190" height="56" aria-hidden="true"></canvas><canvas class="v-aether-front" width="190" height="56" aria-hidden="true"></canvas><button class="v-aether-toggle" type="button" aria-label="Pause aether animation" title="Pause aether animation">Ⅱ</button></div></div></div>
     <div class="v-nav-track"><nav class="v-nav-links" aria-label="Main pages"><a href="#decks" data-nav="decks">Decks</a><a href="#cards" data-nav="cards">Library</a><a href="#discover" data-nav="discover">Explore</a><a href="#game" data-nav="game">Play</a></nav></div>
-    <div class="cm-rail-foot"><button class="v-button cm-rail-menu" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="Menu" title="Menu and user functions"><span class="cm-chip-avatar" aria-hidden="true">☰</span><span class="cm-chip-text"><span class="cm-chip-name">Menu</span><span class="cm-chip-status">Settings &amp; backup</span></span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button><div id="cm-user-menu" class="cm-menu" popover><p>Theme</p><div class="cm-theme-choices" role="group" aria-label="Theme"><button type="button" data-action="set-theme" data-theme-choice="dark" aria-pressed="true">Dark · Brass &amp; Slate</button><button type="button" data-action="set-theme" data-theme-choice="light" aria-pressed="false">Light · Felt &amp; Cream</button><button type="button" data-action="set-theme" data-theme-choice="system" aria-pressed="false">Match system</button></div><hr><button data-action="open-settings"><span class="cm-btn-icon" aria-hidden="true">⚙</span>Settings</button><button data-action="backup">Save a backup file</button><button data-action="restore">Restore from a backup file</button><hr><p>Help</p><button data-action="menu-help"><span class="cm-btn-icon" aria-hidden="true">?</span>Help &amp; glossary</button><button data-action="tour"><span class="cm-btn-icon" aria-hidden="true">⚑</span>Take a Tour</button><button data-action="send-feedback"><span class="cm-btn-icon" aria-hidden="true">✉</span>Send Feedback</button><a id="cm-share-mail" href="#">Share CrankMagic by email</a><button type="button" data-action="share-qr">Show a QR code</button></div></div>
+    <div class="cm-rail-foot"><button class="v-button cm-rail-menu" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="Menu" title="Menu and user functions"><span class="cm-chip-avatar" aria-hidden="true">☰</span><span class="cm-chip-text"><span class="cm-chip-name">Menu</span><span class="cm-chip-status">Settings &amp; backup</span></span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button><div id="cm-user-menu" class="cm-menu" popover><p>Switch theme</p><div class="cm-theme-choices" role="group" aria-label="Switch theme"><button type="button" data-action="set-theme" data-theme-choice="moss-iron" aria-pressed="true">Moss &amp; Iron</button><button type="button" data-action="set-theme" data-theme-choice="brass-slate" aria-pressed="false">Brass &amp; Slate</button><button type="button" data-action="set-theme" data-theme-choice="felt-cream" aria-pressed="false">Felt &amp; Cream</button><button type="button" data-action="set-theme" data-theme-choice="steel-cobalt" aria-pressed="false">Steel &amp; Cobalt</button></div><hr><button data-action="open-settings"><span class="cm-btn-icon" aria-hidden="true">⚙</span>Settings</button><button data-action="backup">Save a backup file</button><button data-action="restore">Restore from a backup file</button><hr><p>Help</p><button data-action="menu-help"><span class="cm-btn-icon" aria-hidden="true">?</span>Help &amp; glossary</button><button data-action="tour"><span class="cm-btn-icon" aria-hidden="true">⚑</span>Take a Tour</button><button data-action="send-feedback"><span class="cm-btn-icon" aria-hidden="true">✉</span>Send Feedback</button><a id="cm-share-mail" href="#">Share CrankMagic by email</a><button type="button" data-action="share-qr">Show a QR code</button></div></div>
   </aside>
     <main id="cm-main" tabindex="-1"><div class="v-panel cm-starting" role="status"><div class="v-eyebrow">Your Commander workshop</div><h1>Opening your library</h1><p>Loading local records and the public card catalog…</p></div></main>
   </div>

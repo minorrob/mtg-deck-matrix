@@ -48,7 +48,7 @@ try {
     /* 1. The picker. */
     await page.locator(".cm-landing [data-action=start-precon]").click();
     await page.locator("#cm-precon-list .cm-precon").first().waitFor({timeout: 30000});
-    eq((await page.locator("#cm-dialog[open] h2").first().innerText()).trim(), "Start from a precon", "the landing page's Start from a precon opens the picker");
+    eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Start from a precon", "the landing page's Start from a precon opens the picker");
     eq((await page.locator("#cm-precon-n").innerText()).trim(), `${data.decks.length} of ${data.decks.length} Commander precons, newest first`, "it says how many there are");
     const first = await rows(page);
     eq(first.map((r) => r.id).slice(0, 5), data.decks.slice(0, 5).map((d) => d.id), "newest first");
@@ -69,7 +69,7 @@ try {
     await search(page, pick.commander[0].name);
     await page.locator(`#cm-precon-list [data-precon="${pick.id}"]`).click();
     await page.waitForFunction(() => document.querySelector("#cm-dialog[open] textarea[name=text]"), null, {timeout: 30000});
-    eq((await page.locator("#cm-dialog[open] h2").first().innerText()).trim(), "Import cards or a deck list", "a choice opens the app's own import, to review before saving");
+    eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Import cards or a deck list", "a choice opens the app's own import, to review before saving");
     const lines = (await page.$eval("#cm-dialog textarea[name=text]", (t) => t.value)).split("\n");
     eq(lines[0], `1 ${pick.commander[0].name}`, "the commander first");
     eq(lines.reduce((n, l) => n + Number(l.split(" ")[0]), 0), 100, "a hundred cards");
@@ -97,7 +97,7 @@ try {
     await page.locator(".cm-page-head [data-action=new-deck]").click();
     await page.locator("#cm-dialog [data-action=start-precon]").click();
     await page.locator("#cm-precon-list .cm-precon").first().waitFor({timeout: 30000});
-    eq((await page.locator("#cm-dialog[open] h2").first().innerText()).trim(), "Start from a precon", "New deck offers From a precon, the same picker");
+    eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Start from a precon", "New deck offers From a precon, the same picker");
     await context.close();
   }
 } finally {
