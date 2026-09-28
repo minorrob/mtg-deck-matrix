@@ -603,6 +603,8 @@ try {
   await rob.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D3")}`);
   await rob.page.waitForFunction(() => /Atraxa/.test(document.querySelector(".cm-deck-hero h1")?.innerText || "") && document.querySelector("#cm-sec-record .cm-record-table"), null, {timeout: 30000});
   const aiRow = (await rob.page.locator("#cm-sec-record .cm-record-table tbody tr").allInnerTexts())[0] || "";
+  await rob.page.locator("#cm-sec-record").scrollIntoViewIfNeeded();
+  await shot(rob.page, "record-ai-game-1400");
   ok(/win/.test(aiRow) && /Table/.test(aiRow) && /\bAI\b/.test(aiRow), `a table game with an AI seat is badged AI on the Record (${aiRow.replace(/\s+/g, " ").trim()})`);
 
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames)`);
