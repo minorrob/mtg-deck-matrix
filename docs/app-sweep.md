@@ -46,7 +46,7 @@ re-sweep behind it.
 
 ### A ritual was a permanent mana rock (fixed, #103)
 
-Seething Song adds five red mana once. It was classified as ramp, so it modelled as a
+Seething Song adds five red mana once. It was classified as ramp, so it modeled as a
 rock making five mana every turn for the rest of the game. Dark Ritual likewise. Most of
 why a spellslinger list measured the way it did.
 
@@ -135,7 +135,7 @@ tuning the shell is sometimes exactly what was wanted.
 
 
 v2.7 counts `unwatchedWinPaths` — cards saying "you win the game", whose condition is the
-part not modelled. The number is computed and nothing shows it. **The report should say
+part not modeled. The number is computed and nothing shows it. **The report should say
 it, and the Deck Lab should refuse to rank a list where it is high**, rather than quietly
 scoring a combo deck as a pile of creatures. Cost: small (it is a rendering change plus
 one guard). This is the highest-value honesty fix left.

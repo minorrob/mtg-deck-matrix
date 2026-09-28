@@ -242,7 +242,7 @@
           if (init.signal.aborted) relay();
           else init.signal.addEventListener("abort", relay, {once: true});
         }
-        /* The deadline is RACED, not merely signalled. Aborting only works if the fetch
+        /* The deadline is RACED, not merely signaled. Aborting only works if the fetch
            implementation honors the signal, and the guarantee "this call returns within
            timeoutMs" must not depend on that cooperation -- a fetch that ignores its signal
            would otherwise hang the caller exactly as before. The abort is still sent, so the

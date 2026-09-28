@@ -107,7 +107,7 @@ check("the two lens policies are measured on the same interaction rule", () => {
 check("the blocker-retention parameter ships at zero in every policy", () => {
   // It costs 10-13 points because the model's block reduction is capped, not
   // because keeping blockers home is bad play. Turning it on before combat is
-  // modelled would put that measurement error into the advice.
+  // modeled would put that measurement error into the advice.
   for (const [key, policy] of Object.entries(Policy.POLICIES)) {
     assert.equal(policy.combat.keepBack, 0, `${key} keeps creatures back, which this model cannot price`);
   }

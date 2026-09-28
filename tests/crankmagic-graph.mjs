@@ -288,7 +288,7 @@ ok("relate is honest about a pair with nothing between them", () => {
 /* ------------------------------------------------- what the bake stopped claiming */
 
 ok("proliferate is a multiplier, not an event anything fires on", () => {
-  /* The old bake modelled proliferate as an EVENT: a card that put counters "caused" it
+  /* The old bake modeled proliferate as an EVENT: a card that put counters "caused" it
      and a card that says proliferate "listened" for it. Neither is what happens. Putting
      counters does not fire Atraxa; proliferate makes more of the counters already there.
      So the pseudo-event is gone and the pair is produces(counter) x multiplies(counter). */

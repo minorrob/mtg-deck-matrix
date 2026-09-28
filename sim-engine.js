@@ -226,9 +226,9 @@
    * producedColors above credits a fetch with every color it can reach, which is
    * right -- you choose the basic. entersTapped then decided the timing off the
    * fetch's own text, and a fetch does not say "enters tapped" because the fetch
-   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modelled
+   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modeled
    * as UNTAPPED FIVE-COLOR LANDS, available the turn they were played: strictly
-   * better than any land in Magic. Naya and Bant Panorama modelled as untapped
+   * better than any land in Magic. Naya and Bant Panorama modeled as untapped
    * tri-lands while really charging {1} on top of the sacrifice.
    *
    * What the real cards do: Evolving Wilds, Terramorphic Expanse and both
@@ -275,7 +275,7 @@
          might reach. Currency Converter reads "{T}: Put a card exiled with this
          artifact into its owner's graveyard. If it's a land card, create a
          Treasure token." The cost is a bare {T}, so the test above passed it and
-         the card modelled as a one-mana Treasure engine -- when the Treasure needs
+         the card modeled as a one-mana Treasure engine -- when the Treasure needs
          a card discarded, exiled with this artifact, and a land at that.
          Only activated abilities are read this way. A triggered Treasure that
          names a condition -- Smothering Tithe's "if the player doesn't" -- is the
@@ -472,7 +472,7 @@
          this engine can now supply. */
       isStorm: /\bstorm\b|copy it for each spell cast before it this turn/.test(text),
       /* A WIN THIS ENGINE CANNOT WATCH. "You win the game" has a condition attached, and
-         the condition is exactly what is not modelled here -- Thassa's Oracle counts a
+         the condition is exactly what is not modeled here -- Thassa's Oracle counts a
          library, Approach counts its own previous cast, Aetherflux counts a life total.
          Flagged, never scored: a deck carrying one of these is reported as having a win
          path the measurement does not describe, rather than quietly given a big body. */
@@ -1615,7 +1615,7 @@
       avgSpellsPerGame: totals.spellSum / games,
       avgStormPeak: totals.stormPeakSum / games,
       /* WIN PATHS THIS ENGINE CANNOT WATCH. "You win the game" always carries a condition,
-         and the condition is the part that is not modelled -- Thassa's Oracle counts a
+         and the condition is the part that is not modeled -- Thassa's Oracle counts a
          library, Approach counts its own previous cast, Aetherflux counts a life total.
          Counted and reported, never scored: a deck built around one of these is not a weak
          deck, it is a deck this measurement does not describe, and the difference has to

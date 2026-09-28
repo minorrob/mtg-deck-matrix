@@ -61,7 +61,7 @@ export function combatTotals(attacks=[]){
  *
  * Rob, immediately after: "There are definitely more damage types than just those. Have to
  * consider first strike, double strike, and similar." He is right, and for DOUBLE STRIKE it is
- * not a labelling problem but an arithmetic one: a double striker deals its power in the
+ * not a labeling problem but an arithmetic one: a double striker deals its power in the
  * first-strike step AND again in the normal step, so a raw power total understates what is
  * coming. `potential` counts it twice; `total.power` is left alone because combatTotals is used
  * elsewhere and means raw power there.

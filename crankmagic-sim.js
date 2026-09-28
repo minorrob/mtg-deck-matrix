@@ -255,7 +255,7 @@
          what gets exported, re-imported and read a month later with no screen around it. */
       limits: [
         "Three opponents are sampled archetype profiles with damage curves and scheduled win turns — not four real decks with hands, libraries and boards.",
-        "There is no stack, no priority and no real blocking unless board combat was enabled; attacks use modelled connection rates.",
+        "There is no stack, no priority and no real blocking unless board combat was enabled; attacks use modeled connection rates.",
         "No recorded human games back this number. It compares lists under one model; it does not predict a real evening.",
         "Turn-capped games are reported separately as incompleteGames and are still counted in the win-rate denominator."
       ].concat(result.unwatchedWinPaths
