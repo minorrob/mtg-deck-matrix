@@ -3015,6 +3015,9 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-size-end{font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
 #matrix-v2 .cm-size-slider input[type=range]{flex:1 1 140px;min-width:90px;width:180px;accent-color:var(--v-accent);margin:0;padding:0;min-height:24px}
 .cm-size-slider output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums;color:var(--v-ink);font-weight:600}
+/* A view's own size, or the default (G8): a quiet word when it is the default, a way back when it is not. */
+.cm-size-note{font-size:11px;color:var(--v-muted);white-space:nowrap}
+.cm-size-reset{min-height:0;padding:2px 8px;border-radius:var(--v-radius-card);border:1px solid var(--v-line);background:var(--color-panel);color:var(--v-ink);font-size:11px;white-space:nowrap;cursor:pointer}
 .cm-tt-drawer-head .cm-size-slider input[type=range]{width:140px;flex-basis:120px}
 @media(max-width:760px){.cm-tt-drawer-head .cm-size-slider .cm-size-end{display:none}.cm-tt-drawer-head .cm-size-slider input[type=range]{width:110px;min-width:80px}}
 /* While a size is dragged, what waits for the redraw fades rather than overlapping. */
