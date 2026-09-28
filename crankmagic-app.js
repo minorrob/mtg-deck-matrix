@@ -9,8 +9,8 @@ const main=$('#cm-main'),dialog=$('#cm-dialog'),actions={},views={};let state=M.
    cannot be "independently manipulated out of sync with one another". */
 const sandbox=globalThis.CrankSandbox?globalThis.CrankSandbox.create({model:M}):null;
 const uid=()=>crypto.randomUUID(),money=n=>n===null||n===undefined?'Unknown':'$'+Number(n).toFixed(2),source=s=>({owned:'Owned',ordered:'Ordered',watching:'Watched',trade:'Ordered · trade',"to-buy":'To buy',draft:'Draft list'}[s]||s);
-/* Colour identity as the game draws it -- the mana symbols -- rather than five coloured
-   dots. A colourless identity keeps a single grey pip so the cell is never empty. */
+/* Color identity as the game draws it -- the mana symbols -- rather than five colored
+   dots. A colourless identity keeps a single gray pip so the cell is never empty. */
 function colors(ci){const list=ci||[];return `<span class="cm-colors" aria-label="${esc(list.join(', ')||'Colorless')}">${list.map(x=>/^[WUBRG]$/.test(x)?`<img class="cm-pip" src="assets/mana/${x}.svg?v=1" alt="" title="${esc({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green'}[x])}">`:`<i class="cm-color ${esc(x)}" title="${esc(x)}"></i>`).join('')||'<i class="cm-color C" title="Colorless"></i>'}</span>`;}
 /* The printed cost only: a card with a second face shows the cost in its top-right corner, not
    the adventure's or the back's too (CrankCatalog.frontCost). Pass the type line so a split card
@@ -24,9 +24,9 @@ function caret(dir='down'){return `<svg class="cm-caret${dir==='left'?' cm-caret
 function button(label,action,data={},primary=false,{caret:dir='',cls=''}={}){return `<button type="button" class="v-button${primary?' primary':''}${cls?' '+cls:''}" data-action="${esc(action)}" ${Object.entries(data).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ')}>${esc(label)}${dir?caret(dir):''}</button>`;}
 /* ONE PILL PER RUNG. Every place that names a status -- the roster's Source and Allocation
    cells, the card pop-up, the deck page, the Ready to add list -- draws it through here, so the
-   colour for "in the box" is the same colour everywhere. `pillKind` is the mapping from the
-   model's words to the seven tokens; a word it does not know wears the draft grey. */
-const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),Owned:'pull',owned:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
+   color for "in the box" is the same color everywhere. `pillKind` is the mapping from the
+   model's words to the seven tokens; a word it does not know wears the draft gray. */
+const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),...Object.fromEntries(M.STATE_LABELS.map(l=>[l,M.stateTone(l)])),Owned:'pull',owned:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
 function pillKind(key,placement){if((key==='owned'||key==='Owned')&&placement==='Physical deck')return 'inbox';return PILL_KIND[key]||'draft';}
 function pill(text,kind,attrs=''){return `<span class="cm-pill ${esc(kind)}" ${attrs}>${text}</span>`;}
 /* THE READINESS BAR: a deck's target as one line, cut into what is in the box, what you own
@@ -47,7 +47,7 @@ function options(items,value){return items.map(x=>{const [v,l]=Array.isArray(x)?
 /* A REQUIRED FIELD WEARS A MOUNTAIN. The red asterisk of every form on the web, except it
    is the red asterisk every form on the web uses, because that is the one mark a reader
    already knows without being taught it. It briefly wore the Mountain pip instead -- red is
-   the game's own colour for "not optional" -- but a symbol a reader has to decode is a worse
+   the game's own color for "not optional" -- but a symbol a reader has to decode is a worse
    asterisk than an asterisk, however apt.
 
    It is driven by the field's OWN `required`, so the mark and the constraint cannot drift
@@ -60,13 +60,13 @@ const requires=attrs=>/(^|\s)(required|data-required)(\s|=|$)/.test(attrs);
 /* The mark is wrapped WITH its label text in one span: `label` is display:grid in this
    stylesheet, so a bare glyph beside a bare text node is a second grid ROW, and the mark
    landed on a line of its own under the words it belongs to. */
-const labelled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
-function field(label,name,value='',attrs=''){return `<label>${labelled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
-function select(label,name,items,value,attrs=''){return `<label>${labelled(label,attrs)}<select name="${esc(name)}" aria-label="${esc(label)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}>${options(items,value)}</select></label>`;}
+const labeled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
+function field(label,name,value='',attrs=''){return `<label>${labeled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
+function select(label,name,items,value,attrs=''){return `<label>${labeled(label,attrs)}<select name="${esc(name)}" aria-label="${esc(label)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}>${options(items,value)}</select></label>`;}
 /* This app's public address: the directory of the page's canonical link. tools/release-pages.mjs
    rewrites that link to wherever a release is published; a page without one falls back to the
    address the app was first published at. */
-function canonicalBase(){try{return new URL('./',document.querySelector('link[rel="canonical"]').href).href;}catch{return 'https://minorrob.github.io/mtg-deck-matrix/';}}
+function canonicalBase(){try{return new URL('./',document.querySelector('link[rel="canonical"]').href).href;}catch{return 'https://crankmagic.com/';}}
 function note(text,warn=false){return `<div class="cm-note${warn?' cm-warning':''}">${esc(text)}</div>`;}
 function head(kicker,title,description,controls=''){return `<header class="cm-page-head"><div><div class="v-eyebrow cm-eyebrow-warm">${esc(kicker)}</div><h1>${esc(title)}</h1><p>${esc(description)}</p></div><div class="cm-actions">${controls}</div></header>`;}
 /* THE PAGE NAME IS THE HEADING. Every page used to open on three lines -- an eyebrow, a
@@ -88,7 +88,9 @@ function subnav(group){document.querySelectorAll('.cm-subnav').forEach(el=>el.re
   /* A sub-nav row may name a tint -- a deck row carries its commander's first color, as an
      8px dot (Track V.3, the guide's step 2). It is a --mana-* token name, never a literal, so
      the dot follows the theme with everything else; a row without one draws no dot. */
-  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}" title="${esc(it.label)}"${it.current?' class="is-current" aria-current="location"':''}${it.tint?` style="--dot:var(--mana-${esc(it.tint)})"`:''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
+  /* A row may be an action instead of a page (Library › Upload cards): it keeps the row's look, and the click
+     handler runs the action instead of following the link. */
+  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}" title="${esc(it.label)}"${it.action?` data-action="${esc(it.action)}" role="button"`:''}${it.current?' class="is-current" aria-current="location"':''}${it.tint?` style="--dot:var(--mana-${esc(it.tint)})"`:''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
   host.insertAdjacentElement('afterend',list);}
 function helpButton(key){return `<button type="button" class="v-button cm-help-btn" data-action="page-help" data-help="${esc(key)}" aria-label="About this page" title="About this page">?</button>`;}
 /* A page head is the name, one muted summary sentence with the two or three figures that
@@ -99,7 +101,21 @@ function helpButton(key){return `<button type="button" class="v-button cm-help-b
    the live brand block out of the shell, so the logo, the wordmark and its mist arrive together
    and the canvas keeps animating. Only the local copy uses it (Rob, 2026-09-24). */
 function pageHead(name,controls='',help='',summary=''){const title=name?`<h1>${esc(name)}</h1>`:`<div class="cm-page-brand" id="cm-brand-slot"></div><span class="cm-page-online">Online</span>`;return `<header class="cm-page-head"><div class="cm-page-title"><div class="cm-page-name">${title}${help?helpButton(help):''}</div>${summary}</div>${controls?`<div class="cm-actions">${controls}</div>`:''}</header>`;}
-function notice(message,error=false){const el=$('#cm-notice');el.textContent=message;el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
+/* A NOTICE CAN CARRY ONE ACTION (r3, 72-toast-error): a save offers Undo, a failure that may pass
+   offers Retry. The message is set as text and the button is built, so nothing in either is read as
+   markup. A save's own notice offers Undo, and so does any notice its flow raises straight after it,
+   while that save is still the last change: the undo it offers is the one History would give. */
+let undoRevision=null,undoAt=0;
+const UNDO={label:'Undo',run:()=>actions.undo()};
+function notice(message,error=false,{action=null,stay=false}={}){const el=$('#cm-notice');if(!action&&!error&&undoRevision===state.revision&&Date.now()-undoAt<3000)action=UNDO;
+  const text=document.createElement('span');text.className='cm-toast-text';text.textContent=message;el.replaceChildren(text);
+  if(action){const b=document.createElement('button');b.type='button';b.className='cm-toast-action';b.textContent=action.label;b.addEventListener('click',async()=>{el.hidden=true;clearTimeout(noticeTimer);try{await action.run();}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});el.append(b);}
+  el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);if(!stay)noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
+/* A NEW VERSION, OFFERED (M-18): the service worker installs a new version and waits; this says so, and stays until
+   answered. Reload asks the waiting worker to take over, and the page reloads once it has -- never before the click. */
+function offerUpdate(reg){let asked=false;const offer=()=>{if(!reg.waiting||!navigator.serviceWorker.controller)return;notice('A new version of CrankMagic is ready.',false,{stay:true,action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});};
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(asked)location.reload();});
+  offer();reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed')offer();});});}
 /* CLOSING A SUB-DIALOG GOES BACK, IT DOES NOT THROW THE WHOLE THING AWAY.
  *
  * Rob, 2026-09-24: "in any of the menu screens in any of the create, load, import, etc. when a
@@ -115,7 +131,19 @@ function notice(message,error=false){const el=$('#cm-notice');el.textContent=mes
  * bind listeners imperatively -- the card picker's input, the Load pane's hover preview -- and
  * restoring markup would bring back a dead copy of them. */
 let modalBack=null;
-function modal(title,body,back=null){if(dialog.open)dialog.close();modalBack=typeof back==='function'?back:null;dialog.className='';dialog.innerHTML=`<div class="cm-dialog-head"><h2 id="cm-dialog-title">${esc(title)}</h2><button type="button" class="cm-dialog-close" data-action="close" aria-label="${back?'Back':'Close dialog'}">${back?'‹':'×'}</button></div>${body}`;dialog.setAttribute('aria-labelledby','cm-dialog-title');dialog.showModal();
+/* A DIALOG HOLDING WORK THAT CLOSING WOULD LOSE (Rob, 2026-09-28: the import's review, after minutes of resolving,
+   closed on a stray click and took everything with it). guardModal() sets the question the close control, the
+   backdrop and Escape ask first; the next modal() clears it. onLeave runs when the person does leave. */
+let modalGuard=null;
+function guardModal(message,onLeave=null){modalGuard={message,onLeave};}
+/* NEW GROUP NAME ONLY FOR A NEW GROUP (Rob, 2026-09-28): an existing group already has its name, so the field shows
+   only while the Collection group choice is "Create a new group". For any form with both. */
+/* A GROUP SAYS WHAT IT IS (docs/plan-groups.md, G3). Beside its name, a group that is a place
+   -- the Bench, a deck's box, the To sell / trade pile -- names its template, so a list of groups
+   reads as places and lists at a glance. A General group is just its name. */
+function groupLabel(g){const t=g&&g.template&&g.template!=='general'?M.TEMPLATE_LABELS[g.template]:'';return !t||t.toLowerCase()===String(g.name).trim().toLowerCase()?g.name:`${g.name} · ${t}`;}
+function newGroupName(root){const sel=root&&root.querySelector('[name=group]'),label=root&&root.querySelector('[name=name]')?.closest('label');if(!sel||!label)return root;const sync=()=>{label.hidden=sel.value!=='';};sel.addEventListener('change',sync);sync();return root;}
+function modal(title,body,back=null){if(dialog.open)dialog.close();modalGuard=null;modalBack=typeof back==='function'?back:null;dialog.className='';dialog.innerHTML=`<div class="cm-dialog-head"><h2 id="cm-dialog-title">${esc(title)}</h2><button type="button" class="cm-dialog-close" data-action="close" aria-label="${back?'Back':'Close dialog'}">${back?'‹':'×'}</button></div>${body}`;dialog.setAttribute('aria-labelledby','cm-dialog-title');dialog.showModal();
   /* showModal() focuses the first focusable thing in the body and scrolls it into view, which put
      a card's art under the sticky title (UAT M-14). Focus the close button without scrolling, and
      open at the top. */
@@ -126,7 +154,12 @@ function form(title,body,submit,label='Save changes',back=null){const d=modal(ti
    open-in-new-tab landed on Decks with no wizard and no message, while a plain click worked
    because a handler intercepted it. Found by a UAT on 2026-09-22. The view is still Decks; the
    wizard opens over it once the page has drawn. */
-function route(){const raw=location.hash.slice(1)||({'graph.html':'discover'}[location.pathname.split('/').pop()]||'decks'),[view,q='']=raw.split('?');return {view:views[view]?view:'decks',params:new URLSearchParams(q)};}
+/* THE BARE ADDRESS (R3.8; Rob, M1·3). `/` with no route is the landing page for a visitor with nothing in this browser, and
+   Decks for everyone else; the account module sends a signed-in person on to Decks as soon as it knows. Any #route is
+   the app, always, so a link into it never meets the landing page. */
+const firstVisit=()=>!!views.welcome&&!!state&&!state.decks.length&&!state.lots.length&&!state.groups.some(g=>g.entries.length);
+/* A table's invitation link, #table/<id>/<code> (M5): the table view, with the id and the code as its params. */
+function route(){const raw=location.hash.slice(1)||({'graph.html':'discover'}[location.pathname.split('/').pop()]||(firstVisit()?'welcome':'decks'));const link=/^table\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(raw);if(link&&views.table)return {view:'table',params:new URLSearchParams({id:link[1],code:link[2]})};const [view,q='']=raw.split('?');return {view:views[view]?view:'decks',params:new URLSearchParams(q)};}
 function go(view,params={}){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==''&&v!==null&&v!==undefined));const hash='#'+view+(q.size?'?'+q:'');if(location.hash===hash)render();else location.hash=hash;}
 /* HOW OLD THESE FACTS ARE. Every data file stamps itself with the moment it was baked, and
    none of that ever reached the reader: a price from three days ago and one from three
@@ -167,14 +200,58 @@ function rescueBrand(){
   const block=document.querySelector('.v-brand-block'),home=document.querySelector('.cm-sidebar');
   if(block&&home&&block.parentElement!==home)home.prepend(block);
 }
-async function render(){if(!catalog)return;rescueBrand();document.getElementById('matrix-v2').classList.toggle('cm-local',isLocal());describeData();/* the theme is a saved preference; dark is the default and what the tokens define (Track V) */document.getElementById('matrix-v2').dataset.theme=state.preferences&&state.preferences.theme==='light'?'light':'dark';disposeView?.();disposeView=null;glossary?.hide();const seq=++renderSeq,r=route();const group=NAV_GROUP[r.view]||r.view;document.querySelectorAll('[data-nav]').forEach(el=>el.setAttribute('aria-current',el.dataset.nav===group?'page':'false'));try{subnav(group);}catch(e){console.error(e);}try{const cleanup=await views[r.view](r.params);if(seq===renderSeq)disposeView=cleanup||null;else cleanup?.();}catch(err){if(seq===renderSeq)main.innerHTML=head('Unable to open this view','Your saved library is intact',err.message,button('Decks','home'));}status();openNewDeckIfAsked();}
-function status(){if(repo)$('#cm-save-status').textContent=`Saved locally · revision ${state.revision}${navigator.onLine?'':' · offline'}`;}
+/* THE THEME IS ONE OF THREE (r3, 06-global-menu): Dark, Light, or Match system. It is a saved
+   preference; dark is the default and what the tokens define (Track V). Match system is resolved
+   here and followed live, so turning the device to light mode turns the app with it. */
+const lightQuery=matchMedia('(prefers-color-scheme: light)');
+function themeChoice(){const t=state.preferences&&state.preferences.theme;return t==='light'||t==='system'?t:'dark';}
+function applyTheme(){const choice=themeChoice(),shown=choice==='system'?(lightQuery.matches?'light':'dark'):choice;document.getElementById('matrix-v2').dataset.theme=shown;
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===choice)));}
+lightQuery.addEventListener('change',()=>{if(themeChoice()==='system')applyTheme();});
+/* REDUCE MOTION IS A SAVED PREFERENCE TOO (r3, 70-settings), on top of the device's own setting, never
+   instead of it: either one stills the page. It is written on <html> so the stylesheet can stop every
+   transition and animation at once, and CrankMotion answers the pieces that animate from script (the
+   rail's aether, the sea field, the Explore trace, the table's recombine), which ask it each time they
+   would move and hear a crankmotion event when it changes. */
+const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
+globalThis.CrankMotion={reduced:()=>document.documentElement.dataset.motion==='reduce'||motionQuery.matches,
+  onChange(fn){motionQuery.addEventListener('change',fn);addEventListener('crankmotion',fn);return ()=>{motionQuery.removeEventListener('change',fn);removeEventListener('crankmotion',fn);};}};
+/* CARD SIZE (R3.9b; AGENTS.md, "Sizes are sliders, never steps"). One continuous scale, a percent of each card
+   surface's own base size, remembered per device because it is a fact about the screen. A phone's range stops lower
+   than a desktop's so the largest card still fits it; the smallest keeps every caption at 10px or more. The value is
+   clamped to the range of the screen it is read on. `--card-scale` carries it to the CSS. */
+const CARD_SCALE={key:'cm-card-scale',def:100,min:60,max:160,phoneMax:130};
+const cardScaleRange=()=>[CARD_SCALE.min,matchMedia('(max-width:760px)').matches?CARD_SCALE.phoneMax:CARD_SCALE.max];
+const clampScale=v=>{const [lo,hi]=cardScaleRange(),n=Math.round(Number(v));return Number.isFinite(n)&&n>0?Math.min(hi,Math.max(lo,n)):CARD_SCALE.def;};
+/* The Table view's old S, M and L carry over once, to the nearest point on the scale. */
+function cardScale(){let v=null;try{v=localStorage.getItem(CARD_SCALE.key);if(v===null){const old=localStorage.getItem('cm-tabletop-size');if(old)v={S:66,M:100,L:146}[old]??null;}}catch(err){/* private mode: the default */}return clampScale(v??CARD_SCALE.def);}
+function applyCardScale(v=cardScale()){document.documentElement.style.setProperty('--card-scale',String(clampScale(v)/100));}
+function setCardScale(v,{save=true}={}){const n=clampScale(v);applyCardScale(n);if(save)try{localStorage.setItem(CARD_SCALE.key,String(n));localStorage.removeItem('cm-tabletop-size');}catch(err){/* applied, not remembered */}return n;}
+/* The slider every card-size control draws: the scale's two ends named, the value beside it. `data-card-scale`
+   is the one hook: dragging previews on every page at once, letting go remembers it. */
+function cardScaleSlider({label=true}={}){const [lo,hi]=cardScaleRange(),v=cardScale();return `<label class="cm-size-slider">${label?'<span class="cm-size-label">Card size</span>':''}<span class="cm-size-end" aria-hidden="true">${lo}%</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-card-scale aria-label="Card size" aria-valuetext="${v}%"><span class="cm-size-end" aria-hidden="true">${hi}%</span><output>${v}%</output></label>`;}
+document.addEventListener('input',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value,{save:false});el.setAttribute('aria-valuetext',n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n+'%';document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:true}}));});
+document.addEventListener('change',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value);document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:false}}));});
+matchMedia('(max-width:760px)').addEventListener?.('change',()=>applyCardScale());
+function applyMotion(){const on=Boolean(state.preferences&&state.preferences.reduceMotion),was=document.documentElement.dataset.motion==='reduce';
+  if(on)document.documentElement.dataset.motion='reduce';else delete document.documentElement.dataset.motion;
+  document.querySelectorAll('[data-action="set-motion"]').forEach(b=>b.setAttribute('aria-pressed',String(on)));
+  if(on!==was)dispatchEvent(new Event('crankmotion'));}
+/* A DATE A READER SEES IS WRITTEN THE US WAY (AGENTS.md, "The United States, always"): "Sep 25, 2026",
+   whatever the browser's own locale, never a bare ISO 2026-09-25. ISO stays for keys and files. */
+const usDate=v=>{const t=M.localDate(v);return t?t.toLocaleDateString('en-US',{dateStyle:'medium'}):'';};
+const usDateTime=v=>{const t=M.localDate(v);return t?t.toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'';};
+/* A deck with no cap of its own is held to this one: the reader's default when Settings has one, the
+   pod's rule ($225) otherwise. */
+const deckCap=()=>{const v=Number(state.preferences&&state.preferences.defaultBudgetCap);return Number.isFinite(v)&&v>0?v:(globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null);};
+async function render(){if(!catalog)return;rescueBrand();document.getElementById('matrix-v2').classList.toggle('cm-local',isLocal());describeData();applyTheme();applyMotion();applyCardScale();disposeView?.();disposeView=null;glossary?.hide();const seq=++renderSeq,r=route();/* The landing page stands alone: no rail, its own header (crankmagic-landing.js). */document.getElementById('matrix-v2').classList.toggle('cm-landing-on',r.view==='welcome');const group=NAV_GROUP[r.view]||r.view;document.querySelectorAll('[data-nav]').forEach(el=>el.setAttribute('aria-current',el.dataset.nav===group?'page':'false'));try{subnav(group);}catch(e){console.error(e);}try{const cleanup=await views[r.view](r.params);if(seq===renderSeq)disposeView=cleanup||null;else cleanup?.();}catch(err){if(seq===renderSeq)main.innerHTML=head('Unable to open this view','Your saved library is intact',err.message,button('Decks','home'));}status();openNewDeckIfAsked();}
+function status(){const line=$('#cm-save-status');if(repo&&line)line.textContent=`Library revision ${state.revision}${navigator.onLine?'':' · offline'}`;}
 /* A SITTING IS RE-VALIDATED WHENEVER THE LIBRARY MOVES (plan §2.7). Another tab confirming,
    a restored backup, or this tab's own save can leave a staged move with nothing to act on;
    the fold names those and drops them rather than letting them fail at Confirm. */
 function restage(){if(!sandbox||!sandbox.open)return sandbox&&sandbox.revalidate(state);const {dropped}=sandbox.revalidate(state);if(dropped.length)notice(`${dropped.length} staged move${dropped.length===1?'':'s'} no longer appl${dropped.length===1?'ies':'y'} and ${dropped.length===1?'was':'were'} dropped: ${dropped.map(d=>d.cardName).join(', ')}.`,true);return {dropped};}
 async function refresh(){state=await repo.getState();for(const c of Object.values(state.cards))catalog?.overlay(c);restage();await render();}
-async function commit(command,{renderView=true}={}){if(committing)throw Error('A save is already in progress. Please wait for its receipt.');committing=true;$('#cm-save-status').textContent='Saving…';try{const result=await repo.commit({id:uid(),...command},state.revision);state=result.state;for(const c of Object.values(state.cards))catalog.overlay(c);restage();notice(result.summary);if(renderView)await render();else status();return result;}catch(error){state=await repo.getState();status();throw error;}finally{committing=false;}}
+async function commit(command,{renderView=true}={}){if(committing)throw Object.assign(Error('A save is already in progress. Please wait for its receipt.'),{retryable:true});committing=true;{const line=$('#cm-save-status');if(line)line.textContent='Saving…';}try{const result=await repo.commit({id:uid(),...command},state.revision);state=result.state;for(const c of Object.values(state.cards))catalog.overlay(c);restage();undoRevision=state.revision;undoAt=Date.now();notice(result.summary);if(renderView)await render();else status();return result;}catch(error){state=await repo.getState();status();throw error;}finally{committing=false;}}
 function download(name,content,type='application/json'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 /* THE STARTER GROUPS REACH A LIBRARY THAT PREDATES THEM, ONCE. A new library gets Main
    Deck, Bench, To Trade and To Buy from Model.empty(), which already carries the flag --
@@ -188,7 +265,7 @@ async function seedStarterGroups(){
   const missing=M.starterGroups().filter(g=>!state.groups.some(x=>x.id===g.id||x.name===g.name));
   try{
     const result=await repo.commit({id:uid(),type:'batch',summary:'Added the starter Collection groups',
-      commands:[...missing.map(g=>({type:'createGroup',groupId:g.id,name:g.name})),
+      commands:[...missing.filter(g=>g.template!=='bench'||!state.groups.some(x=>x.template==='bench')).map(g=>({type:'createGroup',groupId:g.id,name:g.name,template:g.template})),
         {type:'preferences',values:{starterGroups:true}}]},state.revision);
     state=result.state;
   }catch{/* A library that will not take them still opens; it simply has no starter groups. */}
@@ -267,9 +344,9 @@ function compareCards(out,into,{outLabel='Replacing',intoLabel='With'}={}){
   const diff=a>0&&b>0?`<p class="cm-muted">${b>a?'Costs '+money(b-a)+' more':b<a?'Saves '+money(a-b):'The same price'} than the card it replaces.</p>`:'<p class="cm-muted">One of these has no recorded price, so the cost of the swap is unknown.</p>';
   return `<div class="cm-swap-compare">${side(out,outLabel)}<div class="cm-swap-arrow" aria-hidden="true">→</div>${side(into,intoLabel)}</div>${diff}`;
 }
-/* `colors` arrives renamed: the option names the deck's colour identity and the module
+/* `colors` arrives renamed: the option names the deck's color identity and the module
    already has a colors() that draws mana pips, and shadowing it emptied the picker. */
-async function cardPicker(title,onPick,{commander=false,like=null,colors:identity=null,back=null}={}){const d=modal(title,`<label>Card name or a Scryfall link<input id="cm-card-query" autocomplete="off" placeholder="The name on the card, or the one the rules use"></label><div class="cm-commander-results" id="cm-card-results"></div><div class="cm-actions">${button('Search exact name / link','picker-resolve')}${button('Record an unlisted card','picker-manual')}</div><p class="cm-muted">Suggestions never change ownership. The name printed on a Secret Lair or a Universes Beyond card works too. If the exact name cannot be found, provide the card’s Scryfall link.</p><p class="cm-error" hidden></p>`,back);d.classList.add('cm-picker-dialog');const input=$('#cm-card-query',d),results=$('#cm-card-results',d);const choose=async c=>{if(commander&&!c.commander)throw Error('That card is not a verified commander.');await onPick(c);};/* With a card to match, the list is ranked by likeness to it and each row says why it is
+async function cardPicker(title,onPick,{commander=false,like=null,colors:identity=null,back=null,label='Card name or a Scryfall link',paste=null,query=''}={}){const d=modal(title,`<label>${esc(label)}<input id="cm-card-query" autocomplete="off" placeholder="The name on the card, or the one the rules use"></label><div class="cm-commander-results" id="cm-card-results"></div><div class="cm-actions">${button('Search exact name / link','picker-resolve')}${button('Record an unlisted card','picker-manual')}</div><p class="cm-muted">Suggestions never change ownership. The name printed on a Secret Lair or a Universes Beyond card works too. If the exact name cannot be found, provide the card’s Scryfall link.</p><p class="cm-error" hidden></p>`,back);d.classList.add('cm-picker-dialog');const input=$('#cm-card-query',d),results=$('#cm-card-results',d);const choose=async c=>{if(commander&&!c.commander)throw Error('That card is not a verified commander.');await onPick(c);};/* With a card to match, the list is ranked by likeness to it and each row says why it is
      there. Without one it is the old name search. */
   function show(){
     const rows=like?catalog.similar(like,{colors:identity,query:input.value,limit:30})
@@ -281,7 +358,7 @@ async function cardPicker(title,onPick,{commander=false,like=null,colors:identit
     const printedAs=c=>q&&(c.flavorNames||[]).find(f=>CrankCatalog.folded(f).includes(q))||'';
     results.innerHTML=rows.map(({card:c,why})=>`<button type="button" class="cm-commander-result" data-pick-card="${esc(c.id)}"><strong>${esc(c.name)}</strong>${colors(c.colorIdentity)}<span>${printedAs(c)?`printed as ${esc(printedAs(c))}`:esc(why||(c.mechanics[0]||c.keywords[0]||c.typeLine.split('—')[0]).slice(0,28))}</span>${like?`<span class="cm-swap-price">${money(c.price)}</span>`:''}</button>`).join('')
       ||'<p class="cm-muted">Nothing in the catalog matches. Try a name, or use Search exact name / link.</p>';
-  }input.addEventListener('input',show);results.addEventListener('click',e=>{const b=e.target.closest('[data-pick-card]');if(b)choose(catalog.get(b.dataset.pickCard)).catch(error=>{const el=$('.cm-error',d);el.hidden=false;el.textContent=error.message;});});actions['picker-resolve']=async()=>{const c=await catalog.resolve(input.value);if(!c)throw Error('No exact match. Check the name or provide its Scryfall card link.');if(!state.cards[c.id])await commit({type:'cards',cards:[c]},{renderView:false});await choose(c);};actions['picker-manual']=()=>manualCard(input.value,choose);show();input.focus();}
+  }input.addEventListener('input',show);/* A name typed before the picker opened (the landing page's Step one) arrives searched. */if(query){input.value=query;show();}/* A LIST PASTED INTO THE SEARCH (Add cards, r3 wireframe 43): a single line is a name to search; more than one is a list, and goes where lists go. */if(paste)input.addEventListener('paste',e=>{const text=e.clipboardData?.getData('text')||'';if(text.trim().split(/\r?\n/).filter(l=>l.trim()).length<2)return;e.preventDefault();paste(text);});results.addEventListener('click',e=>{const b=e.target.closest('[data-pick-card]');if(b)choose(catalog.get(b.dataset.pickCard)).catch(error=>{const el=$('.cm-error',d);el.hidden=false;el.textContent=error.message;});});actions['picker-resolve']=async()=>{const c=await catalog.resolve(input.value);if(!c)throw Error('No exact match. Check the name or provide its Scryfall card link.');if(!state.cards[c.id])await commit({type:'cards',cards:[c]},{renderView:false});await choose(c);};actions['picker-manual']=()=>manualCard(input.value,choose);show();input.focus();}
 function manualCard(query,onPick){const url=/^https:\/\//i.test(query)?query:'';return form('Record an unlisted card',`<div class="cm-full">${note('Use the printed card or a reliable source. This identity is labeled user-entered and stays out of automatic deck construction until exact catalog verification succeeds.',true)}</div>${field('Card name','name',url?'':query,'required maxlength="250"')}${field('Source link','url',url,'type="url" required')}${field('Card type / subtype','typeLine','','required maxlength="500"')}${field('Mana cost (symbols, e.g. {2}{U})','manaCost','','maxlength="80"')}${field('Mana value','manaValue','','type="number" min="0" max="1000"')}${field('Power / toughness (optional)','stats','','placeholder="4/4" maxlength="25"')}<label class="cm-full">Rules text<textarea name="oracleText" required maxlength="20000"></textarea></label><div class="cm-full cm-actions">${['W','U','B','R','G'].map(color=>`<label class="cm-checkbox"><input type="checkbox" name="color${color}">${color}</label>`).join('')}</div><label class="cm-checkbox cm-full"><input name="commander" type="checkbox">Appears eligible as a commander (unverified)</label>`,async v=>{const sourceURL=CrankCatalog.safeURL(v.url);if(!sourceURL)throw Error('Use an HTTPS source link.');const existing=catalog.exact(v.name);if(existing)throw Error('That card already exists. Select its exact catalog record.');const [power,toughness]=v.stats.split('/');const c=catalog.add({name:v.name,typeLine:v.typeLine,manaCost:v.manaCost,manaValue:v.manaValue===''?null:Number(v.manaValue),power:power||null,toughness:toughness||null,oracleText:v.oracleText,colorIdentity:['W','U','B','R','G'].filter(x=>v['color'+x]),commander:!!v.commander,verified:false,legalities:{commander:'unverified'},source:'User-entered · '+sourceURL,url:sourceURL,updatedAt:new Date().toISOString(),price:null});await commit({type:'cards',cards:[c]},{renderView:false});await onPick(c);},'Save supplemental identity');}
 /* What a commander is FOR, in a few lines a reader can act on: the play styles its text
    earns in the shared vocabulary, what it triggers on and causes, and its own trigger
@@ -291,7 +368,7 @@ function manualCard(query,onPick){const url=/^https:\/\//i.test(query)?query:'';
    and tools/check-glossary.mjs enforces it. "Reserved", "Substitute" and "Primary Purpose" are
    CrankMagic's words, not the game's, so they would have no citation to give. They join the
    glossary at the moment it is created instead, which gives them the same hover, the same
-   keyboard behaviour and the same "Show term definitions" switch, and leaves the rules file a
+   keyboard behavior and the same "Show term definitions" switch, and leaves the rules file a
    rules file. Every definition is one sentence, in the app's own terms, saying what the word
    means HERE. */
 const COLLECTION_TERMS=[
@@ -302,7 +379,7 @@ const COLLECTION_TERMS=[
   ['watched','Watched','A card you are considering for a deck: filed in that deck’s collection group, reserving nothing and moving nothing. You may own a copy or not.',['Watching']],
   ['to-buy','To buy','A seat in a finalized deck’s list that nothing you hold fills yet. It is what the deck asks you to buy.',[]],
   ['ordered','Ordered','A copy you have paid for that has not arrived. It counts toward a deck the way an owned copy does, and cannot be put in a box.',[]],
-  ['draft-list','Draft list','The hundred a deck claims before it is finalized. A draft reserves nothing, so no copy is committed to it.',[]],
+  ['draft-list','Draft list','The hundred a deck claims before it is finalized. Copies you put in the deck or reserve for it cover its seats; what is left is its Draft list, which becomes To buy when the deck is finalized.',[]],
   ['suggestion','Suggestion','A card linked to a deck as an option or an upgrade rather than as part of its hundred.',['Suggestions']],
   ['planned','Planned','A card written into a collection group as a line on a list. It is a plan, not a copy you hold.',[]],
   ['collection-group','Collection group','A named set of records. Every deck owns one, which is how a card is shortlisted for that deck without being reserved.',['Groups']],
@@ -331,24 +408,28 @@ function playsAs(c){const out=[];const styles=CrankCatalog.playStyles(c);if(styl
    substitute, reserved and waiting, or on the Bench; then Ordered, Watched, what finalized
    decks still need to buy, and a draft deck's or a group's plans, because those are rows the
    Collection shows. Assignment is the decks: one chip per deck the card is reserved to,
-   physically in, or wanted by, coloured by that state on the same scale the counts row and
-   the tables use, so a chip's colour reads as its state wherever it appears. */
+   physically in, or wanted by, colored by that state on the same scale the counts row and
+   the tables use, so a chip's color reads as its state wherever it appears. */
 function standing(id){
   const rows=M.projection(state).filter(r=>r.cardId===id);
   const by=pred=>rows.filter(pred).reduce((n,r)=>n+r.quantity,0);
   const draft=[],planned=[];
   for(const d of state.decks.filter(d=>!d.archived&&d.status==='draft')){
-    const filed=d.groupId?state.lots.filter(l=>l.cardId===id&&!l.allocation&&l.groupIds.includes(d.groupId)).reduce((n,l)=>n+l.quantity,0):0;let left=filed;
-    for(const r of d.slots.filter(r=>r.cardId===id&&r.committed)){const use=Math.min(left,r.quantity);left-=use;if(r.quantity-use>0)draft.push({deck:d,quantity:r.quantity-use});}
+    for(const x of M.draftShort(state,d))if(x.slot.cardId===id&&x.quantity>0)draft.push({deck:d,quantity:x.quantity});
   }
   for(const g of state.groups)for(const r of g.entries.filter(r=>r.cardId===id))planned.push({group:g,quantity:r.quantity});
   const lot=pred=>by(r=>r.kind==='lot'&&pred(r));
-  const status=[['Owned',lot(r=>r.source==='owned')],['Physical deck',lot(r=>r.placement==='Physical deck')],['Substitute',lot(r=>r.placement==='Substitute')],['Reserved',lot(r=>r.placement==='Reserved')],['Bench',lot(r=>r.placement==='Bench')],['Ordered',lot(r=>r.source==='ordered')],['Watched',lot(r=>r.source==='watching')],['To buy',by(r=>r.kind==='need')],['Draft list',draft.reduce((n,x)=>n+x.quantity,0)],['Planned',planned.reduce((n,x)=>n+x.quantity,0)],['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
-  /* One chip per deck and state: a copy reserved to a deck and physically in it is one chip,
-     Physical deck; a substitute is its own; a deck still buying gets a To buy chip. */
+  /* THE CARD'S STANDING IN CARD STATES (docs/card-states.md): every record of this card -- its copies, the decks'
+     needs, draft lists, group entries -- asked the model's cardState, then counted by the state's word. Owned
+     leads; then the roles a card for a deck has outside its box -- Upgrade, it replaces a card in the box; Reserved,
+     it takes an empty seat -- and the two slot flags keep their chips. */
+  const records=[...rows,...draft.map(x=>({kind:'draft',deckId:x.deck.id,purpose:'main',quantity:x.quantity})),...planned.map(x=>({kind:'entry',groupId:x.group.id,quantity:x.quantity}))].map(((read)=>r=>({r,st:read(r)}))(M.stateReader(state)));
+  const count=f=>records.filter(({st})=>f(st)).reduce((n,{r})=>n+r.quantity,0);
+  const status=[['Owned',count(st=>st.stage==='owned')],...M.STATE_LABELS.map(l=>[l,count(st=>M.stateLabel(st)===l)]),['Upgrade',count(st=>!!st.deckId&&!st.inBox&&st.role==='upgrade')],['Reserved',count(st=>!!st.deckId&&!st.inBox&&st.role==='reserved')],['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
+  /* One chip per deck and state: the deck the record is for, named with its state's word -- a stage while not
+     owned, the role in the box once owned, To add while not -- and, outside the box, its role ("To buy · upgrade"). */
   const decks=new Map(),add=(deckId,label,kind,q)=>{const d=deckId&&state.decks.find(x=>x.id===deckId);if(!d||!q)return;const key=d.id+'|'+label,cur=decks.get(key)||{name:d.name,label,kind,quantity:0};cur.quantity+=q;decks.set(key,cur);};
-  for(const r of rows){if(r.kind==='need')add(r.deckId,'To buy','buy',r.quantity);else if(r.kind==='lot'){if(r.placement==='Physical deck')add(r.deckId,'Physical deck','inbox',r.quantity);else if(r.placement==='Substitute')add(r.standInDeckId,'Substitute','standin',r.quantity);else if(r.placement==='Reserved')add(r.deckId,r.source==='ordered'?'Ordered':'Reserved',r.source==='ordered'?'ordered':'reserved',r.quantity);}}
-  for(const x of draft)add(x.deck.id,'Draft list','draft',x.quantity);
+  for(const {r,st} of records){if(!st.deckId)continue;const l=M.stateLabel(st);add(st.deckId,!st.inBox&&(st.role==='upgrade'||st.role==='reserved')?`${l} · ${M.roleLabel(st.role).toLowerCase()}`:l,M.stateTone(l),r.quantity);}
   const open=`data-action="library-card" data-card="${esc(id)}"`;
   const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<button type="button" class="cm-pill ${esc(pillKind(l))}" ${open} title="Open Library filtered to this card">${esc(l)} <strong>${n}</strong></button>`).join('')||'<span class="cm-muted">none</span>';
   const assignment=[...decks.values()].map(x=>`<button type="button" class="cm-pill ${esc(x.kind)}" ${open} title="${esc(x.label)} · ${x.quantity} — open Library filtered to this card">${esc(x.name)}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`).concat(planned.map(x=>`<button type="button" class="cm-pill draft" ${open} title="Planned in the group ${esc(x.group.name)}">${esc(x.group.name)} · planned${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`)).join('');
@@ -367,35 +448,50 @@ async function inspector(id){let c=cardOf(id);if(!c)throw Error('Card not found.
    own copy for a card the record set does not carry. */
 const cardOf=id=>(catalog&&catalog.get(id))||state.cards[id]||null;
 const cardsOf=()=>Object.keys(state.cards).map(cardOf).filter(Boolean);
-const C={M,E,$,esc,uid,isLocal,money,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;}};
+const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,newGroupName,groupLabel,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,deckCap,applyMotion,status,usDate,usDateTime};
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
 /* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
-actions['page-help']=el=>{const h=HELP[el.dataset.help];if(h)modal(h.title,typeof h.body==='function'?h.body():h.body);};
+/* HELP SLIDES IN FROM THE RIGHT (r3, 07-help-panel) and leaves the page visible beside it. The
+   glossary is one step on, and closing it comes back here. */
+actions['page-help']=el=>{const h=HELP[el.dataset.help];if(!h)return;const key=el.dataset.help;
+  modal('Help — '+h.title,`<div class="cm-help-body">${typeof h.body==='function'?h.body():h.body}</div><div class="cm-help-foot"><button type="button" class="cm-link" data-action="open-glossary" data-help="${esc(key)}">Open the glossary →</button>${button('Got it','close',{},true)}</div>`);
+  dialog.classList.add('cm-slideover');};
+/* THE GLOSSARY (r3, 76-glossary): the app's own words, one sentence each, the statuses in the
+   colors they wear everywhere else. Rules terms stay on their hover; this is the vocabulary a
+   reader meets in CrankMagic and nowhere else. */
+const TERM_TONE={'physical-deck':'--st-physical','substitute':'--st-standin','reserved':'--st-reserved','bench':'--st-pull','ordered':'--st-ordered','watched':'--st-watch','to-buy':'--st-buy','draft-list':'--st-draft'};
+actions['open-glossary']=el=>{const key=el&&el.dataset.help,back=key&&HELP[key]?()=>actions['page-help'](el):null;
+  const rows=COLLECTION_TERMS.map(t=>`<div class="cm-gloss-row"><span class="cm-gloss-term"${TERM_TONE[t.id]?` style="--tone:var(${TERM_TONE[t.id]})"`:''}>${esc(t.term)}</span><span>${esc(t.definition)}</span></div>`).join('');
+  modal('Glossary',`<div class="cm-glossary">${rows}</div><div class="cm-form-footer">${button('Close','close')}</div>`,back);};
+/* The Menu's Help opens the help of the page underneath, which is what "help" means from there;
+   a page with no help opens the glossary. */
+actions['menu-help']=()=>{const b=$('#cm-main [data-action="page-help"]');if(b&&HELP[b.dataset.help])actions['page-help'](b);else actions['open-glossary']();};
 actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
-actions.close=()=>{const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
+actions.close=()=>{if(modalGuard&&!confirm(modalGuard.message))return;const guard=modalGuard;modalGuard=null;guard?.onLeave?.();const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
 /* Clicking the backdrop is the same gesture as the corner control: it goes back if there is
    somewhere to go, and closes otherwise. A <dialog> reports a backdrop click as a click on the
    dialog itself, which is why the target test is the element and not a child. */
 dialog.addEventListener('click',event=>{if(event.target===dialog)actions.close();});
 /* Esc closes the dialog natively, which would skip the journey. Cancel it and go back instead. */
-dialog.addEventListener('cancel',event=>{if(modalBack){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
-actions['toggle-theme']=async()=>{const next=state.preferences&&state.preferences.theme==='light'?'dark':'light';await commit({type:'preferences',values:{theme:next}});notice(next==='light'?'Light theme (Felt and Cream).':'Dark theme (Brass and Slate).');};
+dialog.addEventListener('cancel',event=>{if(modalBack||modalGuard){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
+const THEME_SAID={dark:'Dark theme (Brass and Slate).',light:'Light theme (Felt and Cream).',system:'The theme now follows this device’s light or dark setting.'};
+actions['set-theme']=async el=>{const choice=el.dataset.themeChoice;if(!THEME_SAID[choice]||choice===themeChoice())return;await commit({type:'preferences',values:{theme:choice}});notice(THEME_SAID[choice]);};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
-/* E-MAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
+/* EMAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
    are bought, then the library sent home. No browser can attach a file to a mailto: draft,
    so on a phone this opens the share sheet with the export attached -- Mail, Messages,
-   Drive, AirDrop -- which is the honest version of "e-mail it". Where the share sheet
+   Drive, AirDrop -- which is the honest version of "email it". Where the share sheet
    cannot take files, the export is downloaded and a pre-addressed draft opens telling the
    reader to attach it. The file is prepared when the menu opens so the share call still
    sits inside the tap that asked for it, which Safari requires. */
 let shareFile=null;
 async function exportFile(){const data=await E.backup(await backupData());return new File([JSON.stringify(data,null,2)],'CrankMagic-export-'+M.today()+'.json',{type:'application/json'});}
-/* THE ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal e-mail."
+/* THE ONE PUBLIC ADDRESS. Rob, 2026-09-24: "I don't want just anyone to see my personal email."
    admin@crankmagic.com forwards to him (Cloudflare Email Routing); nothing the app shows names any
    other address, and tools/release-pages.mjs refuses a release that does. */
 const CONTACT='admin@crankmagic.com';
-/* SEND FEEDBACK. A mailto, opened the same way the export's e-mail is: no form to fill in
+/* SEND FEEDBACK. A mailto, opened the same way the export's email is: no form to fill in
    here, no message stored anywhere, and it works from a phone and a desktop alike because
    the mail client is the one the reader already uses. */
 function feedbackLink(){
@@ -408,9 +504,13 @@ function feedbackLink(){
 actions['send-feedback']=()=>{const a=document.createElement('a');a.href=feedbackLink();a.rel='noopener';document.body.appendChild(a);a.click();a.remove();};
 actions['share-export']=async()=>{const file=shareFile||await exportFile();shareFile=null;const when=M.today();const body=`CrankMagic library export ${when}. On your computer, open CrankMagic → User Functions → Restore from a backup file and choose ${file.name}.`;
 if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'CrankMagic export '+when,text:body});notice('Export handed to your share sheet.');return;}catch(err){if(err.name==='AbortError')return;}}
-download(file.name,await file.text());location.href='mailto:?subject='+encodeURIComponent('CrankMagic export '+when)+'&body='+encodeURIComponent('The export file '+file.name+' was just downloaded. Attach it to this e-mail. '+body);notice('This browser cannot attach a file to an e-mail by itself: the export was downloaded and an e-mail draft opened — attach the file to it.',true);};
-actions.undo=async()=>{state=await repo.undo(state.revision);await render();notice('Last change undone.');};
-actions.history=async()=>{const rows=await repo.history();modal('History & undo',`${note('History records completed transactions. Undo reverses the last compound change when no later change has intervened.')}${button('Undo last change','undo')}<label style="margin-top:16px">Filter history<input id="cm-history-filter" placeholder="Card, deck or operation"></label><div id="cm-history-rows"></div>`);const draw=()=>{$('#cm-history-rows').innerHTML=rows.filter(r=>(r.summary+' '+r.type).toLowerCase().includes($('#cm-history-filter').value.toLowerCase())).slice(0,200).map(r=>`<article><h3>${esc(r.summary)}</h3><p class="cm-muted">${esc(r.at)} · revision ${r.revision} · ${esc(r.type)}</p>${effectsHTML(r.effects,state)}</article>`).join('')||'<p>No matching history.</p>';};$('#cm-history-filter').addEventListener('input',draw);draw();};
+download(file.name,await file.text());location.href='mailto:?subject='+encodeURIComponent('CrankMagic export '+when)+'&body='+encodeURIComponent('The export file '+file.name+' was just downloaded. Attach it to this email. '+body);notice('This browser cannot attach a file to an email by itself: the export was downloaded and an email draft opened — attach the file to it.',true);};
+/* Undo holds the same guard a save does. The repository announces the new revision to this tab's own
+   listeners before undo() returns, while `state` still holds the old one, and the listener took that for
+   another tab's change: it refreshed and said so, on top of "Last change undone", in whichever order
+   the two landed (tests/shell-r3.mjs records every notice to hold this). */
+actions.undo=async()=>{if(committing)throw Object.assign(Error('A save is already in progress. Please wait for its receipt.'),{retryable:true});committing=true;try{state=await repo.undo(state.revision);}finally{committing=false;}await render();notice('Last change undone.');};
+actions.history=async()=>{const rows=await repo.history();modal('History & undo',`${note('History records completed transactions. Undo reverses the last compound change when no later change has intervened.')}${button('Undo last change','undo')}<label style="margin-top:16px">Filter history<input id="cm-history-filter" placeholder="Card, deck or operation"></label><div id="cm-history-rows"></div>`);const draw=()=>{$('#cm-history-rows').innerHTML=rows.filter(r=>(r.summary+' '+r.type).toLowerCase().includes($('#cm-history-filter').value.toLowerCase())).slice(0,200).map(r=>`<article><h3>${esc(r.summary)}</h3><p class="cm-muted">${esc(usDateTime(r.at)||r.at)} · revision ${r.revision} · ${esc(r.type)}</p>${effectsHTML(r.effects,state)}</article>`).join('')||'<p>No matching history.</p>';};$('#cm-history-filter').addEventListener('input',draw);draw();};
 actions.clear=()=>form('Clear all CrankMagic data',`<div class="cm-full">${note('This permanently removes the library, decks, history, undo data and cached public card data from this browser. Export a backup first. It does not delete files you exported.',true)}${button('Export backup first','backup')}</div>${field('Type CLEAR to confirm','confirm','','required autocomplete="off"')}<label class="cm-checkbox"><input type="checkbox" name="legacy">Also remove this app’s legacy storage keys</label>`,async data=>{if(data.confirm!=='CLEAR')throw Error('Type CLEAR exactly.');state=await repo.clear(state.revision);if(data.legacy)for(const key of MtgUserState.keys())localStorage.removeItem(key);catalog=await CrankCatalog.create({repository:repo,client:CrankCardClient.create(),link:MtgCardLink,urls:CrankAssets,savedCards:{}});await render();notice('Local library and history cleared. Exported files remain under your control.');},'Clear local data');
 document.addEventListener('error',e=>{const img=e.target;if(img.matches?.('.cm-commander>img,.cm-inspector>img,.cm-graph-art')){const p=document.createElement('p');p.className='cm-image-fallback';p.textContent='Card image unavailable. Rules and saved card records remain available.';img.replaceWith(p);}},true);
 /* A SECOND CLICK ON A MENU'S OWN BUTTON CLOSES IT (Rob, 24 September: "when I click More
@@ -425,7 +525,10 @@ addEventListener('pointerdown',e=>{const m=openMenu();pressedMenuButton=m&&m.cmA
 document.addEventListener('click',async e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;const fn=actions[el.dataset.action];if(!fn)return;e.preventDefault();
   const open=openMenu(),again=pressedMenuButton===el||(open&&open.cmAnchor===el);pressedMenuButton=null;
   if(again){if(open)open.hidePopover();return;}
-  try{const run=fn(el,e),opened=openMenu();if(opened&&!opened.cmAnchor)opened.cmAnchor=el;await run;}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});
+  try{const run=fn(el,e),opened=openMenu();if(opened&&!opened.cmAnchor)opened.cmAnchor=el;await run;}catch(error){if(error.name!=='AbortError')notice(error.message,true,{action:mayPass(error)&&el.isConnected?{label:'Retry',run:()=>fn(el,e)}:null});}});
+/* Retry is offered only for a failure that trying again could fix -- the network, a save that was
+   busy -- never for a rule the reader has not met yet, which would fail the same way twice. */
+function mayPass(error){return Boolean(error.retryable)||!navigator.onLine||(error.name==='TypeError'&&/fetch|network|load failed/i.test(error.message));}
 /* SHARE. Two ways to hand the app to someone, neither needing a server: sharing is a
    pre-written draft with the To line left for them, and the QR code is drawn in the page
    (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
@@ -487,7 +590,7 @@ if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soo
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=317',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=384',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

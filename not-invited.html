@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" style="color-scheme:dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="CrankMagic is invite-only for now. If the address you signed in with is not on its invite list, here is what to do.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="robots" content="noindex">
+  <title>Not on the invite list · CrankMagic</title>
+  <link rel="canonical" href="https://crankmagic.com/not-invited">
+  <link rel="icon" type="image/png" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
+  <!-- THE REFUSAL, WITH INSTRUCTIONS (Rob, 2026-09-26; docs/decisions-2026-09-25.md, M5). Cloudflare Access sends
+       anyone it will not let in here: someone who opened a table's link but whose address is not on CrankMagic's
+       invite list. A table's link never adds anyone to that list; only Rob does. docs/play-invites.md is how Access
+       is pointed at this page. No script: it says what it says, to anyone, signed in or not. -->
+  <style>
+    @font-face{font-family:Satoshi;font-weight:400;font-display:swap;src:url("assets/crankmagic/satoshi-400.woff2?v=1") format("woff2")}
+    @font-face{font-family:Satoshi;font-weight:700;font-display:swap;src:url("assets/crankmagic/satoshi-700.woff2?v=1") format("woff2")}
+    :root{--bg:#1a1815;--panel:#231f1b;--line:#3a342c;--ink:#f5f0e8;--muted:#a99e90;--accent:#d9a441}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Satoshi,system-ui,sans-serif}
+    main{max-width:640px;margin:0 auto;padding:40px 20px 64px}
+    a{color:var(--accent)}
+    .back{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
+    .back img{width:32px;height:32px}
+    h1{font-size:34px;margin:28px 0 10px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+    h2{font-size:20px;margin:30px 0 6px;font-weight:700}
+    .short{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px}
+    ol{padding-left:22px}
+    li{margin:8px 0}
+    .button{display:inline-block;margin-top:6px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:700;text-decoration:none}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="/"><img src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="">CrankMagic</a>
+    <h1>You're not on the invite list yet</h1>
+    <p class="short">CrankMagic is invite-only for now. The address you signed in with isn't on its invite list, so a table's link can't seat you. A link never adds anyone to the list: only Rob does.</p>
+    <h2>What to do</h2>
+    <ol>
+      <li>Ask the person who sent you the link to ask Rob to add the address you signed in with. You can also write to <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a>.</li>
+      <li>Once you're on the list, open the same link again. A link works for a day; if yours is older, ask the host for a new one.</li>
+    </ol>
+    <h2>Signed in with the wrong address?</h2>
+    <p>Sign out, then open the link again and sign in with the address your invitation was sent to.</p>
+    <a class="button" href="/cdn-cgi/access/logout">Sign out</a>
+    <footer><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="mailto:admin@crankmagic.com">admin@crankmagic.com</a></footer>
+  </main>
+</body>
+</html>

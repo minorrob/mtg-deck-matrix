@@ -2,17 +2,22 @@
 @font-face{font-family:Satoshi;font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-400.woff2?v=1") format("woff2")}
 @font-face{font-family:Satoshi;font-weight:500;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-500.woff2?v=1") format("woff2")}
 @font-face{font-family:Satoshi;font-weight:700;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-700.woff2?v=1") format("woff2")}
-/* SATOSHI IS THE DISPLAY FACE TOO (Rob, 2026-09-24: "use the Satoshi header font (H1, H2, H3, etc.)
-   instead of the current header fonts in our design guide"). Headings and big figures are Satoshi 700
-   through --font-display and --display-weight; Young Serif, the Gallery's first display face, is
-   retired with its two self-hosted subsets. The design guide's typography.css says the same. */
+@font-face{font-family:Satoshi;font-weight:900;font-style:normal;font-display:swap;src:url("assets/crankmagic/satoshi-900.woff2?v=1") format("woff2")}
+@font-face{font-family:'Young Serif';font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/youngserif-400.woff2?v=1") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Young Serif';font-weight:400;font-style:normal;font-display:swap;src:url("assets/crankmagic/youngserif-400-ext.woff2?v=1") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+/* THE TYPE IS r3's "TYPE (FINAL)" (docs/design/2026-09-25-redesign-r3/INTAKE.md §2.1, decision 1,
+   approved by Rob 2026-09-25, docs/decisions-2026-09-25.md). Headings and big figures are Satoshi Black
+   900 at -.035em through --font-display, --display-weight and --display-tracking; the 900 file came from
+   Fontshare, self-hosted under the ITF Free Font License. Young Serif returns as --font-hero, for hero
+   headlines of 48px and up only (the deck title today; the landing hero and its closing call to action
+   when R3.8 builds them), restored from git with its OFL text. */
 
 /* THE GALLERY TOKENS (Track V, docs/design-intake-2026-09-20.md). The values are the designer's, from
    docs/design/2026-09-20-deck-page/.../design-system/tokens/*.css, and tests/design-tokens.mjs holds this
    block equal to that file in both themes. Dark (Brass and Slate) is the default; data-theme="light"
    on #matrix-v2 is Felt and Cream. The legacy --v-* tokens below remain until V.1 has converted the page
-   layer; then they go. The display face is Satoshi 700 since 2026-09-24. */
-:root,#matrix-v2{ --color-bg:#1a1815; --color-panel:#231f1b; --color-raised:#2d2823; --color-line:#3a342c; --color-ink:#f5f0e8; --color-muted:#a99e90; --color-accent:#d9a441; --color-on-accent:#1a1815; --color-aether:#7cc4ff; --color-money:#f0b35a; --mana-W:#e9d79a; --mana-U:#74b5f7; --mana-B:#a897bf; --mana-R:#f0805f; --mana-G:#77c58f; --st-inbox:#5cc98a; --st-pull:#4fc2c0; --st-ordered:#3b7dd8; --st-buy:#f0b35a; --st-standin:#c39bff; --st-remove:#ef6b60; --surface-page:var(--color-bg); --surface-card:var(--color-panel); --surface-control:var(--color-raised); --border-default:var(--color-line); --text-body:var(--color-ink); --text-muted:var(--color-muted); --action-primary:var(--color-accent); --action-primary-text:var(--color-on-accent); --radius-control:12px; --radius-card:calc(12px * 1.5); --radius-tile:calc(12px * 1.8); --radius-pill:999px; --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px; --shadow-card:0 1px 0 rgba(255,255,255,.04) inset; --motion-fast:250ms; --motion-ease:ease; --font-display:Satoshi,system-ui,sans-serif; --font-body:Satoshi,system-ui,sans-serif; --display-weight:700; --display-tracking:-.02em; --display-case:none; --text-h1:56px; --text-h2:22px; --text-h3:16px; --text-body-size:14px; --text-small:12px; --text-label:11px; --label-tracking:.08em; --leading-body:1.5; --leading-tight:1.05;}
+   layer; then they go. The display face is Satoshi 900 since 2026-09-25 (r3). */
+:root,#matrix-v2{ --color-bg:#1a1815; --color-panel:#231f1b; --color-raised:#2d2823; --color-line:#3a342c; --color-ink:#f5f0e8; --color-muted:#a99e90; --color-accent:#d9a441; --color-on-accent:#1a1815; --color-aether:#7cc4ff; --color-money:#f0b35a; --mana-W:#e9d79a; --mana-U:#74b5f7; --mana-B:#a897bf; --mana-R:#f0805f; --mana-G:#77c58f; --st-inbox:#5cc98a; --st-pull:#4fc2c0; --st-ordered:#3b7dd8; --st-buy:#f0b35a; --st-standin:#c39bff; --st-remove:#ef6b60; --surface-page:var(--color-bg); --surface-card:var(--color-panel); --surface-control:var(--color-raised); --border-default:var(--color-line); --text-body:var(--color-ink); --text-muted:var(--color-muted); --action-primary:var(--color-accent); --action-primary-text:var(--color-on-accent); --radius-control:12px; --radius-card:calc(12px * 1.5); --radius-tile:calc(12px * 1.8); --radius-pill:999px; --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px; --shadow-card:0 1px 0 rgba(255,255,255,.04) inset; --motion-fast:250ms; --motion-ease:ease; --card-ratio:5/7; --font-display:Satoshi,system-ui,sans-serif; --font-hero:'Young Serif',Georgia,serif; --font-body:Satoshi,system-ui,sans-serif; --display-weight:900; --display-tracking:-.035em; --display-case:none; --text-h1:56px; --text-h2:22px; --text-h3:16px; --text-body-size:14px; --text-small:12px; --text-label:11px; --label-tracking:.08em; --leading-body:1.5; --leading-tight:1.05;}
 :root[data-theme="light"],#matrix-v2[data-theme="light"]{color-scheme:light; --color-bg:#f5f0e6; --color-panel:#fffdf8; --color-raised:#ece5d7; --color-line:#d9d0bf; --color-ink:#1f1c18; --color-muted:#6e665a; --color-accent:#2f8f5b; --color-on-accent:#f7fbf6; --color-aether:#4aa6d8; --color-money:#d0603c; --mana-W:#c9a52e; --mana-U:#2b7fd8; --mana-B:#6f5c8e; --mana-R:#d0603c; --mana-G:#2f8f5b; --st-inbox:#2f8f5b; --st-pull:#1f9e9c; --st-ordered:#2f6fcc; --st-buy:#d0893a; --st-standin:#8a5be0; --st-remove:#c0392f; --surface-page:var(--color-bg); --surface-card:var(--color-panel); --surface-control:var(--color-raised); --border-default:var(--color-line); --text-body:var(--color-ink); --text-muted:var(--color-muted); --action-primary:var(--color-accent); --action-primary-text:var(--color-on-accent);}
 /* The --v-* tokens are the page's, and a menu, a tooltip or the hover art is a popover on <body>,
    outside #matrix-v2. Defined there only, every one of them came up empty on a menu, which drew
@@ -83,7 +88,19 @@
      keeps its own ink in both themes for the same reason the poster pair does -- it sits over
      four colored status elements, and a panel that flipped would be legible over two of them
      and not the other two. */
-  --table-panel:#fbfaf7;--table-ink:#1f1c18;}
+  --table-panel:#fbfaf7;--table-ink:#1f1c18;
+  /* THE BOARD'S FELT AND CARDS (M5, crankmagic-board.js). The same reasoning as the two pairs above: the mat
+     and the cards on it are the table, not the page, and keep their colors in both themes. A card's face and
+     back are the paper; --vital-danger is the handoff's red for a life total in trouble; --on-accent is ink on
+     the brass step chip. */
+  --mat-felt:#2b3a2c;--mat-felt-edge:#141812;--mat-ink:#f3efe6;
+  --card-face:#ece5d6;--card-face-edge:#cfc5b0;--card-back:#3a2f22;--card-back-edge:#2c231a;
+  --vital-danger:#b3261e;--on-accent:#1a1611;
+  /* THE APP'S OWN MATS (M5, Choose mat): drawn in CSS from these, so no mat is anyone else's art. Felt is above. */
+  --mat-forge:#3b2113;--mat-forge-edge:#120a06;--mat-forge-glow:#d9772f;
+  --mat-cavern:#30363c;--mat-cavern-edge:#0f1215;
+  --mat-sea:#0f3d48;--mat-sea-edge:#06161b;--mat-sea-foam:#9fd8e0;
+  --mat-night:#1d1b3d;--mat-night-edge:#07071a;}
 #matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(color-mix(in srgb,var(--v-accent) 16%,transparent),#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
 #matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:var(--v-accent)}

@@ -53,7 +53,8 @@ async function keys(team, {fetchImpl = fetch, now = Date.now(), refresh = false,
  * @throws {Unauthorized} for anything short of a valid token for this application naming a person
  */
 export async function verifyAccess(request, env, deps = {}) {
-  const team = env.ACCESS_TEAM_DOMAIN, audience = env.ACCESS_AUD;
+  /* `deps.audience` names another Access application on the same team: the AI door has its own (cloud/ai.mjs). */
+  const team = env.ACCESS_TEAM_DOMAIN, audience = deps.audience || env.ACCESS_AUD;
   if (!team || !audience) throw new Error("ACCESS_TEAM_DOMAIN and ACCESS_AUD must be set; refusing every request until they are");
   const token = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!token) throw new Unauthorized("no Access token");

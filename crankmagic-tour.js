@@ -114,7 +114,7 @@ const TOURS=[
    have:'Cards in your deck that you found by how they interact rather than by recalling them — and a recorded reason each one is in there.',
    steps:[
     /* The bare input collapses to nothing while the graph is still loading, so the step points at
-       the labelled search box around it — found in the sweep, PR 6. */
+       the labeled search box around it — found in the sweep, PR 6. */
     {view:'discover',selectors:['.cm-toolbar .cm-search','#cm-graph-query','.cm-toolbar'],
      title:'Start from a card you already play',
      copy:'Every Commander-legal card is in here, including printings that carry a different name on the front.'},
@@ -157,7 +157,7 @@ const TOURS=[
     {view:'cards',selectors:['#cm-roster-table'],
      title:'One row per card',
      copy:'What it is, what it costs, and where it lives. Click a row to see the card itself.'},
-    {view:'cards',selectors:['[data-action=roster-filters]'],act:'openFilters',
+    {view:'cards',selectors:['[data-action=roster-filters]'],
      title:'Filter and group',
      copy:'By deck, status, type or color. Grouping is how you find the eleven copies of the same land spread across four decks.'},
     {view:'cards',selectors:['[data-action=new-group]'],
@@ -204,10 +204,10 @@ const TOURS=[
     {view:'decks',params:()=>({...firstDeck(),tab:'hundred'}),selectors:['.cm-curve','.cm-count-list','#cm-sec-cards'],
      title:'The shape, before any simulation',
      copy:'The curve and the counts tell you things a score cannot: too few lands, nothing to do on turn two, or eleven cards that all want the same slot.'},
-    /* And the recommendations live on the Overview tab now (Phase 1 PR4), for the same reason. */
-    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-suggestions]','#cm-sec-swot','[data-action=compare-decks]'],
+    /* The recommendations sit with the guide and the SWOT, which open as a dialog from How it plays (R3.5). */
+    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['[data-action=deck-guide]','.cm-plays-grid','#cm-main'],
      title:'And what to do about it',
-     copy:'Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
+     copy:'Full guide and SWOT opens the strengths, weaknesses and recommendations. Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
 
   {id:'acquire',name:'Buy what a deck still needs',icon:'🜛',
    job:'Turn a list into cards in a box.',
@@ -221,7 +221,7 @@ const TOURS=[
     {view:'cards',params:{tab:'buy'},selectors:['.cm-tabs'],
      title:'Three tabs, one page',
      copy:'Library is everything you own or want; To buy is what your decks still need; Orders is what is on its way. Ready to add — what goes into each deck once it has arrived — is under More.'},
-    {view:'cards',params:{tab:'buy'},selectors:['[data-action=roster-filters]'],act:'openFilters',
+    {view:'cards',params:{tab:'buy'},selectors:['[data-action=roster-filters]'],
      title:'Filter to today',
      copy:'At a booth you want the red cards under five dollars, not the whole list.'},
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=shop-buy]','.cm-row-actions','#cm-roster-table'],
@@ -230,7 +230,7 @@ const TOURS=[
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=export-view]','[data-action=roster-more]'],act:'openMore',
      title:'Take it with you',
      copy:'Export exactly what you are looking at — the filters, the grouping and the columns — as a list you can print or hand to a shop.'},
-    {view:'cards',params:{tab:'buy'},selectors:['.cm-user-menu','#cm-user-functions'],
+    {view:'settings',selectors:['[data-action=share-export]','#cm-settings-data'],
      title:'Or mail it to yourself',
      copy:'Which is how the list gets from the desktop you built on into the pocket you shop with.'},
     {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-play','.cm-tt-mat'],
@@ -246,24 +246,24 @@ const TOURS=[
    have:'A backup you can restore anywhere, a spreadsheet of your collection enriched with everything the app worked out about it, and a phone and desktop that can hand work back and forth without either forgetting what the other did.',
    steps:[
     {view:'decks',selectors:['#cm-user-functions'],act:'openMenu',
-     title:'It all lives in one menu',
-     copy:'Back it up, restore it, export it, and move it between machines. Signed in, your library also saves itself to the cloud and follows you to any device you sign in on; signed out, it lives in this browser alone, which is exactly why this menu matters.'},
+     title:'It starts in the Menu',
+     copy:'Back it up and restore it from the Menu; Settings has the exports and the history. Signed in, your library also saves itself to the cloud and follows you to any device you sign in on; signed out, it lives in this browser alone, which is exactly why this menu matters.'},
     {view:'decks',selectors:['[data-action=backup]'],act:'openMenu',
      title:'A backup is one file',
      copy:'Your whole library — decks, collection, groups, prices, every status. The file is the copy that outlives the browser.'},
-    {view:'decks',selectors:['[data-action=share-export]'],act:'openMenu',
+    {view:'settings',selectors:['[data-action=share-export]'],
      title:'Desktop to phone',
-     copy:'E-mail that file to yourself, open the mail on the phone, and restore from the attachment. That is the whole trip out.'},
+     copy:'Email that file to yourself, open the mail on the phone, and restore from the attachment. That is the whole trip out.'},
     {view:'decks',selectors:['[data-action=restore]'],act:'openMenu',
      title:'Restoring replaces',
      copy:'This device’s library becomes the file’s. Do it on the phone before you leave, not after you have marked anything.'},
     {view:'cards',params:{tab:'buy'},selectors:['#cm-roster-table'],
      title:'At the booth',
      copy:'You mark cards bought on the phone. Those changes live in the phone’s browser and nowhere else until you move them.'},
-    {view:'decks',selectors:['[data-action=share-export]'],act:'openMenu',
+    {view:'settings',selectors:['[data-action=share-export]'],
      title:'Phone back to desktop',
      copy:'The same button, the other direction. Export from the phone, mail it home, restore on the desktop — and the statuses you set at the booth land on the machine you build on.'},
-    {view:'decks',selectors:['[data-action=export-excel]'],act:'openMenu',
+    {view:'settings',selectors:['[data-action=export-excel]'],
      title:'The other kind of export',
      copy:'Excel gives you your collection plus everything the app worked out about it: real prices, colors, types, what each card is for. Cards in, metadata out.'}]}];
 
@@ -290,7 +290,6 @@ const has={
 const ACTS={
   openCommander(){const d=$('#cm-lab-commander');if(d&&!d.hidden)d.open=true;},
   openDefinition(){const d=$('#cm-lab-definition');if(d)d.open=true;},
-  openFilters(){const p=$('#cm-filter-host');if(p&&!p.children.length)$('[data-action=roster-filters]')?.click();},
   /* Export and the other page tools moved behind the Library page's More menu, so a step about
      one has to open it first (sweep, PR 6). Opening an open menu is a no-op. */
   openMore(){if(!$('[data-action=export-view]'))$('[data-action=roster-more]')?.click();raise();},

@@ -55,7 +55,8 @@
     let next = names.length === 1 ? 0 : (idx + 1 + Math.floor(Math.random() * (names.length - 1))) % names.length;
     let time = 0, last = 0, frame = 0, elapsed = 0;
     let reduced = false;
-    try { reduced = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { reduced = false; }
+    const still = () => { try { return root.CrankMotion ? root.CrankMotion.reduced() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+    reduced = still();
 
     /* Layered sines with a warp term: cheap, smooth, and it looks like a fluid seen from above. */
     const field = (x, y, t, e) => {
@@ -97,11 +98,15 @@
       if (names.length > 1 && elapsed >= cycleSeconds) {
         idx = next; next = (idx + 1 + Math.floor(Math.random() * (names.length - 1))) % names.length; elapsed = 0;
       }
-      paint(time); frame = requestAnimationFrame(tick);
+      paint(time);
+      /* Reduce motion turned on mid-cycle stops here, on the frame just painted. */
+      frame = still() ? 0 : requestAnimationFrame(tick);
     };
     paint(0);
     if (!reduced) frame = requestAnimationFrame(tick);
-    return function () { cancelAnimationFrame(frame); };
+    const wake = () => { if (!frame && !still()) { last = 0; frame = requestAnimationFrame(tick); } };
+    const unhear = root.CrankMotion ? root.CrankMotion.onChange(wake) : function () {};
+    return function () { cancelAnimationFrame(frame); unhear(); };
   }
 
   root.CrankSea = {startSea, elementFor, ELEMENTS};

@@ -145,5 +145,36 @@
     return sort([...commanderStrategies, ...named]);
   }
 
-  return {STRATEGIES, ids, labelOf, derive, describe, servedBy, fromMechanics, fromWords, forDeck, MECHANIC_LABELS};
+  /* THE LAB WIZARD'S STRATEGY STEP (R3.10's sibling, R3.11; the design's "Lab strategy"): the options a commander offers,
+     ranked, each with a fit label, never a fixed list. Sources in the design's order: the commander's rules text
+     (`entry.derived`, baked into data/commander-strategies.json), then how the decks and guides name it
+     (`entry.named.strategies`); a strategy both agree on ranks first. EDHREC's themes are not in the committed data, so
+     that source is skipped rather than invented. Only when a commander has no entry at all do its colors suggest the
+     generic archetypes those colors are known for. The first option is the top fit (the wizard preselects it); the rest
+     are "strong" when the rules text offers them and "good" otherwise. Ties go to the more distinctive strategy: `counts`
+     is the file's perStrategy (how many commanders offer each), and one fewer commanders share says more about this
+     one -- Krenko's rules text and decks agree on Sacrifice supply, Enter-the-battlefield payoff and Tribal payoff,
+     and Tribal payoff is the one that is his. Without counts, the vocabulary's order. Pure. */
+  const BY_COLOR = {W: ["team-quality", "etb-payoff", "tribal-payoff"], U: ["draw-payoff", "spellslinger", "blink-loop", "copy-loop"],
+    B: ["death-payoff", "sacrifice-supply", "recursion-loop"], R: ["spellslinger", "sacrifice-supply", "stat-payoff"],
+    G: ["landfall", "counters", "stat-payoff"], C: ["untap-loop", "copy-loop"]};
+  function optionsFor({entry = null, colorIdentity = [], counts = null} = {}) {
+    const order = STRATEGIES.map((x) => x.id), known = new Set(order);
+    const derived = new Set(((entry && entry.derived) || []).filter((id) => known.has(id)));
+    const named = new Set(((entry && entry.named && entry.named.strategies) || []).filter((id) => known.has(id)));
+    let rows = [...new Set([...derived, ...named])].map((id) => ({id, score: (derived.has(id) ? 2 : 0) + (named.has(id) ? 1 : 0),
+      source: derived.has(id) && named.has(id) ? "rules text, and the decks and guides" : derived.has(id) ? "rules text" : "the decks and guides"}));
+    const shared = (id) => (counts && Number.isFinite(counts[id]) ? counts[id] : Infinity);
+    rows.sort((a, b) => b.score - a.score || (shared(a.id) === shared(b.id) ? 0 : shared(a.id) < shared(b.id) ? -1 : 1) || order.indexOf(a.id) - order.indexOf(b.id));
+    if (!rows.length) {
+      const colors = (colorIdentity || []).length ? colorIdentity : ["C"];
+      rows = [...new Set("WUBRGC".split("").filter((k) => colors.includes(k)).flatMap((k) => BY_COLOR[k] || []))].slice(0, 5).map((id) => ({id, score: 0, source: "colors"}));
+    }
+    return rows.map((r, i) => {
+      const def = STRATEGIES.find((x) => x.id === r.id);
+      return {id: r.id, label: def.label, why: def.why, source: r.source, fit: i === 0 ? "top fit" : r.score >= 2 ? "strong" : "good"};
+    });
+  }
+
+  return {STRATEGIES, ids, labelOf, derive, describe, servedBy, fromMechanics, fromWords, forDeck, optionsFor, BY_COLOR, MECHANIC_LABELS};
 });

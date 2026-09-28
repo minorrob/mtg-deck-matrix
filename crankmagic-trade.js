@@ -8,7 +8,7 @@
  * who opens the link sees the cards with their pictures and can ask about one or several
  * from their own mail client. Nothing is stored anywhere: the link IS the publication, and a
  * new list is a new link. The QR code is offered only when the link fits the one this app
- * draws (crankmagic-qr.js stops at version 10); a long list is a link to copy or e-mail.
+ * draws (crankmagic-qr.js stops at version 10); a long list is a link to copy or email.
  *
  * TWO HALVES. `listFrom(state)`, `pack`, `unpack`, `link` and `qrFits` are pure and tested in
  * Node (CompressionStream is in Node 22 and every current browser); the view and the Share
@@ -25,7 +25,7 @@
      where a release is published; outside a page (the suite) it is the first public address. */
   const VERSION = 1, APP_URL = (() => {
     try { return new URL("./", document.querySelector('link[rel="canonical"]').href).href; }
-    catch { return "https://minorrob.github.io/mtg-deck-matrix/"; }
+    catch { return "https://crankmagic.com/"; }
   })();
   const fold = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   const isTradeGroup = (g) => g && (g.id === "group:to-trade" || fold(g.name) === "to trade");
@@ -109,11 +109,11 @@
       const p = C.state.preferences.trade || {};
       if (!list.count) { C.modal("Publish your To Trade list", note("Nothing is on offer yet. Mark a copy Sell / Trade from its row menu or the ticked-rows bar, or file cards in the To Trade collection group, then publish.") + `<div class="cm-actions">${b("Open the Cards page", "trade-cards")}</div>`); return; }
       C.form("Publish your To Trade list", `<div class="cm-full">${note(`${list.count} cop${list.count === 1 ? "y" : "ies"} of ${list.cards.length} card${list.cards.length === 1 ? "" : "s"}: ${e(list.cards.slice(0, 5).map((r) => r.name).join(", "))}${list.cards.length > 5 ? ` and ${list.cards.length - 5} more` : ""}. The link carries the list itself; anyone with it can read the cards and ask you about them from their own mail client.`)}</div>`
-        + f("Your name", "from", p.from || "", 'maxlength="80" required') + f("How to reach you (e-mail address or a link)", "contact", p.contact || "", 'maxlength="200"') + f("A note for readers (optional)", "note", p.note || "", 'maxlength="500"'),
+        + f("Your name", "from", p.from || "", 'maxlength="80" required') + f("How to reach you (email address or a link)", "contact", p.contact || "", 'maxlength="200"') + f("A note for readers (optional)", "note", p.note || "", 'maxlength="500"'),
         async (v) => {
           await C.commit({type: "preferences", values: {trade: {from: v.from, contact: v.contact, note: v.note}}}, {renderView: false});
           const packed = await pack(list, {from: v.from, contact: v.contact, note: v.note}), url = link(packed);
-          C.modal("Your trade list link", `<p class="cm-trade-link"><a href="${e(url)}" rel="noopener">${e(url.length > 90 ? url.slice(0, 88) + "…" : url)}</a></p><p class="cm-muted">${url.length.toLocaleString()} characters · ${list.cards.length} card${list.cards.length === 1 ? "" : "s"}. A new list is a new link; this one stays what it is.</p><div class="cm-actions">${b("Copy link", "trade-copy", {url})}${b("Open the page", "trade-open", {d: packed})}<a class="v-button" href="mailto:?subject=${encodeURIComponent("My trade list on CrankMagic")}&body=${encodeURIComponent("Have a look at what I have to trade: " + url)}">Share by e-mail</a>${qrFits(url) ? b("Show a QR code", "trade-qr", {url}) : ""}</div>${qrFits(url) ? "" : note("Too long for a QR code this app draws; copy the link or e-mail it.")}`);
+          C.modal("Your trade list link", `<p class="cm-trade-link"><a href="${e(url)}" rel="noopener">${e(url.length > 90 ? url.slice(0, 88) + "…" : url)}</a></p><p class="cm-muted">${url.length.toLocaleString('en-US')} characters · ${list.cards.length} card${list.cards.length === 1 ? "" : "s"}. A new list is a new link; this one stays what it is.</p><div class="cm-actions">${b("Copy link", "trade-copy", {url})}${b("Open the page", "trade-open", {d: packed})}<a class="v-button" href="mailto:?subject=${encodeURIComponent("My trade list on CrankMagic")}&body=${encodeURIComponent("Have a look at what I have to trade: " + url)}">Share by email</a>${qrFits(url) ? b("Show a QR code", "trade-qr", {url}) : ""}</div>${qrFits(url) ? "" : note("Too long for a QR code this app draws; copy the link or email it.")}`);
         }, "Make the link");
     };
     const closeDialog = () => { if (actions.close) actions.close(); };

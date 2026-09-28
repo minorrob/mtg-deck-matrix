@@ -65,10 +65,11 @@
     aria-label="${tools ? 'Hide search and filters' : 'Show search and filters'}"
     title="${tools ? 'Hide search and filters' : 'Show search and filters'}">${TOOLS_ICON}</button>`;
   /* PROGRESSIVE DISCLOSURE (Explore B): toggle for advanced tools (Filters, Trace, Lens) */
-  const advancedToolsButton = () => `<button type="button" class="cm-advanced-tools-toggle" data-action="toggle-advanced-tools"
-    aria-expanded="${advancedToolsOpen}" aria-controls="cm-advanced-tools-panel"
-    aria-label="${advancedToolsOpen ? 'Hide advanced tools' : 'Show advanced tools'}"
-    title="${advancedToolsOpen ? 'Hide Filters, Trace, and Lens' : 'Show Filters, Trace, and Lens'}">${advancedToolsOpen ? '▼' : '▶'} ${advancedToolsOpen ? 'Hide' : 'Show'} Advanced Tools</button>`;
+  /* PROGRESSIVE DISCLOSURE (Explore B): the toggle for the advanced tools (filters, Trace, lens). In r3's
+     head it is "Filters · lens" (wireframe 50), pressed while the tools are open. */
+  const advancedToolsButton = () => `<button type="button" class="v-button cm-advanced-tools-toggle" data-action="toggle-advanced-tools"
+    aria-expanded="${advancedToolsOpen}" aria-pressed="${advancedToolsOpen}" aria-controls="cm-advanced-tools-panel"
+    title="${advancedToolsOpen ? 'Hide filters, Trace and lens' : 'Show filters, Trace and lens'}">Filters · lens</button>`;
   const applyStage = () => {
     const root = document.getElementById('matrix-v2');
     root?.classList.toggle('cm-stage', stage);
@@ -127,7 +128,7 @@
   function setAdvancedToolsState(open) { try { localStorage.setItem(advancedToolsKey, open ? 'open' : 'closed'); } catch { /* private mode */ } }
 
   views.discover = async (params) => {
-    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labelled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labeled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
     C.main.innerHTML = C.pageHead('Explore') + '<p role="status">Loading graph metadata…</p>';
 
     /* SCOPED LOADING: when there's a seed (deck/commander/card), load a neighborhood first
@@ -202,12 +203,12 @@
       const total = (g.counts && g.counts.cards) || g.cards.length, links = (g.counts && g.counts.playedWith) || (g.played || []).length;
       const commanders = g.cards.filter((c) => c.isCommander).length;
       const whole = /^every/i.test(g.scope || '');
-      const when = g.generatedAt ? new Date(g.generatedAt).toLocaleDateString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}) : '';
+      const when = g.generatedAt ? new Date(g.generatedAt).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : '';
       const body = whole
-        ? `<p><strong>${total.toLocaleString()} cards</strong> is every card legal in Commander, as Scryfall lists the format — one entry per card, not per printing. <strong>${commanders.toLocaleString()}</strong> of them can lead a deck, and every one of those is here.</p>
-           <p>Two kinds of evidence join them. What a card <em>does</em> — what it causes, triggers on, produces, multiplies, the tribe it is or wants — is read off every card's rules text by the same classifier that reads a card you type. What people <em>actually play</em> comes from EDHREC: for each of the ${commanders.toLocaleString()} commanders, the cards its real decks run alongside it, <strong>${links.toLocaleString()}</strong> co-play links in all.</p>
+        ? `<p><strong>${total.toLocaleString('en-US')} cards</strong> is every card legal in Commander, as Scryfall lists the format — one entry per card, not per printing. <strong>${commanders.toLocaleString('en-US')}</strong> of them can lead a deck, and every one of those is here.</p>
+           <p>Two kinds of evidence join them. What a card <em>does</em> — what it causes, triggers on, produces, multiplies, the tribe it is or wants — is read off every card's rules text by the same classifier that reads a card you type. What people <em>actually play</em> comes from EDHREC: for each of the ${commanders.toLocaleString('en-US')} commanders, the cards its real decks run alongside it, <strong>${links.toLocaleString('en-US')}</strong> co-play links in all.</p>
            <p>So if a card is legal, it is here; if any commander's players play it, that link is here too. A Commander deck cannot legally contain anything outside this set, which is why you can treat it as the definitive universe of cards you will care about — for any commander, not only the ones you own.</p>`
-        : `<p><strong>${total.toLocaleString()} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString()}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
+        : `<p><strong>${total.toLocaleString('en-US')} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString('en-US')}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
       return `<details class="cm-inline-menu cm-hint cm-universe-hint"><summary class="cm-hint-btn" aria-label="What is this universe of cards?" title="What is this universe of cards?">?</summary><div class="cm-menu cm-inline-menu-body cm-hint-body cm-universe-body"><h4>The universe</h4>${body}${when ? `<p class="cm-muted">Refreshed ${e(when)}.</p>` : ''}</div></details>`;
     }
     /* EXPLORE SCOPE: query contract for scoped entry into Discover.
@@ -282,7 +283,7 @@
             <div>
               <p class="cm-explore-eyebrow">Explore</p>
               <h1 class="cm-explore-title">Every card is joined to the cards it works with. Start anywhere.</h1>
-              <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString()} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
+              <p class="cm-explore-sub">${graphSize ? `<b>${graphSize.toLocaleString('en-US')} cards</b>, joined by their rules text and by what people play together. ` : ''}Pick a deck's gap, a commander, or any card — the graph opens on it.</p>
             </div>
             <form class="cm-explore-search" role="search"><label class="cm-visually-hidden" for="cm-entry-query">Find any card</label><input id="cm-entry-query" name="q" type="search" placeholder="Find any card…" autocomplete="off"><button type="submit" class="v-button">Find</button></form>
           </header>
@@ -315,7 +316,7 @@
               </svg>
             </button>
           </div>
-          ${roleCounts.length ? `<div class="cm-explore-roles"><p class="cm-explore-recents-label">Or read by role</p><div class="cm-explore-role-pills">${roleCounts.map((r) => `<button type="button" class="cm-chip cm-role-chip" data-action="explore-role" data-role="${e(r.id)}">${e(r.id)} <b>${r.n.toLocaleString()}</b></button>`).join('')}</div></div>` : ''}
+          ${roleCounts.length ? `<div class="cm-explore-roles"><p class="cm-explore-recents-label">Or read by role</p><div class="cm-explore-role-pills">${roleCounts.map((r) => `<button type="button" class="cm-chip cm-role-chip" data-action="explore-role" data-role="${e(r.id)}">${e(r.id)} <b>${r.n.toLocaleString('en-US')}</b></button>`).join('')}</div></div>` : ''}
           ${recents.length ? `<div class="cm-explore-recents">
             <p class="cm-explore-recents-label">Pick up where you left off</p>
             <div class="cm-explore-recent-chips">${recents.map((r) => `<button type="button" class="cm-chip" data-action="explore-recent" data-recent="${e(JSON.stringify(r))}">${e(r.label)}</button>`).join('')}
@@ -351,7 +352,7 @@
         C.modal('Explore from a commander', `<form class="cm-form">
           <div class="cm-form-grid"><label>Commander name<input name="commander" list="cm-commander-list" placeholder="Type a commander name" required autocomplete="off"></label>
           <datalist id="cm-commander-list">${commanders.slice(0, 200).map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
-          <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString()} commanders in the catalog.</p></div></div>
+          <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString('en-US')} commanders in the catalog.</p></div></div>
           <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore commander</button></div>
         </form>`).querySelector('form').addEventListener('submit', (ev) => {
           ev.preventDefault();
@@ -430,8 +431,8 @@
        stays on the tooltip, the fold ("used by one card") still reads the whole graph so the
        list does not reshuffle, and an option no current card carries steps back rather than
        vanishing, so the reader can still see it exists. */
-    const countLabel = (row, narrow) => { const n = narrow ? (narrow.get(row.value) || 0) : row.count; return {n, note: narrow && n !== row.count ? `${n.toLocaleString()} of ${row.count.toLocaleString()} in the whole graph, under your other filters` : `${row.count.toLocaleString()} card${row.count === 1 ? '' : 's'} in the whole graph`}; };
-    const pickButton = (key, row, folds, narrow) => { const {n, note} = countLabel(row, narrow); return `<button type="button" class="cm-facet-pick${n === 0 ? ' is-empty' : ''}" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}" data-count="${e(note)}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${n.toLocaleString()}</small></button>`; };
+    const countLabel = (row, narrow) => { const n = narrow ? (narrow.get(row.value) || 0) : row.count; return {n, note: narrow && n !== row.count ? `${n.toLocaleString('en-US')} of ${row.count.toLocaleString('en-US')} in the whole graph, under your other filters` : `${row.count.toLocaleString('en-US')} card${row.count === 1 ? '' : 's'} in the whole graph`}; };
+    const pickButton = (key, row, folds, narrow) => { const {n, note} = countLabel(row, narrow); return `<button type="button" class="cm-facet-pick${n === 0 ? ' is-empty' : ''}" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}" data-count="${e(note)}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${n.toLocaleString('en-US')}</small></button>`; };
     function facetBar() {
       const placed = new Set(FACET_GROUPS.flatMap(([, keys]) => keys)), extra = facets.filter((f) => !placed.has(f.key)).map((f) => f.key);
       return FACET_GROUPS.map(([label, keys]) => [label, label === 'Rules' ? keys.concat(extra) : keys]).map(([label, keys]) => {
@@ -444,12 +445,13 @@
       }).join('');
     }
 
-    C.main.innerHTML = C.pageHead('Explore', toolsButton(), 'discover')
+    /* A graph opened from a deck says which deck (wireframe 50: "Explore › D6 Krenko Goblins") and has the
+       way back to it in the head, beside Filters · lens. */
+    const fromDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) : null;
+    C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
+      + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
-      <div class="cm-advanced-tools-disclosure">
-        ${advancedToolsButton()}
-      </div>
 
       <div class="cm-advanced-tools-panel" id="cm-advanced-tools-panel"${advancedToolsOpen ? '' : ' hidden'}>
         <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">
@@ -620,7 +622,7 @@
         ...rel.fed.map((t) => termChip('requires', t, p)),
         ...rel.shared.map((t) => termChip(keyOf(from, t), t, p))
       ];
-      const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString()} decks</p>` : '';
+      const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString('en-US')} decks</p>` : '';
       return `${chips.length ? `<p class="cm-muted">${e(rel.reason || rel.kind)}</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}${co}`;
     }
     function ownTermsHTML(card) {
@@ -767,28 +769,77 @@
         ? `<button type="button" class="v-button" data-action="graph-back" title="Back to ${e(prior.name)}">◀ Back to Prior Card</button>`
         : '';
     }
-    /* ADD/BUY, ONE MENU FOR THE PANE AND EVERY LIST ROW: the two vendors, the library, the
-       collection groups and the draft decks. */
+    /* ADD AND/OR BUY, ONE DIALOG (r3, wireframe 52; INTAKE R3.7). The choices are kept distinct, each
+       saying where the card lands, in the card states' words (docs/card-states.md): into a deck (a
+       draft's list, or a finished deck's upgrade option, whose swap is chosen next), Watching (a watched
+       copy: looked at, not decided), To buy (the To Buy list, on the To buy tab), On the Bench (a copy
+       you own, reserved for no deck), or a collection group. The vendors sit beside the
+       price. The pane's button and every list row's caret open the same dialog. */
     function buyMenu(c, rec, compact = false) {
-      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
-      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
-      const cardId = CrankCatalog.key(c.name);
-      const groups = C.state.groups || [];
-      const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
-      return `<details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn${compact ? ' cm-buy-caret' : ''}"${compact ? ` title="Add/Buy" aria-label="Add or buy ${e(c.name)}"` : ''}>${compact ? (C.caret ? C.caret('down') : '▾') : 'Add/Buy'}</summary><div class="cm-menu cm-inline-menu-body">
-              <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
-              <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
-              <hr>
-              <p>Add to collection</p>
-              <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
-              ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
-                || '<p class="cm-muted">No collection groups yet.</p>'}
-              <hr>
-              <p>Add to deck</p>
-              ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
-                || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
-            </div></details>`;
+      return compact
+        ? `<button type="button" class="v-button cm-buy-caret" data-action="add-buy" data-card="${e(c.name)}" title="Add and/or buy" aria-label="Add or buy ${e(c.name)}">${C.caret ? C.caret('down') : '▾'}</button>`
+        : `<button type="button" class="v-button primary" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
     }
+    actions['add-buy'] = (el) => {
+      const name = el.dataset.card, rec = C.catalog.exact(name) || {name}, c = C.catalog.get(CrankCatalog.key(name)) || rec;
+      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
+      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(name);
+      const price = [rec.price, c.price].find((p) => Number.isFinite(p) && p > 0);
+      const scoped = C.route().params.get('deck') || '';
+      const decks = (C.state.decks || []).filter((d) => !d.archived).sort((a, b) => (b.id === scoped) - (a.id === scoped) || a.name.localeCompare(b.name, 'en-US', {numeric: true}));
+      const groups = (C.state.groups || []).filter((g) => g.id !== 'group:to-buy');
+      const img = rec.image || c.image || '';
+      const choice = (value, label, hint, extra = '', on = false) => `<label class="cm-add-choice"><input type="radio" name="put" value="${value}"${on ? ' checked' : ''}><span><b>${label}</b><small>${hint}</small></span>${extra}</label>`;
+      const deckWhy = (d) => d.status === 'draft' ? 'Adds it to the list' : 'As an upgrade option; you choose the card it replaces next';
+      const f = C.form(`Add ${name}`,
+        `<div class="cm-full cm-add-head">${img ? `<img src="${e(img)}" alt="" loading="lazy">` : '<div class="cm-add-art"></div>'}<div><b>${e(name)}</b><small>${price ? `Best price ${e(C.money(price))} · ` : ''}<a href="${e(buy)}" target="_blank" rel="noopener">TCGplayer ↗</a> · <a href="${e(kingdom)}" target="_blank" rel="noopener">Card Kingdom ↗</a></small></div></div>`
+        + `<fieldset class="cm-full cm-add-put"><legend>Put it</legend>`
+        + (decks.length ? choice('deck', 'Into a deck', e(deckWhy(decks[0])), C.select('Deck', 'deck', decks.map((d) => [d.id, d.name]), decks[0].id), !!scoped) : '')
+        + choice('watching', 'Watching', 'Remember it: looked at, not decided. Nothing is bought.', '', !scoped || !decks.length)
+        + choice('buy', 'To buy', 'Decided: on your To Buy list and the To buy tab.')
+        + choice('bench', 'On the Bench', 'You own it: a copy on the Bench, reserved for no deck.', `<label class="cm-add-qty">Copies<input type="number" name="qty" value="1" min="1" max="1000"></label>`)
+        + (groups.length ? choice('group', 'Into a collection group', 'Planned there; planning a card is not owning it.', C.select('Group', 'group', groups.map((g) => [g.id, g.name]), groups[0].id)) : '')
+        + `</fieldset>`,
+        async (v) => {
+          const card = await cardFor(name);
+          if (v.put === 'deck') {
+            const deck = C.M.deck(C.state, v.deck);
+            if (deck.status === 'draft') return actions['discover-to-deck']({dataset: {deck: deck.id, card: name}});
+            if (!C.state.cards[card.id]) await C.commit({type: 'cards', cards: [card]}, {renderView: false});
+            /* The swap is its own dialog, the outgoing and incoming cards side by side; this one closes first. */
+            setTimeout(() => optionDialog(deck, C.card(card.id) || card, 'Explore'), 0);
+            return;
+          }
+          if (v.put === 'buy') return actions['discover-to-group']({dataset: {group: C.M.WANT_LIST, card: name}});
+          if (v.put === 'watching') {
+            if (C.state.lots.some((l) => l.cardId === card.id && l.source === 'watching')) throw Error(card.name + ' is already Watching.');
+            await C.commit({type: 'acquire', cards: [card], lot: {cardId: card.id, quantity: 1, source: 'watching', printing: {}}}, {renderView: false});
+            C.notice(`${card.name} is Watching: remembered, nothing bought.`);
+            return;
+          }
+          if (v.put === 'group') return actions['discover-to-group']({dataset: {group: v.group, card: name}});
+          if (v.put === 'bench') {
+            const qty = Math.floor(Number(v.qty));
+            if (!(qty >= 1)) throw Error('Put at least one copy on the Bench.');
+            await C.commit({type: 'acquire', cards: [card], lot: {cardId: card.id, quantity: qty, source: 'owned', printing: {}, location: {kind: 'bench', box: ''}}}, {renderView: false});
+            C.notice(`${qty === 1 ? '1 copy' : qty + ' copies'} of ${card.name} on the Bench, reserved for no deck.`);
+            return;
+          }
+          throw Error('Choose where to put it.');
+        }, 'Add');
+      f.closest('dialog').classList.add('cm-add-buy-dialog');
+      const submit = f.querySelector('[type=submit]');
+      const say = () => {
+        const put = f.querySelector('input[name=put]:checked')?.value, deck = decks.find((d) => d.id === f.querySelector('select[name=deck]')?.value);
+        const deckHint = f.querySelector('input[value=deck]')?.closest('label')?.querySelector('small');
+        if (deckHint && deck) deckHint.textContent = deckWhy(deck);
+        submit.textContent = put === 'deck' ? (deck && deck.status !== 'draft' ? 'Choose the swap…' : 'Add to deck') : put === 'watching' ? 'Watch it' : put === 'buy' ? 'Add to To buy' : put === 'bench' ? 'Add to the Bench' : put === 'group' ? 'Add to group' : 'Add';
+      };
+      /* Touching a choice's own field picks that choice. */
+      f.addEventListener('input', (ev) => { const row = ev.target.closest('.cm-add-choice'); if (row && ev.target.name !== 'put') row.querySelector('input[name=put]').checked = true; say(); });
+      f.addEventListener('change', say);
+      say();
+    };
     function tabButton(id, label) { return `<button type="button" role="tab" class="cm-pane-tab${paneTab === id ? ' is-on' : ''}" aria-selected="${paneTab === id}" data-action="pane-tab" data-tab="${id}">${label}</button>`; }
     function applyTab() {
       for (const t of document.querySelectorAll('.cm-pane-tab')) { const on = t.dataset.tab === paneTab; t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on)); }
@@ -803,9 +854,9 @@
     /* THE LIST. graph.reach() at the widest setting, over the filtered world the graph is
        mounted on, so every filter still applies and only the sliders do not. */
     const LIST_COLS = [['name', 'Card'], ['link', 'Link'], ['color', 'Color'], ['price', 'Price']];
-    /* ONE PIP PER CARD, whatever it costs. A mono-coloured card shows its symbol once; a
-       colourless one the grey pip; a multicoloured one a pip of the same shape split into
-       wedges of its own colours -- and a four- or five-colour card the full five-way split,
+    /* ONE PIP PER CARD, whatever it costs. A mono-colored card shows its symbol once; a
+       colourless one the gray pip; a multicoloured one a pip of the same shape split into
+       wedges of its own colors -- and a four- or five-color card the full five-way split,
        which is the format's own sign for "all of them". */
     const PIP = {W: '#fff0b4', U: '#53acff', B: '#696076', R: '#ee735f', G: '#66b889'};
     const PIP_NAME = {W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green'};
@@ -993,7 +1044,7 @@
     actions['trace-add-group'] = () => {
       const chosen = [...traceChosen]; if (!chosen.length) throw Error('Tick at least one card in the trace first.');
       const deck = tracePick();
-      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} from the trace to a group`,
+      C.newGroupName(form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} from the trace to a group`,
         `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', deck ? `From the trace of ${deck.name}` : 'From the trace')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${e(chosen.slice(0, 8).join(', '))}${chosen.length > 8 ? ` and ${chosen.length - 8} more` : ''}</p></div>`,
         async (v) => {
           const cards = chosen.map((name) => C.catalog.exact(name)).filter(Boolean);
@@ -1004,7 +1055,7 @@
           commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1, notes: deck ? `From the trace of ${deck.name}` : 'From the trace'}))});
           await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} from the trace to a Collection group`}, {renderView: false});
           traceChosen = new Set(); drawTracePane();
-        }, 'Add to group');
+        }, 'Add to group'));
     };
     actions['trace-ctl'] = (el) => {
       if (!graph || !graph.tracing) { runTrace(true); return; }
@@ -1054,7 +1105,7 @@
       const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
-      view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
+      view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString('en-US')} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}${b('Send to the table', 'results-table')}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
@@ -1190,8 +1241,8 @@
       };
       const bracket = BRACKETS[c.bracket || (c.gameChanger || rec.gameChanger ? 'gameChanger' : '')]
         || ['No bracket restriction', 'Legal at every bracket.'];
-      /* The frame around the art takes the card's identity: one colour for one colour,
-         gold for three or more, a quiet grey for colourless. */
+      /* The frame around the art takes the card's identity: one color for one color,
+         gold for three or more, a quiet gray for colourless. */
       const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
       const tint = ci.length >= 3 ? '#e0b660' : ci.length === 2 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : ci.length === 1 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : '#6f8199';
       view.innerHTML = `
@@ -1200,8 +1251,8 @@
           <div class="cm-card-view-title">
             <h2>${e(c.name)}</h2>
             <p>${e(rec.typeLine || c.type || '')}</p>
-            <!-- The mana cost already says the colours. Printing the identity pips beside
-                 it gave Atraxa eight symbols for a four-colour card; the pips are for the
+            <!-- The mana cost already says the colors. Printing the identity pips beside
+                 it gave Atraxa eight symbols for a four-color card; the pips are for the
                  cards that have no cost to read, which is the lands. -->
             <p class="cm-card-view-cost">${cost || C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
@@ -1214,7 +1265,7 @@
           <!-- INSPECT BELONGS TO THE ART, so it sits directly beneath it in the art's own
                column, where there was nothing but empty space. -->
           <div class="cm-card-view-tools">
-            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
+            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)})}
           </div>
         </div>
         <!-- NO ORACLE BOX. The card image above is the whole card, rules text included, so
@@ -1252,11 +1303,11 @@
       document.querySelector('.cm-graph-grid')?.classList.toggle('cm-lands-mode', lands);
       document.getElementById('matrix-v2')?.classList.toggle('cm-lands', lands);
       $('#cm-facet-count').textContent = picks
-        ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
+        ? `${shown.length.toLocaleString('en-US')} of ${data.cards.length.toLocaleString('en-US')} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
         : (deckPicked && loopMode 
-          ? `${data.cards.length.toLocaleString()} cards. Explore loops in ${loopMode ? 'this deck' : 'the graph'}, or use Advanced Tools to filter further.`
-          : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`);
-      $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString()} cards` : '· none applied';
+          ? `${data.cards.length.toLocaleString('en-US')} cards. Explore loops in ${loopMode ? 'this deck' : 'the graph'}, or use Advanced Tools to filter further.`
+          : `${data.cards.length.toLocaleString('en-US')} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`);
+      $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString('en-US')} cards` : '· none applied';
       $('#cm-facet-chips').innerHTML = CrankFacets.chips(selection)
         .map((chip) => `<button class="cm-chip${chip.exclude ? ' is-not' : ''}" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${chip.exclude ? '<span aria-hidden="true">−</span> ' : ''}${e(chip.label)}: ${e(chip.value)}${chip.exclude ? '<span class="cm-visually-hidden"> — excluded</span>' : ''} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
         .join('') + (picks ? b('Clear filters', 'facet-clear') : '');
@@ -1352,7 +1403,7 @@
       const open = list.dataset.expanded !== '1';
       list.dataset.expanded = open ? '1' : '0';
       const rare = list.querySelectorAll('[data-rare="1"]').length;
-      button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString()} more used by one card`;
+      button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString('en-US')} more used by one card`;
       applyFacetRows(key);
     };
     const onModeChange = (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); updateFacetCounts(); } };
@@ -1423,10 +1474,10 @@
       const rows = sortedRows(key), rare = rows.filter((r) => r.count < 2).length, folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
       const narrow = narrowedFor(key);
       C.modal(facet.label, `<div class="cm-facet-dialog" data-facet-dialog="${e(key)}">
-        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString()} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.${narrow ? ' Counts are under the filters you already have.' : ''}</p>
+        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString('en-US')} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.${narrow ? ' Counts are under the filters you already have.' : ''}</p>
         ${rows.length > 12 ? `<label class="cm-search"><span class="cm-muted">Find in ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(key)}" placeholder="Type to narrow"></label>` : ''}
         <div class="cm-facet-list cm-facet-grid" data-facet-list="${e(key)}" data-expanded="0">${rows.map((row) => pickButton(key, row, folds, narrow)).join('')}</div>
-        ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
+        ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString('en-US')} more used by one card</button>` : ''}
         <div class="cm-facet-dialog-foot"><span class="cm-facet-mode"><span class="cm-muted">A card must match</span><label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label><label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label></span><span class="cm-facet-drop-tools">${b('Clear ' + facet.label.toLowerCase(), 'facet-clear-one', {key}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span></div></div>`);
       redrawTicks();
     };
@@ -1439,7 +1490,7 @@
       for (const pick of dialog.querySelectorAll('[data-facet-pick]')) {
         const row = byValue.get(pick.dataset.value); if (!row) continue;
         const {n, note} = countLabel(row, narrow);
-        const small = pick.querySelector('small'); if (small) small.textContent = n.toLocaleString();
+        const small = pick.querySelector('small'); if (small) small.textContent = n.toLocaleString('en-US');
         pick.classList.toggle('is-empty', n === 0); pick.dataset.count = note;
       }
       const help = dialog.querySelector('.cm-facet-help'); if (help) help.textContent = help.textContent.replace(/ Counts are under the filters you already have\.$/, '') + (narrow ? ' Counts are under the filters you already have.' : '');
@@ -1481,7 +1532,7 @@
     actions['results-group'] = () => {
       const chosen = [...picked].map((id) => data.cards.find((c) => c.id === id)).filter(Boolean);
       if (!chosen.length) throw Error('Switch to Select and tap at least one card on the graph first.');
-      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} to a group`,
+      C.newGroupName(form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} to a group`,
         `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', 'From the graph')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${chosen.slice(0, 12).map((c) => e(c.name)).join(' · ')}${chosen.length > 12 ? ` · and ${chosen.length - 12} more` : ''}</p></div>`,
         async (v) => {
           const cards = chosen.map((c) => C.catalog.exact(c.name)).filter(Boolean);
@@ -1492,7 +1543,7 @@
           commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1}))});
           await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} to a Collection group`}, {renderView: false});
           picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true);
-        }, 'Add to group');
+        }, 'Add to group'));
     };
 
     /* SEND THE CARDS TO THE TABLE (plan §2.15; decided 15 September). Shelf mode needs a way to

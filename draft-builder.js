@@ -27,8 +27,8 @@
  *     the share it is loosened in steps and the result says how far -- a relaxation of
  *     the share, never of the cap.
  *   - Under a cap, the candidate order also prefers value: the same score costs less.
- *   - Lands: a mono-colour deck wants basics, not fourteen utility lands with a rank.
- *     Nonbasic lands are capped by colour count and basics fill the rest.
+ *   - Lands: a mono-color deck wants basics, not fourteen utility lands with a rank.
+ *     Nonbasic lands are capped by color count and basics fill the rest.
  *   - Game Changers follow the bracket: none at a ceiling of 1-2, three at 3, any at 4-5.
  *     That is a CEILING. `definition.fitBracket` turns it into a target as well, so a deck
  *     generated for a bracket 3 table actually plays at bracket 3 rather than merely under it.

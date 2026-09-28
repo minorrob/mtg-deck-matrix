@@ -23,7 +23,7 @@
       if(/^[XYZ]$/i.test(body))continue;
       const half=/^(\d+)\//.exec(body);                 // {2/W} pays 2 or W: the rules count 2
       if(half){total+=Number(half[1]);continue;}
-      total+=1;                                          // a coloured, hybrid, snow or Phyrexian pip
+      total+=1;                                          // a colored, hybrid, snow or Phyrexian pip
     }
     return seen?total:null;
   }
@@ -37,7 +37,7 @@
   function frontCost(cost,typeLine){const text=String(cost||'');return text.includes('//')&&!isSplit(typeLine)?text.split('//')[0].trim():text;}
   function manaValueOf(c){const cost=c.manaCost||c.mana_cost||'',type=c.typeLine||c.type_line||c.type||'';if(String(cost).includes('//')&&!isSplit(type))return mvFromCost(frontCost(cost,type));return c.manaValue??c.cmc??c.mv??mvFromCost(cost);}
   function normalize(raw,prior={}){const c={...prior,...raw},name=String(c.name||'').trim();if(!name)throw Error('A card needs a name.');const type=c.typeLine||c.type_line||c.type||'',oracle=c.oracleText||c.oracle_text||'',identity=c.colorIdentity||c.color_identity||String(c.ci||'').split('');const tags=Classify.classify({typeLine:type,oracleText:oracle,keywords:c.keywords||[],card_faces:c.faces||c.card_faces||[]});const price=c.price===null?null:Number(c.price);return {id:key(name),oracleId:c.oracleId||c.oracle_id||'',scryfallId:c.scryfallId||'',name,typeLine:type,oracleText:oracle,manaCost:c.manaCost||c.mana_cost||'',manaValue:manaValueOf(c),colorIdentity:identity,colors:c.colors||[],keywords:c.keywords||[],power:c.power??null,toughness:c.toughness??null,rarity:c.rarity||'',commander:!!(c.commander||c.isCommander||c.canBeCommander||(/Legendary/.test(type)&&/Creature/.test(type))||/can be your commander/i.test(oracle)),verified:c.verified??!!c.legalities?.commander,legalities:c.legalities||{},mechanics:raw.mechanics||tags.mechanics||[],roles:raw.roles||tags.roles||[],tribes:raw.tribes||tags.tribes||[],requires:raw.requires||tags.requires||[],causes:raw.causes||tags.causes||[],triggers:raw.triggers||tags.triggers||[],produces:raw.produces||tags.produces||[],multiplies:raw.multiplies||tags.multiplies||[],grants:raw.grants||tags.grants||[],extends:raw.extends||tags.extends||[],price:Number.isFinite(price)&&price>0?price:null,priceUpdated:c.priceUpdated||'',priceSource:c.priceSource||'Scryfall snapshot',image:safeURL(c.imageLarge||c.normal||c.image||c.small||('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name)+'&format=image&version=normal')),set:c.setCode||c.set||'',setName:c.setName||'',collector:c.collector||c.collectorNumber||c.collector_number||'',cheapestSet:c.cheapestSet||'',cheapestSetCode:c.cheapestSetCode||'',printings:c.printings||null,flavorName:c.flavorName||c.flavor_name||'',flavorNames:[...new Set([...(c.flavorNames||[]),...(c.flavorName||c.flavor_name?[c.flavorName||c.flavor_name]:[])])],commanderRank:c.commanderRank??null,rank:c.edhrecRank||c.rank||null,source:c.source||'Bundled Scryfall snapshot',updatedAt:c.updatedAt||'',url:safeURL(c.url||c.scryfallUri||c.scryfall_uri||''),buy:safeURL(c.buy||c.tcgplayerUrl||''),gameChanger:!!(c.gameChanger||c.game_changer),layout:c.layout||'',faces:c.faces||c.card_faces||[],shipped:!!c.shipped};}
-  /* THE PLAY-STYLE VOCABULARY. Each entry is a label a reader recognises and the rules
+  /* THE PLAY-STYLE VOCABULARY. Each entry is a label a reader recognizes and the rules
      text that earns it, matched against oracle text, keywords, mechanics, roles and the
      classifier's cause/trigger tags -- so a card the graph knows only as tags still
      answers. Purphoros ("whenever another creature you control enters, ... deals 2 damage
@@ -84,17 +84,21 @@
   async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map(),byOracle=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null,playedLoading=null;const fetcher=options.fetchImpl||fetch;
     /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
        name the rules use and not always the name printed on the card: a Secret Lair prints
-       Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavour names
+       Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavor names
        for a while, but resolve() and exact() did not -- they missed locally and fell
        through to Scryfall, so a pasted list or an import carrying a printed name needed
        the network, and offline it simply failed. The catalog ships all 513 of them; it
        should answer for them too. Kept in a SEPARATE map so an oracle name always wins:
-       a flavour name can never shadow a real card. */
+       a flavor name can never shadow a real card. */
     /* THE ORACLE ID IS THE JOIN KEY. A graph node's id, a Card record's oracleId and a library
        reference's oracleId are one value, so byOracle answers for all three; the name key
        stays the lens for links and typed input. get() takes either. */
     function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);if(next.oracleId)byOracle.set(next.oracleId,next);
       for(const alias of next.flavorNames||[]){const a=folded(alias);if(a&&!byName.has(a))byAlias.set(a,next);}
+      /* A double-faced card is written by its front face as often as by its full name: "Delver of Secrets", not
+         "Delver of Secrets // Insectile Aberration". Without the alias every such line missed the catalog and cost
+         a network lookup (Rob's 886-card paste, 2026-09-28). */
+      if(next.name.includes(' // ')){const front=folded(next.name.split(' // ')[0]);if(front&&!byName.has(front))byAlias.set(front,next);}
       return next;}
     const named=name=>{const n=folded(name);return byName.get(n)||byAlias.get(n)||null;};
     /* THE LIBRARY REFERENCES THE RECORD. A saved library card whose name the shipped record
@@ -127,7 +131,7 @@
        offering nothing: the reader is not replacing a card with a good card, they are
        replacing it with THIS card's understudy -- about this price, doing about this job,
        legal where this one was. Ranked in that order, and every row says why it is there.
-         colours   a hard filter. An illegal card is not a replacement.
+         colors   a hard filter. An illegal card is not a replacement.
          price     closeness, not cheapness. A $30 card is a bad answer for a $2 slot and
                    so is a bulk common; both change what the deck costs to build.
          what it does   shared mechanics, roles, triggers, causes, multipliers, grants --
@@ -166,6 +170,43 @@
       return out.sort((a,b)=>b.score-a.score||a.card.name.localeCompare(b.card.name)).slice(0,limit);
     }
     async function resolve(value,{signal,printing}={}){const name=String(value||'').trim();if(printing?.set&&printing?.collector){const found=await options.client.bySetNumber(printing.set,printing.collector,{signal});if(!found)return null;if(folded(found.name)!==folded(name))throw Error(`That printing is ${found.name}, not ${name}. Review the row before import.`);return add({...found,collector:printing.collector,verified:true,source:'Scryfall exact printing',updatedAt:new Date().toISOString()});}const local=named(name);if(local)return local;if(/^https?:\/\//i.test(name)){const result=await options.link.resolveLink(name,{client:options.client,allowManual:false,signal});return result.card?add({...result.card,verified:true,source:name,updatedAt:new Date().toISOString()}):null;}const found=await options.client.named(name,{exact:true,signal});return found?add({...found,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()}):null;}
+    /* MANY ROWS AT ONCE, FOR AN IMPORT. One row at a time, every name the catalog did not know was its own Scryfall
+       lookup; past Scryfall's burst allowance each was refused and retried for about 2.6 seconds, so an 886-card paste
+       crawled after its first 150 (Rob, 2026-09-28). Now: every name the catalog knows answers at once, the rest go to
+       /cards/collection 75 names a request, and only rows that name a printing (set and number) or a link are looked
+       up one by one, as before. Returns one {card, error} per row, in order. */
+    const NO_MATCH='No exact match. Check the name or use a Scryfall link.';
+    async function resolveMany(rows,{signal,onProgress}={}){
+      const out=new Array(rows.length),misses=new Map();let done=0;
+      const tick=()=>onProgress?.({done,total:rows.length});
+      const stop=()=>{if(signal?.aborted)throw Object.assign(new Error('Request canceled'),{name:'AbortError'});};
+      rows.forEach((row,i)=>{const name=String(row.name||'').trim();if(row.printing?.set&&row.printing?.collector||/^https?:\/\//i.test(name))return;
+        const local=named(name);if(local){out[i]={card:local,error:''};done+=1;return;}
+        const k=folded(name);if(!misses.has(k))misses.set(k,[]);misses.get(k).push(i);});
+      tick();
+      const keys=[...misses.keys()];
+      if(keys.length&&options.client?.collection){
+        for(let j=0;j<keys.length;j+=75){
+          stop();
+          const batch=keys.slice(j,j+75);
+          let result;
+          try{result=await options.client.collection(batch.map(k=>({name:String(rows[misses.get(k)[0]].name).trim()})),{signal});}
+          catch(error){if(error?.name==='AbortError')throw error;for(const k of batch)for(const i of misses.get(k)){out[i]={card:null,error:error.message};done+=1;}tick();continue;}
+          const stamp=new Date().toISOString(),found=new Map();
+          for(const raw of result.cards||[]){const c=add({...raw,verified:true,source:'Scryfall exact name',updatedAt:stamp});found.set(folded(c.name),c);if(c.name.includes(' // '))found.set(folded(c.name.split(' // ')[0]),c);}
+          for(const k of batch){const c=found.get(k)||named(k);for(const i of misses.get(k)){out[i]=c?{card:c,error:''}:{card:null,error:NO_MATCH};done+=1;}}
+          tick();
+        }
+      }
+      for(let i=0;i<rows.length;i++){
+        if(out[i])continue;
+        stop();
+        try{const card=await resolve(rows[i].name,{printing:rows[i].printing,signal});out[i]=card?{card,error:''}:{card:null,error:NO_MATCH};}
+        catch(error){if(error?.name==='AbortError')throw error;out[i]={card:null,error:error.message};}
+        done+=1;tick();
+      }
+      return out;
+    }
     /* THE LOWEST-COST PAPER PRINTING. A Scryfall name lookup answers with one printing and
        that printing's price, which is whichever edition Scryfall considers canonical -- often
        not the cheap one. A buyer wants the cheap one. One prints search, cheapest first,
@@ -237,7 +278,7 @@
        graph-played.json and are fetched the first time a page needs them -- Discover's canvas
        -- never at install and never for the Lab. Joined onto the loaded card list by index. */
     async function loadPlayed(){const g=await loadGraph();if(g.played&&g.played.length)return g.played;if(!options.urls.graphPlayed||!Payload||!Payload.unpackPlayed)return g.played||[];if(!playedLoading)playedLoading=load(options.urls.graphPlayed).then(raw=>{if(typeof options.urls.expect==='function')options.urls.expect(raw,'graphPlayed');g.played=Payload.unpackPlayed(g.cards.map(c=>c.id),raw);return g.played;}).catch(error=>{playedLoading=null;throw error;});return playedLoading;}
-    return {add,overlay,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||byOracle.get(id)||named(id),oracle:id=>byOracle.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
+    return {add,overlay,search,similar,resolve,resolveMany,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||byOracle.get(id)||named(id),oracle:id=>byOracle.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
      wins when it is set; when it is blank this says what the hundred cards themselves say.

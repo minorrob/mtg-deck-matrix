@@ -1,7 +1,7 @@
 {
   "name": "crankmagic",
   "main": "cloud/worker.mjs",
-  "compatibility_date": "2026-09-24",
+  "compatibility_date": "2026-09-28",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -28,5 +28,23 @@
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
     "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"
-  }
+  },
+  "ratelimits": [
+    {
+      "name": "LIMIT_IP",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 240,
+        "period": 60
+      }
+    },
+    {
+      "name": "LIMIT_PERSON",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    }
+  ]
 }
