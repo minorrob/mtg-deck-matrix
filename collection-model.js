@@ -746,5 +746,29 @@
     return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  /* ADD / MOVE TO GROUP as commands (G4; the rule is spelled out over the Library's moveTo). Pure, so the Library's
+     dialog and a drop staged on the table (G6b-2, the sandbox's `moveto`) fold to the same commands. */
+  function moveCommands(s,lotIds,groupId){
+    const g=(s.groups||[]).find(x=>x.id===groupId);if(!g)throw Error('That group is gone.');
+    const lots=lotIds.map(id=>s.lots.find(l=>l.id===id)).filter(Boolean),owned=lots.filter(l=>l.source==='owned'),ids=x=>x.map(l=>l.id),commands=[],notes=[];
+    const piles=s.groups.filter(x=>x.id!==g.id&&(x.template==='trade'||x.template==='limited'));
+    const leave=list=>{for(const p of piles){const inIt=list.filter(l=>l.groupIds.includes(p.id));if(inIt.length)commands.push({type:'groupLots',groupId:g.template==='bench'?null:g.id,moveFrom:p.id,lotIds:ids(inIt)});}};
+    const offered=owned.filter(l=>l.offer==='available'),boxed=owned.filter(l=>l.location?.kind==='deck');
+    if(g.template==='general'){commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});return {commands,notes:[`${lots.length} record${lots.length===1?' is':'s are'} filed in ${g.name}. Nothing moves.`]};}
+    if(owned.length<lots.length)notes.push(`${lots.length-owned.length} record${lots.length-owned.length===1?' is':'s are'} not in hand yet (Ordered or Watched), so ${lots.length-owned.length===1?'it is':'they are'} filed in ${g.name} and moves when ${lots.length-owned.length===1?'it arrives':'they arrive'}.`);
+    if(g.template==='commander'){const d=s.decks.find(x=>x.groupId===g.id);if(!d)throw Error(`${g.name} has no deck.`);
+      if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});
+      if(owned.length)commands.push({type:'bulk',op:'place',deckId:d.id,asStandIn:true,lotIds:ids(owned)});
+      leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
+      if(owned.length)notes.push(`${owned.length} record${owned.length===1?'':'s'} go${owned.length===1?'es':''} in ${d.name}'s box: a card its list calls for is reserved on the way in, any other stands in as a substitute.`);
+      return {commands,notes};}
+    if(boxed.length)commands.push({type:'bulk',op:'bench',lotIds:ids(boxed)});
+    if(g.template==='bench'){if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);
+      notes.push(`${owned.length} record${owned.length===1?'':'s'} ${owned.length===1?'is':'are'} on the Bench${boxed.length?`, ${boxed.length} out of a deck's box`:''}${offered.length?`, ${offered.length} off Sell / Trade`:''}. Reservations stay.`);return {commands,notes};}
+    if(g.template==='trade'){const toOffer=owned.filter(l=>l.offer!=='available'&&l.offer!=='held');if(toOffer.length)commands.push({type:'bulk',op:'offer',offer:'available',lotIds:ids(toOffer)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
+      notes.push(`${owned.length} record${owned.length===1?' is':'s are'} offered for Sell / Trade in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}.`);return {commands,notes};}
+    if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
+    notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
+  }
+  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

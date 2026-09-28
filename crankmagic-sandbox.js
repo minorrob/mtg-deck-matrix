@@ -51,7 +51,9 @@
   /* `plan` is shelf mode's (plan §2.15): a card from the catalog filed into a collection group as
      a PLANNED entry rather than a copy. It is the one move whose card the library has never seen,
      so the record travels with it. */
-  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group", "hold", "tray", "plan"]);
+  /* `moveto` is the table's (G6b-2): a drop on a place or a list on the bottom row is Add / move to group, staged
+     rather than reviewed per drop, and folded by the model's own moveCommands -- the rule the Library's dialog uses. */
+  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group", "hold", "tray", "plan", "moveto"]);
 
   /* The one place a move's destination is spelled, so the pile, the badge and the receipt
      cannot disagree about what a drop meant. */
@@ -283,6 +285,10 @@
         if (!seat) throw Error(`${deck.name}’s list does not call for ${mv.cardName}, or already has it.`);
         return [{ type: "allocate", lotId: lot.id, quantity: lot.quantity, deckId: deck.id, slotId: seat.id }];
       }
+      case "moveto": {
+        if (!(state.groups || []).some((g) => g.id === mv.arg)) throw Error(`The group ${mv.to || "you chose"} is gone.`);
+        return model.moveCommands(state, [lotOf(model, state, mv)], mv.arg).commands;
+      }
       case "group": {
         const group = (state.groups || []).find((g) => g.id === mv.arg);
         if (!group) throw Error(`The group ${mv.to || "you chose"} is gone.`);
@@ -374,6 +380,7 @@
       case "standin": return `${mv.cardName} → ${mv.deckName || "a physical deck"} as a substitute${mv.standInForName ? `, standing in for ${mv.standInForName}` : ""}`;
       case "reserve": return `${mv.cardName} → reserved for ${mv.deckName || "a deck"}`;
       case "group": return `${mv.cardName} → ${mv.to || "a group"}`;
+      case "moveto": return `${mv.cardName} → ${mv.to || "a group"}`;
       case "plan": return `${mv.cardName} → planned in ${mv.to || "a group"}`;
       case "hold": return `${mv.cardName} → in hand${mv.deckName ? `, watched for ${mv.deckName}` : ""}`;
       case "tray": return `${mv.cardName} → tray ${mv.tray || 1}: on ${mv.deckName || "the deck"}’s list and reserved`;

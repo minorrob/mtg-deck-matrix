@@ -303,6 +303,27 @@ const moveFor = (r, extra) => Object.assign({
   ok(S.ACTIONS.has("plan"), "plan is one of the destinations a sitting can hold");
 }
 
+/* ---- the table's drop on a group (G6b-2): Add / move to group, staged, folded by the model's own rule ---- */
+{
+  const trade = live.groups.find((g) => g.template === "trade");
+  const pair = benched.filter((r) => r.offer === "none").slice(0, 2);
+  const sb = make();
+  for (const r of pair) sb.stage(moveFor(r, {action: "moveto", arg: trade.id, to: trade.name, toStatus: ""}));
+  const built = sb.build(live);
+  eq(built.refusals, [], "two Bench copies staged onto To Trade are both accepted");
+  /* Each move folds to exactly what the Library's Add / move to group sends for that copy on its own. */
+  let work = live; const expected = [];
+  for (const r of pair) { const {commands} = M.moveCommands(work, [r.id], trade.id); for (const c of commands) { expected.push(c); work = M.apply(work, {id: "x", confirmed: true, ...c}).state; } }
+  eq(built.commands, expected, "the batch is the Library's own moveCommands, move by move");
+  ok(pair.every((r) => { const l = built.state.lots.find((x) => x.id === r.id); return l.offer === "available" && l.groupIds.includes(trade.id); }), "and the preview has them offered in To Trade");
+  eq(JSON.stringify(live), frozen, "the library itself is untouched");
+  ok(/To Trade/.test(S.describe(sb.moves[0])), "a staged move names the group it goes to");
+  const gone = make();
+  gone.stage(moveFor(pair[0], {action: "moveto", arg: "group:gone", to: "Old binder", toStatus: ""}));
+  ok(/Old binder/.test(gone.build(live).refusals[0].why), "a group that is gone is refused by name");
+  ok(S.ACTIONS.has("moveto"), "moveto is one of the destinations a sitting can hold");
+}
+
 /* ---- the sentence every surface uses for a move ---- */
 {
   const said = S.describe({cardName: "Sol Ring", action: "reserve", deckName: "Goblins", to: "Reserved"});

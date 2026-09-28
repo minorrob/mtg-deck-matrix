@@ -324,8 +324,8 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(T.table(rows, {...opts, groupBy: "type"}).deckPiles, undefined, "the model no longer builds deck piles");
   ok(!/deckpile|deck-pick/.test(ttSrc), "and nothing draws or answers for one");
   ok(/if \(mode !== "selected"\) \{/.test(ttSrc), "an open pile leaves the board standing — only a selection takes the middle");
-  ok(/const dragFrom = host\.querySelector\(mode === "selected" \? "\.cm-tt-fanL" : "\.cm-tt-drawer-strip"\)/.test(ttSrc),
-    "and a drag starts from the drawer as well as the selection, which is the whole point of it");
+  ok(/host\.querySelector\(mode === "selected" \? "\.cm-tt-fanL" : "\.cm-tt-drawer-strip"\)/.test(ttSrc) && /host\.querySelector\("\.cm-tt-sorting"\), fromSorting/.test(ttSrc),
+    "and a drag starts from the drawer as well as the selection, which is the whole point of it -- and from a pile of your own (G6b-2)");
   ok(/cm-tt-grid is-drawer/.test(ttSrc), "the drawer keeps the class the laid-out pile wore, so the keyboard and the selectors still find the cards");
   /* THE DRAWER STAYS OPEN WHILE YOU WORK OUT OF IT (Rob, 15 September). Two ways it used to shut
      on him, both fixed at the source because both are about how the module binds rather than what
@@ -367,6 +367,26 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(added.length, 0, `nothing inside mount() adds a listener (${added.length} found); handlers are properties, so a patched node never stacks them`);
   for (const on of ["onchange", "onpointerdown", "onpointermove", "onpointerup", "onpointercancel"])
     ok(new RegExp("\\." + on + "\\s*=").test(mountSrc), `${on} is assigned as a property`);
+}
+/* THE SORTING SPACE (G6b-2): piles of your own, over the table and not instead of it. */
+{
+  const lots = rows.filter((r) => r.kind === "lot").slice(0, 3), ids = lots.map((r) => r.recordId);
+  const catalogRow = {recordId: "catalog:sol-ring", id: "catalog:sol-ring", kind: "catalog", cardId: "sol-ring", card: {name: "Sol Ring", typeLine: "Artifact"}, quantity: 1, source: "watching", groupIds: [], status: T.SENT};
+  const places = [...new Set(state.groups.filter((g) => g.template === "trade").map((g) => g.id))].map((id) => ({id, label: "To Trade", template: "trade"}));
+  const base = {...opts, places, placeOf: () => "bench"};
+  eq(T.table(rows, base).sortNew, null, "no sorting option, no sorting space: the model is as it was");
+  const m = T.table(rows, {...base, sorting: [{id: "a", name: "Pile 1", ids: ids.slice(0, 2)}, {id: "b", name: "Pile 2", ids: [ids[1], ids[2], "lot:gone"]}, {id: "c", name: "Empty", ids: ["lot:gone"]}]});
+  eq(m.sortPiles.map((p) => [p.id, p.label, p.rows.map((r) => r.recordId)]), [["sort:a", "Pile 1", ids.slice(0, 2)], ["sort:b", "Pile 2", [ids[2]]]], "a card is on one pile of your own at most, a missing one is skipped, and an empty pile is not drawn");
+  eq([m.sortNew.id, m.sorted.get(ids[1])], ["sort:new", "Pile 1"], "a New pile door, and the model says which pile each card is on");
+  eq(m.bench.count, T.table(rows, base).bench.count, "a card on a pile of your own is still in its place");
+  eq(T.findPile(m, "sort:b").label, "Pile 2", "a pile of your own is found by id, so it opens in the drawer and takes a drop");
+  const on = T.accepts(T.findPile(m, "sort:a"), [lots[2]]);
+  eq([on.ok, on.action], [true, "sort:a"], "a pile of your own takes a card");
+  eq(T.accepts(T.findPile(m, "sort:a"), [lots[0]]).ok, false, "but not the cards already on it");
+  eq(T.accepts(m.sortNew, [catalogRow]).action, "sortnew", "and New pile takes anything, a card sent from Discover too");
+  const list = {id: "place:group:list", kind: "place", groupId: "group:list", template: "general", list: true, label: "Proliferate", rows: []};
+  eq([T.accepts(list, [catalogRow]).ok, T.accepts(list, [catalogRow]).action], [true, "moveto:group:list"], "a list takes a card sent from Discover, to plan it there");
+  if (places.length) ok(/Lists on the table/.test(T.accepts(T.findPile(m, "place:" + places[0].id), [catalogRow]).why), "a physical place refuses it, and says where it can go");
 }
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);
