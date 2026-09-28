@@ -503,7 +503,7 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   // A LAND THAT GOES AND GETS A BASIC IS A COLOR NEXT TURN, NOT THIS ONE.
   // entersTapped was read off the fetch's own text, and a fetch does not print
   // "enters tapped" because the fetch is not the land that does. So Evolving
-  // Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOR LANDS,
+  // Wilds and Terramorphic Expanse modeled as UNTAPPED FIVE-COLOR LANDS,
   // available the turn they were played -- strictly better than any land in Magic.
   for (const name of ["Evolving Wilds", "Terramorphic Expanse", "Fabled Passage", "Naya Panorama", "Bant Panorama"]) {
     const land = read(name);

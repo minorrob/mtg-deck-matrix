@@ -23,7 +23,7 @@
  *
  *   the deck    the list plays worse than the model thinks
  *   the pilot   the deck is fine and the lines are being missed
- *   the pod     the simulator measures against a modelled table, not against
+ *   the pod     the simulator measures against a modeled table, not against
  *               the four people you actually sit with
  *
  * Nothing in the log distinguishes them, so nothing here claims to. The finding

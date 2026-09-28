@@ -1010,7 +1010,7 @@
            also ticked and clicked, and a pointer captured here retargets the click that follows to
            the capturing element -- so every tick in the drawer arrived as a click on the strip's
            background, which the mat reads as "clicked away" and puts the pile down. Both are taken
-           in the move handler instead, the moment the pointer has travelled far enough to be a
+           in the move handler instead, the moment the pointer has traveled far enough to be a
            drag and the press is certainly not a click. */
         held = cargo(ev.target); if (!held.length) return;
         drag = {id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, el: null, over: null, ok: false, moved: false};

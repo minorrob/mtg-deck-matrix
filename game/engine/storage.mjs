@@ -120,6 +120,23 @@ export function createMatchStore(storage, matchId) {
       return events;
     },
 
+    /** THE DECISION TAPE (docs/plan-to-100.md M8): the inputs the journal does not hold -- a person's answers, a seat
+        leaving, the game ended -- each under its own number, appended, never rewritten. With the seed it replays the
+        game (game/room/replay.mjs); the journal holds what the engine did, the tape what people told it. */
+    async appendTape(entries) {
+      for (const t of entries) {
+        if (!t || !Number.isInteger(t.n) || t.n < 0 || !["answer", "leave", "end"].includes(t.kind)) throw new Error("A tape entry is {n, kind: answer | leave | end, seat, ...}");
+        const key = `${root}/tape/${pad(t.n)}`;
+        if (await storage.get(key) !== null) throw new Error(`Tape entry ${t.n} is already written; a tape is appended to, never rewritten`);
+        await write(key, t);
+      }
+    },
+    async readTape() {
+      const tape = [];
+      for (const k of await storage.list(`${root}/tape/`)) tape.push(await read(k));
+      return tape;
+    },
+
     /** A checkpoint from the engine's `journal.checkpoint(state, rng)`, verified, then made the latest. */
     async saveCheckpoint(point) {
       verified(point, "saveCheckpoint");

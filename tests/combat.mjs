@@ -422,7 +422,7 @@ check("the commander is worth more than its body", () => {
     const none = run(0);
     const one = run(1);
     assert.ok(one.winRate < none.winRate,
-      "keeping a body home costs win rate -- offence is worth more than defense when three players have to die");
+      "keeping a body home costs win rate -- offense is worth more than defense when three players have to die");
     assert.equal(Policy.BALANCED.combat.keepBack, 0, "so it stays at zero");
   });
 

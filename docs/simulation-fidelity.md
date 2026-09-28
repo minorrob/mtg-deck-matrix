@@ -72,7 +72,7 @@ loudly rather than drifting.
 
 ---
 
-## 2 · Storm count, ritual chains and one-card wins — **named in the app, not modelled**
+## 2 · Storm count, ritual chains and one-card wins — **named in the app, not modeled**
 
 The engine plays creatures, mana and combat. It has no concept of a spell count within a
 turn, so a ritual into a big X spell is simulated as an expensive spell that resolved, and a
@@ -189,9 +189,9 @@ built (below). Measured:
 | keep one home | 32,823 | 22,633 (69%) | **5.9%** |
 
 The blocker does exactly its job — twenty percentage points more of the incoming damage is
-stopped, about 1.9 extra damage a game. It is still not worth a seventeenth of the offence,
+stopped, about 1.9 extra damage a game. It is still not worth a seventeenth of the offense,
 and the reason is structural rather than a modeling error: **you must kill three players and
-any one of them need only kill you once.** Offence compounds toward three eliminations;
+any one of them need only kill you once.** Offense compounds toward three eliminations;
 defense buys life against a table with three sources of it. That is a real property of
 four-player Commander, not an artifact, and it is why "block less than feels right" is
 ordinary multiplayer advice.
@@ -390,7 +390,7 @@ misunderstood while producing a perfectly plausible number.
 off the fetch's own text — and a fetch does not print *"enters tapped"*, because the fetch is
 not the land that does. So:
 
-| card | modelled as | actually |
+| card | modeled as | actually |
 |---|---|---|
 | Evolving Wilds | untapped, W U B R G, turn it is played | fetches a basic **tapped** |
 | Terramorphic Expanse | untapped, W U B R G | fetches a basic **tapped** |
@@ -414,7 +414,7 @@ test now does too, and `tests/sim-engine.mjs` pins it with a land that both fetc
 prints its ability only in parentheses.
 
 **A Treasure you might reach was a Treasure you make.** `makesTreasureFreely` tested only the
-cost before the colon. Currency Converter's is a bare `{T}` — so it modelled as a one-mana
+cost before the colon. Currency Converter's is a bare `{T}` — so it modeled as a one-mana
 Treasure engine, when the Treasure needs a card discarded, exiled with the artifact, and a
 land at that. What a bare `{T}` buys now has to *be* the Treasure, not a Treasure it might
 reach. Exactly one card in the catalog changes, and it is in no shipped deck; Smothering
@@ -552,7 +552,7 @@ deploying the commander costs points on every one of the six** (−0.93 to −4.
 a way of playing, not a pile of the moves that scored best, so it stays — and the advice
 reports it as a cost rather than hiding it.
 
-### What is still not modelled
+### What is still not modeled
 
 The pilot decides; it does not yet decide *well*. There is no lookahead, no reading of the
 board, no holding a wipe for the turn it is worth most. `castPriority` is a table with
@@ -566,7 +566,7 @@ question of what a creature is for — wait on section 3.
 - **The opponents are profiles, not decks.** `sim/opponents.json` describes nine playstyles
   statistically rather than playing real hundreds. A deck that beats "tuned" beats a
   distribution, not a list somebody brought.
-- **No stack, no priority, no responses.** Counterspells are modelled as interaction
+- **No stack, no priority, no responses.** Counterspells are modeled as interaction
   availability rather than as answers to specific spells.
 - **No mulligan skill.** The keep rule is a heuristic on land count; a real player's keep
   depends on the matchup and the seat. It is now a *parameter* — see section 3a — but a

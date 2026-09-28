@@ -110,8 +110,8 @@
       "sha": "fd2b5287b193df6e"
     },
     "combat.js": {
-      "version": 2,
-      "sha": "218a98465449d00c"
+      "version": 3,
+      "sha": "a35a68f87ac2dadf"
     },
     "crankmagic-account.js": {
       "version": 8,
@@ -122,8 +122,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 392,
-      "sha": "945e2a53cb12dc43"
+      "version": 394,
+      "sha": "964689b752e80003"
     },
     "crankmagic-assets.js": {
       "version": 34,
@@ -270,24 +270,24 @@
       "sha": "1fa4c7e4b577acbb"
     },
     "crankmagic-sim.js": {
-      "version": 22,
-      "sha": "4a3ca1011a732019"
+      "version": 23,
+      "sha": "e25c589859b1d709"
     },
     "crankmagic-strategies.js": {
       "version": 4,
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 381,
-      "sha": "a427863c3ffa2393"
+      "version": 383,
+      "sha": "4ba2378f555d920b"
     },
     "crankmagic-table.js": {
       "version": 7,
       "sha": "a52e7ed8d4cb59f3"
     },
     "crankmagic-tabletop.js": {
-      "version": 26,
-      "sha": "69ac4be274de2125"
+      "version": 27,
+      "sha": "ed361f19553dfa1d"
     },
     "crankmagic-tour.js": {
       "version": 22,
@@ -374,8 +374,8 @@
       "sha": "2ea37a108afaeb50"
     },
     "game-record.js": {
-      "version": 2,
-      "sha": "fc79910214a4214a"
+      "version": 3,
+      "sha": "7cedb05c85339157"
     },
     "graph-payload.js": {
       "version": 3,
@@ -394,16 +394,16 @@
       "sha": "cd1057e88664be7c"
     },
     "scryfall-client.js": {
-      "version": 12,
-      "sha": "19bed92426d3d749"
+      "version": 13,
+      "sha": "2a131e6f69169f34"
     },
     "shop-export.js": {
       "version": 1,
       "sha": "70a6f03ab9f97b78"
     },
     "sim-engine.js": {
-      "version": 13,
-      "sha": "4bbbcfdc6cb07c1d"
+      "version": 14,
+      "sha": "84cc98d705dd3aa9"
     },
     "sim-worker.js": {
       "version": 1,

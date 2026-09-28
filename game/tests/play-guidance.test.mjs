@@ -56,7 +56,7 @@ test('what is coming at one seat, and of what kind', () => {
 
 /* Rob, 2026-09-21: "There are definitely more damage types than just those. Have to consider
  * first strike, double strike, and similar." Double strike is the one that is arithmetic rather
- * than labelling -- it deals its power in the first-strike step and again in the normal step, so
+ * than labeling -- it deals its power in the first-strike step and again in the normal step, so
  * a raw power total is simply wrong about how much is coming. */
 test('double strike is counted twice, because it hits twice', () => {
   const atk = (name, power, keywords, blockers = []) =>
