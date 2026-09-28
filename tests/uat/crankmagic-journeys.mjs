@@ -8,8 +8,6 @@ const BASE=process.env.UAT_BASE||'http://localhost:8790',ENTRY=process.env.CRANK
 const browser=await chromium.launch({headless:true,...(process.env.UAT_CHROME?{executablePath:process.env.UAT_CHROME}:process.platform==='win32'?{executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'}:{})});
 let checks=0;const eq=(a,b)=>{assert.deepEqual(a,b);checks++;},ok=x=>{assert.ok(x);checks++;};
 const context=await browser.newContext({viewport:{width:1440,height:980},acceptDownloads:true}),page=await context.newPage(),errors=[];
-/* The journeys walk the table's status piles: By status (G6 made By group the default). */
-await page.addInitScript(()=>{try{localStorage.setItem('cm-tabletop-arrange','status');}catch(err){/* the default then */}});
 page.on('pageerror',error=>errors.push(error.message));
 /* SCRYFALL IS ANSWERED FROM THE SHIPPED CATALOG, the way every walk already does it, so the
    gate that guards each PR does not depend on a third party's rate limit: an unstubbed run

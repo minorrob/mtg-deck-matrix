@@ -6,6 +6,8 @@
  *   Once       the piles' counts add up to the table's total: no card on two piles
  *   Spread     opening a deck shows only that deck's cards, and its stacks stay that deck's when one is opened
  *   Drop       Move to… on a copy lists the places, and a place is Add / move to group, reviewed, then done
+ *   Status     Group piles by Status breaks a group into its card-state piles; there is no separate status band
+ *   Lists      a General list laid on the row shows the cards filed in it, the places unchanged, remembered per device
  *
  * On Rob's library, restored through the app. Needs Playwright (GEOMETRY_REQUIRED=1 makes its absence a failure).
  */
@@ -35,7 +37,6 @@ try {
   await page.locator(".cm-tt-mat").waitFor({timeout: 60000});
 
   /* BAND */
-  eq(await page.locator("select[name=tabletopArrange]").inputValue(), "group", "the table is arranged by group unless you choose otherwise");
   const band = await page.locator("[data-pile^='place:group:']").evaluateAll((bs) => bs.map((b) => b.dataset.pile.replace(/^place:/, "")));
   eq(band.slice().sort(), [...facts.decks.map((d) => d.gid), ...facts.trade].sort(), `the band is the ${facts.decks.length} decks and the Sell / Trade pile`);
   eq(await page.locator("[data-pile^='status:']").count(), 0, "no status piles along the bottom");
@@ -83,15 +84,32 @@ try {
   await page.waitForFunction((id) => {const l = globalThis.__cm.state.lots.find((x) => x.id === id); return l && l.offer === "available";}, lotId, {timeout: 30000});
   checks += 1;
 
-  /* BY STATUS, one choice away and remembered (from the table at rest: Escape puts the card back) */
+  /* STATUS IS A BREAKOUT: D1 sorted by Status spreads into the card-state piles, and they add up to D1 */
   await page.keyboard.press("Escape");
-  await page.locator("select[name=tabletopArrange]").waitFor({timeout: 60000});
-  await page.selectOption("select[name=tabletopArrange]", "status");
-  await page.locator(".cm-tt-mat [data-pile^='status:']").first().waitFor({timeout: 30000});
-  eq(await page.locator(".cm-tt-mat [data-pile^='place:group:']").count(), 0, "By status puts the status piles back");
+  await page.selectOption("select[name=tabletopGroupBy]", "status");
+  await page.locator(`.cm-tt-mat [data-pile='place:${d1.gid}']`).click();
+  await page.locator(".cm-tt-mat [data-pile^='group:status:']").first().waitFor({timeout: 30000});
+  const byStatus = await page.locator(".cm-tt-mat [data-pile^='group:status:']").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
+  ok(byStatus.some((l) => /^Target, /.test(l)) && byStatus.reduce((n, l) => n + countOf(l), 0) === d1Count, `Group piles by Status breaks D1 into its card-state piles, adding up to D1 (${byStatus.join(" | ")})`);
+  ok(/^Target, /.test(byStatus[0]), `and in the order a deck is finished, Target first (${byStatus[0]})`);
+  eq(await page.locator("select[name=tabletopArrange]").count(), 0, "there is no second arrangement: the status piles are a breakout, not a band");
+  await shot(page, "table-d1-by-status-1400");
+
+  /* LISTS ON THE TABLE: a General list laid on the row shows its cards, and the places do not change */
+  await page.keyboard.press("Escape");
+  await page.evaluate(async (ids) => {const C = globalThis.__cm; await C.commit({type: "createGroup", groupId: "group:list-proliferate", name: "Proliferate", template: "general"}); await C.commit({type: "groupLots", groupId: "group:list-proliferate", lotIds: ids});}, [lotId]);
+  await page.locator("[data-tt-lists]").click();
+  await page.locator("#cm-dialog[open] h2", {hasText: "Lists on the table"}).waitFor();
+  await page.check("#cm-dialog [name='list:group:list-proliferate']");
+  await page.click("#cm-dialog button[type=submit]");
+  const listPile = page.locator(".cm-tt-mat [data-pile='place:group:list-proliferate']");
+  await listPile.waitFor({timeout: 30000});
+  eq(countOf(await listPile.getAttribute("aria-label")), 1, "the list is on the row with the one card filed in it");
+  const placesAgain = await page.locator(".cm-tt-mat [data-pile^='place:']:not([data-pile='place:group:list-proliferate']), .cm-tt-mat [data-pile='bench']").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
+  eq(placesAgain.reduce((n, l) => n + countOf(l), 0), total, "and the places still hold every copy once: a list never moves a card");
   await page.reload();
-  await page.locator("select[name=tabletopArrange]").waitFor({timeout: 60000});
-  eq(await page.locator("select[name=tabletopArrange]").inputValue(), "status", "and is remembered on this device");
+  await page.locator(".cm-tt-mat [data-pile='place:group:list-proliferate']").waitFor({timeout: 60000});
+  checks += 1;
   await context.close();
 } finally {
   await close();

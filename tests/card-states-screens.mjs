@@ -27,7 +27,6 @@ const stateOf = (page) => page.evaluate(async () => { const r = await CrankRepos
 try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
-  await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
   if (stub) await stub(page);
   await loadLiveState(page, base);
   const st = await stateOf(page);
@@ -72,17 +71,21 @@ try {
   ok(chips.every(([l]) => ["Owned", "Upgrade", "Reserved", "Option", "Pinned", ...M.STATE_LABELS].includes(l)), "and every chip is a card-state word");
   await page.keyboard.press("Escape");
 
-  /* 4. The Table view (step 2c): its status piles are the card states, each counting the copies the model puts in it,
-     and "To add" is the pile Ready to add empties. Its own Status dropdown offers the same words. */
+  /* 4. The Table view (step 2c; G6b): Group piles by Status breaks the table into the card states, each counting the
+     copies the model puts in it, and "To add" is the pile Ready to add empties. Its own Status dropdown offers the same
+     words. The Bench, which the status band used to leave to its rail, is a pile of its own here. */
   await page.goto(`${base}/index.html#cards?view=tabletop`);
-  await page.locator("[data-pile^='status:']").first().waitFor({timeout: 30000});
-  const piles = Object.fromEntries(await page.$$eval("[data-pile^='status:']", (ps) => ps.map((x) => { const m = x.getAttribute("aria-label").match(/^(.*), ([\d,]+) cards?$/); return m ? [m[1], Number(m[2].replace(/,/g, ""))] : [x.getAttribute("aria-label"), -1]; })));
+  await page.locator("select[name=tabletopGroupBy]").waitFor({timeout: 30000});
+  await page.selectOption("select[name=tabletopGroupBy]", "status");
+  await page.locator(".cm-tt-mat [data-pile^='group:status:']").first().waitFor({timeout: 30000});
+  const piles = Object.fromEntries(await page.$$eval(".cm-tt-mat [data-pile^='group:status:']", (ps) => ps.map((x) => { const m = x.getAttribute("aria-label").match(/^(.*), ([\d,]+) cards?$/); return m ? [m[1], Number(m[2].replace(/,/g, ""))] : [x.getAttribute("aria-label"), -1]; })));
   const all = [...M.projection(st), ...st.groups.flatMap((g) => g.entries.map((r) => ({...r, kind: "entry", groupId: g.id})))].map((r) => ({r, s: readS(r)}));
   const n = (f) => all.filter(({s}) => f(s)).reduce((k, {r}) => k + r.quantity, 0);
   const own = (f) => n((s) => s.stage === "owned" && f(s));
   const pileWant = {"Target": own((s) => s.role === "target" && s.inBox), "To add": own((s) => !!s.deckId && !s.inBox), "Substitute": own((s) => s.role === "substitute"), "Ordered": n((s) => s.stage === "ordered"), "To buy": n((s) => s.stage === "buy"), "Watching": n((s) => s.stage === "watching")};
   for (const k of Object.keys(pileWant)) if (!pileWant[k]) delete pileWant[k];
-  eq(piles, pileWant, "the Table view's status piles are the card states, each counting what the model puts in it");
+  ok(Object.keys(piles).every((k) => k === "Bench" || k in pileWant), `the breakout's piles are the card states (${Object.keys(piles).join(", ")})`);
+  eq(Object.fromEntries(Object.keys(pileWant).map((k) => [k, piles[k]])), pileWant, "Group piles by Status breaks the table into the card states, each counting what the model puts in it");
   eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Owned (any)", "Target", "To add", "Substitute", "Bench", "Ordered", "To buy", "Watching"], "and its Status dropdown offers the same words");
 
   /* 5. Ready to add: a copy waiting outside its box wears "To add", with where to find it. */

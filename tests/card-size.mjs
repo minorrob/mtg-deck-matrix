@@ -37,8 +37,8 @@ const noSteps = async (page, where) => {
 };
 const openPile = async (page) => {
   await page.goto(`${base}/index.html#cards?view=tabletop`);
-  await page.locator("[data-pile^='status:']").first().waitFor({timeout: 30000});
-  await page.$eval("[data-pile^='status:']:not(.is-empty)", (b) => b.click());
+  await page.locator("[data-pile^='place:']").first().waitFor({timeout: 30000});
+  await page.$eval("[data-pile^='place:']:not(.is-empty)", (b) => b.click());
   await page.locator(".cm-tt-grid .cm-tt-card").first().waitFor({timeout: 30000});
 };
 /* Everything that says whether the open pile at this size is legible and fits. */
@@ -61,7 +61,6 @@ try {
   for (const [vw, vh, tag, hi] of [[1400, 900, "desktop", 160], [390, 844, "phone", 130]]) {
     const context = await browser.newContext({viewport: {width: vw, height: vh}, serviceWorkers: "block", ...(tag === "phone" ? {isMobile: true, hasTouch: true} : {})});
     const page = await context.newPage();
-    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await loadLiveState(page, base);
 
@@ -137,7 +136,6 @@ try {
   {
     const context = await browser.newContext({viewport: {width: 390, height: 844}, serviceWorkers: "block", isMobile: true, hasTouch: true});
     const page = await context.newPage();
-    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await loadLiveState(page, base);
     await page.evaluate(() => localStorage.setItem("cm-card-scale", "160"));
