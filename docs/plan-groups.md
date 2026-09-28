@@ -173,6 +173,22 @@ It is done in the model's own `migrate()`, the way 1→2 was. A repair at boot i
 
 G1 and G2 need no decisions and can start at once. G3–G6 wait on §8.
 
+**G3 as built (2026-09-28).** G3 ships in steps:
+
+| Step | What | State |
+|---|---|---|
+| G3a | A deck holds cards whether or not it is final: a draft reserves and holds copies; New deck from a group puts your copies in the box | merged (#421) |
+| G3b | Group templates and schema 3 → 4: one Bench, Commander deck groups kept by the model, To sell / trade, General; the migration, checked on Rob's library | #422 |
+| G3c | A draft works like a deck: assign, the sheet and Reserve available copies on a draft; a copy in a draft is one row, not a copy and a Draft list row; the live **Commander + 99** badge ("Legal · Commander + 99", "Not legal · Commander + 8 of 99") | next |
+| G3d | The buy list for every deck, and Finalize fully a badge | **waits on D4**: a draft on the buy list needs a rule for owned copies elsewhere (reserved, or read live) |
+| G3e | A copy's physical place is its template group (bench, deck box, To sell / trade) | with G4 |
+
+**Commander + 99, how it is kept.** The list still stores the commander among its hundred, and the screens
+read it as commander + 99. That changes no stored deck, no export, no game file and no legality rule
+(a legal list is still 100 with the commander once), so nothing Rob has built moves. Taking the commander
+out of the stored list, as §4 step 2 first planned, would touch every reader of a deck (the buy list,
+reservations, the Table, the simulator) for no difference Rob would see.
+
 ## 7b. The design work that follows
 
 Rob added a design update on 2026-09-28: a new hero image for Decks, and four themes (Moss & Iron by
