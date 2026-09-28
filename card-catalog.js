@@ -95,6 +95,10 @@
        stays the lens for links and typed input. get() takes either. */
     function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);if(next.oracleId)byOracle.set(next.oracleId,next);
       for(const alias of next.flavorNames||[]){const a=folded(alias);if(a&&!byName.has(a))byAlias.set(a,next);}
+      /* A double-faced card is written by its front face as often as by its full name: "Delver of Secrets", not
+         "Delver of Secrets // Insectile Aberration". Without the alias every such line missed the catalog and cost
+         a network lookup (Rob's 886-card paste, 2026-09-28). */
+      if(next.name.includes(' // ')){const front=folded(next.name.split(' // ')[0]);if(front&&!byName.has(front))byAlias.set(front,next);}
       return next;}
     const named=name=>{const n=folded(name);return byName.get(n)||byAlias.get(n)||null;};
     /* THE LIBRARY REFERENCES THE RECORD. A saved library card whose name the shipped record
@@ -166,6 +170,43 @@
       return out.sort((a,b)=>b.score-a.score||a.card.name.localeCompare(b.card.name)).slice(0,limit);
     }
     async function resolve(value,{signal,printing}={}){const name=String(value||'').trim();if(printing?.set&&printing?.collector){const found=await options.client.bySetNumber(printing.set,printing.collector,{signal});if(!found)return null;if(folded(found.name)!==folded(name))throw Error(`That printing is ${found.name}, not ${name}. Review the row before import.`);return add({...found,collector:printing.collector,verified:true,source:'Scryfall exact printing',updatedAt:new Date().toISOString()});}const local=named(name);if(local)return local;if(/^https?:\/\//i.test(name)){const result=await options.link.resolveLink(name,{client:options.client,allowManual:false,signal});return result.card?add({...result.card,verified:true,source:name,updatedAt:new Date().toISOString()}):null;}const found=await options.client.named(name,{exact:true,signal});return found?add({...found,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()}):null;}
+    /* MANY ROWS AT ONCE, FOR AN IMPORT. One row at a time, every name the catalog did not know was its own Scryfall
+       lookup; past Scryfall's burst allowance each was refused and retried for about 2.6 seconds, so an 886-card paste
+       crawled after its first 150 (Rob, 2026-09-28). Now: every name the catalog knows answers at once, the rest go to
+       /cards/collection 75 names a request, and only rows that name a printing (set and number) or a link are looked
+       up one by one, as before. Returns one {card, error} per row, in order. */
+    const NO_MATCH='No exact match. Check the name or use a Scryfall link.';
+    async function resolveMany(rows,{signal,onProgress}={}){
+      const out=new Array(rows.length),misses=new Map();let done=0;
+      const tick=()=>onProgress?.({done,total:rows.length});
+      const stop=()=>{if(signal?.aborted)throw Object.assign(new Error('Request canceled'),{name:'AbortError'});};
+      rows.forEach((row,i)=>{const name=String(row.name||'').trim();if(row.printing?.set&&row.printing?.collector||/^https?:\/\//i.test(name))return;
+        const local=named(name);if(local){out[i]={card:local,error:''};done+=1;return;}
+        const k=folded(name);if(!misses.has(k))misses.set(k,[]);misses.get(k).push(i);});
+      tick();
+      const keys=[...misses.keys()];
+      if(keys.length&&options.client?.collection){
+        for(let j=0;j<keys.length;j+=75){
+          stop();
+          const batch=keys.slice(j,j+75);
+          let result;
+          try{result=await options.client.collection(batch.map(k=>({name:String(rows[misses.get(k)[0]].name).trim()})),{signal});}
+          catch(error){if(error?.name==='AbortError')throw error;for(const k of batch)for(const i of misses.get(k)){out[i]={card:null,error:error.message};done+=1;}tick();continue;}
+          const stamp=new Date().toISOString(),found=new Map();
+          for(const raw of result.cards||[]){const c=add({...raw,verified:true,source:'Scryfall exact name',updatedAt:stamp});found.set(folded(c.name),c);if(c.name.includes(' // '))found.set(folded(c.name.split(' // ')[0]),c);}
+          for(const k of batch){const c=found.get(k)||named(k);for(const i of misses.get(k)){out[i]=c?{card:c,error:''}:{card:null,error:NO_MATCH};done+=1;}}
+          tick();
+        }
+      }
+      for(let i=0;i<rows.length;i++){
+        if(out[i])continue;
+        stop();
+        try{const card=await resolve(rows[i].name,{printing:rows[i].printing,signal});out[i]=card?{card,error:''}:{card:null,error:NO_MATCH};}
+        catch(error){if(error?.name==='AbortError')throw error;out[i]={card:null,error:error.message};}
+        done+=1;tick();
+      }
+      return out;
+    }
     /* THE LOWEST-COST PAPER PRINTING. A Scryfall name lookup answers with one printing and
        that printing's price, which is whichever edition Scryfall considers canonical -- often
        not the cheap one. A buyer wants the cheap one. One prints search, cheapest first,
@@ -237,7 +278,7 @@
        graph-played.json and are fetched the first time a page needs them -- Discover's canvas
        -- never at install and never for the Lab. Joined onto the loaded card list by index. */
     async function loadPlayed(){const g=await loadGraph();if(g.played&&g.played.length)return g.played;if(!options.urls.graphPlayed||!Payload||!Payload.unpackPlayed)return g.played||[];if(!playedLoading)playedLoading=load(options.urls.graphPlayed).then(raw=>{if(typeof options.urls.expect==='function')options.urls.expect(raw,'graphPlayed');g.played=Payload.unpackPlayed(g.cards.map(c=>c.id),raw);return g.played;}).catch(error=>{playedLoading=null;throw error;});return playedLoading;}
-    return {add,overlay,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||byOracle.get(id)||named(id),oracle:id=>byOracle.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
+    return {add,overlay,search,similar,resolve,resolveMany,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||byOracle.get(id)||named(id),oracle:id=>byOracle.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
      wins when it is set; when it is blank this says what the hundred cards themselves say.

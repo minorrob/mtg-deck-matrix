@@ -2432,6 +2432,10 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* ------------------------------------------------------------------ NEW DECK WIZARD (Phase 1 PR3)
    Unified entry with three peer paths: Create, Import, Lab. */
 .cm-new-deck-wizard{max-width:56ch;padding:6px 0}
+/* The New deck dialog is as wide as its choices (Rob, 2026-09-28): the general dialog is 900px wide and the choices
+   stopped at 56ch, which left a band of empty panel on the right and put the close button far from them. Narrowed,
+   the close button's right edge lines up with the choices', and the gutter matches the left side's. */
+#cm-dialog.cm-new-deck-dialog{width:min(560px,calc(100vw - 24px))}#cm-dialog.cm-new-deck-dialog .cm-new-deck-wizard{max-width:none}
 .cm-new-deck-wizard > p{margin:0 0 18px;font-size:14px;color:var(--v-muted)}
 .cm-wizard-paths{display:flex;flex-direction:column;gap:12px}
 /* These are CONTROLS on a panel, so they take --v-raised. crankmagic-design.css line 38 states the
@@ -3355,3 +3359,7 @@ button.cm-vitals{cursor:pointer}
 .cm-mat-preview span:nth-child(1){grid-column:1;grid-row:1}
 .cm-mat-preview span:nth-child(2){grid-column:1;grid-row:2}
 .cm-mat-note{margin:8px 0 0;font-size:12px}
+/* THE MENU UNDER PLAY (Rob, 2026-09-28): the nav track grew to fill the rail, which pushed Menu to the rail's foot,
+   as far down as the page is long, "lost in the scroll". The track now takes only its own height, so Menu sits
+   right under the last page. */
+#matrix-v2 .cm-sidebar .v-nav-track{flex:0 0 auto}

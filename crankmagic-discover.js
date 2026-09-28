@@ -1044,7 +1044,7 @@
     actions['trace-add-group'] = () => {
       const chosen = [...traceChosen]; if (!chosen.length) throw Error('Tick at least one card in the trace first.');
       const deck = tracePick();
-      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} from the trace to a group`,
+      C.newGroupName(form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} from the trace to a group`,
         `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', deck ? `From the trace of ${deck.name}` : 'From the trace')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${e(chosen.slice(0, 8).join(', '))}${chosen.length > 8 ? ` and ${chosen.length - 8} more` : ''}</p></div>`,
         async (v) => {
           const cards = chosen.map((name) => C.catalog.exact(name)).filter(Boolean);
@@ -1055,7 +1055,7 @@
           commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1, notes: deck ? `From the trace of ${deck.name}` : 'From the trace'}))});
           await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} from the trace to a Collection group`}, {renderView: false});
           traceChosen = new Set(); drawTracePane();
-        }, 'Add to group');
+        }, 'Add to group'));
     };
     actions['trace-ctl'] = (el) => {
       if (!graph || !graph.tracing) { runTrace(true); return; }
@@ -1532,7 +1532,7 @@
     actions['results-group'] = () => {
       const chosen = [...picked].map((id) => data.cards.find((c) => c.id === id)).filter(Boolean);
       if (!chosen.length) throw Error('Switch to Select and tap at least one card on the graph first.');
-      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} to a group`,
+      C.newGroupName(form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} to a group`,
         `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', 'From the graph')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${chosen.slice(0, 12).map((c) => e(c.name)).join(' · ')}${chosen.length > 12 ? ` · and ${chosen.length - 12} more` : ''}</p></div>`,
         async (v) => {
           const cards = chosen.map((c) => C.catalog.exact(c.name)).filter(Boolean);
@@ -1543,7 +1543,7 @@
           commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1}))});
           await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} to a Collection group`}, {renderView: false});
           picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true);
-        }, 'Add to group');
+        }, 'Add to group'));
     };
 
     /* SEND THE CARDS TO THE TABLE (plan §2.15; decided 15 September). Shelf mode needs a way to

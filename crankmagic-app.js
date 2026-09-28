@@ -88,7 +88,9 @@ function subnav(group){document.querySelectorAll('.cm-subnav').forEach(el=>el.re
   /* A sub-nav row may name a tint -- a deck row carries its commander's first color, as an
      8px dot (Track V.3, the guide's step 2). It is a --mana-* token name, never a literal, so
      the dot follows the theme with everything else; a row without one draws no dot. */
-  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}" title="${esc(it.label)}"${it.current?' class="is-current" aria-current="location"':''}${it.tint?` style="--dot:var(--mana-${esc(it.tint)})"`:''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
+  /* A row may be an action instead of a page (Library › Upload cards): it keeps the row's look, and the click
+     handler runs the action instead of following the link. */
+  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}" title="${esc(it.label)}"${it.action?` data-action="${esc(it.action)}" role="button"`:''}${it.current?' class="is-current" aria-current="location"':''}${it.tint?` style="--dot:var(--mana-${esc(it.tint)})"`:''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
   host.insertAdjacentElement('afterend',list);}
 function helpButton(key){return `<button type="button" class="v-button cm-help-btn" data-action="page-help" data-help="${esc(key)}" aria-label="About this page" title="About this page">?</button>`;}
 /* A page head is the name, one muted summary sentence with the two or three figures that
@@ -124,7 +126,15 @@ function notice(message,error=false,{action=null}={}){const el=$('#cm-notice');i
  * bind listeners imperatively -- the card picker's input, the Load pane's hover preview -- and
  * restoring markup would bring back a dead copy of them. */
 let modalBack=null;
-function modal(title,body,back=null){if(dialog.open)dialog.close();modalBack=typeof back==='function'?back:null;dialog.className='';dialog.innerHTML=`<div class="cm-dialog-head"><h2 id="cm-dialog-title">${esc(title)}</h2><button type="button" class="cm-dialog-close" data-action="close" aria-label="${back?'Back':'Close dialog'}">${back?'‹':'×'}</button></div>${body}`;dialog.setAttribute('aria-labelledby','cm-dialog-title');dialog.showModal();
+/* A DIALOG HOLDING WORK THAT CLOSING WOULD LOSE (Rob, 2026-09-28: the import's review, after minutes of resolving,
+   closed on a stray click and took everything with it). guardModal() sets the question the close control, the
+   backdrop and Escape ask first; the next modal() clears it. onLeave runs when the person does leave. */
+let modalGuard=null;
+function guardModal(message,onLeave=null){modalGuard={message,onLeave};}
+/* NEW GROUP NAME ONLY FOR A NEW GROUP (Rob, 2026-09-28): an existing group already has its name, so the field shows
+   only while the Collection group choice is "Create a new group". For any form with both. */
+function newGroupName(root){const sel=root&&root.querySelector('[name=group]'),label=root&&root.querySelector('[name=name]')?.closest('label');if(!sel||!label)return root;const sync=()=>{label.hidden=sel.value!=='';};sel.addEventListener('change',sync);sync();return root;}
+function modal(title,body,back=null){if(dialog.open)dialog.close();modalGuard=null;modalBack=typeof back==='function'?back:null;dialog.className='';dialog.innerHTML=`<div class="cm-dialog-head"><h2 id="cm-dialog-title">${esc(title)}</h2><button type="button" class="cm-dialog-close" data-action="close" aria-label="${back?'Back':'Close dialog'}">${back?'‹':'×'}</button></div>${body}`;dialog.setAttribute('aria-labelledby','cm-dialog-title');dialog.showModal();
   /* showModal() focuses the first focusable thing in the body and scrolls it into view, which put
      a card's art under the sticky title (UAT M-14). Focus the close button without scrolling, and
      open at the top. */
@@ -430,7 +440,7 @@ async function inspector(id){let c=cardOf(id);if(!c)throw Error('Card not found.
    own copy for a card the record set does not carry. */
 const cardOf=id=>(catalog&&catalog.get(id))||state.cards[id]||null;
 const cardsOf=()=>Object.keys(state.cards).map(cardOf).filter(Boolean);
-const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,deckCap,applyMotion,status,usDate,usDateTime};
+const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,newGroupName,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,deckCap,applyMotion,status,usDate,usDateTime};
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
 /* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
@@ -450,13 +460,13 @@ actions['open-glossary']=el=>{const key=el&&el.dataset.help,back=key&&HELP[key]?
    a page with no help opens the glossary. */
 actions['menu-help']=()=>{const b=$('#cm-main [data-action="page-help"]');if(b&&HELP[b.dataset.help])actions['page-help'](b);else actions['open-glossary']();};
 actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
-actions.close=()=>{const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
+actions.close=()=>{if(modalGuard&&!confirm(modalGuard.message))return;const guard=modalGuard;modalGuard=null;guard?.onLeave?.();const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
 /* Clicking the backdrop is the same gesture as the corner control: it goes back if there is
    somewhere to go, and closes otherwise. A <dialog> reports a backdrop click as a click on the
    dialog itself, which is why the target test is the element and not a child. */
 dialog.addEventListener('click',event=>{if(event.target===dialog)actions.close();});
 /* Esc closes the dialog natively, which would skip the journey. Cancel it and go back instead. */
-dialog.addEventListener('cancel',event=>{if(modalBack){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
+dialog.addEventListener('cancel',event=>{if(modalBack||modalGuard){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
 const THEME_SAID={dark:'Dark theme (Brass and Slate).',light:'Light theme (Felt and Cream).',system:'The theme now follows this device’s light or dark setting.'};
 actions['set-theme']=async el=>{const choice=el.dataset.themeChoice;if(!THEME_SAID[choice]||choice===themeChoice())return;await commit({type:'preferences',values:{theme:choice}});notice(THEME_SAID[choice]);};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
