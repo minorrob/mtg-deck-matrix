@@ -5,7 +5,8 @@
  *   Band       one pile per deck and per Sell / Trade pile, By group the default; By status one choice away, remembered
  *   Once       the piles' counts add up to the table's total: no card on two piles
  *   Spread     opening a deck shows only that deck's cards, and its stacks stay that deck's when one is opened
- *   Drop       Move to… on a copy lists the places, and a place is Add / move to group, reviewed, then done
+ *   Drop       Move to… on a copy lists the places, and a place is Add / move to group, staged in the sitting (G6b-2)
+ *              and written by Review and confirm
  *   Status     Group piles by Status breaks a group into its card-state piles; there is no separate status band
  *   Lists      a General list laid on the row shows the cards filed in it, the places unchanged, remembered per device
  *
@@ -77,9 +78,10 @@ try {
   await dest.waitFor({timeout: 10000});
   ok(/Add \/ move to/.test(await dest.innerText()), "Move to… offers the Sell / Trade pile as Add / move to group");
   await dest.click();
-  await page.locator("#cm-dialog[open] h2", {hasText: "Add / move 1 record to a group"}).waitFor();
-  eq(await page.locator("#cm-dialog [name=groupId]").inputValue(), facts.trade[0], "the dialog opens on the pile it was dropped on");
-  await page.click("#cm-dialog button[type=submit]");
+  /* G6b-2: the drop is staged in the sitting, not reviewed on the spot; Review and confirm writes it. */
+  await page.locator(".cm-sitting", {hasText: "pending"}).waitFor({timeout: 15000});
+  ok(await page.evaluate((id) => globalThis.__cm.state.lots.find((x) => x.id === id).offer !== "available", lotId), "the drop is staged: the library is unchanged until Review and confirm");
+  await page.locator("[data-action=sitting-confirm]").first().click();
   await page.locator("#cm-dialog[open] button[type=submit]", {hasText: "Confirm change"}).click();
   await page.waitForFunction((id) => {const l = globalThis.__cm.state.lots.find((x) => x.id === id); return l && l.offer === "available";}, lotId, {timeout: 30000});
   checks += 1;
