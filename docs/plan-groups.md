@@ -178,10 +178,11 @@ G1 and G2 need no decisions and can start at once. G3–G6 wait on §8.
 | Step | What | State |
 |---|---|---|
 | G3a | A deck holds cards whether or not it is final: a draft reserves and holds copies; New deck from a group puts your copies in the box | merged (#421) |
-| G3b | Group templates and schema 3 → 4: one Bench, Commander deck groups kept by the model, To sell / trade, General; the migration, checked on Rob's library | #422 |
-| G3c | A draft works like a deck: assign, the sheet and Reserve available copies on a draft; a copy in a draft is one row, not a copy and a Draft list row; the live **Commander + 99** badge ("Legal · Commander + 99", "Not legal · Commander + 8 of 99") | next |
+| G3b | Group templates and schema 3 → 4: one Bench, Commander deck groups kept by the model, To sell / trade, General; the migration, checked on Rob's library | merged (#422) |
+| G3c | A draft works like a deck: assign, the sheet and Reserve available copies on a draft; a copy in a draft is one row, not a copy and a Draft list row; the live **Commander + 99** badge ("Legal · Commander + 99", "Not legal · Commander + 8 of 99") | merged (#423) |
 | G3d | The buy list for every deck, and Finalize fully a badge | **waits on D4**: a draft on the buy list needs a rule for owned copies elsewhere (reserved, or read live) |
 | G3e | A copy's physical place is its template group (bench, deck box, To sell / trade) | with G4 |
+| G4a | One **Add / move to group** for ticked copies and a row: into a deck's box (a seat the list calls for is reserved, any other copy stands in), onto the Bench, into a To sell / trade pile (offered), or onto a General list (filed; nothing moves); New group… makes one, and a Commander deck made there opens New deck from the group. The Library's bar loses Ordered…, Bought in store and Arrived; the To buy tab keeps them, and a row's Status is the stage choice (D1) | next |
 
 **Commander + 99, how it is kept.** The list still stores the commander among its hundred, and the screens
 read it as commander + 99. That changes no stored deck, no export, no game file and no legality rule

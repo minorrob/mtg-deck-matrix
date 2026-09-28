@@ -7,7 +7,7 @@
  *   Upload   his owned cards go into a new group through Library › Upload cards
  *   Deck     New deck from that group offers to put the copies he owns in the deck's box, ticked; they go in,
  *            each one the list calls for reserved for its seat (Target), the rest as substitutes
- *   Library  "Put in a physical deck" lists a draft deck, and no "Finalize a deck first" is left anywhere
+ *   Library  "Add / move to group" lists a draft deck, and no "Finalize a deck first" is left anywhere
  *   G3c      the hero badge reads Commander + 99 live; a copy in the draft is one Library row, not two
  *   Model    the model's own rule is in tests/collection-model.mjs (a draft deck reserves and holds copies)
  *
@@ -31,7 +31,7 @@ const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path
 {
   const src = readFileSync(path.join(ROOT, "crankmagic-collection.js"), "utf8");
   eq((src.match(/Finalize a deck first — a draft holds no/g) || []).length, 0, "no \"Finalize a deck first — a draft holds no …\" is left in the Library");
-  eq((src.match(/(finals|decks)=C\.state\.decks\.filter\(d=>!d\.archived&&d\.status==='final'\)/g) || []).length, 2, "of the Library's deck lists, only Ready to add's two (the roster menu and its picker, which read a finished list) are limited to finalized decks: the three that put copies in a deck list every deck");
+  eq((src.match(/(finals|decks)=C\.state\.decks\.filter\(d=>!d\.archived&&d\.status==='final'\)/g) || []).length, 2, "of the Library's deck lists, only Ready to add's two (the roster menu and its picker, which read a finished list) are limited to finalized decks: the others that put copies in a deck list every deck");
 }
 
 /* The cards: Quintorius and eight cards the catalog has in full. */
@@ -104,14 +104,14 @@ try {
   eq(chips.length, 1, `the card's dialog gives the deck one Assignment chip, its copy, and no Draft list chip beside it (${chips.join(" | ")})`);
   await page.locator("#cm-dialog [data-action=close]").first().click();
 
-  /* LIBRARY: Put in a physical deck lists the draft deck */
+  /* LIBRARY: Add / move to group lists the draft deck (G4 made it one action) */
   await page.goto(`${base}/index.html#cards`);
   await page.locator(".cm-table tbody tr input[type=checkbox]").first().waitFor({timeout: 60000});
   await page.locator(".cm-table tbody tr input[type=checkbox]").first().check();
-  await page.locator("[data-action=batch-place]").first().click();
-  await page.locator("#cm-dialog[open] h2", {hasText: "Put these copies in a physical deck"}).waitFor();
-  const options = await page.locator("#cm-dialog [name=deckId] option").allInnerTexts();
-  ok(options.includes(after.name), `Put in a physical deck lists the draft deck (${options.join(", ")})`);
+  await page.locator("[data-action=batch-move]").first().click();
+  await page.locator("#cm-dialog[open] h2", {hasText: "Add / move 1 record to a group"}).waitFor();
+  const options = await page.locator("#cm-dialog [name=groupId] option").allInnerTexts();
+  ok(options.includes("Quintorius pile · Commander deck"), `Add / move to group lists the draft deck's group (${options.join(", ")})`);
   await context.close();
 } finally {
   await close();
