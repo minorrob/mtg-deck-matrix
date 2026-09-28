@@ -127,12 +127,12 @@ try {
   await page.getByRole("tab", {name: /^Overview/}).waitFor({timeout: 30000});
   await page.waitForTimeout(800);
   await shot("05-create-deck-page");
-  /* Finalize is the step between testing and buying ("How a deck comes together": Test, Finalize,
-     Acquire): a saved draft asks for nothing until it is final, and then its hundred are wanted. */
-  await click("Finalize & reserve");
+  /* Finalize marks the list final (G3d, D4: a draft already reserves what you own and lists the rest to buy, so
+     finalizing is the badge, not the step that makes the buy list). */
+  await click("Finalize");
   await click("Confirm change");
   await page.getByRole("dialog").waitFor({state: "hidden"});
-  ok((await library()).decks.find((d) => d.id === saved.id).status === "final", "Finalize & reserve makes it final");
+  ok((await library()).decks.find((d) => d.id === saved.id).status === "final", "Finalize makes it final");
 
   /* 3 · EXPLORE. Follow a card into the graph. */
   await nav("Explore");
