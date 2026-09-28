@@ -17,7 +17,8 @@ const ok = (c, m) => { assert.ok(c, m); checks++; };
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks++; };
 const throws = (fn, m) => { assert.throws(fn); checks++; };
 
-const live = JSON.parse(readFileSync(path.join(ROOT, "data/live-state.json"), "utf8")).payload.state;
+const live = M.migrate(JSON.parse(readFileSync(path.join(ROOT, "data/live-state.json"), "utf8")).payload.state); // as the app reads a backup: migrated to the current schema first
+
 const frozen = JSON.stringify(live);
 const make = (store) => S.create({model: M, storage: store || S.memoryStore(), key: "test-sitting"});
 const name = (id) => (live.cards[id] || {}).name || id;

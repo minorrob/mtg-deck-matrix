@@ -58,7 +58,8 @@ eq(M.STAGES.map((x) => x.label), ["Watching", "To buy", "Ordered", "Owned"], "th
 eq(M.ROLES.map((x) => x.label), ["Target", "Substitute", "Upgrade", "Reserved"], "the roles: two in the box, two outside it");
 
 /* 2 and 3. Rob's library as committed. */
-const live = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state;
+const live = M.migrate(JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state); // as the app reads a backup: migrated to the current schema first
+
 /* The records a screen draws: copies and needs from the projection, the draft and option rows of each
    deck, and every group entry -- built as crankmagic-collection.js builds them. */
 const records = [...M.projection(live)];

@@ -652,4 +652,41 @@ assert.equal(M.localDate(''),null);assert.equal(M.localDate('not a date'),null);
   expectFailure('createDeck',{deckId:'deck:x',name:'X',commanders:['leader'],slots:[],kind:'other'},/deck or a lobby deck/);
   expectFailure('editDeck',{deckId:'d1',kind:'lobby-ish'},/deck or a lobby deck/);
 }
+
+// GROUPS HAVE TEMPLATES (Rob, 2026-09-28; docs/plan-groups.md, G3). A copy sits in one template group -- a deck, the
+// Bench, To sell / trade -- and in any number of General groups. A Commander deck group is the group its deck points to.
+{const saved=s;s=M.empty();
+ assert.deepEqual(s.groups.map(g=>[g.id,g.template]),[['group:bench','bench'],['group:to-trade','trade'],['group:to-buy','general']],'a new library starts with the Bench, To sell / trade and To Buy; Main Deck is gone');checks++;
+ run('cards',{cards});
+ run('createDeck',{deckId:'T1',name:'Templated',commanders:['leader'],slots:[{id:'t1c',cardId:'leader',quantity:1}]});
+ const own=M.deck(s,'T1').groupId;assert.equal(s.groups.find(g=>g.id===own).template,'commander','a deck\'s own group is a Commander deck group');checks++;
+ run('createGroup',{groupId:'group:pile',name:'Pile'});assert.equal(s.groups.find(g=>g.id==='group:pile').template,'general','a group made without a template is General');checks++;
+ run('createDeck',{deckId:'T2',name:'From the pile',commanders:['leader'],groupId:'group:pile',slots:[{id:'t2c',cardId:'leader',quantity:1}]});
+ assert.equal(s.groups.find(g=>g.id==='group:pile').template,'commander','the group a deck is made from becomes that deck\'s Commander group');checks++;
+ run('createGroup',{groupId:'group:binder',name:'Trade binder',template:'trade'});assert.equal(s.groups.find(g=>g.id==='group:binder').template,'trade');checks++;
+ expectFailure('createGroup',{name:'Another bench',template:'bench'},/already a Bench/);
+ expectFailure('createGroup',{name:'A deck',template:'commander'},/made with its deck/);
+ expectFailure('createGroup',{name:'Odd',template:'binder'},/Choose a group template/);
+ run('groupTemplate',{groupId:'group:to-buy',template:'limited'});assert.equal(s.groups.find(g=>g.id==='group:to-buy').template,'limited');checks++;
+ expectFailure('groupTemplate',{groupId:'group:bench',template:'general'},/stays the Bench/);
+ expectFailure('groupTemplate',{groupId:own,template:'general'},/changes with its deck/);
+ expectFailure('groupTemplate',{groupId:'group:binder',template:'commander'},/changes with its deck/);
+ expectFailure('deleteGroup',{groupId:'group:bench'},/The Bench stays/);
+ expectFailure('editDeck',{deckId:'T2',groupId:'group:bench'},/not a deck's box/);
+ expectFailure('editDeck',{deckId:'T2',groupId:'group:binder'},/not a deck's box/);
+ expectFailure('editDeck',{deckId:'T2',groupId:own},/already another deck's group/);
+ expectFailure('editDeck',{deckId:'T2',groupId:'group:to-buy'},/list of cards to buy/);
+ expectFailure('createDeck',{deckId:'T9',name:'On the bench',groupId:'group:bench'},/not a deck's box/);
+ assert.equal(s.groups.find(g=>g.id==='group:bench').template,'bench','the refused attach leaves the Bench the Bench');checks++;
+ run('editDeck',{deckId:'T2',groupId:null});assert.equal(s.groups.find(g=>g.id==='group:pile').template,'general','a group its deck lets go of is General again');checks++;
+ {const bad=structuredClone(s);bad.groups.find(g=>g.id==='group:binder').template='commander';assert.throws(()=>M.validate(bad),/group of its deck/);checks++;}
+ {const two=structuredClone(s);two.groups.find(g=>g.id==='group:binder').template='bench';assert.throws(()=>M.validate(two),/one Bench/);checks++;}
+ // SCHEMA 3 -> 4: every group gets its template from what it already was; an empty Main Deck goes, a used one stays.
+ {const v3=structuredClone(s);v3.schemaVersion=3;for(const g of v3.groups)delete g.template;
+  v3.groups.push({id:'group:main-deck',name:'Main Deck',entries:[],createdAt:null});
+  const m=M.migrate(v3);M.validate(m);
+  assert.deepEqual(Object.fromEntries(m.groups.map(g=>[g.id,g.template])),{'group:bench':'bench','group:to-trade':'trade','group:to-buy':'general',[own]:'commander','group:pile':'general','group:binder':'general'},'schema 3 groups get their templates, and the empty Main Deck goes');
+  const kept=structuredClone(v3);kept.groups.find(g=>g.id==='group:main-deck').entries=[{id:'entry:x',cardId:'ring',quantity:1}];
+  assert.equal(M.migrate(kept).groups.find(g=>g.id==='group:main-deck').template,'general','a Main Deck with cards in it stays, as General');checks+=2;}
+ s=saved;}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);
