@@ -313,7 +313,7 @@ const moveFor = (r, extra) => Object.assign({
   eq(built.refusals, [], "two Bench copies staged onto To Trade are both accepted");
   /* Each move folds to exactly what the Library's Add / move to group sends for that copy on its own. */
   let work = live; const expected = [];
-  for (const r of pair) { const {commands} = M.moveCommands(work, [r.id], trade.id); for (const c of commands) { expected.push(c); work = M.apply(work, {id: "x", confirmed: true, ...c}).state; } }
+  for (const r of pair) { const {commands} = M.moveCommands(work, [r.id], trade.id); for (const c of commands) { expected.push({confirmed: true, ...c}); work = M.apply(work, {id: "x", confirmed: true, ...c}).state; } }
   eq(built.commands, expected, "the batch is the Library's own moveCommands, move by move");
   ok(pair.every((r) => { const l = built.state.lots.find((x) => x.id === r.id); return l.offer === "available" && l.groupIds.includes(trade.id); }), "and the preview has them offered in To Trade");
   eq(JSON.stringify(live), frozen, "the library itself is untouched");
@@ -322,6 +322,31 @@ const moveFor = (r, extra) => Object.assign({
   gone.stage(moveFor(pair[0], {action: "moveto", arg: "group:gone", to: "Old binder", toStatus: ""}));
   ok(/Old binder/.test(gone.build(live).refusals[0].why), "a group that is gone is refused by name");
   ok(S.ACTIONS.has("moveto"), "moveto is one of the destinations a sitting can hold");
+}
+
+/* ---- a staged move that needs confirming is confirmed by the sitting's own receipt (G6d; found by the journeys walk) ----
+   A reserved copy, one in a deck's box or one in a pending deal asks the model for confirmation. The fold applies every
+   part confirmed -- Review and confirm is that confirmation -- so the batch it hands to Confirm must carry it too, or the
+   receipt the reader was shown can never be written. */
+{
+  const trade = live.groups.find((g) => g.template === "trade");
+  const held = reserved.find((r) => r.offer === "none");
+  const sb = make();
+  sb.stage(moveFor(held, {action: "moveto", arg: trade.id, to: trade.name, toStatus: ""}));
+  const built = sb.build(live);
+  eq(built.refusals, [], `a reserved copy (${name(held.cardId)}) staged onto To Trade is accepted`);
+  ok(built.commands.every((c) => c.confirmed === true), "and every command in its batch carries the confirmation the receipt gives");
+  const written = M.apply(live, {id: "confirm", type: "batch", confirmed: true, commands: built.commands, summary: "the sitting"}).state;
+  const moved = written.lots.find((l) => l.id === held.id);
+  ok(moved.groupIds.includes(trade.id) && moved.offer === "available" && !moved.allocation, "so Confirm writes it: offered in To Trade, and no longer reserved for a deck -- a copy for trade is for no deck");
+  /* And into another deck's box: a reserved copy moving decks is the other move that asks for confirmation. */
+  const other = live.decks.find((d) => d.groupId && !d.archived && d.id !== held.allocation.deckId && d.id !== (held.location && held.location.deckId));
+  const sb2 = make();
+  sb2.stage(moveFor(held, {action: "moveto", arg: other.groupId, to: other.name, toStatus: ""}));
+  const built2 = sb2.build(live);
+  eq(built2.refusals, [], `a reserved copy staged into ${other.name}'s box is accepted`);
+  const into = M.apply(live, {id: "confirm2", type: "batch", confirmed: true, commands: built2.commands, summary: "the sitting"}).state.lots.find((l) => l.id === held.id);
+  eq(into.location && into.location.deckId, other.id, `and Confirm puts it in ${other.name}'s box`);
 }
 
 /* ---- the sentence every surface uses for a move ---- */

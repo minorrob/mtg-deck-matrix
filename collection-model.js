@@ -771,8 +771,10 @@
     if(boxed.length)commands.push({type:'bulk',op:'bench',lotIds:ids(boxed)});
     if(g.template==='bench'){if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);
       notes.push(`${owned.length} record${owned.length===1?'':'s'} ${owned.length===1?'is':'are'} on the Bench${boxed.length?`, ${boxed.length} out of a deck's box`:''}${offered.length?`, ${offered.length} off Sell / Trade`:''}. Reservations stay.`);return {commands,notes};}
-    if(g.template==='trade'){const toOffer=owned.filter(l=>l.offer!=='available'&&l.offer!=='held');if(toOffer.length)commands.push({type:'bulk',op:'offer',offer:'available',lotIds:ids(toOffer)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
-      notes.push(`${owned.length} record${owned.length===1?' is':'s are'} offered for Sell / Trade in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}.`);return {commands,notes};}
+    if(g.template==='trade'){const toOffer=owned.filter(l=>l.offer!=='available'&&l.offer!=='held'),held=toOffer.filter(l=>l.allocation);
+      /* A copy offered for Sell / Trade is for no deck, so one reserved for a deck lets the reservation go first (G6d). */
+      if(held.length)commands.push({type:'bulk',op:'release',lotIds:ids(held)});if(toOffer.length)commands.push({type:'bulk',op:'offer',offer:'available',lotIds:ids(toOffer)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
+      notes.push(`${owned.length} record${owned.length===1?' is':'s are'} offered for Sell / Trade in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}${held.length?`, ${held.length} no longer reserved for a deck`:''}.`);return {commands,notes};}
     if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
     notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
   }
