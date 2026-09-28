@@ -8,6 +8,7 @@
  *   Deck     New deck from that group offers to put the copies he owns in the deck's box, ticked; they go in,
  *            each one the list calls for reserved for its seat (Target), the rest as substitutes
  *   Library  "Put in a physical deck" lists a draft deck, and no "Finalize a deck first" is left anywhere
+ *   G3c      the hero badge reads Commander + 99 live; a copy in the draft is one Library row, not two
  *   Model    the model's own rule is in tests/collection-model.mjs (a draft deck reserves and holds copies)
  *
  * Needs Playwright (GEOMETRY_REQUIRED=1 makes its absence a failure).
@@ -84,6 +85,24 @@ try {
   }, before.gid);
   eq([after.status, after.inBox, after.reserved, after.roles], ["draft", 9, 9, ["target"]], "the draft deck holds all 9 copies in its box, each reserved for its seat: Target, not Bench");
   await shot(page, "draft-deck-with-copies-1280");
+
+  /* G3c: the badge reads Commander + 99 live, and the deck's More menu offers its Draft list, not an empty buy list */
+  const legal = await page.locator(".cm-deck-hero .cm-legal-badge").innerText();
+  eq(legal, "Not legal · Commander + 8 of 99", "the hero badge counts the commander and the 99 apart, live, on a draft");
+  await page.locator("[data-action=deck-more-menu]").first().click();
+  ok(await page.locator("[data-action=deck-cards]", {hasText: "Draft list (0)"}).count() === 1 && await page.locator("[data-action=deck-buy-list]").count() === 0, "More offers the Draft list (0: every seat has its copy), not a buy list a draft does not have");
+  await page.keyboard.press("Escape");
+
+  /* G3c: a copy put in the draft is one Library row, not a copy row and a Draft list row */
+  await page.goto(`${base}/index.html#cards?deck=${encodeURIComponent(await page.evaluate((gid) => globalThis.__cm.state.decks.find((x) => x.groupId === gid).id, before.gid))}`);
+  await page.locator(".cm-table tbody tr.cm-row-card").first().waitFor({timeout: 60000});
+  const recs = await page.locator(".cm-table tbody tr.cm-row-card").evaluateAll((trs) => trs.map((t) => t.dataset.record));
+  eq([recs.length, recs.filter((x) => x.startsWith("plan:")).length], [9, 0], "the deck's Library shows its 9 copies once each, and no Draft list row for a seat a copy fills");
+  await page.evaluate((gid) => {const C = globalThis.__cm, d = C.state.decks.find((x) => x.groupId === gid); return C.inspector(C.state.lots.find((l) => l.groupIds.includes(gid) && !d.commanders.includes(l.cardId)).cardId);}, before.gid);
+  await page.locator("#cm-dialog[open] .cm-standing").waitFor();
+  const chips = await page.locator("#cm-dialog .cm-standing p").nth(1).locator("button").evaluateAll((bs) => bs.map((x) => x.title));
+  eq(chips.length, 1, `the card's dialog gives the deck one Assignment chip, its copy, and no Draft list chip beside it (${chips.join(" | ")})`);
+  await page.locator("#cm-dialog [data-action=close]").first().click();
 
   /* LIBRARY: Put in a physical deck lists the draft deck */
   await page.goto(`${base}/index.html#cards`);

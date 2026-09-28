@@ -341,9 +341,13 @@ M.validate(s);checks++;
    expectFailure('assign',{deckId:'B',cardId:'ring',assigned:0},/Review the reservations/);run('assign',{deckId:'B',cardId:'ring',assigned:0,confirmed:true});assert.equal(M.lot(s,'ring1').allocation,null);assert.equal(M.counters(s).owned,2);checks+=2;agree();}
   expectFailure('assign',{deckId:'B',cardId:'ring',assigned:2,confirmed:true},/lists 1 copy/);
   expectFailure('assign',{deckId:'B',cardId:'ring',assigned:1,boxed:2,confirmed:true},/Assign the copies before/);
-  expectFailure('assign',{deckId:'C',cardId:'land',assigned:1,confirmed:true},/Finalize/);
+  // A DRAFT TAKES COPIES TOO (G3c): assigning, the sheet and Reserve available copies all work on a draft; restoring is for archived decks.
+  {const t=M.apply(s,{type:'assign',id:'g3c-a',deckId:'C',cardId:'land',assigned:1,confirmed:true}).state;assert.equal(t.lots.filter(l=>l.allocation?.deckId==='C').reduce((n,l)=>n+l.quantity,0),1,'a draft deck takes an assigned copy');checks++;
+   const short=M.draftShort(t,M.deck(t,'C')),land=short.find(x=>x.slot.cardId==='land');assert.equal(land.quantity,land.slot.quantity-1,'the copy covers its seat on the Draft list: one row, not two');checks++;
+   const f=M.apply(s,{type:'fulfill',id:'g3c-f',deckId:'C'});assert.ok(f.state.revision===s.revision+1,'Reserve available copies runs on a draft');checks++;}
+  expectFailure('restoreDeck',{deckId:'A'},/not archived/);
   expectFailure('assign',{deckId:'A',cardId:'red',assigned:1,confirmed:true},/not in Deck A's list/);
-  assert.equal(M.plan(s,{cardId:'land',column:'a',deckId:'C',value:1}).refused,'Draft C is a draft; finalize it, or set its target.');checks++;
+  {const p=M.plan(s,{cardId:'land',column:'a',deckId:'C',value:1});assert.ok(!p.refused&&p.command,'the sheet assigns to a draft as it does to a final deck');checks++;}
   // TARGET: the copies rule, the color identity and the commander are the limits; 100 is not.
   expectFailure('target',{deckId:'A',cardId:'ring',quantity:2,confirmed:true},/one copy/);
   expectFailure('target',{deckId:'A',cardId:'red',quantity:1,confirmed:true},/color identity/);

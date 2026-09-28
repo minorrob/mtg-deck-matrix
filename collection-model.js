@@ -179,6 +179,12 @@
   function compatible(l,r){return l.cardId===r.cardId&&Object.entries(r.printing||{}).every(([k,v])=>!v||l.printing?.[k]===v);}
   function countFor(s,did,sid){return s.lots.filter(l=>l.allocation?.deckId===did&&l.allocation.slotId===sid).reduce((n,l)=>n+l.quantity,0);}
   const shortfall=(s,d,r)=>Math.max(0,r.quantity-countFor(s,d.id,r.id));
+  /* WHAT A DRAFT STILL WANTS (G3). A draft's committed seat is covered first by copies reserved to it -- a draft holds
+     copies since G3 -- then by free copies filed in the deck's group, each such copy covering one seat of its card.
+     What is left is the Draft list: the Library's rows and the card dialog both read it here, so a copy put in the
+     deck is one row, not a copy row and a Draft list row. */
+  function draftShort(s,d){const pool=new Map(),filed=cid=>d.groupId?s.lots.filter(l=>l.cardId===cid&&!l.allocation&&l.groupIds.includes(d.groupId)).reduce((n,l)=>n+l.quantity,0):0;
+    return d.slots.filter(r=>r.committed).map(r=>{const q=shortfall(s,d,r),have=pool.has(r.cardId)?pool.get(r.cardId):filed(r.cardId),use=Math.min(have,q);pool.set(r.cardId,have-use);return {slot:r,quantity:q-use};});}
   /* HOW MANY OF A CARD A DECK MAY CARRY. Basics and "any number of cards named" cards are
      unlimited; "up to seven cards named" is seven; everything else is one. Legality reads
      it, and so does the spreadsheet's target command, so the two never disagree. */
@@ -362,7 +368,6 @@
        boxes, then newly recorded ones straight into the box. */
     const subLots=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id),sub=subLots.reduce((n,l)=>n+l.quantity,0);
     if(col==='boxed'){
-      if(d.status!=='final')return {command:null,refused:`${d.name} is a draft; finalize it, or set its target.`,review:false,notes:[]};
       const physical=boxed+sub;if(value===physical)return {command:null,review:false,notes:['No change.']};
       const realWant=Math.min(value,t),subWant=value-realWant,commands=[],notes=[];let review=false;
       if(realWant!==boxed){const wantA=Math.max(a,realWant);commands.push({type:'assign',...intro,deckId:d.id,cardId:cardObj.id,assigned:wantA,boxed:realWant,confirmed:true});review=true;
@@ -379,7 +384,6 @@
       return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${value} ${name} in the physical deck`},review,notes};
     }
     if(col==='a'){
-      if(d.status!=='final')return {command:null,refused:`${d.name} is a draft; finalize it, or set its target.`,review:false,notes:[]};
       const wantA=value,wantBoxed=Math.min(boxed,value);
       if(wantA===a&&wantBoxed===boxed)return {command:null,review:false,notes:['No change.']};
       const commands=[],notes=[];
@@ -521,7 +525,7 @@
         else{if(n<before){let over=countFor(s,d.id,r.id)-n;for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id).sort((a,b)=>(inDeck(s,a)?1:0)-(inDeck(s,b)?1:0))){if(over<=0)break;const take=Math.min(over,l.quantity),part=split(l,take);part.allocation=null;release(part,c.destination);over-=take;}}r.quantity=n;if(n>before&&d.status==='final')satisfy(d,r.id);}
         const total=d.slots.filter(x=>x.purpose==='main').reduce((k,x)=>k+x.quantity,0);
         summary=`${d.name} lists ${n} ${cardObj.name} (${total} card${total===1?'':'s'}${total===100?'':', not 100'})`;break;}
-      case 'assign':{const d=deck(s,c.deckId);ensure(!d.archived&&d.status==='final','Finalize this deck before assigning copies to it.');for(const raw of c.cards||[])addCard(raw);const cardObj=card(s,c.cardId);
+      case 'assign':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore this deck before assigning copies to it.');for(const raw of c.cards||[])addCard(raw);const cardObj=card(s,c.cardId);
         const r=d.slots.find(x=>x.purpose==='main'&&x.cardId===cardObj.id);ensure(r,`${cardObj.name} is not in ${d.name}'s list; set its target first.`);
         const want=c.assigned===0?0:quantity(c.assigned);ensure(want<=r.quantity,`${d.name} lists ${r.quantity} cop${r.quantity===1?'y':'ies'} of ${cardObj.name}; raise the target to assign more.`);
         const boxedWant=c.boxed===undefined||c.boxed===null?null:(c.boxed===0?0:quantity(c.boxed));ensure(boxedWant===null||boxedWant<=want,'Assign the copies before putting them in the physical deck.');
@@ -571,7 +575,7 @@
       case 'finalize':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');ensure(d.status==='draft','This deck is already finalized.');const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));d.status='final';version(d);satisfy(d);summary=`Finalized ${d.name}; reserved available copies without creating ownership`;break;}
       case 'lock':{const d=deck(s,c.deckId);d.locked=!!c.locked;summary=`${d.locked?'Locked':'Unlocked'} ${d.name}`;break;}
       case 'archive':{const d=deck(s,c.deckId);ensure(!d.archived,'Deck already archived.');d.archived=true;version(d);for(const l of [...s.lots].filter(l=>l.allocation?.deckId===d.id))release(l,c.destination);summary=`Archived ${d.name}; released allocations and retained actual box locations`;break;}
-      case 'restoreDeck':{const d=deck(s,c.deckId);d.archived=false;d.status='draft';d.locked=false;summary=`Restored ${d.name} as a draft for availability review`;break;}
+      case 'restoreDeck':{const d=deck(s,c.deckId);ensure(d.archived,`${d.name} is not archived.`);d.archived=false;d.status='draft';d.locked=false;summary=`Restored ${d.name} as a draft for availability review`;break;}
       /* PERMANENT DELETION, and only of an archived deck. Archiving is the reversible step
          and it already released every allocation, so by the time a deck can be deleted no
          lot is reserved for it. What can still point at it: a lot's PHYSICAL location (the
@@ -639,7 +643,7 @@
       case 'swap':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the archived deck first.');for(const raw of c.cards||[])addCard(raw);card(s,c.cardId);version(d);const released=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);for(const l of released)l.allocation=null;r.cardId=c.cardId;r.printing=clone(c.printing||{});r.pinned=!!c.pinned;r.option=false;r.optionWhy='';if(c.commander)d.commanders=d.commanders.map(cid=>cid===c.commander?c.cardId:cid);const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of released)release(l,c.destination);if(d.status==='final'){if(c.lotId){let l=lot(s,c.lotId);warning(l);l=split(l,Math.min(l.quantity,shortfall(s,d,r)));l.allocation=null;allocate(l,d,r,l.quantity);}satisfy(d,r.id);}summary=`Replaced a slot in ${d.name}; ownership unchanged`;break;}
       case 'option':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');const parent=slot(s,d.id,c.replaces);ensure(parent.purpose==='main','Choose a main-deck slot.');for(const raw of c.cards||[])addCard(raw);const [r]=rows([{...c.option,committed:!!c.reserve,replaces:parent.id,purpose:c.option.purpose||'upgrade'}]);ensure(r.purpose!=='main','An option is separate from the main hundred.');d.slots.push(r);if(d.status==='final'&&c.reserve)satisfy(d,r.id);summary='Saved a linked upgrade or bracket option outside the main hundred';break;}
       case 'removeOption':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(r.purpose!=='main','Replace a main slot instead.');const releaseLots=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);d.slots=d.slots.filter(x=>x.id!==r.id);for(const l of releaseLots)release(l,c.destination);summary='Removed an optional commitment';break;}
-      case 'fulfill':{const d=deck(s,c.deckId);ensure(d.status==='final'&&!d.archived,'Finalize an available deck first.');satisfy(d);summary=`Reserved eligible unassigned copies for ${d.name}`;break;}
+      case 'fulfill':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore this deck before reserving copies for it.');satisfy(d);summary=`Reserved eligible unassigned copies for ${d.name}`;break;}
       /* SELL / TRADE IS A BENCH FLAG. A copy put up for sale or trade stops filling a deck's claim
          -- the deck reads To Buy again -- because a card that may leave cannot also be counted
          as the deck's. */
@@ -742,5 +746,5 @@
     return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

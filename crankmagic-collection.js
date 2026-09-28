@@ -21,14 +21,14 @@ const R=globalThis.CrankRules||{RULES:{capFloor:2,capPct:.1,localOnly:5,perCardM
 C.RULES=R.RULES;
 /* A DRAFT IS A LIST OF PLANS, AND A PLAN THAT ALREADY HAS ITS COPIES IS ACCOUNTED FOR. A draft
    deck's slots show as Draft list rows -- the deck's cards, in the deck's group, at the status
-   'draft' -- until copies filed under that group cover them, at which point the copy records
-   are the rows and the plan row shrinks by that many and then goes. So marking a draft card
-   Owned puts one owned row where the draft row was, rather than one of each. */
+   'draft' -- until copies reserved to the deck or filed under its group cover them, at which point
+   the copy records are the rows and the plan row shrinks by that many and then goes
+   (M.draftShort). So marking a draft card Owned, or putting a copy in the deck, puts one row where
+   the draft row was, rather than one of each. */
 function plans(d){
-  const st=lens();const pool=new Map(),filed=cardId=>d.groupId?st.lots.filter(l=>l.cardId===cardId&&!l.allocation&&l.groupIds.includes(d.groupId)).reduce((n,l)=>n+l.quantity,0):0;
+  const st=lens(),short=new Map(d.status==='draft'?M.draftShort(st,d).map(x=>[x.slot.id,x.quantity]):[]);
   return d.slots.filter(r=>d.status==='draft'||!r.committed).map(r=>{
-    let quantity=r.quantity;
-    if(r.committed){const have=pool.has(r.cardId)?pool.get(r.cardId):filed(r.cardId),use=Math.min(have,quantity);pool.set(r.cardId,have-use);quantity-=use;}
+    const quantity=r.committed?short.get(r.id)||0:r.quantity;
     return quantity<1?null:{recordId:'plan:'+d.id+':'+r.id,kind:r.committed?'draft':'option',deckId:d.id,slotId:r.id,cardId:r.cardId,card:C.card(r.cardId),quantity,source:'draft',placement:r.committed?'Draft list':'Suggestion',purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:r.printing,offer:'none',groupIds:d.groupId?[d.groupId]:[]};
   }).filter(Boolean);
 }
@@ -752,11 +752,11 @@ function tabletopDrop(pileId,ids){
           to:standin||v.asStandIn?'Substitute':'Physical deck'});},'Stage the move'));return;}
   if(action==='reserve'){
     const fixed=pile.key==='deck'?finals.find(d=>d.name===pile.label):null;
-    if(pile.key==='deck'&&!fixed)throw Error(`${pile.label} is not a finalized deck; only a finalized deck holds reservations.`);
+    if(pile.key==='deck'&&!fixed)throw Error(`${pile.label} is not one of your decks.`);
     const put=deckId=>stageRows(rows,{action:'reserve',deckId,deckName:M.deck(C.state,deckId).name,to:'Reserved'});
     if(fixed)return put(fixed.id);
     const decks=finals.filter(d=>rows.some(r=>{if(r.kind!=='lot')return false;let l;try{l=M.lot(C.state,r.id);}catch(err){return false;}return d.slots.some(x=>x.committed&&M.compatible(l,x)&&M.shortfall(C.state,d,x)>0);}));
-    if(!decks.length)throw Error('No finalized deck has an unfulfilled requirement for these cards.');
+    if(!decks.length)throw Error('No deck has an unfulfilled requirement for these cards.');
     form('Reserve for a deck',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+note('Only a deck whose list calls for the card and still lacks it can take the reservation; the physical box stays unchanged.')+note('Staged, not saved: this joins the sitting and is written when you confirm.'),v=>put(v.deckId),'Stage the move');return;}
   throw Error('That destination is not one a card can be moved to.');
 }
@@ -819,8 +819,8 @@ function sheet(params){
       +decks.map((d,i)=>{const p=r.perDeck[d.id],short=d.status==='final'&&p.t>p.a,pend=p.a-p.boxed;
         const marks=(p.option?'<span class="cm-sheet-opt" title="Flagged as an option: first to swap out">●</span>':'')+(p.pinned?'<span class="cm-sheet-opt cm-sheet-pinned" title="Pinned: kept whatever a swap suggests">■</span>':'');
         return live(r,'t',d.id,p.t,{cls:alt(i)+(short?' is-short':''),mark:marks,label:`${d.name}: copies of ${r.card.name} in the list`,title:short?`${d.name} lists ${p.t}, ${p.a} covered`:''})
-          +(d.status==='final'?live(r,'boxed',d.id,p.boxed+p.sub,{cls:alt(i)+(p.boxed&&p.boxed>=p.t?' is-done':''),mark:(pend>0?`<sup class="cm-sheet-pend" title="${pend} more reserved to ${e(d.name)}, owned and ready to add">+${pend}</sup>`:'')+(p.sub?`<sup class="cm-sheet-sub" title="${p.sub} cop${p.sub===1?'y':'ies'} of ${e(r.card.name)} standing in as ${p.sub===1?'a substitute':'substitutes'} in ${e(d.name)}: physically there, not called for by its list">ˢ${p.sub}</sup>`:''),label:`${d.name}: copies of ${r.card.name} physically in the deck`})
-            :`<td class="cm-sheet-num cm-sheet-muted${alt(i)}" title="A draft holds no copies; finalize it first">—</td>`);}).join('')+`</tr>`).join('');
+          +(!d.archived?live(r,'boxed',d.id,p.boxed+p.sub,{cls:alt(i)+(p.boxed&&p.boxed>=p.t?' is-done':''),mark:(pend>0?`<sup class="cm-sheet-pend" title="${pend} more reserved to ${e(d.name)}, owned and ready to add">+${pend}</sup>`:'')+(p.sub?`<sup class="cm-sheet-sub" title="${p.sub} cop${p.sub===1?'y':'ies'} of ${e(r.card.name)} standing in as ${p.sub===1?'a substitute':'substitutes'} in ${e(d.name)}: physically there, not called for by its list">ˢ${p.sub}</sup>`:''),label:`${d.name}: copies of ${r.card.name} physically in the deck`})
+            :`<td class="cm-sheet-num cm-sheet-muted${alt(i)}" title="An archived deck holds no copies; restore it first">—</td>`);}).join('')+`</tr>`).join('');
     const foot=`<tfoot><tr><th scope="row" class="cm-sheet-name">Whole library</th><td>${m.own}</td><td>${m.ordered}</td><td>${m.rows.reduce((n,r)=>n+r.bench,0)}</td><td class="${m.toBuy?'is-short':''}">${m.toBuy}</td>`
       +decks.map((d,i)=>{const t=m.totals[d.id];return `<td class="${(t.t!==100?'is-short':'')+alt(i)}" title="${e(d.name)} lists ${t.t} cards">${t.t}</td><td class="${alt(i).trim()}" title="${t.boxed+t.sub} cards in the physical deck: ${t.boxed} of the list${t.sub?` and ${t.sub} substitute${t.sub===1?'':'s'}`:''}; ${t.a} reserved">${t.boxed+t.sub}${t.a>t.boxed?`<sup class="cm-sheet-pend">+${t.a-t.boxed}</sup>`:''}${t.sub?`<sup class="cm-sheet-sub">ˢ${t.sub}</sup>`:''}</td>`;}).join('')+`</tr></tfoot>`;
     host.innerHTML=`<div class="cm-sheet-wrap"><table class="cm-table cm-sheet" aria-label="Collection spreadsheet">${head}<tbody>${body||`<tr><td colspan="${5+decks.length*2}" class="cm-muted cm-sheet-empty">No cards match. Clear the search, or add a card row.</td></tr>`}</tbody>${foot}</table></div>`;
@@ -1566,7 +1566,7 @@ actions['place-row']=el=>quantityAction(el,el.dataset.deck?'Put in '+M.deck(C.st
    box without a reservation, the deck counts it, and Ready to add asks for it back when a
    real copy is ready. A copy the list does call for is reserved on the way in instead. */
 actions['standin-row']=el=>{const d=M.deck(C.state,el.dataset.deck);return quantityAction(el,'Substitute in '+d.name,()=>`<div class="cm-full">${note(`Goes into ${e(d.name)} without a reservation, filling a seat while the real card is bought or on its way. ${e(d.name)} counts it as a substitute and Ready to add asks for it back when a real copy is ready. If the list does call for this card, it is reserved on the way in instead.`)}</div>`+f('Box label (optional)','box')+seatField(d.id)+`<div class="cm-full">${note('Naming the seat is optional and it is what the Change List reads: without it the pairing is worked out from the option slot, the type and the mana value.')}</div>`,(_,v)=>({type:'place',deckId:d.id,box:v.box,asStandIn:true,standInFor:v.standInFor||''}));};
-actions['reserve-row']=el=>quantityAction(el,'Reserve copies for a deck',l=>s('Target deck','deck',C.state.decks.filter(d=>d.status==='final'&&!d.archived&&d.slots.some(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>0)).map(d=>[d.id,d.name]),'')+note('This changes the reservation and exposes any donor deck shortfall. The physical box stays unchanged. Locked and In deck donors require this explicit confirmation.',true),(l,v)=>{if(!v.deck)throw Error('No finalized deck has a compatible unfulfilled requirement. Accept a matching replacement first.');const d=M.deck(C.state,v.deck),r=d.slots.find(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>=Number(v.quantity));if(!r)throw Error('This quantity exceeds the matching requirement. Reduce the quantity or choose another deck.');return {type:'allocate',deckId:d.id,slotId:r.id};});
+actions['reserve-row']=el=>quantityAction(el,'Reserve copies for a deck',l=>s('Target deck','deck',C.state.decks.filter(d=>!d.archived&&d.slots.some(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>0)).map(d=>[d.id,d.name]),'')+note('This changes the reservation and exposes any donor deck shortfall. The physical box stays unchanged. Locked and In deck donors require this explicit confirmation.',true),(l,v)=>{if(!v.deck)throw Error('No deck has a compatible unfulfilled requirement. Accept a matching replacement first.');const d=M.deck(C.state,v.deck),r=d.slots.find(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>=Number(v.quantity));if(!r)throw Error('This quantity exceeds the matching requirement. Reduce the quantity or choose another deck.');return {type:'allocate',deckId:d.id,slotId:r.id};});
 actions['release-row']=el=>quantityAction(el,'Release these copies',()=>note('The reservation becomes unfulfilled (To buy). Owned copies remain owned, with the same last confirmed physical location.'),()=>({type:'release',destination:'bench'}));
 actions['offer-row']=el=>quantityAction(el,'Sell / Trade collection',l=>s('Availability','offer',[['none','Remove from Sell / Trade'],['available','Available for sale / trade'],['held','Held for a pending deal']],l.offer)+note('Available offers remain candidates for builds. A pending deal releases a deck allocation and protects the copy from automatic reuse.'),(_,v)=>({type:'offer',offer:v.offer}));
 actions['dispose-row']=el=>quantityAction(el,'Record copies leaving your library',()=>s('Reason','reason',[['sold','Sold'],['traded','Traded away'],['lost','Lost'],['gifted','Gifted'],['correction','Inventory correction']],'sold')+note('Confirm only after the copies have left your ownership. This reduces owned quantity and restores any unfulfilled deck needs.',true),(_,v)=>({type:'dispose',reason:v.reason}));
