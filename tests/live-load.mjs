@@ -148,10 +148,8 @@ eq(real.summary.toBuyEntries,0);
    number per kind: Scryfall for what a card costs, the workbook's $ Each for what was paid.
    So every upgrade the file lists is priced as the catalog prices it wherever the catalog
    has a figure, and the workbook's number stands in only where it has none. */
-{const lookup=await bundledLookup();let priced=0;
- for(const u of liveDoc.upgrades){const c=lookup(u.card),p=Number(c&&c.price);if(!(Number.isFinite(p)&&p>0))continue;priced++;
-   ok(Math.abs(u.price-p)<0.005,`${u.deck} upgrade ${u.card} is priced ${u.price} by the file and ${p} by the catalog`);}
- ok(priced>=liveDoc.upgrades.length*0.8,`only ${priced} of ${liveDoc.upgrades.length} upgrades have a catalog price`);checks++;}
+/* Checked on a fresh build from the workbook, below, not on the committed file: the committed file's prices are the
+   market's on the day it was built, and a price moving since is not a failure (Rob, 2026-09-28). */
 ok(real.summary.options>=1&&real.summary.planned>=1);ok(real.state.decks.every(d=>d.groupId&&real.state.groups.some(g=>g.id===d.groupId)));
 M.validate(real.state);checks++;
 // and the committed saved state is that build, in the app's own backup format: it restores
@@ -194,6 +192,10 @@ eq(L.PASSWORD,'treycmload1');
     eq(n(doc.owned.bench),total('In Bench'));
     eq(boxes+n(doc.owned.bench),total('Own'));
     eq(n(doc.buy),total('Buy Count'));
+    {const lookup=await bundledLookup();let priced=0;
+     for(const u of doc.upgrades){const c=lookup(u.card),p=Number(c&&c.price);if(!(Number.isFinite(p)&&p>0))continue;priced++;
+       ok(Math.abs(u.price-p)<0.005,`${u.deck} upgrade ${u.card} is priced ${u.price} by the build and ${p} by the catalog`);}
+     ok(priced>=doc.upgrades.length*0.8,`only ${priced} of ${doc.upgrades.length} upgrades have a catalog price`);checks++;}
     eq(n(doc.ordered),total('Ordered'));
     eq(M.counters(built.state).owned,total('Own'));
     ok(doc.decks.every(d=>n(d.cards)===100));

@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-28T05:09:47.803Z",
+ "generatedAt": "2026-09-28T05:25:05.804Z",
  "generator": "tools/data-manifest.mjs",
  "count": 22,
  "files": [
@@ -40,22 +40,22 @@
   {
    "file": "data/cards.json",
    "schema": "cards@2",
-   "stamp": "2026-09-25T02:31:35.131Z",
+   "stamp": "2026-09-28T05:25:01.295Z",
    "generator": "tools/build-card-records.mjs",
-   "bytes": 4844484,
-   "sha256": "f2adfe773cf38d5344fb3428a29bc1e3f7deb42d746607e0480d5cde6a6ff2d8",
-   "version": 12,
+   "bytes": 4840974,
+   "sha256": "4dde4bd87622bdff8557fb59ee2f666cb7715368dcfb73fa77c7c26ebf51f6e7",
+   "version": 13,
    "served": true,
    "cache": "precached"
   },
   {
    "file": "data/card-facts.json",
    "schema": "card-facts@1",
-   "stamp": "2026-09-25T02:31:35.132Z",
+   "stamp": "2026-09-28T05:25:01.295Z",
    "generator": "tools/build-card-records.mjs",
-   "bytes": 491128,
-   "sha256": "64ea719bcfe8586ffc07cd5a8047fe2e5fe84c38d1e6dc98b66fd3f988a1bdd8",
-   "version": 9,
+   "bytes": 489897,
+   "sha256": "2621e41dbbae4a3d60ede59196c2643e0cfadad6fcef7651aca8c581c6340d70",
+   "version": 10,
    "served": true,
    "cache": "precached"
   },
@@ -84,11 +84,11 @@
   {
    "file": "data/commander-strategies.json",
    "schema": "commander-strategies@1",
-   "stamp": "2026-09-28T05:09:35.206Z",
+   "stamp": "2026-09-28T05:25:02.592Z",
    "generator": "tools/commander-strategies.mjs",
    "bytes": 628875,
-   "sha256": "3e30bf46709f48f8212296127932eb8cc41bcd16f80af351f45a4aa112dce452",
-   "version": 5,
+   "sha256": "3ca5f2398a73a38680ba09a87ae3f96be0090476a8d51e1dbf90eb8514d8fbc7",
+   "version": 6,
    "served": true,
    "cache": "on demand"
   },
@@ -163,9 +163,9 @@
    "schema": "graph@2",
    "stamp": "2026-09-11T17:28:45.280Z",
    "generator": "tools/graph-amplifiers.mjs",
-   "bytes": 16611199,
-   "sha256": "74d772160071c3c8b6f6c66c9740e3c264dd54d10066a1b5352d4bd74848020a",
-   "version": 21,
+   "bytes": 16611213,
+   "sha256": "99f97e6db117361278e7c41daeb752b6d9c168ea08cce6ac2fdc1c7d87090c63",
+   "version": 22,
    "served": true,
    "cache": "on demand"
   },
