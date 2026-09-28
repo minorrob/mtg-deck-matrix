@@ -45,8 +45,13 @@ the Table view show each card once. This plan covers all of it. It is built in s
 
 ## 3. The new model
 
+- **Rob, 2026-09-28: one template group per copy, any number of General groups.** A copy sits in exactly one
+  *template* group: Commander deck, 40-card deck (later), Bench, or To sell/trade. Those are the physical places.
+  It can also be in any number of **General** groups (for example "proliferate" or "high damage"). General groups
+  are assigned by hand and never move anything. Physical is therefore implied by the template, and General groups
+  are never physical. A physical place that is not a deck, such as "Binder 3", would be a later template.
 - **A group** is `{id, name, template, physical, …}`.
-  - `template` is one of `commander`, `limited`, `bench`, `trade`, or `list` (a plain group).
+  - `template` is one of `commander`, `limited`, `bench`, `trade`, or `general`.
   - `physical` is true or false.
   - **Physical groups are places.** A copy is in exactly one physical group at a time, like a real box, so a copy's *location* becomes its physical group.
   - **Non-physical groups are lists.** A card can be on any number of them, and nothing moves.
@@ -61,7 +66,10 @@ the Table view show each card once. This plan covers all of it. It is built in s
   - Roles are still worked out, now from list against contents.
   - **Target:** on the 99 and in the box.
   - **Substitute:** in the box, standing in for a card on the 99.
-  - **To add:** on the 99, owned, but in another group.
+  - **Owned elsewhere:** on the 99, owned, but in another group. This is shown as where the card is:
+    "Owned · on the Bench" or "Owned · in D1 Atraxa". It is worked out live, never stored or locked, and nothing
+    "becomes" it. **The Pull list** (today's "Ready to add") lists these cards: what to pull, and from where.
+  - **Over 100 is allowed.** A deck group can hold more than 100 cards and shows **Not legal** as a warning.
   - **To buy:** on the 99 and not owned.
 - **Bench** is a physical group with the `bench` template: always there, and cannot be deleted.
 - **To sell/trade** is a physical group with the `trade` template. The `offer` flag becomes "is in a To sell/trade group" (decision D2).
@@ -167,12 +175,14 @@ G1 and G2 need no decisions and can start at once. G3–G6 wait on §8.
 
 ## 8. Decisions for Rob
 
+Rob agreed D1–D3 and D5–D7 on 2026-09-28, with General groups as in §3. D4 awaits his answer.
+
 | # | Question | Recommendation |
 |---|---|---|
 | D1 | With "Ordered…", "Bought in store" and "Arrived" gone from the Library, where does a copy's stage change? | A card's row menu keeps one **Stage** choice (Watching, To buy, Ordered, Owned). The Orders tab keeps order tracking (vendor, arrival, prices). |
 | D2 | Is To sell/trade physical, a binder a copy sits in? | **Yes.** A copy in it is not in a deck, and the `offer` flag becomes "is in a To sell/trade group". |
 | D3 | The "Main Deck" starter group means nothing to the model. Remove it? | **Remove it** when empty (yours is). |
-| D4 | Reservations: keep "owned elsewhere, meant for this deck" as a state? | **Keep it, as "To add"** (it drives Ready to add). Drop reserving as a separate step: it follows from the list. |
+| D4 | Reservations: keep "owned elsewhere, meant for this deck" as a state? | Rob questioned it (2026-09-28). The case for keeping it, reworded: it is worked out live (never stored or locked) and shown as where the card is ("Owned · on the Bench", "Owned · in D1"), so owned cards never land on the buy list, and the Pull list says what to pull from where. **Awaiting Rob.** |
 | D5 | Can a copy be in a physical group and on lists at once? | **Yes.** One physical place, any number of lists. |
 | D6 | The Table view's bottom row: physical groups only, or lists too? | **Physical groups by default**, lists addable. That keeps "each card once" true. |
 | D7 | The 40-card template (Limited) | **Name it now, build it later**, as agreed. Until then it behaves as a plain physical group. |
