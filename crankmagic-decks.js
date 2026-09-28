@@ -517,6 +517,7 @@ function commanderDeck(groupId,query=''){
 }
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
 const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
+C.groupDeck=gid=>groupDeck(gid);
 function groupDeck(groupId){
   const g=C.state.groups.find(x=>x.id===groupId);
   if(!g)throw Error('Choose a collection group.');
