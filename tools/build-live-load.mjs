@@ -429,8 +429,13 @@ export async function newestWorkbook(){
   ensure(books.length,'No *Master*.xlsx under data/source/ and no workbook named.');
   return fileURLToPath(new URL(books[books.length-1],dir));
 }
-/* Same collection, ignoring the timestamp: what --check compares. */
-export const same=(a,b)=>JSON.stringify({...a,savedAt:null})===JSON.stringify({...b,savedAt:null});
+/* Same collection, ignoring the timestamp and the market prices: what --check compares. PRICES ARE NOT A
+   CORRECTNESS FACT (Rob, 2026-09-28). A buy row's price and an upgrade's price are the catalog's market figures,
+   which move every day; a data refresh that re-read them made this check call Rob's collection "stale" when not
+   one card, count or deck had changed. The cards, the counts, where they are and what was paid are still compared,
+   exactly; the diff above still reports the buy list's total, for the reader. */
+const priceless=d=>d&&{...d,savedAt:null,buy:(d.buy||[]).map(r=>r.slice(0,2)),upgrades:(d.upgrades||[]).map(({price,...u})=>u)};
+export const same=(a,b)=>JSON.stringify(priceless(a))===JSON.stringify(priceless(b));
 
 /* WHAT CHANGED, PER DECK, AGAINST THE COMMITTED FILE. Every line here should trace to a
    change Rob asked for; a difference he did not report goes back to him before the commit. */
