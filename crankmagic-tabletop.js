@@ -964,7 +964,9 @@
       } else {
         /* The selection (plan §2.2): on the center of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
-        const L = {w: 182}, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
+        /* A fanned card is 182 wide and 5:7 tall; the stage and the mat are measured from both (the height went missing in
+           R3.9b and left them NaN, G6d). */
+        const L = {w: 182, h: Math.round(182 * 7 / 5)}, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
         const fanW = L.w + step * (n - 1), x0 = Math.max(16, (width - fanW) / 2);
         const say = hooks.describe || ((r) => ({status: r.status || "", price: r.card && r.card.price != null ? "$" + Number(r.card.price).toFixed(2) : "", deck: ""}));
         const fan = selected.map((r, i) => { const d = say(r) || {}; return cardFace(r, {ghost: isGhost(r), size: "fan", big: true, cls: "cm-tt-chosen", style: `left:${Math.round(x0 + i * step)}px;top:${Math.round(Math.abs(i - (n - 1) / 2) * 6)}px;transform:rotate(${((i - (n - 1) / 2) * 3).toFixed(1)}deg);z-index:${i + 1};`}) + ""; }).join("");

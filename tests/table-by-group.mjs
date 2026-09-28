@@ -96,6 +96,17 @@ try {
   ok(/^Target, /.test(byStatus[0]), `and in the order a deck is finished, Target first (${byStatus[0]})`);
   eq(await page.locator("select[name=tabletopArrange]").count(), 0, "there is no second arrangement: the status piles are a breakout, not a band");
   await shot(page, "table-d1-by-status-1400");
+  /* PUT AWAY, THE WHOLE TABLE AGAIN (G6d; found by the journeys walk): leaving an opened group -- Escape, or Back to Play
+     Space -- puts the table back at rest, so the stacks are the whole table's again, not that group's. */
+  const whole = async () => (await page.locator(".cm-tt-mat [data-pile^='group:status:']").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")))).reduce((n, l) => n + countOf(l), 0);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction((n) => [...document.querySelectorAll(".cm-tt-mat [data-pile^='group:status:']")].reduce((t, b) => t + Number((/, (\d+) cards?/.exec(b.getAttribute("aria-label")) || [])[1] || 0), 0) > n, d1Count, {timeout: 15000}).catch(() => {});
+  ok(await whole() > d1Count, "Escape puts D1 away: the stacks are the whole table's again");
+  await page.locator(`.cm-tt-mat [data-pile='place:${d1.gid}']`).click();
+  await page.waitForFunction((n) => [...document.querySelectorAll(".cm-tt-mat [data-pile^='group:status:']")].reduce((t, b) => t + Number((/, (\d+) cards?/.exec(b.getAttribute("aria-label")) || [])[1] || 0), 0) === n, d1Count, {timeout: 15000});
+  await page.locator("[data-action=tt-rest]").first().click();
+  await page.waitForTimeout(800);
+  ok(await whole() > d1Count, "and so does Back to Play Space");
 
   /* LISTS ON THE TABLE: a General list laid on the row shows its cards, and the places do not change */
   await page.keyboard.press("Escape");

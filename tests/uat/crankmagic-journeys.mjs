@@ -310,17 +310,14 @@ try{
   {const w0=await page.locator('.cm-tt-grid .cm-tt-card').first().evaluate(el=>el.offsetWidth);await slide('.cm-tt-strip.is-top [data-card-scale]','max');await page.waitForTimeout(300);ok((await page.locator('.cm-tt-grid .cm-tt-card').first().evaluate(el=>el.offsetWidth))>w0,'the card-size slider makes the cards bigger');ok((await page.locator('.cm-tt-grid .cm-tt-card').count())<=40);}
   await slide('.cm-tt-strip.is-top [data-card-scale]',100);await page.waitForTimeout(200);
   {const pages=Number((await page.locator('.cm-tt-strip.is-top .cm-tt-pager span').innerText()).match(/of (\d+)/)[1]);if(pages>1){await page.locator('.cm-tt-strip.is-top [data-tt=page][aria-label="Next page"]').click();await page.waitForTimeout(200);ok(!/· 1–/.test(await strip()));await page.locator('.cm-tt-strip.is-top [data-tt=page][aria-label="Previous page"]').click();await page.waitForTimeout(200);}else{ok(await page.locator('.cm-tt-strip.is-top [data-tt=page][aria-label="Next page"]').isDisabled(),'one page, so Next is disabled');}}
-  /* Single cards, not stacks (G6b-2): a stack's ×N badge sits over its tick, so a click there picks
-     the stack up rather than ticking it -- an app fault this journey reports rather than walks. */
+  /* Single cards, not stacks (G6b-2): a stack carries every copy under it, so three picks are three cards on the stage
+     only when each is one card. */
   const cards=page.locator('.cm-tt-grid .cm-tt-card:not(.is-stack)');ok(await cards.count()>=3,'three single cards to tick and pick');const picked=[await cards.nth(0).getAttribute('data-n'),await cards.nth(1).getAttribute('data-n'),await cards.nth(2).getAttribute('data-n')];
   await cards.nth(0).locator('.cm-tt-tick').click();await page.waitForTimeout(150);await cards.nth(1).locator('.cm-tt-tick').click();await page.waitForTimeout(150);eq(await page.locator('.cm-tt-grid .cm-tt-card.is-ticked').count(),2);ok(/Select 2 ticked/.test(await page.locator('.cm-tt-strip.is-top').innerText()));
   await cards.nth(2).click();await page.locator('.cm-tt-stage').waitFor({timeout:5000});eq(await page.locator('.cm-tt-stage .cm-tt-card').count(),3);eq(await page.locator('.cm-tt-grid').count(),0);
   eq((await page.locator('.cm-tt-captions li strong').allInnerTexts()).sort(),picked.slice().sort());ok((await page.locator('.cm-tt-captions .cm-tt-pill').allInnerTexts()).every(x=>x===biggest.label));
-  /* The arrow is pressed by its own click, not by a pointer at its place: with two or more cards on
-     the stage the mat's height is computed from a size the card-size slider change (R3.9b) left
-     undefined, so the mat collapses and a pointer finds nothing -- an app fault this journey
-     reports rather than walks. */
-  await page.getByRole('button',{name:`Back to ${biggest.label}`,exact:true}).evaluate(b=>b.click());await page.locator('.cm-tt-grid').waitFor();eq(await page.locator('.cm-tt-stage').count(),0);
+  /* The arrow is pressed where it stands: the mat keeps its height with several cards on the stage (G6d). */
+  await page.getByRole('button',{name:`Back to ${biggest.label}`,exact:true}).click();await page.locator('.cm-tt-grid').waitFor();eq(await page.locator('.cm-tt-stage').count(),0);
   await cards.nth(0).click();await page.locator('.cm-tt-stage').waitFor({timeout:5000});eq(await page.locator('.cm-tt-stage .cm-tt-card').count(),1);
   /* TB5: one card on the stage brings its facts, a picture size, and Previous / Next through the pile. */
   eq(await page.locator('.cm-tt-stage.is-solo .cm-tt-info').count(),1,'one card on the stage brings its facts');ok(/Inspect card/.test(await page.locator('.cm-tt-info').innerText()));
@@ -398,10 +395,10 @@ try{
    ok((await page.locator('.cm-tt-drawer-strip .cm-tt-card').count())>0,'and its cards are in the drawer');
    /* A tick in the drawer is a tick, not a click on the mat: a pointer captured on press used to
       retarget the click to the strip, which the mat read as "clicked away" and put the pile down. */
-   /* A single card: a stack's tick is under its ×N badge (see TB2). */
-   await page.locator('.cm-tt-drawer-strip .cm-tt-card:not(.is-stack)').first().locator('.cm-tt-tick').click();await page.waitForTimeout(300);
+   /* The first card, a stack or not: a stack's count sits clear of its tick (G6d). */
+   await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(300);
    eq(await page.locator('.cm-tt-drawer-strip .cm-tt-card.is-ticked').count(),1,'ticking a card in the drawer keeps the pile open');
-   await page.locator('.cm-tt-drawer-strip .cm-tt-card:not(.is-stack)').first().locator('.cm-tt-tick').click();await page.waitForTimeout(200);
+   await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(200);
    /* AND A DRAG THAT ENDS ANYWHERE IS NOT A CLICK EITHER (Rob, 15 September). The tick fix moved
       the pointer capture off the press and onto the first 8px of travel, which cured the tick but
       not the drag: a completed press-and-release still leaves a click behind, the capture retargets
@@ -607,10 +604,8 @@ try{
    eq([(await state()).revision,await page.locator('.cm-sitting').count(),await page.evaluate(()=>localStorage.getItem('cm-tabletop-sort'))],[rev0+1,0,null],'Put the pile away ends it; nothing is staged or written');
    await page.keyboard.press('Escape');await page.waitForTimeout(200);}
   /* THE BACK ARROW AT EVERY LEVEL (§2.4): the laid-out pile in the drawer carries one, and it comes
-     home to the board. The table is reloaded first: a place opened earlier (the Bench, here) keeps
-     the group piles to its own stacks even after Back to Play Space or Escape, an app fault this
-     journey reports rather than walks. */
-  {await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});await byStatus();await page.locator(stPile('Watched')).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+     home to the board. Escape put the Bench away above, so the piles are the whole table's again (G6d). */
+  {await byStatus();await page.locator(stPile('Watched')).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    eq(await page.locator('.cm-tt-strip.is-top .cm-tt-back').count(),1,'a laid-out pile carries a back arrow');
    await page.locator('.cm-tt-strip.is-top .cm-tt-back').click();await page.waitForTimeout(400);
    eq(await page.locator('.cm-tt-grid').count(),0,'and it comes home to the board');}

@@ -66,6 +66,9 @@ try {
   ok(stackN > 1 && new RegExp(`, ${stackN} copies`).test(await stack.getAttribute("aria-label")), `identical copies are one stack with a count (${stackName} ×${stackN})`);
   const faces = await page.locator(".cm-tt-drawer .cm-tt-card[data-record]").evaluateAll((cs) => cs.map((c) => c.dataset.n));
   eq([faces.filter((n) => n === stackName).length, twin.ids.length, stackN], [1, 2, twin.copies], `${stackName}'s two records are one face in the drawer, counting all ${twin.copies} copies`);
+  /* The count never sits on the tick (G6d; found by the journeys walk): the point under a stack's tick is the tick, so
+     ticking a stack ticks it rather than picking it up. */
+  ok(await stack.evaluate((el) => { const t = el.querySelector(".cm-tt-tick").getBoundingClientRect(), hit = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return Boolean(hit && hit.closest(".cm-tt-tick")); }), "the stack's tick is uncovered: its count sits clear of it");
 
   /* PILES: drag the stack onto New pile */
   await page.locator(".cm-tt-sorting").waitFor();
@@ -121,6 +124,21 @@ try {
   const after = await page.evaluate(([list, gid]) => {const C = globalThis.__cm; return {rev: C.state.revision, all: list.every((id) => {const l = C.state.lots.find((x) => x.id === id); return l && l.groupIds.includes(gid) && (l.source !== "owned" || l.offer === "available");})};}, [ids, trade]);
   eq(after, {rev: rev0 + 1, all: true}, "Review and confirm writes every card into To Trade as one revision");
   eq(await pending(), 0, "and the sitting is closed");
+
+  /* SEVERAL CARDS CHOSEN (G6d; found by the journeys walk): tick two, choose a third, and the three stand on the stage
+     with the mat whole around them -- the stage and the mat have a height, and Clear selection can be pressed. */
+  await page.locator("[data-pile='bench']").click();
+  const singles = page.locator(".cm-tt-drawer .cm-tt-card[data-record]:not(.is-out):not(.is-stack)");
+  await singles.nth(2).waitFor({timeout: 30000});
+  await singles.nth(0).locator(".cm-tt-tick").click();
+  await singles.nth(1).locator(".cm-tt-tick").click();
+  await singles.nth(2).click();
+  await page.locator(".cm-tt-stage .cm-tt-card").nth(2).waitFor({timeout: 15000});
+  const geom = await page.evaluate(() => [document.querySelector(".cm-tt-stage").getBoundingClientRect().height, document.querySelector(".cm-tt-mat").getBoundingClientRect().height]);
+  ok(geom[0] > 200 && geom[1] > geom[0], `three chosen cards stand on a stage with a height, inside a mat that holds it (${geom.map(Math.round).join(" in ")}px)`);
+  await page.locator(".cm-tt-stage [data-tt=clear]").click({timeout: 5000});
+  await page.waitForFunction(() => !document.querySelector(".cm-tt-stage"), null, {timeout: 10000});
+  checks += 1;
 
   /* AWAY: a pile put away was only ever a thought */
   await page.locator("[data-pile='bench']").click();

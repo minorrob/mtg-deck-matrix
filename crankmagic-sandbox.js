@@ -129,7 +129,9 @@
         }
         if (!ok) continue;
         work = next;
-        for (const part of made) commands.push(part);
+        /* The receipt is the confirmation: every part was applied confirmed, so it goes to Confirm confirmed, or a move of a
+           reserved, boxed or deal-held copy the reader has reviewed would be refused as it is written (G6d). */
+        for (const part of made) commands.push(Object.assign({ confirmed: true }, part));
       }
       return { state: work, commands, refusals };
     }
