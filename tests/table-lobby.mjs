@@ -99,8 +99,10 @@ async function person(email, viewport, {play = true} = {}) {
   await page.goto("about:blank");   /* so the next address loads the page afresh, with the marks above */
   return {context, page};
 }
-const pageText = (page, sel) => page.locator(sel).innerText();
-const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.innerText || ""), [sel, re.source], {timeout});
+/* The words as written (A1): Moss & Iron sets headings in capitals, so a read turns text-transform off for its own
+   instant and reads innerText, line breaks and all. */
+const pageText = (page, sel) => page.locator(sel).evaluate((el) => { const s = document.createElement("style"); s.textContent = "*{text-transform:none!important}"; document.head.append(s); const t = el.innerText; s.remove(); return t; });
+const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => { const el = document.querySelector(s); if (!el) return false; const st = document.createElement("style"); st.textContent = "*{text-transform:none!important}"; document.head.append(st); const t = el.innerText; st.remove(); return new RegExp(src).test(t); }, [sel, re.source], {timeout});
 
 try {
   /* SHUT: without the mark, Coming Soon. */
@@ -125,7 +127,7 @@ try {
   await rob.page.click("[data-action=table-create]");
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
-  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allInnerTexts(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
   ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
   const wide = await panelReading(rob.page);
@@ -201,7 +203,7 @@ try {
   await maya.page.goto(link.replace(/^https?:\/\/[^/]+/, base).replace("/index.html", "/index.html"));
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
-  eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").innerText()).trim(), "Seat 2 · You", "Maya lands on her seat, as herself");
+  eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "Maya lands on her seat, as herself");
   ok(!/\d+ cards/.test(await pageText(maya.page, ".cm-lobby-seat[data-seat='0']")), "she sees Rob's deck by name, never its cards");
   ok(await maya.page.getAttribute(".cm-lobby-seat[data-seat='0']", "data-mat") === "forge" && !(await maya.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]").count()) && await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-mat]").count() === 1, "she sees Rob's mat, and chooses only her own");
   const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

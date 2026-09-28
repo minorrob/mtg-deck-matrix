@@ -39,7 +39,7 @@ try {
 
   /* 1. The Menu, slimmed. */
   await openMenu(page);
-  eq(await entries(page), ["Dark · Brass & Slate", "Light · Felt & Cream", "Match system", "Settings", "Save a backup file", "Restore from a backup file",
+  eq(await entries(page), ["Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt", "Settings", "Save a backup file", "Restore from a backup file",
     "Help & glossary", "Take a Tour", "Send Feedback", "Share CrankMagic by email", "Show a QR code"], "the Menu holds what INTAKE §4.7 lists, in order");
   for (const moved of ["Export as Excel", "Email the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
     ok(!(await entries(page)).includes(moved), `${moved} has left the Menu`);
@@ -63,11 +63,16 @@ try {
 
   /* 3. The theme, from Settings. */
   await toSettings(page);
-  await page.locator(".cm-settings").getByRole("button", {name: "Light · Felt & Cream"}).click();
+  /* A1: four swatch cards, each drawn in its own theme's colors and face. */
+  eq(await page.$$eval(".cm-settings .cm-theme-card", (bs) => bs.map((b) => b.getAttribute("aria-label"))), ["Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "Settings shows the four themes as swatch cards");
+  const swatchBg = await page.$$eval(".cm-settings .cm-theme-swatch", (ss) => ss.map((x) => getComputedStyle(x).backgroundColor));
+  eq(new Set(swatchBg).size, 4, `each swatch is drawn in its own theme's ground (${swatchBg.join(", ")})`);
+  eq(await page.$eval(".cm-settings .cm-theme-card[data-theme-choice='moss-iron'] strong", (el) => [getComputedStyle(el).fontFamily.includes("Barlow Condensed"), getComputedStyle(el).textTransform]), [true, "uppercase"], "and Moss & Iron's name is in its own face, Barlow Condensed capitals");
+  await page.locator(".cm-settings").getByRole("button", {name: "Felt & Cream", exact: true}).click();
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "light");
-  eq(await page.$$eval("[data-theme-choice][aria-pressed=true]", (bs) => bs.map((b) => b.dataset.themeChoice)), ["light", "light"], "Light chosen in Settings is pressed in Settings and in the Menu alike");
-  await page.locator(".cm-settings").getByRole("button", {name: "Dark · Brass & Slate"}).click();
-  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
+  eq(await page.$$eval("[data-theme-choice][aria-pressed=true]", (bs) => bs.map((b) => b.dataset.themeChoice)), ["felt-cream", "felt-cream"], "Felt & Cream chosen in Settings is pressed in Settings and in the Menu alike");
+  await page.locator(".cm-settings").getByRole("button", {name: "Moss & Iron", exact: true}).click();
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.palette === "moss-iron");
 
   /* 4. Reduce motion. */
   const motion = () => page.evaluate(() => ({attr: document.documentElement.dataset.motion || null, reduced: globalThis.CrankMotion.reduced(),

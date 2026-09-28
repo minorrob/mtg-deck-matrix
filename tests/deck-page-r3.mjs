@@ -124,7 +124,7 @@ try {
   const order = await page.evaluate(() => { const f = document.querySelector(".cm-fidelity"), sc = document.querySelector(".cm-report-score"); return {before: Boolean(f.compareDocumentPosition(sc) & Node.DOCUMENT_POSITION_FOLLOWING), above: f.getBoundingClientRect().bottom <= sc.getBoundingClientRect().top}; });
   ok(order.before && order.above, `the fidelity notice sits above the score: ${JSON.stringify(order)}`);
   const fidelity = await page.locator(".cm-fidelity").innerText();
-  ok(/Fidelity: Medium/.test(fidelity) && /2 cards the engine could not read/.test(fidelity), `two unread cards make it Medium, and it says so: ${fidelity.split("\n").slice(0, 2).join(" / ")}`);
+  ok(/Fidelity: Medium/i.test(fidelity) && /2 cards the engine could not read/.test(fidelity), `two unread cards make it Medium, and it says so: ${fidelity.split("\n").slice(0, 2).join(" / ")}`);
   ok(/What any Measure is/.test(fidelity), "and the measurement's own limits sit under the notice");
   eq([await page.locator(".cm-report-number").textContent(), await page.locator(".cm-report-score").getByText("of 100").count()], ["78", 1], "the score reads 78 of 100");
   eq(await page.$$eval(".cm-report-checks tbody tr", (rows) => rows.map((r) => [r.querySelector("th").textContent, r.lastElementChild.textContent])),
@@ -136,7 +136,7 @@ try {
   await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}&report=${encodeURIComponent(stale)}`);
   await page.locator(".cm-fidelity").waitFor();
   const low = await page.locator(".cm-fidelity").innerText();
-  ok(/Fidelity: Low/.test(low) && /list has changed/.test(low), `a report of a list the deck no longer holds is Low, and says why: ${low.split("\n").slice(0, 2).join(" / ")}`);
+  ok(/Fidelity: Low/i.test(low) && /list has changed/.test(low), `a report of a list the deck no longer holds is Low, and says why: ${low.split("\n").slice(0, 2).join(" / ")}`);
   await page.getByRole("link", {name: "Back to deck"}).click();
   await page.locator(".cm-deck-hero h1").waitFor();
   ok(!/report=/.test(page.url()), "Back to deck returns to the deck");

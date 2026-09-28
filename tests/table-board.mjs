@@ -116,8 +116,10 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   await page.goto("about:blank");
   return {context, page};
 }
-const text = (page, sel) => page.locator(sel).first().innerText();
-const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => new RegExp(src).test(document.querySelector(s)?.innerText || ""), [sel, re.source], {timeout});
+/* The words as written (A1): Moss & Iron sets headings in capitals, so a read turns text-transform off for its own
+   instant and reads innerText, line breaks and all. */
+const text = (page, sel) => page.locator(sel).first().evaluate((el) => { const s = document.createElement("style"); s.textContent = "*{text-transform:none!important}"; document.head.append(s); const t = el.innerText; s.remove(); return t; });
+const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => { const el = document.querySelector(s); if (!el) return false; const st = document.createElement("style"); st.textContent = "*{text-transform:none!important}"; document.head.append(st); const t = el.innerText; st.remove(); return new RegExp(src).test(t); }, [sel, re.source], {timeout});
 const views = (email) => frames[email].map((f) => JSON.parse(f)).filter((f) => f.view).map((f) => f.view);
 
 try {
@@ -200,7 +202,7 @@ try {
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
   await brightLand.click();
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
-  ok(/land drop used/.test(await text(active.page, ".cm-board-lands")), "tapping it plays it: Lands · 1, the land drop used");
+  ok(/land drop used/i.test(await text(active.page, ".cm-board-lands")), "tapping it plays it: Lands · 1, the land drop used");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
@@ -601,7 +603,7 @@ try {
     table: {schema: "CrankMagicTableResult@1", tableId: "aitable1", matchId: "aitable1g1", seatId: "s0", ai: true, reason: "last one standing", deckVersion: 2}}, {renderView: false}).then(() => "", (error) => error.message));
   eq(committed, "", "a table result with an AI seat is taken by the library");
   await rob.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D3")}`);
-  await rob.page.waitForFunction(() => /Atraxa/.test(document.querySelector(".cm-deck-hero h1")?.innerText || "") && document.querySelector("#cm-sec-record .cm-record-table"), null, {timeout: 30000});
+  await rob.page.waitForFunction(() => /Atraxa/.test(document.querySelector(".cm-deck-hero h1")?.textContent || "") && document.querySelector("#cm-sec-record .cm-record-table"), null, {timeout: 30000});
   const aiRow = (await rob.page.locator("#cm-sec-record .cm-record-table tbody tr").allInnerTexts())[0] || "";
   await rob.page.locator("#cm-sec-record").scrollIntoViewIfNeeded();
   await shot(rob.page, "record-ai-game-1400");

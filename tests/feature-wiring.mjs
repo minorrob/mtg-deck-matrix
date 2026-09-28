@@ -112,17 +112,20 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
 }
 
-/* Track V.1b, and r3's three choices: the theme is a saved preference the shell applies -- dark,
-   light, or the device's own setting -- and the Menu offers all three. */
+/* Track V.1b, r3, and since A1 (Rob, 2026-09-28) four themes: the theme is a saved preference the shell applies as a
+   palette and a face on <html> and #matrix-v2, and the Menu's Switch theme offers all four. */
 {
   const app = read("crankmagic-app.js");
-  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),shown=choice==='system'\?\(lightQuery\.matches\?'light':'dark'\):choice;document\.getElementById\('matrix-v2'\)\.dataset\.theme=shown;/.test(app), "applyTheme sets #matrix-v2's theme from the saved choice, resolving Match system");
+  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),\[palette,face\]=THEME_FACE\[choice\]/.test(app) && /for\(const el of \[root,app\]\)\{if\(el\.dataset\.palette!==palette\)el\.dataset\.palette=palette;/.test(app), "applyTheme sets the palette and face from the saved choice, on <html> and #matrix-v2");
   ok(/describeData\(\);applyTheme\(\);/.test(app), "render applies it");
-  ok(/lightQuery\.addEventListener\('change',\(\)=>\{if\(themeChoice\(\)==='system'\)applyTheme\(\);\}\)/.test(app), "and Match system follows the device live");
+  ok(/t==='dark'\?'brass-slate':t==='light'\?'felt-cream':'moss-iron'/.test(app), "a value saved before A1 reads as its theme, and nothing or Match system as Moss & Iron");
+  ok(!/lightQuery|prefers-color-scheme: light/.test(app), "and nothing follows the device's light or dark setting any more");
   ok(/actions\['set-theme'\]/.test(app) && !/actions\['toggle-theme'\]/.test(app), "the Menu sets a theme rather than flipping one");
-  for (const f of ["index.html", "crankmagic.html"])
-    for (const choice of ["dark", "light", "system"])
+  for (const f of ["index.html", "crankmagic.html"]) {
+    for (const choice of ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"])
       ok(new RegExp(`data-action="set-theme" data-theme-choice="${choice}" aria-pressed=`).test(read(f)), `${f}: the menu offers the ${choice} theme`);
+    ok(/<div id="matrix-v2"[^>]*data-palette="moss-iron"/.test(read(f)), `${f}: before any script runs, the page is Moss & Iron`);
+  }
   ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
 }
 
