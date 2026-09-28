@@ -58,7 +58,9 @@
       if (slot.purpose !== "main" || commanders.has(slot.cardId)) continue;
       for (let i = 0; i < (slot.quantity || 1); i += 1) cards.push(name(slot.cardId));
     }
-    return {name: deck.name, commander: [...commanders].map(name).filter(Boolean), cards: cards.filter(Boolean)};
+    /* source: which deck of this library it is, so the finished game is filed under it; the table shows it
+       back to this seat alone. */
+    return {name: deck.name, commander: [...commanders].map(name).filter(Boolean), cards: cards.filter(Boolean), source: {deckId: deck.id, deckVersion: deck.version}};
   }
   const libraryDecks = () => (C.state.decks || []).filter((d) => !d.archived && (d.commanders || []).length);
 

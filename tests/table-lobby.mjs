@@ -56,7 +56,7 @@ const panelReading = (page) => page.evaluate(() => {
 const REFUSED = "Sol Ring";
 const cards = (name) => basicCards(name) ?? (name === REFUSED ? null : {types: ["Creature"], power: 2, toughness: 2, manaCost: "{2}"});
 let clock = Date.parse("2026-09-26T22:00:00Z");
-const objects = new Map(), writes = [];
+const objects = new Map(), writes = [], deckBodies = [];
 let nextId = 0;
 const objectCtx = () => {
   const map = new Map(), sockets = [];
@@ -75,6 +75,7 @@ async function answer(route, email) {
   if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
   const [, given, action] = m;
   const body = method === "GET" ? undefined : req.postData() || "{}";
+  if (action === "deck") deckBodies.push(JSON.parse(body));
   let id = given, internal = action ? `/table/${action}` : "/table";
   let payload = body;
   if (!given) {id = `table${String(++nextId).padStart(6, "0")}`; internal = "/table/create"; payload = JSON.stringify({...JSON.parse(body), tableId: id});}
@@ -150,6 +151,10 @@ try {
     } else chosen = name;
   }
   ok(chosen, "a playable deck is taken");
+  /* The deck carries which deck of this library it is, so the finished game can be filed under it (M5). */
+  {const live = JSON.parse(readFileSync(path.join(ROOT, "data", "live-state.json"), "utf8")).payload.state.decks.find((d) => d.name === chosen);
+    const sent = deckBodies.filter((b) => b.seatId === 0 && b.deck.name === chosen).at(-1);
+    eq(sent && sent.deck.source, {deckId: live.id, deckVersion: live.version}, `the lobby sends the chosen deck's library id and version (${live.id} v${live.version})`);}
   await waitText(rob.page, ".cm-lobby-seat[data-seat='0']", new RegExp(chosen.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   /* The AI's deck: the host chooses it, and an AI with a deck is ready. */
   if (await rob.page.locator("#cm-dialog[open]").count()) await rob.page.keyboard.press("Escape");

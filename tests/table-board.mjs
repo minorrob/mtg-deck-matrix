@@ -52,7 +52,9 @@ acceptWebSocket: (s, tags) => {s.tags = tags; live.push(s);}, getWebSockets: () 
 const object = new GameTable(ctx, {}, {cards, now: () => clock});
 const TABLE = "tableboard01";
 const call = async (p, email, body) => (await object.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json();
-const deck = (who, land) => ({name: `${who}'s deck`, commander: [`${who} General`], cards: [...Array(40)].map((_, i) => i % 2 ? land : `${who} Secret ${i}`)});
+const deck = (who, land, source) => ({name: `${who}'s deck`, commander: [`${who} General`], cards: [...Array(40)].map((_, i) => i % 2 ? land : `${who} Secret ${i}`), source});
+/* Each brings a deck of the library both pages restore (data/live-state.json): Rob his D1, Maya her D2. */
+const ROB_DECK = {deckId: "deck:live:D1", deckVersion: 2}, MAYA_DECK = {deckId: "deck:live:D2", deckVersion: 2};
 
 /* One queue for everything the object is asked, as a Durable Object runs one request at a time. */
 let queue = Promise.resolve();
@@ -81,7 +83,7 @@ function carry(email) {
       object.socketPair = () => [{}, server];
       object.upgraded = () => ({status: 101});
       const r = await object.fetch(new Request("https://table.internal/connect", {headers: {upgrade: "websocket", "x-crankmagic-email": email}}));
-      if (r.status !== 101) ws.close({code: 1008, reason: "refused"});
+      if (r.status !== 101) {server.closed = true; ws.close({code: 1008, reason: "refused"});}
     });
     ws.onMessage((message) => serial(() => object.webSocketMessage(server, message)));
     ws.onClose(() => serial(async () => {if (!server.closed) {server.closed = true; await object.webSocketClose(server, 1001);}}));
@@ -102,6 +104,8 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   /* A browser that will not give a page the whole screen (a phone's, or one set so): the view must fill the window by itself. */
   if (!fullscreen) await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
   if (stub) await stub(page);
+  /* The app's own handle, for reading what the library holds once a game is filed. */
+  await page.addInitScript(() => (globalThis.CrankFeatures ||= []).push((C) => {globalThis.__cm = C;}));
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
@@ -120,8 +124,8 @@ try {
   /* THE TABLE, set up through the server as the lobby would: Rob hosts, Maya joins, both ready, it starts. */
   await call("/table/create", ROB, {tableId: TABLE, hostName: "Rob", seats: [{kind: "human", name: "Maya"}]});
   await call("/table/join", MAYA, {code: (await call("/table/invite", ROB, {seatId: 1})).invite.code});
-  await call("/table/deck", ROB, {seatId: 0, deck: deck("Rob", "Forest")});
-  await call("/table/deck", MAYA, {seatId: 1, deck: deck("Maya", "Island")});
+  await call("/table/deck", ROB, {seatId: 0, deck: deck("Rob", "Forest", ROB_DECK)});
+  await call("/table/deck", MAYA, {seatId: 1, deck: deck("Maya", "Island", MAYA_DECK)});
   await call("/table/ready", ROB, {ready: true}); await call("/table/ready", MAYA, {ready: true});
   await call("/table/mat", ROB, {mat: "forge"});
   await call("/table/start", ROB, {});
@@ -551,9 +555,55 @@ try {
   await waitText(maya.page, ".cm-board-over", /ended early/);
   ok(/record is kept/.test(await text(rob.page, ".cm-board-over")), "both boards say it was ended early, nobody lost, and the record is kept");
   await shot(rob.page, "board-over-1400");
+
+  /* FILED: each person's own result, under the deck of their own library they brought, once. */
+  const tableGames = (page) => page.evaluate(() => globalThis.__cm.state.games.filter((g) => g.table).map((g) => ({id: g.id, deckId: g.deckId, outcome: g.outcome, seatId: g.table.seatId, ai: g.table.ai, deckVersion: g.deckVersion, pod: g.pod, notes: g.notes})));
+  for (const who of [rob, maya]) await who.page.waitForFunction(() => globalThis.__cm.state.games.some((g) => g.table), null, {timeout: 15000});
+  const matchId = views(ROB).at(-1).matchId, robGames = await tableGames(rob.page), mayaGames = await tableGames(maya.page);
+  eq(robGames.map(({id, deckId, outcome, seatId, ai, deckVersion, pod}) => ({id, deckId, outcome, seatId, ai, deckVersion, pod})),
+    [{id: `game:table:${matchId}:s0`, deckId: "deck:live:D1", outcome: "unfinished", seatId: "s0", ai: false, deckVersion: 2, pod: 2}],
+    "Rob's game is filed once, under the D1 he brought, as unfinished: it was ended early");
+  eq(mayaGames.map(({id, deckId, outcome}) => ({id, deckId, outcome})), [{id: `game:table:${matchId}:s1`, deckId: "deck:live:D2", outcome: "unfinished"}],
+    "Maya's is filed in her own library, under her D2, for her seat alone");
+  ok(!robGames.some((g) => g.deckId === "deck:live:D2") && /ended early/.test(robGames[0].notes), "nothing of Maya's game reached the host's library, and the record says why it ended");
+  await waitText(rob.page, "#cm-notice", /unfinished game is filed under D1 Quintorius Spirits's record/, 10000);
+  ok(true, "and the board says where it went: filed under D1's record");
+  /* Views of the ended game keep arriving while the board is open (anyone's End, an away frame, a mat): each is
+     read again, and the result is still filed once. */
+  const viewsAtEnd = views(ROB).length;
+  await serial(async () => object.broadcast());
+  for (let i = 0; i < 50 && !(views(ROB).length > viewsAtEnd); i += 1) await new Promise((r) => setTimeout(r, 200));
+  await new Promise((r) => setTimeout(r, 800));
+  ok(views(ROB).length > viewsAtEnd && views(ROB).at(-1).status === "finished", "the ended game's view reaches the board again");
+  eq((await tableGames(rob.page)).length, 1, "and the same result is not filed twice");
+  const outcomes = await rob.page.evaluate(() => {
+    const o = globalThis.__cm.board.outcomeOf, base = {seatId: "s0", departures: {}, result: null, status: "playing"};
+    const at = (x) => {const r = o({...base, ...x}); return r && r.outcome;};
+    return [at({status: "finished", result: {winner: "s0", reason: "last one standing"}}), at({status: "finished", result: {winner: "s2", reason: "last one standing"}}),
+      at({status: "finished", result: {winner: null, reason: "everyone lost at once"}}), at({departures: {s0: "conceded"}}), at({departures: {s0: "timed-out"}}),
+      at({status: "finished", result: {winner: null, reason: "ended early", endedBy: "s1"}}), at({departures: {s1: "conceded"}}), at({})];
+  });
+  eq(outcomes, ["win", "loss", "draw", "loss", "unfinished", "unfinished", null, null],
+    "what the board files: a win, a loss, a draw; a concession is a loss; running out of time or an early end is unfinished; someone else leaving, or the game going on, files nothing yet");
   await rob.page.click("[data-action=board-leave]");
   await waitText(rob.page, "#cm-table-game", /The game is over/);
   ok(!(await rob.page.locator("#cm-board").count()), "Back to the table puts the board away, and the lobby says the game is over");
+
+  /* THE RECORD READS IT BACK, on the deck's page: one game, unfinished, marked as played at a table. */
+  await rob.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D1")}`);
+  await rob.page.locator("#cm-sec-record .cm-record-table").waitFor({timeout: 30000});
+  const row = (await rob.page.locator("#cm-sec-record .cm-record-table tbody tr").allInnerTexts());
+  ok(row.length === 1 && /unfinished/.test(row[0]) && /Table/.test(row[0]) && !/\bAI\b/.test(row[0]), `D1's Record reads the game back: unfinished, played at a table, no AI (${row[0].replace(/\s+/g, " ").trim()})`);
+  await rob.page.locator("#cm-sec-record").scrollIntoViewIfNeeded();
+  await shot(rob.page, "record-table-game-1400");
+  /* A game with an AI in it says so, so a win over the house pilot never passes for one over friends. */
+  const committed = await rob.page.evaluate(() => globalThis.__cm.commit({type: "game", gameId: "game:table:aitable1g1:s0", deckId: "deck:live:D3", outcome: "win", pod: 4, finish: 1,
+    table: {schema: "CrankMagicTableResult@1", tableId: "aitable1", matchId: "aitable1g1", seatId: "s0", ai: true, reason: "last one standing", deckVersion: 2}}, {renderView: false}).then(() => "", (error) => error.message));
+  eq(committed, "", "a table result with an AI seat is taken by the library");
+  await rob.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D3")}`);
+  await rob.page.waitForFunction(() => /Atraxa/.test(document.querySelector(".cm-deck-hero h1")?.innerText || "") && document.querySelector("#cm-sec-record .cm-record-table"), null, {timeout: 30000});
+  const aiRow = (await rob.page.locator("#cm-sec-record .cm-record-table tbody tr").allInnerTexts())[0] || "";
+  ok(/win/.test(aiRow) && /Table/.test(aiRow) && /\bAI\b/.test(aiRow), `a table game with an AI seat is badged AI on the Record (${aiRow.replace(/\s+/g, " ").trim()})`);
 
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames)`);
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the board's ${writes.length} writes carried Play's header and JSON`);
