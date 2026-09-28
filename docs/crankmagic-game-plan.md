@@ -206,9 +206,11 @@ sidebar. What shipped, and the three places the plan met the code:
   them is the reader's, not the app's.
 - **The seating is a seeded shuffle**, so "fixed for a replay" is a seed you can write down rather
   than a saved list.
-- **Nothing is written to the library.** A table being set up is not a fact about a collection, so
+- **Seating a table writes nothing to the library.** A table being set up is not a fact about a collection, so
   it lives in `localStorage` beside the table's canvas and the sandbox's sitting — the journey
-  checks the revision is unmoved after a whole table is assembled.
+  checks the revision is unmoved after a whole table is assembled. **One exception, Rob's decision
+  of 2026-09-28:** seating "A pasted decklist" saves it as a "Pasted deck" draft in the library, so a
+  list brought to the table can be kept, measured and bought for like any other deck.
 
 **The zero that matters, pinned.** All six of Rob's decks carry no Game Changers, so the cap only
 ever bites on an imported list; the suite asserts that, and the day one of them does carry one the
