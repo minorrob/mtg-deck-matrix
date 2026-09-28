@@ -1,0 +1,2 @@
+id,game_id,seat,turn,phase,cards,happened,should_have,cr_rule,evidence,severity,class,status
+PT-EXAMPLE-01,t1234g1,seat-2,5,combat damage,Grizzly Bears; Giant Growth,Bears dealt 2 damage after Giant Growth resolved,Bears deal 5 damage (+3/+3 until end of turn),CR 510.1a,"journal events 412-418; screenshot pt-01.png",S2,rules,open

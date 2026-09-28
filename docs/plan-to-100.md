@@ -162,7 +162,9 @@ Rob's plan: Grok Bot runs four agents that play each other, some simulating huma
   - "simulating a human": an agent drives the real board in a browser, seat by seat, through the same UI a person uses;
   - "as AI": the lobby's house pilot, or an LLM seat through the AI door (M6).
 - [ ] **A game record they can hand over:** every game exports its seed, its journal and its per-seat projections. **Game history has a Download for playtest button.** With it, any game replays identically here.
-- [ ] **A findings template**, one row per finding:
+  - **Built (M8a, 2026-09-28):** the room keeps a **decision tape** (every answer a person gives, a seat leaving, the game ended), and `game/room/replay.mjs` replays a stored game from its seed and tape to the same state and the same journal (`tests/game-replay.mjs`: 360 decisions across wakings, a concession and End game).
+  - **M8b waits on Rob:** the Download itself. After a game ends, its seed, tape and journal show every hand and every library's order. Recommendation: the full record for a **playtest table** only (a flag set when the table is made, and staging's tables are playtest tables), and on production each seat gets its own projections and the public history, never the seed. Rob's call.
+- [x] **A findings template**, one row per finding (`docs/uat/playtest-findings.md` and its CSV, checked by `tests/playtest-findings.mjs`):
   - game id, seat, turn and phase;
   - the card or cards involved;
   - what happened against what should have;
