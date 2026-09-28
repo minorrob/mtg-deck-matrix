@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
-import {importWorkbook} from '../tools/build-live-load.mjs';
+import {importWorkbook,same} from '../tools/build-live-load.mjs';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
 
@@ -148,10 +148,8 @@ eq(real.summary.toBuyEntries,0);
    number per kind: Scryfall for what a card costs, the workbook's $ Each for what was paid.
    So every upgrade the file lists is priced as the catalog prices it wherever the catalog
    has a figure, and the workbook's number stands in only where it has none. */
-{const lookup=await bundledLookup();let priced=0;
- for(const u of liveDoc.upgrades){const c=lookup(u.card),p=Number(c&&c.price);if(!(Number.isFinite(p)&&p>0))continue;priced++;
-   ok(Math.abs(u.price-p)<0.005,`${u.deck} upgrade ${u.card} is priced ${u.price} by the file and ${p} by the catalog`);}
- ok(priced>=liveDoc.upgrades.length*0.8,`only ${priced} of ${liveDoc.upgrades.length} upgrades have a catalog price`);checks++;}
+/* Checked on a fresh build from the workbook, below, not on the committed file: the committed file's prices are the
+   market's on the day it was built, and a price moving since is not a failure (Rob, 2026-09-28). */
 ok(real.summary.options>=1&&real.summary.planned>=1);ok(real.state.decks.every(d=>d.groupId&&real.state.groups.some(g=>g.id===d.groupId)));
 M.validate(real.state);checks++;
 // and the committed saved state is that build, in the app's own backup format: it restores
@@ -194,9 +192,22 @@ eq(L.PASSWORD,'treycmload1');
     eq(n(doc.owned.bench),total('In Bench'));
     eq(boxes+n(doc.owned.bench),total('Own'));
     eq(n(doc.buy),total('Buy Count'));
+    {const lookup=await bundledLookup();let priced=0;
+     for(const u of doc.upgrades){const c=lookup(u.card),p=Number(c&&c.price);if(!(Number.isFinite(p)&&p>0))continue;priced++;
+       ok(Math.abs(u.price-p)<0.005,`${u.deck} upgrade ${u.card} is priced ${u.price} by the build and ${p} by the catalog`);}
+     ok(priced>=doc.upgrades.length*0.8,`only ${priced} of ${doc.upgrades.length} upgrades have a catalog price`);checks++;}
     eq(n(doc.ordered),total('Ordered'));
     eq(M.counters(built.state).owned,total('Own'));
     ok(doc.decks.every(d=>n(d.cards)===100));
   }
 }
+/* A PRICE MOVING IS NOT A CHANGE (Rob, 2026-09-28). --check compares the collection, not the market: a buy row's
+   price or an upgrade's price may move and the file is still current; a count, a card, a paid figure may not. */
+{const base={savedAt:'a',decks:[],owned:{inDeck:{},bench:[['Sol Ring',1]]},ordered:[],buy:[['Arcane Signet',2,1.25]],paid:{'Sol Ring':1.5},upgrades:[{deck:'D1',card:'Ring',price:3}]};
+  const moved={...base,savedAt:'b',buy:[['Arcane Signet',2,1.9]],upgrades:[{deck:'D1',card:'Ring',price:4.2}]};
+  ok(same(base,moved));
+  ok(!same(base,{...moved,buy:[['Arcane Signet',3,1.9]]}));
+  ok(!same(base,{...moved,paid:{'Sol Ring':2}}));
+  ok(!same(base,{...moved,upgrades:[{deck:'D1',card:'Other',price:4.2}]}));
+  ok(!same(base,{...moved,owned:{inDeck:{},bench:[['Sol Ring',2]]}}));}
 console.log(`live-load: ${checks} checks passed; the hand-written file rebuilds a validated library, and the committed file loads clean.`);

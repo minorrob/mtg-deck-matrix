@@ -115048,7 +115048,7 @@
           "name": "Traxos, Scourge of Kroog",
           "quantity": 1,
           "manaCost": "{4}",
-          "typeLine": "Legendary Artifact Creature — Construct",
+          "typeLine": "Legendary Artifact Creature — Dragon Construct",
           "tags": [],
           "isCommander": false,
           "gameChanger": false,
@@ -116029,7 +116029,7 @@
           "id": "shell-7b-51-traxos-scourge-of-kroog",
           "name": "Traxos, Scourge of Kroog",
           "quantity": 1,
-          "typeLine": "Legendary Artifact Creature — Construct",
+          "typeLine": "Legendary Artifact Creature — Dragon Construct",
           "tags": [],
           "isCommander": false,
           "gameChanger": false
