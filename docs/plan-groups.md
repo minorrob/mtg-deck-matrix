@@ -173,6 +173,13 @@ It is done in the model's own `migrate()`, the way 1→2 was. A repair at boot i
 
 G1 and G2 need no decisions and can start at once. G3–G6 wait on §8.
 
+## 7b. The design work that follows
+
+Rob added a design update on 2026-09-28: a new hero image for Decks, and four themes (Moss & Iron by
+default, Brass & Slate, Felt & Cream, Steel & Cobalt), saved with the profile. It has its own plan,
+`docs/plan-appearance.md` (PRs A1 and A2, decisions A1–A4), and comes after G3–G6. The user profile page
+is in `BACKLOG.md` (§7).
+
 ## 8. Decisions for Rob
 
 Rob agreed D1–D3 and D5–D7 on 2026-09-28, with General groups as in §3. D4 awaits his answer.

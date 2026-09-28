@@ -518,10 +518,15 @@ function groupDeck(groupId){
   if(!rows.length)throw Error(`${g.name} holds no cards yet, so there is nothing to start a deck from. Import a list into it, or start from a commander.`);
   const leaders=rows.map(r=>C.card(r.cardId)).filter(c=>c&&c.commander&&c.legalities?.commander==='legal');
   if(!leaders.length)throw Error(`${g.name} holds no Commander-legal creature, so there is nothing to lead the deck. Add one, or start from a commander instead.`);
-  return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`This makes a new draft deck whose list is the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in ${g.name}. No copies move: the cards you own stay where they are, and the deck stays linked to ${g.name}.`),
+  /* THE COPIES COME TOO, IF YOU SAY SO (Rob, 2026-09-28). He loaded 85 cards he owns into a group for a Quintorius deck,
+     made the deck from the group, and found them still on the Bench: the deck copied the list and moved nothing. The
+     copies on the Bench filed in this group can go straight into the new deck's box; a copy already in another deck, reserved for one, or offered for trade stays where it is. */
+  const bench=C.state.lots.filter(l=>l.source==='owned'&&(l.groupIds||[]).includes(g.id)&&l.location?.kind==='bench'&&!l.allocation&&l.offer==='none'),copies=bench.reduce((n,l)=>n+l.quantity,0);
+  return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`This makes a new draft deck whose list is the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in ${g.name}, and the deck stays linked to ${g.name}.`)+(copies?`<label class="cm-checkbox cm-full"><input type="checkbox" name="move" checked> Put the ${copies} cop${copies===1?'y':'ies'} you own from ${e(g.name)} (now on the Bench) in the deck's box</label>`:''),
     async data=>{const id='deck:'+C.uid();
       await commit({type:'createDeck',deckId:id,name:data.name,commanders:[data.commanderId],groupId:g.id,
         slots:rows.some(r=>r.cardId===data.commanderId)?rows:[{cardId:data.commanderId,quantity:1},...rows]});
+      if(data.move&&bench.length)await commit({type:'bulk',op:'place',deckId:id,lotIds:bench.map(l=>l.id),asStandIn:true});
       go('decks',{deck:id});},'Create draft');
 }
 /* NOTHING HERE IS A QUESTION YOU HAVE TO ANSWER. Both selects open on the answer most
@@ -723,7 +728,7 @@ actions['wizard-create']=()=>{
       :'Continue opens the commander picker. A collection group is made with the deck and named after it.';
     if(!g)return 'Continue opens the import: upload a CSV, TSV, TXT or XLSX file, or paste a list. The cards land in a new collection group and the deck is built from them.';
     const rows=groupRows(g),copies=rows.reduce((n,r)=>n+r.quantity,0);
-    return rows.length?`Continue brings ${copies} card${copies===1?'':'s'} across from ${g.name} as the deck's list, and the deck stays attached to that group.`
+    return rows.length?`Continue makes a draft deck whose list is the ${copies} card${copies===1?'':'s'} in ${g.name}, linked to that group. The next step offers to put the copies you own in its box.`
       :`${g.name} holds no cards yet. Choose a group that does, ask for a new one and import a list into it, or start from a commander.`;
   };
   const wiz=form('Create a deck from a commander',
