@@ -33,7 +33,7 @@ import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
 import {createRng} from "../engine/rng.mjs";
-import {createJournal} from "../engine/journal.mjs";
+import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot} from "../engine/pilots/house-pilot.mjs";
@@ -119,6 +119,12 @@ function roomOn(storage, matchId, cards) {
   let leaving = [], departures = {}, ended = null;
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
   let history = [];
+  /* THE DECISION TAPE (M8): every input a person gives -- an answer, leaving, ending the game -- in order, numbered
+     from the match's first. The journal is what the engine did; the tape is what people told it; with the seed the
+     two replay the game (game/room/replay.mjs). House-pilot answers are not taped: the pilot is deterministic and
+     answers again on replay. `tapeN` is the next number; `unsaved` waits for persist(). */
+  let tapeN = 0, unsaved = [];
+  const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
   const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = housePilot({seat, cards: facts}));
@@ -158,10 +164,27 @@ function roomOn(storage, matchId, cards) {
   }
   /* The open question, withdrawn: the controller keeps its receipts and moves its revision on, so an answer
      already in flight to the withdrawn question is refused as stale rather than applied to a changed board. */
+  /* A taped answer stands in for the controller's: the question is closed and the revision moves on, but what was
+     being asked (the seat, the actions offered) stays for the answer to be applied to. */
+  function withdrawKeeping() {
+    const point = controller.checkpoint();
+    controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
+  }
   function withdraw() {
     const point = controller.checkpoint();
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
     pendingSeat = null; pendingActions = null;
+  }
+  /* A person's answer applied: a priority action by its index, or the awaited decision resolved. Shared by `act`
+     and by a replay of the tape, so the two cannot drift apart. */
+  function answerWith(seat, answer) {
+    if (pendingActions) {
+      const action = pendingActions[answer.indices[0]];
+      pendingActions = null;
+      apply(seat, action);
+    } else write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+    pendingSeat = null;
+    drive();
   }
   function apply(seat, action) {
     if (action.kind === "pass") {
@@ -176,6 +199,8 @@ function roomOn(storage, matchId, cards) {
     const events = journal.events();
     await store.appendEvents(events.slice(saved));
     saved = events.length;
+    await store.appendTape(unsaved);
+    unsaved = [];
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
@@ -221,6 +246,7 @@ function roomOn(storage, matchId, cards) {
       controller = createController(record.controller);
       pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
       saved = 0;
+      tapeN = (await store.readTape()).length;
       return api;
     },
 
@@ -245,6 +271,32 @@ function roomOn(storage, matchId, cards) {
     },
 
     /**
+     * A FINGERPRINT OF THE GAME, never the game: the state's hash, how many events the journal holds, and the
+     * tape's length (the stored journal itself is compared by game/room/replay.mjs). Two rooms with the same fingerprint are the same game, which is how a replay is proved; nothing about
+     * a hidden card can be read back out of it.
+     */
+    fingerprint() {
+      return {hash: hashState(state), events: journal.checkpoint(state, rng.checkpoint()).sequence, tape: tapeN, status: finished() ? "finished" : "playing"};
+    },
+
+    /**
+     * One tape entry, applied as the person gave it (game/room/replay.mjs). An answer must come from the seat the
+     * room is waiting on; otherwise the tape and this game have parted, and that is said, with where.
+     */
+    async replay(entry) {
+      if (entry.kind === "leave") return api.leave(entry.seat, entry.why);
+      if (entry.kind === "end") return api.end(entry.seat);
+      if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave or an end.`);
+      const seat = seatIndex(entry.seat);
+      if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
+      withdrawKeeping();
+      tape({kind: "answer", seat: entry.seat, answer: entry.answer});
+      answerWith(seat, entry.answer);
+      await persist();
+      return api;
+    },
+
+    /**
      * A seat leaves the game in play: "conceded" when they choose to, "timed-out" when a dropped player's
      * time ran out. Whatever was being asked is withdrawn and asked afresh, because the board it was asked
      * about has changed; the engine concedes them (CR 104.3a) and play goes on without them.
@@ -258,6 +310,7 @@ function roomOn(storage, matchId, cards) {
       if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
       withdraw();
       departures[seatId] = why;
+      tape({kind: "leave", seat: seatId, why});
       note(why === "timed-out" ? `${seats[seat].name} ran out of time · not finished` : `${seats[seat].name} conceded`);
       leaving = [...leaving, seat];
       drive();
@@ -272,6 +325,7 @@ function roomOn(storage, matchId, cards) {
       if (finished()) throw new RoomError(409, "This game is over.");
       withdraw();
       ended = {by: seatId};
+      tape({kind: "end", seat: seatId});
       note(`${seats[seat].name} ended the game for everyone · not finished`);
       pendingSeat = null; pendingActions = null;
       await persist();
@@ -302,13 +356,8 @@ function roomOn(storage, matchId, cards) {
       if (controller.revision === before) return {receipt, changed: false};  /* a retry older than this room's receipts */
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
-      if (pendingActions) {
-        const action = pendingActions[answer.indices[0]];
-        pendingActions = null;
-        apply(seat, action);
-      } else write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
-      pendingSeat = null;
-      drive();
+      tape({kind: "answer", seat: seatId, answer});
+      answerWith(seat, answer);
       await persist();
       return {receipt, changed: true};
     },
