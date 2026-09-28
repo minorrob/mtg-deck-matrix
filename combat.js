@@ -28,7 +28,7 @@
  * policy the design asks for first: block when it is a clean profit, chump only
  * when the damage would kill you. The real one prices life against board at this
  * life total (docs/simulation-fidelity.md §3, piece 4) and is where Playstyle
- * enters. Instants held up are not modelled at all. Both are named in the doc.
+ * enters. Instants held up are not modeled at all. Both are named in the doc.
  */
 (function (root, factory) {
   "use strict";

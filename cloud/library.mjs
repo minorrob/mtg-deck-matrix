@@ -110,5 +110,18 @@ export function createLibrary(db, {now = () => new Date().toISOString(), newId =
     ]);
   }
 
-  return {user, head, version, history, save, keep, prune};
+  /* DELETE ACCOUNT (R3.3b; privacy.html promises it). Everything the cloud holds for one person -- the head,
+     every version of every kind, and the user row -- in one batch, so it is all gone or none of it is. The
+     head goes first because it points at a version. What it counts is what the person is told. */
+  async function forget(userId) {
+    const {versions} = await db.prepare("SELECT COUNT(*) AS versions FROM snapshots WHERE user_id = ?1").bind(userId).first();
+    await db.batch([
+      db.prepare("DELETE FROM heads WHERE user_id = ?1").bind(userId),
+      db.prepare("DELETE FROM snapshots WHERE user_id = ?1").bind(userId),
+      db.prepare("DELETE FROM users WHERE id = ?1").bind(userId),
+    ]);
+    return {versions: Number(versions)};
+  }
+
+  return {user, head, version, history, save, keep, prune, forget};
 }

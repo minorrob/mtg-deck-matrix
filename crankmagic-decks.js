@@ -13,7 +13,7 @@ C.SUBNAV.decks=()=>{const r=C.route(),did=(r.view==='decks'||r.view==='pull'||r.
   const tint=d=>{const c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[];return /^[WUBRG]$/.test(ci[0]||'')?ci[0]:'';};
   return [...C.state.decks.filter(d=>!d.archived&&(C.showLobbyDecks||!M.isLobbyDeck(d)||d.id===did)).slice(0,12).map(d=>({label:d.name,hash:'#decks?deck='+encodeURIComponent(d.id),current:d.id===did,tint:tint(d)})),{label:'How a deck comes together',hash:'#how',current:r.view==='how'}];};
 C.HELP.decks={title:'Decks',body:`<p>Every deck you have, at its stage: <strong>Defining</strong> while the list is being written, <strong>Building</strong> while cards are still to buy or to add, <strong>Playable</strong> when substitutes make up the hundred, <strong>Complete</strong> when every reserved copy is in the physical deck.</p><p>Each tile's bar is the hundred: in the physical deck, ready to add, ordered, to buy. Tick two or more tiles to compare them; the ⋯ on a tile archives or restores it.</p>`};
-C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs against the cap; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>finalized</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> has no reservations until you finalize it. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
+C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs against the cap; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>finalized</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Finalize checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
 const commander=d=>d.commanders.map(id=>C.card(id)?.name||'Unknown').join(' + ');
 /* WHAT THE DECK IS ABOUT: the owner's mechanics when the definition names them, otherwise
    read off the list by the catalog -- marked derived, so the tile can say it is a reading
@@ -24,6 +24,12 @@ function mechanicsOf(d){if(d.definition.mechanics.length)return {list:d.definiti
    file its own reserved copies into the group in a single action -- which is what makes a
    group like "Main Deck" describe the deck rather than whatever was dragged into it. */
 const attached=d=>d.groupId?C.state.groups.find(g=>g.id===d.groupId)||null:null;
+/* COMMANDER + 99 (Rob, 2026-09-28; docs/plan-groups.md, G3). A deck holds its commander, its 99 and its contents.
+   The list keeps the commander among its hundred, so the 99 is the list less the commanders it names; the badge
+   says it that way and reads legality live, a finalized deck or not. Over a hundred is allowed, and says so. */
+function legalBadge(d){const main=d.slots.filter(r=>r.purpose==='main'),total=main.reduce((n,r)=>n+r.quantity,0),lead=d.commanders.filter(id=>main.some(r=>r.cardId===id)).length||d.commanders.length,rest=total-lead,of=100-lead;
+  const issues=M.legality(C.state,d),who=lead>1?'Commanders':'Commander';
+  return issues.length?`<span class="cm-badge warn cm-legal-badge" title="${e(issues[0])}">Not legal · ${who} + ${rest} of ${of}</span>`:`<span class="cm-badge good cm-legal-badge" title="A legal Commander deck: ${lead} + ${rest} = 100">Legal · ${who} + ${of}</span>`;}
 /* SIMULATION HISTORY. Every measured run of this deck, newest first: when, on what protocol,
    the score with its error, the two figures a reader compares first, how many games, and
    whether it measured the list as it stands now. A run is filed the moment it finishes --
@@ -33,21 +39,61 @@ const attached=d=>d.groupId?C.state.groups.find(g=>g.id===d.groupId)||null:null;
 const measuredReports=d=>C.state.reports.filter(r=>r.deckId===d.id&&r.origin==='measured');
 const latestReport=d=>measuredReports(d).slice(-1)[0]||null;
 const scoreOf=r=>r&&r.metrics&&r.metrics.score&&r.metrics.score.value!==null&&r.metrics.score.value!==undefined?String(r.metrics.score.value):'';
-const when=iso=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):String(iso||'');};
+const when=iso=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):String(iso||'');};
 function historyHTML(d){
   const reports=measuredReports(d).slice().reverse(),fp=M.fingerprint(d,C.state);
   const metric=(r,k,suffix='')=>{const m=r.metrics&&r.metrics[k];return m&&m.value!==null&&m.value!==undefined?e(String(m.value))+suffix:'—';};
   const status=`<span class="cm-pause-pill" id="cm-deck-sim-status" hidden></span>`;
   if(!reports.length)return `<section class="v-panel cm-history" id="cm-sec-history"><h2>Simulation history</h2><p>No measurement yet. Measure this deck and every run is kept here — the score, what it measured, and which list it measured.</p><div class="cm-actions">${b('Measure this deck','measure-deck',{deck:d.id},true)}${status}</div><p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and files the report here when it finishes.</p></section>`;
-  return `<section class="v-panel cm-history" id="cm-sec-history"><h2>Simulation history</h2><p class="cm-muted">${reports.length} measured run${reports.length===1?'':'s'}, newest first. A run is filed the moment it finishes; a list change makes earlier runs historical, not wrong.</p><div class="cm-table-wrap"><table class="cm-table cm-history-table"><thead><tr><th scope="col">When</th><th scope="col">Protocol</th><th scope="col">Score</th><th scope="col">Win rate</th><th scope="col">Avg win turn</th><th scope="col">Games</th><th scope="col">List</th><th scope="col">Report</th></tr></thead><tbody>${reports.map(r=>`<tr><td data-label="When">${e(when(r.importedAt))}</td><td data-label="Protocol">${e(r.protocol)}</td><td data-label="Score"><strong>${metric(r,'score')}</strong>${r.metrics&&r.metrics.scoreStandardError?` <small class="cm-muted">± ${metric(r,'scoreStandardError')}</small>`:''}</td><td data-label="Win rate">${metric(r,'winRate','%')}</td><td data-label="Avg win turn">${metric(r,'averageWinTurn')}</td><td data-label="Games">${((r.run&&r.run.games)||0).toLocaleString()}</td><td data-label="List">${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}</td><td data-label="Report">${b('View report','deck-report',{deck:d.id,report:r.id},false,{cls:'compact'})}</td></tr>`).join('')}</tbody></table></div><div class="cm-actions">${b('Measure again','measure-deck',{deck:d.id})}${reports.length>1?b('Compare two runs','compare-reports',{deck:d.id}):''}${b('Reports & advice','deck-evidence',{deck:d.id})}${status}</div></section>`;
+  return `<section class="v-panel cm-history" id="cm-sec-history"><h2>Simulation history</h2><p class="cm-muted">${reports.length} measured run${reports.length===1?'':'s'}, newest first. A run is filed the moment it finishes; a list change makes earlier runs historical, not wrong.</p><div class="cm-table-wrap"><table class="cm-table cm-history-table"><thead><tr><th scope="col">When</th><th scope="col">Protocol</th><th scope="col">Score</th><th scope="col">Win rate</th><th scope="col">Avg win turn</th><th scope="col">Games</th><th scope="col">List</th><th scope="col">Report</th></tr></thead><tbody>${reports.map(r=>`<tr><td data-label="When">${e(when(r.importedAt))}</td><td data-label="Protocol">${e(r.protocol)}</td><td data-label="Score"><strong>${metric(r,'score')}</strong>${r.metrics&&r.metrics.scoreStandardError?` <small class="cm-muted">± ${metric(r,'scoreStandardError')}</small>`:''}</td><td data-label="Win rate">${metric(r,'winRate','%')}</td><td data-label="Avg win turn">${metric(r,'averageWinTurn')}</td><td data-label="Games">${((r.run&&r.run.games)||0).toLocaleString('en-US')}</td><td data-label="List">${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}</td><td data-label="Report">${b('View report','deck-report',{deck:d.id,report:r.id},false,{cls:'compact'})}</td></tr>`).join('')}</tbody></table></div><div class="cm-actions">${b('Measure again','measure-deck',{deck:d.id})}${reports.length>1?b('Compare two runs','compare-reports',{deck:d.id}):''}${b('Reports & advice','deck-evidence',{deck:d.id})}${status}</div></section>`;
 }
 /* ALL REPORTS attached to this deck (Hosted Play + Measure + imported). Simple list for
    deck overview, no Measure wizard chrome. */
+/* THE MEASURE REPORT (r3, 30-measure-report; R3.5b). One filed measurement, read the way the design draws it:
+   what the number can be trusted for FIRST, then the number, then what made it.
+
+   The fidelity notice is computed from the report's own facts, never asserted: the cards the engine could
+   not read (they played as blanks), the cards that win in a way the engine does not model, whether the
+   deck's list has changed since, and whether a different engine generation measured it. None of those is
+   a high-fidelity measurement; the list changing or the engine changing makes it a low one, because the
+   number no longer describes this deck under this model. Every measurement also carries its own limits --
+   sampled opponents, no real stack -- which sit under the notice, not hidden behind the score.
+
+   The checks are the score's own breakdown (sim-engine's scoreParts): each part's reading against the
+   engine's stated target, and the points it earned of the points it could. Nothing here is recomputed. */
+function fidelityOf(r,d){
+  const m=r.metrics||{},list=Array.isArray(r.list)?r.list:[],total=list.reduce((n,x)=>n+(Number(x.quantity)||1),0)||null;
+  const read=m.cardsTheEngineCouldRead?.value,unread=total&&Number.isFinite(read)?Math.max(0,total-read):0;
+  const unwatched=m.winPathsTheEngineCannotWatch?.value||0,names=(r.unwatchedWinCards||[]).slice(0,4);
+  const generation=globalThis.CrankSim&&CrankSim.ENGINE_GENERATION,engine=r.versions&&r.versions.engine;
+  const reasons=[];
+  if(r.deckFingerprint!==M.fingerprint(d,C.state))reasons.push({severe:true,text:'The deck’s list has changed since this was measured. Measure again for the hundred it holds now.'});
+  if(generation&&engine&&engine!==generation)reasons.push({severe:true,text:`Measured by engine ${engine}; the app now runs ${generation}. Scores from different engines are not comparable.`});
+  if(unread)reasons.push({text:`${unread} card${unread===1?'':'s'} the engine could not read played as blanks.`});
+  if(unwatched)reasons.push({text:`${unwatched} card${unwatched===1?' wins':'s win'} in a way the engine does not model${names.length?`: ${names.join(', ')}`:''}. A deck built on ${unwatched===1?'it':'them'} is described less well by this score.`});
+  return {level:!reasons.length?'high':reasons.some(x=>x.severe)?'low':'medium',reasons};
+}
+function reportView(d,id){
+  const r=C.state.reports.find(x=>x.id===id&&x.deckId===d.id);
+  const back=`<a class="v-button" href="#decks?deck=${encodeURIComponent(d.id)}">Back to deck</a>`;
+  if(!r){C.main.innerHTML=`<a class="cm-crumb" href="#decks?deck=${encodeURIComponent(d.id)}">Decks › ${e(deckNumberOff(d.name))}</a>`+C.pageHead('Measure',back)+note('That report is not in this library. It may have been measured on another device, or deleted with an older version of the deck.',true);return;}
+  const m=r.metrics||{},score=m.score?.value,se=m.scoreStandardError?.value,f=fidelityOf(r,d),parts=r.scoreParts||[];
+  const LEVEL={high:'High',medium:'Medium',low:'Low'};
+  const fact=[Number.isFinite(se)?`± ${se.toFixed(1)}`:'',m.winRate?.value!=null?`wins ${m.winRate.value}% of games`:'',r.run?.games?`${r.run.games.toLocaleString('en-US')} games`:''].filter(Boolean).join(' · ');
+  C.main.innerHTML=`<a class="cm-crumb" href="#decks?deck=${encodeURIComponent(d.id)}">Decks › ${e(deckNumberOff(d.name))}</a>`
+    +C.pageHead('Measure',back+b('Export report','report-export',{deck:d.id,report:r.id}),'deck',`<p class="cm-decks-summary">How this list played under the simulation model, measured ${e(when(r.run?.measuredAt||r.importedAt))}.</p>`)
+    +`<section class="cm-fidelity cm-fidelity-${f.level}" aria-label="Fidelity"><h2>Fidelity: ${LEVEL[f.level]}</h2>${f.reasons.length?`<ul>${f.reasons.map(x=>`<li>${e(x.text)}</li>`).join('')}</ul>`:'<p>The list is the one measured, every card was read, and nothing in it wins in a way the engine cannot watch.</p>'}`
+    +`${(r.limits||[]).length?`<details><summary>What any Measure is, and is not</summary><ul>${r.limits.map(x=>`<li>${e(x)}</li>`).join('')}</ul></details>`:''}</section>`
+    +`<div class="cm-report-grid"><section class="v-panel cm-report-score"><h2>Score</h2><p class="cm-report-number">${Number.isFinite(score)?e(String(Math.round(score))):'—'}</p><p>of 100</p>${fact?`<p class="cm-muted">${e(fact)}</p>`:''}</section>`
+    +`<section class="v-panel cm-report-checks"><h2>What made the number</h2>${parts.length?`<table><thead><tr><th scope="col">Check</th><th scope="col">What it read</th><th scope="col">Points</th></tr></thead><tbody>${parts.map(p=>`<tr><th scope="row">${e(p.label)}</th><td>${e(p.reads)}</td><td>${e(String(p.points))} of ${e(String(p.max))}</td></tr>`).join('')}</tbody></table>`:'<p class="cm-muted">This report carries no breakdown of its score (it was filed before reports did).</p>'}</section></div>`;
+}
+actions['report-export']=el=>{const d=M.deck(C.state,el.dataset.deck),r=C.state.reports.find(x=>x.id===el.dataset.report);if(!r)throw Error('That report is not in this library.');
+  C.download(`CrankMagic-measure-${deckNumberOff(d.name).replace(/[^\w-]+/g,'-')}-${M.today()}.json`,JSON.stringify(r,null,2));};
 function reportsHTML(d){
   const allReports=C.state.reports.filter(r=>r.deckId===d.id);
   if(!allReports.length)return '';
   const fp=M.fingerprint(d,C.state);
-  return `<section class="v-panel cm-reports" id="cm-sec-reports"><h2>Reports</h2><p class="cm-muted">${allReports.length} report${allReports.length===1?'':'s'} attached to this deck. Reports from simulations, play sessions, or imported data.</p><ul class="cm-reports-list">${allReports.slice().reverse().map(r=>`<li><strong>${e(r.protocol||'Unknown protocol')}</strong> · ${e(when(r.importedAt))} · ${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}${r.origin?` · <span class="cm-muted">${e(r.origin)}</span>`:''}</li>`).join('')}</ul></section>`;
+  return `<section class="v-panel cm-reports" id="cm-sec-reports"><h2>Reports</h2><p class="cm-muted">${allReports.length} report${allReports.length===1?'':'s'} attached to this deck. Reports from simulations, play sessions, or imported data.</p><ul class="cm-reports-list">${allReports.slice().reverse().map(r=>`<li><strong>${e(r.protocol||'Unknown protocol')}</strong> · ${e(when(r.importedAt))} · ${r.deckFingerprint===fp?'<span class="cm-badge good">Current list</span>':'<span class="cm-badge">Historical list</span>'}${r.origin?` · <span class="cm-muted">${e(r.origin)}</span>`:''} · <a href="#decks?deck=${encodeURIComponent(d.id)}&amp;report=${encodeURIComponent(r.id)}">Open report</a></li>`).join('')}</ul></section>`;
 }
 /* NO ART, NO EMPTY PANEL. A deck whose commander has no cached picture used to be a dark
    rectangle with text at the bottom; the commander's initials, faint, in the deck's own two
@@ -101,7 +147,7 @@ function workingHTML(d){
    cap, the cap itself, and the lines paid over the 110% cap. Every figure is the model's
    (readiness) or the rules module's, so the card agrees with the Shop strip and the Orders
    tab by construction: the same lots, the same prices. */
-function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??(R?R.RULES.deckCap:null),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
+function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??C.deckCap(),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
   const pct=cap>0?r.marketValue/cap*100:null,tone=pct===null?'':pct>100?' cm-over':pct>90?' cm-near':'';
   const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id),overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
   const dear=perCard!==null?d.slots.filter(x=>x.purpose==='main'&&C.card(x.cardId).price>perCard).length:0,gc=gcCount(d);
@@ -112,7 +158,7 @@ function stats(d){const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.d
   const owned=lots.filter(l=>l.source==='owned'),estimated=owned.filter(l=>!Number.isFinite(l.paid)||l.paidSource==='catalog'),paidOrList=owned.reduce((n,l)=>n+(Number.isFinite(l.paid)?l.paid:(C.card(l.cardId)?.price||0))*l.quantity,0);
   return `<section class="cm-deck-summary${tone}" aria-label="Deck progress and cost"><div class="cm-summary-col"><h3>Progress</h3><div class="cm-summary-figures">${fig(r.sleeved,'Physical deck','','inbox')}${r.standIns||r.remove?fig(r.standIns,`of them substitute${r.standIns===1?'':'s'}${r.remove?` · ${r.remove} to take out`:''}`,'','standin'):''}${fig(pullCount(r),'Ready to add','','pull')}${fig(r.ordered,'Ordered','','ordered')}${fig(r.toBuy,d.status==='draft'?'Not yet reserved':'To buy','','buy')}${fig(`${gc} / ${GC_LIMIT}`,'Game Changers')}</div>${C.readinessBar(r)}</div><div class="cm-summary-col cm-summary-cost"><h3>Cost</h3><div class="cm-summary-figures">${fig(C.money(r.costToFinish),'$ to finish')}${fig((estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100),'Paid so far','','',estimated.length?`${estimated.reduce((n,l)=>n+l.quantity,0)} owned cop${estimated.reduce((n,l)=>n+l.quantity,0)===1?'y has':'ies have'} no recorded price and count at list price. Set Paid on a row in Cards to replace the estimate.`:'')}${fig(C.money(r.marketValue),`Market value${pct!==null?` · ${Math.round(pct)}% of cap`:''}`)}${fig(cap===null?'—':C.money(cap),'Cap')}${fig(overCap,`line${overCap===1?'':'s'} over the 110% cap`,overCap?'cm-amber':'')}${dear?fig(dear,`card${dear===1?'':'s'} over ${C.money(perCard)}`,'cm-amber'):''}</div>${cap>0?`<div class="cm-budget-bar" role="img" aria-label="Market value ${Math.round(pct)}% of the cap"><i style="width:${Math.min(100,pct)}%"></i></div>`:''}</div></section>`;}
 actions.jump=el=>{const t=document.getElementById(el.dataset.target);if(!t)return;const bar=document.querySelector('.cm-jump'),top=t.getBoundingClientRect().top+scrollY-((bar?bar.getBoundingClientRect().height:0)+(matchMedia('(max-width:760px)').matches?54:0)+10);scrollTo({top,behavior:'smooth'});};
-views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}await overview(found);return;}const decks=C.state.decks.filter(d=>(showArchived||!d.archived)&&(C.showLobbyDecks||!M.isLobbyDeck(d))),lobbyHidden=C.state.decks.filter(d=>!d.archived&&M.isLobbyDeck(d)).length,picks=[...(C.comparePicks||[])].filter(id=>C.state.decks.some(d=>d.id===id));
+views.decks=async params=>{const did=params.get('deck');if(did){const found=C.state.decks.find(x=>x.id===did);if(!found){C.main.innerHTML=C.pageHead('Decks',b('Decks','home',{},true))+note('Deck not found: this library has no deck with that id. It may live in another browser’s library, or under a different link.',true);return;}if(params.get('report')){reportView(found,params.get('report'));return;}await overview(found);return;}const decks=C.state.decks.filter(d=>(showArchived||!d.archived)&&(C.showLobbyDecks||!M.isLobbyDeck(d))),lobbyHidden=C.state.decks.filter(d=>!d.archived&&M.isLobbyDeck(d)).length,picks=[...(C.comparePicks||[])].filter(id=>C.state.decks.some(d=>d.id===id));
 /* THE SHOWCASE. The page opens on cards, not on a sentence: a fan of the reader's own
    commanders when they have decks, and three well-known ones while they do not. The fan
    is decoration -- it never claims a holding. */
@@ -122,7 +168,7 @@ const fan=fanSrc.length?`<div class="cm-cardfan" aria-hidden="true">${fanSrc.map
 /* THE PAGE IS THE DECKS. With a library to show, the page name is the heading and the tiles
    are the page. The showcase -- the fan and "Build it. Make it yours." -- is the welcome a
    fresh library gets, and the only place the slogan is spoken. */
-const anyDecks=C.state.decks.length>0,howLink=`<a class="cm-how-link" href="#how">How a deck comes together</a>`,compare=`<button type="button" class="v-button" data-action="compare-decks"${picks.length<2?' disabled':''} title="${picks.length<2?'Tick at least two decks to compare them':'Compare the ticked decks'}">Compare selected${picks.length?` (${picks.length})`:''}</button>`;
+const anyDecks=C.state.decks.length>0,howLink=`<a class="cm-how-link" href="#how">How a deck comes together</a>`,compare=`<button type="button" class="v-button" data-action="compare-decks"${picks.length<2?' disabled':''} title="${picks.length<2?'Tick at least two decks to compare them':'Compare the ticked decks'}">Compare${picks.length?` (${picks.length})`:''}</button>`;
 /* THE SUMMARY LINE REPLACES THE TOOLBAR (the guide's step 3). One sentence under the heading
    with the two figures that matter, read from the same readiness the tiles draw -- how many
    decks are playable, how many substitutes are still standing in, and what finishing them all
@@ -137,9 +183,31 @@ const count=n=>n<=10?words[n]:String(n);
    drawn. Two things named alike is how a wait turns into a false pass. */
 const summary=live.length?`<p class="cm-decks-summary">${e(count(live.length).replace(/^./,c=>c.toUpperCase()))} deck${live.length===1?'':'s'}, ${playable===live.length?(live.length===1?'ready to play':'all playable'):playable===0?(live.length===1?'not playable yet':'none playable yet'):`${e(count(playable))} playable`}.${subs?` <b>${subs} substitute${subs===1?'':'s'}</b> still standing in${toFinish?',':'.'}`:''}${toFinish?` <b>$${e(String(Math.round(toFinish)))}</b> to finish them all.`:''}</p>`:'';
 /* The two switches and the explainer link fall to a footer row under the grid. */
-const footLinks=anyDecks?`<div class="cm-deck-footlinks">${howLink}<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label>${lobbyHidden||C.showLobbyDecks?`<label class="cm-checkbox cm-show-lobby" title="Decks the Play lobby built for a seat. They stay out of Decks and the library until you save one."><input id="cm-show-lobby" type="checkbox" ${C.showLobbyDecks?'checked':''}>Show lobby decks${lobbyHidden&&!C.showLobbyDecks?` (${lobbyHidden})`:''}</label>`:''}</div>`:'';
-C.main.innerHTML=(anyDecks?C.pageHead('Decks',b('New deck','new-deck',{},true)+compare,'decks',summary)
-  :`<section class="cm-showcase"><div><h1>Build it.<br><span>Make it yours.</span></h1><div class="cm-actions">${b('New deck','new-deck',{},true)}${b('Restore a backup','restore')}</div><p class="cm-sub">${howLink}</p></div>${fan}</section>`)+(decks.length?`<div class="cm-deck-grid">${decks.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
+const footLinks=anyDecks?`<div class="cm-deck-footlinks">${howLink}${lobbyHidden||C.showLobbyDecks?`<label class="cm-checkbox cm-show-lobby" title="Decks the Play lobby built for a seat. They stay out of Decks and the library until you save one."><input id="cm-show-lobby" type="checkbox" ${C.showLobbyDecks?'checked':''}>Show lobby decks${lobbyHidden&&!C.showLobbyDecks?` (${lobbyHidden})`:''}</label>`:''}</div>`:'';
+/* R3.4: WHICH DECKS, IN WHAT ORDER (r3, 16-decks-hub). The stage chips and the sort live in the address --
+   #decks?stage=playable&sort=name -- so Back undoes them, a link carries them, and nothing is stored.
+   "Closest to finished" counts what still stands between a deck and a complete box: copies to buy, copies on
+   order and substitutes holding seats. "Recently changed" reads the change journal for the last change that
+   named the deck, and a deck nothing has changed since it was made sorts by when it was made. Archived decks,
+   when shown, come last in every order. */
+const stageOf=d=>{const r=M.readiness(C.state,d);return d.archived?'archived':d.status==='draft'?'defining':r.complete?'complete':r.playable?'playable':'building';};
+const STAGES=[['all','All'],...(live.some(d=>d.status==='draft')?[['defining','Defining']]:[]),['building','Building'],['playable','Playable'],['complete','Complete']];
+const SORTS=[['closest','Closest to finished'],['name','Name'],['recent','Recently changed']];
+const stage=STAGES.some(([k])=>k===params.get('stage'))?params.get('stage'):'all',sort=SORTS.some(([k])=>k===params.get('sort'))?params.get('sort'):'closest';
+const changed=new Map();if(sort==='recent')for(const row of await C.repo.history()){const id=row.operation&&row.operation.deckId;if(id&&!changed.has(id))changed.set(id,row.at||'');}
+const leftToDo=d=>{const r=M.readiness(C.state,d);return (r.toBuy||0)+(r.ordered||0)+(r.standIns||0);};
+const byName=(a,b)=>a.name.localeCompare(b.name,'en-US',{numeric:true});
+const order={closest:(a,b)=>leftToDo(a)-leftToDo(b)||byName(a,b),name:byName,recent:(a,b)=>String(changed.get(b.id)||b.createdAt||'').localeCompare(String(changed.get(a.id)||a.createdAt||''))||byName(a,b)}[sort];
+const shown=decks.filter(d=>stage==='all'||stageOf(d)===stage).sort((a,b)=>(a.archived-b.archived)||order(a,b));
+const hashFor=(k,v)=>{const q=new URLSearchParams({stage,sort});q.set(k,v);if(q.get('stage')==='all')q.delete('stage');if(q.get('sort')==='closest')q.delete('sort');return '#decks'+(q.size?'?'+q:'');};
+const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Show decks">${STAGES.map(([k,label])=>`<a class="v-button cm-chip-toggle" href="${e(hashFor('stage',k))}"${k===stage?' aria-current="true"':''}>${e(label)}</a>`).join('')}</nav>`
+  +`<div class="cm-decks-order"><label class="cm-decks-sort">Sort<select id="cm-decks-sort" aria-label="Sort decks">${SORTS.map(([k,label])=>`<option value="${k}"${k===sort?' selected':''}>${e(label)}</option>`).join('')}</select></label>`
+  +`<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div></div>`;
+const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k===stage)||[,''])[1].toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
+/* NO DECKS YET (r3 wireframe, decks-hub-empty): the page is still Decks, and the panel says the three honest ways
+   in -- a commander, a list, a backup file you saved. The welcome and its slogan are the landing page's now (R3.8). */
+C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+bar
+  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
    a tick and the Compare button rather than a link to find in each footer. The mana pips sit
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
@@ -160,7 +228,7 @@ const stage=d.archived?'archived':d.status==='draft'?'defining':r.complete?'comp
 const ci=(C.card(d.commanders[0])?.colorIdentity)||[],tint=/^[WUBRG]$/.test(ci[0]||'')?`--tint:var(--mana-${ci[0]});`:'';
 /* The bracket sits on the poster rather than in a footer row, and the menu joins the compare
    tick in the top-left corner, both quiet until the tile is hovered. */
-return `<article class="cm-deck-tile${picked?' is-picked':''}" style="${tint}">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools"><label class="cm-tile-pick" title="Tick to compare this deck"><input type="checkbox" data-action="compare-pick" data-deck="${e(d.id)}"${picked?' checked':''} aria-label="Compare ${e(d.name)}"></label><button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(badge[1]),badge[0])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="deck" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span></button>${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;}).join('')}<a class="cm-deck-new" href="#new" data-action="new-deck"><span aria-hidden="true">+</span>New deck</a></div>${footLinks}`:anyDecks?'<p class="cm-muted">Every deck here is archived. Tick Show archived to see them.</p>'+footLinks:'');$('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});$('#cm-show-lobby')?.addEventListener('change',ev=>{C.showLobbyDecks=ev.target.checked;C.render();});};
+return `<article class="cm-deck-tile${picked?' is-picked':''}" style="${tint}">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools"><label class="cm-tile-pick" title="Tick to compare this deck"><input type="checkbox" data-action="compare-pick" data-deck="${e(d.id)}"${picked?' checked':''} aria-label="Compare ${e(d.name)}"></label><button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(badge[1]),badge[0])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="deck" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span></button>${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;}).join('')}<a class="cm-deck-new" href="#new" data-action="new-deck"><span aria-hidden="true">+</span>New deck</a></div>${footLinks}`:anyDecks?(decks.length?noneHere:'<p class="cm-muted">Every deck here is archived. Tick Show archived to see them.</p>')+footLinks:'');$('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});$('#cm-decks-sort')?.addEventListener('change',ev=>{location.hash=hashFor('sort',ev.target.value);});$('#cm-show-lobby')?.addEventListener('change',ev=>{C.showLobbyDecks=ev.target.checked;C.render();});};
 /* A card's roles: the ones the catalog already carries, or the classifier read fresh from
    the rules text -- the same vocabulary the graph joins cards on, so "ramp" here is the
    ramp the Discover page means. */
@@ -210,9 +278,12 @@ const traceBtn=d.archived||!cards.length?'':b('Trace','deck-trace',{deck:d.id});
 const changeBtn=d.archived||d.status!=='final'||!C.changePlan?'':(()=>{const p=C.changePlan(d),n=p?p.rows.filter(r=>r.available).length:0;return b(n?`Make the change (${n})`:'Make the change','deck-change',{deck:d.id});})();
 const mech=mechanicsOf(d),games=C.state.games.filter(g=>g.deckId===d.id);
 const counts={hundred:cards.reduce((n,x)=>n+x.q,0),upgrades:d.slots.filter(r=>r.purpose==='upgrade').length+d.slots.filter(r=>r.purpose==='main'&&r.option).length,acquire:ready.toBuy};
-const tabs=`<div class="cm-tabs cm-deck-tabs" role="tablist" aria-label="Deck page">${DECK_TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="deck-tab" data-deck="${e(d.id)}" data-tab="${id}">${label}${counts[id]?` <small>${counts[id].toLocaleString()}</small>`:''}</button>`).join('')}</div>`;
+const tabs=`<div class="cm-tabs cm-deck-tabs" role="tablist" aria-label="Deck page">${DECK_TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="deck-tab" data-deck="${e(d.id)}" data-tab="${id}">${label}${counts[id]?` <small>${counts[id].toLocaleString('en-US')}</small>`:''}</button>`).join('')}</div>`;
 /* Build guide HTML for overview tab */
-const guideSection=()=>`<div class="cm-grid-2"><section class="v-panel" id="cm-sec-commander">${leaders.map(c=>`<div class="cm-commander">${c.image?`<img src="${e(c.image)}" alt="${e(c.name)}">`:'<div></div>'}<div><h2>About the Commander</h2><h3>${e(c.name)}</h3><ul><li>${C.mana(c.manaCost,c.typeLine)} · ${c.power!==null?e(c.power+'/'+c.toughness)+' · ':''}${C.glossary.html(c.typeLine)}</li><li>${C.glossary.html(c.keywords.join(', ')||'No keyword abilities recorded')}</li>${c.oracleText.split('\n').filter(line=>/^(When|Whenever|At the beginning)|:/.test(line)).map(t=>`<li>${C.glossary.html(t)}</li>`).join('')}</ul><p>${e(commanderUse(c))}</p>${b('Full card & rules','card',{card:c.id})}</div></div>`).join('<hr>')}</section><section class="v-panel" id="cm-sec-guide"><h2>Strategy & how to play</h2>${guideHTML(guide,d,leaders,cards)}<h3>Your notes</h3><p>${e(d.notes||'No deck notes yet.')}</p></section></div><section class="v-panel" id="cm-sec-swot"><h2>SWOT & recommendations</h2><div class="cm-swot">${Object.entries(swot).map(([k,v])=>`<div><h3>${e(k)}</h3><p>${e(v)}</p></div>`).join('')}</div><h3>Review next</h3><ul>${issues.slice(0,5).map(x=>`<li>${e(x)}</li>`).join('')||'<li>The basic Commander list checks pass. Review price, bracket expectations and your playgroup’s preferences.</li>'}</ul>${b('Explore recommendations','deck-suggestions',{deck:d.id})}${b('Review linked upgrades','deck-upgrades',{deck:d.id})}</section>`;
+/* GUIDE & SWOT IS A DIALOG (r3, 31-deck-guide; R3.5). About the Commander stays on the page; the written
+   guide, the deck's notes and the SWOT are drawn once, here, into a template, and the dialog opens a copy
+   of it -- so the link and the More menu show exactly what the page computed, with nothing recomputed. */
+const guideSection=()=>`<section class="v-panel" id="cm-sec-commander">${leaders.map(c=>`<div class="cm-commander">${c.image?`<img src="${e(c.image)}" alt="${e(c.name)}">`:'<div></div>'}<div><h2>About the Commander</h2><h3>${e(c.name)}</h3><ul><li>${C.mana(c.manaCost,c.typeLine)} · ${c.power!==null?e(c.power+'/'+c.toughness)+' · ':''}${C.glossary.html(c.typeLine)}</li><li>${C.glossary.html(c.keywords.join(', ')||'No keyword abilities recorded')}</li>${c.oracleText.split('\n').filter(line=>/^(When|Whenever|At the beginning)|:/.test(line)).map(t=>`<li>${C.glossary.html(t)}</li>`).join('')}</ul><p>${e(commanderUse(c))}</p>${b('Full card & rules','card',{card:c.id})}</div></div>`).join('<hr>')}</section><template id="cm-guide-template" data-deck="${e(d.id)}"><section class="cm-guide-dialog" id="cm-sec-guide"><h3>Strategy & how to play</h3>${guideHTML(guide,d,leaders,cards)}<h3>Your notes</h3><p>${e(d.notes||'No deck notes yet.')}</p></section><section class="cm-guide-dialog" id="cm-sec-swot"><h3>SWOT & recommendations</h3><div class="cm-swot">${Object.entries(swot).map(([k,v])=>`<div><h3>${e(k)}</h3><p>${e(v)}</p></div>`).join('')}</div><h3>Review next</h3><ul>${issues.slice(0,5).map(x=>`<li>${e(x)}</li>`).join('')||'<li>The basic Commander list checks pass. Review price, bracket expectations and your playgroup’s preferences.</li>'}</ul>${b('Explore recommendations','deck-suggestions',{deck:d.id})}${b('Review linked upgrades','deck-upgrades',{deck:d.id})}</section></template>`;
 /* THE HERO (Track V.4b, the guide's step 4). The commander's own card stands beside the copy,
    tilted, with a glow in the deck's tint behind it -- the deck is a picture before it is a list.
    --tint is the same token the tile uses, so a deck looks like itself on both pages. */
@@ -231,9 +302,9 @@ const body={
   hundred:()=>cardsTab(d,cards,curve,max,types),
   upgrades:()=>workingHTML(d)+upgradesHTML(d),
   explore:()=>`<section class="v-panel cm-explore-deck" id="cm-sec-explore"><h2>Explore</h2><p class="cm-muted">Explore this deck's card relationships and strategies in the interactive graph. Trace lights the deck from its commander outward; Lens filters by role.</p>${cards.length?`<div class="cm-actions"><a class="v-button primary" href="#discover?deck=${encodeURIComponent(d.id)}">Open Discover with this deck</a></div><p class="cm-muted">Opens Discover scoped to this deck. Progressive-disclosure tools (Trace, Lens, filters) are available once inside.</p>`:`<p class="cm-muted">Add cards to this deck first. Once your hundred has cards, return here to explore connections and strategies.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}</div>`}</section>`,
-  acquire:()=>`<section class="v-panel cm-acquire-deck" id="cm-sec-acquire"><h2>Acquire</h2>${ready.toBuy||ready.ordered?`<p>Track what this deck needs and where to get it.</p><div class="cm-budget-figures"><div><strong>${ready.toBuy}</strong><span>To buy</span></div><div><strong>${ready.ordered}</strong><span>Ordered</span></div><div><strong>${C.money(ready.costToFinish)}</strong><span>$ to finish</span></div></div><div class="cm-actions">${b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},true)}${b('View orders','shop-orders')}</div><p class="cm-muted">The buy list shows cards this deck needs with current prices. Orders track what's on the way from shops.</p>`:`<p class="cm-muted">This deck has no outstanding cards to acquire. Every reserved card is either in the physical deck or ready to add.</p>${d.status==='draft'?`<p class="cm-muted">Finalize this deck to create reservations and a buy list.</p>`:''}`}</section>`
+  acquire:()=>`<section class="v-panel cm-acquire-deck" id="cm-sec-acquire"><h2>Acquire</h2>${ready.toBuy||ready.ordered?`<p>Track what this deck needs and where to get it.</p><div class="cm-budget-figures"><div><strong>${ready.toBuy}</strong><span>To buy</span></div><div><strong>${ready.ordered}</strong><span>Ordered</span></div><div><strong>${C.money(ready.costToFinish)}</strong><span>$ to finish</span></div></div><div class="cm-actions">${b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},true)}${b('View orders','shop-orders')}</div><p class="cm-muted">The buy list shows cards this deck needs with current prices. Orders track what's on the way from shops.</p>`:`<p class="cm-muted">This deck has no outstanding cards to acquire. Every reserved card is either in the physical deck or ready to add.</p>${d.status==='draft'?`<p class="cm-muted">A draft's missing cards are its Draft list in the Library; Finalize & reserve puts them on the buy list.</p>`:''}`}</section>`
 }[tab]();
-C.main.innerHTML=`<section class="cm-deck-hero" style="${heroTint}${heroArt?`--hero:url('${e(heroArt)}')`:''}">${heroCard}<div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${e(commander(d))} ${C.colors(C.card(d.commanders[0])?.colorIdentity)} <span class="cm-badge ${ready.ready?'good':''}">${d.archived?'Archived':d.status==='draft'?'Defining':ready.complete?'Complete':ready.playable?'Playable':'Building'}</span> <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="Recorded prices of the main list against the definition’s total cap">Over the ${e(C.money(cap))} cap · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p>${mech.list.length?`<div class="cm-deck-chips${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${mech.list.map(m=>`<span class="cm-chip">${e(m)}</span>`).join('')}</div>`:''}${d.notes?`<p class="cm-deck-strategy">${e(d.notes)}</p>`:''}<div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${changeBtn}${measure}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}</div></div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}</nav>`);}
+C.main.innerHTML=`<section class="cm-deck-hero" style="${heroTint}${heroArt?`--hero:url('${e(heroArt)}')`:''}">${heroCard}<div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${e(commander(d))} ${C.colors(C.card(d.commanders[0])?.colorIdentity)} <span class="cm-badge ${ready.ready?'good':''}">${d.archived?'Archived':d.status==='draft'?'Defining':ready.complete?'Complete':ready.playable?'Playable':'Building'}</span> ${d.archived?'':legalBadge(d)} <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="Recorded prices of the main list against the definition’s total cap">Over the ${e(C.money(cap))} cap · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p>${mech.list.length?`<div class="cm-deck-chips${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${mech.list.map(m=>`<span class="cm-chip">${e(m)}</span>`).join('')}</div>`:''}${d.notes?`<p class="cm-deck-strategy">${e(d.notes)}</p>`:''}<div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${changeBtn}${measure}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}</div></div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}${changeBtn}</nav>`);C.afterOverview?.(d.id);}
 /* THE NEXT LINE. One sentence, in the order the work happens: add what you already own, buy
    what you do not, wait for what is ordered, swap the substitutes out when the real copies
    arrive. Every number is readiness's, so the line agrees with the figures above it. */
@@ -258,7 +329,7 @@ function compositionHTML(cards,curve,max,types){return cards.length?`<div class=
    not. Every one is the rules module's or readiness's, so the cards agree with the Shop strip and
    the Orders tab by construction. */
 function costOf(d){
-  const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??(R?R.RULES.deckCap:null),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
+  const r=M.readiness(C.state,d),R=globalThis.CrankRules,cap=d.definition.budget??C.deckCap(),perCard=d.definition.perCardCap??(R?R.RULES.perCardMax:null);
   const pct=cap>0?r.marketValue/cap*100:null;
   const lots=C.state.lots.filter(l=>l.allocation?.deckId===d.id);
   const overCap=R?lots.filter(l=>Number.isFinite(l.paid)&&R.capFor(C.card(l.cardId).price)!==null&&l.paid>R.capFor(C.card(l.cardId).price)).length:0;
@@ -314,7 +385,7 @@ function bento(d,cards,curve,max,types,ready,tint=''){
   const terms=lead&&CL&&CL.classify?{...lead,...CL.classify(lead)}:lead;
   const desc=S&&lead?S.describe(terms,d.definition.mechanics||[]):null;
   const plays=card('plays','How it plays',desc&&desc.lines.length
-    ?`<div class="cm-plays-grid">${desc.lines.slice(0,4).map(l=>`<div><strong>${e(l.label)}</strong><span>${e(l.why)}${l.source==='mechanics'?' (named by the deck)':''}</span></div>`).join('')}</div><p class="cm-bento-facts"><button type="button" class="cm-text-button" data-action="jump" data-target="cm-sec-guide">Full guide and SWOT</button></p>`
+    ?`<div class="cm-plays-grid">${desc.lines.slice(0,4).map(l=>`<div><strong>${e(l.label)}</strong><span>${e(l.why)}${l.source==='mechanics'?' (named by the deck)':''}</span></div>`).join('')}</div><p class="cm-bento-facts"><button type="button" class="cm-text-button" data-action="deck-guide" data-deck="${e(d.id)}">Full guide and SWOT</button></p>`
     :`<p class="cm-muted">${lead?`Nothing in ${e(lead.name)}'s rules text names a strategy the vocabulary knows. Name the deck's mechanics in its definition and they will read here.`:'The deck has no commander yet.'}</p>`);
 
   /* UPGRADE PATH. The four cheapest linked swaps, and a link to the rest. */
@@ -367,13 +438,23 @@ function cardsTab(d,cards,curve,max,types){
   for(const r of M.projection(C.state)){if(r.standInDeckId!==d.id)continue;subs.set(r.cardId,(subs.get(r.cardId)||0)+r.quantity);
     if(r.standInFor){const n=(C.card(r.cardId)||{}).name||'';if(n)heldBy.set(r.standInFor,[...(heldBy.get(r.standInFor)||[]),n]);}}
   const sum=(list,f)=>list.filter(f).reduce((n,r)=>n+r.quantity,0);
-  const status=slot=>{if(d.status==='draft')return ['Draft list',M.statusTone('Draft list')];const rs=bySlot.get(slot.id)||[];const need=sum(rs,r=>r.kind==='need'),ordered=sum(rs,r=>r.kind==='lot'&&r.source==='ordered'),ready=sum(rs,r=>r.kind==='lot'&&r.source==='owned'&&r.placement!=='Physical deck'),boxed=sum(rs,r=>r.placement==='Physical deck');
-    return need?[slot.quantity>1?`To buy ${need}`:'To buy','buy']:ordered?['Ordered',M.statusTone('Ordered')]:ready?['Ready to add','pull']:boxed>=slot.quantity?['Physical deck',M.statusTone('Physical deck')]:['Reserved',M.statusTone('Reserved')];};
+  /* EACH SLOT IN CARD STATES (docs/card-states.md). The pill is the stage while the list's card is not owned --
+     Watching on a draft list, To buy, Ordered -- then To add while an owned copy waits outside the box, and
+     Target once it is in. Outside the box a slot also wears its role (Rob, 2026-09-26): Upgrade when a card in
+     the box holds its seat (a substitute, or the box is full), Reserved when the seat is empty. */
+  const seat=M.seats(C.state).decks.get(d.id),role=slot=>seat&&(seat.full||seat.held.has(slot.id))?'Upgrade':'Reserved';
+  const status=slot=>{const T=l=>[l,M.stateTone(l)];if(d.status==='draft')return T('Watching');const rs=bySlot.get(slot.id)||[];const need=sum(rs,r=>r.kind==='need'),ordered=sum(rs,r=>r.kind==='lot'&&r.source==='ordered'),ready=sum(rs,r=>r.kind==='lot'&&r.source==='owned'&&r.placement!=='Physical deck');
+    return need?[slot.quantity>1?`To buy ${need}`:'To buy',M.stateTone('To buy'),role(slot)]:ordered?[...T('Ordered'),role(slot)]:ready?[...T('To add'),role(slot)]:T('Target');};
   const ORDER=R.TYPE_ORDER,groups=new Map(ORDER.map(k=>[k,[]]));
   for(const slot of d.slots.filter(r=>r.purpose==='main')){const c=C.card(slot.cardId);if(!c)continue;groups.get(d.commanders.includes(slot.cardId)?'Commander':ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other').push({slot,c});}
-  const line=({slot,c})=>{const [label,tone]=status(slot),sub=subs.get(slot.cardId)||0,held=heldBy.get(slot.id)||[];return `<li><span class="cm-deck-qty">${slot.quantity}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.id)}">${e(c.name)}</button><span class="cm-deck-mana">${C.mana(c.manaCost,c.typeLine)}</span><span class="cm-price">${Number.isFinite(c.price)?C.money(c.price):''}</span><span class="cm-deck-flags">${C.pill(e(label),tone)}${sub?C.pill(`${sub} substitute${sub===1?'':'s'} in the box`,'standin'):''}${held.length?C.pill(e(`held by ${held.slice(0,2).join(', ')}${held.length>2?` and ${held.length-2} more`:''}`),'standin','title="A substitute is in the box for this seat until the real card is ready."'):''}${slot.option?C.pill('Option','watch'):''}${c.gameChanger?C.pill('GC','remove','title="Game Changer"'):''}</span></li>`;};
+  const line=({slot,c})=>{const [label,tone,fact]=status(slot),sub=subs.get(slot.cardId)||0,held=heldBy.get(slot.id)||[];return `<li><span class="cm-deck-qty">${slot.quantity}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.id)}">${e(c.name)}</button><span class="cm-deck-mana">${C.mana(c.manaCost,c.typeLine)}</span><span class="cm-price">${Number.isFinite(c.price)?C.money(c.price):''}</span><span class="cm-deck-flags">${C.pill(e(label),tone)}${fact?` <span class="cm-badge cm-badge-${fact.toLowerCase()}" title="${fact==='Upgrade'?'Replaces the card holding this seat in the box':'Takes an empty seat: the deck is short until it is in'}">${e(fact)}</span>`:''}${sub?C.pill(`${sub} substitute${sub===1?'':'s'} in the box`,'standin'):''}${held.length?C.pill(e(`held by ${held.slice(0,2).join(', ')}${held.length>2?` and ${held.length-2} more`:''}`),'standin','title="A substitute is in the box for this seat until the real card is ready."'):''}${slot.option?C.pill('Option','watch'):''}${c.gameChanger?C.pill('GC','remove','title="Game Changer"'):''}</span></li>`;};
   const composition=compositionHTML(cards,curve,max,types);
-  return `<section class="v-panel cm-deck-cards" id="cm-sec-cards"><div class="cm-deck-cards-head"><h2>The hundred <span class="cm-pull-n">${cards.reduce((n,x)=>n+x.q,0)}</span></h2><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Export deck list','deck-export',{deck:d.id})}</div></div>${cards.length?'':'<p class="cm-muted">No cards yet. Edit the card list, or build one in the Deck Lab.</p>'}${composition}${[...groups].filter(([,l])=>l.length).map(([k,l])=>`<h3>${e(k)} <small>${l.reduce((n,x)=>n+x.slot.quantity,0)}</small></h3><ul class="cm-deck-list">${l.sort((a,b2)=>(Number(a.c.manaValue)||0)-(Number(b2.c.manaValue)||0)||a.c.name.localeCompare(b2.c.name)).map(line).join('')}</ul>`).join('')}</section>`;
+  /* PLAYABLE, AND WHY (Rob, 2026-09-26): a deck plays when every seat holds a card -- no Reserved slot -- and is
+     complete when every seat holds the list's own card. The line says which, with the counts behind it. */
+  const mains=d.status==='draft'?[]:d.slots.filter(r=>r.purpose==='main'),outside=mains.map(slot=>status(slot)[2]).filter(Boolean);
+  const nUp=outside.filter(x=>x==='Upgrade').length,nRes=outside.filter(x=>x==='Reserved').length;
+  const playLine=d.status==='draft'?'':`<p class="cm-deck-playable ${nRes?'is-short':'is-playable'}">${nRes?`<b>Not playable</b>: ${nRes} card${nRes===1?'':'s'} reserved for empty seats`:`<b>Playable</b>: every seat holds a card`}${nUp?` · ${nUp} upgrade${nUp===1?'':'s'} to make`:nRes?'':' · complete'}</p>`;
+  return `<section class="v-panel cm-deck-cards" id="cm-sec-cards"><div class="cm-deck-cards-head"><h2>The hundred <span class="cm-pull-n">${cards.reduce((n,x)=>n+x.q,0)}</span></h2><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Export deck list','deck-export',{deck:d.id})}</div></div>${playLine}${cards.length?'':'<p class="cm-muted">No cards yet. Edit the card list, or build one in the Deck Lab.</p>'}${composition}${[...groups].filter(([,l])=>l.length).map(([k,l])=>`<h3>${e(k)} <small>${l.reduce((n,x)=>n+x.slot.quantity,0)}</small></h3><ul class="cm-deck-list">${l.sort((a,b2)=>(Number(a.c.manaValue)||0)-(Number(b2.c.manaValue)||0)||a.c.name.localeCompare(b2.c.name)).map(line).join('')}</ul>`).join('')}</section>`;
 }
 actions['deck-tab']=el=>go('decks',{deck:el.dataset.deck,tab:el.dataset.tab==='overview'?'':el.dataset.tab});
 /* THE UPGRADE PATH HAS A HOME. The ceiling cards used to interleave the Collection as
@@ -431,11 +512,12 @@ actions.deck=el=>go('decks',{deck:el.dataset.deck});actions['deck-cards']=el=>go
    pick a commander and the ninety-nine come later. From what you already have, the group is
    the deck: it names its own commander -- the one Commander-legal card in it -- and the deck
    is created attached to that group, so the thing it draws from is set from the first day. */
-function commanderDeck(groupId){
-  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck']()});
+function commanderDeck(groupId,query=''){
+  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck'](),query});
 }
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
 const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
+C.groupDeck=gid=>groupDeck(gid);
 function groupDeck(groupId){
   const g=C.state.groups.find(x=>x.id===groupId);
   if(!g)throw Error('Choose a collection group.');
@@ -443,10 +525,15 @@ function groupDeck(groupId){
   if(!rows.length)throw Error(`${g.name} holds no cards yet, so there is nothing to start a deck from. Import a list into it, or start from a commander.`);
   const leaders=rows.map(r=>C.card(r.cardId)).filter(c=>c&&c.commander&&c.legalities?.commander==='legal');
   if(!leaders.length)throw Error(`${g.name} holds no Commander-legal creature, so there is nothing to lead the deck. Add one, or start from a commander instead.`);
-  return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`${rows.reduce((n,r)=>n+r.quantity,0)} cards come across from ${g.name}, and the deck stays attached to that group.`),
+  /* THE COPIES COME TOO, IF YOU SAY SO (Rob, 2026-09-28). He loaded 85 cards he owns into a group for a Quintorius deck,
+     made the deck from the group, and found them still on the Bench: the deck copied the list and moved nothing. The
+     copies on the Bench filed in this group can go straight into the new deck's box; a copy already in another deck, reserved for one, or offered for trade stays where it is. */
+  const bench=C.state.lots.filter(l=>l.source==='owned'&&(l.groupIds||[]).includes(g.id)&&l.location?.kind==='bench'&&!l.allocation&&l.offer==='none'),copies=bench.reduce((n,l)=>n+l.quantity,0);
+  return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`This makes a new draft deck whose list is the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in ${g.name}, and the deck stays linked to ${g.name}.`)+(copies?`<label class="cm-checkbox cm-full"><input type="checkbox" name="move" checked> Put the ${copies} cop${copies===1?'y':'ies'} you own from ${e(g.name)} (now on the Bench) in the deck's box</label>`:''),
     async data=>{const id='deck:'+C.uid();
       await commit({type:'createDeck',deckId:id,name:data.name,commanders:[data.commanderId],groupId:g.id,
         slots:rows.some(r=>r.cardId===data.commanderId)?rows:[{cardId:data.commanderId,quantity:1},...rows]});
+      if(data.move&&bench.length)await commit({type:'bulk',op:'place',deckId:id,lotIds:bench.map(l=>l.id),asStandIn:true});
       go('decks',{deck:id});},'Create draft');
 }
 /* NOTHING HERE IS A QUESTION YOU HAVE TO ANSWER. Both selects open on the answer most
@@ -475,11 +562,19 @@ actions['new-deck']=()=>{
         <strong>Import</strong>
         <span>Upload or paste a decklist</span>
       </button>
+      <button type="button" class="cm-wizard-path" data-action="import-archidekt">
+        <strong>From a link</strong>
+        <span>A public deck on Archidekt</span>
+      </button>
+      <button type="button" class="cm-wizard-path" data-action="start-precon">
+        <strong>From a precon</strong>
+        <span>One of Wizards' Commander decks</span>
+      </button>
       <button type="button" class="cm-wizard-path" data-action="wizard-load">
         <strong>Load</strong>
         <span>Start from one of your own decks</span>
       </button>
-    </div></div>`);
+    </div></div>`).classList.add('cm-new-deck-dialog');
 };
 /* LOAD PATH: start from one of Rob's own decks.
  *
@@ -632,22 +727,23 @@ actions['load-choose']=async el=>{
 actions['wizard-create']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   const sources=filledGroups();
-  if(!sources.length)return commanderDeck();
+  /* From a commander is the Build wizard (R3.11): Commander → Strategy → Budget → Review. */
+  if(!sources.length)return C.build.start();
   const road=(how,groupId)=>{
     const g=groupId?C.state.groups.find(x=>x.id===groupId):null;
     if(how!=='group')return g?`Continue opens the commander picker. The deck is filed in ${g.name} and draws from it.`
       :'Continue opens the commander picker. A collection group is made with the deck and named after it.';
     if(!g)return 'Continue opens the import: upload a CSV, TSV, TXT or XLSX file, or paste a list. The cards land in a new collection group and the deck is built from them.';
     const rows=groupRows(g),copies=rows.reduce((n,r)=>n+r.quantity,0);
-    return rows.length?`Continue brings ${copies} card${copies===1?'':'s'} across from ${g.name} as the deck's list, and the deck stays attached to that group.`
+    return rows.length?`Continue makes a draft deck whose list is the ${copies} card${copies===1?'':'s'} in ${g.name}, linked to that group. The next step offers to put the copies you own in its box.`
       :`${g.name} holds no cards yet. Choose a group that does, ask for a new one and import a list into it, or start from a commander.`;
   };
   const wiz=form('Create a deck from a commander',
     `<div class="cm-full">${s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')}</div>`
-    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
+    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.filter(g=>M.deckMayTake(C.state,g,'')).map(g=>[g.id,C.groupLabel(g)])],'')}</div>`
     +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
     v=>{
-      if(v.how!=='group')return commanderDeck(v.groupId||undefined);
+      if(v.how!=='group')return v.groupId?commanderDeck(v.groupId):C.build.start();
       if(v.groupId)return groupDeck(v.groupId);
       if(!C.importList)throw Error('The import module is not loaded, so a list cannot be read in. Start from a commander, or reload the page.');
       return C.importList({name:'New deck list',after:gid=>groupDeck(gid)});
@@ -658,28 +754,80 @@ actions['wizard-create']=()=>{
   });
   return wiz;
 };
+/* After a list is imported for a new deck: the deck, when the list names a commander to lead it. */
+function deckFromImport(gid){
+  const g=C.state.groups.find(x=>x.id===gid);
+  if(g&&groupRows(g).length)return groupDeck(gid);
+  C.notice('Import completed. Create a deck from the imported cards in the Cards page.');
+}
+/* The landing page's Step one (R3.8) starts a deck the two ways the wizard does: from a commander, with the name
+   typed there already searched, or from a pasted list or a file, read by the app's own import. */
+/* A DECK BY ITS LINK (R3.10a): the deck comes through the app's own importer (cloud/import.mjs) and becomes a list,
+   commander first, in the same import the paste path opens, so it is read against the catalog and reviewed before
+   anything is saved. A Moxfield or Deckstats link, or an importer out of reach, is answered with the paste path. */
+function listOf(deck){const lead=new Set(deck.commander||[]);const rows=[...deck.cards].sort((a,b)=>(lead.has(b.name)?1:0)-(lead.has(a.name)?1:0));return rows.map(r=>`${r.quantity} ${r.name}`).join('\n');}
+async function deckFromLink(url){
+  const S=globalThis.MtgDeckSources;
+  if(!S)throw Error('The deck-link reader is not loaded. Reload the page, or paste the list instead.');
+  const out=await S.load(String(url||'').trim());
+  if(out.error)throw Error(out.advice?`${out.error} ${out.advice}`:out.error);
+  const warn=(out.deck.warnings||[]).join(' ');
+  if(warn)C.notice(`${out.deck.name}: ${warn}`);
+  return C.importList({name:out.deck.name||'New deck list',text:listOf(out.deck),after:deckFromImport});
+}
+C.startDeck={commander:query=>C.build.start(String(query||'').trim()),list:(text='')=>C.importList({name:'New deck list',text,after:deckFromImport}),link:deckFromLink,
+  /* True for a link to a deck site the app knows: Step one sends it here rather than searching for it as a name. */
+  isLink:text=>!!(globalThis.MtgDeckSources&&MtgDeckSources.identify(String(text||'').trim()))};
+/* START FROM A PRECON (R3.10b): every Commander precon Wizards has published (data/precons.json, from MTGJSON by
+   tools/build-precons.mjs), fetched only when the picker opens. A choice becomes a list, commander first, in the same
+   import the paste path opens, so it is read against the catalog and reviewed before anything is saved. */
+let preconCache=null;
+async function precons(){
+  if(preconCache)return preconCache;
+  const A=globalThis.CrankAssets,r=await fetch(A.precons).catch(()=>null);
+  if(!r||!r.ok)throw Error('The list of precons could not be loaded. Check the connection and try again, or paste a list instead.');
+  return preconCache=A.expect(await r.json(),'precons');
+}
+const usDate=d=>new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])=>`${q} ${n}`)).join('\n');
+async function preconPicker(){
+  const data=await precons(),today=M.today();  /* the reader's own calendar date: a deck out today is out */
+  const d=modal('Start from a precon',`<label>Search<input id="cm-precon-q" type="search" placeholder="A deck, a commander or a set code" autocomplete="off"></label><p class="cm-muted" id="cm-precon-n" aria-live="polite"></p><ul class="cm-precon-list" id="cm-precon-list"></ul>`);
+  const q=d.querySelector('#cm-precon-q'),list=d.querySelector('#cm-precon-list'),n=d.querySelector('#cm-precon-n');
+  const draw=()=>{
+    const t=q.value.trim().toLowerCase(),hits=data.decks.filter(p=>!t||[p.name,p.code,...p.commander.map(c=>c.name)].some(x=>x.toLowerCase().includes(t)));
+    n.textContent=`${hits.length.toLocaleString('en-US')} of ${data.decks.length.toLocaleString('en-US')} Commander precons, newest first`;
+    list.innerHTML=hits.slice(0,60).map(p=>`<li><button type="button" class="cm-precon" data-action="precon-start" data-precon="${e(p.id)}"><strong>${e(p.name)}</strong><span class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span><span class="cm-muted">${e(p.code)} · ${p.releaseDate>today?'Releases ':''}${e(usDate(p.releaseDate))}</span></button></li>`).join('')
+      +(hits.length>60?`<li class="cm-muted">${(hits.length-60).toLocaleString('en-US')} more: narrow the search.</li>`:'')+(hits.length?'':'<li class="cm-muted">No precon matches that. Try a commander\'s name or a set code.</li>');
+  };
+  q.addEventListener('input',draw);draw();q.focus();
+}
+actions['start-precon']=()=>{actions.close();return preconPicker();};
+actions['precon-start']=async el=>{
+  const p=(await precons()).decks.find(x=>x.id===el.dataset.precon);
+  if(!p)throw Error('That precon is not in the list any more. Reload the page.');
+  actions.close();
+  C.importList({name:p.name,text:preconText(p),after:deckFromImport});
+  /* A card banned since it was printed, or one too new for the card list, is said before the review shows it. */
+  if(p.notInUniverse)C.notice(`${p.name}: ${p.notInUniverse.length} of its cards ${p.notInUniverse.length===1?'is':'are'} not in the Commander card list today (${p.notInUniverse.slice(0,3).join(', ')}${p.notInUniverse.length>3?', …':''}): banned since it was printed, or too new. The review shows ${p.notInUniverse.length===1?'it':'them'}.`);
+};
+C.startDeck.precon=preconPicker;
+actions['import-archidekt']=()=>{actions.close();return form('Import from Archidekt',f('Deck link','url','','required maxlength="300" placeholder="archidekt.com/decks/123456" inputmode="url" autocomplete="off"')+note('A public deck. It comes in as a list you review before anything is saved, read against the card catalog. Private decks, and Moxfield or Deckstats links, cannot be read this way: export the list there and paste it.'),v=>deckFromLink(v.url),'Import deck');};
 /* IMPORT PATH: file/paste import */
 actions['wizard-import']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   if(!C.importList)throw Error('The import module is not loaded. Reload the page.');
-  C.importList({name:'New deck list',back:()=>actions['new-deck'](),after:gid=>{
-    const g=C.state.groups.find(x=>x.id===gid);
-    if(g){
-      const rows=groupRows(g);
-      if(rows.length)return groupDeck(gid);
-    }
-    C.notice('Import completed. Create a deck from the imported cards in the Cards page.');
-  }});
+  C.importList({name:'New deck list',back:()=>actions['new-deck'](),after:deckFromImport});
 };
 /* LAB PATH: navigate to Lab for auto-build */
 actions['wizard-lab']=()=>{
   actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
   go('lab');
 };
-actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.deckCap:225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
+actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.deckCap()??225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
        ever over anything. The form shows the standing figures as placeholders and writes them
        on save when the field is left empty; Finalize's "remove the price caps" clears them. */
-      budget:data.budget===''?(C.RULES?C.RULES.deckCap:null):Number(data.budget),perCardCap:data.perCardCap===''?(C.RULES?C.RULES.perCardMax:null):Number(data.perCardCap)}}));};
+      budget:data.budget===''?C.deckCap():Number(data.budget),perCardCap:data.perCardCap===''?(C.RULES?C.RULES.perCardMax:null):Number(data.perCardCap)}}));};
 /* ATTACHING AN EXISTING GROUP IS THE OTHER ROAD IN: you uploaded a sheet, the cards are in a
    group, and now you want a deck around them. So attaching offers to bring the group's cards
    across as the deck's list -- offered only where it cannot destroy anything, on a draft
@@ -688,15 +836,15 @@ actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Def
 actions['attach-group']=el=>{
   const d=M.deck(C.state,el.dataset.deck);
   if(!C.state.groups.length)throw Error('Create a collection group first, from the Cards page.');
-  const choices=C.state.groups.filter(g=>g.id!==d.groupId);
-  if(!choices.length)throw Error(`${d.name} is already attached to your only collection group.`);
+  const choices=C.state.groups.filter(g=>g.id!==d.groupId&&M.deckMayTake(C.state,g,d.id));
+  if(!choices.length)throw Error(`No other group can be ${d.name}\u2019s box: the Bench, To sell / trade and other decks\u2019 groups are places of their own. Make a General group first, from the Library.`);
   const main=()=>d.slots.filter(r=>r.purpose==='main');
   const bare=d.status==='draft'&&main().length<=1;
   /* The offer is about the group you pick, which you pick after the dialog opens -- keying it
      off the first one in the list hid it whenever that one happened to be empty. */
   const anyRows=choices.some(g=>groupRows(g).length);
   form(d.groupId?'Change the collection group':'Attach a collection group',
-    `<div class="cm-full">${s('Collection group','groupId',choices.map(g=>[g.id,g.name]),'')}</div>`
+    `<div class="cm-full">${s('Collection group','groupId',choices.map(g=>[g.id,C.groupLabel(g)]),'')}</div>`
     +(bare&&anyRows?`<label class="cm-checkbox cm-full"><input type="checkbox" name="adopt" checked>Bring the group\u2019s cards across as this deck\u2019s list</label>`:'')
     +note('This deck\u2019s cards appear under this group in Cards, and a copy filed there is reserved for this deck before any other matching copy.'),
     v=>{
@@ -762,8 +910,27 @@ function popMenu(el,html,width=250){
   menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});
   return menu;
 }
-actions['deck-more-menu']=el=>{const d=M.deck(C.state,el.dataset.deck),g=attached(d),ladder=C.statusLadder||[],upgrades=d.slots.filter(r=>r.purpose!=='main').length;
-  popMenu(el,`<p>${e(d.name)}</p><button type="button" data-action="page-help" data-help="deck">About this page</button>${d.archived?'':b('Trace','deck-trace',{deck:d.id})}<hr>${g?b('View the collection group','deck-group',{group:g.id}):''}${b(g?'Change the collection group':'Attach a collection group','attach-group',{deck:d.id})}${b('Reserve available copies','fulfill',{deck:d.id})}${d.status==='final'?b(d.locked?'Unlock deck':'Lock deck','lock',{deck:d.id}):''}<hr>${b(`Upgrades (${upgrades})`,'deck-upgrades',{deck:d.id})}${b('Role lens (Discover)','deck-lens',{deck:d.id})}${d.status==='draft'?b(`Buy list (${M.readiness(C.state,d).toBuy})`,'deck-buy-list',{deck:d.id}):''}${b('Edit definition','edit-deck',{deck:d.id})}${b('Export deck list','deck-export',{deck:d.id})}${b('Archive deck','archive',{deck:d.id})}${d.archived?'':`<hr><p>${d.status==='draft'?'Every card in the draft list becomes':'Every card still owed becomes'}</p>${ladder.map(([id,label,why])=>`<button type="button" class="cm-rung" aria-label="${e(label)}" data-action="deck-status" data-deck="${e(d.id)}" data-source="${id}"><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`).join('')}`}<hr><p>Insight</p>${b('Recommendations','deck-suggestions',{deck:d.id})}${b('Reports & advice','deck-evidence',{deck:d.id})}${b(C.termsOn()?'Hide term definitions':'Show term definitions','toggle-terms')}`,290);};
+/* THE MORE MENU, IN THE DESIGN'S ORDER (r3, 29-deck-more-menu; R3.5). What you do with this deck first --
+   Measure, Trace in Explore, Guide & SWOT, Export, Compare with -- then renaming, archiving and deleting,
+   with Delete in red and only on an archived deck. Everything the menu carried before the redesign stays,
+   below those (INTAKE §3): the collection group, reserving, locking, upgrades, the role lens, the status
+   ladder and the insight entries. The design also draws Duplicate; there is no way to duplicate a deck yet,
+   so it is not drawn until there is. */
+actions['deck-more-menu']=el=>{const d=M.deck(C.state,el.dataset.deck),g=attached(d),ladder=C.statusLadder||[],upgrades=d.slots.filter(r=>r.purpose!=='main').length,hasCards=d.slots.some(r=>r.purpose==='main');
+  popMenu(el,`<p>This deck</p>${!d.archived&&hasCards?b('Measure','measure-deck',{deck:d.id}):''}${d.archived?'':b('Trace in Explore','deck-trace',{deck:d.id})}${b('Guide & SWOT','deck-guide',{deck:d.id})}${b('Export / print','deck-export',{deck:d.id})}${b('Compare with…','compare-with',{deck:d.id})}`
+    +`<hr>${b('Rename & edit definition','edit-deck',{deck:d.id})}${d.archived?b('Restore as draft','restore-deck',{deck:d.id})+`<button type="button" data-action="delete-deck" data-deck="${e(d.id)}" class="cm-danger">Delete deck…</button>`:b('Archive','archive',{deck:d.id})}`
+    +`<hr><p>Collection</p>${g?b('View the collection group','deck-group',{group:g.id}):''}${b(g?'Change the collection group':'Attach a collection group','attach-group',{deck:d.id})}${b('Reserve available copies','fulfill',{deck:d.id})}${d.status==='final'?b(d.locked?'Unlock deck':'Lock deck','lock',{deck:d.id}):''}${b(`Upgrades (${upgrades})`,'deck-upgrades',{deck:d.id})}${b('Role lens (Explore)','deck-lens',{deck:d.id})}${d.status==='draft'?b(`Draft list (${M.draftShort(C.state,d).reduce((n,x)=>n+x.quantity,0)})`,'deck-cards',{deck:d.id}):''}`
+    +`${d.archived?'':`<hr><p>${d.status==='draft'?'Every card in the draft list becomes':'Every card still owed becomes'}</p>${ladder.map(([id,label,why])=>`<button type="button" class="cm-rung" aria-label="${e(label)}" data-action="deck-status" data-deck="${e(d.id)}" data-source="${id}"><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`).join('')}`}<hr><p>Insight</p>${b('Recommendations','deck-suggestions',{deck:d.id})}${b('Reports & advice','deck-evidence',{deck:d.id})}${b(C.termsOn()?'Hide term definitions':'Show term definitions','toggle-terms')}<button type="button" data-action="page-help" data-help="deck">About this page</button>`,290);};
+/* Compare with…: this deck is ticked, and Decks says to tick the other. */
+actions['compare-with']=el=>{const d=M.deck(C.state,el.dataset.deck);C.comparePicks=new Set([d.id]);go('decks');C.notice(`Tick another deck to compare with ${deckNumberOff(d.name)}, then press Compare.`);};
+/* Opened from the page, it opens in place and the address does not move (the first look's rule: the
+   link stays on the deck). From another tab or the More menu, the Overview draws first and then opens it. */
+let guideWanted=null;
+function openGuide(id){const t=document.getElementById('cm-guide-template');if(!t||t.dataset.deck!==id)return false;const d=M.deck(C.state,id);
+  modal('Guide & SWOT · '+deckNumberOff(d.name),`<div class="cm-guide-body"></div><div class="cm-form-footer">${b('Close','close')}</div>`);
+  $('#cm-dialog .cm-guide-body').append(t.content.cloneNode(true));$('#cm-dialog').classList.add('cm-guide-modal');return true;}
+actions['deck-guide']=el=>{const id=el.dataset.deck;if(openGuide(id))return;guideWanted=id;go('decks',{deck:id});};
+C.afterOverview=id=>{if(guideWanted===id){guideWanted=null;openGuide(id);}};
 actions['deck-pull']=el=>go('pull',{deck:el.dataset.deck});
 actions['deck-buy-list']=el=>go('cards',{tab:'buy',deck:el.dataset.deck});
 actions['deck-upgrades']=el=>go('decks',{deck:el.dataset.deck,tab:'upgrades'});
@@ -782,11 +949,12 @@ actions['deck-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);document.query
   menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});};
 actions['delete-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.archived)throw Error('Archive the deck first. Delete permanently is offered on archived decks only.');
   const games=C.state.games.filter(g=>g.deckId===d.id).length,reports=C.state.reports.filter(r=>r.deckId===d.id).length;
-  /* The typed DELETE goes with the message: a reader who has turned the warning off has
-     said they know what this does, and asking them to type it anyway is theatre. What is
+  /* The deck's own name is what is typed (r3, 74-confirm-delete): it proves the reader is deleting
+     the deck they think they are, which a fixed word did not. The typing goes with the message: a reader who has turned the warning off has
+     said they know what this does, and asking them to type it anyway is theater. What is
      never skipped is that it only applies to archived decks. */
   if(C.skipping('deleteDeck'))return commit({type:'deleteDeck',deckId:d.id,confirmed:true}).then(()=>{C.notice('Deleted permanently. You turned this confirmation off; User Functions → Confirmations turns it back on.');go('decks');});
-  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. This cannot be undone.`,true)}${f('Type DELETE to confirm','confirm','','required autocomplete="off"')}<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again</label></div>`,async v=>{if(v.confirm!=='DELETE')throw Error('Type DELETE exactly.');if(v.skipNext)await C.setSkip('deleteDeck',true);await commit({type:'deleteDeck',deckId:d.id,confirmed:true});go('decks');},'Delete permanently');};
+  form('Delete '+d.name+' permanently',`<div class="cm-full">${note(`This removes the deck plan, ${reports} report${reports===1?'':'s'} and ${games} logged game${games===1?'':'s'}. Copies physically in it return to the Bench. Your owned cards are not deleted. Only the Undo offered straight after can bring it back.`,true)}${f('Type the deck name to confirm','confirm','',`required autocomplete="off" placeholder="${e(d.name)}"`)}<label class="cm-checkbox cm-full"><input type="checkbox" name="skipNext">Don’t show this message again</label></div>`,async v=>{if(v.confirm.trim()!==d.name.trim())throw Error(`Type the deck name exactly: ${d.name}`);if(v.skipNext)await C.setSkip('deleteDeck',true);await commit({type:'deleteDeck',deckId:d.id,confirmed:true});go('decks');},'Delete permanently').classList.add('cm-destructive');};
 /* Straight through when the reader has said so, with a toast that names what happened and
    where the confirmation went, so a silent archive is never a mystery. */
 actions.archive=el=>C.skipping('archive')
@@ -806,6 +974,9 @@ actions['log-game']=el=>{const d=M.deck(C.state,el.dataset.deck),did=d.id,cards=
 const MIN_GAMES=8;
 const gamesOf=d=>C.state.games.filter(g=>g.deckId===d.id).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
 function recordSummary(d){const games=gamesOf(d),wins=games.filter(g=>g.outcome==='win').length,losses=games.filter(g=>g.outcome==='loss').length,decided=wins+losses;const W=globalThis.MtgGameRecord;const interval=W&&decided?W.wilson(wins,decided):null;return {games,wins,losses,decided,rate:decided?wins/decided:null,interval};}
+/* A game played at a CrankMagic table says so, and says when an AI sat in: a win over the house pilot is not a
+   win over three friends, and the record should not let one pass for the other (M5). */
+const tableBadges=g=>`<span class="cm-badge" title="Played at a CrankMagic table">Table</span>${g.table.ai?' <span class="cm-badge warn" title="An AI played at least one seat">AI</span>':''}`;
 function recordHTML(d){const {games,wins,losses,decided,rate,interval}=recordSummary(d),r=M.readiness(C.state,d);
   const head=`<h2>Record <span class="cm-pull-n">${games.length}</span></h2>`;
   if(!games.length)return `<section class="v-panel cm-record" id="cm-sec-record">${head}<p class="cm-muted">No games logged yet. Log a game from the action row and the record reads back here: wins and losses, the win rate once there are enough games to trust it, what each win cost, and which cards decided the games.</p></section>`;
@@ -814,14 +985,14 @@ function recordHTML(d){const {games,wins,losses,decided,rate,interval}=recordSum
      the typed figure alone, so a deck whose copies came in without receipts read $0.00 per win
      under a Cost panel saying $95 paid (UAT P-05). */
   const ownedLots=C.state.lots.filter(l=>l.source==='owned'&&l.allocation&&l.allocation.deckId===d.id),paidEstimated=ownedLots.some(l=>!Number.isFinite(l.paid)||l.paidSource==='catalog'),paidOrList=ownedLots.reduce((n,l)=>n+(Number.isFinite(l.paid)?l.paid:(C.card(l.cardId)?.price||0))*l.quantity,0);
-  const perWin=wins?paidOrList/wins:null,dateOf=g=>{const t=M.localDate(g.at);return t?t.toLocaleDateString(undefined,{dateStyle:'medium'}):String(g.at||'').slice(0,10);};
+  const perWin=wins?paidOrList/wins:null,dateOf=g=>{const t=M.localDate(g.at);return t?t.toLocaleDateString('en-US',{dateStyle:'medium'}):String(g.at||'').slice(0,10);};
   const verdict=decided<MIN_GAMES?`Too few games to tell — ${decided} decided of ${MIN_GAMES} needed.`:interval?`Win rate ${Math.round(rate*100)}% (${Math.round(interval.low*100)}–${Math.round(interval.high*100)}% at 95% over ${decided} decided games)${interval.low>0.25?' — better than a fair four-player seat':interval.high<0.25?' — below a fair four-player seat':' — not distinguishable from a fair seat yet'}.`:'';
   const name=id=>id&&C.card(id)?e(C.card(id).name):'—';
-  return `<section class="v-panel cm-record" id="cm-sec-record">${head}<div class="cm-budget-figures cm-record-figures"><div><strong>${wins}–${losses}${games.length-decided?`–${games.length-decided}`:''}</strong><span>W–L${games.length-decided?'–other':''}, last ${games.length}</span></div><div><strong>${rate===null?'—':Math.round(rate*100)+'%'}</strong><span>win rate · n = ${decided}</span></div><div><strong>${perWin===null?'—':(paidEstimated?'≈ ':'')+C.money(Math.round(perWin*100)/100)}</strong><span>paid per win</span></div></div><p class="cm-muted">${verdict}</p><div class="cm-table-wrap"><table class="cm-table cm-record-table"><thead><tr><th scope="col">When</th><th scope="col">Result</th><th scope="col">Finish</th><th scope="col">Bracket</th><th scope="col">Won it</th><th scope="col">Dead in hand</th><th scope="col">Turns</th><th scope="col">Evidence</th></tr></thead><tbody>${games.slice(0,10).map(g=>`<tr><td>${dateOf(g)}</td><td>${C.pill(e(g.outcome),g.outcome==='win'?'inbox':g.outcome==='loss'?'remove':'watch')}</td><td>${g.finish?`${g.finish}${g.pod?' of '+g.pod:''}`:'—'}</td><td>${g.bracket?'B'+g.bracket:'—'}</td><td>${name(g.mvpCardId)}</td><td>${name(g.deadCardId)}</td><td>${g.turns??'—'}</td><td>${g.online?b('Online report','online-game-report',{deck:d.id,game:g.id},false,{cls:'compact'}):'Manual log'}</td></tr>`).join('')}</tbody></table></div></section>`;}
+  return `<section class="v-panel cm-record" id="cm-sec-record">${head}<div class="cm-budget-figures cm-record-figures"><div><strong>${wins}–${losses}${games.length-decided?`–${games.length-decided}`:''}</strong><span>W–L${games.length-decided?'–other':''}, last ${games.length}</span></div><div><strong>${rate===null?'—':Math.round(rate*100)+'%'}</strong><span>win rate · n = ${decided}</span></div><div><strong>${perWin===null?'—':(paidEstimated?'≈ ':'')+C.money(Math.round(perWin*100)/100)}</strong><span>paid per win</span></div></div><p class="cm-muted">${verdict}</p><div class="cm-table-wrap"><table class="cm-table cm-record-table"><thead><tr><th scope="col">When</th><th scope="col">Result</th><th scope="col">Finish</th><th scope="col">Bracket</th><th scope="col">Won it</th><th scope="col">Dead in hand</th><th scope="col">Turns</th><th scope="col">Evidence</th></tr></thead><tbody>${games.slice(0,10).map(g=>`<tr><td>${dateOf(g)}</td><td>${C.pill(e(g.outcome),g.outcome==='win'?'inbox':g.outcome==='loss'?'remove':'watch')}</td><td>${g.finish?`${g.finish}${g.pod?' of '+g.pod:''}`:'—'}</td><td>${g.bracket?'B'+g.bracket:'—'}</td><td>${name(g.mvpCardId)}</td><td>${name(g.deadCardId)}</td><td>${g.turns??'—'}</td><td>${g.online?b('Online report','online-game-report',{deck:d.id,game:g.id},false,{cls:'compact'}):g.table?tableBadges(g):'Manual log'}</td></tr>`).join('')}</tbody></table></div></section>`;}
 actions['online-game-report']=el=>{const d=M.deck(C.state,el.dataset.deck),g=C.state.games.find(item=>item.id===el.dataset.game&&item.deckId===d.id);if(!g?.online)throw Error('That online match report is no longer available.');const r=g.online,c=r.telemetry?.counts||{},recommendations=r.deckSignals?.recommendations||[];
   modal(`Online match · ${d.name} · ${String(r.completedAt||g.at).slice(0,10)}`,`${note(`${String(r.outcome).toUpperCase()} · ${r.turns??'?'} turns · ${r.podSize??g.pod??'?'} players · journal ${r.telemetry?.integrity?.complete?'complete':'needs review'}`)}<div class="cm-budget-figures"><div><strong>${c.spells||0}</strong><span>spells</span></div><div><strong>${c.triggers||0}</strong><span>triggers</span></div><div><strong>${c.abilities||0}</strong><span>abilities</span></div><div><strong>${c.battlefieldDeaths||0}</strong><span>battlefield deaths</span></div></div><h3>Deck signals</h3><ul>${recommendations.map(item=>`<li><strong>${e(item.confidence||'evidence')}:</strong> ${e(item.text)}</li>`).join('')||'<li>No recommendation was generated from this match.</li>'}</ul><h3>Player feedback</h3><p>${e(r.playerFeedback?.notes||'No written feedback.')}</p><details class="cm-details"><summary>Full sanitized match report</summary><pre style="white-space:pre-wrap">${e(JSON.stringify(r,null,2))}</pre></details>`);};
 actions['deck-export']=el=>{const d=M.deck(C.state,el.dataset.deck);C.download(d.name.replace(/[^\w-]+/g,'-')+'.txt',d.slots.filter(r=>r.purpose==='main').map(r=>r.quantity+' '+C.card(r.cardId).name).join('\n'),'text/plain');};
-actions['deck-evidence']=el=>{const d=M.deck(C.state,el.dataset.deck),reports=C.state.reports.filter(r=>r.deckId===d.id),advice=C.state.advice.filter(r=>r.deckId===d.id),games=C.state.games.filter(r=>r.deckId===d.id);modal('Reports, advice & game history',`${note('Every measured run is filed here and under Simulation history on the deck page. Imported reports keep their protocol and exact-list fingerprint; a list change makes older results historical, not current.')}${b('Import report / advice pack','import-evidence',{deck:d.id})}${b('Compare reports','compare-reports',{deck:d.id})}${b('Export advice request','advice-request',{deck:d.id})}<h3>Simulation reports</h3>${reports.map(r=>`<details class="cm-details"><summary>${e(r.protocol)} · ${e(r.importedAt)} · ${r.deckFingerprint===M.fingerprint(d,C.state)?'Current list':'Historical list'}</summary><pre style="white-space:pre-wrap">${e(JSON.stringify(r,null,2))}</pre></details>`).join('')||'<p>No imported reports.</p>'}<h3>Advice</h3>${advice.map(r=>`<article>${note(r.deckFingerprint===M.fingerprint(d,C.state)?'Matches current list':'Historical advice for a different list')}<p style="white-space:pre-wrap">${e(r.text)}</p></article>`).join('')||'<p>No advice packs.</p>'}<h3>Recorded games</h3>${games.map(g=>`<p><strong>${e(g.outcome)}</strong> · ${e(String(g.at).slice(0,10))}${g.finish?` · ${g.finish}${g.pod?' of '+g.pod:''}`:''}${g.bracket?' · B'+g.bracket:''} · ${g.turns??'?'} turns<br>${e(g.notes)}</p>`).join('')||'<p>No games logged yet.</p>'}`);};
+actions['deck-evidence']=el=>{const d=M.deck(C.state,el.dataset.deck),reports=C.state.reports.filter(r=>r.deckId===d.id),advice=C.state.advice.filter(r=>r.deckId===d.id),games=C.state.games.filter(r=>r.deckId===d.id);modal('Reports, advice & game history',`${note('Every measured run is filed here and under Simulation history on the deck page. Imported reports keep their protocol and exact-list fingerprint; a list change makes older results historical, not current.')}${b('Import report / advice pack','import-evidence',{deck:d.id})}${b('Compare reports','compare-reports',{deck:d.id})}${b('Export advice request','advice-request',{deck:d.id})}<h3>Simulation reports</h3>${reports.map(r=>`<details class="cm-details"><summary>${e(r.protocol)} · ${e(C.usDate(r.importedAt)||r.importedAt)} · ${r.deckFingerprint===M.fingerprint(d,C.state)?'Current list':'Historical list'}</summary><pre style="white-space:pre-wrap">${e(JSON.stringify(r,null,2))}</pre></details>`).join('')||'<p>No imported reports.</p>'}<h3>Advice</h3>${advice.map(r=>`<article>${note(r.deckFingerprint===M.fingerprint(d,C.state)?'Matches current list':'Historical advice for a different list')}<p style="white-space:pre-wrap">${e(r.text)}</p></article>`).join('')||'<p>No advice packs.</p>'}<h3>Recorded games</h3>${games.map(g=>`<p><strong>${e(g.outcome)}</strong>${g.table?' '+tableBadges(g):''} · ${e(dateOf(g))}${g.finish?` · ${g.finish}${g.pod?' of '+g.pod:''}`:''}${g.bracket?' · B'+g.bracket:''} · ${g.turns??'?'} turns<br>${e(g.notes)}</p>`).join('')||'<p>No games logged yet.</p>'}`);};
 /* THE WHOLE LIST AT A STATUS, FROM THE DECK. A draft saved from the Lab is a hundred plans,
    and the reader who owns most of them says so once here rather than a hundred times in the
    Collection. On a finalized deck it takes only what is still owed. */
@@ -847,7 +1018,7 @@ actions['report-spinoff']=async el=>{const d=M.deck(C.state,el.dataset.deck),r=C
   actions.close();go('decks',{deck:id});};
 actions['measure-deck']=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!C.measureDeck)throw Error('Measure is not loaded.');
   const say=t=>{const pill=$('#cm-deck-sim-status');if(pill){pill.hidden=false;pill.textContent=t;}};say('Starting…');
-  try{const {report,result}=await C.measureDeck(d.id,say);C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s. Filed under Simulation history.`);}
+  try{const {report,result}=await C.measureDeck(d.id,say);const filed=C.state.reports.filter(x=>x.deckId===d.id).at(-1);if(filed)go('decks',{deck:d.id,report:filed.id});C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString('en-US')} games in ${(result.elapsedMs/1000).toFixed(1)}s. The report is open; it is also filed under Reports on the deck.`);}
   catch(err){say(err.message);throw err;}};
 actions['advice-request']=el=>{const d=M.deck(C.state,el.dataset.deck);C.download('CrankMagic-advice-request.json',JSON.stringify({format:'crankmagic-advice-request',version:1,deckFingerprint:M.fingerprint(d,C.state),definition:d.definition,deckName:d.name,cards:d.slots.map(r=>({name:C.card(r.cardId).name,quantity:r.quantity,purpose:r.purpose,oracleText:C.card(r.cardId).oracleText})),responseContract:{kind:'advice',deckFingerprint:'Copy the exact supplied fingerprint',text:'Explain strategy, sequencing, weaknesses and proposed replacements. Do not invent Measure results.'}},null,2));};
 actions['import-evidence']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Import versioned report or advice',`<div class="cm-full">${note('Accepts a JSON object with kind (report or advice), deckFingerprint, and protocol for reports or text for advice. Imported material is labeled and never executed.')}<label>JSON file<input name="file" type="file" accept=".json" required></label></div>`,async(_,formEl)=>{const file=formEl.elements.file.files[0];if(file.size>10000000)throw Error('Limit evidence packs to 10 MB.');const data=CrankEvidence.validate(JSON.parse(await file.text()));const known=[M.fingerprint(d,C.state),...d.versions.map(v=>M.fingerprint(v,C.state))];if(!known.includes(data.deckFingerprint))throw Error('This pack does not match any retained version of this deck. Its original version must be present before importing.');if(!['report','advice'].includes(data.kind))throw Error('Set kind to report or advice.');if(data.kind==='report'&&(!data.protocol||typeof data.metrics!=='object'||!data.versions))throw Error('Reports need protocol, versions and metrics provenance.');await commit({type:data.kind,deckId:d.id,[data.kind]:data});},'Import pack');};

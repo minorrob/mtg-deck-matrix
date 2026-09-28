@@ -242,11 +242,11 @@
           if (init.signal.aborted) relay();
           else init.signal.addEventListener("abort", relay, {once: true});
         }
-        /* The deadline is RACED, not merely signalled. Aborting only works if the fetch
-           implementation honours the signal, and the guarantee "this call returns within
+        /* The deadline is RACED, not merely signaled. Aborting only works if the fetch
+           implementation honors the signal, and the guarantee "this call returns within
            timeoutMs" must not depend on that cooperation -- a fetch that ignores its signal
            would otherwise hang the caller exactly as before. The abort is still sent, so the
-           real request is genuinely cancelled rather than left in flight; the race is what
+           real request is genuinely canceled rather than left in flight; the race is what
            makes the caller's await end either way. */
         /* The caller's cancellation is raced for the same reason as the deadline, and keeps
            its AbortError name so the loop below can tell "the caller changed their mind"
@@ -281,7 +281,9 @@
               stats.notFound += 1;
               return {status: 404, data: null};
             }
-            if (response.status === 429 || response.status >= 500) return {status: response.status, retry: true};
+            /* Scryfall says how long to wait when it refuses; that is honored, within the call's deadline, instead
+               of guessing shorter and being refused again. */
+            if (response.status === 429 || response.status >= 500) return {status: response.status, retry: true, wait: Number(response.headers?.get?.("retry-after")) || 0};
             if (!response.ok) throw new Error(`Scryfall responded ${response.status}`);
             return {status: response.status, data: await response.json()};
           })]);
@@ -289,7 +291,7 @@
             stats.retries += 1;
             lastError = new Error(`Scryfall responded ${payload.status}`);
             if (Date.now() >= deadline) break;
-            await sleep(250 * (2 ** (attempt - 1)));
+            await sleep(Math.min(Math.max(250 * (2 ** (attempt - 1)), payload.wait * 1000), Math.max(0, deadline - Date.now())));
             continue;
           }
           writeCache(key, payload.data);

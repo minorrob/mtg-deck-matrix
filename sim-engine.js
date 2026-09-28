@@ -180,7 +180,7 @@
   }
 
   /* What the land taps for ITSELF, before any land it might go and get. Split out
-     because "does this land make its own colour" is also the question that decides
+     because "does this land make its own color" is also the question that decides
      whether it is a fetch, and asking producedColors would get the fetch fallback's
      answer instead of the card's. */
   function ownProducedColors(card, typeLine, text) {
@@ -195,10 +195,10 @@
         if (COLORS.includes(color)) produced.add(color);
       });
     });
-    /* "Add {C}{C}" is Sol Ring, and {C} is COLOURLESS -- it is not a colour and it cannot
-       pay a coloured pip. Reading it as "any colour" is the single biggest piece of false
-       fixing in this engine: it put a Sol Ring in every deck's colour requirements and let
-       a mono-red list cast {U}{U} spells. Only "any color" wording produces every colour. */
+    /* "Add {C}{C}" is Sol Ring, and {C} is COLOURLESS -- it is not a color and it cannot
+       pay a colored pip. Reading it as "any color" is the single biggest piece of false
+       fixing in this engine: it put a Sol Ring in every deck's color requirements and let
+       a mono-red list cast {U}{U} spells. Only "any color" wording produces every color. */
     if (/add one mana of any color|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
     return produced;
   }
@@ -221,29 +221,29 @@
     return Array.from(produced);
   }
 
-  /* A LAND WHOSE ONLY COLOUR IS THE BASIC IT GOES AND GETS.
+  /* A LAND WHOSE ONLY COLOR IS THE BASIC IT GOES AND GETS.
    *
-   * producedColors above credits a fetch with every colour it can reach, which is
+   * producedColors above credits a fetch with every color it can reach, which is
    * right -- you choose the basic. entersTapped then decided the timing off the
    * fetch's own text, and a fetch does not say "enters tapped" because the fetch
-   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modelled
-   * as UNTAPPED FIVE-COLOUR LANDS, available the turn they were played: strictly
-   * better than any land in Magic. Naya and Bant Panorama modelled as untapped
+   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modeled
+   * as UNTAPPED FIVE-COLOR LANDS, available the turn they were played: strictly
+   * better than any land in Magic. Naya and Bant Panorama modeled as untapped
    * tri-lands while really charging {1} on top of the sacrifice.
    *
    * What the real cards do: Evolving Wilds, Terramorphic Expanse and both
-   * Panoramas fetch the basic TAPPED, so the colour is a turn away in every case.
+   * Panoramas fetch the basic TAPPED, so the color is a turn away in every case.
    * Fabled Passage untaps it only while you control four or fewer lands. So the
    * fetch enters tapped here, which costs it the {C} the Panoramas really do tap
    * for on that turn and still does not charge the mana to crack them -- two
-   * errors pointing opposite ways, with the colour landing on the right turn.
+   * errors pointing opposite ways, with the color landing on the right turn.
    *
    * Myriad Landscape and Krosan Verge already read as tapped, because they print
    * the words; this makes the other five agree with them. */
   function fetchesItsColors(card, typeLine, rawText) {
     if (!/\bLand\b/.test(typeLine)) return false;
     if (!PUTS_LAND_ONTO_BATTLEFIELD.test(rawText)) return false;
-    /* Only when the land makes no coloured mana of its own. A real dual that also
+    /* Only when the land makes no colored mana of its own. A real dual that also
        fetches is not one of these -- and it is read from the UNSTRIPPED text, the
        same text producedColors gets, because a true dual prints its whole mana
        ability as reminder text: "({T}: Add {W} or {U}.)" is the entirety of
@@ -275,7 +275,7 @@
          might reach. Currency Converter reads "{T}: Put a card exiled with this
          artifact into its owner's graveyard. If it's a land card, create a
          Treasure token." The cost is a bare {T}, so the test above passed it and
-         the card modelled as a one-mana Treasure engine -- when the Treasure needs
+         the card modeled as a one-mana Treasure engine -- when the Treasure needs
          a card discarded, exiled with this artifact, and a land at that.
          Only activated abilities are read this way. A triggered Treasure that
          names a condition -- Smothering Tithe's "if the player doesn't" -- is the
@@ -424,7 +424,7 @@
       isLand,
       isBasicLand: /\bBasic Land\b/.test(typeLine),
       // A fetch is tapped too: the basic it goes and gets arrives tapped, so the
-      // colour is a turn away however the fetch itself is printed. See
+      // color is a turn away however the fetch itself is printed. See
       // fetchesItsColors.
       entersTapped: /enters (?:the battlefield )?tapped/.test(text) || fetchesItsColors(card, typeLine, rawText),
       produces: producedColors(card, typeLine, rawText),
@@ -472,7 +472,7 @@
          this engine can now supply. */
       isStorm: /\bstorm\b|copy it for each spell cast before it this turn/.test(text),
       /* A WIN THIS ENGINE CANNOT WATCH. "You win the game" has a condition attached, and
-         the condition is exactly what is not modelled here -- Thassa's Oracle counts a
+         the condition is exactly what is not modeled here -- Thassa's Oracle counts a
          library, Approach counts its own previous cast, Aetherflux counts a life total.
          Flagged, never scored: a deck carrying one of these is reported as having a win
          path the measurement does not describe, rather than quietly given a big body. */
@@ -598,23 +598,23 @@
 
   /* ------------------------------------------------------------------ MANA, TYPED
    *
-   * The old model kept `sources` -- a count, per colour, of permanents that make that
-   * colour -- and asked each colour of a cost against it independently. Three things were
+   * The old model kept `sources` -- a count, per color, of permanents that make that
+   * color -- and asked each color of a cost against it independently. Three things were
    * wrong with that, and all three flattered the deck:
    *
    *   ONE SOURCE PAID EVERY PIP. A single Watery Grave counts in sources.U and sources.B,
-   *   so {U}{B} passed on one land. Every dual in the list was worth its two colours at
+   *   so {U}{B} passed on one land. Every dual in the list was worth its two colors at
    *   once, in the same spell.
    *   NOTHING WAS EVER SPENT. sources never decremented, so the same land paid for the
    *   first spell of the turn and the fourth. Only the scalar `mana` was debited.
-   *   COLOURLESS PAID COLOURED. A rock with no produced colours was credited with all
-   *   five (see the ramp branch), and "Add {C}{C}" was read as "any colour".
+   *   COLOURLESS PAID COLORED. A rock with no produced colors was credited with all
+   *   five (see the ramp branch), and "Add {C}{C}" was read as "any color".
    *
-   * Now every source is one mana with a colour MASK, the turn's pool is those masks, and
+   * Now every source is one mana with a color MASK, the turn's pool is those masks, and
    * paying a cost removes the sources it used. A cost is payable when its pips can be
-   * matched to distinct sources -- the scarcest colour first, and within a colour the
+   * matched to distinct sources -- the scarcest color first, and within a color the
    * least flexible source that can pay it, so a dual is kept back for the pip that has
-   * nothing else. On costs this small (at most five pips over five colours) that ordering
+   * nothing else. On costs this small (at most five pips over five colors) that ordering
    * is an exact matching, and the assignment it finds IS the payment. */
   const COLOR_BIT = {W: 1, U: 2, B: 4, R: 8, G: 16};
   const bits = (mask) => { let n = 0; while (mask) { n += mask & 1; mask >>= 1; } return n; };
@@ -640,8 +640,8 @@
     let available = 0;
     for (const n of spent) available += n;
     if (cost > available) return null;
-    /* Coloured pips first, scarcest colour first: a colour that only one source can make
-       must take that source before a colour with three candidates does. */
+    /* Colored pips first, scarcest color first: a color that only one source can make
+       must take that source before a color with three candidates does. */
     const wanted = COLORS.filter((color) => profile.pips[color] > 0)
       .map((color) => {
         let supply = 0;
@@ -810,7 +810,7 @@
 
     const drawn = new Set(hand);
     const cast = new Set();
-    /* Every mana this board can make, by colour mask. lands and rocks stay as they were --
+    /* Every mana this board can make, by color mask. lands and rocks stay as they were --
        the screw, flood and mana-behind signals are counted off them and none of that
        changes -- but what a cost is actually PAID from is this. */
     const manaPerm = {mask: [], count: []};
@@ -981,8 +981,8 @@
       if (landInHand >= 0) {
         const [played] = hand.splice(landInHand, 1);
         const profile = profiles[played];
-        /* A land is ONE mana, of whichever colours it can make -- not one source per
-           colour it lists. A triome used to count three times. */
+        /* A land is ONE mana, of whichever colors it can make -- not one source per
+           color it lists. A triome used to count three times. */
         const landMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
         if (profile.entersTapped) {
           tappedPending.count += 1;
@@ -996,7 +996,7 @@
            land never counted as dead -- but the counter did not, so all 36 lands in a
            hundred read "0% cast, 0% dead" and the table's whole visible half was zeros.
            Counted here, a land's rate answers a real question: how often a drawn copy
-           actually reached the battlefield rather than sitting behind a colour it could
+           actually reached the battlefield rather than sitting behind a color it could
            not use or a drop already spent. */
         if (cardStats) {
           const stat = cardStats.get(profile.name);
@@ -1026,7 +1026,7 @@
       /* TAPPING OUT, OR NOT. A pilot who holds an answer up is refusing to spend
          the mana that answer costs. Reserving nothing -- the published pilot --
          leaves this at zero and the loop below spends exactly as it always has.
-         Colour is not reserved: this model has no notion of which land is tapped
+         Color is not reserved: this model has no notion of which land is tapped
          (see SIMPLIFICATIONS). */
       const reserved = policy
         ? pilotOrThrow().manaToReserve(hand.map((index) => profiles[index]), mana, turn, policy)
@@ -1104,7 +1104,7 @@
         /* A RITUAL PUTS MANA BACK, this turn only. It used to be classified as ramp, so
            Seething Song was a permanent rock making five mana every turn for the rest of
            the game -- which is most of why a spellslinger list measured the way it did.
-           The mana it makes is its own colours, or colourless when it names none. */
+           The mana it makes is its own colors, or colourless when it names none. */
         if (profile.isRitual) {
           const ritualMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
           const at = pool.mask.indexOf(ritualMask);
@@ -1129,8 +1129,8 @@
         }
         if (profile.isRamp) {
           rocks += profile.rampAmount;
-          /* A rock that makes no colour makes COLOURLESS mana. It used to be credited with
-             all five, which is how Sol Ring came to fix a five-colour manabase. */
+          /* A rock that makes no color makes COLOURLESS mana. It used to be credited with
+             all five, which is how Sol Ring came to fix a five-color manabase. */
           const rockMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
           permAdd(manaPerm, rockMask, Math.max(1, profile.rampAmount));
         }
@@ -1244,7 +1244,7 @@
            that separates one nonland from another in this model: cast rate cannot, because a
            game runs long enough that essentially every drawn spell is eventually cast, so it
            sits at 99-100% for the whole list and ranks nothing. Being stuck in hand on turn
-           eight is a real, varying fault -- too expensive, or off-colour for these sources. */
+           eight is a real, varying fault -- too expensive, or off-color for these sources. */
         if (cardStats) {
           const already = new Set();
           stranded.forEach((index) => {
@@ -1615,7 +1615,7 @@
       avgSpellsPerGame: totals.spellSum / games,
       avgStormPeak: totals.stormPeakSum / games,
       /* WIN PATHS THIS ENGINE CANNOT WATCH. "You win the game" always carries a condition,
-         and the condition is the part that is not modelled -- Thassa's Oracle counts a
+         and the condition is the part that is not modeled -- Thassa's Oracle counts a
          library, Approach counts its own previous cast, Aetherflux counts a life total.
          Counted and reported, never scored: a deck built around one of these is not a weak
          deck, it is a deck this measurement does not describe, and the difference has to

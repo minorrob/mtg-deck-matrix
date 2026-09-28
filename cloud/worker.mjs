@@ -12,9 +12,18 @@
  *   POST /api/library/kept         file this device's version without moving the head (the losing side of a choice)
  *   GET  /api/library/history      the versions held, newest first, without their bodies
  *   GET  /api/library/versions/:id one version with its body
+ *   GET  /api/import/archidekt?id=N a public Archidekt deck, trimmed to what the importer reads; no sign-in, nothing
+ *                                  stored (import.mjs, R3.10a)
+ *   /api/tables/*                  Play's front door: a table's lobby and its game, each table a Durable Object
+ *                                  (tables.mjs, game-room.mjs) -- shut until Play's release binds TABLES
+ *   POST /api/ai/explain           a measured score read out loud by the AI, behind its own Access application, an
+ *                                  allowlist, the key and the spend caps -- shut until Rob opens each (ai.mjs, M6)
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
+import {archidekt, ImportError} from "./import.mjs";
+import {createAi, settings, explain, Closed} from "./ai.mjs";
+import {tables} from "./tables.mjs";
 
 const HEADERS = {
   "content-type": "application/json; charset=utf-8",
@@ -25,11 +34,24 @@ const HEADERS = {
 };
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
 
+/* RATE LIMITS (M3, docs/plan-to-100.md): per IP before anything else is done, and per person once Access has
+   said who they are. Cloudflare's Rate Limiting bindings count at the edge; tools/release-pages.mjs configures
+   both (LIMITS_PER_MINUTE there) and refuses a cloud release without them. The app saves a few seconds after
+   a change, about twenty times a minute at the busiest, so a person meeting the limit is not using the app.
+   A refusal says what happened and what to do, as the repository's rule asks. */
+async function overLimit(binding, key) {
+  if (!binding || !key) return false;
+  const {success} = await binding.limit({key});
+  return !success;
+}
+const tooMany = (who) => new Response(JSON.stringify({error: `Too many requests from ${who}. Nothing was changed. Wait a minute, then try again.`, retryAfterSeconds: 60}),
+  {status: 429, headers: {...HEADERS, "retry-after": "60"}});
+
 /* A write must come from the app itself. The Access cookie rides along on any request to this site, so a
    page elsewhere could otherwise post to it; a custom header cannot be sent cross-site without a CORS
    preflight this Worker never answers, and the Origin, when the browser sends one, must be this site. */
-function fromTheApp(request, url) {
-  if (request.headers.get("x-crankmagic") !== "sync") return false;
+function fromTheApp(request, url, purpose = "sync") {
+  if (request.headers.get("x-crankmagic") !== purpose) return false;
   if (!(request.headers.get("content-type") || "").startsWith("application/json")) return false;
   const origin = request.headers.get("origin");
   return !origin || origin === url.origin;
@@ -45,11 +67,35 @@ async function body(request) {
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url), path = url.pathname, method = request.method;
   const ms = () => deps.now ?? Date.now();
+  if (await overLimit(env.LIMIT_IP, request.headers.get("cf-connecting-ip"))) return tooMany("this network");
+  /* IMPORT BY LINK needs no account: a first visit can start from a deck it already has. It is still the app's
+     alone -- a custom header a page elsewhere cannot send without a preflight this Worker never answers, and the
+     Origin, when there is one, this site -- and it writes nothing, so it is answered before anyone is asked who
+     they are. Signed-out visitors reach it only once Access lets /api/import/* through (a Bypass policy, Rob's
+     dashboard step at release; docs/plan-account-cloud.md). */
+  if (path === "/api/import/archidekt") {
+    const origin = request.headers.get("origin");
+    if (method !== "GET") return reply(405, {error: "Import is a GET."});
+    if (request.headers.get("x-crankmagic") !== "import" || (origin && origin !== url.origin)) return reply(403, {error: "That request did not come from CrankMagic."});
+    try {return reply(200, {deck: await archidekt(url.searchParams.get("id"), {fetchImpl: deps.fetchImpl || fetch})});}
+    catch (error) {if (error instanceof ImportError) return reply(error.status, {error: error.message}); throw error;}
+  }
+  if (path.startsWith("/api/ai/")) return aiDoor(request, env, deps, url, ms);
   let who;
   try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
   catch (error) {
     if (error instanceof Unauthorized) return reply(401, {error: "Sign in to use your cloud library.", why: error.message});
     throw error;
+  }
+  if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  /* PLAY (M5; cloud/tables.mjs): shut until Play's release binds TABLES. Its writes carry their own header, and
+     its WebSocket must come from this site: a socket carries the Access cookie like any request, and a page
+     elsewhere could otherwise open one to someone's seat. */
+  if (path === "/api/tables" || path.startsWith("/api/tables/")) {
+    const origin = request.headers.get("origin");
+    if (method !== "GET" && !fromTheApp(request, url, "play")) return reply(403, {error: "That request did not come from CrankMagic."});
+    if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
+    return tables(request, env, who);
   }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
@@ -70,6 +116,14 @@ export async function handle(request, env, deps = {}) {
     }
     if (method === "POST" && path === "/api/library/kept") return reply(201, {kept: await library.keep(person.id, await body(request))});
     if (method === "GET" && path === "/api/library/history") return reply(200, {versions: await library.history(person.id, Number(url.searchParams.get("limit")) || 30)});
+    /* DELETE ACCOUNT. The body repeats the address the person is signed in as: the dialog asks them to type
+       it, and a request that does not carry it -- a replayed or mistaken one -- deletes nothing. Signing in
+       again later starts an empty account; removing the sign-in itself is Access's, and Rob's runbook step. */
+    if (method === "DELETE" && path === "/api/account") {
+      const input = await body(request);
+      if (String(input.confirm || "").trim().toLowerCase() !== person.email) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
+      return reply(200, {deleted: {email: person.email, ...await library.forget(person.id)}});
+    }
     const version = /^\/api\/library\/versions\/([0-9a-f-]{36})$/.exec(path);
     if (method === "GET" && version) {
       const found = await library.version(person.id, version[1]);
@@ -79,6 +133,36 @@ export async function handle(request, env, deps = {}) {
   } catch (error) {
     if (error instanceof Conflict) return reply(409, {error: "Your library changed on another device since this one last saved.", head: error.head});
     if (error instanceof Invalid) return reply(400, {error: `The cloud refused that: ${error.message}.`});
+    throw error;
+  }
+}
+
+/* THE AI DOOR (M6; cloud/ai.mjs, docs/ai-door.md). Its own Access application, so a library sign-in -- which may
+   be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. */
+const AI_BODY = 64 * 1024;
+async function aiDoor(request, env, deps, url, ms) {
+  if (!env.AI_ACCESS_AUD) return reply(503, {error: "AI features are not switched on here yet."});
+  let who;
+  try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience: env.AI_ACCESS_AUD});}
+  catch (error) {
+    if (error instanceof Unauthorized) return reply(401, {error: "Sign in to CrankMagic's AI features to use them.", why: error.message});
+    throw error;
+  }
+  if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  if (url.pathname !== "/api/ai/explain") return reply(404, {error: "No such endpoint."});
+  if (request.method !== "POST") return reply(405, {error: "Explain is a POST."});
+  if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+  if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
+  try {
+    const config = settings(env);
+    const text = await request.text();
+    if (text.length > AI_BODY) return reply(413, {error: "That is more than a score explanation needs. Nothing was sent to the AI."});
+    let input;
+    try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
+    return reply(200, await explain({ai, who, input, config, fetchImpl: deps.fetchImpl || fetch}));
+  } catch (error) {
+    if (error instanceof Closed) return reply(error.status, {error: error.message});
     throw error;
   }
 }

@@ -19,9 +19,9 @@
 .cm-kpi-caption{margin:0 0 16px;font-size:12px;color:var(--v-muted);line-height:1.5}
 .cm-cards-summary{margin:8px 0 0;color:var(--v-muted);font-size:15px;max-width:70ch}
 /* The row mark, the purpose chip and the tinted band (Track V.4f). */
-#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-right:7px}
+#cm-roster-table .cm-row-mana{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin-left:7px}
 #cm-roster-table .cm-row-mana img{width:16px;height:16px}
-#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
+#cm-roster-table .cm-row-land{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:7px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);color:var(--v-muted);font-size:10px;font-weight:700;vertical-align:middle}
 #cm-roster-table .cm-purpose-chip{display:inline-block;padding:2px 7px;border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:11px;font-weight:600}
 #cm-roster-table .cm-group-row td{background:color-mix(in oklab,var(--band,var(--v-raised)) 10%,var(--v-panel))}
 #cm-roster-table .cm-group-row .cm-group-toggle:before{content:'';display:inline-block;width:8px;height:8px;border-radius:var(--radius-pill);background:var(--band,var(--v-line));margin-right:8px;vertical-align:middle}
@@ -36,8 +36,6 @@
 #cm-roster-table tbody td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;vertical-align:middle;padding-top:10px;padding-bottom:10px}
 /* The ticks, the pips and the row's one verb are the cells that must not be squeezed to nothing. */
 #cm-roster-table tbody td:first-child,#cm-roster-table tbody td:last-child{max-width:none;overflow:visible}
-@media(max-width:1050px){.cm-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:640px){.cm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 
 /* THE LOBBY AS A TABLE (V.5a, DELTA-play-and-implementation.md section B). Four quadrants in the
@@ -117,7 +115,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-q-bl .cm-seat-detail,.cm-q-br .cm-seat-detail{align-self:flex-start}
 /* 2b: `height:144` in a 190px quadrant -- a proportion, not a pixel count, so the card stays a
    card at every table size. */
-.cm-seat-card{height:76%;max-height:100%;aspect-ratio:488/680;flex:0 0 auto;padding:0;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--poster-ink) 50%,transparent);box-shadow:0 6px 16px -6px var(--poster-ground);background:color-mix(in srgb,var(--poster-ground) 40%,transparent);cursor:zoom-in;display:grid;place-items:center}
+.cm-seat-card{height:76%;max-height:100%;aspect-ratio:var(--card-ratio);flex:0 0 auto;padding:0;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--poster-ink) 50%,transparent);box-shadow:0 6px 16px -6px var(--poster-ground);background:color-mix(in srgb,var(--poster-ground) 40%,transparent);cursor:zoom-in;display:grid;place-items:center}
 .cm-seat-card img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .cm-seat-card.is-empty,.cm-seat-card.is-blank{border-style:dashed;border-color:color-mix(in srgb,var(--poster-ink) 55%,transparent);cursor:default;background:color-mix(in srgb,var(--poster-ground) 28%,transparent)}
 .cm-seat-card.is-empty span,.cm-seat-card.is-blank span{font-size:22px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 70%,transparent)}
@@ -247,7 +245,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* The commander fan: four crops leaning out from the left, straightening together on hover, so
    the door shows whose decks it would open on rather than saying that it would. */
 .cm-door-fan{display:flex;margin:auto 0 0;padding-left:8px}
-.cm-door-fan i{display:block;width:58px;height:81px;flex:0 0 58px;margin-left:-14px;border-radius:6px;overflow:hidden;background:var(--v-raised);border:1px solid var(--v-line);transform:rotate(calc((var(--i) - 1.5) * 6deg));transform-origin:50% 100%;transition:transform .25s ease;display:grid;place-items:center}
+.cm-door-fan i{display:block;width:58px;aspect-ratio:var(--card-ratio);flex:0 0 58px;margin-left:-14px;border-radius:6px;overflow:hidden;background:var(--v-raised);border:1px solid var(--v-line);transform:rotate(calc((var(--i) - 1.5) * 6deg));transform-origin:50% 100%;transition:transform .25s ease;display:grid;place-items:center}
 .cm-door-fan i:first-child{margin-left:0}
 .cm-door-fan img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
 .cm-door-fan b{font-family:var(--v-display);font-weight:var(--display-weight);font-size:26px;color:var(--v-muted)}
@@ -279,9 +277,12 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-deck-hero{position:relative;display:grid;grid-template-columns:280px minmax(0,1fr);gap:36px;align-items:center;margin-bottom:22px;padding:8px 0 4px;background:none;border:0}
 #matrix-v2 .cm-deck-hero:before{content:'';position:absolute;left:-40px;top:-60px;width:900px;height:520px;max-width:120%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 20% 30%,color-mix(in oklab,var(--tint,var(--v-accent)) 28%,transparent),transparent 62%)}
 #matrix-v2 .cm-deck-hero-card{perspective:900px}
-#matrix-v2 .cm-deck-hero-card img{display:block;width:100%;aspect-ratio:488/680;object-fit:cover;border-radius:14px;transform:rotate(-3deg);transition:transform .3s ease;box-shadow:0 30px 60px -20px color-mix(in oklab,var(--tint,var(--v-line)) 60%,var(--poster-ground))}
+#matrix-v2 .cm-deck-hero-card img{display:block;width:100%;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:14px;transform:rotate(-3deg);transition:transform .3s ease;box-shadow:0 30px 60px -20px color-mix(in oklab,var(--tint,var(--v-line)) 60%,var(--poster-ground))}
 #matrix-v2 .cm-deck-hero-card img:hover{transform:rotate(0deg) scale(1.03)}
 #matrix-v2 .cm-deck-hero-copy h1{font-size:clamp(34px,4.4vw,56px);line-height:1.02;letter-spacing:-.015em;margin:6px 0 12px}
+/* The deck title is a hero (r3, "Type (final)"): Young Serif where it is 48px or larger, which its clamp reaches
+   from about 1091px; below that it stays the Satoshi 900 heading every other page title is. */
+@media (min-width:1100px){#matrix-v2 .cm-deck-hero .cm-deck-hero-copy h1{font-family:var(--font-hero);font-weight:400;letter-spacing:-.015em}}
 #matrix-v2 .cm-deck-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
 #matrix-v2 .cm-deck-hero .cm-deck-actions{margin:18px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 #matrix-v2 .cm-deck-hero .cm-deck-work{display:contents}
@@ -426,6 +427,20 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-rail-menu{display:flex;width:100%;justify-content:flex-start;gap:9px;min-height:42px;padding:0 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel);color:var(--v-ink);font-weight:600}
 #matrix-v2 .cm-rail-menu:hover{background:var(--v-raised)}
 #matrix-v2 .cm-rail-menu .cm-btn-chevron{margin-left:auto}
+/* THE MENU IS A CHIP (r3, 04-shell and 06-global-menu): an initial, who is signed in, and one
+   line on whether the library has reached the cloud. crankmagic-account.js fills it; without an
+   account it reads Menu, and what the Menu holds. */
+#matrix-v2 .cm-rail-menu{min-height:52px;padding:0 8px;gap:8px;text-align:left}
+#matrix-v2 .cm-rail-menu .cm-btn-chevron{flex:0 0 auto;margin-left:auto}
+#matrix-v2 .cm-chip-avatar{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:var(--radius-pill);background:var(--v-raised);border:1px solid var(--v-line);font-size:13px;font-weight:700}
+#matrix-v2 .cm-rail-menu.is-signed-in .cm-chip-avatar{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-chip-text{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+#matrix-v2 .cm-chip-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-chip-status{font-size:11px;font-weight:500;color:var(--v-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-rail-menu.is-trouble .cm-chip-status{color:color-mix(in oklab,var(--st-remove) 55%,var(--v-ink))}
+/* Three theme choices, the one in force marked (aria-pressed is the state; the mark only shows it). */
+.cm-menu .cm-theme-choices button[aria-pressed=true]{background:var(--v-raised);font-weight:700}
+.cm-menu .cm-theme-choices button[aria-pressed=true]:after{content:'✓';float:right;color:var(--v-muted)}
 /* A deck row in the sub-nav carries an 8px dot in its commander's first color (guide, step 2).
    crankmagic-app.js sets --dot per row; a row without one shows no dot rather than a gray one. */
 #matrix-v2 .cm-sidebar .cm-subnav a{font-size:13px}
@@ -442,7 +457,9 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
   #matrix-v2 .cm-sidebar .v-aether-wrap{display:none}
   #matrix-v2 .cm-rail-foot{margin-top:0;flex:0 0 auto}
   #matrix-v2 .cm-rail-menu{width:auto;min-height:40px;padding:0 10px}
-  #matrix-v2 .cm-rail-menu .cm-btn-label{display:none}
+  #matrix-v2 .cm-rail-menu{min-height:40px}
+  #matrix-v2 .cm-rail-menu .cm-chip-text{display:none}
+  #matrix-v2 .cm-chip-avatar{flex-basis:26px;width:26px;height:26px}
 }
 /* THE TYPE SCALE, MEASURED (tools/compare-to-screen.mjs). The layout was already exact against
    the screens -- grid, tile, gaps all within a pixel -- and the type was eight pixels small
@@ -462,9 +479,9 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .v-button:hover{background:var(--v-raised)}#matrix-v2 .v-button.primary{background:var(--v-accent);color:var(--v-on);border-color:var(--v-accent);font-weight:700}#matrix-v2 .v-button:hover{filter:brightness(1.12)}.cm-layout{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}.cm-sidebar{border-right:1px solid var(--v-line);background:var(--v-bg);padding:22px 18px;display:flex;flex-direction:column;gap:28px;min-width:0}.cm-sidebar nav{position:sticky;top:18px;display:grid;gap:4px;margin-bottom:auto;z-index:3}.cm-sidebar .v-nav-links a{padding:10px 12px;min-height:42px;display:flex;align-items:center;text-decoration:none;border-radius:10px;font-weight:600;color:var(--v-muted)}.cm-sidebar .v-nav-links a[aria-current=page]{background:var(--v-raised);color:var(--v-ink);font-weight:700;box-shadow:none}.cm-sidebar a:hover{background:var(--color-raised)}.cm-nav-note{font-size:12px;color:var(--v-muted);padding:16px 2px 0;border-top:1px solid var(--v-line);margin-top:24px}.cm-nav-note p{margin:6px 0}.cm-text-button{background:none;border:0;padding:4px 0;min-height:32px;display:inline-flex;align-items:center;color:var(--color-accent);font:inherit;text-align:left;text-decoration:underline;text-underline-offset:4px}#cm-main{padding:28px 36px 48px;min-width:0;outline:none}.cm-skip{position:fixed;left:10px;top:-60px;z-index:30;background:var(--v-accent);color:var(--v-on);padding:10px}.cm-skip:focus{top:10px}.cm-page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:26px}.cm-page-head p{color:var(--color-muted);max-width:680px}.cm-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.cm-stats{display:flex;flex-wrap:wrap;gap:25px;padding:22px 0;border-top:1px solid var(--v-line);border-bottom:1px solid var(--v-line);margin:24px 0}.cm-stats strong{font-size:27px;font-weight:500;margin-right:6px}.cm-stats span{font-size:13px;color:var(--color-muted)}.cm-deck-tile:after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--v-bg) 34%,color-mix(in srgb,var(--v-bg) 68%,transparent) 56%,color-mix(in srgb,var(--v-bg) 4%,transparent) 88%);z-index:-1}/* Below the art's name banner: at 15px the status sat straight across the commander's printed name. */
 .cm-badge{display:inline-flex;padding:4px 8px;border-radius:var(--v-radius);font-size:12px;background:var(--v-raised);color:var(--v-muted);white-space:nowrap}.cm-badge.warn{background:color-mix(in oklab,var(--v-accent) 20%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 20%,var(--v-ink))}.cm-badge.good{background:color-mix(in oklab,var(--st-inbox) 24%,var(--v-bg));color:color-mix(in oklab,var(--st-inbox) 32%,var(--v-ink))}.cm-danger{color:color-mix(in oklab,var(--st-remove) 32%,var(--v-ink))!important}.cm-empty{padding:45px 24px;text-align:center;max-width:900px;margin:15px auto}.cm-empty .cm-actions{justify-content:center}.cm-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}.cm-commander{display:grid;grid-template-columns:140px minmax(0,1fr);gap:22px}.cm-commander img{width:100%;border-radius:var(--v-radius-card);align-self:start}.cm-commander ul{padding-left:18px;line-height:1.6}.cm-commander h2{margin-top:0}.cm-mana{display:inline-flex;align-items:center;gap:3px;vertical-align:middle}.cm-mana img{width:19px;height:19px}.cm-mana-symbol{width:21px;height:21px;border-radius:50%;background:var(--v-muted);color:var(--v-bg);display:inline-grid;place-items:center;font-size:11px;font-weight:700}.cm-colors{display:inline-flex;gap:3px}.cm-color{width:13px;height:13px;border-radius:50%;display:inline-block;background:#ccc;box-shadow:0 0 0 1px #ffffff22}.cm-color.W{background:color-mix(in oklab,var(--mana-W) 8%,var(--v-ink))}.cm-color.U{background:var(--mana-U)}.cm-color.B{background:color-mix(in oklab,var(--mana-B) 56%,var(--v-bg))}.cm-color.R{background:var(--mana-R)}.cm-color.G{background:var(--mana-G)}.cm-curve{display:flex;gap:9px;align-items:flex-end;height:135px}.cm-curve>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%;font-size:11px}.cm-curve i{display:block;background:linear-gradient(var(--v-accent),var(--v-line));width:100%;min-height:3px;border-radius:4px 4px 0 0}.cm-count-list{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 0}.cm-count-list span{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--v-line);padding:6px 0}.cm-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:20px 0}.cm-toolbar .cm-search{flex:1;min-width:180px}.cm-filter-panel{padding:18px;background:var(--color-panel);border:1px solid var(--color-raised);border-radius:var(--v-radius-card);margin:12px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.cm-graph-focus{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0;padding:12px 15px;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card)}.cm-graph-focus h2{margin:0;font-size:18px}.cm-graph-focus p{margin:4px 0 0;font-size:13px;color:var(--color-muted);display:flex;gap:8px;align-items:center}.cm-toolbar-split{justify-content:space-between}.cm-show-archived{margin-left:auto}.cm-tile-tools{display:inline-flex;align-items:center;gap:6px}.cm-tile-menu-btn{width:36px;height:36px;border-radius:var(--v-radius);border:1px solid var(--color-raised);background:var(--v-raised);color:var(--v-ink);font-size:18px;line-height:1;cursor:pointer}.cm-tile-menu-btn:hover{background:var(--v-raised)}.cm-tile-menu button.cm-danger{color:color-mix(in oklab,var(--st-remove) 32%,var(--v-ink))}/* screens/Gallery Explore.dc.html draws the graph box 722 tall at 1280x900; 100vh-180px is
    what puts it there, and the clamp still protects a short window and a tall one. */
-.cm-graph-grid-tall{--cm-graph-h:clamp(560px,calc(100vh - 180px),880px);align-items:start}.cm-graph-col{display:flex;flex-direction:column;min-width:0}.cm-graph-grid-tall .cm-graph{height:var(--cm-graph-h);min-height:0}.cm-graph-hint{margin:0 0 10px}.cm-card-view{display:flex;flex-direction:column;gap:8px;height:var(--cm-graph-h);overflow:auto;scrollbar-width:thin}.cm-card-view-head{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start}.cm-card-view-art{width:150px;aspect-ratio:488/680;border-radius:var(--v-radius);object-fit:cover;background:var(--v-panel);box-shadow:0 8px 24px #0008}.cm-card-view-blank{border:1px dashed var(--color-raised)}.cm-card-view-title h2{margin:0 0 4px;font-size:19px;line-height:1.2}.cm-card-view-title p{margin:3px 0;font-size:13px;color:var(--v-muted)}.cm-card-view-cost{display:flex;align-items:center;gap:8px}.cm-card-view-foot{margin-top:auto}.cm-term-chips{display:flex;flex-wrap:wrap;gap:6px}.cm-term-chips .cm-chip{flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;cursor:pointer;font:inherit;font-size:12px}.cm-term-chips .cm-chip small{font-size:10px;color:var(--v-muted)}.cm-chip.is-on{background:color-mix(in srgb,color-mix(in oklab,var(--v-accent) 28%,var(--v-ink)) 13%,transparent);border-color:var(--color-money);color:color-mix(in oklab,var(--v-accent) 8%,var(--v-ink))}.v-button.is-on{background:var(--color-money);color:var(--v-on);border-color:var(--color-money)}.cm-pick-actions{padding:10px;background:color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border:1px solid color-mix(in oklab,var(--v-accent) 36%,var(--v-bg));border-radius:var(--v-radius)}.cm-graph-reach{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-left:auto}.cm-graph-reach label{display:flex;align-items:center;gap:8px;font-size:12px}.cm-graph-reach input[type=range]{width:110px;min-height:0;padding:0;background:none;border:0}.cm-graph-reach output{min-width:18px;font-weight:700;color:var(--color-ink)}.cm-facet-mode{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:10px 0 0;font-size:13px}.cm-picker-count{margin:0 0 4px;font-size:12px}.cm-picker-row{grid-template-columns:minmax(0,1fr) auto auto minmax(120px,170px) auto;padding:9px 12px}.cm-picker-choose{background:none;border:0;color:inherit;text-align:left;padding:0;font:inherit;cursor:pointer;min-width:0}.cm-picker-choose strong{display:block;font-size:13px}.cm-picker-choose em{display:block;font-style:normal;font-size:11px;color:var(--v-muted)}.cm-picker-cost{display:inline-flex;align-items:center;min-width:24px}.cm-picker-cost .cm-mana img{width:16px;height:16px}.cm-picker-meta{font-size:12px;color:var(--v-muted);line-height:1.3}.cm-picker-row .cm-text-button{white-space:nowrap;font-size:12px}.cm-color-pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 0}.cm-color-pill{position:relative;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--v-line);border-radius:var(--v-radius-tile);cursor:pointer;font-size:12px;color:var(--v-muted);background:var(--v-panel)}.cm-color-pill img{width:16px;height:16px}.cm-color-pill input{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;opacity:0;cursor:pointer}.cm-color-pill:has(input:checked){background:var(--v-raised);border-color:var(--color-accent);color:var(--color-ink)}.cm-color-pill:has(input:focus-visible){outline:2px solid var(--color-aether);outline-offset:2px}.cm-preview-total{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0}.cm-preview-total strong{font-size:18px}.cm-plays-as{margin:12px 0;padding:12px 14px;background:var(--v-bg);border-radius:var(--v-radius)}.cm-plays-as h3{margin:0 0 6px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--v-muted)}.cm-plays-as ul{margin:0;padding-left:18px;line-height:1.6;font-size:13px}/* The design sheet stretches every input in a dialog to full width; a checkbox is the one
+.cm-graph-grid-tall{--cm-graph-h:clamp(560px,calc(100vh - 180px),880px);align-items:start}.cm-graph-col{display:flex;flex-direction:column;min-width:0}.cm-graph-grid-tall .cm-graph{height:var(--cm-graph-h);min-height:0}.cm-graph-hint{margin:0 0 10px}.cm-card-view{display:flex;flex-direction:column;gap:8px;height:var(--cm-graph-h);overflow:auto;scrollbar-width:thin}.cm-card-view-head{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start}.cm-card-view-art{width:150px;aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);object-fit:cover;background:var(--v-panel);box-shadow:0 8px 24px #0008}.cm-card-view-blank{border:1px dashed var(--color-raised)}.cm-card-view-title h2{margin:0 0 4px;font-size:19px;line-height:1.2}.cm-card-view-title p{margin:3px 0;font-size:13px;color:var(--v-muted)}.cm-card-view-cost{display:flex;align-items:center;gap:8px}.cm-card-view-foot{margin-top:auto}.cm-term-chips{display:flex;flex-wrap:wrap;gap:6px}.cm-term-chips .cm-chip{flex-direction:column;align-items:flex-start;gap:1px;line-height:1.15;cursor:pointer;font:inherit;font-size:12px}.cm-term-chips .cm-chip small{font-size:10px;color:var(--v-muted)}.cm-chip.is-on{background:color-mix(in srgb,color-mix(in oklab,var(--v-accent) 28%,var(--v-ink)) 13%,transparent);border-color:var(--color-money);color:color-mix(in oklab,var(--v-accent) 8%,var(--v-ink))}.v-button.is-on{background:var(--color-money);color:var(--v-on);border-color:var(--color-money)}.cm-pick-actions{padding:10px;background:color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border:1px solid color-mix(in oklab,var(--v-accent) 36%,var(--v-bg));border-radius:var(--v-radius)}.cm-graph-reach{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-left:auto}.cm-graph-reach label{display:flex;align-items:center;gap:8px;font-size:12px}.cm-graph-reach input[type=range]{width:110px;min-height:0;padding:0;background:none;border:0}.cm-graph-reach output{min-width:18px;font-weight:700;color:var(--color-ink)}.cm-facet-mode{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:10px 0 0;font-size:13px}.cm-picker-count{margin:0 0 4px;font-size:12px}.cm-picker-row{grid-template-columns:minmax(0,1fr) auto auto minmax(120px,170px) auto;padding:9px 12px}.cm-picker-choose{background:none;border:0;color:inherit;text-align:left;padding:0;font:inherit;cursor:pointer;min-width:0}.cm-picker-choose strong{display:block;font-size:13px}.cm-picker-choose em{display:block;font-style:normal;font-size:11px;color:var(--v-muted)}.cm-picker-cost{display:inline-flex;align-items:center;min-width:24px}.cm-picker-cost .cm-mana img{width:16px;height:16px}.cm-picker-meta{font-size:12px;color:var(--v-muted);line-height:1.3}.cm-picker-row .cm-text-button{white-space:nowrap;font-size:12px}.cm-color-pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 0}.cm-color-pill{position:relative;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--v-line);border-radius:var(--v-radius-tile);cursor:pointer;font-size:12px;color:var(--v-muted);background:var(--v-panel)}.cm-color-pill img{width:16px;height:16px}.cm-color-pill input{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;opacity:0;cursor:pointer}.cm-color-pill:has(input:checked){background:var(--v-raised);border-color:var(--color-accent);color:var(--color-ink)}.cm-color-pill:has(input:focus-visible){outline:2px solid var(--color-aether);outline-offset:2px}.cm-preview-total{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0}.cm-preview-total strong{font-size:18px}.cm-plays-as{margin:12px 0;padding:12px 14px;background:var(--v-bg);border-radius:var(--v-radius)}.cm-plays-as h3{margin:0 0 6px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--v-muted)}.cm-plays-as ul{margin:0;padding-left:18px;line-height:1.6;font-size:13px}/* The design sheet stretches every input in a dialog to full width; a checkbox is the one
    input that must not stretch, or its label text drifts to the far side of the cell. */
-#matrix-v2 .v-dialog .cm-checkbox input[type=checkbox],#matrix-v2 .cm-checkbox input[type=checkbox]{width:16px;height:16px;min-height:0;flex:0 0 16px;padding:0;margin:0}.cm-columns-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 18px}.cm-columns-grid .cm-checkbox{justify-content:flex-start;min-height:36px;white-space:nowrap;padding:4px 8px;border-radius:var(--v-radius)}.cm-columns-grid .cm-checkbox:hover{background:var(--v-raised)}.cm-columns-grid .cm-checkbox input:disabled+span,.cm-columns-grid .cm-checkbox:has(input:disabled){opacity:.6}#matrix-v2 .cm-user-menu>.v-button{min-height:34px;padding:6px 11px;font-size:12px;gap:6px}.cm-lab-save-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:12px}.cm-graph-col{position:relative}.cm-graph-modes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}#matrix-v2 .cm-graph-modes .v-button{min-height:34px;padding:6px 12px;font-size:12px}.cm-graph-mode-hint{font-size:12px;margin-left:4px}.cm-graph-pop{position:absolute;z-index:6;width:min(330px,calc(100% - 16px));background:color-mix(in srgb,var(--v-bg) 96%,transparent);border:1px solid var(--v-line);border-radius:var(--v-radius-card);padding:12px 14px;box-shadow:0 12px 34px #000a;font-size:13px;backdrop-filter:blur(3px)}.cm-graph-pop header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.cm-graph-pop header strong{font-size:14px;line-height:1.25}.cm-graph-pop h4{margin:10px 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent)}.cm-graph-pop p{margin:4px 0}.cm-pop-close{border:0;background:var(--color-raised);color:#fff;border-radius:var(--v-radius);width:28px;height:28px;flex-shrink:0;cursor:pointer;font-size:16px}.cm-graph-pop .cm-actions{margin-top:10px}#matrix-v2 .cm-graph-pop .cm-actions .v-button{min-height:32px;padding:5px 10px;font-size:12px}.cm-colors img.cm-pip{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 1px #ffffff22,0 1px 3px #0006;vertical-align:middle}.cm-color.C{background:#b9b3a8}.cm-eyebrow-warm:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:color-mix(in oklab,var(--v-accent) 48%,var(--v-ink));margin-right:9px;vertical-align:1px}.cm-showcase{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(190px,1fr);gap:16px;align-items:center;padding:6px 0 26px}.cm-showcase h1{font-size:clamp(34px,4.2vw,54px);letter-spacing:-.045em;line-height:1.02;margin:0 0 6px}.cm-showcase h1 span{color:var(--color-accent)}.cm-showcase .cm-sub{max-width:440px;color:var(--color-muted);margin:0 0 18px;line-height:1.6}/* The showcase's three lines are one stack, so they get one rhythm: the buttons sit the same   distance below "Make it yours." as the how-link sits below them, and the link's left edge   lines up with the first button. `.cm-how-link`'s 12px indent is for the Decks toolbar, where   it trails other controls; here it is the only thing on its line and the indent read as a   misalignment. */.cm-showcase .cm-actions{margin:18px 0}.cm-showcase .cm-how-link{margin:0}.cm-cardfan{height:246px;position:relative;isolation:isolate}.cm-cardfan:before{content:'';position:absolute;width:190px;height:160px;inset:45px 0 0;margin:auto;background:var(--v-raised);filter:blur(36px);border-radius:50%;z-index:-1;opacity:.85}.cm-fan-card{position:absolute;left:50%;top:25px;width:125px;height:175px;margin-left:-62px;border:6px solid var(--v-panel);border-radius:var(--v-radius-card);background-size:cover;background-position:center top;background-color:var(--v-panel);box-shadow:0 12px 22px #00000059;overflow:hidden}.cm-fan-card span{position:absolute;inset:auto 0 0;padding:13px 7px 8px;background:linear-gradient(transparent,var(--v-bg));font-size:11px;letter-spacing:1.7px;color:var(--v-ink);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cm-fan-left{transform:translate(-56px,18px) rotate(-20deg)}.cm-fan-right{transform:translate(57px,18px) rotate(20deg)}.cm-fan-center{transform:rotate(-3deg)}.cm-deck-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--v-radius-tile);min-height:230px;padding:28px 30px;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;margin-bottom:22px;background:var(--v-panel);border:1px solid var(--v-line)}.cm-deck-hero:before{content:'';position:absolute;inset:0;z-index:-2;background:var(--hero,none) center 28%/cover no-repeat;opacity:.8}.cm-deck-hero:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in srgb,var(--v-bg) 95%,transparent) 0%,color-mix(in srgb,var(--v-bg) 80%,transparent) 42%,color-mix(in srgb,var(--v-bg) 20%,transparent) 100%),linear-gradient(0deg,color-mix(in srgb,var(--v-bg) 91%,transparent) 0%,color-mix(in srgb,var(--v-bg) 0%,transparent) 55%)}.cm-deck-hero h1{margin:6px 0 8px;font-size:clamp(30px,3.6vw,46px)}.cm-deck-hero p{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--v-muted)}.cm-deck-hero .cm-actions{position:relative}.cm-card-thumb{width:26px;height:36px;object-fit:cover;object-position:center top;border-radius:3px;margin-right:9px;vertical-align:middle;background:var(--v-panel);box-shadow:0 1px 3px #0008;flex-shrink:0;display:inline-block}.cm-card-thumb-lg{width:48px;height:67px;border-radius:var(--v-radius);margin:0}.cm-table .cm-card-name{display:inline-flex;align-items:center;text-align:left}#matrix-v2 .cm-selected-commander{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}.cm-card-view-art{box-shadow:0 0 0 2px var(--ci-a,var(--color-raised)),0 12px 30px #0009}.cm-guide-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px;font-size:13px}.cm-guide-hook{font-size:15px;line-height:1.55;color:var(--v-ink)}.cm-guide-keys,.cm-guide-watch{padding-left:18px;line-height:1.6;font-size:13px}.cm-guide-keys li{margin:4px 0}.cm-guide-keys .cm-card-name{font-weight:700;color:var(--color-ink);background:none;border:0;padding:0;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.cm-edge-kind{margin:14px 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent)}.cm-edge-kind:first-child{margin-top:0}.cm-facet-values{margin-top:10px;display:grid;gap:8px}.cm-facet-list{display:grid;gap:2px;max-height:210px;overflow:auto;padding-right:4px}.cm-facet-list .cm-checkbox{padding:4px 2px;font-size:13px;min-height:32px}.cm-facet-list .cm-checkbox span{overflow-wrap:anywhere}.cm-facet-list .cm-checkbox small{margin-left:auto;flex-shrink:0}.cm-facet-status{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}.cm-facet-status p{margin:0}#cm-facet-panel{margin-top:12px}#cm-facet-results{max-height:300px;margin-top:8px}.cm-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}button.cm-chip{cursor:pointer;font:inherit}button.cm-chip:hover{background:var(--v-raised)}.cm-chip{display:inline-flex;gap:8px;border:1px solid var(--v-line);border-radius:var(--v-radius-tile);color:var(--v-muted);background:var(--v-raised);padding:5px 10px;font-size:12px}.cm-table-wrap{overflow:auto;max-width:100%;margin:16px 0;border-top:1px solid var(--v-line)}.cm-table{width:100%;border-collapse:collapse;table-layout:auto;font-size:13px}.cm-table th,.cm-table td{text-align:left!important;vertical-align:top;padding:13px 14px;border-bottom:1px solid var(--v-line);min-width:90px}.cm-table th{color:var(--v-muted);font-size:11px;letter-spacing:.035em;position:sticky;top:0;background:var(--v-panel);z-index:1;white-space:nowrap}.cm-table th button{padding:0;border:0;background:none;color:inherit;text-align:left;display:flex;gap:6px;font:inherit;min-height:24px}.cm-table td:first-child,.cm-table th:first-child{padding-left:0;min-width:230px}.cm-table td:last-child,.cm-table th:last-child{min-width:95px}.cm-table .cm-card-name{font-weight:700;color:var(--color-ink);text-decoration:none;border:0;background:none;padding:0;text-align:left}.cm-table .cm-card-name:hover{color:var(--v-accent)}.cm-table small{display:block;margin-top:5px;max-width:280px;line-height:1.4}.cm-table tr.cm-group-row td{padding:14px;background:var(--v-raised);font-weight:700}.cm-paging{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.cm-menu{padding:10px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);box-shadow:0 12px 40px #0008;color:var(--v-ink);min-width:210px;max-width:calc(100vw - 24px);max-height:75vh;overflow:auto;position:fixed;margin:0;z-index:30}.cm-menu button,.cm-menu a{display:block;width:100%;padding:11px 12px;border:0;background:transparent;color:inherit;text-align:left;text-decoration:none;border-radius:var(--v-radius);font-size:13px}.cm-menu button:hover,.cm-menu a:hover{background:var(--v-raised)}.cm-menu p{padding:0 12px;color:var(--v-muted);font-size:12px}.cm-menu hr{border:0;border-top:1px solid var(--v-line)}.cm-menu .cm-submenu{margin-left:12px;border-left:1px solid var(--v-line);padding-left:6px}.cm-user-menu{flex-shrink:0;display:flex;align-items:center;gap:8px}.cm-menu:popover-open{display:block}.cm-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;padding:14px 20px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius);max-width:min(720px,calc(100vw - 24px));box-shadow:0 10px 35px #0008}.cm-toast.error{background:color-mix(in oklab,var(--st-remove) 28%,var(--v-bg));border-color:var(--st-remove)}#cm-dialog{width:min(900px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:25px;border:1px solid var(--color-line);background:var(--color-panel);color:var(--color-ink);overflow:hidden auto;border-radius:var(--v-radius-card)}#cm-dialog::backdrop{background:color-mix(in srgb,var(--v-bg) 75%,transparent);backdrop-filter:blur(5px)}.cm-dialog-head{display:flex;justify-content:space-between;align-items:start;gap:15px;margin-bottom:20px}.cm-dialog-head h2{margin:0}.cm-dialog-close{border:0;background:var(--color-raised);color:white;border-radius:var(--v-radius);width:36px;height:36px;flex-shrink:0}.cm-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.cm-full{grid-column:1/-1}.cm-form-footer{margin-top:25px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.cm-error{color:color-mix(in oklab,var(--st-remove) 24%,var(--v-ink));background:color-mix(in oklab,var(--st-remove) 24%,var(--v-bg));border-radius:var(--v-radius);padding:12px;white-space:pre-wrap}.cm-note{border-left:3px solid var(--v-accent);padding:13px 16px;background:var(--v-raised);color:var(--v-muted);font-size:13px;margin:16px 0;line-height:1.5}.cm-warning{border-color:var(--v-accent);background:color-mix(in oklab,var(--v-accent) 20%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 28%,var(--v-ink))}.cm-checkbox{display:flex;align-items:center;gap:8px}.cm-checkbox input{min-height:0;width:16px;height:16px}.cm-details{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:0 15px;background:var(--v-panel)}.cm-details>summary{cursor:pointer;min-height:0;padding:12px 0}.cm-details[open]{padding-bottom:12px}.cm-inspector{display:grid;grid-template-columns:minmax(150px,230px) minmax(0,1fr);gap:22px}.cm-inspector img{width:100%;border-radius:var(--v-radius-card)}.cm-inspector .cm-oracle{white-space:pre-line;line-height:1.7;font-size:14px}.cm-lab-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:24px;align-items:start}.cm-run-panel{position:sticky;top:20px}.cm-run-steps{list-style:none;padding:0;display:grid;gap:22px}.cm-run-steps li{display:flex;align-items:center;gap:12px;font-size:13px}.cm-run-orb{position:relative;display:block;width:38px;height:38px;flex:0 0 38px;overflow:hidden;border-radius:50%;border:1px solid color-mix(in srgb,var(--v-line) 19%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 60%,var(--v-ink)) 13%,transparent),transparent 60%),color-mix(in srgb,var(--v-bg) 38%,transparent);box-sizing:border-box}.cm-run-orb.active{border-color:color-mix(in srgb,var(--v-accent) 53%,transparent);background:radial-gradient(circle at 32% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 36%,var(--v-ink)) 31%,transparent),transparent 56%),color-mix(in srgb,color-mix(in oklab,var(--v-accent) 32%,var(--v-bg)) 22%,transparent);box-shadow:inset 0 -3px 8px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 64%,var(--v-bg)) 23%,transparent),0 0 17px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 48%,var(--v-bg)) 13%,transparent)}.cm-run-orb i{display:none;position:absolute;bottom:3px;left:12px;width:14px;height:27px;border-radius:65% 15% 65% 45%;background:linear-gradient(20deg,color-mix(in oklab,var(--v-accent) 48%,var(--v-ink)),color-mix(in oklab,var(--v-accent) 72%,var(--v-bg)) 46%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 40%,var(--v-bg)) 13%,transparent));filter:blur(1.3px);transform-origin:50% 100%;animation:cm-orb-fire 1.65s ease-in-out infinite alternate}.cm-run-orb.active i{display:block}.cm-run-orb i:nth-child(2){left:5px;height:21px;animation-delay:-.7s;opacity:.7}.cm-run-orb i:nth-child(3){left:21px;width:10px;height:20px;animation-delay:-1.2s;opacity:.8}.cm-run-orb img{display:none;position:absolute;inset:7px;width:22px;height:22px;filter:brightness(1.55) drop-shadow(0 0 4px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 36%,var(--v-ink)) 40%,transparent));animation:cm-orb-grow 2.7s ease-in-out infinite alternate}.cm-run-orb.complete{border-color:color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 60%,var(--v-ink)) 42%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 8%,var(--v-ink)) 24%,transparent),transparent 62%),color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 52%,var(--v-bg)) 19%,transparent);box-shadow:inset 0 -4px 9px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 48%,var(--v-bg)) 19%,transparent),0 0 13px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 68%,var(--v-ink)) 10%,transparent)}.cm-run-orb.complete img{display:block}.cm-run-orb.waiting{opacity:.45}.cm-commander-results{display:grid;gap:7px;max-height:270px;overflow:auto;margin:12px 0}.cm-commander-result{display:grid;grid-template-columns:minmax(0,1fr) 72px 115px;gap:10px;align-items:center;text-align:left;padding:12px;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius);color:var(--v-ink)}.cm-commander-result strong{font-size:13px}.cm-commander-result span:last-child{font-size:12px;color:var(--v-muted)}.cm-selected-commander{padding:16px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);margin:15px 0}.cm-section-heading{margin:28px 0 16px;padding-top:20px;border-top:1px solid var(--v-line);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--v-muted)}.cm-graph{height:550px;min-height:320px;width:100%;display:block;touch-action:none;border:1px solid var(--v-raised);border-radius:var(--v-radius-tile);background:radial-gradient(ellipse at 50% 40%,var(--v-panel),var(--v-bg) 72%)}.cm-graph-grid{display:grid;grid-template-columns:minmax(0,1.85fr) 12px var(--cm-pane-w,minmax(310px,1fr));gap:8px}.cm-swot{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.cm-swot>div{padding:14px;background:var(--v-bg);border-radius:var(--v-radius)}.cm-swot h3{margin:0 0 6px;color:var(--v-ink)}.cm-share-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.cm-starting{max-width:750px;margin:40px auto}.cm-status-line{font-size:12px;color:var(--color-muted)}.cm-pause-pill{display:inline-block;border:1px solid color-mix(in oklab,var(--v-accent) 56%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 60%,var(--v-ink));background:var(--v-raised);border-radius:var(--v-radius);padding:5px 9px;font-size:12px}.cm-loading{opacity:.6;pointer-events:none}.v-term{font:inherit;display:inline;padding:0;background:none;border:0;border-bottom:1px dotted var(--v-line);color:inherit;cursor:help}.v-term:hover,.v-term:focus-visible{text-shadow:0 0 .5px currentColor}.v-glossary-tip{position:fixed;margin:0;padding:16px;background:var(--v-raised);color:var(--v-ink);border:1px solid var(--v-line);border-radius:var(--v-radius);max-width:340px;z-index:90;box-shadow:0 8px 30px #0007;font-size:13px}.v-glossary-tip strong{font-size:15px}.v-glossary-tip p{margin:8px 0 0}.v-glossary-tip .v-tip-kind{display:block;font-size:11px;color:var(--v-line);margin-top:4px}@keyframes cm-orb-fire{0%{transform:rotate(-9deg) scale(1,1)}50%{transform:rotate(6deg) scale(.9,1.12)}100%{transform:rotate(-4deg) scale(1.05,.94);opacity:.85}}@keyframes cm-orb-grow{from{transform:scale(.86);opacity:.7}to{transform:scale(1.08);opacity:1}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}@media(max-width:1050px){.cm-showcase{grid-template-columns:minmax(0,1fr) 230px}.cm-cardfan{height:232px}.cm-grid-2,.cm-graph-grid{grid-template-columns:1fr}.cm-lab-grid{grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr)}.cm-layout{grid-template-columns:216px minmax(0,1fr)}.cm-commander{grid-template-columns:160px 1fr}#cm-main{padding:28px 24px 48px}}@media(max-width:760px){.cm-showcase{grid-template-columns:1fr;padding-bottom:10px}.cm-cardfan{height:186px}.cm-fan-card{width:96px;height:134px;margin-left:-48px;top:14px;border-width:4px}.cm-fan-left{transform:translate(-44px,14px) rotate(-20deg)}.cm-fan-right{transform:translate(45px,14px) rotate(20deg)}.cm-deck-hero{padding:20px 18px;min-height:200px}.cm-graph-pop{width:calc(100% - 12px);left:6px!important}.cm-graph-mode-hint{flex-basis:100%;margin:0}.cm-picker-row{grid-template-columns:minmax(0,1fr) auto auto}.cm-picker-meta{grid-column:1/-1}.cm-picker-row .cm-text-button{grid-column:1/-1;text-align:left}.cm-columns-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#matrix-v2 .cm-user-menu>.v-button{padding:5px 9px;font-size:11px;max-width:none;min-height:30px;white-space:nowrap}.cm-graph-grid-tall{--cm-graph-h:390px}.cm-card-view{height:auto;max-height:none;overflow:visible;min-height:0}.cm-card-view-head{grid-template-columns:110px minmax(0,1fr)}.cm-card-view-art{width:110px}.cm-graph-reach{margin-left:0}.cm-graph-reach input[type=range]{width:90px}.cm-filter-panel{grid-template-columns:1fr;padding:12px}.cm-facet-list{max-height:170px}#cm-facet-results{max-height:none}#matrix-v2 .v-top{padding:13px 15px;gap:10px}#matrix-v2 .v-brand-subline{font-size:9px;max-width:250px}#matrix-v2 .v-brand{font-size:25px}#matrix-v2 .v-brand-logo{width:45px;height:45px}.cm-user-menu>.v-button{padding:8px!important;font-size:11px;max-width:95px}.cm-layout{display:block}.cm-sidebar{padding:8px 10px;position:sticky;top:0;z-index:10;border-right:0;border-bottom:1px solid var(--v-line);display:flex;flex-direction:row;align-items:center;gap:10px;background:color-mix(in srgb,var(--v-bg) 96%,transparent)}.cm-sidebar nav{display:flex;gap:2px;position:static;justify-content:space-between;margin:0;flex:1 1 auto}.cm-sidebar .v-nav-links a{padding:10px 7px;font-size:12px;white-space:nowrap;min-height:40px}.cm-sidebar .v-nav-links a[aria-current=page]{box-shadow:inset 0 -2px var(--v-accent)}.cm-nav-note{display:none}#cm-main{padding:23px 15px 50px}.cm-lab-grid,.cm-form-grid,.cm-inspector{grid-template-columns:1fr}.cm-run-panel{position:static}.cm-inspector-art{max-width:200px;margin:auto}.cm-page-head{display:block}.cm-page-head>.cm-actions{margin-top:16px}.cm-commander{grid-template-columns:110px minmax(0,1fr);gap:13px}.cm-commander li{font-size:12px}.cm-swot{grid-template-columns:1fr}.cm-commander-result{grid-template-columns:minmax(0,1fr) 45px 75px}.cm-graph{height:390px}.cm-form-grid .cm-full{grid-column:auto}#matrix-v2 .v-panel{padding:17px}.cm-stats{gap:18px}.cm-table th,.cm-table td{padding:12px 11px}.cm-table td:first-child,.cm-table th:first-child{min-width:190px}.cm-deck-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}@media(max-width:370px){.cm-sidebar .v-nav-links a{font-size:11px;padding:10px 5px}.cm-commander{grid-template-columns:1fr}.cm-commander>img{width:140px;margin:auto}#matrix-v2 .v-brand-subline{font-size:8px}.cm-user-menu>.v-button{max-width:80px;font-size:10px}.cm-toolbar .cm-search{min-width:120px}}@media print{.v-top,.cm-sidebar,.cm-toolbar,.cm-actions,.cm-paging,.cm-menu,.cm-toast,button{display:none!important}.cm-layout{display:block}body,#matrix-v2,#cm-main{background:white!important;color:black!important;padding:0!important}.cm-table{font-size:10px}.cm-table th,.cm-table td{color:black!important;background:white!important;padding:6px}.cm-table-wrap{overflow:visible}.cm-table td:last-child,.cm-table th:last-child{display:none}}
+#matrix-v2 .v-dialog .cm-checkbox input[type=checkbox],#matrix-v2 .cm-checkbox input[type=checkbox]{width:16px;height:16px;min-height:0;flex:0 0 16px;padding:0;margin:0}.cm-columns-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 18px}.cm-columns-grid .cm-checkbox{justify-content:flex-start;min-height:36px;white-space:nowrap;padding:4px 8px;border-radius:var(--v-radius)}.cm-columns-grid .cm-checkbox:hover{background:var(--v-raised)}.cm-columns-grid .cm-checkbox input:disabled+span,.cm-columns-grid .cm-checkbox:has(input:disabled){opacity:.6}#matrix-v2 .cm-user-menu>.v-button{min-height:34px;padding:6px 11px;font-size:12px;gap:6px}.cm-lab-save-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:12px}.cm-graph-col{position:relative}.cm-graph-modes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}#matrix-v2 .cm-graph-modes .v-button{min-height:34px;padding:6px 12px;font-size:12px}.cm-graph-mode-hint{font-size:12px;margin-left:4px}.cm-graph-pop{position:absolute;z-index:6;width:min(330px,calc(100% - 16px));background:color-mix(in srgb,var(--v-bg) 96%,transparent);border:1px solid var(--v-line);border-radius:var(--v-radius-card);padding:12px 14px;box-shadow:0 12px 34px #000a;font-size:13px;backdrop-filter:blur(3px)}.cm-graph-pop header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.cm-graph-pop header strong{font-size:14px;line-height:1.25}.cm-graph-pop h4{margin:10px 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent)}.cm-graph-pop p{margin:4px 0}.cm-pop-close{border:0;background:var(--color-raised);color:#fff;border-radius:var(--v-radius);width:28px;height:28px;flex-shrink:0;cursor:pointer;font-size:16px}.cm-graph-pop .cm-actions{margin-top:10px}#matrix-v2 .cm-graph-pop .cm-actions .v-button{min-height:32px;padding:5px 10px;font-size:12px}.cm-colors img.cm-pip{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 1px #ffffff22,0 1px 3px #0006;vertical-align:middle}.cm-color.C{background:#b9b3a8}.cm-eyebrow-warm:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:color-mix(in oklab,var(--v-accent) 48%,var(--v-ink));margin-right:9px;vertical-align:1px}.cm-showcase{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(190px,1fr);gap:16px;align-items:center;padding:6px 0 26px}.cm-showcase h1{font-size:clamp(34px,4.2vw,54px);letter-spacing:-.045em;line-height:1.02;margin:0 0 6px}.cm-showcase h1 span{color:var(--color-accent)}.cm-showcase .cm-sub{max-width:440px;color:var(--color-muted);margin:0 0 18px;line-height:1.6}/* The showcase's three lines are one stack, so they get one rhythm: the buttons sit the same   distance below "Make it yours." as the how-link sits below them, and the link's left edge   lines up with the first button. `.cm-how-link`'s 12px indent is for the Decks toolbar, where   it trails other controls; here it is the only thing on its line and the indent read as a   misalignment. */.cm-showcase .cm-actions{margin:18px 0}.cm-showcase .cm-how-link{margin:0}.cm-cardfan{height:246px;position:relative;isolation:isolate}.cm-cardfan:before{content:'';position:absolute;width:190px;height:160px;inset:45px 0 0;margin:auto;background:var(--v-raised);filter:blur(36px);border-radius:50%;z-index:-1;opacity:.85}.cm-fan-card{position:absolute;left:50%;top:25px;width:125px;aspect-ratio:var(--card-ratio);margin-left:-62px;border:6px solid var(--v-panel);border-radius:var(--v-radius-card);background-size:cover;background-position:center top;background-color:var(--v-panel);box-shadow:0 12px 22px #00000059;overflow:hidden}.cm-fan-card span{position:absolute;inset:auto 0 0;padding:13px 7px 8px;background:linear-gradient(transparent,var(--v-bg));font-size:11px;letter-spacing:1.7px;color:var(--v-ink);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cm-fan-left{transform:translate(-56px,18px) rotate(-20deg)}.cm-fan-right{transform:translate(57px,18px) rotate(20deg)}.cm-fan-center{transform:rotate(-3deg)}.cm-deck-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--v-radius-tile);min-height:230px;padding:28px 30px;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;margin-bottom:22px;background:var(--v-panel);border:1px solid var(--v-line)}.cm-deck-hero:before{content:'';position:absolute;inset:0;z-index:-2;background:var(--hero,none) center 28%/cover no-repeat;opacity:.8}.cm-deck-hero:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in srgb,var(--v-bg) 95%,transparent) 0%,color-mix(in srgb,var(--v-bg) 80%,transparent) 42%,color-mix(in srgb,var(--v-bg) 20%,transparent) 100%),linear-gradient(0deg,color-mix(in srgb,var(--v-bg) 91%,transparent) 0%,color-mix(in srgb,var(--v-bg) 0%,transparent) 55%)}.cm-deck-hero h1{margin:6px 0 8px;font-size:clamp(30px,3.6vw,46px)}.cm-deck-hero p{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:var(--v-muted)}.cm-deck-hero .cm-actions{position:relative}.cm-card-thumb{width:26px;height:auto;aspect-ratio:var(--card-ratio);object-fit:cover;object-position:center top;border-radius:3px;margin-right:9px;vertical-align:middle;background:var(--v-panel);box-shadow:0 1px 3px #0008;flex-shrink:0;display:inline-block}.cm-card-thumb-lg{width:48px;border-radius:var(--v-radius);margin:0}.cm-table .cm-card-name{display:inline-flex;align-items:center;text-align:left}#matrix-v2 .cm-selected-commander{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}.cm-card-view-art{box-shadow:0 0 0 2px var(--ci-a,var(--color-raised)),0 12px 30px #0009}.cm-guide-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px;font-size:13px}.cm-guide-hook{font-size:15px;line-height:1.55;color:var(--v-ink)}.cm-guide-keys,.cm-guide-watch{padding-left:18px;line-height:1.6;font-size:13px}.cm-guide-keys li{margin:4px 0}.cm-guide-keys .cm-card-name{font-weight:700;color:var(--color-ink);background:none;border:0;padding:0;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.cm-edge-kind{margin:14px 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent)}.cm-edge-kind:first-child{margin-top:0}.cm-facet-values{margin-top:10px;display:grid;gap:8px}.cm-facet-list{display:grid;gap:2px;max-height:210px;overflow:auto;padding-right:4px}.cm-facet-list .cm-checkbox{padding:4px 2px;font-size:13px;min-height:32px}.cm-facet-list .cm-checkbox span{overflow-wrap:anywhere}.cm-facet-list .cm-checkbox small{margin-left:auto;flex-shrink:0}.cm-facet-status{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}.cm-facet-status p{margin:0}#cm-facet-panel{margin-top:12px}#cm-facet-results{max-height:300px;margin-top:8px}.cm-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}button.cm-chip{cursor:pointer;font:inherit}button.cm-chip:hover{background:var(--v-raised)}.cm-chip{display:inline-flex;gap:8px;border:1px solid var(--v-line);border-radius:var(--v-radius-tile);color:var(--v-muted);background:var(--v-raised);padding:5px 10px;font-size:12px}.cm-table-wrap{overflow:auto;max-width:100%;margin:16px 0;border-top:1px solid var(--v-line)}.cm-table{width:100%;border-collapse:collapse;table-layout:auto;font-size:13px}.cm-table th,.cm-table td{text-align:left!important;vertical-align:top;padding:13px 14px;border-bottom:1px solid var(--v-line);min-width:90px}.cm-table th{color:var(--v-muted);font-size:11px;letter-spacing:.035em;position:sticky;top:0;background:var(--v-panel);z-index:1;white-space:nowrap}.cm-table th button{padding:0;border:0;background:none;color:inherit;text-align:left;display:flex;gap:6px;font:inherit;min-height:24px}.cm-table td:first-child,.cm-table th:first-child{padding-left:0;min-width:230px}.cm-table td:last-child,.cm-table th:last-child{min-width:95px}.cm-table .cm-card-name{font-weight:700;color:var(--color-ink);text-decoration:none;border:0;background:none;padding:0;text-align:left}.cm-table .cm-card-name:hover{color:var(--v-accent)}.cm-table small{display:block;margin-top:5px;max-width:280px;line-height:1.4}.cm-table tr.cm-group-row td{padding:14px;background:var(--v-raised);font-weight:700}.cm-paging{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.cm-menu{padding:10px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);box-shadow:0 12px 40px #0008;color:var(--v-ink);min-width:210px;max-width:calc(100vw - 24px);max-height:75vh;overflow:auto;position:fixed;margin:0;z-index:30}.cm-menu button,.cm-menu a{display:block;width:100%;padding:11px 12px;border:0;background:transparent;color:inherit;text-align:left;text-decoration:none;border-radius:var(--v-radius);font-size:13px}.cm-menu button:hover,.cm-menu a:hover{background:var(--v-raised)}.cm-menu p{padding:0 12px;color:var(--v-muted);font-size:12px}.cm-menu hr{border:0;border-top:1px solid var(--v-line)}.cm-menu .cm-submenu{margin-left:12px;border-left:1px solid var(--v-line);padding-left:6px}.cm-user-menu{flex-shrink:0;display:flex;align-items:center;gap:8px}.cm-menu:popover-open{display:block}.cm-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;padding:14px 20px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius);max-width:min(720px,calc(100vw - 24px));box-shadow:0 10px 35px #0008}.cm-toast.error{background:color-mix(in oklab,var(--st-remove) 28%,var(--v-bg));border-color:var(--st-remove)}#cm-dialog{width:min(900px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:25px;border:1px solid var(--color-line);background:var(--color-panel);color:var(--color-ink);overflow:hidden auto;border-radius:var(--v-radius-card)}#cm-dialog::backdrop{background:color-mix(in srgb,var(--v-bg) 75%,transparent);backdrop-filter:blur(5px)}.cm-dialog-head{display:flex;justify-content:space-between;align-items:start;gap:15px;margin-bottom:20px}.cm-dialog-head h2{margin:0}.cm-dialog-close{border:0;background:var(--color-raised);color:white;border-radius:var(--v-radius);width:36px;height:36px;flex-shrink:0}.cm-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.cm-full{grid-column:1/-1}.cm-form-footer{margin-top:25px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.cm-error{color:color-mix(in oklab,var(--st-remove) 24%,var(--v-ink));background:color-mix(in oklab,var(--st-remove) 24%,var(--v-bg));border-radius:var(--v-radius);padding:12px;white-space:pre-wrap}.cm-note{border-left:3px solid var(--v-accent);padding:13px 16px;background:var(--v-raised);color:var(--v-muted);font-size:13px;margin:16px 0;line-height:1.5}.cm-warning{border-color:var(--v-accent);background:color-mix(in oklab,var(--v-accent) 20%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 28%,var(--v-ink))}.cm-checkbox{display:flex;align-items:center;gap:8px}.cm-checkbox input{min-height:0;width:16px;height:16px}.cm-details{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:0 15px;background:var(--v-panel)}.cm-details>summary{cursor:pointer;min-height:0;padding:12px 0}.cm-details[open]{padding-bottom:12px}.cm-inspector{display:grid;grid-template-columns:minmax(150px,230px) minmax(0,1fr);gap:22px}.cm-inspector img{width:100%;border-radius:var(--v-radius-card)}.cm-inspector .cm-oracle{white-space:pre-line;line-height:1.7;font-size:14px}.cm-lab-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:24px;align-items:start}.cm-run-panel{position:sticky;top:20px}.cm-run-steps{list-style:none;padding:0;display:grid;gap:22px}.cm-run-steps li{display:flex;align-items:center;gap:12px;font-size:13px}.cm-run-orb{position:relative;display:block;width:38px;height:38px;flex:0 0 38px;overflow:hidden;border-radius:50%;border:1px solid color-mix(in srgb,var(--v-line) 19%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 60%,var(--v-ink)) 13%,transparent),transparent 60%),color-mix(in srgb,var(--v-bg) 38%,transparent);box-sizing:border-box}.cm-run-orb.active{border-color:color-mix(in srgb,var(--v-accent) 53%,transparent);background:radial-gradient(circle at 32% 20%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 36%,var(--v-ink)) 31%,transparent),transparent 56%),color-mix(in srgb,color-mix(in oklab,var(--v-accent) 32%,var(--v-bg)) 22%,transparent);box-shadow:inset 0 -3px 8px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 64%,var(--v-bg)) 23%,transparent),0 0 17px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 48%,var(--v-bg)) 13%,transparent)}.cm-run-orb i{display:none;position:absolute;bottom:3px;left:12px;width:14px;height:27px;border-radius:65% 15% 65% 45%;background:linear-gradient(20deg,color-mix(in oklab,var(--v-accent) 48%,var(--v-ink)),color-mix(in oklab,var(--v-accent) 72%,var(--v-bg)) 46%,color-mix(in srgb,color-mix(in oklab,var(--v-accent) 40%,var(--v-bg)) 13%,transparent));filter:blur(1.3px);transform-origin:50% 100%;animation:cm-orb-fire 1.65s ease-in-out infinite alternate}.cm-run-orb.active i{display:block}.cm-run-orb i:nth-child(2){left:5px;height:21px;animation-delay:-.7s;opacity:.7}.cm-run-orb i:nth-child(3){left:21px;width:10px;height:20px;animation-delay:-1.2s;opacity:.8}.cm-run-orb img{display:none;position:absolute;inset:7px;width:22px;height:22px;filter:brightness(1.55) drop-shadow(0 0 4px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 36%,var(--v-ink)) 40%,transparent));animation:cm-orb-grow 2.7s ease-in-out infinite alternate}.cm-run-orb.complete{border-color:color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 60%,var(--v-ink)) 42%,transparent);background:radial-gradient(circle at 30% 20%,color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 8%,var(--v-ink)) 24%,transparent),transparent 62%),color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 52%,var(--v-bg)) 19%,transparent);box-shadow:inset 0 -4px 9px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 48%,var(--v-bg)) 19%,transparent),0 0 13px color-mix(in srgb,color-mix(in oklab,var(--st-inbox) 68%,var(--v-ink)) 10%,transparent)}.cm-run-orb.complete img{display:block}.cm-run-orb.waiting{opacity:.45}.cm-commander-results{display:grid;gap:7px;max-height:270px;overflow:auto;margin:12px 0}.cm-commander-result{display:grid;grid-template-columns:minmax(0,1fr) 72px 115px;gap:10px;align-items:center;text-align:left;padding:12px;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius);color:var(--v-ink)}.cm-commander-result strong{font-size:13px}.cm-commander-result span:last-child{font-size:12px;color:var(--v-muted)}.cm-selected-commander{padding:16px;background:var(--v-raised);border:1px solid var(--v-line);border-radius:var(--v-radius-card);margin:15px 0}.cm-section-heading{margin:28px 0 16px;padding-top:20px;border-top:1px solid var(--v-line);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--v-muted)}.cm-graph{height:550px;min-height:320px;width:100%;display:block;touch-action:none;border:1px solid var(--v-raised);border-radius:var(--v-radius-tile);background:radial-gradient(ellipse at 50% 40%,var(--v-panel),var(--v-bg) 72%)}.cm-graph-grid{display:grid;grid-template-columns:minmax(0,1.85fr) 12px var(--cm-pane-w,minmax(310px,1fr));gap:8px}.cm-swot{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.cm-swot>div{padding:14px;background:var(--v-bg);border-radius:var(--v-radius)}.cm-swot h3{margin:0 0 6px;color:var(--v-ink)}.cm-share-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.cm-starting{max-width:750px;margin:40px auto}.cm-status-line{font-size:12px;color:var(--color-muted)}.cm-pause-pill{display:inline-block;border:1px solid color-mix(in oklab,var(--v-accent) 56%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 60%,var(--v-ink));background:var(--v-raised);border-radius:var(--v-radius);padding:5px 9px;font-size:12px}.cm-loading{opacity:.6;pointer-events:none}.v-term{font:inherit;display:inline;padding:0;background:none;border:0;border-bottom:1px dotted var(--v-line);color:inherit;cursor:help}.v-term:hover,.v-term:focus-visible{text-shadow:0 0 .5px currentColor}.v-glossary-tip{position:fixed;margin:0;padding:16px;background:var(--v-raised);color:var(--v-ink);border:1px solid var(--v-line);border-radius:var(--v-radius);max-width:340px;z-index:90;box-shadow:0 8px 30px #0007;font-size:13px}.v-glossary-tip strong{font-size:15px}.v-glossary-tip p{margin:8px 0 0}.v-glossary-tip .v-tip-kind{display:block;font-size:11px;color:var(--v-line);margin-top:4px}@keyframes cm-orb-fire{0%{transform:rotate(-9deg) scale(1,1)}50%{transform:rotate(6deg) scale(.9,1.12)}100%{transform:rotate(-4deg) scale(1.05,.94);opacity:.85}}@keyframes cm-orb-grow{from{transform:scale(.86);opacity:.7}to{transform:scale(1.08);opacity:1}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}@media(max-width:1050px){.cm-showcase{grid-template-columns:minmax(0,1fr) 230px}.cm-cardfan{height:232px}.cm-grid-2,.cm-graph-grid{grid-template-columns:1fr}.cm-lab-grid{grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr)}.cm-layout{grid-template-columns:216px minmax(0,1fr)}.cm-commander{grid-template-columns:160px 1fr}#cm-main{padding:28px 24px 48px}}@media(max-width:760px){.cm-showcase{grid-template-columns:1fr;padding-bottom:10px}.cm-cardfan{height:186px}.cm-fan-card{width:96px;margin-left:-48px;top:14px;border-width:4px}.cm-fan-left{transform:translate(-44px,14px) rotate(-20deg)}.cm-fan-right{transform:translate(45px,14px) rotate(20deg)}.cm-deck-hero{padding:20px 18px;min-height:200px}.cm-graph-pop{width:calc(100% - 12px);left:6px!important}.cm-graph-mode-hint{flex-basis:100%;margin:0}.cm-picker-row{grid-template-columns:minmax(0,1fr) auto auto}.cm-picker-meta{grid-column:1/-1}.cm-picker-row .cm-text-button{grid-column:1/-1;text-align:left}.cm-columns-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#matrix-v2 .cm-user-menu>.v-button{padding:5px 9px;font-size:11px;max-width:none;min-height:30px;white-space:nowrap}.cm-graph-grid-tall{--cm-graph-h:390px}.cm-card-view{height:auto;max-height:none;overflow:visible;min-height:0}.cm-card-view-head{grid-template-columns:110px minmax(0,1fr)}.cm-card-view-art{width:110px}.cm-graph-reach{margin-left:0}.cm-graph-reach input[type=range]{width:90px}.cm-filter-panel{grid-template-columns:1fr;padding:12px}.cm-facet-list{max-height:170px}#cm-facet-results{max-height:none}#matrix-v2 .v-top{padding:13px 15px;gap:10px}#matrix-v2 .v-brand-subline{font-size:9px;max-width:250px}#matrix-v2 .v-brand{font-size:25px}#matrix-v2 .v-brand-logo{width:45px;height:45px}.cm-user-menu>.v-button{padding:8px!important;font-size:11px;max-width:95px}.cm-layout{display:block}.cm-sidebar{padding:8px 10px;position:sticky;top:0;z-index:10;border-right:0;border-bottom:1px solid var(--v-line);display:flex;flex-direction:row;align-items:center;gap:10px;background:color-mix(in srgb,var(--v-bg) 96%,transparent)}.cm-sidebar nav{display:flex;gap:2px;position:static;justify-content:space-between;margin:0;flex:1 1 auto}.cm-sidebar .v-nav-links a{padding:10px 7px;font-size:12px;white-space:nowrap;min-height:40px}.cm-sidebar .v-nav-links a[aria-current=page]{box-shadow:inset 0 -2px var(--v-accent)}.cm-nav-note{display:none}#cm-main{padding:23px 15px 50px}.cm-lab-grid,.cm-form-grid,.cm-inspector{grid-template-columns:1fr}.cm-run-panel{position:static}.cm-inspector-art{max-width:200px;margin:auto}.cm-page-head{display:block}.cm-page-head>.cm-actions{margin-top:16px}.cm-commander{grid-template-columns:110px minmax(0,1fr);gap:13px}.cm-commander li{font-size:12px}.cm-swot{grid-template-columns:1fr}.cm-commander-result{grid-template-columns:minmax(0,1fr) 45px 75px}.cm-graph{height:390px}.cm-form-grid .cm-full{grid-column:auto}#matrix-v2 .v-panel{padding:17px}.cm-stats{gap:18px}.cm-table th,.cm-table td{padding:12px 11px}.cm-table td:first-child,.cm-table th:first-child{min-width:190px}.cm-deck-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}@media(max-width:370px){.cm-sidebar .v-nav-links a{font-size:11px;padding:10px 5px}.cm-commander{grid-template-columns:1fr}.cm-commander>img{width:140px;margin:auto}#matrix-v2 .v-brand-subline{font-size:8px}.cm-user-menu>.v-button{max-width:80px;font-size:10px}.cm-toolbar .cm-search{min-width:120px}}@media print{.v-top,.cm-sidebar,.cm-toolbar,.cm-actions,.cm-paging,.cm-menu,.cm-toast,button{display:none!important}.cm-layout{display:block}body,#matrix-v2,#cm-main{background:white!important;color:black!important;padding:0!important}.cm-table{font-size:10px}.cm-table th,.cm-table td{color:black!important;background:white!important;padding:6px}.cm-table-wrap{overflow:visible}.cm-table td:last-child,.cm-table th:last-child{display:none}}
 
 /* Production navigation owns its layout at every breakpoint. */
 #matrix-v2 .cm-sidebar .v-nav-links{display:flex;flex-direction:column;gap:8px;top:18px}#cm-main h2{margin-bottom:14px}#cm-main h3{margin-top:14px;margin-bottom:8px}#cm-main p{margin-top:8px;margin-bottom:8px}#matrix-v2 .cm-commander img{min-height:190px;object-fit:contain}#matrix-v2 .cm-commander .cm-mana img{min-height:0;object-fit:contain}
@@ -1426,7 +1443,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-table td{height:56px;vertical-align:middle}
 #matrix-v2 .cm-table td.cm-row-actions-cell{vertical-align:middle}
 #matrix-v2 .cm-table td:first-child small{display:inline-block;margin:0 0 0 8px;padding:1px 7px;border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:10.5px;line-height:1.5;max-width:none;vertical-align:middle}
-.cm-hover-art{position:fixed;z-index:70;width:360px;aspect-ratio:488/680;border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel)}
+.cm-hover-art{position:fixed;z-index:70;width:clamp(240px,calc(360px * var(--card-scale,1)),min(488px,45vw));aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel)}
 #matrix-v2 .cm-cell-edit{box-shadow:none;border-bottom:1px dotted var(--v-field-line);border-radius:0;padding-right:16px;position:relative}
 #matrix-v2 .cm-cell-edit::after{content:'\270E';position:absolute;right:2px;top:1px;font-size:11px;color:var(--v-accent);opacity:0}
 #matrix-v2 .cm-cell-edit:hover{background:none;border-bottom-color:var(--v-accent)}
@@ -1545,7 +1562,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-deck-hero .cm-deck-actions{margin-bottom:0;gap:8px}
 @media(max-width:760px){.cm-deck-summary{grid-template-columns:1fr}.cm-summary-col+.cm-summary-col{border-left:0;border-top:1px solid var(--color-raised)}}
 /* HOVER ART is a box now: the picture, and a spinner while it is on its way. */
-.cm-hover-art{position:fixed;z-index:70;width:360px;aspect-ratio:488/680;border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel);overflow:hidden}
+.cm-hover-art{position:fixed;z-index:70;width:clamp(240px,calc(360px * var(--card-scale,1)),min(488px,45vw));aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);box-shadow:0 12px 34px #000b;pointer-events:none;background:var(--v-panel);overflow:hidden}
 .cm-hover-art img{display:block;width:100%;height:100%;object-fit:cover;transition:opacity .15s}
 .cm-hover-art.is-loading img{opacity:0}
 .cm-hover-art .cm-spinner{display:none;position:absolute;inset:0;margin:auto;width:30px;height:30px;border:3px solid #ffffff2e;border-top-color:var(--color-accent);border-radius:50%;animation:cm-spin .8s linear infinite}
@@ -1703,7 +1720,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-stats-row .cm-stat{min-width:0;box-sizing:border-box;padding:10px 12px 9px;border-radius:var(--v-radius-card);background:var(--v-bg);border:1px solid var(--color-raised);border-top:3px solid var(--st,var(--color-line))}
 .cm-stats-row .cm-stat strong{display:block;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--v-ink)}
 .cm-stats-row .cm-stat span{display:block;margin-top:3px;font-size:12px;color:var(--color-muted);white-space:nowrap}
-.cm-stat-plan{--st:var(--st-reserved)}.cm-stat-have{--st:var(--st-inbox)}.cm-stat-subs{--st:var(--st-standin)}.cm-stat-physical{--st:var(--st-physical)}.cm-stat-coming{--st:var(--st-ordered)}.cm-stat-missing{--st:var(--st-buy)}.cm-stat-considering{--st:var(--st-watch,var(--v-line))}
+.cm-stat-plan{--st:var(--st-reserved)}.cm-stat-bench{--st:var(--st-pull)}.cm-stat-have{--st:var(--st-inbox)}.cm-stat-subs{--st:var(--st-standin)}.cm-stat-physical{--st:var(--st-physical)}.cm-stat-coming{--st:var(--st-ordered)}.cm-stat-missing{--st:var(--st-buy)}.cm-stat-considering{--st:var(--st-watch,var(--v-line))}
 /* THE ROSTER USES THE WIDTH IT HAS: the deck name on one line, the card name with room. */
 #matrix-v2 .cm-table td.cm-col-deck,#matrix-v2 .cm-table th.cm-col-deck{white-space:nowrap}
 #matrix-v2 .cm-table td.cm-col-name,#matrix-v2 .cm-table th.cm-col-name{min-width:190px}
@@ -1753,7 +1770,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
    tile, on the Collection's Allocation pill and on the card pop-up's deck chips alike. */
 .cm-pill.reserved{--st:var(--st-reserved)}
 /* The dialog's title row and its close button stay put while the rest scrolls. */
-#matrix-v2 .cm-dialog-head{position:sticky;top:0;z-index:3;background:var(--color-panel);margin:-25px -25px 20px;padding:25px 25px 12px}
+/* top:-25px, not 0: a sticky box stops at the scroll box's padding edge, so top:0 held the head 25px below where its
+   -25px margin puts it, over the first 5px of every dialog's first line (seen in R3.6's Filters and Add copies). */
+#matrix-v2 .cm-dialog-head{position:sticky;top:-25px;z-index:3;background:var(--color-panel);margin:-25px -25px 20px;padding:25px 25px 12px}
 /* THE PAGE NAME IS THE HEADING: one row, the name and its "?" on the left, the actions on the
    right; a crumb above a page that belongs to another (a deck, its Ready to add list). */
 .cm-page-title{display:grid;gap:0;min-width:0}
@@ -1878,7 +1897,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
      and a phone showed the three actions twice, in the hero and in the bar at the foot. */
   #matrix-v2 .cm-deck-hero .cm-deck-work{display:none}
   .cm-action-bar{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--v-bg) 95%,transparent);border-top:1px solid var(--color-line);backdrop-filter:blur(6px)}
-  #matrix-v2 .cm-action-bar .v-button{flex:1 1 0;min-width:0;padding:10px 6px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ONE ROW THAT SCROLLS SIDEWAYS (r3, 11-mobile-deck-detail; R3.5). Every button keeps its whole label at its
+     own width -- squeezing them to equal shares clipped "Make the change" to "Ma…" (CW-MOB-02). Make the
+     change rides here on a phone and leaves the hero, as the design draws it. */
+  #matrix-v2 .cm-action-bar{overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none}
+  #matrix-v2 .cm-action-bar::-webkit-scrollbar{display:none}
+  #matrix-v2 .cm-action-bar .v-button{flex:0 0 auto;padding:10px 14px;font-size:13px;white-space:nowrap;scroll-snap-align:start}
+  #matrix-v2 .cm-deck-hero .cm-deck-actions>[data-action=deck-change]{display:none}
   #cm-main:has(.cm-action-bar){padding-bottom:96px}
   .cm-deck-composition{grid-template-columns:1fr}
   .cm-deck-list li{grid-template-columns:22px minmax(0,1fr) minmax(0,auto);font-size:12px}
@@ -1890,8 +1915,8 @@ button.cm-pill:hover{filter:brightness(1.15)}
    than the line pop-up, opened to the right of its node. */
 .cm-graph-pop.cm-pop-card{width:min(440px,calc(100% - 16px))}
 .cm-pop-body{display:grid;grid-template-columns:138px minmax(0,1fr);gap:12px;margin-top:8px;align-items:start}
-.cm-pop-art img{display:block;width:100%;border-radius:var(--v-radius);box-shadow:0 8px 22px #000a,0 0 0 1px #ffffff14;background:var(--v-panel);aspect-ratio:63/88;object-fit:cover}
-.cm-pop-noart{aspect-ratio:63/88;border-radius:var(--v-radius);background:linear-gradient(160deg,color-mix(in oklab,var(--st-remove) 12%,var(--v-bg)),color-mix(in oklab,var(--st-standin) 8%,var(--v-bg)));display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--v-ink);box-shadow:inset 0 0 0 1px #ffffff14}
+.cm-pop-art img{display:block;width:100%;border-radius:var(--v-radius);box-shadow:0 8px 22px #000a,0 0 0 1px #ffffff14;background:var(--v-panel);aspect-ratio:var(--card-ratio);object-fit:cover}
+.cm-pop-noart{aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);background:linear-gradient(160deg,color-mix(in oklab,var(--st-remove) 12%,var(--v-bg)),color-mix(in oklab,var(--st-standin) 8%,var(--v-bg)));display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--v-ink);box-shadow:inset 0 0 0 1px #ffffff14}
 .cm-pop-meta{min-width:0}.cm-pop-meta p:first-child{margin-top:0}
 .cm-pop-facts{font-size:12px;color:var(--color-muted);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 /* HOW MANY YOU HAVE, AND WHO IS WAITING FOR IT (Rob, 16 September). Two lines, the counts over
@@ -1961,7 +1986,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-tt-drawer-head{position:static;flex:0 0 auto;font-size:12px}
 .cm-tt-drawer-head strong{color:var(--color-ink);font-size:13px}
 #matrix-v2 .cm-tt-drawer-print{margin-left:auto;min-height:26px;padding:2px 10px;font-size:11px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted)}
-#matrix-v2 .cm-tt-drawer-shut{min-height:26px;width:26px;padding:0;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:15px;line-height:1}
+#matrix-v2 .cm-tt-drawer-shut{position:static;flex:0 0 auto;min-height:26px;width:26px;padding:0;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-muted);font-size:15px;line-height:1}
 #matrix-v2 .cm-tt-drawer-print:hover,#matrix-v2 .cm-tt-drawer-shut:hover{background:var(--v-raised);filter:none}
 /* The cards scroll sideways: a pile is read along a row, which is the gesture the pictures ask
    for, and the pager is only there for a pile deeper than the forty a page holds. */
@@ -1970,7 +1995,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-drawer.is-shut .cm-tt-play-invite{margin:0;max-width:56ch}
 .cm-tt-pile.is-flow{position:relative;left:auto;top:auto;flex:0 0 auto;width:74px;height:126px}
 .cm-tt-pile.is-flow .cm-tt-placard{top:auto;bottom:0;max-width:96px}
-.cm-tt-card{width:64px;height:90px;border-radius:var(--v-radius);background:linear-gradient(160deg,var(--v-panel),var(--v-bg));border:1px solid #0009;box-shadow:0 3px 8px #000a,inset 0 1px 0 #ffffff10;position:relative;overflow:hidden}
+.cm-tt-card{width:64px;aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);background:linear-gradient(160deg,var(--v-panel),var(--v-bg));border:1px solid #0009;box-shadow:0 3px 8px #000a,inset 0 1px 0 #ffffff10;position:relative;overflow:hidden}
 .cm-tt-card:before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--art,linear-gradient(135deg,var(--color-raised),var(--v-panel)));background-size:cover;background-position:center}
 .cm-tt-name{display:none;position:absolute;left:4px;right:4px;bottom:4px;font-size:8px;line-height:1.1;color:var(--color-ink);font-weight:600}.cm-tt-card.no-art .cm-tt-name{display:block}
 .cm-tt-card.is-ghost{background:var(--v-bg);border:2px dashed var(--color-money);box-shadow:0 3px 8px #000a}.cm-tt-card.is-ghost:before{opacity:1;filter:saturate(.55)}.cm-tt-card.is-ghost .cm-tt-name{color:var(--color-muted)}
@@ -1979,7 +2004,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-slot{position:absolute;left:-5px;top:-5px;width:74px;height:100px;border-radius:var(--v-radius);background:var(--v-bg);box-shadow:inset 0 3px 10px #000c,0 0 0 1px var(--color-raised)}  /* THE SLOT HUGS THE CARD (Rob, 14 September): it stood 88x118 around a 64x90 card, so the
      picture floated in the top-left with 17px of slate to its right and 21px under it and
      read as a card that had not loaded. A 5px lip all round, and the picture fills its recess. */
-.cm-tt-stack{position:absolute;left:0;top:0;width:64px;height:90px}
+.cm-tt-stack{position:absolute;left:0;top:0;width:64px;aspect-ratio:var(--card-ratio)}
 .cm-tt-stack .cm-tt-card{position:absolute;left:0;top:0;box-shadow:0 3px 8px #000a,0 var(--stack,0px) 0 -1px var(--v-bg),0 calc(var(--stack,0px) + 1px) 0 0 var(--v-raised)}
 .cm-tt-status .cm-tt-card{background:linear-gradient(160deg,var(--v-raised),var(--v-bg))}
 .cm-tt-pile.is-empty .cm-tt-stack{display:none}
@@ -2009,11 +2034,11 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-strip{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:color-mix(in srgb,var(--v-bg) 82%,transparent);border:1px solid var(--color-raised);border-radius:var(--v-radius);padding:5px 10px;font-size:12px;color:var(--color-ink);min-height:36px}
 .cm-tt-strip-title{flex:1 1 auto;min-width:160px}.cm-tt-strip button{min-height:26px;padding:2px 9px;font-size:12px;background:var(--v-panel);color:var(--v-ink);border:1px solid var(--color-raised);border-radius:var(--v-radius);cursor:pointer}
 .cm-tt-strip button[disabled]{opacity:.4;cursor:default}.cm-tt-strip button[aria-pressed=true]{background:var(--color-money);color:color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border-color:var(--color-money)}.cm-tt-strip .cm-tt-primary{background:var(--v-line);border-color:var(--v-line);color:#fff}
-.cm-tt-seg{display:inline-flex;gap:2px}.cm-tt-pager{display:inline-flex;gap:6px;align-items:center}
+.cm-tt-pager{display:inline-flex;gap:6px;align-items:center}
 .cm-tt-grid{position:absolute;left:0;right:0}.cm-tt-grid .cm-tt-card{position:absolute;cursor:pointer;transition:box-shadow .15s}.cm-tt-grid .cm-tt-card:hover{box-shadow:0 6px 16px #000c,0 0 0 2px color-mix(in srgb,color-mix(in oklab,var(--v-accent) 72%,var(--v-ink)) 53%,transparent)}
 .cm-tt-grid .cm-tt-card:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}.cm-tt-empty{margin:20px 16px;color:var(--color-muted);font-size:13px}
-.cm-tt-card.is-S{width:83px;height:117px}.cm-tt-card.is-M{width:125px;height:174px}.cm-tt-card.is-M .cm-tt-name{font-size:10px;left:5px;right:5px;bottom:6px}.cm-tt-card.is-ghost.is-M:after{font-size:9px;line-height:14px}
-.cm-tt-card.is-L{width:182px;height:255px;border-radius:var(--v-radius)}.cm-tt-card.is-L .cm-tt-name{font-size:12px;left:7px;right:7px;bottom:8px}.cm-tt-card.is-ghost.is-L:after,.cm-tt-card.is-ghost.cm-tt-solo:after{font-size:10px;line-height:16px;padding:1px 7px}
+.cm-tt-card.is-fan{width:182px}
+.cm-tt-card.is-fan{border-radius:var(--v-radius)}.cm-tt-card.is-fan .cm-tt-name{font-size:12px;left:7px;right:7px;bottom:8px}.cm-tt-card.is-ghost.is-fan:after,.cm-tt-card.is-ghost.cm-tt-solo:after{font-size:10px;line-height:16px;padding:1px 7px}
 .cm-tt-tick{position:absolute;right:4px;top:4px;width:16px;height:16px;border-radius:4px;border:1px solid var(--color-muted);background:color-mix(in srgb,var(--v-bg) 80%,transparent);cursor:pointer;z-index:2}
 .cm-tt-tick:after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0}
 .cm-tt-card.is-ticked .cm-tt-tick{background:var(--color-money);border-color:var(--color-money)}.cm-tt-card.is-ticked .cm-tt-tick:after{opacity:1}.cm-tt-card.is-ticked{box-shadow:0 3px 8px #000a,0 0 0 2px var(--color-money)}
@@ -2054,8 +2079,8 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-trade-note{max-width:70ch;color:var(--color-ink);white-space:pre-line}
 .cm-trade-grid{list-style:none;margin:16px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .cm-trade-card{position:relative;display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start;background:var(--v-bg);border:1px solid var(--color-raised);border-radius:var(--v-radius-card);padding:10px}
-.cm-trade-card img{width:96px;height:134px;object-fit:cover;border-radius:var(--v-radius);background:var(--v-bg);box-shadow:0 3px 8px #000a}
-.cm-trade-noart{width:96px;height:134px;border-radius:var(--v-radius);background:linear-gradient(160deg,var(--v-panel),var(--v-bg));border:1px solid #0009;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:var(--color-muted);letter-spacing:1px}
+.cm-trade-card img{width:96px;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:var(--v-radius);background:var(--v-bg);box-shadow:0 3px 8px #000a}
+.cm-trade-noart{width:96px;aspect-ratio:var(--card-ratio);border-radius:var(--v-radius);background:linear-gradient(160deg,var(--v-panel),var(--v-bg));border:1px solid #0009;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:var(--color-muted);letter-spacing:1px}
 .cm-trade-tick{position:absolute;left:6px;top:6px;z-index:1}.cm-trade-tick input{width:18px;height:18px;min-height:0;margin:0}
 .cm-trade-facts{display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0}.cm-trade-facts strong{font-size:14px;line-height:1.25}.cm-trade-facts span{color:var(--color-muted);font-size:12px}
 .cm-trade-link{word-break:break-all;font-size:13px}
@@ -2076,7 +2101,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
    short bar on the card's top edge now, the way the Explore doors carry theirs; the figure and
    its label stand in the card with room on every side; and the caption under the row spans it
    instead of taking the first card's column. */
-.cm-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:stretch;margin:4px 0 8px}
+.cm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;margin:4px 0 8px}
 .cm-kpi{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;padding:18px 16px 14px;min-width:0;min-height:84px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);color:var(--color-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
 .cm-kpi:before{content:"";position:absolute;left:16px;top:-1px;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--st,var(--color-line))}
 .cm-kpi strong{font-family:var(--v-display);font-weight:var(--display-weight);font-size:28px;line-height:1;font-variant-numeric:tabular-nums;color:var(--st,var(--v-ink))}
@@ -2090,10 +2115,17 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* TB5 (Rob, 14 September): the whole picture on every card with a caption under it in a laid-out grid;
    ghosts read at full strength behind a gold dashed frame and wear their status; the readings of a plan
    are chips, not piles; the Bench ledge folds; one card on the stage at the size you choose, with its facts. */
-.cm-tt-grid .cm-tt-card{height:104px}.cm-tt-grid .cm-tt-card.is-M{height:152px}.cm-tt-grid .cm-tt-card.is-L{height:216px}
-.cm-tt-grid .cm-tt-card:before{bottom:14px}.cm-tt-grid .cm-tt-card.is-M:before{bottom:18px}.cm-tt-grid .cm-tt-card.is-L:before{bottom:20px}
+/* AN OPEN PILE'S CARDS ARE ONE POINT ON A SCALE (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): 125px wide at
+   100%, times --card-scale, 5:7, with the name in a caption under the picture that never drops below 16px tall or
+   10px type. Each card is placed by its index, so dragging the card-size slider moves them all without a redraw.
+   crankmagic-tabletop.js cardGeom carries the same arithmetic. */
+.cm-tt-grid{--tt-s:var(--card-scale,1);--tt-w:calc(125px * var(--tt-s));--tt-gap:calc(12px * var(--tt-s));--tt-cap:max(16px,calc(18px * var(--tt-s)))}
+.cm-tt-grid.is-drawer{height:calc(var(--tt-w) * 7 / 5 + var(--tt-cap));width:calc(var(--n,1) * (var(--tt-w) + var(--tt-gap)) - var(--tt-gap))}
+.cm-tt-grid .cm-tt-card{width:var(--tt-w);height:calc(var(--tt-w) * 7 / 5 + var(--tt-cap));left:calc(var(--i,0) * (var(--tt-w) + var(--tt-gap)));top:0}
+.cm-tt-grid .cm-tt-card:before{bottom:var(--tt-cap)}
 .cm-tt-grid .cm-tt-name{display:block;left:0;right:0;bottom:0;height:14px;line-height:14px;font-size:8px;text-align:center;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--v-bg);color:var(--color-ink)}
-.cm-tt-grid .cm-tt-card.is-M .cm-tt-name{height:18px;line-height:18px;font-size:10px}.cm-tt-grid .cm-tt-card.is-L .cm-tt-name{height:20px;line-height:20px;font-size:11px}
+.cm-tt-grid .cm-tt-card .cm-tt-name{height:var(--tt-cap);line-height:var(--tt-cap);font-size:max(10px,calc(10px * var(--tt-s)))}
+.cm-tt-grid .cm-tt-card.is-ghost:after{font-size:max(10px,calc(9px * var(--tt-s)));line-height:1.5}
 .cm-tt-grid .cm-tt-card.no-art:before{background:linear-gradient(160deg,var(--v-panel),var(--v-bg))}
 .cm-tt-readings{position:absolute;left:16px;right:16px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:11px;color:var(--color-muted);z-index:2}
 #matrix-v2 .cm-tt-chip.cm-tt-reading,.cm-tt-chip.cm-tt-reading{background:linear-gradient(var(--v-ink),var(--v-muted))}
@@ -2279,7 +2311,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-draw{position:absolute;left:0;top:0;width:110px;height:140px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit}
 .cm-tt-draw .cm-tt-slot{left:0;top:0;width:110px;height:140px;border-radius:var(--v-radius-card)}
 .cm-tt-draw-stack{position:absolute;left:7px;top:7px;width:96px;height:126px}
-.cm-tt-draw-stack .cm-tt-card{position:absolute;width:88px;height:123px}
+.cm-tt-draw-stack .cm-tt-card{position:absolute;width:88px;height:auto;aspect-ratio:var(--card-ratio)}
 .cm-tt-draw.is-open .cm-tt-slot,.cm-tt-draw:focus-visible .cm-tt-slot{box-shadow:inset 0 3px 10px #000c,0 0 0 2px var(--color-money)}
 .cm-tt-draw-empty{position:absolute;inset:6px;display:grid;place-items:center;text-align:center;font-size:10.5px;line-height:1.35;color:var(--v-line)}
 .cm-tt-restore{position:absolute;right:-10px;top:-8px;width:26px;height:26px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;font-size:15px;line-height:1;background:var(--color-panel);border:1px solid color-mix(in srgb,var(--v-accent) 40%,transparent);color:color-mix(in oklab,var(--v-accent) 44%,var(--v-ink));cursor:pointer}
@@ -2291,7 +2323,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-trays{display:flex;align-items:flex-end;justify-content:center;gap:12px;height:110px;margin-top:4px}
 .cm-tt-tray{position:relative;width:78px;height:110px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;display:flex;flex-direction:column;align-items:center;gap:3px}
 .cm-tt-tray-slot{position:relative;width:78px;height:86px;border-radius:var(--v-radius);border:1px dashed var(--v-line);background:color-mix(in srgb,var(--v-bg) 53%,transparent);display:grid;place-items:center}
-.cm-tt-tray-slot .cm-tt-card{width:58px;height:81px}
+.cm-tt-tray-slot .cm-tt-card{width:58px;aspect-ratio:var(--card-ratio)}
 .cm-tt-tray.is-open .cm-tt-tray-slot,.cm-tt-tray:focus-visible .cm-tt-tray-slot{border-style:solid;border-color:var(--color-money);box-shadow:0 0 0 1px color-mix(in srgb,var(--v-accent) 40%,transparent)}
 .cm-tt-tray:not(.is-empty) .cm-tt-tray-slot{border-style:solid;border-color:var(--v-line)}
 .cm-tt-tray-more{position:absolute;right:3px;bottom:3px;font-size:10px;font-weight:700;padding:1px 5px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--v-bg) 85%,transparent);border:1px solid #ffffff22;color:var(--v-muted)}
@@ -2400,6 +2432,10 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* ------------------------------------------------------------------ NEW DECK WIZARD (Phase 1 PR3)
    Unified entry with three peer paths: Create, Import, Lab. */
 .cm-new-deck-wizard{max-width:56ch;padding:6px 0}
+/* The New deck dialog is as wide as its choices (Rob, 2026-09-28): the general dialog is 900px wide and the choices
+   stopped at 56ch, which left a band of empty panel on the right and put the close button far from them. Narrowed,
+   the close button's right edge lines up with the choices', and the gutter matches the left side's. */
+#cm-dialog.cm-new-deck-dialog{width:min(560px,calc(100vw - 24px))}#cm-dialog.cm-new-deck-dialog .cm-new-deck-wizard{max-width:none}
 .cm-new-deck-wizard > p{margin:0 0 18px;font-size:14px;color:var(--v-muted)}
 .cm-wizard-paths{display:flex;flex-direction:column;gap:12px}
 /* These are CONTROLS on a panel, so they take --v-raised. crankmagic-design.css line 38 states the
@@ -2462,8 +2498,8 @@ button.cm-pill:hover{filter:brightness(1.15)}
 
 /* Mid/bottom: commander art LEFT large (~half seat height); type bars RIGHT */
 .cm-lobby-decked{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start;margin-top:8px;width:100%;max-width:100%;min-width:0;overflow:hidden}
-.cm-lobby-art{width:100%;height:auto;max-height:none;aspect-ratio:5/7;object-fit:cover;object-position:top;border-radius:var(--v-radius);display:block;background:var(--v-bg)}
-.cm-lobby-art-fallback{aspect-ratio:5/7;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font-size:12px;color:var(--v-muted);border:1px dashed var(--v-line);border-radius:var(--v-radius)}
+.cm-lobby-art{width:100%;height:auto;max-height:none;aspect-ratio:var(--card-ratio);object-fit:cover;object-position:top;border-radius:var(--v-radius);display:block;background:var(--v-bg)}
+.cm-lobby-art-fallback{aspect-ratio:var(--card-ratio);display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font-size:12px;color:var(--v-muted);border:1px dashed var(--v-line);border-radius:var(--v-radius)}
 .cm-lobby-types{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%;overflow:hidden}
 /* ~15px gap between category label and bar (auto label width, not fixed 72px gutter) */
 .cm-lobby-type-row{display:grid;grid-template-columns:auto 1fr auto;column-gap:15px;align-items:center;font-size:11px;white-space:nowrap}
@@ -2496,12 +2532,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-lobby-art-pop-backdrop{position:absolute;inset:0;border:0;padding:0;margin:0;background:#000a;cursor:pointer}
 /* Sized from the card that opened it (--cm-pop-w), so it reads as that card lifting off the
    table rather than as an unrelated picture. */
-.cm-lobby-art-pop-card{position:relative;z-index:1;width:var(--cm-pop-w,320px);max-width:calc(100vw - 48px);max-height:calc(100vh - 48px);aspect-ratio:488/680;padding:0;border:0;border-radius:var(--v-radius-card);overflow:hidden;background:var(--v-bg);box-shadow:0 16px 48px #000c;cursor:pointer}
+.cm-lobby-art-pop-card{position:relative;z-index:1;width:var(--cm-pop-w,320px);max-width:min(calc(100vw - 48px),calc((100vh - 48px) * 5 / 7));aspect-ratio:var(--card-ratio);padding:0;border:0;border-radius:var(--v-radius-card);overflow:hidden;background:var(--v-bg);box-shadow:0 16px 48px #000c;cursor:pointer}
 .cm-lobby-art-pop-card img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
 
 .cm-lobby-summary{display:flex;flex-direction:column;gap:12px;max-width:520px}
 .cm-lobby-summary-top{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:start}
-.cm-lobby-summary-art{width:120px;height:auto;aspect-ratio:5/7;object-fit:cover;object-position:top;border-radius:var(--v-radius);display:block}
+.cm-lobby-summary-art{width:120px;height:auto;aspect-ratio:var(--card-ratio);object-fit:cover;object-position:top;border-radius:var(--v-radius);display:block}
 .cm-lobby-summary-name{margin:0 0 4px;font-size:16px;font-weight:700}
 .cm-lobby-summary-types{display:flex;flex-direction:column;gap:5px}
 .cm-lobby-summary-actions{margin:0;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
@@ -2655,7 +2691,7 @@ button.cm-building { pointer-events: none; }
 .cm-load-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .cm-load-head h3{margin:0;font-size:17px}
 .cm-load-head p{margin:2px 0 0;font-size:13px}
-.cm-load-art{width:clamp(140px,38%,210px);height:auto;border-radius:var(--v-radius-card);align-self:flex-start;box-shadow:0 6px 18px rgb(0 0 0 / .35)}
+.cm-load-art{width:clamp(140px,38%,210px);height:auto;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:var(--v-radius-card);align-self:flex-start;box-shadow:0 6px 18px rgb(0 0 0 / .35)}
 .cm-load-avg{margin:0;font-size:13px}
 .cm-load-avg strong{font-size:15px;font-variant-numeric:tabular-nums}
 .cm-load-cards{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;
@@ -2667,7 +2703,7 @@ button.cm-building { pointer-events: none; }
 /* The hover preview sits over the pane and never takes the pointer, so moving across the list
    cannot land on the preview and flicker. */
 .cm-load-preview{position:absolute;right:0;bottom:0;width:min(250px,60%);pointer-events:none;z-index:5}
-.cm-load-preview img{width:100%;height:auto;border-radius:var(--v-radius-card);box-shadow:0 10px 30px rgb(0 0 0 / .55)}
+.cm-load-preview img{width:100%;height:auto;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:var(--v-radius-card);box-shadow:0 10px 30px rgb(0 0 0 / .55)}
 @media(max-width:760px){.cm-load-wizard{grid-template-columns:minmax(0,1fr)}.cm-load-list{max-height:200px}.cm-load-preview{position:static;width:auto}}
 /* The deck file controls sit under both panes: a library lives in the browser that made it, and
    the local host and the cloud copy are different browsers as far as IndexedDB is concerned. */
@@ -2688,6 +2724,9 @@ button.cm-building { pointer-events: none; }
    the dialog grows to fit it and stops scrolling. */
 #cm-dialog.cm-picker-dialog{width:min(980px,calc(100vw - 24px))}
 #cm-dialog.cm-picker-dialog .cm-commander-results{position:static;width:auto;max-height:calc(100dvh - 360px);overflow:auto}
+/* The same leak on the Build page (R3.11): its Matching commanders list is a section of the form, not a dropdown, and
+   the lobby's rule hung it over the actions and the chosen commander below it. Back into flow. */
+#cm-lab-results.cm-commander-results{position:static;width:auto;max-height:300px;overflow:auto}
 
 /* THE LOCAL COPY: a game host, not the workshop. Rob, 2026-09-24: "don't show any of the left side
    bar. It is completely not required in the local version for the user to see and try to use in
@@ -2710,3 +2749,617 @@ button.cm-building { pointer-events: none; }
 .cm-visit-crank{flex-basis:100%;text-align:center;padding:5px 12px;font-size:12px;font-weight:500;
   background:none;border:1px solid var(--v-line);color:var(--v-muted);text-decoration:none;border-radius:var(--v-radius-control)}
 .cm-visit-crank:hover,.cm-visit-crank:focus-visible{color:var(--v-text);border-color:var(--v-accent)}
+/* A TOAST CARRIES ONE ACTION (r3, 72-toast-error): Undo after a save, Retry after a failure that
+   may pass. The message and the button sit on one line; the button is a real button. */
+#cm-notice.cm-toast:not([hidden]){display:flex;align-items:center;gap:14px}
+#cm-notice .cm-toast-text{min-width:0}
+#cm-notice:not(.error) .cm-toast-text:before{content:'✓ ';color:var(--st-inbox)}
+#cm-notice .cm-toast-action{flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-panel);color:var(--v-ink);font-weight:700;cursor:pointer}
+#cm-notice .cm-toast-action:hover{background:var(--v-bg)}
+/* HELP IS A RIGHT SLIDE-OVER (r3, 07-help-panel): the page stays in view beside it, dimmed, and
+   the glossary and Got it sit at its foot. The Library's wide help keeps its width. */
+#matrix-v2 dialog#cm-dialog.cm-slideover[open]{display:flex;flex-direction:column;margin:0 0 0 auto;width:min(460px,100vw);height:100dvh;max-height:100dvh;border-radius:0;border-width:0 0 0 1px;animation:cm-slide-in .18s ease-out}
+#matrix-v2 dialog#cm-dialog.cm-slideover:has(.cm-help-wide)[open]{width:min(960px,100vw)}
+#cm-dialog.cm-slideover .cm-help-body{flex:1 1 auto;min-height:0}
+#cm-dialog .cm-help-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--v-line)}
+#cm-dialog .cm-link{border:0;background:none;padding:0;color:var(--v-accent);font:inherit;font-weight:700;cursor:pointer}
+#cm-dialog .cm-link:hover{text-decoration:underline}
+#cm-dialog.cm-slideover::backdrop{backdrop-filter:none;background:color-mix(in srgb,var(--v-bg) 55%,transparent)}
+@keyframes cm-slide-in{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){#matrix-v2 dialog#cm-dialog.cm-slideover[open]{animation:none}}
+/* THE GLOSSARY (r3, 76-glossary): a term, then its one sentence; a status wears its own color. */
+#cm-dialog .cm-glossary{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:10px 18px;align-items:baseline;font-size:14px}
+#cm-dialog .cm-gloss-row{display:contents}
+#cm-dialog .cm-gloss-term{justify-self:start;padding:2px 9px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:700;background:color-mix(in oklab,var(--tone,var(--v-muted)) 18%,transparent);color:var(--v-ink)}
+@media(max-width:560px){#cm-dialog .cm-glossary{grid-template-columns:1fr;gap:4px}#cm-dialog .cm-gloss-row>span:last-child{margin-bottom:8px}}
+/* SETTINGS (r3, 70-settings): five cards in two columns, one on a phone. Appearance's choices are
+   pressable chips whose pressed state is aria-pressed; the danger zone sits apart, at the foot of Data. */
+#matrix-v2 .cm-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+#matrix-v2 .cm-settings-card{border:1px solid var(--v-line);border-radius:var(--v-radius-card);background:var(--v-panel);padding:18px 20px;min-width:0}
+#matrix-v2 .cm-settings-card h2{margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-settings-card p{margin:0 0 10px}
+#matrix-v2 .cm-settings-label{margin:14px 0 8px!important;font-size:12px;font-weight:700;color:var(--v-muted)}
+#matrix-v2 .cm-settings-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+#matrix-v2 .cm-settings-stack{display:grid;gap:8px;margin-bottom:10px}
+#matrix-v2 .cm-settings-stack .v-button{width:100%;justify-content:center}
+#matrix-v2 .cm-chip-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-settings-cap{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:10px}
+#matrix-v2 .cm-settings-cap label{display:grid;gap:6px;font-size:13px;font-weight:600}
+#matrix-v2 .cm-settings-cap input{width:9em}
+#matrix-v2 .cm-settings-danger{margin-top:16px;padding-top:12px;border-top:1px solid color-mix(in oklab,var(--st-remove) 45%,var(--v-line))}
+#matrix-v2 .cm-settings-danger .v-button{width:100%;justify-content:center}
+#matrix-v2 .cm-settings-links{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+#matrix-v2 .cm-settings .cm-data-dates p{display:flex;justify-content:space-between;gap:12px;margin:0 0 4px;font-size:13px}
+@media(max-width:760px){#matrix-v2 .cm-settings{grid-template-columns:1fr}}
+/* REDUCE MOTION, the reader's own switch (Settings › Appearance). crankmagic-app.js writes it on <html>;
+   the scripts that animate ask CrankMotion. This stills every transition and animation at once. */
+html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=reduce] *::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}
+/* A form that deletes says so in its button (r3, 74-confirm-delete): red, not the everyday brass. */
+#cm-dialog .cm-form.cm-destructive [type=submit]{background:var(--st-remove);border-color:var(--st-remove);color:var(--v-on)}
+#cm-dialog .cm-form.cm-destructive [type=submit]:hover{background:color-mix(in oklab,var(--st-remove) 85%,var(--v-ink))}
+/* THE DECKS BAR (r3, 16-decks-hub): stage chips on the left; the sort and Show archived on the right. The
+   chip in force is aria-current, drawn pressed like Settings' choices. */
+#matrix-v2 .cm-decks-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:4px 0 16px}
+#matrix-v2 .cm-decks-stages{display:flex;flex-wrap:wrap;gap:8px}
+#matrix-v2 .cm-decks-stages .v-button{min-height:34px;padding:0 14px;border-radius:var(--radius-pill)}
+#matrix-v2 .cm-chip-toggle[aria-current=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+#matrix-v2 .cm-decks-order{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--v-muted)}
+#matrix-v2 .cm-decks-sort{display:flex;align-items:center;gap:8px}
+#matrix-v2 .cm-decks-sort select{min-height:34px;width:auto}
+#matrix-v2 .cm-decks-none{margin:24px 0}
+/* GUIDE & SWOT, THE DIALOG (r3, 31-deck-guide): the SWOT's four quarters as cards, two by two. */
+#cm-dialog.cm-guide-modal .cm-guide-dialog h3{margin:18px 0 8px}
+#cm-dialog.cm-guide-modal .cm-guide-dialog:first-child h3:first-child{margin-top:0}
+#cm-dialog.cm-guide-modal .cm-swot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#cm-dialog.cm-guide-modal .cm-swot>div{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:12px 14px}
+#cm-dialog.cm-guide-modal .cm-swot>div h3{margin:0 0 6px;font-size:15px}
+@media(max-width:560px){#cm-dialog.cm-guide-modal .cm-swot{grid-template-columns:1fr}}
+/* THE MEASURE REPORT (r3, 30-measure-report): the fidelity notice above the score, tinted by its level; then
+   the score and what made it, side by side, stacked on a phone. */
+#matrix-v2 .cm-fidelity{border:1px solid var(--v-line);border-left:4px solid var(--fid,var(--st-inbox));border-radius:var(--v-radius-card);background:color-mix(in oklab,var(--fid,var(--st-inbox)) 10%,var(--v-panel));padding:14px 18px;margin:4px 0 16px}
+#matrix-v2 .cm-fidelity-medium{--fid:var(--st-buy)}
+#matrix-v2 .cm-fidelity-low{--fid:var(--st-remove)}
+#matrix-v2 .cm-fidelity h2{margin:0 0 6px;font-size:16px}
+#matrix-v2 .cm-fidelity ul{margin:0 0 6px;padding-left:18px}
+#matrix-v2 .cm-fidelity details{margin-top:6px;font-size:13px;color:var(--v-muted)}
+#matrix-v2 .cm-report-grid{display:grid;grid-template-columns:minmax(200px,260px) 1fr;gap:16px;align-items:start}
+#matrix-v2 .cm-report-score{text-align:center}
+#matrix-v2 .cm-report-number{font-size:64px;font-weight:900;line-height:1;margin:8px 0 0}
+#matrix-v2 .cm-report-checks table{width:100%;border-collapse:collapse;font-size:14px}
+#matrix-v2 .cm-report-checks th,#matrix-v2 .cm-report-checks td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--v-line);vertical-align:top}
+#matrix-v2 .cm-report-checks td:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:760px){#matrix-v2 .cm-report-grid{grid-template-columns:1fr}#matrix-v2 .cm-report-checks{overflow-x:auto}}
+/* THE LIBRARY (r3, R3.6). The count cards wrap on narrower screens instead of clipping their figures
+   (700 read as "70" at 390px); the Filters dialog is chips in labeled rows with two ranges under them;
+   the Columns dialog is one list of rows, each with a grip, its box and two arrows. */
+/* Two rows of four at every width (the stages, then where an owned card is); a phone tightens each card. */
+@media(max-width:640px){.cm-kpi{min-height:0;padding:12px 8px 8px;gap:6px}.cm-kpi strong{font-size:20px}.cm-kpi span{font-size:11px}}
+#cm-dialog.cm-filters-dialog{width:min(640px,calc(100vw - 32px))}
+#matrix-v2 .cm-filters-form{display:grid;gap:14px}
+#matrix-v2 .cm-fd-group,#matrix-v2 .cm-fd-range{border:0;margin:0;padding:0;min-width:0}
+#matrix-v2 .cm-fd-group legend,#matrix-v2 .cm-fd-range legend{padding:0;margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-fd-chips{display:flex;flex-wrap:wrap;gap:8px}
+#matrix-v2 .cm-fd-chips .v-button{min-height:34px;padding:0 14px;border-radius:var(--radius-pill)}
+#matrix-v2 .cm-fd-ranges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#matrix-v2 .cm-fd-range{display:flex;align-items:end;gap:8px;flex-wrap:wrap}
+#matrix-v2 .cm-fd-range legend{width:100%}
+#matrix-v2 .cm-fd-range label{display:grid;gap:4px;flex:1 1 0;min-width:0;font-size:12px;color:var(--v-muted)}
+#matrix-v2 .cm-fd-range input{width:100%;min-width:0}
+#matrix-v2 .cm-fd-range>span{padding-bottom:10px;color:var(--v-muted)}
+#matrix-v2 .cm-filters-form .cm-form-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:12px;border-top:1px solid var(--v-line)}
+@media(max-width:560px){#matrix-v2 .cm-fd-ranges{grid-template-columns:1fr}}
+#cm-dialog.cm-columns-dialog{width:min(520px,calc(100vw - 32px))}
+#matrix-v2 .cm-col-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(52vh,560px);overflow:auto}
+#matrix-v2 .cm-col-row{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 10px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel)}
+#matrix-v2 .cm-col-row.is-dragging{border-color:var(--v-accent);background:var(--v-raised)}
+#matrix-v2 .cm-col-row .cm-checkbox{flex:1 1 auto;min-width:0}
+#matrix-v2 .cm-col-row small{color:var(--v-muted)}
+#matrix-v2 .cm-col-grip{flex:0 0 16px;color:var(--v-muted);cursor:grab;touch-action:none;user-select:none;letter-spacing:-2px}
+#matrix-v2 .cm-col-row.is-dragging .cm-col-grip{cursor:grabbing}
+#matrix-v2 .cm-col-move{display:flex;gap:4px}
+#matrix-v2 .cm-col-move .cm-icon-button{width:30px;height:30px;min-height:30px}
+#matrix-v2 .cm-col-options{margin-top:4px}
+/* THE NAME TRUNCATES ITSELF (R3.6, with the name first and the mana after it). A cell that ellipsizes swaps an
+   inline box that does not fit for a bare "…", so a long name went missing whole on a phone. Held to the
+   cell's width, the name keeps every letter that fits and ends in its own ellipsis. */
+#cm-roster-table td.cm-col-name .cm-card-name{max-width:100%;vertical-align:middle}
+#cm-roster-table td.cm-col-name .cm-card-name>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* EXPLORE'S ADD DIALOG (r3, R3.7; wireframe 52): the card and its price on top, then the choices as rows,
+   each saying where the card lands, the one picked outlined. */
+#cm-dialog.cm-add-buy-dialog{width:min(560px,calc(100vw - 32px))}
+#matrix-v2 .cm-add-head{display:flex;gap:14px;align-items:center}
+#matrix-v2 .cm-add-head img,#matrix-v2 .cm-add-head .cm-add-art{width:84px;aspect-ratio:var(--card-ratio);border-radius:6px;object-fit:cover;background:var(--v-raised);flex:0 0 84px}
+#matrix-v2 .cm-add-head b{display:block;font-size:17px}
+#matrix-v2 .cm-add-head small{color:var(--v-muted)}
+#matrix-v2 .cm-add-head a{color:var(--v-accent)}
+#matrix-v2 .cm-add-put{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+#matrix-v2 .cm-add-put legend{padding:0;margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-add-choice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);cursor:pointer}
+#matrix-v2 .cm-add-choice:has(input[name=put]:checked){border-color:var(--v-accent);background:color-mix(in oklab,var(--v-accent) 8%,var(--v-panel))}
+#matrix-v2 .cm-add-choice>input[name=put]{width:16px;height:16px;min-height:0;margin:0;flex:0 0 16px}
+#matrix-v2 .cm-add-choice>span{display:grid;gap:2px;flex:1 1 220px;min-width:0}
+#matrix-v2 .cm-add-choice>span small{color:var(--v-muted)}
+#matrix-v2 .cm-add-choice>label{flex:1 1 180px;min-width:0}
+#matrix-v2 .cm-add-choice select,#matrix-v2 .cm-add-choice input[type=number]{width:100%}
+#matrix-v2 .cm-add-qty{max-width:120px}
+/* EXPLORE'S HEAD (R3.7, wireframe 50): where the graph came from, in the app's own crumbs, above the title;
+   Filters · lens pressed while open. */
+#matrix-v2 .cm-crumbs{margin:0 0 4px}
+#matrix-v2 .cm-advanced-tools-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
+/* CARD STATES (docs/card-states.md): the "To add" fact beside a Target pill, in the Bench-to-box color Ready to add uses. */
+#matrix-v2 .cm-badge-toadd{background:color-mix(in oklab,var(--st-pull) 22%,transparent);color:var(--v-ink)}
+/* CARD STATES, THE TWO ROLES OUTSIDE THE BOX (docs/card-states.md): an upgrade replaces a card in the box; a reserved card fills an empty seat, which keeps the deck from being playable. */
+#matrix-v2 .cm-badge-upgrade{background:color-mix(in oklab,var(--st-reserved) 22%,transparent);color:var(--v-ink)}
+#matrix-v2 .cm-badge-reserved{background:color-mix(in oklab,var(--st-buy) 26%,transparent);color:var(--v-ink)}
+/* The Status cell carries the state's pill and, outside a box, its role badge (Upgrade or Reserved): it wraps the
+   badge under the pill rather than cutting it to an ellipsis like the table's other cells. */
+#cm-roster-table tbody td.cm-col-status{white-space:normal;line-height:1.9}
+#matrix-v2 .cm-deck-playable{margin:4px 0 12px;font-size:14px;color:var(--v-muted)}
+#matrix-v2 .cm-deck-playable b{color:var(--v-ink)}
+#matrix-v2 .cm-deck-playable.is-short b{color:var(--st-buy)}
+/* THE LANDING PAGE (R3.8; the design's "Landing Page"). It stands alone: no rail, its own header, and a column
+   1240px wide at most. Colors are the app's tokens, so the three themes carry it. */
+#matrix-v2.cm-landing-on .cm-layout{display:block}
+#matrix-v2.cm-landing-on .cm-sidebar{display:none}
+#matrix-v2.cm-landing-on #cm-main{padding:0}
+.cm-landing{--l-gutter:32px;color:var(--v-ink)}
+.cm-landing-head,.cm-landing-hero,.cm-landing-section{max-width:1240px;margin:0 auto;padding-left:var(--l-gutter);padding-right:var(--l-gutter);box-sizing:border-box}
+.cm-landing-head{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding-top:18px;padding-bottom:18px}
+.cm-landing-brand{display:flex;align-items:center;gap:10px;color:var(--v-ink);text-decoration:none;font-weight:900;font-size:20px;letter-spacing:-.03em}
+.cm-landing-brand img{width:36px;height:36px;object-fit:contain}
+.cm-landing-nav{display:flex;gap:4px;flex-wrap:wrap}
+.cm-landing-nav a{padding:8px 12px;border-radius:10px;font-weight:600;color:var(--v-muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.cm-landing-nav a:hover{color:var(--v-ink);background:var(--v-raised)}
+.cm-landing-soon{padding:1px 7px;border-radius:99px;background:var(--v-raised);font-size:11px;font-weight:700}
+.cm-landing-account{margin-left:auto;display:flex;gap:10px;align-items:center}
+#matrix-v2 .cm-landing-link{border:0;background:none;padding:0;min-height:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#matrix-v2 .cm-landing-account .cm-landing-link{text-decoration:none;font-weight:600;color:var(--v-muted);padding:8px 12px}
+#matrix-v2 .cm-landing-link:hover{color:var(--v-ink)}
+.cm-landing-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center;padding-top:40px;padding-bottom:72px;position:relative}
+.cm-landing-copy{display:flex;flex-direction:column;gap:20px;min-width:0}
+.cm-landing-eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--v-accent)}
+#matrix-v2 .cm-landing h1{margin:0;font-family:var(--font-hero);font-weight:400;font-size:clamp(40px,5.4vw,68px);line-height:1.02;letter-spacing:-.02em;text-wrap:balance}
+.cm-landing-lede{margin:0;max-width:520px;font-size:18px;line-height:1.5;color:var(--v-muted)}
+.cm-landing-start{margin:6px 0 0;padding:18px;border-radius:18px;background:var(--v-panel);border:1px solid var(--v-line);display:flex;flex-direction:column;gap:12px;max-width:600px}
+.cm-landing-step{display:flex;align-items:center;gap:10px}
+.cm-landing-step>span,.cm-landing-step-name>span{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--v-accent);color:var(--color-on-accent);font-weight:900;font-size:13px;flex:0 0 auto}
+.cm-landing-row{display:flex;gap:10px;flex-wrap:wrap}
+.cm-landing-field{flex:1 1 260px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:12px;background:var(--v-bg);border:1px solid var(--v-line);color:var(--v-muted);min-width:0;box-sizing:border-box}
+.cm-landing-field:focus-within{border-color:var(--v-accent)}
+.cm-landing-field>span{font-size:18px;line-height:1}
+#matrix-v2 .cm-landing .cm-landing-field input[name]{flex:1;min-width:0;width:auto;height:auto;border:0;border-radius:0;background:transparent;font:inherit;font-size:15px;color:var(--v-ink);outline:none;padding:0;margin:0;min-height:0;box-shadow:none}
+#matrix-v2 .cm-landing-row .v-button{height:52px;padding:0 22px;white-space:nowrap}
+.cm-landing-or{margin:0;display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--v-muted)}
+.cm-landing-fine{margin:0;font-size:13px;color:var(--v-muted)}
+.cm-landing-art{position:relative;height:500px;min-width:0}
+.cm-landing-card{position:absolute;width:250px;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.08)}
+.cm-landing-card-1{left:4%;top:50px;transform:rotate(-12deg)}
+.cm-landing-card-2{left:30%;top:10px;transform:rotate(3deg);z-index:1}
+.cm-landing-card-3{left:52%;top:70px;transform:rotate(14deg)}
+.cm-landing-sample{position:absolute;left:0;bottom:20px;z-index:2;width:290px;padding:14px 16px;border-radius:16px;background:var(--v-panel);border:1px solid var(--v-line);box-shadow:0 20px 40px -20px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.cm-landing-sample>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cm-landing-sample>div span,.cm-landing-sample p{font-size:12px;color:var(--v-muted)}
+.cm-landing-sample p{margin:0;display:flex;gap:12px}
+.cm-landing-sample b{color:var(--v-ink)}
+.cm-landing-sample b.cm-landing-buy{color:var(--st-buy)}
+.cm-landing-bar{display:flex;gap:2px;height:8px;border-radius:5px;overflow:hidden;min-width:0}
+.cm-landing-bar i:nth-child(1){background:var(--st-inbox)}.cm-landing-bar i:nth-child(2){background:var(--st-ordered)}.cm-landing-bar i:nth-child(3){background:var(--st-buy)}
+.cm-landing-section{padding-bottom:72px;display:flex;flex-direction:column;gap:24px}
+.cm-landing-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cm-landing-section-head p{margin:0;color:var(--v-muted);max-width:420px}
+#matrix-v2 .cm-landing h2{margin:0;font-size:clamp(28px,3.2vw,38px);line-height:1.05;letter-spacing:-.035em;font-weight:900}
+.cm-landing-doors{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.cm-landing-door{display:flex;flex-direction:column;gap:12px;height:100%;box-sizing:border-box;padding:24px;border-radius:22px;background:linear-gradient(160deg,color-mix(in oklab,var(--tint) 16%,var(--v-panel)),var(--v-panel) 55%);border:1px solid var(--v-line);color:var(--v-ink);text-decoration:none;min-height:280px;transition:transform var(--motion-fast) ease,border-color var(--motion-fast) ease}
+.cm-landing-door:hover,.cm-landing-door:focus-visible{transform:translateY(-6px);border-color:var(--tint)}
+.cm-landing-door-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700}
+.cm-landing-door-top span:first-child{letter-spacing:.1em;text-transform:uppercase;color:var(--tint)}
+.cm-landing-door-top span+span{color:var(--v-muted)}
+#matrix-v2 .cm-landing h3{margin:0;font-size:24px;line-height:1.05;letter-spacing:-.03em;font-weight:900}
+.cm-landing-door p{margin:0;color:var(--v-muted);font-size:14.5px;line-height:1.5}
+.cm-landing-cta{margin-top:auto;display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:10px 16px;border-radius:12px;background:var(--v-raised);font-weight:700;font-size:14px}
+.cm-landing-cta span{color:var(--tint)}
+.cm-landing-band{background:var(--v-panel);border-top:1px solid var(--v-line);border-bottom:1px solid var(--v-line);margin-bottom:56px}
+.cm-landing-band .cm-landing-section{padding-top:72px}
+.cm-landing-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.cm-landing-steps li{display:flex;flex-direction:column;gap:14px;min-width:0}
+.cm-landing-steps p{margin:0;color:var(--v-muted)}
+.cm-landing-step-name{display:flex;align-items:center;gap:10px}
+.cm-landing-step-name>span{background:none;border:1.5px solid var(--v-accent);color:var(--v-accent);width:28px;height:28px;box-sizing:border-box}
+.cm-landing-vis{aspect-ratio:16/10;border-radius:18px;background:var(--v-bg);border:1px solid var(--v-line);padding:18px;box-sizing:border-box;position:relative;overflow:hidden}
+.cm-landing-vis-plan{display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-content:start}
+.cm-landing-vis-plan img{width:54px;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:5px;transform:rotate(-4deg)}
+.cm-landing-vis-plan>div:nth-child(2){display:flex;flex-direction:column;justify-content:center}
+.cm-landing-vis-plan strong{font-weight:900;font-size:18px;letter-spacing:-.02em}
+.cm-landing-vis span{font-size:12px;color:var(--v-muted)}
+.cm-landing-fig{grid-column:1/-1;padding:10px;border-radius:10px;background:var(--v-panel);border:1px solid var(--v-line);display:flex;flex-direction:column;gap:2px}
+.cm-landing-fig strong{font-size:24px}
+.cm-landing-vis-collect{display:flex;flex-direction:column;justify-content:center;gap:14px}
+.cm-landing-vis-collect>div{display:flex;flex-direction:column;gap:6px}
+.cm-landing-vis-collect .cm-landing-bar{height:10px}
+.cm-landing-vis-play{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px}
+.cm-landing-vis-play span{display:flex;align-items:flex-end;padding:8px;border-radius:10px;background:var(--v-panel);border:1px solid var(--v-line);font-weight:700}
+.cm-landing-vis-play img{position:absolute;left:50%;top:50%;width:62px;height:62px;box-sizing:border-box;padding:13px;object-fit:contain;transform:translate(-50%,-50%);border-radius:50%;background:var(--v-bg);border:2px solid var(--v-accent)}
+.cm-landing-promises{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px}
+.cm-landing-promises div{display:flex;flex-direction:column;gap:6px;padding-top:16px;border-top:2px solid var(--v-line)}
+.cm-landing-promises strong{font-weight:900;font-size:17px;letter-spacing:-.02em}
+.cm-landing-promises span{color:var(--v-muted);font-size:14px}
+.cm-landing-close{padding:40px;border-radius:26px;background:var(--v-accent);color:var(--color-on-accent);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+#matrix-v2 .cm-landing-close h2{font-family:var(--font-hero);font-weight:400;font-size:clamp(30px,4vw,48px);max-width:640px}
+#matrix-v2 .cm-landing-close .v-button{background:var(--color-bg);color:var(--color-ink);border-color:transparent;height:52px;padding:0 22px}
+@media(max-width:900px){.cm-landing-hero{grid-template-columns:1fr;gap:28px}.cm-landing-art{height:380px;max-width:520px}.cm-landing-card{width:190px}}
+@media(max-width:760px){.cm-landing{--l-gutter:16px}.cm-landing-head{gap:10px 16px}.cm-landing-account{margin-left:0;width:100%;justify-content:space-between}.cm-landing-hero{padding-top:12px;padding-bottom:48px}.cm-landing-art{height:320px}.cm-landing-card{width:150px}.cm-landing-sample{width:min(290px,100%)}.cm-landing-section{padding-bottom:48px}.cm-landing-band .cm-landing-section{padding-top:48px}.cm-landing-close{padding:28px 22px}.cm-landing-door{min-height:0}}
+/* The Decks page with no decks (r3 wireframe, decks-hub-empty): one centered panel, the fan above it. */
+.cm-decks-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:40px 24px}
+.cm-decks-empty h2{margin:0;font-size:24px}
+.cm-decks-empty p{margin:0}
+.cm-decks-empty .cm-actions{justify-content:center}
+.cm-decks-empty .cm-cardfan{width:100%;max-width:360px;height:220px;margin-bottom:10px}
+/* R3.9: the card itself, and only the card, in the three places that also hold mana symbols as images. */
+.cm-inspector-art>img{aspect-ratio:var(--card-ratio);object-fit:cover}
+.cm-swap-card>img{aspect-ratio:var(--card-ratio);object-fit:cover}
+#matrix-v2 .cm-commander>img{min-height:0;aspect-ratio:var(--card-ratio);object-fit:cover}
+/* THE SIZE SLIDER (R3.9b; AGENTS.md, "Sizes are sliders, never steps"): the label, the scale's two ends, the thumb,
+   and the value. Used for the card size (Settings, the Table view's drawer) and the stage's picture size. */
+.cm-size-slider{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--v-muted);min-width:0;flex-wrap:nowrap}
+.cm-size-label{color:var(--v-ink);font-weight:600;white-space:nowrap}
+.cm-size-end{font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#matrix-v2 .cm-size-slider input[type=range]{flex:1 1 140px;min-width:90px;width:180px;accent-color:var(--v-accent);margin:0;padding:0;min-height:24px}
+.cm-size-slider output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums;color:var(--v-ink);font-weight:600}
+.cm-tt-drawer-head .cm-size-slider input[type=range]{width:140px;flex-basis:120px}
+@media(max-width:760px){.cm-tt-drawer-head .cm-size-slider .cm-size-end{display:none}.cm-tt-drawer-head .cm-size-slider input[type=range]{width:110px;min-width:80px}}
+/* While a size is dragged, what waits for the redraw fades rather than overlapping. */
+.cm-tt-mat.is-sizing>:not(.cm-tt-backrow),.cm-tt-stage.is-sizing .cm-tt-info{opacity:.2;transition:opacity .15s}
+/* The card size scales the two places a card is looked at closely, inside what fits: the hover preview (never past the
+   normal print or half the screen) and the inspector's picture. */
+.cm-inspector{grid-template-columns:minmax(150px,calc(230px * var(--card-scale,1))) minmax(0,1fr)}
+@media(max-width:760px){.cm-inspector-art{max-width:min(100%,calc(200px * var(--card-scale,1)))}}
+/* Start from a precon (R3.10b): one row per deck, name then commander and colors, then set and date. */
+.cm-precon-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;max-height:min(60vh,520px);overflow:auto}
+#matrix-v2 .cm-precon{display:grid;gap:2px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);color:var(--v-ink);font:inherit;cursor:pointer;min-height:0}
+#matrix-v2 .cm-precon:hover,#matrix-v2 .cm-precon:focus-visible{border-color:var(--v-accent)}
+.cm-precon strong{font-size:14px}
+.cm-precon-lead{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.cm-precon span.cm-muted{font-size:12px}
+/* BUILD A DECK (R3.11): the four steps, the strategy chips with their fit labels, and the review. */
+.cm-build-steps{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.cm-build-steps li{padding:5px 11px;border-radius:999px;border:1px solid var(--v-line);font-size:12px;color:var(--v-muted)}
+.cm-build-steps li[aria-current=step]{background:var(--v-accent);border-color:var(--v-accent);color:var(--color-on-accent);font-weight:700}
+.cm-build-steps li.is-done{color:var(--v-ink)}
+.cm-build-lead{margin:0 0 4px;font-size:15px}
+.cm-build-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px;min-height:44px}
+#matrix-v2 .cm-build-chip{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 14px;border-radius:14px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font:inherit;cursor:pointer;min-height:44px}
+#matrix-v2 .cm-build-chip span{font-weight:700;font-size:13px}
+#matrix-v2 .cm-build-chip small{font-size:11px;color:var(--v-muted)}
+#matrix-v2 .cm-build-chip[aria-pressed=true]{border-color:var(--v-accent);background:color-mix(in oklab,var(--v-accent) 18%,var(--v-panel))}
+#matrix-v2 .cm-build-chip[aria-pressed=true] small{color:var(--v-ink)}
+.cm-build-chip.is-loading{width:130px;height:44px;border-radius:14px;background:linear-gradient(90deg,var(--v-panel),var(--v-raised),var(--v-panel));background-size:200% 100%;animation:cm-build-shimmer 1.2s linear infinite;border:1px solid var(--v-line)}
+@keyframes cm-build-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.cm-build-chip.is-loading{animation:none}}
+.cm-build-avoid{display:block}
+#matrix-v2 .cm-build-avoid textarea{width:100%;box-sizing:border-box;margin-top:6px}
+.cm-build-review{display:grid;grid-template-columns:max-content 1fr;gap:8px 16px;margin:0 0 16px}
+.cm-build-review dt{color:var(--v-muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:2px}
+.cm-build-review dd{margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cm-lab-strategies{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px}
+
+/* R3.12 MOBILE (INTAKE row R3.12; wireframes mobile-decks, mobile-library, mobile-explore, mobile-deck-detail). The
+   rail is already a top row and Explore's doors already stack; these are the three places a phone still read as a
+   squeezed desktop.
+   DECKS: the tiles stack, one to a row, as landscape posters. Two 3:4 columns at 390 left each tile 173px wide, which
+   cut "5 to buy · 3 ready to add" to "5 to buy · 3 ready t…" and the names to three lines. */
+@media(max-width:560px){
+  .cm-deck-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+  .cm-deck-tile{aspect-ratio:16/10}
+  .cm-deck-tile .cm-deck-art{transform:scale(1.25);object-position:50% 18%}
+  .cm-deck-new{aspect-ratio:auto;min-height:88px;flex-direction:row}
+  .cm-deck-new span{font-size:24px}
+}
+@media(max-width:760px){
+  /* DECK DETAIL: the commander's card leads, but at the card size, not at 220px -- which filled the phone's first
+     screen with the picture before the deck's name. Its width follows the one card-size slider (Settings ›
+     Appearance), so the ends of the phone's range, 60% and 130%, are 79px and 172px: legible, and both leave the
+     name in the first screen. */
+  #matrix-v2 .cm-deck-hero-card{max-width:none;width:calc(132px * var(--card-scale,1))}
+  /* LIBRARY: its actions are one row at the foot that scrolls sideways, Add cards first, as the deck page's are
+     (wireframe mobile-library: "Tabs + sticky primary"). At the head they took two rows above the tabs. */
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more]){position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;flex-wrap:nowrap;gap:8px;margin:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;background:color-mix(in srgb,var(--v-bg) 95%,transparent);border-top:1px solid var(--color-line);backdrop-filter:blur(10px)}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])::-webkit-scrollbar{display:none}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])>*{flex:0 0 auto;white-space:nowrap}
+  #matrix-v2 .cm-page-head .cm-actions:has(>[data-action=roster-more])>[data-action=add-card]{order:-1}
+  #cm-main:has(.cm-page-head [data-action=roster-more]){padding-bottom:96px}
+}
+
+/* THE CLOUD TABLE'S LOBBY (M5; crankmagic-table.js). The quadrants, the fan, the pill and the center card are
+   the local table's own; these are only what the cloud lobby adds: a new table's form, the invite dialog with
+   its QR beside the link, the deck list, the countdown's number, and the panel over a game in play. */
+.cm-table-new form{display:grid;gap:12px;max-width:560px}
+.cm-table-new label{display:grid;gap:4px}
+.cm-table-new-seat{display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+@media(max-width:560px){.cm-table-new-seat{grid-template-columns:minmax(0,1fr)}}
+.cm-table-invite{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:start}
+.cm-table-invite label{display:grid;gap:4px}
+.cm-table-invite input{width:100%;box-sizing:border-box}
+.cm-table-invite .cm-qr-code svg{display:block;width:100%;height:auto;border-radius:var(--v-radius);background:#fff}
+@media(max-width:560px){.cm-table-invite{grid-template-columns:minmax(0,1fr)}.cm-table-invite .cm-qr-code{max-width:180px}}
+.cm-table-decks{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px;max-height:min(60vh,520px);overflow:auto}
+.cm-table-deck{appearance:none;width:100%;text-align:left;display:grid;gap:2px;padding:10px 12px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);cursor:pointer;font:inherit}
+.cm-table-deck:hover,.cm-table-deck:focus-visible{border-color:var(--v-accent)}
+.cm-table-count{flex:1 1 auto;margin:0;color:var(--table-ink);font-size:13px}
+.cm-table-count strong{font-size:28px;font-variant-numeric:tabular-nums;margin-left:6px}
+.cm-table-game{margin:0 0 14px}
+/* On a phone the seats stack, and a seat's content is laid over its sea, so a stacked seat has no height of
+   its own: it takes one here, enough for the label bar, the commander's card and its controls. */
+@media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}.cm-cloud-table .cm-table-center{max-height:none}}
+/* THE CLOUD BOARD (M5, crankmagic-board.js; the handoff's Focus view). The strip is one 48px line; the pane
+   holds every seat's tile; the mat is felt with its own ink in both themes, as the poster pair is, because the
+   cards on it do not flip; its zones are 1px frames at about 55% white with small italic names. Cards are sized
+   by width only, at 5:7 (README, "card ratio"), and follow the card-size slider through --card-scale. */
+.cm-board{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;--bc:calc(78px * var(--card-scale,1));--hc:calc(112px * var(--card-scale,1))}
+.cm-board-strip{display:flex;align-items:center;gap:10px;height:48px;min-height:48px;padding:0 10px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel);white-space:nowrap;position:relative;z-index:5;min-width:0}
+.cm-board-turn{font-weight:700}
+.cm-board-step{padding:3px 10px;border-radius:999px;background:var(--v-accent);color:var(--on-accent);font-weight:700;font-size:12px}
+.cm-board-next,.cm-board-waiting,.cm-board-conn{font-size:12px;color:var(--v-muted);overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cm-board-waiting{color:var(--v-ink)}
+.cm-board-conn{color:var(--st-buy)}
+.cm-board-spacer{flex:1 1 auto}
+.cm-board-tools{position:relative}
+.cm-board-menu{position:absolute;right:0;top:calc(100% + 6px);width:320px;padding:14px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .67);white-space:normal;z-index:10}
+.cm-board-menu p{margin:0 0 10px;font-size:12px}
+.cm-board-body{display:grid;grid-template-columns:168px minmax(0,1fr);gap:10px;min-width:0}
+.cm-board-pane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cm-board-tile{display:grid;gap:4px;justify-items:start;padding:10px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);min-width:0}
+.cm-board-tile-main{display:grid;gap:2px;justify-items:start;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit}
+.cm-board-tile.is-you{border-color:color-mix(in srgb,var(--v-accent) 60%,var(--v-line))}
+.cm-board-tile.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
+.cm-board-tile-name{font-weight:700}
+.cm-board-tile .cm-muted{font-size:12px}
+.cm-board-tile-flag{font-size:11px;color:var(--v-accent);min-height:1.2em}
+.cm-vitals{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:0;border-radius:999px;background:color-mix(in srgb,var(--v-ink) 10%,transparent);color:inherit;font:inherit;font-size:12px}
+button.cm-vitals{cursor:pointer}
+.cm-vitals b{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+.cm-vitals.is-big b{font-size:20px}
+.cm-vitals.is-danger{background:var(--vital-danger);color:var(--mat-ink)}
+.cm-vitals-bar{display:inline-block;width:4px;height:14px;border-radius:2px;background:linear-gradient(to top,var(--seat) calc(var(--fill) * 100%),color-mix(in srgb,var(--seat) 25%,transparent) 0)}
+.cm-board-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cm-board-mat{padding:12px;border-radius:var(--v-radius-card);background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%);color:var(--mat-ink);border:1px solid color-mix(in srgb,var(--mat-ink) 10%,transparent);min-width:0}
+.cm-board-mat-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:10px}
+.cm-board-mat-head h2{margin:0;font-size:18px;color:var(--mat-ink)}
+.cm-board-life{font-size:13px;color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}
+.cm-board-ribbon{display:flex;flex-wrap:wrap;gap:4px;list-style:none;margin:0 0 0 auto;padding:0;font-size:12px}
+.cm-board-ribbon li{padding:2px 8px;border-radius:999px;color:color-mix(in srgb,var(--mat-ink) 70%,transparent);transition:background .25s,color .25s}
+.cm-board-ribbon li.is-done{text-decoration:line-through;opacity:.5}
+.cm-board-ribbon li.is-now{background:var(--v-accent);color:var(--on-accent);font-weight:700}
+.cm-board-mat-grid{display:grid;grid-template-columns:minmax(0,1fr) repeat(2,calc(var(--bc) + 8px));grid-template-rows:minmax(calc(var(--bc) * 2.2),auto) auto;gap:10px}
+.cm-board-field,.cm-board-lands{border:1px solid color-mix(in srgb,var(--mat-ink) 55%,transparent);border-radius:12px;padding:8px;min-width:0}
+.cm-board-field{grid-column:1;grid-row:1;display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start}
+.cm-board-lands{grid-column:1;grid-row:2}
+.cm-board-piles{grid-column:2 / 4;grid-row:1 / 3;display:grid;grid-template-columns:repeat(2,calc(var(--bc) + 8px));align-content:start;gap:10px}
+.cm-board-group h3,.cm-board-lands h3{margin:0 0 6px;font-size:12px;font-weight:600;font-style:italic;color:color-mix(in srgb,var(--mat-ink) 80%,transparent)}
+.cm-board-cards{display:flex;flex-wrap:wrap;gap:6px}
+.cm-board-chip{margin-left:8px;padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--mat-ink) 12%,transparent);font-style:normal;font-weight:500}
+.cm-board-empty{margin:0;color:color-mix(in srgb,var(--mat-ink) 60%,transparent);font-size:13px}
+.cm-board-their-hand{margin:8px 0 0;font-size:12px;color:color-mix(in srgb,var(--mat-ink) 70%,transparent)}
+.cm-board-pile{margin:0;display:grid;gap:4px;justify-items:start}
+.cm-board-pile figcaption{display:flex;justify-content:space-between;width:var(--bc);font-size:11px}
+.cm-board-pile figcaption em{color:color-mix(in srgb,var(--mat-ink) 70%,transparent)}
+.cm-bcard{position:relative;display:block;flex:0 0 auto;width:var(--bc);aspect-ratio:5 / 7;padding:0;overflow:hidden;border-radius:6% / 4.3%;border:1px solid rgb(0 0 0 / .6);background:linear-gradient(160deg,var(--card-face),var(--card-face-edge));color:var(--table-ink);font:inherit;text-align:left;cursor:default}
+#matrix-v2 .cm-bcard{color:var(--table-ink)}   /* over the app's color:inherit for buttons: the card is light in both themes */
+.cm-bcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cm-bcard-name{position:absolute;left:6%;right:6%;top:5%;font-size:calc(var(--bc) * .12);line-height:1.15;font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.cm-bcard-pt{position:absolute;right:5%;bottom:4%;z-index:1;padding:1px 5px;border-radius:5px;background:var(--table-ink);color:var(--mat-ink);font-size:calc(var(--bc) * .13);font-weight:800}
+.cm-bcard-marks{position:absolute;left:4%;bottom:4%;z-index:1;display:grid;gap:2px}
+.cm-bcard-mark{font-size:10px;background:var(--vital-danger);color:var(--mat-ink);border-radius:4px;padding:0 4px}
+.cm-bcard.is-tapped{transform:rotate(90deg) scale(.86);margin:0 calc(var(--bc) * .22)}
+.cm-bcard.is-bright{box-shadow:0 0 0 3px var(--v-accent);cursor:pointer}
+.cm-bcard.is-picked{box-shadow:0 0 0 3px var(--v-accent),0 0 18px var(--v-accent);translate:0 -4px}
+.cm-bcard.is-dim{filter:brightness(.55) saturate(.6)}
+.cm-bcard.is-back{background:repeating-linear-gradient(45deg,var(--card-back) 0 6px,var(--card-back-edge) 6px 12px);border-color:color-mix(in srgb,var(--v-accent) 33%,transparent)}
+.cm-bcard.is-empty{background:transparent;border:1px dashed color-mix(in srgb,var(--mat-ink) 33%,transparent)}
+.cm-board-stack,.cm-board-decision{padding:12px 14px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line-strong)}
+.cm-board-decision{border-color:var(--v-accent)}
+.cm-board-decision h3,.cm-board-stack h3{margin:0 0 8px;font-size:14px}
+.cm-board-options{display:flex;flex-wrap:wrap;gap:6px}
+#matrix-v2 .cm-board-options .v-button.is-picked{outline:2px solid var(--v-accent);outline-offset:1px}
+.cm-board-options [data-order]::before{content:attr(data-order) " · ";color:var(--v-accent);font-weight:800}
+.cm-board-decision-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.cm-board-amount{display:grid;gap:4px;font-size:12px}
+.cm-board-amount input{width:80px}
+.cm-board-stack ol{margin:0;padding-left:18px;font-size:13px}
+.cm-board-hand{padding:10px 12px;border-radius:var(--v-radius-card);background:rgba(26,24,21,.55);backdrop-filter:blur(3px);border:1px solid var(--v-line);color:var(--mat-ink);min-width:0}
+.cm-board-hand h3{margin:0 0 8px;font-size:13px}
+.cm-board-hand h3 .cm-muted{margin-left:8px;font-weight:500;color:color-mix(in srgb,var(--mat-ink) 70%,transparent)}
+.cm-board-hand-cards{display:flex;gap:8px;overflow-x:auto;padding:6px 4px}
+.cm-board-hand .cm-bcard{--bc:var(--hc)}
+.cm-board-over{position:absolute;inset:0;z-index:20;display:grid;place-items:center;border-radius:var(--v-radius-card);background:rgba(10,9,8,.62)}
+.cm-board-over .v-panel{max-width:420px;text-align:center}
+.cm-board-over .cm-actions{justify-content:center}
+.cm-board-banner{margin:0;padding:8px 12px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--st-buy) 20%,var(--v-panel))}
+.cm-board-loading{padding:40px;text-align:center;color:var(--v-muted)}
+@media(max-width:900px){
+  .cm-board-body{grid-template-columns:minmax(0,1fr)}
+  .cm-board-pane{flex-direction:row;overflow-x:auto}
+  .cm-board-tile{flex:0 0 150px}
+  .cm-board-mat-grid{grid-template-columns:minmax(0,1fr)}
+  .cm-board-piles{grid-column:1;grid-row:auto;grid-template-columns:repeat(4,calc(var(--bc) + 8px))}
+  .cm-board-ribbon{margin:0}
+}
+/* THE BOARD'S THREE VIEWS (M5, the handoff's Table · Focus · Full screen) and Table vitals. */
+.cm-board-views{display:inline-flex;gap:2px;padding:2px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--v-ink) 8%,transparent)}
+#matrix-v2 .cm-board-views .v-button{min-height:0;height:32px;padding:0 10px;border-color:transparent;background:transparent}
+#matrix-v2 .cm-board-views .v-button.is-on{background:var(--v-panel);border-color:var(--v-accent)}
+.cm-seatboard{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;padding:8px;border-radius:var(--v-radius-card);background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%);color:var(--mat-ink);border:1px solid color-mix(in srgb,var(--mat-ink) 10%,transparent);--bc:calc(46px * var(--card-scale,1))}
+.cm-seatboard.is-you{border:2px solid var(--v-accent)}
+.cm-seatboard-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px}
+.cm-seatboard-head .cm-muted{color:color-mix(in srgb,var(--mat-ink) 65%,transparent)}
+.cm-seatboard-head .v-button{margin-left:auto}
+.cm-seatboard-body{display:grid;gap:6px;align-content:start;flex:1 1 auto;min-height:0;overflow:hidden}
+.cm-seatboard-lands{padding-top:6px;border-top:1px solid color-mix(in srgb,var(--mat-ink) 20%,transparent)}
+.cm-seatboard-piles{margin:0;font-size:11px;color:color-mix(in srgb,var(--mat-ink) 65%,transparent)}
+.cm-board-table{position:relative;display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"a b" "c d"}
+.cm-board-table[data-seats="3"]{grid-template-areas:"a b" "c c"}
+.cm-board-table[data-seats="2"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "b"}
+.cm-board-table>.cm-seatboard{aspect-ratio:16 / 9}
+.cm-board-table[data-seats="2"]>.cm-seatboard,.cm-board-table[data-seats="3"]>.cm-seatboard[style*="grid-area:c"]{aspect-ratio:32 / 9}
+.cm-board-center{position:absolute;left:50%;top:50%;z-index:2;width:34px;height:34px;padding:3px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid var(--v-accent);background:var(--v-panel);cursor:pointer}
+.cm-board-center img{width:100%;height:100%;object-fit:contain}
+.cm-board-under{display:flex;flex-direction:column;gap:10px}
+.cm-board[data-view="full"]{position:fixed;inset:0;z-index:60;display:grid;grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:var(--v-bg);overflow:auto}
+.cm-full-rail{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cm-full-rail .cm-board-views{flex-direction:column}
+#matrix-v2 .cm-full-rail .v-button{width:36px;height:36px;min-height:0;padding:0}
+.cm-full-rail .cm-board-menu{left:calc(100% + 6px);right:auto;top:0}
+.cm-full-turn{font-weight:800;font-size:13px}
+.cm-full-center{display:grid;grid-template-rows:minmax(0,2fr) minmax(0,3fr);gap:8px;min-width:0;min-height:0}
+.cm-full-others{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:8px;min-height:0}
+.cm-full-others .cm-seatboard{--bc:calc(40px * var(--card-scale,1))}
+.cm-full-mine{position:relative;display:flex;flex-direction:column;gap:8px;min-height:0}
+.cm-full-mine>.cm-seatboard{flex:1 1 auto;padding-top:52px;--bc:calc(96px * var(--card-scale,1))}   /* room for the pill over it */
+.cm-full-pill{position:absolute;left:50%;top:8px;z-index:3;display:flex;align-items:center;gap:10px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);white-space:nowrap;max-width:calc(100% - 16px)}
+.cm-full-side{display:flex;flex-direction:column;gap:8px;min-width:0;overflow:auto}
+.cm-full-vitals{display:grid;gap:6px;padding:10px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line)}
+.cm-full-vitals>div{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:12px}
+.cm-full-pick{display:grid;gap:8px;justify-items:center;padding:10px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line)}
+.cm-full-pick .cm-bcard{--bc:calc(170px * var(--card-scale,1));max-width:100%}
+.cm-full-side .cm-board-decision,.cm-full-side .cm-board-stack{padding:10px}
+.cm-table-vitals{display:grid;gap:0;max-width:560px;font-size:13px}
+.cm-table-vitals [role=row]{display:grid;grid-template-columns:130px repeat(var(--cols),minmax(0,1fr));gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--v-line)}
+.cm-table-vitals .is-head{font-weight:700}
+.cm-table-vitals [role=rowheader]{color:var(--v-muted)}
+.cm-table-vitals b{font-size:18px;font-variant-numeric:tabular-nums}
+.cm-vitals-meter{display:block;height:4px;margin-top:3px;border-radius:2px;background:linear-gradient(to right,var(--seat) calc(var(--fill) * 100%),color-mix(in srgb,var(--seat) 25%,transparent) 0)}
+@media(max-width:900px){
+  .cm-board-table{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "b" "c" "d"}
+  .cm-board-table[data-seats="3"]{grid-template-areas:"a" "b" "c"}
+  .cm-board-table>.cm-seatboard{aspect-ratio:auto}
+}
+/* SHOW HAND, CARD ZOOM AND THE CARD-SIZE SLIDER ON THE BOARD (M5; the handoff's play-hand-contemplate,
+   play-hand-held and play-card-zoom). The fan's cards are 170px, turned 5° apiece and 132px apart; the held card
+   190px in a 3px brass ring; the zoom 320px. All follow the card-size slider. */
+.cm-board-size{display:grid;gap:4px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--v-line)}
+.cm-board-showhand{width:34px;height:34px;margin-right:8px;border-radius:50%;border:1px solid var(--v-accent);background:color-mix(in srgb,var(--v-accent) 18%,transparent);color:inherit;font-size:16px;cursor:pointer;vertical-align:middle}
+.cm-hand-show{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:rgba(10,9,8,.62);color:var(--mat-ink)}
+.cm-hand-show header{text-align:center}
+.cm-hand-show h2{margin:0;color:var(--mat-ink)}
+.cm-hand-show .cm-muted{color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
+.cm-hand-close{position:absolute;right:20px;top:20px}
+/* 132px apart, or closer when a big hand would run off the screen: the fan's two ends stay inside it. The room
+   kept at the sides is a card's width and the swing of its turn, which pivots below the card. */
+.cm-hand-fan{position:relative;width:100%;height:calc(170px * var(--card-scale,1) * 1.6);--step:min(calc(132px * var(--card-scale,1)),calc((100vw - 480px * var(--card-scale,1)) / var(--gaps)))}
+.cm-hand-slot{position:absolute;left:50%;top:0;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(calc(var(--a) * 10px)) rotate(calc(var(--o) * 5deg));transform-origin:50% 120%;transition:transform .2s}
+.cm-hand-slot:hover{z-index:2;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(-18px) rotate(0deg)}
+.cm-hand-slot .cm-bcard{--bc:calc(170px * var(--card-scale,1));cursor:pointer}
+.cm-hand-key{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:12px;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
+.cm-hand-held .cm-bcard{--bc:calc(190px * var(--card-scale,1));box-shadow:0 0 0 3px var(--v-accent),0 24px 60px -20px rgb(0 0 0 / .8);cursor:pointer}
+.cm-hand-acts{justify-content:center}
+.cm-hand-rest{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.cm-hand-rest .cm-bcard{--bc:calc(72px * var(--card-scale,1));cursor:pointer}
+.cm-board-peek{position:fixed;top:80px;z-index:65;pointer-events:none;filter:drop-shadow(0 20px 40px rgb(0 0 0 / .6))}
+.cm-board-peek[data-side="right"]{right:24px}
+.cm-board-peek[data-side="left"]{left:24px}
+.cm-board-peek .cm-bcard,.cm-board-zoom .cm-bcard{--bc:calc(320px * var(--card-scale,1));max-width:calc(100vw - 48px)}
+.cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
+/* THE HISTORY ON THE BOARD (M5; the handoff's play-history): a drop-down from the strip, a band on the Focus mat
+   between the two pairs of piles, and a column in Full screen. Newest first; a turn is a divider. */
+.cm-board-history{width:360px;max-height:min(70vh,520px);display:flex;flex-direction:column;gap:8px}
+.cm-board-history h3,.cm-board-band h3{margin:0;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.cm-history-filter{width:100%}
+.cm-history-list,.cm-board-band ol{list-style:none;margin:0;padding:0;overflow:auto;font-size:12px}
+.cm-history-list li,.cm-board-band li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--v-line)}
+.cm-history-list li.is-turn{justify-content:center;font-weight:700;color:var(--v-accent);border-bottom-color:var(--v-accent)}
+.cm-history-list li.is-end,.cm-board-band li.is-end{font-weight:700}
+.cm-history-turn{flex:0 0 auto;color:var(--v-muted);font-variant-numeric:tabular-nums}
+.cm-board-band{grid-column:1 / -1;display:grid;gap:4px;padding:6px 8px;border:1px solid color-mix(in srgb,var(--mat-ink) 30%,transparent);border-radius:10px;min-width:0}
+.cm-board-mat .cm-board-band{color:var(--mat-ink)}
+.cm-board-mat .cm-board-band li{border-bottom-color:color-mix(in srgb,var(--mat-ink) 15%,transparent)}
+.cm-board-mat .cm-history-turn{color:color-mix(in srgb,var(--mat-ink) 60%,transparent)}
+#matrix-v2 .cm-board-band h3 .v-button{min-height:0;height:24px;padding:0 8px}
+.cm-full-side .cm-board-band{background:var(--v-panel);border-color:var(--v-line)}
+.cm-board-band li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+/* THE COACH (M5, the handoff's play-coach): a 400px panel over the right edge, above the board in every view,
+   never narrowing the mat. The Coach speaks on a pale aether tint beside the logo; you speak in ink. */
+.cm-board-coach-open{padding:10px;border-radius:var(--v-radius);border:1px solid var(--v-aether);background:color-mix(in srgb,var(--v-aether) 10%,var(--v-panel));color:var(--v-ink);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.cm-board-coach-open[aria-pressed="true"]{background:color-mix(in srgb,var(--v-aether) 22%,var(--v-panel))}
+.cm-board-menu-row{margin-bottom:12px}
+.cm-board-coach{position:fixed;top:0;right:0;bottom:0;z-index:75;width:min(400px,100vw);display:flex;flex-direction:column;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
+.cm-board-coach[hidden]{display:none}
+.cm-coach-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--v-line)}
+.cm-coach-head>div{flex:1 1 auto;min-width:0}
+.cm-coach-head h2{margin:0;font-size:16px}
+.cm-coach-head p{margin:0;font-size:11px}
+.cm-coach-logo{width:26px;height:26px}
+.cm-coach-more{position:relative}
+.cm-coach-more summary{list-style:none;cursor:pointer;padding:4px 8px;color:var(--v-muted)}
+.cm-coach-more>div{position:absolute;right:0;top:100%;z-index:2;padding:8px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line-strong)}
+.cm-coach-thread{flex:1 1 auto;overflow:auto;list-style:none;margin:0;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cm-coach-divider{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--v-muted)}
+.cm-coach-divider::before,.cm-coach-divider::after{content:"";flex:1;border-top:1px solid var(--v-line)}
+.cm-coach-msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+.cm-coach-msg p{margin:0;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.cm-coach-msg.is-coach p{background:color-mix(in srgb,var(--v-aether) 14%,var(--v-panel));border:1px solid color-mix(in srgb,var(--v-aether) 35%,transparent)}
+.cm-coach-msg.is-you{align-self:flex-end}
+.cm-coach-msg.is-you p{background:var(--v-ink);color:var(--v-panel)}
+.cm-coach-avatar{width:22px;height:22px;flex:0 0 auto}
+.cm-coach-msg.is-typing p{display:flex;gap:4px;padding:12px}
+.cm-coach-msg.is-typing i{width:6px;height:6px;border-radius:50%;background:var(--v-aether);animation:cm-coach-dot 1s infinite ease-in-out}
+.cm-coach-msg.is-typing i:nth-child(2){animation-delay:.15s}
+.cm-coach-msg.is-typing i:nth-child(3){animation-delay:.3s}
+@keyframes cm-coach-dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.cm-coach-msg.is-typing i{animation:none}}
+.cm-coach-prompts{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px 0}
+.cm-coach-compose{display:flex;align-items:flex-end;gap:8px;padding:10px 16px 16px}
+.cm-coach-input{flex:1 1 auto;min-height:44px;max-height:140px;padding:11px 16px;border-radius:22px;border:1px solid var(--v-line-strong);background:var(--v-bg);color:var(--v-ink);font:inherit;font-size:13px;resize:none}
+.cm-coach-send{width:44px;height:44px;border-radius:50%;border:0;background:var(--v-accent);color:var(--on-accent);font-size:16px;cursor:pointer}
+/* THE BOARD ON A PHONE (M5, the handoff's "Play on phones"): Focus only, the game surface landscape. A 52px icon
+   rail, your board full-bleed, a 112px seat strip; the pill on top. Held upright, the surface itself is turned a
+   quarter, so there is never a screen asking to turn the phone. */
+.cm-board[data-phone]{position:fixed;inset:0;z-index:60;display:grid;grid-template-columns:52px minmax(0,1fr) 112px;gap:6px;padding:6px;background:var(--v-bg);overflow:hidden;--bc:calc(44px * var(--card-scale,1));--hc:calc(96px * var(--card-scale,1))}
+.cm-board[data-phone="portrait"]{inset:auto;top:0;left:0;width:100vh;height:100vw;transform:translateX(100vw) rotate(90deg);transform-origin:top left}
+.cm-phone-rail{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cm-phone-icon{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font-size:18px;cursor:pointer}
+.cm-phone-badge{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--v-accent);color:var(--on-accent);font-size:11px;font-weight:800;line-height:18px}
+.cm-phone-rail .cm-board-menu{left:calc(100% + 6px);right:auto;top:0;width:min(320px,70vw);max-height:calc(100% - 12px)}
+.cm-phone-center{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.cm-phone-center>.cm-seatboard{flex:1 1 auto;padding-top:46px}
+.cm-phone-pill{position:absolute;left:50%;top:6px;z-index:3;display:flex;align-items:center;gap:8px;padding:3px 4px 3px 12px;transform:translateX(-50%);border-radius:999px;background:var(--v-panel);border:1px solid var(--v-line-strong);font-size:12px;white-space:nowrap;max-width:calc(100% - 12px)}
+#matrix-v2 .cm-phone-pill .v-button{min-height:0;height:30px;padding:0 12px}
+.cm-phone-ask{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
+.cm-phone-ask:empty{display:none}
+.cm-phone-ask .cm-board-decision,.cm-phone-ask .cm-board-stack{padding:8px 10px}
+.cm-phone-seats{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+.cm-phone-seat{display:grid;gap:0;padding:6px 8px;border-radius:10px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.cm-phone-seat b{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+.cm-phone-seat small{font-size:10px;color:var(--v-accent);min-height:1.2em}
+.cm-phone-seat.is-focus{outline:2px solid var(--v-accent);outline-offset:1px}
+.cm-phone-rotate{display:flex;justify-content:space-between;gap:4px;margin-top:auto}
+#matrix-v2 .cm-phone-rotate .v-button{flex:1;min-height:0;height:32px;padding:0}
+.cm-board[data-phone] .cm-hand-fan{display:flex;gap:8px;height:auto;overflow-x:auto;padding:8px 4px}
+.cm-board[data-phone] .cm-hand-slot{position:relative;left:auto;transform:none;flex:0 0 auto}
+.cm-board[data-phone] .cm-hand-slot:hover{transform:none}
+.cm-board[data-phone] .cm-hand-slot .cm-bcard{--bc:calc(110px * var(--card-scale,1))}
+.cm-board[data-phone] .cm-hand-key{display:none}
+.cm-board[data-phone] .cm-hand-held .cm-bcard{--bc:calc(130px * var(--card-scale,1))}
+.cm-board[data-phone] .cm-hand-show{position:absolute;padding:12px;gap:10px}
+/* On a phone, what you are asked is one compact row over the board's foot, not half the screen. */
+.cm-phone-ask .cm-board-decision{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.cm-phone-ask .cm-board-decision h3{margin:0;font-size:12px}
+.cm-phone-ask .cm-board-decision-foot{margin:0}
+/* THE MATS (M5, the handoff's Choose mat). Every board is drawn on its seat's mat; felt is the default. */
+.cm-mat-swatch{background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%)}
+[data-mat="forge"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--mat-forge-glow) 40%,transparent),transparent 55%),radial-gradient(ellipse at 50% 30%,var(--mat-forge),var(--mat-forge-edge) 80%)}
+[data-mat="cavern"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-linear-gradient(115deg,color-mix(in srgb,var(--mat-ink) 3%,transparent) 0 2px,transparent 2px 9px),linear-gradient(160deg,var(--mat-cavern),var(--mat-cavern-edge))}
+[data-mat="sea"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:repeating-radial-gradient(ellipse at 50% 130%,transparent 0 22px,color-mix(in srgb,var(--mat-sea-foam) 9%,transparent) 22px 24px),radial-gradient(ellipse at 50% 30%,var(--mat-sea),var(--mat-sea-edge) 80%)}
+[data-mat="night"]:is(.cm-board-mat,.cm-seatboard,.cm-mat-swatch){background:radial-gradient(1.5px 1.5px at 18% 24%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 62% 14%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1.5px 1.5px at 81% 58%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 35% 72%,var(--mat-ink) 50%,transparent 51%),radial-gradient(1px 1px at 90% 30%,var(--mat-ink) 50%,transparent 51%),radial-gradient(ellipse at 50% 30%,var(--mat-night),var(--mat-night-edge) 80%)}
+.cm-mat-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;list-style:none;margin:0}
+.cm-mat-strip li{flex:0 0 150px}
+.cm-mat-pick{display:grid;gap:4px;width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;font-size:12px;font-weight:700;text-align:left;cursor:pointer}
+.cm-mat-pick .cm-mat-swatch{aspect-ratio:16 / 9;border-radius:10px;border:1px solid var(--v-line)}
+.cm-mat-pick[aria-pressed="true"] .cm-mat-swatch{border:2px solid var(--v-accent)}
+.cm-mat-preview{position:relative;max-width:560px;aspect-ratio:16 / 9;border-radius:var(--v-radius-card);overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 16% 16%;grid-template-rows:62% minmax(0,1fr);gap:4%;padding:4%;color:var(--mat-ink)}
+.cm-mat-preview span{border:1px solid color-mix(in srgb,var(--mat-ink) 55%,transparent);border-radius:8px;display:flex;align-items:flex-end;padding:4px 6px;font-size:11px;font-style:italic}
+.cm-mat-preview span:nth-child(1){grid-column:1;grid-row:1}
+.cm-mat-preview span:nth-child(2){grid-column:1;grid-row:2}
+.cm-mat-note{margin:8px 0 0;font-size:12px}
+/* THE MENU UNDER PLAY (Rob, 2026-09-28): the nav track grew to fill the rail, which pushed Menu to the rail's foot,
+   as far down as the page is long, "lost in the scroll". The track now takes only its own height, so Menu sits
+   right under the last page. */
+#matrix-v2 .cm-sidebar .v-nav-track{flex:0 0 auto}

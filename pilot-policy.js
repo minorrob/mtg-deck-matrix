@@ -326,7 +326,7 @@
 
   /* How much mana to refuse to spend. A pilot holding up an answer is not
      holding up a number -- they are holding up a specific card, and the cheapest
-     one is what they can actually afford to keep live. Colour is not reserved:
+     one is what they can actually afford to keep live. Color is not reserved:
      the model has no notion of which land is tapped (see SIMPLIFICATIONS). */
   function manaToReserve(handProfiles, mana, turn, policy) {
     const hold = policy?.hold;

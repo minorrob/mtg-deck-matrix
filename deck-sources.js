@@ -5,7 +5,7 @@
  *
  *   Archidekt  GET https://archidekt.com/api/decks/<id>/ answers 200 with the
  *              full deck, and every card carries its own `oracleCard` -- name,
- *              mana cost, colour identity, rules text, keywords, types, prices.
+ *              mana cost, color identity, rules text, keywords, types, prices.
  *              A deck loaded this way needs nothing else: it is resolved on
  *              arrival, with no name matching and no second round trip.
  *
@@ -13,7 +13,7 @@
  *              of an origin header: it is refused outright, to a server and to
  *              a browser alike. So there is no URL path for Moxfield and this
  *              file does not pretend there is one. A Moxfield link is
- *              recognised, and answered with the thing that does work -- open
+ *              recognized, and answered with the thing that does work -- open
  *              the deck, More ▾, Export, and paste it in. The paste path is
  *              exact and needs no permission from anybody.
  *
@@ -29,7 +29,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  /* Archidekt writes colour identity out in full -- ["Green"], not ["G"] --
+  /* Archidekt writes color identity out in full -- ["Green"], not ["G"] --
      and everything downstream indexes single letters. */
   const COLOR_LETTER = {White: "W", Blue: "U", Black: "B", Red: "R", Green: "G"};
 
@@ -39,7 +39,9 @@
       label: "Archidekt",
       // archidekt.com/decks/123456/some-slug, with or without the slug.
       test: /archidekt\.com\/decks\/(\d+)/i,
-      api: (id) => `https://archidekt.com/api/decks/${id}/`,
+      /* Through the app's own Worker (R3.10a, cloud/import.mjs): the page may reach Scryfall and nothing else, so
+         the Worker fetches the public deck and hands back only what fromArchidekt reads, as {deck}. */
+      api: (id) => `/api/import/archidekt?id=${id}`,
       fetchable: true
     },
     {
@@ -182,19 +184,25 @@
       return {site, error: `${site.label} decks cannot be loaded by link.`, advice: site.advice};
     }
     if (!fetchImpl) return {site, error: "This browser cannot make the request."};
+    /* Where the importer cannot be reached -- a copy of the app with no Worker behind it, or a sign-in wall in front
+       of it -- the answer is the paste path, said plainly. */
+    const unreachable = {site, error: `The ${site.label} importer is not reachable from here. Open the deck on ${site.label}, export its list, and paste it instead.`};
     let response;
     try {
-      response = await fetchImpl(site.api(site.id), {headers: {Accept: "application/json"}});
+      response = await fetchImpl(site.api(site.id), {headers: {Accept: "application/json", "x-crankmagic": "import"}, credentials: "same-origin", redirect: "manual"});
     } catch (err) {
       return {site, error: `Could not reach ${site.label}. Check the connection, or paste the export instead.`};
     }
-    if (!response.ok) {
-      return {site, error: response.status === 404
+    if (response.type === "opaqueredirect") return unreachable;
+    let body = null;
+    try { body = await response.json(); } catch (err) { return unreachable; }
+    if (!response.ok || !body || !body.deck) {
+      /* The Worker's words when it gave some; they say what happened and what to do. */
+      return {site, error: (body && body.error) || (response.status === 404
         ? `${site.label} has no deck ${site.id}, or it is private.`
-        : `${site.label} answered ${response.status}. Paste the export instead.`};
+        : `${site.label} answered ${response.status}. Paste the export instead.`)};
     }
-    const json = await response.json();
-    return {site, deck: fromArchidekt(json, {url})};
+    return {site, deck: fromArchidekt(body.deck, {url})};
   }
 
   return {SITES, identify, load, fromArchidekt, typeLineOf, COLOR_LETTER};

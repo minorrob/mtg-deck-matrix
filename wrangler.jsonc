@@ -1,7 +1,7 @@
 {
   "name": "crankmagic-staging",
   "main": "cloud/worker.mjs",
-  "compatibility_date": "2026-09-24",
+  "compatibility_date": "2026-09-28",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -28,5 +28,23 @@
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
     "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"
-  }
+  },
+  "ratelimits": [
+    {
+      "name": "LIMIT_IP",
+      "namespace_id": "2001",
+      "simple": {
+        "limit": 240,
+        "period": 60
+      }
+    },
+    {
+      "name": "LIMIT_PERSON",
+      "namespace_id": "2002",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    }
+  ]
 }

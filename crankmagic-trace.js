@@ -13,7 +13,7 @@
  *   return edge (drawn gold). Closed cycles through a lit card (CrankLoops) count too.
  *
  *   Score = Σ over lit cards of ringWeight × (1 + loopBacks) × strategiesServed, weights
- *   3 · 2 · 1. A heuristic, labelled one wherever it is shown; the simulator is the measure.
+ *   3 · 2 · 1. A heuristic, labeled one wherever it is shown; the simulator is the measure.
  *
  * THE LIST IS THE PRODUCT, the animation the explanation: the walk returns a grouped, tagged
  * list first (ring → strategy, each row with the join that lit it, the strategies it serves,

@@ -3,7 +3,7 @@
  * The deck page is organized by what the list asks for; the Collection by copy. Neither
  * answers the question at the table, which is "go and get these": the ones on the bench,
  * the ones in another deck's box, and the ones in this box that no longer belong. So this
- * is the deck's reserved copies cut by location -- colour, then name inside each group,
+ * is the deck's reserved copies cut by location -- color, then name inside each group,
  * the way a binder is walked -- with a tick per row that records the walk as it happens.
  *
  * A tick is one `place`: the lot moves into the box, the model recomputes readiness, and
@@ -40,7 +40,8 @@ function sheet(d){
   const waiting={ordered:s.lots.filter(l=>l.source==='ordered'&&l.allocation?.deckId===d.id&&main.has(l.allocation.slotId)).reduce((n,l)=>n+l.quantity,0),toBuy:M.readiness(s,d).toBuy};
   return {groups,waiting,ready};
 }
-const GROUPS=[['bench','Add from the Bench',r=>C.pill(`Bench${r.box?' · '+e(r.box):''}`,'pull'),'Add','place'],['other','Move from another deck',r=>C.pill(`${e(r.fromDeck?r.fromDeck.name:'Another deck')}`,'pull'),'Move here','place'],['standin','Substitutes in this deck',r=>C.pill(r.stay?'Substitute · stays for now':'Substitute → Bench',r.stay?'standin':'remove'),'To bench','bench']];
+/* A reserved copy waiting outside its box is a Target "to add" (docs/card-states.md); the Bench, or its box label, says where to find it. */
+const GROUPS=[['bench','Add from the Bench',r=>C.pill(`To add · ${r.box?e(r.box):'Bench'}`,'pull'),'Add','place'],['other','Move from another deck',r=>C.pill(`${e(r.fromDeck?r.fromDeck.name:'Another deck')}`,'pull'),'Move here','place'],['standin','Substitutes in this deck',r=>C.pill(r.stay?'Substitute · stays for now':'Substitute → Bench',r.stay?'standin':'remove'),'To bench','bench']];
 const live=rows=>rows.filter(r=>!r.done);
 function rowHTML(r,[,,where,label,op]){const n=live([r]).length?r.quantity:0;
   return `<li class="cm-pull-row${r.done?' is-done':''}${r.stay?' is-stay':''}" data-lot="${e(r.lotId)}"><label class="cm-pull-tick"><input type="checkbox" data-pull-tick="${e(r.lotId)}" data-op="${op}" ${r.done?'checked disabled':''} aria-label="Found ${e(r.card.name)}"></label><span class="cm-pull-color">${C.colors(r.card.colorIdentity)}</span><button type="button" class="cm-card-name cm-pull-name" data-action="card" data-card="${e(r.cardId)}">${e(r.card.name)}${r.quantity>1?` <em>×${r.quantity}</em>`:''}</button><span class="cm-pull-where">${where(r)}</span>${r.done?'<span class="cm-pull-done">Done</span>':`<button type="button" class="v-button compact" data-action="pull-one" data-lot="${e(r.lotId)}" data-op="${op}">${label}</button>`}</li>`;}

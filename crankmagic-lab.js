@@ -21,14 +21,25 @@
  * THE PICKER REACHES EVERY LEGAL COMMANDER. The catalog registers 3,411 of them; the old
  * pane showed the 45 most popular and nothing said so, which read as "only the commanders
  * we already worked with". Now it says how many match, pages through them, filters by
- * colour identity as well as name, play style and rank, and inspects any of them. */
+ * color identity as well as name, play style and rank, and inspects any of them. */
 (globalThis.CrankFeatures ||= []).push(function(C){
 const {M,esc:e,button:b,field:f,select:s,note,form,modal,actions,views,$}=C;
 let leader=null,partner=null,mode='commander',groupId='',deckId='',draftName='',definition=M.defaultDefinition(),pool='all',includeInDeck=false,includeReserved=false;let seedFromTrace=true;
 let preview=null;          // the drafted list that is not yet a deck
 let shownLimit=45;         // how many picker rows are drawn before "Show more"
-let pickerColors=[];       // the picker's colour-identity filter
+let pickerColors=[];       // the picker's color-identity filter
 let runner=null;
+let autoDraft=false;       // set by C.labStart: the Build wizard's Review hands over and the Lab drafts at once
+/* THE BUILD WIZARD'S WAY IN (R3.11): Commander → Strategy → Budget → Review ends here. The Lab takes the commander, the
+   strategies ticked, the price cap and what to include or avoid, as if they had been entered on this page, and drafts
+   the 99 as a preview -- nothing is saved to Decks until Save this deck, as ever. */
+C.labStart=({commander,strategies=[],budget=null,restrictions=''}={})=>{
+  if(!commander)throw Error('Choose a commander first.');
+  leader=commander;partner=null;mode='commander';deckId='';groupId='';draftName='';
+  definition=M.defaultDefinition({...definition,budget:Number.isFinite(budget)&&budget>0?budget:null,strategies:[...strategies],restrictions:String(restrictions||'').slice(0,1000)});
+  preview=null;autoDraft=true;
+  if(C.route().view==='lab')C.render();else C.go('lab');
+};
 const choices=CrankCatalog.MECHANICS.map(([label])=>label);
 const STEPS=['User Input Captured','Initial 99 Cards Chosen','Measure & 99 Refined','Measure loops complete','Measurement Report','Completed Deck'];
 const COLORS=[['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green']];
@@ -118,7 +129,7 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
     const protocolMatch=r.protocol&&typeof CrankSim!=='undefined'&&CrankSim.PROTOCOLS?Object.values(CrankSim.PROTOCOLS).find(p=>p.id===r.protocol):null;
     const protocolLabel=protocolMatch?protocolMatch.label:'Unknown protocol';
     const totalGames=(protocolMatch?.seedCount||0)*(protocolMatch?.games||0);
-    const protocolChip=protocolMatch?`${e(protocolLabel)} · ${totalGames.toLocaleString()} games`+(protocolMatch.label!=='Published protocol'?' · not a published rating':''):e(r.protocol||'Unknown');
+    const protocolChip=protocolMatch?`${e(protocolLabel)} · ${totalGames.toLocaleString('en-US')} games`+(protocolMatch.label!=='Published protocol'?' · not a published rating':''):e(r.protocol||'Unknown');
     /* FIDELITY BANNER: what the simulation model is and is not. This appears BEFORE the
        score so a reader who scrolls to a number meets the honesty first. */
     const fidelityBanner=note(`This score compares lists under a browser simulation model (profile opponents, simplified rules). It is not a full rules-engine game and does not predict a real evening.`,true);
@@ -137,7 +148,7 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
         ${row('First elimination',m.firstEliminationTurn)}${row('Spells cast per game',m.spellsCastPerGame)}
         ${row('Biggest turn',m.biggestTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
-      <p class="cm-muted"><strong>${protocolChip}</strong><br><small title="${e(r.protocol||'')}">${e(r.protocol||'')} · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</small></p>
+      <p class="cm-muted"><strong>${protocolChip}</strong><br><small title="${e(r.protocol||'')}">${e(r.protocol||'')} · ${((r.run&&r.run.games)||0).toLocaleString('en-US')} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</small></p>
       ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
         <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
@@ -155,7 +166,7 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
       ${(r.endTurnCounts||[]).length?(()=>{const rows=r.endTurnCounts,total=rows.reduce((n,x)=>n+x.games,0),peak=Math.max(...rows.map(x=>x.games));
         return `<h3 class="cm-section-heading">When the games ended</h3>
         <div class="cm-turn-hist">${rows.map(x=>`<div><i style="height:${Math.max(2,Math.round(x.games/peak*100))}%"></i><span>${x.turn}</span></div>`).join('')}</div>
-        <p class="cm-muted">Games by the turn they finished, out of ${total.toLocaleString()}. An average of ${m.averageWinTurn?m.averageWinTurn.value:'—'} means something different for one hump than for two, and only this says which it is.</p>`;})():''}
+        <p class="cm-muted">Games by the turn they finished, out of ${total.toLocaleString('en-US')}. An average of ${m.averageWinTurn?m.averageWinTurn.value:'—'} means something different for one hump than for two, and only this says which it is.</p>`;})():''}
       ${(r.coverage&&(r.coverage.unreadable||[]).length)?`<details class="cm-details"><summary>${r.coverage.unreadable.length} card${r.coverage.unreadable.length===1?'':'s'} the engine could not read</summary>
         <p class="cm-muted">These carry no oracle text the engine could classify, so they were played as blanks. The score above is a claim about the other ${(r.coverage.known||0)} cards.</p>
         <div class="cm-count-list">${r.coverage.unreadable.slice(0,60).map(x=>`<span>${e(typeof x==='string'?x:(x&&x.name)||'Unknown')}</span>`).join('')}</div></details>`:''}
@@ -275,14 +286,15 @@ views.lab=async()=>{
          same thing on both roads: the draft may only use copies you actually have. -->
     <label class="cm-checkbox cm-start-owned"><input name="ownedOnly" type="checkbox" ${pool==='owned'?'checked':''}>Use only cards I own</label>
     <label class="cm-checkbox cm-start-seed" title="The 99 is seeded by a trace from the commander over the legal catalog inside the definition: the cards its strategies reach first, then the roles to their targets."><input name="traceSeed" type="checkbox" ${seedFromTrace?'checked':''}>Seed the draft from the trace</label>
+    ${definition.strategies?.length&&globalThis.CrankStrategies?`<p class="cm-lab-strategies cm-full" id="cm-lab-strategies"><strong>Strategies</strong> ${definition.strategies.map(id=>`<span class="cm-chip">${e(CrankStrategies.labelOf(id))}</span>`).join(' ')} <span class="cm-muted">chosen in Build a deck; the draft seeds from them</span></p>`:''}
     <p class="cm-error cm-full" id="cm-lab-error" hidden role="alert"></p></div>
-    <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString()}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
+    <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString('en-US')}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'',`${mode==='commander'?'required ':''}autocomplete="off" placeholder="Name, printed variant name, or a Scryfall link"`)}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
     <div><span class="cm-muted" style="font-size:13px">Color identity within</span><div class="cm-color-pills">${COLORS.map(([k,name])=>`<label class="cm-color-pill" title="${e(name)}"><input type="checkbox" name="commanderColor" value="${k}" ${pickerColors.includes(k)?'checked':''}><img src="assets/mana/${k}.svg?v=1" alt="">${k}</label>`).join('')}<label class="cm-color-pill" title="Colorless commanders only"><input type="checkbox" name="commanderColor" value="C" ${pickerColors.includes('C')?'checked':''}>C</label></div></div></div>
     <details class="cm-lab-section cm-lab-subsection" id="cm-lab-picker" open><summary class="cm-section-heading">Matching commanders</summary><div class="cm-commander-results" id="cm-lab-results"></div></details>
     <div class="cm-actions">${b('Record an unlisted commander','lab-manual')}${b('Add partner / second commander','lab-partner')}${b('Remove second commander','lab-unpartner')}</div>
     <div id="cm-lab-selected"></div>
-    <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.catalog.rankDate?.slice(0,10)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
+    <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.usDate(C.catalog.rankDate)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
     <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing deck</summary><p class="cm-start-pick">Start from a deck you already have<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived&&(C.showLobbyDecks||!M.isLobbyDeck(x))).map(x=>[x.id,x.name])],deckId,mode==='list'?'required':'')}<div id="cm-list-commander">${listCommanderField()}</div><div id="cm-list-source">${listSourceField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create a deck','new-deck')}${b('Import a list','import-list')}</div></details>
     <details class="cm-lab-section" id="cm-lab-definition"><summary class="cm-section-heading">Deck Definition</summary><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
     <div class="cm-form-grid">${f('Deck name','deckName',draftName,'placeholder="Named for you if you leave it blank"')}${s('Primary play style','mechanic',[['','Open to exploration'],...choices],definition.mechanics[0]||'')}${s('Base bracket','baseBracket',[1,2,3,4,5],definition.baseBracket)}${s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],definition.bracketCeiling)}${f('Total deck price cap ($)','budget',definition.budget??'','type="number" min="0" step="0.01" placeholder="No cap"')}${f('Per-card cap ($)','perCardCap',definition.perCardCap??'','type="number" min="0" step="0.01" placeholder="No cap"')}${s('Play style','playStyle',['Balanced','Aggressive','Reactive','Value engine','Combo'],definition.playStyle)}${s('Speed','speed',[1,2,3,4,5],definition.speed)}${s('Competitiveness','competitiveness',[1,2,3,4,5],definition.competitiveness)}${s('Saltiness','saltiness',[[1,'1 · Extremely friendly'],[2,'2 · Friendly'],[3,'3 · Assertive'],[4,'4 · Disruptive'],[5,'5 · Any legal winning mechanic']],definition.saltiness)}<label class="cm-checkbox"><input name="inDeck" type="checkbox" ${includeInDeck?'checked':''}>Consider cards currently In deck</label><label class="cm-checkbox"><input name="reserved" type="checkbox" ${includeReserved?'checked':''}>Consider unlocked reserved copies</label><label class="cm-full">Restrictions and preferences<textarea name="restrictions">${e(definition.restrictions)}</textarea></label></div>
@@ -296,9 +308,9 @@ views.lab=async()=>{
     let rows=C.catalog.search(q,{commander:true,mechanic:mech,rankMax,limit:Infinity,colors:pickerColors.filter(k=>k!=='C')});
     if(colorless)rows=rows.filter(c=>!(c.colorIdentity||[]).length);
     const shown=rows.slice(0,shownLimit),narrowed=q||mech||rankMax||pickerColors.length;
-    results.innerHTML=rows.length?`<p class="cm-muted cm-picker-count">${rows.length.toLocaleString()} legal commander${rows.length===1?'':'s'} match · showing ${shown.length} by EDHREC popularity${narrowed?'':' — type a name, or filter by play style or color'}. Only the most-played thousand carry a rank; the rest follow, marked unranked.</p>`
-      +shown.map(c=>{const styles=CrankCatalog.playStyles(c).slice(0,2).join(' · ');return `<div class="cm-commander-result cm-picker-row"><button type="button" class="cm-picker-choose" data-lab-commander="${e(c.id)}"><strong>${e(c.name)}</strong>${c.flavorName?`<em>${e(c.flavorName)}</em>`:''}</button><span class="cm-picker-cost">${c.manaValue!==null&&c.manaValue!==undefined?`<small class="cm-muted">MV ${e(String(c.manaValue))}</small>`:''}</span>${C.colors(c.colorIdentity)}<span class="cm-picker-meta">${c.commanderRank?'#'+Number(c.commanderRank).toLocaleString()+' · ':'<span class="cm-unranked" title="EDHREC publishes the most-played thousand; this commander is not among them.">unranked</span> · '}${e(styles||c.mechanics[0]||c.keywords[0]||'Explore abilities')}</span><button type="button" class="cm-text-button" data-lab-inspect="${e(c.id)}">Inspect</button></div>`;}).join('')
-      +(rows.length>shown.length?`<button type="button" class="v-button" data-lab-more>Show ${Math.min(45,rows.length-shown.length)} more of ${rows.length.toLocaleString()}</button>`:'')
+    results.innerHTML=rows.length?`<p class="cm-muted cm-picker-count">${rows.length.toLocaleString('en-US')} legal commander${rows.length===1?'':'s'} match · showing ${shown.length} by EDHREC popularity${narrowed?'':' — type a name, or filter by play style or color'}. Only the most-played thousand carry a rank; the rest follow, marked unranked.</p>`
+      +shown.map(c=>{const styles=CrankCatalog.playStyles(c).slice(0,2).join(' · ');return `<div class="cm-commander-result cm-picker-row"><button type="button" class="cm-picker-choose" data-lab-commander="${e(c.id)}"><strong>${e(c.name)}</strong>${c.flavorName?`<em>${e(c.flavorName)}</em>`:''}</button><span class="cm-picker-cost">${c.manaValue!==null&&c.manaValue!==undefined?`<small class="cm-muted">MV ${e(String(c.manaValue))}</small>`:''}</span>${C.colors(c.colorIdentity)}<span class="cm-picker-meta">${c.commanderRank?'#'+Number(c.commanderRank).toLocaleString('en-US')+' · ':'<span class="cm-unranked" title="EDHREC publishes the most-played thousand; this commander is not among them.">unranked</span> · '}${e(styles||c.mechanics[0]||c.keywords[0]||'Explore abilities')}</span><button type="button" class="cm-text-button" data-lab-inspect="${e(c.id)}">Inspect</button></div>`;}).join('')
+      +(rows.length>shown.length?`<button type="button" class="v-button" data-lab-more>Show ${Math.min(45,rows.length-shown.length)} more of ${rows.length.toLocaleString('en-US')}</button>`:'')
       :'<p>No matching local commander. Search the exact name or provide its Scryfall link.</p>';
   }
   function chosen(){
@@ -521,7 +533,7 @@ views.lab=async()=>{
   /* Read the whole form once, into the module state the next render rebuilds it from. */
   function readForm(){
     const v=Object.fromEntries(new FormData(lab));
-    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
+    definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade},/* no control on this page sets them: the Build wizard's, kept */...(Array.isArray(definition.strategies)&&definition.strategies.length?{strategies:[...definition.strategies]}:{})});
     /* The existing-deck select keeps its value when the reader switches back to the commander road; it only means something on the list road. */
     deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';seedFromTrace=!!v.traceSeed;includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
@@ -548,7 +560,7 @@ views.lab=async()=>{
         await C.catalog.loadGraph();
         const available={};for(const l of C.state.lots)if(M.eligibility(C.state,l,{includeInDeck,includeReserved,includeSellTrade:!!v.sellTrade}).eligible)available[l.cardId]=(available[l.cardId]||0)+l.quantity;
         /* THE TRACE SEED: a pool trace from the commander over the legal catalog inside the
-           definition (colour identity, per-card cap, legality), beamed so ring 2 stays quick,
+           definition (color identity, per-card cap, legality), beamed so ring 2 stays quick,
            handed to the builder as a bonus per card. Off when the modules are not loaded or
            the reader unticked it; the builder then drafts as before. */
         let seed=null;
@@ -724,7 +736,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
      instead: a round is thirty seconds of measured search, and it uses them. */
   const REFINE_MS=30000, LOOP_MS=150000, MAX_ROUNDS=5;
   /* Which exact hundred the reader has already been warned about. Keyed on the list, so
-     changing a card asks again rather than inheriting a stale acknowledgement. */
+     changing a card asks again rather than inheriting a stale acknowledgment. */
   let blindOk=null;
   const signatureOf=slots=>slots.map(r=>r.cardId).sort().join('|');
   const PER_SLOT=14;      // candidates screened against one weak slot before moving on
@@ -748,7 +760,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     return runner.measure({protocol:protocol||'refine',lineup,config,opponents,table:config.table,onProgress});
   }
 
-  /* Worth trying: legal in the commander's colours, not already in the list, not a basic,
+  /* Worth trying: legal in the commander's colors, not already in the list, not a basic,
      and joined to the commander on the graph's own relations. Ordered by the strength of
      that join, then by how much the format plays the card. */
   function candidatesFor(leaders,slots,limit){
@@ -772,7 +784,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
    * model runs long enough that essentially every drawn spell is eventually cast, so the
    * whole nonland list sits at 99-100% cast and 0% dead, and the ranking was noise wearing
    * a formula. What varies is being STRANDED -- drawn, and still uncastable in hand on
-   * turn eight -- which is exactly "too expensive, or off-colour for these sources", and
+   * turn eight -- which is exactly "too expensive, or off-color for these sources", and
    * how the deck's own win rate moves in the games a card was cast in. A card with no
    * measured row is treated as average: absence of evidence is not evidence of weakness.
    * Lands, the commander and pinned slots are never dropped. */
@@ -957,7 +969,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     try{
       const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
       const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
-      const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
+      const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString('en-US')} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
       if(saved){report.list=listOf(saved);report.commanders=[...saved.commanders];await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in Decks.');return;}
       if(preview&&preview.at===startedAt){report.list=listOf(preview);report.commanders=[...preview.commanders];await keepPreview({...preview,report});redrawRun();const from=preview.fromDeckId?C.state.decks.find(d=>d.id===preview.fromDeckId):null;C.notice(score+(from?` Save this deck to keep the report with a new deck, or file it with ${from.name}.`:' Save this deck to keep the report with it.'));return;}
       const last=C.state.preferences.lastLabRun,savedFrom=last&&last.previewAt&&last.previewAt===startedAt?C.state.decks.find(x=>x.id===last.deckId):null;
@@ -965,6 +977,8 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       C.notice(score+' The draft it measured was discarded before it finished, so the report was not kept.',true);
     }catch(err){const el=$('#cm-lab-sim-status');if(el)el.textContent=err.message;throw err;}
   };
+  /* Arriving from the Build wizard (C.labStart): draft at once, with what it chose. */
+  if(autoDraft){autoDraft=false;queueMicrotask(()=>runDraft().catch(err=>C.notice(err.message,true)));}
 };
 
 /* THE RUN PANE. Its state is read, not set: a step lights up because a preview, a report or

@@ -8,7 +8,7 @@
  * and 99 cards, one blank line, then a single row that is the commander -- 100
  * exactly. Moxfield puts the command zone in its own trailing block and does not
  * label it, so the blank line carries the meaning. Sites that DO label their
- * sections are handled too, and a labelled header always beats the positional
+ * sections are handled too, and a labeled header always beats the positional
  * guess because it is stated rather than inferred.
  *
  * NOTHING IS EVER SILENTLY DROPPED. A line this cannot parse and a name it

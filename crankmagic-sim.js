@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=12",
-    "combat.js?v=2",
-    "pilot-policy.js?v=3",
-    "deck-measure.js?v=9"
+    "sim-engine.js?v=14",
+    "combat.js?v=3",
+    "pilot-policy.js?v=4",
+    "deck-measure.js?v=10"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -120,7 +120,7 @@
           isCommander: commanders.has(card.id),
           /* deck-measure's hydrate() reads `entry.card` when no facts table is supplied,
              and CrankMagic's catalog rows already carry the printed body, mana cost,
-             oracle text, keywords and colour identity it wants. So the catalog IS the
+             oracle text, keywords and color identity it wants. So the catalog IS the
              facts table; there is no second copy to drift. */
           card: card
         };
@@ -255,7 +255,7 @@
          what gets exported, re-imported and read a month later with no screen around it. */
       limits: [
         "Three opponents are sampled archetype profiles with damage curves and scheduled win turns — not four real decks with hands, libraries and boards.",
-        "There is no stack, no priority and no real blocking unless board combat was enabled; attacks use modelled connection rates.",
+        "There is no stack, no priority and no real blocking unless board combat was enabled; attacks use modeled connection rates.",
         "No recorded human games back this number. It compares lists under one model; it does not predict a real evening.",
         "Turn-capped games are reported separately as incompleteGames and are still counted in the win-rate denominator."
       ].concat(result.unwatchedWinPaths
