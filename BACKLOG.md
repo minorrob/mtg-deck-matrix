@@ -120,3 +120,13 @@ these four.
 moment you choose, plus somewhere sensible to show a diff. That is new state with its own
 lifecycle — when is it taken, when is it stale, what happens when a card leaves the
 collection.
+
+## 7 · A user profile page
+
+**Asked for.** Rob, 2026-09-28: "We also need a user profile page, but this will be built later; backlog for now."
+
+**What it would hold.** The signed-in account (name, address, sign out), the theme (today in Settings ›
+Appearance; `docs/plan-appearance.md`), and whatever else follows the person rather than the device. Settings
+keeps the device's own choices (card size, reduce motion).
+
+**Why it waits.** The four themes land first, in Settings, and move or are linked here when the page exists.
