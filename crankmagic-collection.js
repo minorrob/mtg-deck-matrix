@@ -697,7 +697,8 @@ function tabletopDrop(pileId,ids){
   const a=TT.accepts(pile,rows);if(!a.ok){C.notice(a.why,true);return;}
   const [action,arg]=a.action.split(':');
   const n=rows.length,names=rows.slice(0,4).map(r=>r.card.name).join(', ')+(n>4?` and ${n-4} more`:'');
-  const finals=C.state.decks.filter(d=>!d.archived&&d.status==='final');
+  /* Any deck takes copies, finalized or not (G3, Rob 2026-09-28). */
+  const finals=C.state.decks.filter(d=>!d.archived&&d.kind!=='lobby');
   if(action==='source')return stageRows(rows,{action:'source',arg,to:C.source(arg),toStatus:SB.SOURCE_STATUS[arg]||''});
   if(action==='bench')return stageRows(rows,{action:'bench',to:'Bench'});
   if(action==='release')return stageRows(rows,{action:'release',to:'Bench'});
@@ -741,7 +742,7 @@ function tabletopDrop(pileId,ids){
      `place` reserves the copy for the seat it fills and records it as physically in that box,
      which is what "reserved and in physical deck" means in the model's own words. A copy the list
      does not call for is refused by name at Confirm, with the model's sentence. */
-  if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
+  if(action==='place'||action==='standin'){if(!finals.length)throw Error('Create a deck first: there is no deck to put copies in.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
     const chosen=preferred||(finals[0]||{}).id||'';
     followDeck(form(standin?'Substitute in a physical deck':'Put these copies in a physical deck',s('Deck','deckId',finals.map(d=>[d.id,d.name]),preferred)+f('Box label (optional)','box')+seatField(chosen)+(standin?'':`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`)+note(standin?`${names} go in without a reservation; the deck counts them as substitutes and Ready to add asks for them back when the real card is ready.`:`${names}. Records where these copies physically are. Ownership does not change. A copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.`)+note('Naming the seat is optional and it is what the Change List reads: without it the pairing is worked out from the option slot, the type and the mana value.')+note('Staged, not saved: this joins the sitting and is written when you confirm.'),
@@ -1094,8 +1095,8 @@ actions['batch-arrived']=()=>{const lotIds=pickedIds().filter(id=>{const l=C.sta
 actions['batch-place']=()=>{
   const lotIds=pickedIds();
   if(!lotIds.length)throw Error('Tick at least one copy record first.');
-  const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');
-  if(!decks.length)throw Error('Finalize a deck first — a draft holds no reservations to confirm.');
+  const decks=C.state.decks.filter(d=>!d.archived&&d.kind!=='lobby');
+  if(!decks.length)throw Error('Create a deck first: there is no deck to put copies in.');
   form('Put these copies in a physical deck',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+f('Box label (optional)','box')+`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`+note('Records where these copies physically are. Ownership does not change. A ticked copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.'),
     v=>C.review('Put these copies in a physical deck',note(`${lotIds.length} record${lotIds.length===1?'':'s'} move into ${e(M.deck(C.state,v.deckId).name)}${v.asStandIn?', as substitutes where the list does not call for them':''}.`),{type:'bulk',op:'place',deckId:v.deckId,box:v.box,lotIds,...(v.asStandIn?{asStandIn:true}:{})}),'Review placement');
 };
@@ -1454,7 +1455,7 @@ function wireSubmenu(menu,id){
 }
 actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error('That row changed. Refresh the view.');document.querySelectorAll('.cm-row-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-row-menu';menu.setAttribute('popover','auto');
   const flyout=(id,label,body)=>`<button type="button" id="${id}-toggle" class="cm-submenu-toggle" aria-expanded="false" aria-controls="${id}" aria-haspopup="menu">${e(label)} ${C.caret('left')}</button><div id="${id}" class="cm-menu cm-side-submenu" popover="manual">${body}</div>`;
-  const slotId=r.slotId||r.allocation?.slotId,finals=C.state.decks.filter(d=>!d.archived&&d.status==='final');
+  const slotId=r.slotId||r.allocation?.slotId,finals=C.state.decks.filter(d=>!d.archived&&d.kind!=='lobby');
   /* FOUR SECTIONS, NOT FOURTEEN ITEMS. Status is the ladder; Where it is moves the physical
      copy; Plan is what the deck asks of it; Record is the copy's own facts. A section with
      nothing that applies is not drawn, and Sell / Trade sits under the rule at the bottom
@@ -1463,7 +1464,7 @@ actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error
   const owned=r.kind==='lot'&&r.source==='owned';
   menu.innerHTML=`<p>${e(r.card.name)} · ${r.quantity}${r.kind==='draft'?' · Draft list':r.kind==='need'?' · To buy':''}</p>`
     +(r.kind==='fold'?'':flyout('cm-status-submenu','Status',statusMenu(r)))
-    +section('Where it is',[owned?flyout('cm-put-submenu','Put in physical deck',finals.map(d=>b(d.name,'place-row',{record:r.recordId,deck:d.id})).join('')||'<p>Finalize a matching deck first.</p>'):'',owned?flyout('cm-standin-submenu','Put in a physical deck as a substitute',finals.filter(d=>!(r.location?.kind==='deck'&&r.location.deckId===d.id)).map(d=>b(d.name,'standin-row',{record:r.recordId,deck:d.id})).join('')||'<p>Finalize a deck first.</p>'):'',owned&&r.location?.kind==='deck'?b('Move physically to Bench','place-row',{record:r.recordId}):''])
+    +section('Where it is',[owned?flyout('cm-put-submenu','Put in physical deck',finals.map(d=>b(d.name,'place-row',{record:r.recordId,deck:d.id})).join('')||'<p>Create a deck first.</p>'):'',owned?flyout('cm-standin-submenu','Put in a physical deck as a substitute',finals.filter(d=>!(r.location?.kind==='deck'&&r.location.deckId===d.id)).map(d=>b(d.name,'standin-row',{record:r.recordId,deck:d.id})).join('')||'<p>Create a deck first.</p>'):'',owned&&r.location?.kind==='deck'?b('Move physically to Bench','place-row',{record:r.recordId}):''])
     +section('Plan',[r.kind==='lot'&&!M.PLANNED.includes(r.source)?b('Reserve for a deck','reserve-row',{record:r.recordId}):'',r.kind==='lot'&&r.allocation?b('Release reservation → To buy','release-row',{record:r.recordId}):'',r.deckId&&slotId?b('Replacements & options','replacement',{deck:r.deckId,slot:slotId}):'',r.deckId&&slotId?slotFlagButtons(r.deckId,slotId):''])
     +section('Record',[r.kind==='lot'?b('Edit print & details','edit-row',{record:r.recordId}):'',b('Add another copy','add-card',{card:r.cardId}),r.kind==='lot'?b('Add / move to group','group-row',{record:r.recordId}):'',r.kind==='entry'?b('Move / copy to group','group-entry-row',{record:r.recordId}):''])
     +(owned?`<hr>${b('Sell / Trade','offer-row',{record:r.recordId})}`:'');

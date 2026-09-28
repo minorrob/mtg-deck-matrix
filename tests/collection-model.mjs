@@ -405,7 +405,20 @@ M.validate(s);checks++;
   const A=()=>M.readiness(s,M.deck(s,'A')),B=()=>M.readiness(s,M.deck(s,'B'));
   run('acquire',{lot:{id:'g1',cardId:'gem',quantity:1}});
   expectFailure('place',{lotId:'g1',deckId:'A',quantity:1},/as a substitute/);
-  expectFailure('place',{lotId:'g1',deckId:'C',quantity:1,asStandIn:true},/Finalize/);
+  // A DRAFT DECK HOLDS CARDS TOO (Rob, 2026-09-28): a copy on its list is reserved for its seat and in the box; a copy
+  // it does not list goes in as a substitute. Finalizing is no longer the door to the box.
+  run('acquire',{lot:{id:'g0',cardId:'stone',quantity:1}});run('acquire',{lot:{id:'lead0',cardId:'leader',quantity:1}});
+  run('place',{lotId:'g0',deckId:'C',quantity:1,asStandIn:true});
+  run('place',{lotId:'lead0',deckId:'C',quantity:1});
+  {const g=M.lot(s,'g0'),l=M.lot(s,'lead0'),read=M.stateReader(s);
+   assert.deepEqual([g.location.deckId,g.allocation,read({...g,kind:'lot'}).role],['C',null,'substitute']);
+   assert.deepEqual([l.location.deckId,l.allocation&&l.allocation.deckId,l.allocation&&l.allocation.slotId,read({...l,kind:'lot'}).role],['C','C','cmdC','target']);checks+=2;}
+  run('place',{lotId:'g0',quantity:1,confirmed:true});
+  run('bulk',{op:'place',deckId:'C',lotIds:['g0'],asStandIn:true,confirmed:true});
+  assert.equal(M.lot(s,'g0').location.deckId,'C','a batch puts a substitute in a draft deck too');checks++;
+  run('place',{lotId:'g0',quantity:1,confirmed:true});run('place',{lotId:'lead0',quantity:1,confirmed:true});
+  {const g=M.lot(s,'g0'),l=M.lot(s,'lead0');assert.deepEqual([g.location.kind,l.location.kind],['bench','bench']);checks++;}
+  run('dispose',{lotId:'g0',quantity:1,confirmed:true});run('dispose',{lotId:'lead0',quantity:1,confirmed:true});
   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true});
   {const l=M.lot(s,'g1');assert.equal(l.location.deckId,'A');assert.equal(l.allocation,null);const r=A();assert.deepEqual([r.inBox,r.standIns,r.covered,r.surplus,r.swapReady,r.remove,r.sleeved,r.playable],[0,1,1,0,0,0,1,false]);checks+=3;
    const row=M.projection(s).find(x=>x.recordId==='g1');assert.equal(row.placement,'Substitute');assert.equal(row.standIn,true);assert.equal(row.standInDeckId,'A');assert.equal(row.physical,'Physical deck');checks+=4;
