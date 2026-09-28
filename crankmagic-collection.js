@@ -19,16 +19,12 @@ let pageSize=60;
 const foldFor=shop=>shop?(C.state.preferences.shopFold??true):(C.state.preferences.foldPrints??false);
 const R=globalThis.CrankRules||{RULES:{capFloor:2,capPct:.1,localOnly:5,perCardMax:30,deckCap:225,pool:100},capFor:()=>null,localOnly:()=>false,BANDS:[],bandOf:()=>'under1'};
 C.RULES=R.RULES;
-/* A DRAFT IS A LIST OF PLANS, AND A PLAN THAT ALREADY HAS ITS COPIES IS ACCOUNTED FOR. A draft
-   deck's slots show as Draft list rows -- the deck's cards, in the deck's group, at the status
-   'draft' -- until copies reserved to the deck or filed under its group cover them, at which point
-   the copy records are the rows and the plan row shrinks by that many and then goes
-   (M.draftShort). So marking a draft card Owned, or putting a copy in the deck, puts one row where
-   the draft row was, rather than one of each. */
+/* A DECK'S PLANS ARE ITS SUGGESTIONS. Since G3d (D4: automatic reservations) a draft reserves the copies you own and
+   its missing cards are To buy rows, as a finalized deck's are, so the only plan rows left are the uncommitted
+   options -- the Suggestions. */
 function plans(d){
-  const st=lens(),short=new Map(d.status==='draft'?M.draftShort(st,d).map(x=>[x.slot.id,x.quantity]):[]);
-  return d.slots.filter(r=>d.status==='draft'||!r.committed).map(r=>{
-    const quantity=r.committed?short.get(r.id)||0:r.quantity;
+  return d.slots.filter(r=>!r.committed).map(r=>{
+    const quantity=r.quantity;
     return quantity<1?null:{recordId:'plan:'+d.id+':'+r.id,kind:r.committed?'draft':'option',deckId:d.id,slotId:r.id,cardId:r.cardId,card:C.card(r.cardId),quantity,source:'draft',placement:r.committed?'Draft list':'Suggestion',purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:r.printing,offer:'none',groupIds:d.groupId?[d.groupId]:[]};
   }).filter(Boolean);
 }
@@ -283,7 +279,7 @@ const helpFlow=()=>`<figure class="cm-flow"><div class="cm-flow-scroll"><svg vie
   +fNode(808,190,'Substitute','a bench copy holding a seat','substitute')
   +`<rect x="16" y="310" width="952" height="56" rx="12" fill="${tone('bench')}" fill-opacity=".14" stroke="${tone('bench')}" stroke-width="1.5"></rect><text x="38" y="336" fill="#f2f7ff" font-size="13" font-weight="700">Bench</text><text x="38" y="354" fill="#aec3dc" font-size="10">cards you own that no deck has reserved \u2014 every card that leaves an order or a box lands here</text>`
   +fEdge('M166 62 H193 V138',false)+fEdge('M166 142 H188',false)+fEdge('M166 214 H193 V146',false)+fDot(193,142)+fEdge('M193 142 H218')
-  +fEdge('M370 142 H422')+fLabel(396,134,'finalize')
+  +fEdge('M370 142 H422')+fLabel(396,134,'reserve')
   +fEdge('M574 142 H595',false)+fDot(595,142)
   +fEdge('M595 142 V62 H614')+fEdge('M595 142 V214 H614')
   +fEdge('M499 118 V14 H940 V116')+fLabel(640,28,'sleeve the copy you own')
@@ -429,6 +425,14 @@ const ttUI={open:null,from:null,page:0,ticked:new Set(),selection:new Set(),stag
    those ways (Rob, 2026-09-28: the status piles are a breakout, not a band of their own). A list goes on the row
    when you ask (D6), remembered per device, like the canvas. */
 ttUI.place=null;ttUI.lists=(()=>{try{const v=JSON.parse(localStorage.getItem('cm-tabletop-lists')||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string'):[];}catch(err){return [];}})();
+/* THE SORTING SPACE (G6b-2): piles of your own in the middle of the table, [{id, name, ids}], remembered per device.
+   A card on one is still where it was; a pile is only a thought until it is dropped on a group, and then it is a
+   staged move like any other, confirmed once with the sitting. */
+const SORT_KEY='cm-tabletop-sort';
+ttUI.sorting=(()=>{try{const v=JSON.parse(localStorage.getItem(SORT_KEY)||'[]');return Array.isArray(v)?v.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&Array.isArray(x.ids)).map(x=>({id:x.id,name:x.name,ids:x.ids.filter(y=>typeof y==='string')})):[];}catch(err){return [];}})();
+function saveSorting(){ttUI.sorting=ttUI.sorting.filter(x=>x.ids.length);try{if(ttUI.sorting.length)localStorage.setItem(SORT_KEY,JSON.stringify(ttUI.sorting));else localStorage.removeItem(SORT_KEY);}catch(err){/* not remembered, still on the table */}}
+/* Off every pile of your own: a card is on one at most, and leaves it when it goes into a group. */
+function unsort(ids){const gone=new Set(ids);for(const x of ttUI.sorting)x.ids=x.ids.filter(id=>!gone.has(id));saveSorting();}
 function tablePlaces(){const order={commander:1,trade:2,limited:3};
   return C.state.groups.filter(g=>g.template==='trade'||g.template==='limited'||(g.template==='commander'&&C.state.decks.some(d=>d.groupId===g.id&&!d.archived&&d.kind!=='lobby')))
     .sort((a,b)=>order[a.template]-order[b.template]).map(g=>({id:g.id,label:g.name,template:g.template}))
@@ -552,7 +556,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,places:tablePlaces(),placeOf,listOf:r=>r.groupIds||[],openPlace:ttUI.place});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,places:tablePlaces(),placeOf,listOf:r=>r.groupIds||[],openPlace:ttUI.place,sorting:ttUI.sorting});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString('en-US')} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString('en-US')} rows) · Bench ${model.bench.count.toLocaleString('en-US')} · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -570,6 +574,7 @@ function tabletop(params,shop=false){
       onOpen:id=>{
         /* The New group tile is a door, not a pile: clicking it at rest makes a group to sort
            into, which is the other half of the gesture the drop performs. */
+        if(id==='sort:new')return C.notice('Drag cards onto New pile to start a pile of your own.');
         if(id==='shelf:new'){form('Make a collection group',f('Group name','name','','required maxlength="60" placeholder="Ramp I keep meaning to buy"')
           +note('Empty to begin with. It joins the band along the bottom of the table, and a tray can be bound to it.'),
           async v=>{await C.commit({type:'createGroup',groupId:'group:'+C.uid(),name:(v.name||'').trim()||'New group'},{renderView:false});draw();},'Make the group');return;}
@@ -590,6 +595,10 @@ function tabletop(params,shop=false){
       onClear:why=>{if(why==='escape'&&ttEscShielded){ttEscShielded=false;return false;}rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
       onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
+      onSortRename:sid=>{const x=ttUI.sorting.find(y=>y.id===sid);if(!x)return;
+        form('Rename the pile',f('Name','name',x.name,'required maxlength="40"'),v=>{x.name=(v.name||'').trim()||x.name;saveSorting();draw();},'Rename');},
+      onSortClear:sid=>{const x=ttUI.sorting.find(y=>y.id===sid);if(!x)return;const n=x.ids.length;x.ids=[];saveSorting();if(ttUI.open==='sort:'+sid)ttUI.open=null;ttUI.ticked.clear();
+        C.notice(`${x.name} put away — ${n} card${n===1?'':'s'} back where ${n===1?'it':'they'} lay. Nothing had moved.`);draw();},
       /* MOVE TO… LISTS ONLY WHERE THE CARD CAN GO (Rob, 14 September). It offered every pile on the
          mat -- the six destinations, the Bench and every band of the current grouping -- and merely
          disabled the ones that refuse. Grouped by Primary Purpose that is a scrolling menu of
@@ -600,7 +609,7 @@ function tabletop(params,shop=false){
          refused pile ringed in red answers "can I drop here", which is the question being asked;
          in a menu the same thing is only noise. */
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
-        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),...(ttModel.deckPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
+        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),...(ttModel.deckPiles||[]),ttModel.bench,...ttModel.groupPiles,...(ttModel.sortPiles||[]),...(ttModel.sortNew?[ttModel.sortNew]:[])].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
         /* Nothing accepts it: the Bench is the most permissive destination there is, so its refusal
            is the fundamental one and the only sentence worth printing. */
         popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>`+(open.length
@@ -698,7 +707,7 @@ function tabletopDetail(r){const c=C.card(r.cardId)||r.card||{};const pt=c.power
    moves before it leave it, by crankmagic-sandbox.js. Confirm sends them as one batch. */
 /* `intent` may be a function of the row: one drop on a group can carry copies you hold and cards
    you do not, and those are two different commands (plan §2.15). One call, one notice, one render. */
-function stageRows(rows,intent){
+function stageRows(rows,intent,staged){
   const sb=C.sandbox;if(!sb)throw Error('The sandbox has not loaded yet; reload the page before moving cards.');
   const done=[],refused=[];
   for(const r of rows){
@@ -710,9 +719,11 @@ function stageRows(rows,intent){
       /* A card the library has never seen travels with its record, so the fold can add it. */
       card:r.kind==='catalog'?r.card:null,
       from:r.status||statusOf(r),to:it.to,toStatus:it.toStatus===undefined?it.to:it.toStatus});
-      done.push(r.card.name);}
+      done.push(r.card.name);if(staged)staged.push(r.recordId);}
     catch(err){refused.push(`${r.card.name}: ${err.message}`);}
   }
+  /* A card that goes into a group leaves any pile of your own it was on (G6b-2). */
+  if(staged&&staged.length)unsort(staged);
   if(refused.length)C.notice(refused.join(' · '),true);
   if(done.length)C.notice(`${done.length} move${done.length===1?'':'s'} staged — ${done.slice(0,3).join(', ')}${done.length>3?` and ${done.length-3} more`:''}. Nothing is saved until you confirm.`);
   if(done.length)C.render();
@@ -725,10 +736,19 @@ function tabletopDrop(pileId,ids){
   const n=rows.length,names=rows.slice(0,4).map(r=>r.card.name).join(', ')+(n>4?` and ${n-4} more`:'');
   /* Any deck takes copies, finalized or not (G3, Rob 2026-09-28). */
   const finals=C.state.decks.filter(d=>!d.archived&&d.kind!=='lobby');
-  /* A drop on a place is Add / move to group, reviewed there (G6). */
-  if(action==='moveto')return moveTo(rows.map(r=>r.id||r.recordId),arg);
-  if(action==='source')return stageRows(rows,{action:'source',arg,to:C.source(arg),toStatus:SB.SOURCE_STATUS[arg]||''});
-  if(action==='bench')return stageRows(rows,{action:'bench',to:'Bench'});
+  /* A drop on a place or a list is Add / move to group (G6), staged in the sitting and confirmed once with the rest
+     (G6b-2), in place of a review per drop. The model's moveCommands folds it, the rule the Library's dialog uses. */
+  if(action==='moveto'){const g=C.state.groups.find(x=>x.id===arg);if(!g)throw Error('That group is gone; refresh the view.');
+    /* A card sent from Discover goes on a list as a planned entry, as it did in shelf mode (plan §2.15). */
+    return stageRows(rows,r=>r.kind==='catalog'?{action:'plan',arg:g.id,to:g.name,toStatus:'Watching'}:{action:'moveto',arg:g.id,to:g.name,toStatus:''},[]);}
+  /* THE SORTING SPACE (G6b-2): a pile of your own takes anything and stages nothing. */
+  if(action==='sort'||action==='sortnew'){const ids=rows.map(r=>r.recordId);unsort(ids);
+    let x=ttUI.sorting.find(y=>y.id===arg);
+    if(!x){let k=ttUI.sorting.length+1;while(ttUI.sorting.some(y=>y.name===`Pile ${k}`))k+=1;x={id:C.uid(),name:`Pile ${k}`,ids:[]};ttUI.sorting.push(x);}
+    x.ids.push(...ids);saveSorting();ttUI.ticked.clear();ttUI.selection.clear();if(ttUI.from){ttUI.open=ttUI.from;ttUI.from=null;}
+    C.notice(`${n} card${n===1?'':'s'} on ${x.name} — ${names}. Nothing is staged: drop the pile on a group when you know where it goes.`);C.render();return;}
+  if(action==='source')return stageRows(rows,{action:'source',arg,to:C.source(arg),toStatus:SB.SOURCE_STATUS[arg]||''},[]);
+  if(action==='bench')return stageRows(rows,{action:'bench',to:'Bench'},[]);
   if(action==='release')return stageRows(rows,{action:'release',to:'Bench'});
   if(action==='group'){const g=C.state.groups.find(g=>g.name===pile.label);if(!g)throw Error('That group is gone; refresh the view.');
     return stageRows(rows,{action:'group',arg:g.id,to:g.name,toStatus:''});}
@@ -1131,27 +1151,8 @@ actions['batch-arrived']=()=>{const lotIds=pickedIds().filter(id=>{const l=C.sta
    A copy leaves the other piles (To sell / trade, 40-card) it was filed in when it moves to a place, so it is in
    one place at a time. A copy not in hand yet -- Ordered or Watched -- is only filed: it cannot move until it is
    yours. Reservations are left as they are. */
-function moveCommands(lotIds,g){
-  const lots=lotIds.map(id=>C.state.lots.find(l=>l.id===id)).filter(Boolean),owned=lots.filter(l=>l.source==='owned'),ids=x=>x.map(l=>l.id),commands=[],notes=[];
-  const piles=C.state.groups.filter(x=>x.id!==g.id&&(x.template==='trade'||x.template==='limited'));
-  const leave=list=>{for(const p of piles){const inIt=list.filter(l=>l.groupIds.includes(p.id));if(inIt.length)commands.push({type:'groupLots',groupId:g.template==='bench'?null:g.id,moveFrom:p.id,lotIds:ids(inIt)});}};
-  const offered=owned.filter(l=>l.offer==='available'),boxed=owned.filter(l=>l.location?.kind==='deck');
-  if(g.template==='general'){commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});return {commands,notes:[`${lots.length} record${lots.length===1?' is':'s are'} filed in ${g.name}. Nothing moves.`]};}
-  if(owned.length<lots.length)notes.push(`${lots.length-owned.length} record${lots.length-owned.length===1?' is':'s are'} not in hand yet (Ordered or Watched), so ${lots.length-owned.length===1?'it is':'they are'} filed in ${g.name} and moves when ${lots.length-owned.length===1?'it arrives':'they arrive'}.`);
-  if(g.template==='commander'){const d=C.state.decks.find(x=>x.groupId===g.id);if(!d)throw Error(`${g.name} has no deck.`);
-    if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});
-    if(owned.length)commands.push({type:'bulk',op:'place',deckId:d.id,asStandIn:true,lotIds:ids(owned)});
-    leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
-    if(owned.length)notes.push(`${owned.length} record${owned.length===1?'':'s'} go${owned.length===1?'es':''} in ${d.name}'s box: a card its list calls for is reserved on the way in, any other stands in as a substitute.`);
-    return {commands,notes};}
-  if(boxed.length)commands.push({type:'bulk',op:'bench',lotIds:ids(boxed)});
-  if(g.template==='bench'){if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);
-    notes.push(`${owned.length} record${owned.length===1?'':'s'} ${owned.length===1?'is':'are'} on the Bench${boxed.length?`, ${boxed.length} out of a deck's box`:''}${offered.length?`, ${offered.length} off Sell / Trade`:''}. Reservations stay.`);return {commands,notes};}
-  if(g.template==='trade'){const toOffer=owned.filter(l=>l.offer!=='available'&&l.offer!=='held');if(toOffer.length)commands.push({type:'bulk',op:'offer',offer:'available',lotIds:ids(toOffer)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
-    notes.push(`${owned.length} record${owned.length===1?' is':'s are'} offered for Sell / Trade in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}.`);return {commands,notes};}
-  if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
-  notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
-}
+/* The rule is the model's (M.moveCommands), so a drop staged on the table folds to the same commands. */
+const moveCommands=(lotIds,g)=>M.moveCommands(C.state,lotIds,g.id);
 /* The groups a copy can go to, the Bench first, then the decks, the piles and the lists; and New group at the foot. */
 function moveChoices(){const order={bench:0,commander:1,trade:2,limited:3,general:4},live=g=>g.template!=='commander'||C.state.decks.some(d=>d.groupId===g.id&&!d.archived&&d.kind!=='lobby');
   return [...C.state.groups.filter(live).sort((a,b)=>order[a.template]-order[b.template]).map(g=>[g.id,C.groupLabel(g)]),['__new','New group…']];}

@@ -2302,7 +2302,17 @@ button.cm-pill:hover{filter:brightness(1.15)}
    arrows that step it, four trays, and the scoreboard that says where confirming would leave the
    deck. Everything here is the same kind of object as the piles either side of it -- a click lays
    one out, a drag drops onto one -- so nothing needs its own vocabulary. */
-.cm-tt-play{position:absolute;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;border-radius:var(--v-radius-card);padding:8px 12px 12px;background:radial-gradient(ellipse at 50% 0,#ffffff0a,transparent 70%),color-mix(in srgb,var(--v-bg) 40%,transparent);border:1px dashed color-mix(in srgb,var(--v-accent) 24%,transparent);box-shadow:inset 0 1px 0 #ffffff0d}
+.cm-tt-play,.cm-tt-sorting{position:absolute;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;border-radius:var(--v-radius-card);padding:8px 12px 12px;background:radial-gradient(ellipse at 50% 0,#ffffff0a,transparent 70%),color-mix(in srgb,var(--v-bg) 40%,transparent);border:1px dashed color-mix(in srgb,var(--v-accent) 24%,transparent);box-shadow:inset 0 1px 0 #ffffff0d}
+/* THE SORTING SPACE (G6b-2): piles of your own in the middle, each a pile like any other; an outline where a card
+   was picked up onto one; identical copies as one stack with a count. */
+.cm-tt-sorting{align-items:stretch;gap:8px}
+.cm-tt-sort-piles{display:flex;flex-wrap:wrap;gap:12px 22px;justify-content:center;align-content:flex-start;margin-top:10px}
+.cm-tt-sorting.is-target{border-color:var(--color-money);background:color-mix(in oklab,var(--v-accent) 6%,transparent)}
+.cm-tt-sorting .cm-tt-pile.cm-tt-sort{cursor:grab;touch-action:none}
+.cm-tt-card.is-out{background:transparent;border:2px dashed var(--v-line);box-shadow:none}.cm-tt-card.is-out:before{opacity:.18}
+.cm-tt-card.is-out:after{content:attr(data-out);position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:2;padding:2px 6px;border-radius:4px;background:var(--v-bg);color:var(--v-muted);font-size:10px;line-height:14px;font-weight:700;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.cm-tt-copies{position:absolute;right:4px;top:4px;z-index:3;min-width:22px;padding:1px 6px;border-radius:999px;background:var(--color-money);color:color-mix(in oklab,var(--v-accent) 8%,var(--v-bg));font-size:11px;line-height:16px;font-weight:800;text-align:center;box-shadow:0 0 0 2px var(--v-bg)}
+.cm-tt-card.is-stack{box-shadow:3px 3px 0 -1px var(--v-bg),4px 4px 0 -1px var(--v-line),6px 6px 0 -2px var(--v-bg),7px 7px 0 -2px var(--v-line)}
 .cm-tt-play-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;min-height:22px;font-size:12px;color:var(--v-muted)}
 .cm-tt-play-head strong{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-money)}
 .cm-tt-play-head b{color:var(--v-ink);font-weight:600}
