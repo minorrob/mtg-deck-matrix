@@ -199,7 +199,7 @@ Rob's plan: Grok Bot runs four agents that play each other, some simulating huma
   - playgroups.
 - [ ] Spectators, if wanted. The engine can already produce a view with no hands in it.
 - [ ] The workshop queue:
-  - the defect items left from W.4–W.7, including the service worker's "new version, reload" prompt;
+  - the defect items left from W.4–W.7, including the service worker's "new version, reload" prompt (**built 2026-09-28**: a new version installs and waits, the page says "A new version of CrankMagic is ready" with Reload until answered, and only the click lets it take over; `tests/sw-update.mjs`);
   - BACKLOG #1, #4 and #5, if still wanted: autosave, copies as individual things, curve coverage in the readiness strip.
 - [ ] The ratchets, all the way down: raw hex at 137 · 458 · 31, and the UK spellings.
 
