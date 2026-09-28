@@ -58,7 +58,10 @@ const PAGES = [
      and explainer budgets do not move; the bento reorganizes the figures rather than adding to
      them. The boundary is .cm-bento because the Progress and Cost panel this measured up to
      became the first two cards of it. */
-  [`decks?deck=${DECK}`, "Deck page", ".cm-bento", [80, 15, 4], [80, 15, 4]],
+  /* G3c (28 September): the hero's legality badge reads the deck as Rob described it -- "Legal · Commander + 99",
+     or how far a list is from it -- beside the stage badge. A reading Rob asked for, not chrome: 80 → 83 words.
+     Controls and explainers do not move. */
+  [`decks?deck=${DECK}`, "Deck page", ".cm-bento", [83, 15, 4], [83, 15, 4]],
   /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
      filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
   /* 27, not 26: "Back to Play Space" is the one control Rob asked for by name after losing his
