@@ -180,8 +180,10 @@
   };
   function showError(error, id) {
     const signIn = error.signedOut ? b("Sign in", "account-sign-in", {}, true) : "";
-    C.main.innerHTML = C.pageHead("Play") + `<section class="v-panel cm-table-refused" id="cm-table-refused"><h2>${error.status === 410 ? "This invitation no longer works" : "The table could not be opened"}</h2>
-      <p>${e(error.message)}</p><div class="cm-actions">${signIn}${b("Go to your decks", "home")}</div></section>`;
+    /* Signing in works only for addresses on the invite list (docs/play-invites.md); say so before they try. */
+    const listed = error.signedOut ? `<p class="cm-muted" id="cm-table-invite-only">CrankMagic is invite-only for now: signing in works for addresses on its invite list, and a table's link never adds anyone to it. <a href="not-invited.html">Not on the list?</a></p>` : "";
+    C.main.innerHTML = C.pageHead("Play") + `<section class="v-panel cm-table-refused" id="cm-table-refused"><h2>${error.status === 410 ? "This invitation no longer works" : error.signedOut ? "Sign in to take your seat" : "The table could not be opened"}</h2>
+      <p>${e(error.message)}</p>${listed}<div class="cm-actions">${signIn}${b("Go to your decks", "home")}</div></section>`;
     void id;
   }
 

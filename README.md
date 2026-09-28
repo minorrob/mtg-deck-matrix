@@ -526,6 +526,13 @@ cards named** — which is what makes the flag worth flipping today.
 `runtests.sh` covers both trees: the website suites in `tests/` and the CrankMagic Online
 suites in `game/tests/`. It exits non-zero when any of them fails.
 
+`tools/local-ci.sh [commit] [runs]` is the Tests workflow on this machine, for when GitHub
+Actions cannot run it (the repository is private on the free plan, and a spent month of
+minutes stops every job): a clean checkout of the commit, merged with `main` if `main` has
+moved, the workflow's toolchain checked, both of its steps run twice, and what the commit adds
+scanned for secrets and personal addresses. AGENTS.md, "Merging to `main`", says when it stands
+in for CI.
+
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs

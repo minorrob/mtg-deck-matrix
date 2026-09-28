@@ -1,6 +1,6 @@
 name: Tests
 
-# Every Node suite, on every push and pull request.
+# Every Node suite, once per pull request when it is marked ready, and on every push to main.
 #
 # There was no test workflow at all before this: the suites existed and ran on somebody's
 # machine when somebody remembered. That is how tools/sim/rate-decks.mjs came to read a
@@ -11,17 +11,34 @@ name: Tests
 # itself when no browser is present, which is right for a contributor with a plain Node
 # install and wrong for CI, so GEOMETRY_REQUIRED turns the skip into a failure here.
 
+#
+# HOW OFTEN, AND WHY NOT MORE. The repository is private on GitHub's free plan: Actions has a
+# monthly allowance of minutes and a $0 budget, and a run costs about 9 of them. Running on
+# every push to every branch *and* on every pull_request update ran each PR commit twice and
+# spent the month's allowance in under a week (2026-09-27), after which no job starts at all.
+# The full gate runs on the builder's machine before every push (AGENTS.md), so this is the
+# second confirmation, and one per PR is enough: a draft PR is not run; marking it ready
+# runs it once, and a push to a ready PR runs it again; a newer commit cancels the run it
+# replaces; main is run after every merge. When the allowance is spent, tools/local-ci.sh is
+# this workflow on the builder's machine (AGENTS.md, "Merging to main").
+
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   suites:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     env:
       GEOMETRY_REQUIRED: "1"

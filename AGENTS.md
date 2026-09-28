@@ -53,6 +53,18 @@ squash whenever the commits carry their own reasoning and proof. Rob set this on
 2026-09-19; before that, merging was his alone. Closing someone else's PR is still not an
 agent's call unless the PR is superseded by one the agent opened and the report names it.
 
+**CI is one run per PR, and the local gate stands in when Actions cannot run.** The repository
+is private on GitHub's free plan with a $0 budget, so Actions minutes are a monthly allowance,
+and when it is spent no job starts until the next billing cycle. So: work on a PR as a draft
+(drafts are not run), mark it ready when it is finished, and merge on one green run of the
+head. When Actions cannot run it (the job fails within seconds with no log, on `main` as
+well), the PR merges on `tools/local-ci.sh` instead: the workflow's own steps and toolchain
+on a clean checkout of the exact head (merged with `main` if `main` has moved), run twice,
+with a scan for secrets and personal addresses in what the PR adds. Its closing PASS block
+goes on the PR as a comment before the merge, and the merge report says the merge was made
+on the local gate. Rob set this on 2026-09-28, choosing not to wait out a spent allowance;
+the Actions run is still the rule whenever Actions can run.
+
 ## The production release
 
 `release/pages` is production's record: it is written only by `tools/release-pages.mjs --commit`, from a
