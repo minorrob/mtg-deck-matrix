@@ -19,16 +19,12 @@ let pageSize=60;
 const foldFor=shop=>shop?(C.state.preferences.shopFold??true):(C.state.preferences.foldPrints??false);
 const R=globalThis.CrankRules||{RULES:{capFloor:2,capPct:.1,localOnly:5,perCardMax:30,deckCap:225,pool:100},capFor:()=>null,localOnly:()=>false,BANDS:[],bandOf:()=>'under1'};
 C.RULES=R.RULES;
-/* A DRAFT IS A LIST OF PLANS, AND A PLAN THAT ALREADY HAS ITS COPIES IS ACCOUNTED FOR. A draft
-   deck's slots show as Draft list rows -- the deck's cards, in the deck's group, at the status
-   'draft' -- until copies reserved to the deck or filed under its group cover them, at which point
-   the copy records are the rows and the plan row shrinks by that many and then goes
-   (M.draftShort). So marking a draft card Owned, or putting a copy in the deck, puts one row where
-   the draft row was, rather than one of each. */
+/* A DECK'S PLANS ARE ITS SUGGESTIONS. Since G3d (D4: automatic reservations) a draft reserves the copies you own and
+   its missing cards are To buy rows, as a finalized deck's are, so the only plan rows left are the uncommitted
+   options -- the Suggestions. */
 function plans(d){
-  const st=lens(),short=new Map(d.status==='draft'?M.draftShort(st,d).map(x=>[x.slot.id,x.quantity]):[]);
-  return d.slots.filter(r=>d.status==='draft'||!r.committed).map(r=>{
-    const quantity=r.committed?short.get(r.id)||0:r.quantity;
+  return d.slots.filter(r=>!r.committed).map(r=>{
+    const quantity=r.quantity;
     return quantity<1?null:{recordId:'plan:'+d.id+':'+r.id,kind:r.committed?'draft':'option',deckId:d.id,slotId:r.id,cardId:r.cardId,card:C.card(r.cardId),quantity,source:'draft',placement:r.committed?'Draft list':'Suggestion',purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:r.printing,offer:'none',groupIds:d.groupId?[d.groupId]:[]};
   }).filter(Boolean);
 }
@@ -283,7 +279,7 @@ const helpFlow=()=>`<figure class="cm-flow"><div class="cm-flow-scroll"><svg vie
   +fNode(808,190,'Substitute','a bench copy holding a seat','substitute')
   +`<rect x="16" y="310" width="952" height="56" rx="12" fill="${tone('bench')}" fill-opacity=".14" stroke="${tone('bench')}" stroke-width="1.5"></rect><text x="38" y="336" fill="#f2f7ff" font-size="13" font-weight="700">Bench</text><text x="38" y="354" fill="#aec3dc" font-size="10">cards you own that no deck has reserved \u2014 every card that leaves an order or a box lands here</text>`
   +fEdge('M166 62 H193 V138',false)+fEdge('M166 142 H188',false)+fEdge('M166 214 H193 V146',false)+fDot(193,142)+fEdge('M193 142 H218')
-  +fEdge('M370 142 H422')+fLabel(396,134,'finalize')
+  +fEdge('M370 142 H422')+fLabel(396,134,'reserve')
   +fEdge('M574 142 H595',false)+fDot(595,142)
   +fEdge('M595 142 V62 H614')+fEdge('M595 142 V214 H614')
   +fEdge('M499 118 V14 H940 V116')+fLabel(640,28,'sleeve the copy you own')
