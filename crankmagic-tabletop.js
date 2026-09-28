@@ -58,7 +58,7 @@
 
   /* The groupings the dropdown offers: the list's shared five, then the table's own. */
   const GROUPINGS = [
-    ["type", "Card type"], ["color", "Color"], ["deck", "Deck"], ["groups", "Collection group"],
+    ["type", "Card type"], ["status", "Status"], ["color", "Color"], ["deck", "Deck"], ["groups", "Collection group"],
     ["mechanic", "Mechanic"], ["role", "Role"], ["purpose", "Primary Purpose"], ["mv", "Mana value"], ["price", "Price band"]
   ];
   const isGhost = (r) => GHOST.has(r.status);
@@ -69,6 +69,9 @@
     const c = r.card || {};
     const g = G();
     if (key === "type") return primaryType(c.typeLine);
+    /* STATUS IS A WAY TO BREAK A GROUP OUT (Rob, 2026-09-28): the card-state piles a group spreads into when you
+       sort it by where each card stands -- Target, To add, Bench, To buy and the rest. */
+    if (key === "status") return r.status || "Unassigned";
     if (key === "color" || key === "deck" || key === "groups") return g ? g.label(r, key, value) : value(r, key);
     if (key === "mechanic") return (c.mechanics && c.mechanics[0]) || (c.keywords && c.keywords[0]) || "No mechanic";
     if (key === "role") return (c.roles && c.roles.find((x) => !["creatures", "lands", "artifacts", "enchantments", "instants", "sorceries", "planeswalkers"].includes(x))) || "No role";
@@ -82,6 +85,7 @@
      name with "No …" last. */
   function bandOrder(key, band, statusOrder) {
     const g = G();
+    if (key === "status" && typeof statusOrder === "function") return String(statusOrder(band)).padStart(2, "0");
     if (key === "type") { const at = TYPE_ORDER.indexOf(band); return String(at < 0 ? TYPE_ORDER.length : at).padStart(2, "0"); }
     if (key === "color" && g) { const at = g.COLOR_PILE.indexOf(band); return String(at < 0 ? g.COLOR_PILE.length : at).padStart(2, "0"); }
     if (key === "mv") return band === "7+" ? "07" : band === "No cost" ? "99" : String(Number(band)).padStart(2, "0");
@@ -125,11 +129,17 @@
     let placeRows = null;
     if (Array.isArray(options.places)) {
       const placeOf = typeof options.placeOf === "function" ? options.placeOf : () => "";
-      const held = new Map(options.places.map((p) => [p.id, []])), elsewhere = [];
+      const listOf = typeof options.listOf === "function" ? options.listOf : () => [];
+      const held = new Map(options.places.map((p) => [p.id, []])), elsewhere = [], lists = new Set(options.places.filter((p) => p.list).map((p) => p.id));
       bench = [];
-      for (const r of rows || []) { const id = placeOf(r); if (id === "bench") bench.push(r); else if (held.has(id)) held.get(id).push(r); else elsewhere.push(r); }
+      /* A card is on its one place; a list you put on the table also shows the cards filed in it, as a list does
+         (D6: physical groups by default, lists addable), and never moves them. */
+      for (const r of rows || []) {
+        const id = placeOf(r); if (id === "bench") bench.push(r); else if (held.has(id) && !lists.has(id)) held.get(id).push(r); else elsewhere.push(r);
+        for (const l of listOf(r) || []) if (lists.has(l)) held.get(l).push(r);
+      }
       const byName = (a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name));
-      statusPiles = options.places.map((p) => { const list = held.get(p.id).sort(byName); return {id: "place:" + p.id, kind: "place", groupId: p.id, template: p.template || "", label: p.label, tone: "", rows: list, count: count(list), ghosts: list.filter(isGhost).length, ghost: false, target: true, top: list[0] || null}; });
+      statusPiles = options.places.map((p) => { const list = held.get(p.id).sort(byName); return {id: "place:" + p.id, kind: "place", groupId: p.id, template: p.template || "", list: Boolean(p.list), label: p.label, tone: "", rows: list, count: count(list), ghosts: list.filter(isGhost).length, ghost: false, target: true, top: list[0] || null}; });
       const wanted = elsewhere.sort(byName);
       if (wanted.length) statusPiles.push({id: "place:none", kind: "status", label: "Not in hand", tone: "", rows: wanted, count: count(wanted), ghost: true, target: false, top: wanted[0] || null});
       const open = options.openPlace === "bench" ? bench : options.openPlace ? (held.get(String(options.openPlace).replace(/^place:/, "")) || null) : null;
@@ -720,8 +730,8 @@
     /* A grouping's name is a term as well: what "Primary Purpose" or "Price band" means is a
        question a reader has while choosing one, not afterwards. */
     const groupingTerm = () => { const found = model.groupings.find(([k]) => k === model.groupBy); return found ? term(found[1]) : ""; };
-    /* BY GROUP OR BY STATUS (G6): which band the bottom of the table is. */
-    const arrangeSelect = `<select name="tabletopArrange" aria-label="Arrange the table"><option value="group"${model.byPlace ? " selected" : ""}>By group</option><option value="status"${model.byPlace ? "" : " selected"}>By status</option></select>`;
+    /* LISTS ON THE TABLE (G6b): the physical groups are always on the bottom row; a list goes there when you ask. */
+    const listsButton = model.byPlace && hooks.onLists ? `<button type="button" class="v-button" data-tt-lists>Lists on the table…</button>` : "";
     const orderSelect = `<select name="tabletopStatusOrder" aria-label="Status pile order"><option value="workflow"${model.statusSort === "count" ? "" : " selected"}>Workflow order</option><option value="count"${model.statusSort === "count" ? " selected" : ""}>Fullest first</option></select>`;
     /* Every control names a term the glossary defines, so the words on the table can be asked
        about where they are read (Rob, 14 September). `hooks.term(text)` is the caller's glossary;
@@ -796,7 +806,7 @@
       return {html, height};
     }
     const canvasSelect = `<select name="tabletopCanvas" data-tt="canvas" aria-label="Choose canvas">${CANVASES.map(([k, l]) => `<option value="${k}"${k === canvasOf(ui.canvas) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
-    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>Arrange ${arrangeSelect}</label><label>${term("Group piles by")} ${groupSelect}</label>${model.byPlace ? "" : `<label>${term("Status piles")} ${orderSelect}</label>`}<label>Choose canvas ${canvasSelect}</label></div>`;
+    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>${term("Group piles by")} ${groupSelect}</label>${listsButton}${model.byPlace ? "" : `<label>${term("Status piles")} ${orderSelect}</label>`}<label>Choose canvas ${canvasSelect}</label></div>`;
     let body = "", height = 0, stageHTML = "";
     /* AN OPEN PILE NO LONGER TAKES THE MIDDLE (Rob, 15 September). Clicking a pile used to
        replace the board with a grid, which is why he could not flip through a pile and drag a
@@ -925,7 +935,7 @@
        on the page's own keydown, reappearing one level down. */
     const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.onchange = () => hooks.onGroupBy(sel.value);
     const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.onchange = () => hooks.onStatusOrder(ord.value);
-    const arr = host.querySelector("select[name=tabletopArrange]"); if (arr && hooks.onArrange) arr.onchange = () => hooks.onArrange(arr.value);
+    const lb = host.querySelector("[data-tt-lists]"); if (lb && hooks.onLists) lb.onclick = (ev) => { ev.stopPropagation(); hooks.onLists(lb); };
     const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.onchange = () => hooks.onCanvas(can.value);
     for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.onchange = () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value);
     /* THE CLICK THAT FOLLOWS A DRAG IS NOT A CLICK (Rob, 15 September). `preventDefault` on a

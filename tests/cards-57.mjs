@@ -57,7 +57,6 @@ try {
   {
     const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
     const page = await context.newPage();
-    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await page.goto(`${base}/index.html`);
     await page.locator(".cm-landing-card").first().waitFor({timeout: 60000});
@@ -71,7 +70,6 @@ try {
   for (const [vw, vh, tag] of [[1400, 900, "desktop"], [390, 844, "phone"]]) {
     const context = await browser.newContext({viewport: {width: vw, height: vh}, serviceWorkers: "block"});
     const page = await context.newPage();
-    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await loadLiveState(page, base);
     await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D4")}&tab=hundred`);
@@ -93,10 +91,10 @@ try {
     }
     /* The Table view: piles on the mat, an open pile's cards (their picture, above the caption), and the stage. */
     await page.goto(`${base}/index.html#cards?view=tabletop`);
-    await page.locator("[data-pile^='status:']").first().waitFor({timeout: 30000});
+    await page.locator("[data-pile^='place:']").first().waitFor({timeout: 30000});
     await expect57(page, ".cm-tt-pile:not(.is-empty) .cm-tt-stack > .cm-tt-card", `${tag}: the Table view's piles`);
     /* The card size is a slider (R3.9b): the open pile's pictures at its two ends. */
-    await page.$eval("[data-pile^='status:']:not(.is-empty)", (b) => b.click());
+    await page.$eval("[data-pile^='place:']:not(.is-empty)", (b) => b.click());
     await page.locator(".cm-tt-grid .cm-tt-card").first().waitFor({timeout: 30000});
     for (const end of ["min", "max"]) {
       await page.$eval("[data-card-scale]", (el, end) => { el.value = el[end]; el.dispatchEvent(new Event("input", {bubbles: true})); el.dispatchEvent(new Event("change", {bubbles: true})); }, end);

@@ -425,12 +425,14 @@ let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 const ttUI={open:null,from:null,page:0,ticked:new Set(),selection:new Set(),stageWidth:0,canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
 /* THE TABLE BY GROUP (Rob, 2026-09-28; docs/plan-groups.md G6). The band along the bottom is the physical groups -- the
    decks, the Sell / Trade piles, the 40-card decks -- with the Bench as the rail along the back, and every card is on
-   the one pile its copy is in. By status is the table as it was, kept one choice away until Rob has seen this one.
-   Remembered per device, like the canvas. */
-ttUI.arrange=(()=>{try{return localStorage.getItem('cm-tabletop-arrange')==='status'?'status':'group';}catch(err){return 'group';}})();ttUI.place=null;
+   the one pile its copy is in. Opening a group breaks it out into piles by "Group piles by", and Status is one of
+   those ways (Rob, 2026-09-28: the status piles are a breakout, not a band of their own). A list goes on the row
+   when you ask (D6), remembered per device, like the canvas. */
+ttUI.place=null;ttUI.lists=(()=>{try{const v=JSON.parse(localStorage.getItem('cm-tabletop-lists')||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string'):[];}catch(err){return [];}})();
 function tablePlaces(){const order={commander:1,trade:2,limited:3};
   return C.state.groups.filter(g=>g.template==='trade'||g.template==='limited'||(g.template==='commander'&&C.state.decks.some(d=>d.groupId===g.id&&!d.archived&&d.kind!=='lobby')))
-    .sort((a,b)=>order[a.template]-order[b.template]).map(g=>({id:g.id,label:g.name,template:g.template}));}
+    .sort((a,b)=>order[a.template]-order[b.template]).map(g=>({id:g.id,label:g.name,template:g.template}))
+    .concat(C.state.groups.filter(g=>g.template==='general'&&ttUI.lists.includes(g.id)).map(g=>({id:g.id,label:g.name,template:'general',list:true})));}
 /* Where a row is: a copy you own is in its deck's box, a Sell / Trade or 40-card pile it is filed in, or on the Bench;
    a copy not in hand yet, and a deck's plan row, is with the deck it is for; anything else is in no place yet. */
 function placeOf(r){const deckGroup=id=>{const d=C.state.decks.find(x=>x.id===id&&!x.archived&&x.kind!=='lobby');return d&&d.groupId||'';};
@@ -550,7 +552,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const byGroup=ttUI.arrange==='group',model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,...(byGroup?{places:tablePlaces(),placeOf,openPlace:ttUI.place}:{play:playSpec(params)})});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,places:tablePlaces(),placeOf,listOf:r=>r.groupIds||[],openPlace:ttUI.place});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString('en-US')} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString('en-US')} rows) · Bench ${model.bench.count.toLocaleString('en-US')} · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -575,7 +577,10 @@ function tabletop(params,shop=false){
         if(id&&(id.startsWith('place:')||id==='bench'))ttUI.place=id;
         if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
       onPage:n=>{ttUI.page=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-grid .cm-tt-card[data-tt=card]')?.focus?.({preventScroll:true}));},
-      onArrange:v=>{ttUI.arrange=v==='status'?'status':'group';try{localStorage.setItem('cm-tabletop-arrange',ttUI.arrange);}catch(err){/* not remembered, still applied */}rest();draw();},
+      /* LISTS ON THE TABLE: tick the General groups to lay on the bottom row beside the places. */
+      onLists:()=>{const lists=C.state.groups.filter(g=>g.template==='general');if(!lists.length)return C.notice('Make a General group first: a list is a group that moves nothing.',true);
+        form('Lists on the table',`<div class="cm-full">${lists.map(g=>`<label class="cm-checkbox"><input type="checkbox" name="list:${e(g.id)}"${ttUI.lists.includes(g.id)?' checked':''}> ${e(g.name)}</label>`).join('')}</div>`+`<div class="cm-full">${note('A list shows the cards filed in it; they stay on their own pile too. Your places -- decks, Sell / Trade, the Bench -- are always on the table.')}</div>`,
+          v=>{ttUI.lists=lists.filter(g=>v['list:'+g.id]).map(g=>g.id);try{localStorage.setItem('cm-tabletop-lists',JSON.stringify(ttUI.lists));}catch(err){/* not remembered, still applied */}draw();},'Lay them out');},
       onStatusOrder:v=>{tabletopStatusOrder=v==='count'?'count':'workflow';C.commit({type:'preferences',values:{tabletopStatusOrder}},{renderView:false}).catch(()=>{});draw();},
       onPrint:pileId=>{const pile=TT.findPile(model,pileId);if(!pile)return;document.querySelectorAll('.cm-tt-printsheet').forEach(x=>x.remove());const wrap=document.createElement('div');wrap.innerHTML=TT.printSheet(pile,{describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')}),library:'CrankMagic'});const sheet=wrap.firstElementChild;document.body.append(sheet);document.body.classList.add('cm-tt-printing');
         const done=()=>{document.body.classList.remove('cm-tt-printing');sheet.remove();removeEventListener('afterprint',done);};addEventListener('afterprint',done);setTimeout(()=>{if(sheet.isConnected)done();},60000);
