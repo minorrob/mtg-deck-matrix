@@ -93,7 +93,7 @@
   const stateTone=label=>STATE_TONES[label]||'draft';
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
   const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
-  const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
+  const VERSION=4, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
   const clone=value=>JSON.parse(JSON.stringify(value));
   /* THE DATE A PERSON SEES IS THE LOCAL CALENDAR DATE. toISOString() is UTC, which at ten in the
      evening in New York is already tomorrow: a game logged tonight was dated the day after it was
@@ -116,9 +116,26 @@
      out, what is coming in. They start empty and delete like any other group -- these are
      a starting point, not a schema. The preference flag is what makes deleting them stick:
      a library that has already been offered them is never offered them again. */
-  const STARTER_GROUPS=[['group:main-deck','Main Deck'],['group:bench','Bench'],
-    ['group:to-trade','To Trade'],['group:to-buy','To Buy']];
-  const starterGroups=()=>STARTER_GROUPS.map(([id,name])=>({id,name,entries:[],createdAt:null}));
+  const STARTER_GROUPS=[['group:bench','Bench','bench'],['group:to-trade','To Trade','trade'],['group:to-buy','To Buy','general']];
+  const starterGroups=()=>STARTER_GROUPS.map(([id,name,template])=>({id,name,template,entries:[],createdAt:null}));
+  /* GROUPS HAVE TEMPLATES (Rob, 2026-09-28; docs/plan-groups.md, G3). A copy sits in one template group -- a Commander
+     deck, a 40-card deck (later), the Bench, To sell / trade -- which is a physical place, and in any number of General
+     groups, which are lists the reader keeps by hand ("proliferate", "high damage") and never move anything. A Commander
+     group is the group its deck points to: settleTemplates() keeps that true after every command, so no command has to
+     remember it. The Bench is the one group that is always there and cannot be deleted or duplicated. */
+  const TEMPLATES=['commander','limited','bench','trade','general'];
+  const TEMPLATE_LABELS={commander:'Commander deck',limited:'40-card deck',bench:'Bench',trade:'To sell / trade',general:'General'};
+  const isPhysical=g=>!!g&&g.template!=='general';
+  /* A DECK'S BOX IS A GROUP OF ITS OWN. A deck may take a General group (it becomes the deck's
+     Commander group) or keep its own; never the Bench, a To sell / trade pile or a 40-card deck,
+     which are other places, nor To Buy, nor a group another deck already uses. */
+  const deckMayTake=(s,g,deckId)=>!!g&&g.id!==WANT_LIST&&!['bench','trade','limited'].includes(g.template)&&!s.decks.some(d=>d.id!==deckId&&d.groupId===g.id);
+  function deckGroup(s,gid,deckId){const g=s.groups.find(x=>x.id===gid);ensure(g,'Collection group not found.');
+    ensure(g.id!==WANT_LIST,`${g.name} is your list of cards to buy, not a deck's box: choose a General group or make a new one.`);
+    ensure(!['bench','trade','limited'].includes(g.template),`${g.name} is a ${TEMPLATE_LABELS[g.template]} group, not a deck's box: choose a General group or make a new one.`);
+    ensure(!s.decks.some(d=>d.id!==deckId&&d.groupId===g.id),`${g.name} is already another deck's group.`);return g.id;}
+  function settleTemplates(s){const decked=new Set(s.decks.map(d=>d.groupId).filter(Boolean));
+    for(const g of s.groups){if(decked.has(g.id))g.template='commander';else if(g.template==='commander'||!TEMPLATES.includes(g.template))g.template='general';}}
   /* SCHEMA 2. Wanted folds into Watched: a card you are considering; a deck's To Buy claim is
      already the decision to buy. Incoming trade folds into Ordered with channel 'trade'. A
      copy offered for Sell / Trade is never reserved, so an offered copy that still filled a
@@ -130,11 +147,18 @@
      carry keeps its whole fetched record here, because this is the only copy. The strip
      itself needs the shipped set, which the model does not know, so 2 → 3 bumps the version
      and the app files a reconcileCards command once at boot for the cards it can resolve. */
-  function migrate(raw){if(!raw||!(raw.schemaVersion===1||raw.schemaVersion===2))return raw;const s=clone(raw);
+  /* SCHEMA 4. Every group gets its template from what it already was: a group a deck points to is a Commander deck,
+     group:bench is the Bench, group:to-trade is To sell / trade, anything else is General. The starter Main Deck group,
+     which the model never read, goes when it holds nothing (Rob's decision D3); otherwise it stays, as General. */
+  function migrate(raw){if(!raw||!(raw.schemaVersion===1||raw.schemaVersion===2||raw.schemaVersion===3))return raw;const s=clone(raw);
     if(s.schemaVersion===1){for(const l of s.lots){if(l.source==='wanted'){l.source='watching';l.notes=[l.notes,'Was Wanted before Wanted and Watched became one status.'].filter(Boolean).join(' ').slice(0,5000);}
       if(l.source==='incoming'){l.source='ordered';l.channel='trade';}if(l.source==='ordered'&&!l.channel)l.channel='bought';if(l.offer!=='none'&&l.allocation)l.offer='none';}
     s.schemaVersion=2;}
     if(s.schemaVersion===2)s.schemaVersion=3;
+    if(s.schemaVersion===3){const used=gid=>s.decks.some(d=>d.groupId===gid)||s.lots.some(l=>(l.groupIds||[]).includes(gid));
+      s.groups=s.groups.filter(g=>!(g.id==='group:main-deck'&&!(g.entries||[]).length&&!used(g.id)));
+      for(const g of s.groups)g.template=g.id==='group:bench'?'bench':g.id==='group:to-trade'?'trade':'general';
+      settleTemplates(s);s.schemaVersion=4;}
     return s;}
   /* The identity a shipped card keeps in the library. */
   const reference=c=>({id:c.id,name:text(c.name,250),oracleId:c.oracleId||'',shipped:true,...(c.flavorName?{flavorName:c.flavorName}:{}),...(c.updatedAt?{updatedAt:c.updatedAt}:{})});
@@ -381,7 +405,8 @@
     for(const d of s.decks){id(d,'deck');ensure(['draft','final'].includes(d.status),'Invalid deck state.');ensure(d.kind===undefined||d.kind==='lobby','Invalid deck kind.');ensure(Array.isArray(d.slots)&&Array.isArray(d.commanders)&&Array.isArray(d.versions),'Invalid deck structure.');ensure(typeof d.name==='string'&&d.name.trim()&&d.name.length<=160,'A deck needs a valid name.');defaultDefinition(d.definition);ensure(typeof d.archived==='boolean'&&typeof d.locked==='boolean','Invalid deck flags.');if(d.groupId)group(s,d.groupId);for(const r of d.slots){id(r,'slot');ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);card(s,r.cardId);ensure(PURPOSES.includes(r.purpose),'Invalid card purpose.');ensure(typeof r.committed==='boolean'&&(r.purpose!=='main'||r.committed),'Invalid slot commitment.');if(r.purpose!=='main'){ensure(d.slots.some(x=>x.id===r.replaces&&x.purpose==='main'),'An option must reference a main-deck slot.');if(r.purpose==='bracket')ensure(Number.isInteger(r.targetBracket)&&r.targetBracket>d.definition.baseBracket&&r.targetBracket<=d.definition.bracketCeiling,'Bracket option is outside the deck definition.');}}for(const cid of d.commanders)card(s,cid);}
     for(const l of s.lots){id(l,'lot');card(s,l.cardId);ensure(typeof l.quantity==='number','Stored quantities must be numbers.');quantity(l.quantity);ensure(l.printing&&typeof l.printing==='object'&&!Array.isArray(l.printing),'Invalid printing record.');ensure(l.paid===null||Number.isFinite(l.paid)&&l.paid>=0,'Invalid purchase cost.');ensure(l.paidSource===undefined||['catalog','receipt','typed'].includes(l.paidSource),'Invalid paid source.');if(l.order!==undefined){ensure(l.order&&typeof l.order==='object'&&safeId(l.order.id)&&typeof l.order.vendor==='string'&&typeof l.order.ref==='string','Invalid order record.');ensure(l.order.shipShare===undefined||Number.isFinite(l.order.shipShare)&&l.order.shipShare>=0,'Invalid shipping share.');}if(l.source==='owned')ensure(l.location&&['bench','deck'].includes(l.location.kind),'Invalid owned-card location.');ensure(SOURCES.includes(l.source),'Invalid acquisition source.');ensure(['none','available','held'].includes(l.offer),'Invalid Sell / Trade state.');ensure(l.channel===undefined||CHANNELS.includes(l.channel),'Invalid order channel.');ensure(l.offer==='none'||!l.allocation,'A copy offered for Sell / Trade is not reserved by a deck.');ensure(Array.isArray(l.groupIds)&&new Set(l.groupIds).size===l.groupIds.length,'Invalid group membership.');for(const gid of l.groupIds)group(s,gid);if(l.source!=='owned')ensure(!l.location&&l.offer==='none','Unreceived cards cannot have physical placement or an outgoing offer.');if(l.location?.kind==='deck')deck(s,l.location.deckId);if(l.allocation){const d=deck(s,l.allocation.deckId),r=slot(s,d.id,l.allocation.slotId);ensure(!d.archived,'Archived decks cannot reserve cards.');ensure(r.committed,'This optional card is a suggestion, not a commitment.');ensure(compatible(l,r),'The allocated printing does not match the deck requirement.');ensure(l.offer!=='held','A deal-held copy cannot also be allocated to a deck.');}}
     for(const d of s.decks)for(const r of d.slots)ensure(countFor(s,d.id,r.id)<=r.quantity,'A deck slot is over-allocated.');
-    for(const g of s.groups){id(g,'group');ensure(typeof g.name==='string'&&g.name.trim()&&Array.isArray(g.entries),'Invalid collection group.');for(const r of g.entries){id(r,'group entry');card(s,r.cardId);ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);}}
+    ensure(s.groups.filter(g=>g.template==='bench').length<=1,'There is one Bench.');
+    for(const g of s.groups){id(g,'group');ensure(typeof g.name==='string'&&g.name.trim()&&Array.isArray(g.entries),'Invalid collection group.');ensure(TEMPLATES.includes(g.template),'Invalid group template.');ensure((g.template==='commander')===s.decks.some(d=>d.groupId===g.id),'A Commander deck group is the group of its deck.');for(const r of g.entries){id(r,'group entry');card(s,r.cardId);ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);}}
     for(const r of [...s.reports,...s.games,...s.advice])id(r,'evidence');ensure(s.lots.length<=50000,'This library exceeds the supported record limit.');return s;
   }
   function defaultDefinition(raw={}){const d={baseBracket:2,bracketCeiling:3,budget:null,perCardCap:null,mechanics:[],playStyle:'Balanced',speed:3,competitiveness:3,saltiness:3,restrictions:'',reuse:{includeSellTrade:true},...clone(raw)};ensure(Number.isInteger(d.baseBracket)&&d.baseBracket>=1&&d.baseBracket<=5,'Choose a bracket from 1 to 5.');ensure(Number.isInteger(d.bracketCeiling)&&d.bracketCeiling>=d.baseBracket&&d.bracketCeiling<=5,'The bracket ceiling must include the base bracket.');for(const k of ['speed','competitiveness','saltiness'])ensure(Number.isInteger(d[k])&&d[k]>=1&&d[k]<=5,`Choose ${k} from 1 to 5.`);for(const k of ['budget','perCardCap'])ensure(d[k]===null||(Number.isFinite(d[k])&&d[k]>=0),`Invalid ${k}.`);ensure(Array.isArray(d.mechanics)&&d.mechanics.every(x=>typeof x==='string'),'Invalid mechanics.');ensure(d.reuse&&typeof d.reuse==='object'&&!Array.isArray(d.reuse),'Invalid reuse preferences.');return d;}
@@ -538,11 +563,11 @@
         const own=c.groupId===undefined?{id:id('group'),name:deckName,entries:[],createdAt:now}:null;
         if(own)s.groups.push(own);
         ensure(c.kind===undefined||c.kind==='deck'||c.kind==='lobby','A deck is a deck or a lobby deck.');
-        const d={id:c.deckId||id('deck'),name:deckName,commanders:[...(c.commanders||[])],slots:rows(c.slots||[]),definition:defaultDefinition(c.definition),status:'draft',archived:false,locked:false,version:1,versions:[],createdAt:now,notes:text(c.notes,5000),priority:s.decks.length,groupId:own?own.id:(c.groupId?group(s,c.groupId).id:null),...(c.kind==='lobby'?{kind:'lobby'}:{})};
+        const d={id:c.deckId||id('deck'),name:deckName,commanders:[...(c.commanders||[])],slots:rows(c.slots||[]),definition:defaultDefinition(c.definition),status:'draft',archived:false,locked:false,version:1,versions:[],createdAt:now,notes:text(c.notes,5000),priority:s.decks.length,groupId:own?own.id:(c.groupId?deckGroup(s,c.groupId,c.deckId):null),...(c.kind==='lobby'?{kind:'lobby'}:{})};
         s.decks.push(d);summary=`Created planned deck: ${d.name}`+(own?` and its collection group`:'');break;}
       case 'editDeck':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the archived deck first.');
         /* A LOBBY DECK IS A DECK ON PROBATION (UAT M-15, Rob's call of 2026-09-20). The Play lobby mints a real draft so a measurement can follow it into Decks, but a deck nobody asked for should not be a ninth tile and a hundred library rows. kind:'lobby' hides it from the tiles, the sidebar, the compare list, the Lab and the library counts until Show lobby decks is on; Save to Decks (kind:'deck') promotes it. */
-        if(c.kind!==undefined){ensure(c.kind==='deck'||c.kind==='lobby','A deck is a deck or a lobby deck.');if(c.kind==='lobby')d.kind='lobby';else delete d.kind;summary=c.kind==='lobby'?`Kept ${d.name} as a lobby deck`:`Saved ${d.name} to Decks`;}if(c.name!==undefined){const was=d.name;d.name=text(c.name,160);const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null;if(g&&g.name===was)g.name=d.name;}if(c.definition)d.definition=defaultDefinition(c.definition);if(c.notes!==undefined)d.notes=text(c.notes,5000);if(c.groupId!==undefined)d.groupId=c.groupId?group(s,c.groupId).id:null;if(c.commanders){ensure(d.status==='draft','Use a reviewed commander replacement for a finalized list.');d.commanders=[...c.commanders];}if(c.slots){ensure(d.status==='draft','Use a reviewed replacement for a finalized list.');d.slots=rows(c.slots);}summary=`Updated ${d.name}`;break;}
+        if(c.kind!==undefined){ensure(c.kind==='deck'||c.kind==='lobby','A deck is a deck or a lobby deck.');if(c.kind==='lobby')d.kind='lobby';else delete d.kind;summary=c.kind==='lobby'?`Kept ${d.name} as a lobby deck`:`Saved ${d.name} to Decks`;}if(c.name!==undefined){const was=d.name;d.name=text(c.name,160);const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null;if(g&&g.name===was)g.name=d.name;}if(c.definition)d.definition=defaultDefinition(c.definition);if(c.notes!==undefined)d.notes=text(c.notes,5000);if(c.groupId!==undefined)d.groupId=c.groupId?deckGroup(s,c.groupId,d.id):null;if(c.commanders){ensure(d.status==='draft','Use a reviewed commander replacement for a finalized list.');d.commanders=[...c.commanders];}if(c.slots){ensure(d.status==='draft','Use a reviewed replacement for a finalized list.');d.slots=rows(c.slots);}summary=`Updated ${d.name}`;break;}
       case 'finalize':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');ensure(d.status==='draft','This deck is already finalized.');const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));d.status='final';version(d);satisfy(d);summary=`Finalized ${d.name}; reserved available copies without creating ownership`;break;}
       case 'lock':{const d=deck(s,c.deckId);d.locked=!!c.locked;summary=`${d.locked?'Locked':'Unlocked'} ${d.name}`;break;}
       case 'archive':{const d=deck(s,c.deckId);ensure(!d.archived,'Deck already archived.');d.archived=true;version(d);for(const l of [...s.lots].filter(l=>l.allocation?.deckId===d.id))release(l,c.destination);summary=`Archived ${d.name}; released allocations and retained actual box locations`;break;}
@@ -643,12 +668,14 @@
       case 'editOrder':{const lots=s.lots.filter(l=>l.order&&l.order.id===c.orderId);ensure(lots.length,'That order no longer has any copies.');for(const l of lots)l.order=orderRecord({...l.order,...(c.order||{}),id:c.orderId,shipShare:l.order.shipShare});summary='Updated the order';break;}
       case 'receipt':{ensure(Array.isArray(c.lines)&&c.lines.length,'A receipt needs at least one line.');let changed=0;for(const line of c.lines){const l=lot(s,line.lotId);ensure(Number.isFinite(line.paid)&&line.paid>=0,'A receipt line needs a price.');if(l.paid!==line.paid||l.paidSource!=='receipt'){stampPaid(l,line.paid,'receipt');changed++;}}summary=`Receipt applied to ${changed} cop${changed===1?'y':'ies'} record${changed===1?'':'s'}`;break;}
       case 'editLot':{const l=lot(s,c.lotId);if(c.printing)l.printing=print(c.printing);if(c.notes!==undefined)l.notes=text(c.notes,5000);if(c.paid!==undefined&&c.paid!==l.paid)stampPaid(l,c.paid,c.paidSource);if(c.keepBench!==undefined)l.keepBench=!!c.keepBench;summary='Updated copy details';break;}
-      case 'createGroup':{s.groups.push({id:c.groupId||id('group'),name:text(c.name,100)||'New group',entries:[],createdAt:now});summary='Created Collection group';break;}
+      case 'createGroup':{const template=c.template||'general';ensure(TEMPLATES.includes(template),'Choose a group template.');ensure(template!=='commander','A Commander deck group is made with its deck: start a new deck instead.');ensure(template!=='bench'||!s.groups.some(g=>g.template==='bench'),'There is already a Bench.');
+        s.groups.push({id:c.groupId||id('group'),name:text(c.name,100)||'New group',template,entries:[],createdAt:now});summary=`Created ${TEMPLATE_LABELS[template]} group`;break;}
+      case 'groupTemplate':{const g=group(s,c.groupId);ensure(TEMPLATES.includes(c.template),'Choose a group template.');ensure(g.template!=='commander'&&c.template!=='commander','A Commander deck group changes with its deck, not on its own.');ensure(g.template!=='bench','The Bench stays the Bench.');ensure(c.template!=='bench'||!s.groups.some(x=>x.template==='bench'),'There is already a Bench.');g.template=c.template;summary=`${g.name} is now a ${TEMPLATE_LABELS[c.template]} group`;break;}
       case 'renameGroup':{group(s,c.groupId).name=text(c.name,100);summary='Renamed Collection group';break;}
       /* A list can declare its commander after the fact too -- an import into an existing
          group, or a correction. Same validation: the card must be one we hold. */
       case 'groupCommander':{const g=group(s,c.groupId);if(c.commanderCardId){card(s,c.commanderCardId);g.commanderCardId=c.commanderCardId;}else delete g.commanderCardId;summary='Recorded the list commander';break;}
-      case 'deleteGroup':{group(s,c.groupId);s.groups=s.groups.filter(g=>g.id!==c.groupId);for(const l of s.lots)l.groupIds=l.groupIds.filter(g=>g!==c.groupId);for(const d of s.decks)if(d.groupId===c.groupId)d.groupId=null;summary='Removed the group; owned copies remain in the library';break;}
+      case 'deleteGroup':{ensure(group(s,c.groupId).template!=='bench','The Bench stays: it is where owned cards that are in no deck live.');s.groups=s.groups.filter(g=>g.id!==c.groupId);for(const l of s.lots)l.groupIds=l.groupIds.filter(g=>g!==c.groupId);for(const d of s.decks)if(d.groupId===c.groupId)d.groupId=null;summary='Removed the group; owned copies remain in the library';break;}
       case 'groupLots':{group(s,c.groupId);for(const lid of c.lotIds){const l=lot(s,lid);if(c.moveFrom)l.groupIds=l.groupIds.filter(g=>g!==c.moveFrom);if(!l.groupIds.includes(c.groupId))l.groupIds.push(c.groupId);}summary='Updated group membership without changing ownership';break;}
       case 'moveGroupEntries':{const from=group(s,c.from),to=group(s,c.to);ensure(from.id!==to.id,'Choose a different destination group.');for(const entryId of c.entryIds){const entry=from.entries.find(r=>r.id===entryId);ensure(entry,'That planned entry no longer exists.');to.entries.push({...clone(entry),id:c.copy?id('entry'):entry.id});if(!c.copy)from.entries=from.entries.filter(r=>r.id!==entryId);}summary=`${c.copy?'Copied':'Moved'} planned entries to ${to.name}; ownership unchanged`;break;}
       /* A planned entry is fulfilled or abandoned a few copies at a time: no quantity means the
@@ -692,7 +719,7 @@
       default:throw Error('Unknown collection operation: '+c.type);
     }
     for(const l of s.lots){if(l.source==='ordered'){if(!CHANNELS.includes(l.channel))l.channel='bought';}else if(l.channel!==undefined)delete l.channel;}
-    s.revision=current.revision+1;s.createdAt=s.createdAt||now;s.updatedAt=now;validate(s);
+    settleTemplates(s);s.revision=current.revision+1;s.createdAt=s.createdAt||now;s.updatedAt=now;validate(s);
     // A sale must retain the exact printing after its owned row has gone. The
     // same receipt exposes automatic reallocations instead of hiding them in
     // a prose summary. Unchanged records do not inflate the journal.
@@ -715,5 +742,5 @@
     return lineupHash((d.slots||[]).filter(r=>r.purpose==='main').map(r=>({name:nameOf(r.cardId),quantity:Number(r.quantity||1),isCommander:commanders.has(r.cardId)})));}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

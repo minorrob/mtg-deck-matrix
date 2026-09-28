@@ -260,7 +260,8 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
    pinned here is the difference and nothing else — the three zones, the canvas, the draw pile,
    the arrows and Confirm are the same objects doing the same thing, which is the whole claim. */
 {
-  const groups = state.groups.slice(0, 3).map((g) => ({id: g.id, name: g.name}));
+  /* Groups other than the Bench: a tray bound to the Bench is the Bench (schema 4 dropped the empty Main Deck that used to come first). */
+  const groups = state.groups.filter((g) => g.template !== "bench").slice(0, 3).map((g) => ({id: g.id, name: g.name}));
   ok(groups.length === 3, `three collection groups to sort into (${groups.length})`);
   const spec = {deck: null, trays: 4, at: 0, groups, trayGroups: [groups[0].id, "", "", ""],
     groupOf: (r) => r.groupIds || [], seatOf: () => ""};

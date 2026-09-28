@@ -24,7 +24,7 @@ const own = {id: "card:bXkgY2FyZA", name: "My Card", oracleId: "", typeLine: "Cr
 let n = 0;
 const run = (state, type, args = {}) => M.apply(state, {type, id: "ref" + (++n), ...args}).state;
 let s = M.empty();
-eq(s.schemaVersion, 3, "a new library is schema 3");
+eq(s.schemaVersion, M.VERSION, "a new library is the current schema");
 s = run(s, "cards", {cards: [shipped, own]});
 eq(s.cards[shipped.id], {id: shipped.id, name: "Sol Ring", oracleId: shipped.oracleId, shipped: true}, "a shipped card keeps identity only");
 ok(!("oracleText" in s.cards[shipped.id]) && !("price" in s.cards[shipped.id]), "no fact is copied for a shipped card");
@@ -37,7 +37,7 @@ M.validate(s); checks++;
 const v2 = {...M.empty(), schemaVersion: 2, cards: {[shipped.id]: {...shipped, shipped: undefined}, [own.id]: {...own}}};
 delete v2.cards[shipped.id].shipped;
 const v3 = M.migrate(v2);
-eq(v3.schemaVersion, 3, "2 → 3");
+eq(v3.schemaVersion, M.VERSION, "2 → 3, and on to the current schema");
 eq(v3.cards[shipped.id].oracleText, "{T}: Add {C}{C}.", "migration alone strips nothing (it cannot see the shipped set)");
 M.validate(v3); checks++;
 const first = M.apply(v3, {type: "reconcileCards", id: "rc1", ids: [shipped.id, "card:missing"]});

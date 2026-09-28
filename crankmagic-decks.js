@@ -733,7 +733,7 @@ actions['wizard-create']=()=>{
   };
   const wiz=form('Create a deck from a commander',
     `<div class="cm-full">${s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')}</div>`
-    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
+    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.filter(g=>M.deckMayTake(C.state,g,'')).map(g=>[g.id,C.groupLabel(g)])],'')}</div>`
     +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
     v=>{
       if(v.how!=='group')return v.groupId?commanderDeck(v.groupId):C.build.start();
@@ -829,15 +829,15 @@ actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Def
 actions['attach-group']=el=>{
   const d=M.deck(C.state,el.dataset.deck);
   if(!C.state.groups.length)throw Error('Create a collection group first, from the Cards page.');
-  const choices=C.state.groups.filter(g=>g.id!==d.groupId);
-  if(!choices.length)throw Error(`${d.name} is already attached to your only collection group.`);
+  const choices=C.state.groups.filter(g=>g.id!==d.groupId&&M.deckMayTake(C.state,g,d.id));
+  if(!choices.length)throw Error(`No other group can be ${d.name}\u2019s box: the Bench, To sell / trade and other decks\u2019 groups are places of their own. Make a General group first, from the Library.`);
   const main=()=>d.slots.filter(r=>r.purpose==='main');
   const bare=d.status==='draft'&&main().length<=1;
   /* The offer is about the group you pick, which you pick after the dialog opens -- keying it
      off the first one in the list hid it whenever that one happened to be empty. */
   const anyRows=choices.some(g=>groupRows(g).length);
   form(d.groupId?'Change the collection group':'Attach a collection group',
-    `<div class="cm-full">${s('Collection group','groupId',choices.map(g=>[g.id,g.name]),'')}</div>`
+    `<div class="cm-full">${s('Collection group','groupId',choices.map(g=>[g.id,C.groupLabel(g)]),'')}</div>`
     +(bare&&anyRows?`<label class="cm-checkbox cm-full"><input type="checkbox" name="adopt" checked>Bring the group\u2019s cards across as this deck\u2019s list</label>`:'')
     +note('This deck\u2019s cards appear under this group in Cards, and a copy filed there is reserved for this deck before any other matching copy.'),
     v=>{
