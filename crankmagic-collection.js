@@ -681,7 +681,7 @@ function tabletop(params,shop=false){
   const onScale=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){document.removeEventListener('cm-card-scale',onScale);return;}if(ev.detail.live){TT.liveScale($('#cm-tt-host'),ev.detail.scale/100);return;}ttUI.page=0;draw();queueMicrotask(()=>$('#cm-tt-host [data-card-scale]')?.focus?.({preventScroll:true}));};
   ttScale=onScale;document.addEventListener('cm-card-scale',onScale);
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
-  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape')return;if(ttEscShielded){ttEscShielded=false;return;}if(ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
+  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape')return;if(ttEscShielded){ttEscShielded=false;return;}if(ev.defaultPrevented||!(ttUI.open||ttUI.selection.size||ttUI.place))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.place=null;ttUI.ticked.clear();ttUI.selection.clear();draw();};
   ttKey=onKey;addEventListener('keydown',onKey);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
@@ -1176,7 +1176,7 @@ actions['row-move']=el=>{const r=findRow(el.dataset.record);if(!r||r.kind!=='lot
 /* BACK TO THE PLAY SPACE (Rob, 15 September). The corner arrow that used to be the only way
    back sat wherever the open pile had pushed it; this is in the toolbar, where the rest of
    the page's controls are. It is the same move Escape makes: nothing open, nothing picked. */
-actions['tt-rest']=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();C.render();};
+actions['tt-rest']=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.place=null;ttUI.ticked.clear();ttUI.selection.clear();C.render();};
 /* THE FILTERS DIALOG (r3, wireframe 41-filters-dialog; INTAKE R3.6). Type, color, status and deck
    are chips, one choice each, pressed again to let go; mana value and price are ranges. Nothing
    applies while it is open: the dialog works on a draft, the button counts what the draft would

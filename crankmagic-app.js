@@ -200,14 +200,20 @@ function rescueBrand(){
   const block=document.querySelector('.v-brand-block'),home=document.querySelector('.cm-sidebar');
   if(block&&home&&block.parentElement!==home)home.prepend(block);
 }
-/* THE THEME IS ONE OF THREE (r3, 06-global-menu): Dark, Light, or Match system. It is a saved
-   preference; dark is the default and what the tokens define (Track V). Match system is resolved
-   here and followed live, so turning the device to light mode turns the app with it. */
-const lightQuery=matchMedia('(prefers-color-scheme: light)');
-function themeChoice(){const t=state.preferences&&state.preferences.theme;return t==='light'||t==='system'?t:'dark';}
-function applyTheme(){const choice=themeChoice(),shown=choice==='system'?(lightQuery.matches?'light':'dark'):choice;document.getElementById('matrix-v2').dataset.theme=shown;
+/* THE THEME IS ONE OF FOUR (Rob, 2026-09-28; docs/plan-appearance.md A1). No modes and no Match system: Moss & Iron,
+   Brass & Slate, Felt & Cream or Steel & Cobalt, saved with the library's preferences so it follows the account. Each is
+   a palette and a face on the tokens (crankmagic-design.css): Felt & Cream is Brass & Slate's light face. The values saved
+   before A1 are read, never rewritten: dark was Brass & Slate, light Felt & Cream, and Match system or nothing at all is
+   the new default, Moss & Iron (decision A1). */
+const THEMES=[['moss-iron','Moss & Iron','The armory · default'],['brass-slate','Brass & Slate','Warm graphite, a brass accent'],['felt-cream','Felt & Cream','Card-table felt and cream'],['steel-cobalt','Steel & Cobalt','The forge: cobalt and cyan']];
+const THEME_FACE={'moss-iron':['moss-iron','dark'],'brass-slate':['brass-slate','dark'],'felt-cream':['brass-slate','light'],'steel-cobalt':['steel-cobalt','dark']};
+function themeChoice(){const t=state.preferences&&state.preferences.theme;return THEME_FACE[t]?t:t==='dark'?'brass-slate':t==='light'?'felt-cream':'moss-iron';}
+function applyTheme(){const choice=themeChoice(),[palette,face]=THEME_FACE[choice],root=document.documentElement,app=document.getElementById('matrix-v2');
+  for(const el of [root,app]){if(el.dataset.palette!==palette)el.dataset.palette=palette;if(el.dataset.theme!==face)el.dataset.theme=face;}
+  root.style.colorScheme=face;
+  /* The browser's own chrome takes the theme's ground. */
+  const meta=document.querySelector('meta[name="theme-color"]'),bg=getComputedStyle(app).getPropertyValue('--color-bg').trim();if(meta&&bg&&meta.content!==bg)meta.content=bg;
   document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===choice)));}
-lightQuery.addEventListener('change',()=>{if(themeChoice()==='system')applyTheme();});
 /* REDUCE MOTION IS A SAVED PREFERENCE TOO (r3, 70-settings), on top of the device's own setting, never
    instead of it: either one stills the page. It is written on <html> so the stylesheet can stop every
    transition and animation at once, and CrankMotion answers the pieces that animate from script (the
@@ -223,15 +229,33 @@ globalThis.CrankMotion={reduced:()=>document.documentElement.dataset.motion==='r
 const CARD_SCALE={key:'cm-card-scale',def:100,min:60,max:160,phoneMax:130};
 const cardScaleRange=()=>[CARD_SCALE.min,matchMedia('(max-width:760px)').matches?CARD_SCALE.phoneMax:CARD_SCALE.max];
 const clampScale=v=>{const [lo,hi]=cardScaleRange(),n=Math.round(Number(v));return Number.isFinite(n)&&n>0?Math.min(hi,Math.max(lo,n)):CARD_SCALE.def;};
+/* THE DEFAULT AND EACH VIEW'S OWN (Rob, 2026-09-28; docs/plan-groups.md G8). The card size set in Settings is the
+   default everywhere; a view's own slider sets that view's size, which supersedes the default there and nowhere else,
+   until Use default lets it go. Both are remembered per device. The view is the place cards are drawn at a size: the
+   Table and the Play board today, and any view that draws a slider with scope 'view'. */
+const scaleView=()=>{const r=route();return r.view==='cards'&&r.params.get('view')==='tabletop'?'table':r.view==='table'||r.view==='game'?'board':r.view;};
+const viewKey=(v=scaleView())=>CARD_SCALE.key+':'+v;
+const readScale=k=>{try{return localStorage.getItem(k);}catch(err){return null;}};
 /* The Table view's old S, M and L carry over once, to the nearest point on the scale. */
-function cardScale(){let v=null;try{v=localStorage.getItem(CARD_SCALE.key);if(v===null){const old=localStorage.getItem('cm-tabletop-size');if(old)v={S:66,M:100,L:146}[old]??null;}}catch(err){/* private mode: the default */}return clampScale(v??CARD_SCALE.def);}
+function defaultScale(){let v=readScale(CARD_SCALE.key);if(v===null){const old=readScale('cm-tabletop-size');if(old)v={S:66,M:100,L:146}[old]??null;}return clampScale(v??CARD_SCALE.def);}
+const viewScale=(v=scaleView())=>{const x=readScale(viewKey(v));return x===null?null:clampScale(x);};
+/* The size cards are drawn at here: this view's own, or the default. */
+function cardScale(){return viewScale()??defaultScale();}
 function applyCardScale(v=cardScale()){document.documentElement.style.setProperty('--card-scale',String(clampScale(v)/100));}
-function setCardScale(v,{save=true}={}){const n=clampScale(v);applyCardScale(n);if(save)try{localStorage.setItem(CARD_SCALE.key,String(n));localStorage.removeItem('cm-tabletop-size');}catch(err){/* applied, not remembered */}return n;}
+function setCardScale(v,{save=true,scope='view'}={}){const n=clampScale(v);
+  if(scope==='default'){if(viewScale()===null)applyCardScale(n);if(save)try{localStorage.setItem(CARD_SCALE.key,String(n));localStorage.removeItem('cm-tabletop-size');}catch(err){/* applied, not remembered */}return n;}
+  applyCardScale(n);if(save)try{localStorage.setItem(viewKey(),String(n));}catch(err){/* applied, not remembered */}return n;}
+/* Use default: the view lets its own size go and draws at the default again. */
+function clearViewScale(){try{localStorage.removeItem(viewKey());}catch(err){/* nothing to forget */}const n=defaultScale();applyCardScale(n);return n;}
 /* The slider every card-size control draws: the scale's two ends named, the value beside it. `data-card-scale`
    is the one hook: dragging previews on every page at once, letting go remembers it. */
-function cardScaleSlider({label=true}={}){const [lo,hi]=cardScaleRange(),v=cardScale();return `<label class="cm-size-slider">${label?'<span class="cm-size-label">Card size</span>':''}<span class="cm-size-end" aria-hidden="true">${lo}%</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-card-scale aria-label="Card size" aria-valuetext="${v}%"><span class="cm-size-end" aria-hidden="true">${hi}%</span><output>${v}%</output></label>`;}
-document.addEventListener('input',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value,{save:false});el.setAttribute('aria-valuetext',n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n+'%';document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:true}}));});
-document.addEventListener('change',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value);document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:false}}));});
+function cardScaleSlider({label=true,scope='view'}={}){const [lo,hi]=cardScaleRange(),mine=scope==='view'?viewScale():null,v=scope==='default'?defaultScale():cardScale(),name=scope==='default'?'Default card size':'Card size';
+  /* A view's slider says whether it is using the default or its own size, and offers the way back. */
+  const own=scope==='view'?(mine===null?'<small class="cm-size-note">default</small>':`<button type="button" class="cm-size-reset" data-card-scale-reset title="Go back to the default size from Settings">Use default</button>`):'';
+  return `<label class="cm-size-slider">${label?`<span class="cm-size-label">${name}</span>`:''}<span class="cm-size-end" aria-hidden="true">${lo}%</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-card-scale="${scope}" aria-label="${name}" aria-valuetext="${v}%"><span class="cm-size-end" aria-hidden="true">${hi}%</span><output>${v}%</output>${own}</label>`;}
+document.addEventListener('click',e=>{const el=e.target.closest?.('[data-card-scale-reset]');if(!el)return;e.preventDefault();const n=clearViewScale();document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:false}}));render();});
+document.addEventListener('input',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value,{save:false,scope:el.dataset.cardScale==='default'?'default':'view'});el.setAttribute('aria-valuetext',n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n+'%';document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:true}}));});
+document.addEventListener('change',e=>{const el=e.target.closest?.('[data-card-scale]');if(!el)return;const n=setCardScale(el.value,{scope:el.dataset.cardScale==='default'?'default':'view'});document.dispatchEvent(new CustomEvent('cm-card-scale',{detail:{scale:n,live:false}}));});
 matchMedia('(max-width:760px)').addEventListener?.('change',()=>applyCardScale());
 function applyMotion(){const on=Boolean(state.preferences&&state.preferences.reduceMotion),was=document.documentElement.dataset.motion==='reduce';
   if(on)document.documentElement.dataset.motion='reduce';else delete document.documentElement.dataset.motion;
@@ -447,7 +471,7 @@ async function inspector(id){let c=cardOf(id);if(!c)throw Error('Card not found.
    own copy for a card the record set does not carry. */
 const cardOf=id=>(catalog&&catalog.get(id))||state.cards[id]||null;
 const cardsOf=()=>Object.keys(state.cards).map(cardOf).filter(Boolean);
-const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,newGroupName,groupLabel,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,deckCap,applyMotion,status,usDate,usDateTime};
+const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,newGroupName,groupLabel,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,THEMES,THEME_FACE,deckCap,applyMotion,status,usDate,usDateTime};
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
 /* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
@@ -474,8 +498,10 @@ actions.close=()=>{if(modalGuard&&!confirm(modalGuard.message))return;const guar
 dialog.addEventListener('click',event=>{if(event.target===dialog)actions.close();});
 /* Esc closes the dialog natively, which would skip the journey. Cancel it and go back instead. */
 dialog.addEventListener('cancel',event=>{if(modalBack||modalGuard){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
-const THEME_SAID={dark:'Dark theme (Brass and Slate).',light:'Light theme (Felt and Cream).',system:'The theme now follows this device’s light or dark setting.'};
-actions['set-theme']=async el=>{const choice=el.dataset.themeChoice;if(!THEME_SAID[choice]||choice===themeChoice())return;await commit({type:'preferences',values:{theme:choice}});notice(THEME_SAID[choice]);};
+/* Choosing a theme applies at once, before the save, so the page never waits on the library to recolor. */
+actions['set-theme']=async el=>{const choice=el.dataset.themeChoice,t=THEMES.find(x=>x[0]===choice);if(!t||choice===themeChoice())return;
+  document.getElementById('matrix-v2').animate?.([{opacity:.85},{opacity:1}],{duration:200});
+  await commit({type:'preferences',values:{theme:choice}},{renderView:false});applyTheme();notice(`${t[1]} theme.`);render();};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
 /* EMAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
    are bought, then the library sent home. No browser can attach a file to a mailto: draft,
@@ -589,7 +615,7 @@ if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soo
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=387',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=390',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();
