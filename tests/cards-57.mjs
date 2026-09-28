@@ -57,6 +57,7 @@ try {
   {
     const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
     const page = await context.newPage();
+    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await page.goto(`${base}/index.html`);
     await page.locator(".cm-landing-card").first().waitFor({timeout: 60000});
@@ -70,6 +71,7 @@ try {
   for (const [vw, vh, tag] of [[1400, 900, "desktop"], [390, 844, "phone"]]) {
     const context = await browser.newContext({viewport: {width: vw, height: vh}, serviceWorkers: "block"});
     const page = await context.newPage();
+    await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
     if (stub) await stub(page);
     await loadLiveState(page, base);
     await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D4")}&tab=hundred`);
