@@ -27,6 +27,7 @@ const stateOf = (page) => page.evaluate(async () => { const r = await CrankRepos
 try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
+  await page.addInitScript(() => {try {localStorage.setItem("cm-tabletop-arrange", "status");} catch (err) {/* the default then */}});  /* the status piles this suite reads: By status (G6 made By group the default) */
   if (stub) await stub(page);
   await loadLiveState(page, base);
   const st = await stateOf(page);

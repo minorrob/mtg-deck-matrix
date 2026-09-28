@@ -423,6 +423,23 @@ function sheetEdit(btn,seed=''){
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
 const ttUI={open:null,from:null,page:0,ticked:new Set(),selection:new Set(),stageWidth:0,canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
+/* THE TABLE BY GROUP (Rob, 2026-09-28; docs/plan-groups.md G6). The band along the bottom is the physical groups -- the
+   decks, the Sell / Trade piles, the 40-card decks -- with the Bench as the rail along the back, and every card is on
+   the one pile its copy is in. By status is the table as it was, kept one choice away until Rob has seen this one.
+   Remembered per device, like the canvas. */
+ttUI.arrange=(()=>{try{return localStorage.getItem('cm-tabletop-arrange')==='status'?'status':'group';}catch(err){return 'group';}})();ttUI.place=null;
+function tablePlaces(){const order={commander:1,trade:2,limited:3};
+  return C.state.groups.filter(g=>g.template==='trade'||g.template==='limited'||(g.template==='commander'&&C.state.decks.some(d=>d.groupId===g.id&&!d.archived&&d.kind!=='lobby')))
+    .sort((a,b)=>order[a.template]-order[b.template]).map(g=>({id:g.id,label:g.name,template:g.template}));}
+/* Where a row is: a copy you own is in its deck's box, a Sell / Trade or 40-card pile it is filed in, or on the Bench;
+   a copy not in hand yet, and a deck's plan row, is with the deck it is for; anything else is in no place yet. */
+function placeOf(r){const deckGroup=id=>{const d=C.state.decks.find(x=>x.id===id&&!x.archived&&x.kind!=='lobby');return d&&d.groupId||'';};
+  if(r.kind==='lot'){
+    if(r.source==='owned'){if(r.location?.kind==='deck')return deckGroup(r.location.deckId)||'bench';
+      const pile=(r.groupIds||[]).find(id=>{const g=C.state.groups.find(x=>x.id===id);return g&&(g.template==='trade'||g.template==='limited');});
+      if(pile)return pile;if(r.offer==='available')return (C.state.groups.find(g=>g.template==='trade')||{}).id||'bench';return 'bench';}
+    return r.allocation?.deckId?deckGroup(r.allocation.deckId):'';}
+  return r.deckId?deckGroup(r.deckId):'';}
 /* The Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library; so is the card size, the app's one scale (C.cardScale). */
 try{localStorage.removeItem('cm-tabletop-bench');/* The picture's old named steps carry over once, as a width. */const w=Number(localStorage.getItem('cm-tabletop-stage-w'))||{L:220,XL:244,XXL:366,full:488}[localStorage.getItem('cm-tabletop-stage')]||0;if(w)ttUI.stageWidth=w;localStorage.removeItem('cm-tabletop-stage');const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
   /* Shelf mode's hand and its tray bindings are the same kind of fact: about this screen, not
@@ -533,7 +550,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
+    const byGroup=ttUI.arrange==='group',model=TT.table(all,{groupBy:tabletopGroupBy,statuses:TABLE_PILES,statusOrder:label=>{const i=TABLE_PILES.findIndex(x=>x.label===label);return i<0?TABLE_PILES.length:i;},value,maxGroupPiles:16,statusSort:tabletopStatusOrder,...(byGroup?{places:tablePlaces(),placeOf,openPlace:ttUI.place}:{play:playSpec(params)})});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString('en-US')} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString('en-US')} rows) · Bench ${model.bench.count.toLocaleString('en-US')} · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -545,7 +562,7 @@ function tabletop(params,shop=false){
        here is a pile of some other grouping or a group that was deleted. */
     if(ttUI.open&&!TT.findPile(model,ttUI.open)&&!ttUI.open.startsWith('group:'+tabletopGroupBy+':'))ttUI.open=null;
     if(ttUI.from&&!TT.findPile(model,ttUI.from))ttUI.from=null;
-    const rest=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();};
+    const rest=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.place=null;ttUI.ticked.clear();ttUI.selection.clear();};
     TT.mount($('#cm-tt-host'),model,{
       onGroupBy:v=>{tabletopGroupBy=v;if(ttUI.open&&ttUI.open.startsWith('group:'))rest();C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();},
       onOpen:id=>{
@@ -554,8 +571,11 @@ function tabletop(params,shop=false){
         if(id==='shelf:new'){form('Make a collection group',f('Group name','name','','required maxlength="60" placeholder="Ramp I keep meaning to buy"')
           +note('Empty to begin with. It joins the band along the bottom of the table, and a tray can be bound to it.'),
           async v=>{await C.commit({type:'createGroup',groupId:'group:'+C.uid(),name:(v.name||'').trim()||'New group'},{renderView:false});draw();},'Make the group');return;}
+        /* Opening a place spreads it: the stacks become that group's cards, and stay so while a stack is open. */
+        if(id&&(id.startsWith('place:')||id==='bench'))ttUI.place=id;
         if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
       onPage:n=>{ttUI.page=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-grid .cm-tt-card[data-tt=card]')?.focus?.({preventScroll:true}));},
+      onArrange:v=>{ttUI.arrange=v==='status'?'status':'group';try{localStorage.setItem('cm-tabletop-arrange',ttUI.arrange);}catch(err){/* not remembered, still applied */}rest();draw();},
       onStatusOrder:v=>{tabletopStatusOrder=v==='count'?'count':'workflow';C.commit({type:'preferences',values:{tabletopStatusOrder}},{renderView:false}).catch(()=>{});draw();},
       onPrint:pileId=>{const pile=TT.findPile(model,pileId);if(!pile)return;document.querySelectorAll('.cm-tt-printsheet').forEach(x=>x.remove());const wrap=document.createElement('div');wrap.innerHTML=TT.printSheet(pile,{describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')}),library:'CrankMagic'});const sheet=wrap.firstElementChild;document.body.append(sheet);document.body.classList.add('cm-tt-printing');
         const done=()=>{document.body.classList.remove('cm-tt-printing');sheet.remove();removeEventListener('afterprint',done);};addEventListener('afterprint',done);setTimeout(()=>{if(sheet.isConnected)done();},60000);
@@ -695,10 +715,13 @@ function stageRows(rows,intent){
 function tabletopDrop(pileId,ids){
   const TT=globalThis.CrankTabletop,pile=TT.findPile(ttModel,pileId),rows=ids.map(id=>findRow(id)).filter(Boolean);
   const a=TT.accepts(pile,rows);if(!a.ok){C.notice(a.why,true);return;}
-  const [action,arg]=a.action.split(':');
+  /* The first colon only: a place's argument is a group id, which has one of its own. */
+  const [action,...tail]=a.action.split(':'),arg=tail.join(':');
   const n=rows.length,names=rows.slice(0,4).map(r=>r.card.name).join(', ')+(n>4?` and ${n-4} more`:'');
   /* Any deck takes copies, finalized or not (G3, Rob 2026-09-28). */
   const finals=C.state.decks.filter(d=>!d.archived&&d.kind!=='lobby');
+  /* A drop on a place is Add / move to group, reviewed there (G6). */
+  if(action==='moveto')return moveTo(rows.map(r=>r.id||r.recordId),arg);
   if(action==='source')return stageRows(rows,{action:'source',arg,to:C.source(arg),toStatus:SB.SOURCE_STATUS[arg]||''});
   if(action==='bench')return stageRows(rows,{action:'bench',to:'Bench'});
   if(action==='release')return stageRows(rows,{action:'release',to:'Bench'});
@@ -1127,9 +1150,9 @@ function moveCommands(lotIds,g){
 /* The groups a copy can go to, the Bench first, then the decks, the piles and the lists; and New group at the foot. */
 function moveChoices(){const order={bench:0,commander:1,trade:2,limited:3,general:4},live=g=>g.template!=='commander'||C.state.decks.some(d=>d.groupId===g.id&&!d.archived&&d.kind!=='lobby');
   return [...C.state.groups.filter(live).sort((a,b)=>order[a.template]-order[b.template]).map(g=>[g.id,C.groupLabel(g)]),['__new','New group…']];}
-function moveTo(lotIds){
+function moveTo(lotIds,preset=''){
   if(!lotIds.length)throw Error('Tick at least one copy record first — a draft-list row or a To buy requirement is not a copy yet; Set status is what those take.');
-  const n=lotIds.length,d=form(`Add / move ${n} record${n===1?'':'s'} to a group`,s('Group','groupId',moveChoices(),'')+f('New group name','name','','maxlength="100"')+s('Template','template',[['general','General — a list'],['trade','To sell / trade — a physical pile'],['limited','40-card deck — a physical deck'],['commander','Commander deck — makes a deck of these cards']],'general')
+  const n=lotIds.length,d=form(`Add / move ${n} record${n===1?'':'s'} to a group`,s('Group','groupId',moveChoices(),preset)+f('New group name','name','','maxlength="100"')+s('Template','template',[['general','General — a list'],['trade','To sell / trade — a physical pile'],['limited','40-card deck — a physical deck'],['commander','Commander deck — makes a deck of these cards']],'general')
     +`<div class="cm-full">${note('A deck, the Bench and a Sell / Trade pile are places: a copy you own moves there, and is in one place at a time. A General group is a list: the copies are filed in it, and nothing moves.')}</div>`,
     async v=>{
       if(v.groupId==='__new'){const name=(v.name||'').trim()||'New group',gid='group:'+C.uid();

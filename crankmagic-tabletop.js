@@ -105,9 +105,9 @@
     const byStatus = new Map();
     for (const r of rows || []) { const s = r.status || "Unassigned"; if (!byStatus.has(s)) byStatus.set(s, []); byStatus.get(s).push(r); }
     const count = (list) => list.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
-    const bench = byStatus.get(BENCH) || [];
+    let bench = byStatus.get(BENCH) || [];
     const order = statuses.length ? statuses.map((s) => s.label) : [...byStatus.keys()];
-    const statusPiles = order.filter((label) => label !== BENCH).map((label) => {
+    let statusPiles = order.filter((label) => label !== BENCH).map((label) => {
       const list = (byStatus.get(label) || []).slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
       const meta = statuses.find((s) => s.label === label) || {};
       return {id: "status:" + (meta.id || label), kind: "status", label, tone: meta.tone || "", rows: list, count: count(list), ghost: GHOST.has(label), target: TARGET.has(label), top: list[0] || null};
@@ -116,9 +116,28 @@
     /* options.statusSort: "workflow" (the model's order, the default) or "count" (fullest first,
        the workflow order breaking ties) -- a reader's preference the view remembers. */
     if (options.statusSort === "count") statusPiles.sort((a, b) => b.count - a.count);
+    /* THE TABLE BY GROUP (Rob, 2026-09-28; docs/plan-groups.md G6). With `options.places` -- the physical groups, each
+       {id, label, template} -- the band along the bottom is those places, and `options.placeOf(row)` says which one
+       a row is in: "bench" for the Bench, a place's id, or "" for a card that is in no place yet (to buy, watched,
+       ordered for no deck). EACH CARD ONCE: a row is on exactly one pile. The status piles give way; a card's
+       status is still on its face. `options.openPlace` narrows the stacks (the group piles) to one place's cards,
+       so opening a group spreads it into stacks. */
+    let placeRows = null;
+    if (Array.isArray(options.places)) {
+      const placeOf = typeof options.placeOf === "function" ? options.placeOf : () => "";
+      const held = new Map(options.places.map((p) => [p.id, []])), elsewhere = [];
+      bench = [];
+      for (const r of rows || []) { const id = placeOf(r); if (id === "bench") bench.push(r); else if (held.has(id)) held.get(id).push(r); else elsewhere.push(r); }
+      const byName = (a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name));
+      statusPiles = options.places.map((p) => { const list = held.get(p.id).sort(byName); return {id: "place:" + p.id, kind: "place", groupId: p.id, template: p.template || "", label: p.label, tone: "", rows: list, count: count(list), ghosts: list.filter(isGhost).length, ghost: false, target: true, top: list[0] || null}; });
+      const wanted = elsewhere.sort(byName);
+      if (wanted.length) statusPiles.push({id: "place:none", kind: "status", label: "Not in hand", tone: "", rows: wanted, count: count(wanted), ghost: true, target: false, top: wanted[0] || null});
+      const open = options.openPlace === "bench" ? bench : options.openPlace ? (held.get(String(options.openPlace).replace(/^place:/, "")) || null) : null;
+      placeRows = open;
+    }
     const groups = new Map();
     const none = "No " + GROUPINGS.find(([k]) => k === groupBy)[1].toLowerCase();
-    for (const r of rows || []) { let band = bandOf(r, groupBy, value); if (band === undefined || band === null || String(band).trim() === "") band = none; if (!groups.has(band)) groups.set(band, []); groups.get(band).push(r); }
+    for (const r of placeRows || rows || []) { let band = bandOf(r, groupBy, value); if (band === undefined || band === null || String(band).trim() === "") band = none; if (!groups.has(band)) groups.set(band, []); groups.get(band).push(r); }
     let groupPiles = [...groups.entries()].map(([band, list]) => ({id: "group:" + groupBy + ":" + band, kind: "group", key: groupBy, label: band, rows: list, count: count(list), ghosts: list.filter(isGhost).length, top: list[0] || null, order: bandOrder(groupBy, band, options.statusOrder)}))
       .sort((a, b) => a.order.localeCompare(b.order) || a.label.localeCompare(b.label));
     /* A table has room for so many piles. Past options.maxGroupPiles the smallest bands fold
@@ -151,7 +170,7 @@
     return {
       groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
-      statusPiles, groupPiles, shelfPiles, play: playModel,
+      statusPiles, groupPiles, shelfPiles, play: playModel, byPlace: Array.isArray(options.places),
       total: count(all || []), rows: (all || []).length, ghosts: (all || []).filter(isGhost).length
     };
   }
@@ -387,6 +406,13 @@
       if (cats.length) return no(NOT_HELD);
       if (owned.length === lots.length && !plans.length) return yes("bench", "Move physically to the Bench", owned.some(inBox) ? "Takes a copy out of its physical deck; asks first." : "Records the Bench as where the copies are; reservations are untouched.");
       return yes("source:owned", "Record as owned copies on the Bench", "An ordered or watched copy becomes owned; a To buy requirement or a draft-list row becomes an owned copy filed with its deck.");
+    }
+    /* A PLACE TAKES COPIES (G6): dropping on a group is Add / move to group -- into a deck's box, a Sell / Trade pile,
+       a 40-card deck -- which asks and reviews first, as the Library's action does. */
+    if (pile.kind === "place") {
+      if (cats.length) return no(NOT_HELD);
+      if (others || plans.length) return no(NOT_COPY);
+      return yes("moveto:" + pile.groupId, "Add / move to " + pile.label, pile.template === "commander" ? "Copies you own go in the deck's box; a seat its list wants is reserved." : pile.template === "trade" ? "Copies you own come out of any box and are offered." : "Copies you own go there, out of any deck's box.");
     }
     if (pile.kind === "status") {
       if (cats.length) return no(NOT_HELD);
@@ -694,6 +720,8 @@
     /* A grouping's name is a term as well: what "Primary Purpose" or "Price band" means is a
        question a reader has while choosing one, not afterwards. */
     const groupingTerm = () => { const found = model.groupings.find(([k]) => k === model.groupBy); return found ? term(found[1]) : ""; };
+    /* BY GROUP OR BY STATUS (G6): which band the bottom of the table is. */
+    const arrangeSelect = `<select name="tabletopArrange" aria-label="Arrange the table"><option value="group"${model.byPlace ? " selected" : ""}>By group</option><option value="status"${model.byPlace ? "" : " selected"}>By status</option></select>`;
     const orderSelect = `<select name="tabletopStatusOrder" aria-label="Status pile order"><option value="workflow"${model.statusSort === "count" ? "" : " selected"}>Workflow order</option><option value="count"${model.statusSort === "count" ? " selected" : ""}>Fullest first</option></select>`;
     /* Every control names a term the glossary defines, so the words on the table can be asked
        about where they are read (Rob, 14 September). `hooks.term(text)` is the caller's glossary;
@@ -768,7 +796,7 @@
       return {html, height};
     }
     const canvasSelect = `<select name="tabletopCanvas" data-tt="canvas" aria-label="Choose canvas">${CANVASES.map(([k, l]) => `<option value="${k}"${k === canvasOf(ui.canvas) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
-    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>${term("Group piles by")} ${groupSelect}</label><label>${term("Status piles")} ${orderSelect}</label><label>Choose canvas ${canvasSelect}</label></div>`;
+    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>Arrange ${arrangeSelect}</label><label>${term("Group piles by")} ${groupSelect}</label>${model.byPlace ? "" : `<label>${term("Status piles")} ${orderSelect}</label>`}<label>Choose canvas ${canvasSelect}</label></div>`;
     let body = "", height = 0, stageHTML = "";
     /* AN OPEN PILE NO LONGER TAKES THE MIDDLE (Rob, 15 September). Clicking a pile used to
        replace the board with a grid, which is why he could not flip through a pile and drag a
@@ -886,7 +914,7 @@
       height = statusTop + statusRows * ROW + readH + (narrow ? 86 : 44);
       body = shelfHTML + stageHTML + bar.html + statusHTML;
     }
-    const legend = `${model.total.toLocaleString('en-US')} cards on the table · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
+    const legend = `${model.total.toLocaleString('en-US')} cards on the table · ${model.ghosts.toLocaleString('en-US')} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : model.byPlace ? `${sN} group${sN === 1 ? "" : "s"} along the bottom` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     paint(host, `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`);
     /* The drawer's head as drawn: if its height is not the one the rail was made for, the host redraws once with it. */
     const drawnHead = open && host.querySelector(".cm-tt-drawer:not(.is-shut) .cm-tt-drawer-head");
@@ -897,6 +925,7 @@
        on the page's own keydown, reappearing one level down. */
     const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.onchange = () => hooks.onGroupBy(sel.value);
     const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.onchange = () => hooks.onStatusOrder(ord.value);
+    const arr = host.querySelector("select[name=tabletopArrange]"); if (arr && hooks.onArrange) arr.onchange = () => hooks.onArrange(arr.value);
     const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.onchange = () => hooks.onCanvas(can.value);
     for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.onchange = () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value);
     /* THE CLICK THAT FOLLOWS A DRAG IS NOT A CLICK (Rob, 15 September). `preventDefault` on a
