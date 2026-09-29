@@ -36,7 +36,7 @@
   const matApplied = new Set();   /* tables this page has already put the remembered mat on */
   let matPicked = null;
   const ORDER = [["br", 0], ["bl", 1], ["tr", 2], ["tl", 3]];   /* the quadrant corners the local table uses, seat 1 first */
-  let current = null;
+  let current = null, drawnKey = null;   /* the table last drawn, so a read that changed nothing redraws nothing */
   /* How far the table's clock is from this device's: the countdown is the server's, read in its own time. */
   let skew = 0;
   const tableNow = () => Date.now() + skew;
@@ -133,6 +133,11 @@
     applyRememberedMat(t);
     /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
     if (C.board && C.board.wants(t)) return C.board.show(t);
+    /* The table is read every two seconds; a read that changed nothing leaves the page as it is (Rob, 2026-09-29:
+       every redraw restarted the seats' seas, and it loses whatever the reader was pointing at). */
+    const key = JSON.stringify(t);
+    if (key === drawnKey && C.main.querySelector(".cm-cloud-table")) return;
+    drawnKey = key;
     const art = C.seatArt;
     const seats = ORDER.map(([corner, i]) => {
       const s = t.seats[i];

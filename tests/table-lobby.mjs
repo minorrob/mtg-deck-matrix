@@ -143,6 +143,20 @@ try {
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
   eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  /* THE SEAS DO NOT JUMP (Rob, 2026-09-29: the background played "for about a second then jumping back to the
+     beginning"). The lobby reads the table every two seconds; a read that changed nothing leaves the seats' seas
+     running, and a redraw that did change something picks up where the last one was, on the page's clock. */
+  const sea = () => rob.page.evaluate(() => {const c = document.querySelector(".cm-cloud-table .cm-seat-sea"); if (!c) return null; c.dataset.probe ||= String(Math.random()); return {probe: c.dataset.probe, t: Number(c.dataset.t)};});
+  await rob.page.waitForFunction(() => Number(document.querySelector(".cm-cloud-table .cm-seat-sea")?.dataset.t) > 0, null, {timeout: 10000});
+  const before = await sea();
+  await rob.page.waitForTimeout(4500);
+  const after = await sea();
+  ok(after.probe === before.probe && after.t - before.t > 3, `through two reads of the table the seats' seas keep running, not restarted (${before.t.toFixed(1)}s → ${after.t.toFixed(1)}s)`);
+  const drawnAt = after.t;
+  await rob.page.evaluate(() => {const c = document.querySelector(".cm-cloud-table"); c.remove();});
+  await rob.page.waitForFunction(() => !!document.querySelector(".cm-cloud-table .cm-seat-sea")?.dataset.t, null, {timeout: 10000});
+  const redrawn = await sea();
+  ok(redrawn.probe !== after.probe && redrawn.t >= drawnAt, `and a sea drawn afresh carries on from the same moment, never from the beginning (${redrawn.t.toFixed(1)}s)`);
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
   ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
   const wide = await panelReading(rob.page);
