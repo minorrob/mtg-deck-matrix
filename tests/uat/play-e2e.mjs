@@ -125,6 +125,11 @@ try {
   const lands = (land) => ({name: `${land}s`, commander: ["Wastes"], cards: Array(99).fill(land)});
   eq((await api("POST", `${url}/deck`, {seatId: 0, deck: lands("Forest")})).status, 200, "Rob brings a deck of basic lands");
   eq((await api("POST", `${url}/deck`, {seatId: 1, deck: lands("Island")})).status, 200, "and the AI's");
+  /* The lobby, drawn from the release's own modules (Rob, 2026-09-29: it opened on "reading 'statusPill'"). */
+  await page.goto(`${BASE}/index.html#table?id=${id}`);
+  await page.locator(".cm-cloud-table .cm-lobby-seat").nth(1).waitFor({timeout: 30000});
+  eq([await page.locator(".cm-cloud-table .cm-lobby-seat").count(), await page.locator("#cm-table-refused").count(), await page.locator(".cm-cloud-table .cm-seat-pill").count()], [2, 0, 2], "the lobby opens and draws both seats, each with its status");
+  await shot(page, "lobby-1400");
   await api("POST", `${url}/ready`, {ready: true});
   eq((await api("POST", `${url}/start`)).status, 200, "Rob starts the countdown");
 

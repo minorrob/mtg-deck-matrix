@@ -14,6 +14,7 @@
  *   Mat      Choose mat: the app's own mats, a preview, everyone sees it, remembered for the next table.
  *   Board    once the game is on the page is the board's (tests/table-board.mjs); once over, the lobby says so.
  *   Shut     without the cloud-Play mark the page says Coming Soon; every write carries Play's header.
+ *   Page     marked for Play, the page is staging's own release page, so a module it leaves out cannot be leaned on.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -24,6 +25,7 @@ import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
+import {build, worktreeSource} from "../tools/release-pages.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let checks = 0;
@@ -86,7 +88,11 @@ async function answer(route, email) {
   return route.fulfill({status: r.status, contentType: "application/json", body: await r.text()});
 }
 
-const html = (play) => readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", `<meta name="crankmagic-accounts" content="on">${play ? '<meta name="crankmagic-play" content="cloud">' : ""}</head>`);
+/* Marked for Play in the cloud, the page is the one staging ships: built by tools/release-pages.mjs from this tree,
+   with the local game host's modules left out (Rob, 2026-09-29: the lobby borrowed its seats from one of them, and
+   opened on "reading 'statusPill'" on staging while every suite, loading the whole development page, passed). */
+const STAGING_PAGE = build({source: worktreeSource(), profileName: "cloud-staging"}).built.get("index.html").toString("utf8");
+const html = (play) => play ? STAGING_PAGE : readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", `<meta name="crankmagic-accounts" content="on"></head>`);
 const {browser, base, stub, close} = await openBrowser({name: "table-lobby", flag: "GEOMETRY_REQUIRED"});
 async function person(email, viewport, {play = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
