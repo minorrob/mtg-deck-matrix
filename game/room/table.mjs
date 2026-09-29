@@ -24,8 +24,10 @@
  */
 import {createTable, transitionTable, countdownBlockers} from "../contracts/table-lifecycle.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
+import {createMatchStore} from "../engine/storage.mjs";
 
 export const TABLE_SCHEMA = "CrankTable@1";
+export const RECORD_SCHEMA = "CrankGameRecord@1";
 export const INVITE_TTL = 24 * 3600 * 1000;
 /* THE MATS a seat may play on (the handoff's Choose mat): drawn by the app itself, so nothing here is anyone
    else's art. A person's own uploaded mats wait on file storage. Felt is where every seat starts. */
@@ -33,6 +35,7 @@ export const MATS = Object.freeze(["felt", "forge", "cavern", "sea", "night"]);
 /* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
+export const MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const KEY = "table";
 
 export class TableError extends Error {
@@ -109,7 +112,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
 
   const api = {
     /** A new table, the host in seat 1. Seats after the first are a person to invite or an AI. */
-    async create({tableId, host, hostName, seats, settings = {}}) {
+    async create({tableId, host, hostName, seats, settings = {}, playtest = false}) {
       if (!TABLE_ID.test(String(tableId || ""))) throw new TableError(400, "A table needs its id.");
       if (await storage.get(KEY) !== null) throw new TableError(409, "This table already exists.");
       const others = Array.isArray(seats) ? seats : [];
@@ -118,7 +121,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
         lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, ...settings}}),
-        members: {0: host}, invites: [], decks: {}, matches: [], away: {},
+        members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
       await save();
       return api.view(host);
@@ -298,6 +301,28 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       return {room, seatId: seatName(seat)};
     },
 
+    /**
+     * A FINISHED GAME'S RECORD (M8b; Rob's go, 2026-09-29). A record shows what the game hid, so there is none
+     * while it goes on. On a PLAYTEST table (made one by the Worker, never by the request: staging's tables are)
+     * it is the whole game -- its seed, pod, decision tape and journal, which game/room/replay.mjs plays again --
+     * so a finding can be seen happen twice. On any other table it is the asking seat's own: its last view and
+     * the public history, never the seed (which with the pod would deal every hand again) or the tape.
+     * Nobody's address is in either: the room only ever knew "s0".."s3".
+     */
+    async record(email, matchId) {
+      await load();
+      const seat = needSeat(email), id = matchId || record.matches.at(-1);
+      if (!id || !record.matches.includes(id)) throw new TableError(404, "There is no such game at this table.");
+      const game = room && room.matchId === id ? room : await openRoom({storage, matchId: id, cards});
+      if (game.status !== "finished") throw new TableError(409, "A game's record is ready once the game is over.");
+      const seatId = seatName(seat);
+      if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
+      const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history};
+      if (!record.playtest) return {...base, kind: "seat", seatId, view: mine};
+      const store = createMatchStore(storage, id), meta = await store.loadMatch();
+      return {...base, kind: "full", seed: meta.seed, pod: meta.pod, tape: await store.readTape(), journal: await store.readJournal()};
+    },
+
     /** The table as one person sees it: every seat's state, but only their own deck's cards. */
     async view(email, {any = false} = {}) {
       await load();
@@ -305,7 +330,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       if (!any && mine === null && !isHost(email)) throw new TableError(403, "You do not have a seat at this table.");
       const t = record.lifecycle;
       return {
-        schema: TABLE_SCHEMA, tableId: record.tableId, phase: t.phase, revision: t.revision,
+        schema: TABLE_SCHEMA, tableId: record.tableId, phase: t.phase, revision: t.revision, playtest: !!record.playtest,
         youAreHost: isHost(email), yourSeat: mine,
         countdownAt: t.countdownAt, launchError: t.launchError, matchId: t.phase === "playing" ? t.matchId : null,
         blockers: countdownBlockers(t).map(({seatId, reason}) => ({seatId, reason})),

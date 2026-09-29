@@ -213,6 +213,8 @@ function roomOn(storage, matchId, cards) {
     get status() {return finished() ? "finished" : "playing";},
     get revision() {return controller.revision;},
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
+    /** Every line of the table's history the room keeps (a view shows the newest): public, the same for every seat. */
+    get history() {return history.map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})}));},
 
     async start(pod, seed) {
       seats = readPod(pod, cards);

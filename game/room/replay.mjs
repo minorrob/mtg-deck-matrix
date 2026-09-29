@@ -11,9 +11,9 @@
  * length, and the stored journal's hash) and whether they agree. A tape that stops fitting the game -- an answer for
  * a seat the game is not waiting on -- is refused at that entry, by number, so a tampered record says where it parts.
  *
- * Nothing here returns a state, a hand or a library: fingerprints only. What a seat may be shown of a replayed
- * game is still `projectFor`'s business, and the export that would carry it (M8b) waits on Rob's call about
- * showing every hand once a game is over. */
+ * Nothing here returns a state, a hand or a library: fingerprints only. The export (M8b, Rob's go 2026-09-29) is
+ * game/room/table.mjs `record`: the seed, pod and tape this replays, for a playtest table only; any other table's
+ * seat gets its own last view and the public history. */
 import {memoryStorage, createMatchStore} from "../engine/storage.mjs";
 import {startRoom, openRoom} from "./room.mjs";
 import {hashState} from "../engine/journal.mjs";

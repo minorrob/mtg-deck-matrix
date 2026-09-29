@@ -21,6 +21,8 @@
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
  *   End       Tools › End game asks a second tap, then both boards say it was ended early; back to the table.
+ *   Record    once it is over, Download your record (M8b): this is not a playtest table, so it is Rob's own seat's
+ *             view and the history, with no seed and nothing of Maya's hand.
  *   Shape     one 48px strip; 5:7 cards sized by width, hand larger than the mat's; no sideways scroll.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
@@ -68,7 +70,7 @@ async function answer(route, email) {
   if (method !== "GET") writes.push({path: url.pathname, header: req.headers()["x-crankmagic"], type: req.headers()["content-type"]});
   const m = /^\/api\/tables\/([a-z0-9]+)(?:\/([a-z]+))?$/.exec(url.pathname);
   if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
-  const r = await serial(() => object.fetch(new Request(`https://table.internal${m[2] ? `/table/${m[2]}` : "/table"}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(method === "GET" ? {} : {body: req.postData() || "{}"})})));
+  const r = await serial(() => object.fetch(new Request(`https://table.internal${m[2] ? `/table/${m[2]}` : "/table"}${url.search}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(method === "GET" ? {} : {body: req.postData() || "{}"})})));
   return route.fulfill({status: r.status, contentType: "application/json", body: await r.text()});
 }
 
@@ -570,6 +572,16 @@ try {
   ok(!robGames.some((g) => g.deckId === "deck:live:D2") && /ended early/.test(robGames[0].notes), "nothing of Maya's game reached the host's library, and the record says why it ended");
   await waitText(rob.page, "#cm-notice", /unfinished game is filed under D1 Quintorius Spirits's record/, 10000);
   ok(true, "and the board says where it went: filed under D1's record");
+
+  /* THE RECORD (M8b): not a playtest table, so each person downloads their own seat's. */
+  const [download] = await Promise.all([rob.page.waitForEvent("download", {timeout: 15000}), rob.page.click(".cm-board-over [data-action=board-record]")]);
+  const rec = JSON.parse(readFileSync(await download.path(), "utf8"));
+  eq([download.suggestedFilename(), rec.kind, rec.seatId, rec.playtest, "seed" in rec, "tape" in rec], [`CrankMagic-${rec.matchId}-your-record.json`, "seat", "s0", false, false, false], "the game over, Download your record gives Rob his own seat's record: no seed, no tape");
+  ok(!JSON.stringify(rec).includes("Maya Secret") && rec.history.length > 0, "with the table's history and nothing of Maya's hidden cards");
+  await waitText(rob.page, "#cm-notice", /Your record is downloaded/, 10000);
+  eq(await rob.page.locator("#cm-notice .cm-toast-action").count(), 0, "and the board says what was downloaded, with no Undo: the download changed nothing");
+  await shot(rob.page, "board-record-1400");
+
   /* Views of the ended game keep arriving while the board is open (anyone's End, an away frame, a mat): each is
      read again, and the result is still filed once. */
   const viewsAtEnd = views(ROB).length;

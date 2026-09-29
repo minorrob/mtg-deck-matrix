@@ -132,6 +132,8 @@ export class GameRoom {
  *   POST /table/mat {mat}   your seat's mat, one of MATS in game/room/table.mjs
  *   POST /table/end      any person ends the game for everyone (the board asks a second tap first)
  *   POST /table/concede  you leave the game in play
+ *   GET  /table/record?match=<matchId>  a finished game's record (M8b): the whole game on a playtest table, your
+ *        own seat's elsewhere. A table is a playtest table when the Worker's PLAYTEST_TABLES is "on" as it is made.
  *   GET  /connect (websocket), once the game is on: the seat this address holds
  *
  * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
@@ -157,9 +159,10 @@ export class GameTable extends GameRoom {
     try {
       if (!email) return reply(401, {error: "Sign in to use a table."});
       const route = `${request.method} ${url.pathname}`;
-      if (route === "POST /table/create") {const b = await body(); return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats})});}
+      if (route === "POST /table/create") {const b = await body(); return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on"})});}
       /* With the table, the object's own time: a countdown is read against the clock that set it, not the device's. */
       if (route === "GET /table") return reply(200, {table: await t.view(email), now});
+      if (route === "GET /table/record") return reply(200, {record: await t.record(email, url.searchParams.get("match") || undefined)});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});

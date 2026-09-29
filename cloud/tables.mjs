@@ -10,11 +10,12 @@
  *   GET  /api/tables/:id                     the table as you see it
  *   POST /api/tables/:id/invite|uninvite|join|deck|ready|start|cancel|end|concede
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
+ *   GET  /api/tables/:id/record?match=<id>   a finished game's record (M8b; what it holds is the table's call)
  *
  * A table's invitation link is `https://<site>/#table/<id>/<code>`: the code rides in the fragment, which a
  * browser never sends, so it is in no server's logs until the invited person posts it to /join.
  */
-const TABLE_ID = /^[a-z0-9]{8,40}$/;
+const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "ready", "mat", "start", "cancel", "end", "concede"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 const reply = (status, value) => new Response(JSON.stringify(value), {status, headers: HEADERS});
@@ -49,6 +50,11 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       const headers = new Headers(request.headers);
       headers.set("x-crankmagic-email", who.email);
       return env.TABLES.get(env.TABLES.idFromName(given)).fetch(new Request("https://table.internal/connect", {method: "GET", headers}));
+    }
+    if (action === "record") {
+      if (request.method !== "GET") return reply(405, {error: "Read a record with a GET."});
+      const match = url.searchParams.get("match") || "";
+      return forward(given, `/table/record${MATCH_ID.test(match) ? `?match=${match}` : ""}`);
     }
     if (!ACTIONS.has(action)) return reply(404, {error: "No such endpoint."});
     if (request.method !== "POST") return reply(405, {error: "That is a POST."});

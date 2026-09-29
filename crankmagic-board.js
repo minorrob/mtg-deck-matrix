@@ -20,6 +20,9 @@
  *                 turn dividers. The shell only, as the handoff says: its reply says it is not switched on yet.
  *   History       the table's history (game/room/history.mjs: public lines, the same for everyone), newest
  *                 first: a drop-down from the strip with a filter, a band on the Focus mat, a column in Full screen
+ *   Over          who won, or that it was ended early; Back to the table; and Download the record (M8b): the
+ *                 whole game on a playtest table, your own seat's view and the history on any other
+ *                 (game/room/table.mjs `record`)
  *   the mat       the battlefield in groups over the lands; Command and Exile, Library and Graveyard as piles
  *   the hand      your own, docked over the mat's foot; bright = something you can do with it now
  *   the decision  whatever the room is asking you, in any mode the engine asks in
@@ -380,6 +383,8 @@
       <input type="search" class="cm-history-filter" data-board-history-filter placeholder="Search & filter by card or player…" aria-label="Filter the history" value="${e(historyFilter)}">
       <ol class="cm-history-list">${all.map((l) => historyRow(l).replace("<li", `<li${matches(l) ? "" : " hidden"}`)).join("") || `<li class="cm-muted">Nothing has happened yet.</li>`}</ol></div>`;
   }
+  /* The record is there once the game is over; what it holds is the table's call, and the button says which. */
+  const recordButton = () => view && view.status === "finished" ? b(table && table.playtest ? "Download the full record" : "Download your record", "board-record", {}, false, {cls: "compact"}) : "";
   function historyBand(count) {
     const recent = lines().filter((l) => l.mark !== "turn").slice(0, count);
     return `<section class="cm-board-band" aria-label="History"><h3>History ${b("⌕", "board-history", {}, false, {cls: "compact"}).replace("<button ", '<button aria-label="Open the history" title="Open the history" ')}</h3>
@@ -558,7 +563,7 @@
         : you ? "You won" : r.winner ? `${seatName(r.winner)} won` : "The game is over";
       const line = r.reason === "ended early" ? "Nobody lost. Its record is kept, as not finished." : r.reason ? `${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : "";
       return `<div class="cm-board-over" role="dialog" aria-modal="false" aria-labelledby="cm-board-over-title"><div class="v-panel"><h2 id="cm-board-over-title">${e(head)}</h2><p class="cm-muted">${e(line)}</p>
-        <div class="cm-actions">${b("Back to the table", "board-leave", {}, true)}</div></div></div>`;
+        <div class="cm-actions">${b("Back to the table", "board-leave", {}, true)}${recordButton()}</div></div></div>`;
     }
     const gone = departed(view.seat);
     if (gone) return `<p class="cm-board-banner" role="status">You have left this game; the others play on.</p>`;
@@ -773,6 +778,12 @@
     confirmEnd = false; tools = false;
     await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/end`);
     draw();   /* the room's own view, ended, follows on the socket */
+  };
+  actions["board-record"] = async () => {
+    const {record} = await tableApi().api("GET", `${tableApi().tableUrl(tableId)}/record?match=${encodeURIComponent(view.matchId)}`);
+    C.download(`CrankMagic-${record.matchId}-${record.kind === "full" ? "full-record" : "your-record"}.json`, JSON.stringify(record, null, 2));
+    /* A download changes nothing in the library, so it offers no Undo (the result filed a moment ago is not this). */
+    C.notice(record.kind === "full" ? "The full record is downloaded: its seed and decision tape play the game again." : "Your record is downloaded: your seat's view and the table's history.", false, {undo: false});
   };
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
