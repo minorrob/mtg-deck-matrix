@@ -119,6 +119,7 @@ The program's Stage 3 table, built to the r3 Play design.
 - [ ] **Results back to the library:** a finished game files its record under the deck and syncs with the account. AI games carry a badge, and a guest's deck never overwrites the host's library.
 - [ ] Ship the **audio pack** (88 files, 5.3 MB) and wire the three clips that can never fire today, once CME emits their events.
 - [ ] **Release:** a release profile that ships Play. The builder refuses `game/` today, and the Coming Soon mark comes off. Staging first.
+  - **Built for staging (2026-09-29; Rob: "execute the play release and merge to staging"):** `cloud-staging` is marked Play in the cloud, runs `cloud/play-worker.mjs` with `TABLES` bound to the `GameTable` Durable Object, and carries the engine modules the table imports (never as files). Its tables are playtest tables. `tests/uat/play-e2e.mjs` walks it under `wrangler dev`. Production waits on Rob's go. Until M4's card definitions land, only basic lands are playable, and a real deck is refused by name.
 - [ ] **Launch gate: hidden information.** Tests inspect network payloads, logs and reconnect snapshots, and MP-07 to MP-09 run live.
 - [ ] **Speed:** Rob's rule, "we don't leave users hanging for 5 seconds", measured over the network.
 - [ ] **Rob:**

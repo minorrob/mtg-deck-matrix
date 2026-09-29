@@ -8,7 +8,7 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
-import {build, worktreeSource, verify, transform, referencesOf, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -136,11 +136,11 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"},
-  "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard)");
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on"},
+  "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
-eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
-  "staging: its own Worker on staging.crankmagic.com, the API script run for /api/* only");
+eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
+  "staging: its own Worker on staging.crankmagic.com, Play's, the API script run for /api/* only");
 eq(sw2.d1_databases, [{binding: "DB", database_name: "crankmagic-staging", database_id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26", migrations_dir: "cloud/migrations"}], "its own database, never production's");
 ok(["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs", "cloud/migrations/0001_accounts.sql", "cloud-sync.js", "crankmagic-account.js"].every((f) => sb.has(f)), "the Worker, its migration and the account module are all in it");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("cloud/"), "and the Worker's source is not published as files");
@@ -149,6 +149,31 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a Worker that would run for every path, not just the API, is named");
 ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2, vars: {...sw2.vars, ACCESS_JWKS: "{\"keys\":[]}"}}))]]), PROFILES["cloud-staging"]).some((p) => p.includes("ACCESS_JWKS")),
   "a release that would hand the Worker its own signing keys is refused");
+/* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
+const stagingProfile = PROFILES["cloud-staging"];
+eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
+ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
+ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");
+ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"].every((f) => !sb.has(f)), "and none of the local game host's modules");
+const engine = workerModules(worktreeSource());
+eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
+eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
+ok(engine.files.every((f) => /\.mjs$/.test(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");
+eq([pw.durable_objects, pw.migrations, pw.vars.PLAYTEST_TABLES, built.has("crankmagic-table.js"), [...built.keys()].some((f) => f.startsWith("game/"))], [undefined, undefined, undefined, false, false], "production binds no table, has no playtest tables, and carries neither the lobby nor the engine: Play there waits on Rob's go");
+const without = (map, name) => new Map([...map].filter(([f]) => f !== name));
+const playConfig = (map, change) => new Map([...map, ["wrangler.jsonc", Buffer.from(JSON.stringify(change(JSON.parse(map.get("wrangler.jsonc").toString("utf8")))))]]);
+ok(verify(playConfig(sb, (c) => ({...c, durable_objects: undefined})), stagingProfile).some((p) => p.includes("does not bind TABLES")), "a Play release that binds no table is named");
+ok(verify(playConfig(sb, (c) => ({...c, migrations: []})), stagingProfile).some((p) => p.includes("no migration")), "and one with no migration to make the class");
+ok(verify(playConfig(sb, (c) => ({...c, main: "cloud/worker.mjs"})), stagingProfile).some((p) => p.includes(`does not run ${PLAY_WORKER}`)), "and one that runs the Worker without the table");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "off"}})), stagingProfile).some((p) => p.includes("playtest tables are not switched on")), "and staging's playtest tables switched off");
+ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "on"}})), profile).some((p) => p.includes("full record would be downloadable")), "production with playtest tables on is refused: every finished game's full record would be downloadable");
+ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
+ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
+ok(verify(without(sb, "game/room/room.mjs"), stagingProfile).some((p) => p.includes("game/room/room.mjs")), "one missing a module the table imports is named");
+ok(verify(new Map([...sb, ["game/engine/index.mjs", Buffer.from("export {};\n")]]), stagingProfile).some((p) => p.includes("game/engine/index.mjs is in a folder that never ships")), "and a module of game/ the Worker does not import is still something that never ships");
+ok(verify(new Map([...sb, ["game/room/history.mjs", Buffer.from(`import fs from "node:fs";\n${sb.get("game/room/history.mjs")}`)]]), stagingProfile).some((p) => p.includes("imports node:fs")), "a Node import in the engine, which a Worker cannot bundle, is named");
+ok(verify(without(sb, "crankmagic-board.js"), stagingProfile).some((p) => p.includes("crankmagic-board.js is Play in the cloud")), "and a Play release without the board");
 ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace('<meta name="crankmagic-accounts" content="on">', ""))]]), profile).some((p) => p.includes("would stay asleep")),
   "a production page that lost its accounts-on mark is named");
 

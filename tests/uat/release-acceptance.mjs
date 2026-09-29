@@ -7,7 +7,8 @@
  * one piece no other suite runs: crankmagic-journeys files a report instead of measuring, and the
  * simulator is exactly what a release can break by leaving out a file it loads at run time.
  *
- * Around the four, the release's own promises: the Menu names the commit, Play says Coming Soon,
+ * Around the four, the release's own promises: the Menu names the commit, Play says Coming Soon (or is the
+ * table's page, on a release with Play in the cloud),
  * and across the whole walk the page throws nothing, asks the site for nothing it does not have,
  * and never reaches for a game host or a tunnel.
  *
@@ -84,14 +85,22 @@ try {
     await shot("01b-menu");
     await page.keyboard.press("Escape");
 
-    /* Play is Coming Soon. */
+    /* Play is Coming Soon -- or, on a release with Play in the cloud (staging since 2026-09-29), the table's page. */
     await nav("Play");
-    await page.getByRole("heading", {name: "Coming Soon", level: 1}).waitFor({timeout: 20000});
-    ok(/play/i.test(await page.locator("#cm-main .v-eyebrow").first().innerText()), "Play says Coming Soon");
-    await shot("02-play-coming-soon");
-    await click("Go to your decks");
-    await page.waitForFunction(() => location.hash.startsWith("#decks"));
-    ok(true, "and its button goes back to the decks");
+    if (await page.getAttribute('meta[name="crankmagic-play"]', "content") === "cloud") {
+      await page.getByRole("heading", {name: "New table"}).waitFor({timeout: 20000});
+      ok(!/Coming Soon/.test(await page.locator("#cm-main").textContent()), "Play is the table's page: New table, not Coming Soon");
+      await shot("02-play-new-table");
+      await nav("Decks");
+      await page.waitForFunction(() => location.hash.startsWith("#decks"));
+    } else {
+      await page.getByRole("heading", {name: "Coming Soon", level: 1}).waitFor({timeout: 20000});
+      ok(/play/i.test(await page.locator("#cm-main .v-eyebrow").first().innerText()), "Play says Coming Soon");
+      await shot("02-play-coming-soon");
+      await click("Go to your decks");
+      await page.waitForFunction(() => location.hash.startsWith("#decks"));
+      ok(true, "and its button goes back to the decks");
+    }
   }
 
   /* 1 · CREATE. Build drafts a hundred for a commander from nothing but its name. */

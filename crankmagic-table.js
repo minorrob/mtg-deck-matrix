@@ -10,8 +10,9 @@
  *   #table/<id>/<code>       an invitation: joins that seat, then shows the lobby
  *
  * SHUT UNTIL PLAY SHIPS. The page is only drawn where the build is marked for cloud Play
- * (<meta name="crankmagic-play" content="cloud">) and accounts are on; no release is, and releases leave this
- * file out with the rest of Play (tools/release-pages.mjs, PLAY). Anywhere else it says Coming Soon.
+ * (<meta name="crankmagic-play" content="cloud">) and accounts are on: staging is (2026-09-29), where the Play tab
+ * opens this page; production leaves this file out with the rest of Play (tools/release-pages.mjs, PLAY) and its
+ * Play tab says Coming Soon.
  *
  * While a game is on, the page is the board (crankmagic-board.js), which carries End game (two taps, Rob's
  * rule against accidental clicks) and Concede in its Tools. Once it is over, the lobby says so here.
@@ -146,8 +147,10 @@
     matApplied.add(t.tableId);
     if (mat && mine.mat === "felt" && mat !== "felt") api("POST", `${tableUrl(t.tableId)}/mat`, {mat}).catch(() => {});
   }
-  async function refresh(id) {
+  /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
+  async function refresh(id, live = () => true) {
     const {table, now} = await api("GET", tableUrl(id));
+    if (!live()) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
     draw(table);
     return table;
@@ -167,14 +170,14 @@
     };
     const loop = async () => {
       if (stop) return;
-      try {await refresh(id);} catch (error) {showError(error, id); return;}
+      try {await refresh(id, () => !stop);} catch (error) {if (!stop) showError(error, id); return;}
       timer = setTimeout(loop, POLL_MS);
     };
     const clock = setInterval(tick, 250);
     (async () => {
       if (code) {
         try {await api("POST", `${tableUrl(id)}/join`, {code}); history.replaceState(null, "", `#table?id=${id}`);}
-        catch (error) {showError(error, id); return;}
+        catch (error) {if (!stop) showError(error, id); return;}
       }
       loop();
     })();
