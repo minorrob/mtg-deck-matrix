@@ -154,6 +154,11 @@ const stagingProfile = PROFILES["cloud-staging"];
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
 ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");
+/* Rob's artwork mats (2026-09-29): Play only, every one with its picture and thumbnail; none in production. */
+const {ART_MATS} = await import("../game/room/table.mjs");
+ok(sb.has("crankmagic-mats.css") && ART_MATS.every((id) => sb.has(`assets/playmats/${id}.webp`) && sb.has(`assets/playmats/${id}-thumb.webp`)), `staging carries Rob's ${ART_MATS.length} artwork mats, each with its picture and thumbnail`);
+eq([...sb.keys()].filter((f) => f.startsWith("assets/playmats/")).length, ART_MATS.length * 2, "and nothing else from that folder");
+eq([built.has("crankmagic-mats.css"), [...built.keys()].filter((f) => f.startsWith("assets/playmats/")).length], [false, 0], "production, where Play is Coming Soon, carries neither the sheet nor its pictures");
 ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"].every((f) => !sb.has(f)), "and none of the local game host's modules");
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");

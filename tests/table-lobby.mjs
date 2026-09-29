@@ -25,6 +25,7 @@ import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
+import {MATS} from "../game/room/table.mjs";
 import {build, worktreeSource} from "../tools/release-pages.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -142,6 +143,20 @@ try {
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
   eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  /* THE SEAS DO NOT JUMP (Rob, 2026-09-29: the background played "for about a second then jumping back to the
+     beginning"). The lobby reads the table every two seconds; a read that changed nothing leaves the seats' seas
+     running, and a redraw that did change something picks up where the last one was, on the page's clock. */
+  const sea = () => rob.page.evaluate(() => {const c = document.querySelector(".cm-cloud-table .cm-seat-sea"); if (!c) return null; c.dataset.probe ||= String(Math.random()); return {probe: c.dataset.probe, t: Number(c.dataset.t)};});
+  await rob.page.waitForFunction(() => Number(document.querySelector(".cm-cloud-table .cm-seat-sea")?.dataset.t) > 0, null, {timeout: 10000});
+  const before = await sea();
+  await rob.page.waitForTimeout(4500);
+  const after = await sea();
+  ok(after.probe === before.probe && after.t - before.t > 3, `through two reads of the table the seats' seas keep running, not restarted (${before.t.toFixed(1)}s → ${after.t.toFixed(1)}s)`);
+  const drawnAt = after.t;
+  await rob.page.evaluate(() => {const c = document.querySelector(".cm-cloud-table"); c.remove();});
+  await rob.page.waitForFunction(() => !!document.querySelector(".cm-cloud-table .cm-seat-sea")?.dataset.t, null, {timeout: 10000});
+  const redrawn = await sea();
+  ok(redrawn.probe !== after.probe && redrawn.t >= drawnAt, `and a sea drawn afresh carries on from the same moment, never from the beginning (${redrawn.t.toFixed(1)}s)`);
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
   ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
   const wide = await panelReading(rob.page);
@@ -188,11 +203,27 @@ try {
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
   await rob.page.locator("#cm-mat-preview").waitFor();
-  eq(await rob.page.locator(".cm-mat-pick").allInnerTexts(), ["Felt", "Forge", "Cavern", "Sea", "Night"], "Choose mat offers the app's own mats");
+  const picks = await rob.page.$$eval(".cm-mat-pick", (els) => els.map((el) => [el.dataset.mat, el.textContent.trim()]));
+  eq(picks.slice(0, 5).map(([, name]) => name), ["Felt", "Forge", "Cavern", "Sea", "Night"], "Choose mat offers the five mats the app draws first");
+  eq(picks.map(([id]) => id), [...MATS], "then Rob's 25 artwork mats (2026-09-29): exactly the mats the table accepts, in its order");
   const swatch = await rob.page.evaluate(() => {const r = document.querySelector(".cm-mat-pick .cm-mat-swatch").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)];});
   ok(swatch[0] >= 140 && Math.abs(swatch[0] / swatch[1] - 16 / 9) < 0.05, `each mat shows as a 16:9 swatch you can see (${swatch.join("×")})`);
   await rob.page.click(".cm-mat-pick[data-mat=forge]");
   eq([await rob.page.getAttribute("#cm-mat-preview", "data-mat"), await rob.page.getAttribute(".cm-mat-pick[data-mat=forge]", "aria-pressed")], ["forge", "true"], "picking one previews the zones over it");
+  /* ROB'S ARTWORK (2026-09-29): a thumbnail in the picker, the full picture in the preview, both served by the site. */
+  await rob.page.locator(".cm-mat-pick[data-mat=moon-wolf]").scrollIntoViewIfNeeded();
+  await rob.page.click(".cm-mat-pick[data-mat=moon-wolf]");
+  const art = await rob.page.evaluate(async () => {
+    const bg = (el) => getComputedStyle(el).backgroundImage, url = (s) => (/url\("?([^")]+)"?\)/.exec(s) || [])[1];
+    const thumb = url(bg(document.querySelector(".cm-mat-pick[data-mat=moon-wolf] .cm-mat-swatch"))), full = url(bg(document.getElementById("cm-mat-preview")));
+    const load = async (u) => {const r = await fetch(u); return [r.status, r.headers.get("content-type"), (await r.arrayBuffer()).byteLength];};
+    return {thumb, full, thumbGot: thumb && await load(thumb), fullGot: full && await load(full)};
+  });
+  ok(/assets\/playmats\/moon-wolf-thumb\.webp$/.test(art.thumb || "") && art.thumbGot[0] === 200 && art.thumbGot[2] < 30000, `Moon Wolf's thumbnail shows in the picker, small (${art.thumbGot && art.thumbGot[2]} bytes)`);
+  ok(/assets\/playmats\/moon-wolf\.webp$/.test(art.full || "") && art.fullGot[0] === 200 && /webp/.test(art.fullGot[1] || "") && art.fullGot[2] < 400000, `and the whole picture in the preview, downscaled (${art.fullGot && art.fullGot[2]} bytes)`);
+  await shot(rob.page, "choose-mat-art-1400");
+  await rob.page.locator(".cm-mat-pick[data-mat=forge]").scrollIntoViewIfNeeded();
+  await rob.page.click(".cm-mat-pick[data-mat=forge]");
   /* The preview is the board's layout (Rob, 2026-09-29): the four piles are cards, 5:7, and the History band is outlined. */
   const zones = await rob.page.$$eval("#cm-mat-preview .cm-mat-zone", (els) => els.map((el) => {const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return {zone: el.dataset.zone, w: r.width, h: r.height, x: r.left, y: r.top, border: parseFloat(cs.borderTopWidth)};}));
   const zone = (name) => zones.find((z) => z.zone === name);

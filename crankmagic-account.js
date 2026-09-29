@@ -156,6 +156,8 @@
       : `<p>Signed out. Sign in and the library saves itself to the cloud and follows you to any device you sign in on.</p><div class="cm-settings-row">${button("Sign in", "account-sign-in", {}, true)}</div>`;
   }
   C.drawAccount = () => {settings(); danger();};
+  /** Whether someone is signed in (false until the Worker has said). The landing page reads it for its header. */
+  C.signedIn = () => !!who.email;
 
   /* DELETE ACCOUNT (R3.3b; r3, 74-confirm-delete). The person types the address they are signed in as, the
      Worker checks it again, and everything the cloud holds for them goes in one step. This device's library
@@ -199,8 +201,8 @@
     try {const me = await api("GET", "/api/me"); who = {checked: true, email: me.email};}
     catch {who = {checked: true, email: null};}
     draw();
-    /* Signed-in people skip the landing page (R3.8, M1·3): their library is on its way from the cloud. */
-    if (who.email && C.route().view === "welcome") C.go("decks");
+    /* The landing page is everyone's front door now (Rob, 2026-09-29); signed in, it says so, so it is drawn again. */
+    if (C.route().view === "welcome") C.render();
     if (!who.email) return;
     setInterval(chip, 30000);
     C.repo.subscribe((message) => {if (message && message.revision && !running) soon();});

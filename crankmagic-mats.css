@@ -1,0 +1,82 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* ROB'S OWN MATS (2026-09-29: "They're all mine, publish them"): his artwork, downscaled to at most 1920 px wide
+   (assets/playmats/<id>.webp) with a 320 px thumbnail for the picker (<id>-thumb.webp). Play only: the releases
+   that leave Play out leave this sheet and its pictures out with it (tools/release-pages.mjs). On the board a
+   wash of the table's ink sits over the art, so cards and their text read on any of them. Ids are
+   game/room/table.mjs ART_MATS. */
+:root{--mat-art-wash:linear-gradient(color-mix(in srgb,var(--table-ink,#111) 38%,transparent),color-mix(in srgb,var(--table-ink,#111) 38%,transparent))}
+.cm-mat-pick .cm-mat-swatch[data-mat="cloud-wolf"]{background:var(--table-ink,#111) url(assets/playmats/cloud-wolf-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="cloud-wolf"]{background:var(--mat-art-wash),url(assets/playmats/cloud-wolf.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="cloud-wolf"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/cloud-wolf.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="sand-lion"]{background:var(--table-ink,#111) url(assets/playmats/sand-lion-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="sand-lion"]{background:var(--mat-art-wash),url(assets/playmats/sand-lion.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="sand-lion"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/sand-lion.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="ember-serpent"]{background:var(--table-ink,#111) url(assets/playmats/ember-serpent-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="ember-serpent"]{background:var(--mat-art-wash),url(assets/playmats/ember-serpent.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="ember-serpent"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/ember-serpent.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="grove-stag"]{background:var(--table-ink,#111) url(assets/playmats/grove-stag-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="grove-stag"]{background:var(--mat-art-wash),url(assets/playmats/grove-stag.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="grove-stag"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/grove-stag.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="star-gate"]{background:var(--table-ink,#111) url(assets/playmats/star-gate-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="star-gate"]{background:var(--mat-art-wash),url(assets/playmats/star-gate.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="star-gate"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/star-gate.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="moon-altar"]{background:var(--table-ink,#111) url(assets/playmats/moon-altar-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="moon-altar"]{background:var(--mat-art-wash),url(assets/playmats/moon-altar.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="moon-altar"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/moon-altar.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="sky-citadel"]{background:var(--table-ink,#111) url(assets/playmats/sky-citadel-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="sky-citadel"]{background:var(--mat-art-wash),url(assets/playmats/sky-citadel.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="sky-citadel"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/sky-citadel.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="sky-dais"]{background:var(--table-ink,#111) url(assets/playmats/sky-dais-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="sky-dais"]{background:var(--mat-art-wash),url(assets/playmats/sky-dais.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="sky-dais"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/sky-dais.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="star-tome"]{background:var(--table-ink,#111) url(assets/playmats/star-tome-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="star-tome"]{background:var(--mat-art-wash),url(assets/playmats/star-tome.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="star-tome"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/star-tome.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="dragon-pact"]{background:var(--table-ink,#111) url(assets/playmats/dragon-pact-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="dragon-pact"]{background:var(--mat-art-wash),url(assets/playmats/dragon-pact.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="dragon-pact"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/dragon-pact.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="moon-wolf"]{background:var(--table-ink,#111) url(assets/playmats/moon-wolf-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="moon-wolf"]{background:var(--mat-art-wash),url(assets/playmats/moon-wolf.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="moon-wolf"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/moon-wolf.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="falls-tree"]{background:var(--table-ink,#111) url(assets/playmats/falls-tree-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="falls-tree"]{background:var(--mat-art-wash),url(assets/playmats/falls-tree.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="falls-tree"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/falls-tree.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="star-whale"]{background:var(--table-ink,#111) url(assets/playmats/star-whale-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="star-whale"]{background:var(--mat-art-wash),url(assets/playmats/star-whale.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="star-whale"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/star-whale.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="grove-arch"]{background:var(--table-ink,#111) url(assets/playmats/grove-arch-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="grove-arch"]{background:var(--mat-art-wash),url(assets/playmats/grove-arch.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="grove-arch"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/grove-arch.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="molten-sword"]{background:var(--table-ink,#111) url(assets/playmats/molten-sword-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="molten-sword"]{background:var(--mat-art-wash),url(assets/playmats/molten-sword.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="molten-sword"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/molten-sword.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="sky-tree"]{background:var(--table-ink,#111) url(assets/playmats/sky-tree-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="sky-tree"]{background:var(--mat-art-wash),url(assets/playmats/sky-tree.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="sky-tree"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/sky-tree.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="void-ring"]{background:var(--table-ink,#111) url(assets/playmats/void-ring-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="void-ring"]{background:var(--mat-art-wash),url(assets/playmats/void-ring.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="void-ring"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/void-ring.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="desert-portal"]{background:var(--table-ink,#111) url(assets/playmats/desert-portal-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="desert-portal"]{background:var(--mat-art-wash),url(assets/playmats/desert-portal.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="desert-portal"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/desert-portal.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="night-citadel"]{background:var(--table-ink,#111) url(assets/playmats/night-citadel-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="night-citadel"]{background:var(--mat-art-wash),url(assets/playmats/night-citadel.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="night-citadel"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/night-citadel.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="white-sanctum"]{background:var(--table-ink,#111) url(assets/playmats/white-sanctum-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="white-sanctum"]{background:var(--mat-art-wash),url(assets/playmats/white-sanctum.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="white-sanctum"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/white-sanctum.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="grave-king"]{background:var(--table-ink,#111) url(assets/playmats/grave-king-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="grave-king"]{background:var(--mat-art-wash),url(assets/playmats/grave-king.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="grave-king"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/grave-king.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="tree-portal"]{background:var(--table-ink,#111) url(assets/playmats/tree-portal-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="tree-portal"]{background:var(--mat-art-wash),url(assets/playmats/tree-portal.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="tree-portal"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/tree-portal.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="ringed-world"]{background:var(--table-ink,#111) url(assets/playmats/ringed-world-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="ringed-world"]{background:var(--mat-art-wash),url(assets/playmats/ringed-world.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="ringed-world"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/ringed-world.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="mirror-gates"]{background:var(--table-ink,#111) url(assets/playmats/mirror-gates-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="mirror-gates"]{background:var(--mat-art-wash),url(assets/playmats/mirror-gates.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="mirror-gates"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/mirror-gates.webp) center/cover no-repeat,var(--table-ink,#111)}
+.cm-mat-pick .cm-mat-swatch[data-mat="orrery-bridge"]{background:var(--table-ink,#111) url(assets/playmats/orrery-bridge-thumb.webp) center/cover no-repeat}
+.cm-mat-preview[data-mat="orrery-bridge"]{background:var(--mat-art-wash),url(assets/playmats/orrery-bridge.webp) center/cover no-repeat,var(--table-ink,#111)}
+[data-mat="orrery-bridge"]:is(.cm-board-mat,.cm-seatboard){background:var(--mat-art-wash),url(assets/playmats/orrery-bridge.webp) center/cover no-repeat,var(--table-ink,#111)}

@@ -13,6 +13,7 @@
  *           only from this site; strangers see no table.
  */
 import assert from "node:assert/strict";
+import {existsSync} from "node:fs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {tableOn, INVITE_TTL, MATS} from "../game/room/table.mjs";
@@ -77,7 +78,10 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   eq((await t.view(ROB)).seats[1].mat, "sea", "and Rob sees it on her seat");
   await refuses(t.mat(MAYA, "someone-elses-art"), 400, /no such mat/, "a mat that is not one of the app's is refused");
   await refuses(t.mat(EVE, "forge"), 403, null, "someone with no seat picks no mat");
-  eq(MATS, ["felt", "forge", "cavern", "sea", "night"], "the app's own mats, drawn by the app: nobody else's art");
+  eq(MATS.slice(0, 5), ["felt", "forge", "cavern", "sea", "night"], "five mats the app draws, felt first");
+  eq(MATS.length, 30, "and Rob's own artwork after them (2026-09-29), 25 mats: nobody else's art");
+  eq((await t.mat(MAYA, "moon-wolf")).seats[1].mat, "moon-wolf", "one of Rob's artwork mats is chosen like any other, and everyone sees it");
+  for (const id of MATS.slice(5)) ok(existsSync(new URL(`../assets/playmats/${id}.webp`, import.meta.url)) && existsSync(new URL(`../assets/playmats/${id}-thumb.webp`, import.meta.url)), `${id} has its picture and its thumbnail`);
 
   /* Decks. */
   await refuses(t.deck(MAYA, 0, deckFor("maya"), now), 403, null, "a person chooses only their own seat's deck");
