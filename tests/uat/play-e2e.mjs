@@ -137,6 +137,8 @@ try {
   const seats = (await api("GET", url)).json.table.seats;
   eq(seats.map((s) => s.deck && s.deck.name), ["Basic lands test deck", "Basic lands test deck"], "on this playtest table the deck dialog offers the basic lands test deck, and both seats take it");
   await shot(page, "lobby-1400");
+  /* ROB'S ARTWORK MATS (2026-09-29): one is chosen like any other mat. */
+  eq((await api("POST", `${url}/mat`, {mat: "star-whale"})).json.table.seats[0].mat, "star-whale", "Rob puts his seat on the Star Whale mat");
   await api("POST", `${url}/ready`, {ready: true});
   eq((await api("POST", `${url}/start`)).status, 200, "Rob starts the countdown");
 
@@ -151,6 +153,13 @@ try {
     throw error;
   });
   ok(true, "the board opens over the table's WebSocket, through the Worker to the object");
+  const whale = await page.evaluate(async () => {
+    const mat = document.querySelector('.cm-board-mat[data-mat="star-whale"]'), bg = mat && getComputedStyle(mat).backgroundImage;
+    const src = bg && (/url\("?([^")]+star-whale\.webp)"?\)/.exec(bg) || [])[1];
+    const r = src ? await fetch(src) : null;
+    return {src, status: r && r.status, type: r && r.headers.get("content-type")};
+  });
+  ok(/assets\/playmats\/star-whale\.webp$/.test(whale.src || "") && whale.status === 200 && /webp/.test(whale.type || ""), `the board draws Rob's seat on the Star Whale picture, served by staging's release (${whale.status} ${whale.type})`);
   await shot(page, "board-1400");
 
   /* 4. End game; Download the full record; replay it. */

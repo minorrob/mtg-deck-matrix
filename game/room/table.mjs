@@ -29,9 +29,14 @@ import {createMatchStore} from "../engine/storage.mjs";
 export const TABLE_SCHEMA = "CrankTable@1";
 export const RECORD_SCHEMA = "CrankGameRecord@1";
 export const INVITE_TTL = 24 * 3600 * 1000;
-/* THE MATS a seat may play on (the handoff's Choose mat): drawn by the app itself, so nothing here is anyone
-   else's art. A person's own uploaded mats wait on file storage. Felt is where every seat starts. */
-export const MATS = Object.freeze(["felt", "forge", "cavern", "sea", "night"]);
+/* THE MATS a seat may play on (the handoff's Choose mat): five drawn by the app itself, and Rob's own artwork (2026-09-29:
+   "They're all mine, publish them"; assets/playmats, crankmagic-mats.css). Nothing here is anyone else's art. A
+   person's own uploaded mats wait on file storage. Felt is where every seat starts. */
+export const DRAWN_MATS = Object.freeze(["felt", "forge", "cavern", "sea", "night"]);
+export const ART_MATS = Object.freeze(["cloud-wolf", "sand-lion", "ember-serpent", "grove-stag", "star-gate", "moon-altar", "sky-citadel", "sky-dais",
+  "star-tome", "dragon-pact", "moon-wolf", "falls-tree", "star-whale", "grove-arch", "molten-sword", "sky-tree", "void-ring", "desert-portal",
+  "night-citadel", "white-sanctum", "grave-king", "tree-portal", "ringed-world", "mirror-gates", "orrery-bridge"]);
+export const MATS = Object.freeze([...DRAWN_MATS, ...ART_MATS]);
 /* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
