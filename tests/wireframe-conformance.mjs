@@ -22,7 +22,8 @@ import {readFileSync} from "node:fs";
 let checks = 0;
 const check = (label, fn) => { fn(); checks += 1; void label; };
 
-const game = readFileSync("crankmagic-game.js", "utf8");
+/* The lobby, and the seats it draws: crankmagic-seat-art.js since 2026-09-29, shared with the cloud table. */
+const game = readFileSync("crankmagic-game.js", "utf8") + "\n" + readFileSync("crankmagic-seat-art.js", "utf8");
 const css = readFileSync("crankmagic.css", "utf8");
 const online = readFileSync("crankmagic-online.js", "utf8");
 
@@ -95,7 +96,7 @@ check("your own seat's detail states the bracket and the deck cost against the c
 // each sweep. If it does not land inside the quadrant, the fan is being drawn somewhere else.
 check("each corner's fan sweeps into its own quadrant", () => {
   const table = /const at = \{([^}]*)\}\[corner\]/.exec(game);
-  assert.ok(table, "the fan's corner table not found in crankmagic-game.js");
+  assert.ok(table, "the fan's corner table not found in crankmagic-seat-art.js");
   const corners = {};
   for (const m of table[1].matchAll(/(\w+):\s*\[([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\]/g)) {
     corners[m[1]] = [Number(m[2]), Number(m[3]), Number(m[4])];
@@ -517,7 +518,7 @@ check("pressing Host tools again closes the menu", () => {
 check("every route a lobby control navigates to exists", () => {
   const views = new Set();
   for (const file of ["crankmagic-app.js", "crankmagic-decks.js", "crankmagic-collection.js",
-    "crankmagic-discover.js", "crankmagic-game.js", "crankmagic-online.js", "crankmagic-lab.js",
+    "crankmagic-discover.js", "crankmagic-game.js", "crankmagic-seat-art.js", "crankmagic-online.js", "crankmagic-lab.js",
     "crankmagic-pull.js", "crankmagic-change-ui.js", "crankmagic-how.js", "crankmagic-orders.js",
     "crankmagic-trade.js", "crankmagic-shop.js"]) {
     let text = "";
