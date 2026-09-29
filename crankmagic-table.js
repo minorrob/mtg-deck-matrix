@@ -234,12 +234,33 @@
   actions["table-uninvite"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/uninvite`, {seatId: Number(el.dataset.seat)}); await refresh(current.tableId);};
 
   /* ---- decks ---- */
+  /* THE BASIC LANDS TEST DECK (Rob, 2026-09-29: "add the basic lands test deck on staging"). Until M4 defines the
+     decks' cards the engine plays basic lands only, so no library deck can be brought and a game cannot be played
+     through. On a playtest table (every staging table) the chooser offers this one: Wastes, with 99 basic lands.
+     It is not a library deck, so its result is filed nowhere. */
+  const TEST_DECK = Object.freeze({name: "Basic lands test deck", commander: ["Wastes"],
+    cards: [["Plains", 20], ["Island", 20], ["Swamp", 20], ["Mountain", 20], ["Forest", 19]].flatMap(([land, n]) => Array(n).fill(land))});
   actions["table-deck"] = (el) => {
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
-    const list = decks.length
-      ? `<ul class="cm-table-decks">${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span></button></li>`).join("")}</ul>`
+    const test = current && current.playtest
+      ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through on this playtest table, while the engine plays basic lands only</span></button></li>`
+      : "";
+    const list = decks.length || test
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span></button></li>`).join("")}</ul>`
       : `<p class="cm-muted">Your library has no deck with a commander yet.</p>`;
     C.modal(`Choose a deck · Seat ${seatId + 1}`, `${list}<div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+  };
+  actions["table-use-test-deck"] = async (el) => {
+    try {
+      await api("POST", `${tableUrl(current.tableId)}/deck`, {seatId: Number(el.dataset.seat), deck: {name: TEST_DECK.name, commander: [...TEST_DECK.commander], cards: [...TEST_DECK.cards]}});
+      actions.close();
+      await refresh(current.tableId);
+    } catch (error) {
+      const box = document.getElementById("cm-table-deck-error");
+      if (!box) throw error;
+      box.hidden = false;
+      box.textContent = error.message;
+    }
   };
   actions["table-use-deck"] = async (el) => {
     const deck = libraryDecks().find((d) => d.id === el.dataset.deck);
@@ -257,12 +278,15 @@
     }
   };
 
-  /* ---- Choose mat (the handoff's 2b): a strip of the app's mats, the zones previewed over the one picked ---- */
+  /* ---- Choose mat (the handoff's 2b): a strip of the app's mats, the zones previewed over the one picked ----
+     The preview is the board's own layout (Rob, 2026-09-29): Battlefield over Lands; beside them Command and Exile,
+     the History band, then Library and Graveyard, those four the shape of a card (5:7). */
   function matDialog() {
     const strip = MATS.map(([k, name]) => `<li><button type="button" class="cm-mat-pick" data-action="table-mat-pick" data-mat="${k}" aria-pressed="${k === matPicked}"><span class="cm-mat-swatch" data-mat="${k}"></span>${e(name)}</button></li>`).join("");
+    const zone = (name, cls = "") => `<span class="cm-mat-zone${cls}" data-zone="${name.toLowerCase()}">${name}</span>`;
     return `<ul class="cm-mat-strip" aria-label="Mats">${strip}</ul>
       <div class="cm-mat-preview cm-mat-swatch" data-mat="${matPicked}" id="cm-mat-preview" aria-label="Preview of the mat">
-        <span>Battlefield</span><span>Lands</span><span>Command</span><span>Exile</span><span>Library</span><span>Graveyard</span></div>
+        ${zone("Battlefield")}${zone("Lands")}${zone("Command", " is-card")}${zone("Exile", " is-card")}${zone("History")}${zone("Library", " is-card")}${zone("Graveyard", " is-card")}</div>
       <p class="cm-muted cm-mat-note">The app's own mats. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>
       <div class="cm-form-footer">${b("Use this mat", "table-mat-use", {}, true)}${b("Cancel", "close")}</div>`;
   }
