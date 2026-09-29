@@ -2,9 +2,10 @@
  *
  * In a real page:
  *
- *   1. Who sees it. `/` with nothing in this browser is the landing page, standing alone (no rail). With a
- *      library, `/` is Decks. Signed in, `/` goes on to Decks as soon as the account answers. Any #route is the
- *      app, and #welcome is the landing page on purpose.
+ *   1. Who sees it. `/` is the landing page, standing alone (no rail), for everyone: with nothing in this browser,
+ *      with a library (its header then says Open your decks), and signed in (Rob, 2026-09-29: "when I go to
+ *      crankmagic.com that should go to the landing page"). The rail's CrankMagic name and logo go back to it
+ *      (#welcome). Any other #route is the app.
  *   2. What it promises. Invite-only: Sign in (only where accounts are on) and "Start without an account",
  *      never "Start free" or "Free account". Play is Coming soon.
  *   3. Where each door goes: Decks, Library, Explore, Play, each to its own page.
@@ -18,7 +19,7 @@
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
@@ -29,6 +30,7 @@ const ok = (c, msg) => { checks++; assert.ok(c, msg); };
 const eq = (a, b, msg) => { checks++; assert.deepEqual(a, b, msg); };
 
 const {browser, base, stub, close} = await openBrowser({name: "landing-r3", flag: "GEOMETRY_REQUIRED"});
+const shot = async (page, name) => {if (process.env.UAT_SHOTS) {mkdirSync(process.env.UAT_SHOTS, {recursive: true}); await page.screenshot({path: path.join(process.env.UAT_SHOTS, `${name}.png`)});}};
 const fresh = async (viewport = {width: 1400, height: 900}, extra = {}) => {
   const context = await browser.newContext({viewport, serviceWorkers: "block", ...extra});
   const page = await context.newPage();
@@ -110,17 +112,33 @@ try {
     await context.close();
   }
 
-  /* 1. With a library, / is Decks. */
+  /* 1. THE FRONT DOOR (Rob, 2026-09-29): with a library too, / is the landing page, and it offers the way in; the
+        rail's CrankMagic name and logo bring you back to it. */
   {
     const {context, page} = await fresh();
     await loadLiveState(page, base);
     await page.goto(`${base}/index.html`);
+    await landing(page);
+    eq([await page.locator(".cm-landing-account .v-button").innerText(), await page.locator(".cm-landing-account .v-button").getAttribute("href"), await page.locator(".cm-landing [data-action=landing-start]").count()],
+      ["Open your decks", "#decks", 1], "with a library in this browser, / is the landing page too, and its header says Open your decks");
+    eq(await page.locator(".cm-landing-step strong").textContent(), "Start a new deck", "and Step one reads Start a new deck, not your first");
+    await page.waitForTimeout(1500);
+    ok(!/Offline app caching is unavailable/.test(await page.locator("#cm-notice").textContent()), "a browser that blocks service workers is not shown an error about it");
+    await shot(page, "landing-with-library-1440");
+    await page.locator(".cm-landing-account .v-button").click();
     await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
-    eq(await page.locator(".cm-landing").count(), 0, "with a library in this browser, / opens Decks, not the landing page");
+    ok(true, "Open your decks opens Decks");
+    for (const [which, sel] of [["logo", ".v-brand-home"], ["name", "a.v-brand"]]) {
+      await page.locator(sel).click();
+      await landing(page);
+      ok(true, `the rail's CrankMagic ${which} goes back to the landing page`);
+      await page.goto(`${base}/index.html#decks`);
+      await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
+    }
     await context.close();
   }
 
-  /* 1 and 2. Signed in, / goes on to Decks; signed out where accounts are on, the landing page offers Sign in. */
+  /* 1 and 2. Signed in, / is the landing page, with no Sign in; signed out where accounts are on, it offers Sign in. */
   for (const who of ["signed in", "signed out"]) {
     const {context, page} = await fresh();
     const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"></head>');
@@ -129,9 +147,9 @@ try {
     await page.route(`${base}/api/library`, (route) => route.fulfill({json: {head: null}}));
     await page.goto(`${base}/index.html`);
     if (who === "signed in") {
-      await page.waitForFunction(() => location.hash === "#decks", null, {timeout: 30000});
-      await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
-      eq(await page.locator(".cm-landing").count(), 0, "signed in, / goes on to Decks: the library is on its way from the cloud");
+      await landing(page);
+      await page.waitForFunction(() => document.querySelector(".cm-landing-account .v-button")?.textContent === "Open your decks", null, {timeout: 30000});
+      eq(await page.locator(".cm-landing-account [data-action=account-sign-in]").count(), 0, "signed in, / is the landing page too (Rob, 2026-09-29): no Sign in, and Open your decks");
     } else {
       await landing(page);
       await page.waitForTimeout(1000);
@@ -163,4 +181,4 @@ try {
 } finally {
   await close();
 }
-console.log(`landing-r3: ${checks} checks passed — / is the landing page for a first visit only, its promises are invite-only, each door and Step one go where they say, and Decks with no decks says so.`);
+console.log(`landing-r3: ${checks} checks passed — / is the landing page for everyone, the rail's name and logo go back to it, its promises are invite-only, each door and Step one go where they say, and Decks with no decks says so.`);

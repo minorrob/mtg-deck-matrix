@@ -193,7 +193,7 @@ try {
     await p.route(`${base}/api/library`, (route) => cloud === "answers"
       ? route.fulfill({json: {head: null}})
       : route.fulfill({status: 500, json: {error: "The cloud is down for a moment."}}));
-    await p.goto(`${base}/index.html`);
+    await p.goto(`${base}/index.html#decks`);   /* the rail's chip: / is the landing page, which has no rail (2026-09-29) */
     await p.locator("#cm-user-functions.is-signed-in").waitFor({timeout: 30000});
     const chip = () => p.$eval("#cm-user-functions", (b) => ({
       avatar: b.querySelector(".cm-chip-avatar").textContent, name: b.querySelector(".cm-chip-name").textContent,

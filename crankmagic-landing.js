@@ -1,8 +1,9 @@
 /* THE LANDING PAGE (R3.8; docs/design/2026-09-25-redesign-r3, "Landing Page.dc.html").
  *
- * WHO SEES IT (Rob, M1·3): `/` with no route, for a visitor who is signed out and has nothing in this browser.
- * Anyone with a library, and anyone signed in, goes to Decks (crankmagic-app.js route(); crankmagic-account.js
- * sends a signed-in person on as soon as it knows). #welcome shows it on purpose.
+ * WHO SEES IT (Rob, 2026-09-29: "when I go to crankmagic.com that should go to the landing page", and the CrankMagic
+ * name and logo "should take me back to the landing page"): everyone, at `/` with no route and at #welcome, which the
+ * rail's name and logo link to. It was a signed-out first visit's only (M1·3). For someone with a library, or signed
+ * in, its header says Open your decks instead of Start without an account.
  *
  * WHAT IT PROMISES (M1·2): accounts are invite-only, so the page says Sign in and "Start without an account",
  * never "Start free" or "Free account". Step one takes a commander's name or a pasted list, or a CSV (M1·4);
@@ -46,12 +47,16 @@
   };
 
   views.welcome = () => {
-    const signIn = accounts() ? `<button type="button" class="cm-landing-link" data-action="account-sign-in">Sign in</button>` : "";
+    const signedIn = !!(C.signedIn && C.signedIn()), s = C.state || {};
+    const known = signedIn || !!((s.decks || []).length || (s.lots || []).length);
+    const signIn = accounts() && !signedIn ? `<button type="button" class="cm-landing-link" data-action="account-sign-in">Sign in</button>` : "";
+    const go = known ? `<a class="v-button primary" href="#decks">Open your decks</a>` : `<button type="button" class="v-button primary" data-action="landing-start">Start without an account</button>`;
+    const playSoon = document.querySelector('meta[name="crankmagic-play"]')?.content !== "cloud";
     C.main.innerHTML = `<div class="cm-landing">
 <header class="cm-landing-head">
   <a class="cm-landing-brand" href="#welcome"><img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" width="36" height="36"><span>CrankMagic</span></a>
-  <nav class="cm-landing-nav" aria-label="Main pages"><a href="#decks">Decks</a><a href="#cards">Library</a><a href="#discover">Explore</a><a href="#game">Play <span class="cm-landing-soon">Soon</span></a></nav>
-  <div class="cm-landing-account">${signIn}<button type="button" class="v-button primary" data-action="landing-start">Start without an account</button></div>
+  <nav class="cm-landing-nav" aria-label="Main pages"><a href="#decks">Decks</a><a href="#cards">Library</a><a href="#discover">Explore</a><a href="#game">Play${playSoon ? ` <span class="cm-landing-soon">Soon</span>` : ""}</a></nav>
+  <div class="cm-landing-account">${signIn}${go}</div>
 </header>
 <section class="cm-landing-hero">
   <div class="cm-landing-copy">
@@ -59,7 +64,7 @@
     <h1>Build the deck. Own the cards. Bring it to the table.</h1>
     <p class="cm-landing-lede">Plan a hundred, track what’s really in the box, find the cards that fit, and play it. On any device.</p>
     <form class="cm-landing-start" id="cm-landing-start">
-      <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>Step one: start your first deck</strong></div>
+      <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>${known ? "Start a new deck" : "Step one: start your first deck"}</strong></div>
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
       <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
@@ -74,7 +79,7 @@
 </section>
 <section class="cm-landing-section">
   <div class="cm-landing-section-head"><h2>Where do you want to start?</h2><p>Four ways in. Each one starts with a single step, and they all share the same library.</p></div>
-  <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
+  <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => [page, href, title, body, cta, tint, page === "Play" && !playSoon ? "" : badge]).map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
 </section>
 <section class="cm-landing-band"><div class="cm-landing-section">
   <h2>From an idea to a deck you can shuffle</h2>
