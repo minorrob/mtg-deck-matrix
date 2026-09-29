@@ -65,8 +65,11 @@ const objectCtx = () => {
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets, getTags: (s) => s.tags};
 };
 const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+/* A person's table reads can be held in flight, to prove an answer that lands after they left the page draws nothing. */
+const held = {};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
+  if (method === "GET" && held[email]) {held[email].waiting += 1; await held[email].promise;}
   if (method !== "GET") {
     writes.push({path: url.pathname, header: req.headers()["x-crankmagic"], type: req.headers()["content-type"]});
     if (req.headers()["x-crankmagic"] !== "play") return route.fulfill({status: 403, json: {error: "That request did not come from CrankMagic."}});
@@ -273,6 +276,19 @@ try {
     ok(/not on the invite list/.test(refusal[0]) && refusal[1] && refusal[2] === 0, "and the page it points to says what to do, on a phone without sideways scroll");
     await shot(page, "not-invited-390");
     await context.close();
+  }
+
+  /* LEFT MID-READ: the lobby reads its table every two seconds. Rob leaves for a new table while a read is in
+     flight; when it lands, it draws nothing -- the page he went to stays. */
+  {
+    let release; held["rob@example.com"] = {waiting: 0, promise: new Promise((r) => {release = r;})};
+    for (let i = 0; i < 40 && !held["rob@example.com"].waiting; i += 1) await new Promise((r) => setTimeout(r, 250));
+    ok(held["rob@example.com"].waiting > 0, "a read of his table is in flight");
+    await rob.page.goto(`${base}/index.html#table`);
+    await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+    delete held["rob@example.com"]; release();
+    await new Promise((r) => setTimeout(r, 1500));
+    ok(await rob.page.locator("#cm-table-new").count() === 1 && !(await rob.page.locator(".cm-cloud-table").count()), "when it lands after he left, the new-table page stays: the old table is not drawn over it");
   }
 
   /* The mat is remembered on the device: at Rob's next table his seat is on the forge without his asking. */

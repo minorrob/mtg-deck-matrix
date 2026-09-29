@@ -147,8 +147,10 @@
     matApplied.add(t.tableId);
     if (mat && mine.mat === "felt" && mat !== "felt") api("POST", `${tableUrl(t.tableId)}/mat`, {mat}).catch(() => {});
   }
-  async function refresh(id) {
+  /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
+  async function refresh(id, live = () => true) {
     const {table, now} = await api("GET", tableUrl(id));
+    if (!live()) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
     draw(table);
     return table;
@@ -168,14 +170,14 @@
     };
     const loop = async () => {
       if (stop) return;
-      try {await refresh(id);} catch (error) {showError(error, id); return;}
+      try {await refresh(id, () => !stop);} catch (error) {if (!stop) showError(error, id); return;}
       timer = setTimeout(loop, POLL_MS);
     };
     const clock = setInterval(tick, 250);
     (async () => {
       if (code) {
         try {await api("POST", `${tableUrl(id)}/join`, {code}); history.replaceState(null, "", `#table?id=${id}`);}
-        catch (error) {showError(error, id); return;}
+        catch (error) {if (!stop) showError(error, id); return;}
       }
       loop();
     })();
