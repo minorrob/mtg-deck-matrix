@@ -79,10 +79,15 @@ try {
     if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
       await page.locator("#cm-account").waitFor({timeout: 15000});
       ok(/Sign in to keep your library in the cloud/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
+      ok(await page.locator("#cm-account [data-action=app-refresh]").count() === 1, "with Refresh under it (Rob, 2026-09-29)");
     }
-    const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
-    ok((await page.locator("#cm-share-mail").getAttribute("href")).includes(encodeURIComponent(home)), `the share link carries the published address, ${home}`);
+    ok(!(await page.locator("#cm-share-mail").count()), "the Menu has no Share CrankMagic by email (Rob, 2026-09-29)");
     await shot("01b-menu");
+    const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
+    await page.locator("#cm-user-menu").getByRole("button", {name: "Show a QR code"}).click();
+    await page.locator("#cm-dialog .cm-qr-link a").waitFor({timeout: 15000});
+    ok((await page.locator("#cm-dialog .cm-qr-link a").innerText()) === home, `the QR code carries the published address, ${home}`);
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
 
     /* Play is Coming Soon -- or, on a release with Play in the cloud (staging since 2026-09-29), the table's page. */

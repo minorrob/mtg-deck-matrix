@@ -132,10 +132,12 @@
     if (!menu) return;
     let box = C.$("#cm-account");
     if (!box) {box = document.createElement("div"); box.id = "cm-account"; box.className = "cm-account"; menu.prepend(box);}
+    /* Refresh (Rob, 2026-09-29) sits under Sync now: the app's newest files, the library untouched (crankmagic-app.js). */
+    const refresh = `<button type="button" data-action="app-refresh" title="Reload CrankMagic with its newest files from the site. Your library is not touched.">Refresh</button>`;
     box.innerHTML = who.email
       ? `<p>Account</p><p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
-        + `<button type="button" data-action="account-sync">Sync now</button><hr>`
-      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign in to keep your library in the cloud</button><hr>`;
+        + `<button type="button" data-action="account-sync">Sync now</button>${refresh}<hr>`
+      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign in to keep your library in the cloud</button>${refresh}<hr>`;
     let out = C.$("#cm-account-out");
     if (who.email && !out) {out = document.createElement("div"); out.id = "cm-account-out"; out.innerHTML = `<hr><button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`; menu.append(out);}
     if (!who.email && out) out.remove();

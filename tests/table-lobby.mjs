@@ -153,6 +153,7 @@ try {
   await rob.page.locator(".cm-table-deck").first().waitFor();
   const deckCount = await rob.page.locator(".cm-table-deck").count();
   ok(deckCount >= 5, `Choose a deck lists the decks in your own library (${deckCount})`);
+  eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
@@ -192,6 +193,13 @@ try {
   ok(swatch[0] >= 140 && Math.abs(swatch[0] / swatch[1] - 16 / 9) < 0.05, `each mat shows as a 16:9 swatch you can see (${swatch.join("×")})`);
   await rob.page.click(".cm-mat-pick[data-mat=forge]");
   eq([await rob.page.getAttribute("#cm-mat-preview", "data-mat"), await rob.page.getAttribute(".cm-mat-pick[data-mat=forge]", "aria-pressed")], ["forge", "true"], "picking one previews the zones over it");
+  /* The preview is the board's layout (Rob, 2026-09-29): the four piles are cards, 5:7, and the History band is outlined. */
+  const zones = await rob.page.$$eval("#cm-mat-preview .cm-mat-zone", (els) => els.map((el) => {const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return {zone: el.dataset.zone, w: r.width, h: r.height, x: r.left, y: r.top, border: parseFloat(cs.borderTopWidth)};}));
+  const zone = (name) => zones.find((z) => z.zone === name);
+  eq(zones.map((z) => z.zone), ["battlefield", "lands", "command", "exile", "history", "library", "graveyard"], "the preview names the board's zones, History among them");
+  for (const pile of ["command", "exile", "library", "graveyard"]) ok(Math.abs(zone(pile).w / zone(pile).h - 5 / 7) < 0.03, `${pile} is the shape of a card, 5:7 (${Math.round(zone(pile).w)}×${Math.round(zone(pile).h)})`);
+  const h = zone("history");
+  ok(h.border >= 1 && h.y > zone("command").y + zone("command").h && h.y + h.h < zone("library").y && h.w > zone("command").w * 1.5 && h.h > 20, `the History band is outlined between Command and Exile above and Library and Graveyard below (${Math.round(h.w)}×${Math.round(h.h)})`);
   await shot(rob.page, "choose-mat-1400");
   await rob.page.click("[data-action=table-mat-use]");
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 10000});

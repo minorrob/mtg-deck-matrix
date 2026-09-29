@@ -490,7 +490,17 @@ actions['open-glossary']=el=>{const key=el&&el.dataset.help,back=key&&HELP[key]?
 /* The Menu's Help opens the help of the page underneath, which is what "help" means from there;
    a page with no help opens the glossary. */
 actions['menu-help']=()=>{const b=$('#cm-main [data-action="page-help"]');if(b&&HELP[b.dataset.help])actions['page-help'](b);else actions['open-glossary']();};
-actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
+actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});syncTermsItem();if(el.dataset.card)await inspector(el.dataset.card);};
+/* THE GLOSSARY SWITCH IN THE MENU'S HELP (Rob, 2026-09-29: "a toggle to turn on the glossary function ... hover over
+   game terms to see what they mean in an info box that disappears after moving the cursor off it"). The same
+   preference the deck page's switch sets; the menu item says whether it is on each time the menu opens. */
+function syncTermsItem(){const item=$('#cm-menu-terms');if(!item)return;item.setAttribute('aria-pressed',String(termsOn()));const word=item.querySelector('.cm-menu-state');if(word)word.textContent=termsOn()?'On':'Off';}
+$('#cm-user-menu')?.addEventListener('beforetoggle',syncTermsItem);
+/* REFRESH (Rob, 2026-09-29: a hard refresh in the Menu, under Sync now). The app's files come back from the site,
+   not this browser's copies: the service worker is asked to look for a new version, its caches of the app's files
+   are emptied, a new version waiting is let in, and the page reloads. The library lives in IndexedDB and is not
+   touched. */
+actions['app-refresh']=async()=>{try{const regs=navigator.serviceWorker?await navigator.serviceWorker.getRegistrations():[];await Promise.all(regs.map(r=>r.update().catch(()=>{})));const keys=globalThis.caches?await caches.keys():[];await Promise.all(keys.filter(k=>k.startsWith('crankmagic-public:')).map(k=>caches.delete(k)));const reg=regs.find(r=>r.waiting);if(reg)await new Promise(done=>{navigator.serviceWorker.addEventListener('controllerchange',done,{once:true});reg.waiting.postMessage({type:'skip-waiting'});setTimeout(done,3000);});}catch{}location.reload();};
 actions.close=()=>{if(modalGuard&&!confirm(modalGuard.message))return;const guard=modalGuard;modalGuard=null;guard?.onLeave?.();const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
 /* Clicking the backdrop is the same gesture as the corner control: it goes back if there is
    somewhere to go, and closes otherwise. A <dialog> reports a backdrop click as a click on the
@@ -554,15 +564,11 @@ document.addEventListener('click',async e=>{const el=e.target.closest('[data-act
 /* Retry is offered only for a failure that trying again could fix -- the network, a save that was
    busy -- never for a rule the reader has not met yet, which would fail the same way twice. */
 function mayPass(error){return Boolean(error.retryable)||!navigator.onLine||(error.name==='TypeError'&&/fetch|network|load failed/i.test(error.message));}
-/* SHARE. Two ways to hand the app to someone, neither needing a server: sharing is a
-   pre-written draft with the To line left for them, and the QR code is drawn in the page
-   (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
-   whatever address this copy happens to be open on: the page's canonical link, which
-   tools/release-pages.mjs sets to the address a release is published at. */
+/* SHARE. The QR code hands the app to someone with no server: it is drawn in the page (crankmagic-qr.js), so it
+   works offline and at a table. (Share by email left the Menu, Rob, 2026-09-29.) The link is the public one, not
+   whatever address this copy happens to be open on: the page's canonical link, which tools/release-pages.mjs sets
+   to the address a release is published at. */
 const APP_URL=canonicalBase();
-function shareLinks(){const mail=$('#cm-share-mail');if(!mail)return;
-  mail.href='mailto:?subject='+encodeURIComponent('CrankMagic: an intelligent Commander deck creator and card library')+'&body='+encodeURIComponent('Have a look at CrankMagic: '+APP_URL+'\n\nIt builds and measures Commander decks, keeps your card library, and works on a phone at the table.');}
-shareLinks();
 $('#cm-share-menu')?.addEventListener('beforetoggle',e=>{if(e.newState==='open'){const r=$('#cm-share-button').getBoundingClientRect(),m=$('#cm-share-menu');m.style.right='auto';m.style.left=Math.max(8,Math.min(r.left,innerWidth-248))+'px';m.style.top=(r.bottom+8)+'px';}});
 $('#cm-share-menu')?.addEventListener('click',e=>{if(e.target.closest('a,button'))$('#cm-share-menu').hidePopover();});
 actions['share-qr']=()=>{if(typeof CrankQR==='undefined')throw Error('The QR code module has not loaded yet. Try again in a moment.');
@@ -623,7 +629,7 @@ else if(document.querySelector('meta[name="crankmagic-play"]')?.content==='cloud
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=395',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=396',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();
