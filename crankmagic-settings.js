@@ -10,7 +10,9 @@
 (globalThis.CrankFeatures ||= []).push(function(C){const {esc:e,button:b,actions,views,notice,commit}=C;
 const money=n=>'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const card=(id,title,body,cls='')=>`<section class="cm-settings-card${cls?' '+cls:''}" aria-labelledby="cm-settings-h-${id}"><h2 id="cm-settings-h-${id}">${e(title)}</h2>${body}</section>`;
-const THEMES=[['dark','Dark · Brass & Slate'],['light','Light · Felt & Cream'],['system','Match system']];
+/* A THEME IS PICKED BY ITS LOOK (A1): a swatch card per theme, drawn in that theme's own tokens -- five bands (ground,
+   panel, raised, line, ink), the accent as a dot, and the name in the theme's display face. The current one is ringed. */
+const swatch=([k,label,line])=>{const [palette,face]=C.THEME_FACE[k];return `<button type="button" class="cm-theme-card" data-action="set-theme" data-theme-choice="${k}" aria-pressed="${k===C.themeChoice()}" aria-label="${e(label)}" aria-description="${e(line)}"><span class="cm-theme-swatch" data-palette="${palette}" data-theme="${face}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b><strong>${e(label)}</strong></span><small>${e(line)}</small></button>`;};
 
 C.HELP.settings={title:'Settings',body:`<p>Your account, how the app looks, the price cap a deck is held to, and your library's data: backups, exports, history, and starting over.</p><p>A backup is an extra copy of the library, in a file you keep. Restoring one <strong>replaces</strong> the library with the file's.</p>`};
 
@@ -21,9 +23,8 @@ views.settings=async()=>{
    +`<div class="cm-settings">`
    +card('account','Account',`<div id="cm-settings-account"><p class="cm-muted">Signing in is not offered on this copy of CrankMagic, so the library has no cloud copy here. Save a backup file below to keep an extra one.</p></div>`)
    +card('appearance','Appearance',
-      `<p class="cm-settings-label">Theme</p><div class="cm-settings-row" role="group" aria-label="Theme">${THEMES.map(([k,label])=>`<button type="button" class="v-button cm-chip-toggle" data-action="set-theme" data-theme-choice="${k}" aria-pressed="${k===choice}">${e(label)}</button>`).join('')}</div>`
-      +`<p class="cm-settings-label">Card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false})}</div>`
-      +`<p class="cm-muted">The Table view's cards, the hover preview and the card inspector's picture. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
+      `<p class="cm-settings-label">Theme</p><div class="cm-theme-cards" role="group" aria-label="Theme">${C.THEMES.map(swatch).join('')}</div>`
+      +`<p class="cm-settings-label">Default card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false,scope:'default'})}</div><p class="cm-muted">The size cards are drawn at everywhere: the hover preview, the card inspector's picture, and any view you have not sized. The Table and the Play board have their own slider, which sets that view's size over this one. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
       +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-motion" aria-pressed="${still}">Reduce motion</button></div>`
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)

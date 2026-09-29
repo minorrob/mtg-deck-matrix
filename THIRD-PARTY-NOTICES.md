@@ -86,6 +86,7 @@ CrankMagic is not affiliated with any of them.
 | **Oxanium** | subset embedded in the wordmark CSS | SIL Open Font License 1.1 — full text in `assets/crankmagic/oxanium-OFL.txt`. Copyright 2019 The Oxanium Project Authors. |
 | **Satoshi** | `assets/crankmagic/satoshi-{400,500,700,900}.woff2` | Indian Type Foundry, distributed via Fontshare under the ITF Free Font License (FFL). Free for personal and commercial *use*, and self-hosting for our own site is permitted; the files are used unmodified (the license forbids subsetting or conversion). **Redistribution of the font files is restricted by the foundry's terms.** Anyone forking this repository should read those terms rather than assume the files may travel with it. `satoshi-900.woff2` is Fontshare's `Satoshi-Black.woff2`, downloaded 2026-09-25 with Rob's approval (r3 decision 1). |
 | **Young Serif** | `assets/crankmagic/youngserif-400.woff2`, `youngserif-400-ext.woff2` | SIL Open Font License 1.1 — full text in `assets/crankmagic/youngserif-OFL.txt`. The hero face for headlines of 48px and up (r3). Retired 2026-09-24 and restored from git on 2026-09-25. |
+| **Barlow Condensed** | `assets/crankmagic/barlowcondensed-{600,700,800}.woff2` and `-ext` | SIL Open Font License 1.1 — full text in `assets/crankmagic/barlowcondensed-OFL.txt`; Copyright 2017 The Barlow Project Authors. The Moss & Iron theme's display face (A1, 2026-09-28), self-hosted from the `@fontsource/barlow-condensed` 5.3.0 files, unmodified. |
 | System stacks | — | No embedded files. |
 
 ## Artwork not originated by this project

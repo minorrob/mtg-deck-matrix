@@ -176,11 +176,26 @@
       });
       shelfPiles.push({id: "shelf:new", kind: "shelfnew", label: "New group…", rows: [], count: 0, top: null, target: true});
     }
+    /* THE SORTING SPACE (Rob, 2026-09-28; docs/plan-groups.md G6b-2). The middle of the table is where you sort as you
+       would at a real one: pull cards into piles of your own, name them, and put a pile into a group when you know
+       where it goes. `options.sorting` is those piles, [{id, name, ids}], the caller's view state: a card on one is
+       still in its place (the place piles are the library), and nothing is staged until a card or a whole pile is
+       dropped on a group. A pile that has lost its cards is not drawn. */
+    let sortPiles = [], sortNew = null;
+    const sorted = new Map();
+    if (Array.isArray(options.sorting)) {
+      const every = new Map((all || []).map((r) => [r.recordId, r]));
+      sortPiles = options.sorting.map((x) => {
+        const list = (x.ids || []).map((id) => every.get(id)).filter((r) => r && !sorted.has(r.recordId) && sorted.set(r.recordId, x.name));
+        return {id: "sort:" + x.id, kind: "sort", sortId: x.id, label: x.name, rows: list, count: count(list), ghosts: list.filter(isGhost).length, top: list[0] || null, target: true};
+      }).filter((p) => p.rows.length);
+      sortNew = {id: "sort:new", kind: "sortnew", label: "New pile", rows: [], count: 0, top: null, target: true};
+    }
     const benchSorted = bench.slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
     return {
       groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
-      statusPiles, groupPiles, shelfPiles, play: playModel, byPlace: Array.isArray(options.places),
+      statusPiles, groupPiles, shelfPiles, play: playModel, byPlace: Array.isArray(options.places), sortPiles, sortNew, sorted,
       total: count(all || []), rows: (all || []).length, ghosts: (all || []).filter(isGhost).length
     };
   }
@@ -246,7 +261,7 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
   /* What a ghost's corner says: its status, shortened where the word is long. */
   const GHOST_TAG = {"Draft list": "Draft", Suggestion: "Suggested"};
-  const cardFace = (row, {ghost = false, cls = "", size = "", tick = false, checked = false, style = "", big = false} = {}) => {
+  const cardFace = (row, {ghost = false, cls = "", size = "", tick = false, checked = false, style = "", big = false, copies = 0, out = ""} = {}) => {
     const c = (row && row.card) || {};
     /* The small print of the picture (Scryfall's 146px) is what a 64px card needs; a card laid
        out large or standing on the stage takes the normal size. The picture is the whole card
@@ -255,7 +270,11 @@
     const src = c.image ? (big ? String(c.image) : String(c.image).replace("cards.scryfall.io/normal/", "cards.scryfall.io/small/")) : "";
     const art = src ? `--art:url('${esc(src)}');` : "";
     const tag = ghost ? ` data-ghost="${esc(GHOST_TAG[row && row.status] || (row && row.kind === "draft" ? "Draft" : row && row.kind === "option" ? "Suggested" : "") || (row && row.status) || "Not held")}"` : "";
-    return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${src ? "" : " no-art"}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${tag}${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${esc(c.name || "")}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${esc(c.name || "")}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span></div>`;
+    /* `copies` stacks identical copies under one face with a count; `out` is the pile a card was picked up onto,
+       and leaves its outline where it lay (G6b-2). */
+    const more = copies > 1 ? `<span class="cm-tt-copies" aria-label="${copies} copies">×${copies}</span>` : "";
+    const say = `${esc(c.name || "")}${copies > 1 ? `, ${copies} copies` : ""}${out ? `, on ${esc(out)}` : ""}`;
+    return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${src ? "" : " no-art"}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${copies > 1 ? " is-stack" : ""}${out ? " is-out" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${tag}${out ? ` data-out="On ${esc(out)}"` : ""}${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${say}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${say}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span>${more}</div>`;
   };
   /* `count === null` prints the name alone: the New group tile is a door, not a pile, and
      "New group… · 0" reads as an empty pile rather than as somewhere to drop a card. */
@@ -357,8 +376,9 @@
     return {cards, cols, lines, perPage, pages, page: p, from, to, total, scale: sz.scale, w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString('en-US')}–${to.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}${copies !== total ? ` · ${copies.toLocaleString('en-US')} copies` : ""}` : "Nothing on this pile"};
   }
-  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
-  const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
+  const sortPilesOf = (model) => (model && model.sortNew ? [...model.sortPiles, model.sortNew] : []);
+  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model), ...sortPilesOf(model)].find((p) => p.id === id) || null);
+  const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model), ...sortPilesOf(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
 
   /* The recombine (plan §2.2): the cards not selected slide back into their pile, transforms
      only, sixty at most in motion and the rest fading; reduced motion skips it. Resolves when
@@ -409,8 +429,11 @@
     const others = list.length - lots.length - plans.length - cats.length;
     const owned = lots.filter((r) => r.source === "owned");
     const NOT_COPY = "A suggestion or a planned card is not a copy; set its status from its row menu.";
-    const NOT_HELD = "A card sent from Discover is not a copy you hold; file it in a collection group and it becomes a planned entry.";
+    const NOT_HELD = "A card sent from Discover is not a copy you hold; file it in a list (Lists on the table…) and it becomes a planned entry.";
     const NOT_MINE = "Only a card record is filed in a group; a deck's plan is filed with its deck.";
+    /* A pile of your own takes anything, and means nothing yet (G6b-2). */
+    if (pile.kind === "sort") return list.every((r) => (pile.rows || []).some((x) => x.recordId === r.recordId)) ? no(`Already on ${pile.label}.`) : yes("sort:" + pile.sortId, "Put on " + pile.label, "Your own pile on the table: nothing is staged and nothing changes until it goes into a group.");
+    if (pile.kind === "sortnew") return yes("sortnew", "Start a new pile", "A pile of your own in the middle of the table; name it, and drop it on a group when you know where it goes.");
     if (pile.kind === "bench" || pile.label === BENCH) {
       if (others) return no(NOT_COPY);
       if (cats.length) return no(NOT_HELD);
@@ -418,9 +441,11 @@
       return yes("source:owned", "Record as owned copies on the Bench", "An ordered or watched copy becomes owned; a To buy requirement or a draft-list row becomes an owned copy filed with its deck.");
     }
     /* A PLACE TAKES COPIES (G6): dropping on a group is Add / move to group -- into a deck's box, a Sell / Trade pile,
-       a 40-card deck -- which asks and reviews first, as the Library's action does. */
+       a 40-card deck, or filed in a list -- staged in the sitting and confirmed once with the rest (G6b-2). */
     if (pile.kind === "place") {
-      if (cats.length) return no(NOT_HELD);
+      /* A list takes a card sent from Discover, as a planned entry: it is a plan, and a list holds plans (G6b-2). */
+      if (cats.length && !(pile.template === "general" && !others && !plans.length)) return no(NOT_HELD);
+      if (cats.length) return yes("moveto:" + pile.groupId, "File in " + pile.label, "A card sent from Discover is planned in the list; a copy you hold is filed there. Nothing moves.");
       if (others || plans.length) return no(NOT_COPY);
       return yes("moveto:" + pile.groupId, "Add / move to " + pile.label, pile.template === "commander" ? "Copies you own go in the deck's box; a seat its list wants is reserved." : pile.template === "trade" ? "Copies you own come out of any box and are offered." : "Copies you own go there, out of any deck's box.");
     }
@@ -651,9 +676,9 @@
       const n = p.count, h = stackHeight(n), isOpen = p.id === homeId;
       const faces = p.top ? cardFace(p.top, {ghost: p.ghost || (kind === "group" && p.rows.length && p.rows.every(isGhost))}) : "";
       const title = p.folded ? `${p.label}: ${p.bands.join(", ")}` : p.label;
-      const door = p.kind === "shelfnew";
+      const door = p.kind === "shelfnew" || p.kind === "sortnew";
       const place = flow ? `--stack:${h}px` : `left:${x}px;top:${y}px;--stack:${h}px`;
-      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${flow ? " is-flow" : ""}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${isOpen ? "true" : "false"}" style="${place}" title="${esc(door ? "Drop cards here to make a group for them" : title)}" aria-label="${esc(title)}${door ? "" : `, ${n} card${n === 1 ? "" : "s"}`}"><span class="cm-tt-slot">${door ? "<span class=\"cm-tt-newmark\" aria-hidden=\"true\">+</span>" : ""}</span><span class="cm-tt-stack">${faces}</span>${placard(p.label, door ? null : n, "")}</button>`;
+      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${flow ? " is-flow" : ""}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${isOpen ? "true" : "false"}" style="${place}" title="${esc(door ? (p.kind === "sortnew" ? "Drop cards here to start a pile of your own" : "Drop cards here to make a group for them") : title)}" aria-label="${esc(title)}${door ? "" : `, ${n} card${n === 1 ? "" : "s"}`}"><span class="cm-tt-slot">${door ? "<span class=\"cm-tt-newmark\" aria-hidden=\"true\">+</span>" : ""}</span><span class="cm-tt-stack">${faces}</span>${placard(p.label, door ? null : n, "")}</button>`;
     };
     /* THE BACK ROW (Rob, 15 September): the Bench and the decks, side by side, both as piles.
        The Bench used to fan out as many cards as the ledge was wide — and a fanned card could not
@@ -680,8 +705,26 @@
        keeps the `cm-tt-grid` class the laid-out pile used to wear: the keyboard model, the
        recombine and every selector that knew where a pile's cards were still find them. */
     let drawerHTML;
+    /* IDENTICAL COPIES ARE ONE STACK (G6b-2): the same card in the same state is one face with a count, as a real
+       table keeps them, and ticking, choosing or dragging it carries every copy under it. A copy picked up onto a
+       pile of your own is its own stack, drawn as the outline it left. */
+    const stackOf = new Map();
+    const stacked = (list, own) => {
+      const seen = new Map(), out = [];
+      for (const r of list) {
+        const on = own ? "" : (model.sorted && model.sorted.get(r.recordId)) || "";
+        const k = `${r.cardId || (r.card && r.card.name) || r.recordId}|${r.status || ""}|${isGhost(r) ? 1 : 0}|${on}`;
+        const have = seen.get(k);
+        if (have) { stackOf.get(have.recordId).push(r); have.copies += Number(r.quantity) || 1; continue; }
+        const rep = Object.assign(Object.create(r), {copies: Number(r.quantity) || 1, out: on});
+        seen.set(k, rep); stackOf.set(r.recordId, [r]); out.push(rep);
+      }
+      return out;
+    };
+    const unstack = (ids) => [...new Set([...ids].flatMap((id) => (stackOf.get(id) || [{recordId: id}]).map((r) => r.recordId)))];
     if (open) {
-      const l = layout(openPile, {width: 40 * (drawSz.w + drawSz.gap), scale: drawSz.scale, page: ui.page, rowsFit: 1, inset: 0});
+      const own = openPile.kind === "sort";
+      const l = layout({...openPile, rows: stacked(openPile.rows, own)}, {width: 40 * (drawSz.w + drawSz.gap), scale: drawSz.scale, page: ui.page, rowsFit: 1, inset: 0});
       /* The card size is the app's one scale (Settings shows the same slider); the host draws it. */
       const sizeSeg = ui.scaleSlider || "";
       const pager = l.pages > 1 ? `<span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">&#8249;</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">&#8250;</button></span>` : "";
@@ -690,12 +733,14 @@
          size buttons, its pager and its way out live. */
       const head = `<span class="cm-tt-strip-title"><strong>${esc(openPile.label)}</strong> · <span class="cm-tt-muted">${esc(l.label)}</span></span>${sizeSeg}${pager}`
         + (ticked.size ? `<button type="button" class="cm-tt-primary" data-tt="select-ticked">Select ${ticked.size} ticked</button>` : "")
+        + (own && hooks.onSortRename ? `<button type="button" data-tt="sort-rename" data-sort="${esc(openPile.sortId)}">Rename</button>` : "")
+        + (own && hooks.onSortClear ? `<button type="button" data-tt="sort-clear" data-sort="${esc(openPile.sortId)}" title="The cards were never moved; the pile goes">Put the pile away</button>` : "")
         + `<button type="button" class="cm-tt-drawer-print" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button>`
         + `<button type="button" class="cm-tt-back cm-tt-drawer-shut" data-tt="open" data-pile="${esc(openPile.id)}" title="Close ${esc(openPile.label)}" aria-label="Close ${esc(openPile.label)}">&#215;</button>`;
       const body = l.cards.length
         /* Placed by the CSS from --card-scale and each card's place in the row, so dragging the slider moves them
            live without a redraw; a card wider than Scryfall's small print (146px) asks for the normal one. */
-        ? `<div class="cm-tt-grid is-drawer" style="--n:${l.cards.length}" data-cols="${l.cols}">${l.cards.map(({row}, i) => cardFace(row, {ghost: isGhost(row), tick: true, checked: ticked.has(row.recordId), big: drawSz.w > 146, style: `--i:${i};`})).join("")}</div>`
+        ? `<div class="cm-tt-grid is-drawer" style="--n:${l.cards.length}" data-cols="${l.cols}">${l.cards.map(({row}, i) => cardFace(row, {ghost: isGhost(row), tick: true, checked: ticked.has(row.recordId), big: drawSz.w > 146, style: `--i:${i};`, copies: row.copies, out: row.out})).join("")}</div>`
         : `<p class="cm-tt-play-invite">Nothing on this pile.</p>`;
       drawerHTML = `<div class="cm-tt-drawer"><span class="cm-tt-strip is-top cm-tt-drawer-head">${head}</span><div class="cm-tt-drawer-strip">${body}</div></div>`;
     } else {
@@ -788,6 +833,17 @@
       const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:${height}px">${head}<div class="cm-tt-draw-wrap">${pileBtn}${restore}</div>${arrows}${trays}${counter}${board}</div>`;
       return {html, height};
     }
+    /* THE SORTING SPACE, DRAWN (G6b-2): your piles in the middle, and a New pile door. A pile is dragged whole onto a
+       group, or clicked to spread it in the drawer and take a card at a time. */
+    function sortHTML(x, y, w, fill = 0) {
+      if (!model.sortNew) return {html: "", height: 0};
+      const piles = [...model.sortPiles, model.sortNew], per = Math.max(1, Math.floor((w - 24) / 96)), lines = Math.ceil(piles.length / per);
+      /* It fills the middle, and a drop anywhere on it that is not a pile starts a new one. */
+      const height = Math.max(fill, 64 + lines * (PILE_H + 12) + 12);
+      const say = model.sortPiles.length ? "Drag a pile onto a group to put it there; every drop waits for Review and confirm." : "Drag cards here from the drawer to sort them into piles of your own. Nothing moves until a pile goes into a group.";
+      const html = `<div class="cm-tt-sorting" data-pile="sort:new" style="left:${x}px;top:${y}px;width:${w}px;height:${height}px"><div class="cm-tt-play-head"><strong>The sorting space</strong><span class="cm-tt-muted">${esc(say)}</span></div><div class="cm-tt-sort-piles">${piles.map((p) => pile(p, 0, 0, p.kind === "sort" ? "sort" : "sortnew", true)).join("")}</div></div>`;
+      return {html, height};
+    }
     /* THE PLAY SPACE WHEN THE STAGE HAS THE MIDDLE. A card is dragged from the selection on the
        stage, and the stage stands where the play space stands -- so with a pile laid out or a
        card chosen, the middle's destinations become a row of chips above the status band. Same
@@ -797,6 +853,12 @@
       const P = model.play;
       /* Not on a phone: the play space is not offered there at all (plan §2.5), so its
          destinations must not appear only because a card happens to be selected. */
+      /* Without a play space the bar carries the sorting space's piles instead (G6b-2), so a chosen card can still
+         be put on one. */
+      if (!P && !narrow && model.sortNew) {
+        const chips = [...model.sortPiles, model.sortNew].map((p) => `<button type="button" class="cm-tt-playchip cm-tt-sortchip${p.count ? "" : " is-empty"}" data-tt="open" data-pile="${esc(p.id)}" aria-label="${esc(p.label)}${p.kind === "sort" ? `, ${p.count} card${p.count === 1 ? "" : "s"}` : ""}">${esc(p.label)}${p.count ? ` · ${p.count}` : ""}</button>`).join("");
+        return {html: `<div class="cm-tt-playbar" style="top:${y}px;height:46px"><span class="cm-tt-playbar-say">The sorting space</span>${chips}</div>`, height: 46};
+      }
       if (!P || narrow || (!P.deck && !shelf)) return {html: "", height: 0};
       const chip = (p, label) => `<button type="button" class="cm-tt-playchip${p.count ? "" : " is-empty"}${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(label)}${p.count ? ` · ${p.count}` : ""}</button>`;
       const board = score.length ? `<span class="cm-tt-score is-bar">${score.map((f) => `<span class="cm-tt-score-fig${f.tone ? " is-" + f.tone : ""}"${f.why ? ` title="${esc(f.why)}"` : ""}><b>${esc(f.value)}</b> ${esc(f.label)}</span>`).join("")}</span>` : "";
@@ -859,7 +921,7 @@
            takes whichever is taller for the band below, so the destinations never ride up over
            the trays. */
         const midX = 16 + leftW + (leftW ? 12 : 0), midW = Math.max(300, width - 32 - leftW - rightW - (leftW ? 12 : 0) - (rightW ? 12 : 0));
-        const laid = playHTML(midX, shelfTop - 16, midW);
+        const laid = model.play ? playHTML(midX, shelfTop - 16, midW) : sortHTML(midX, shelfTop - 16, midW, shelfH + 12);
         groupHTML += laid.html;
         const statusTop = Math.round(shelfTop + Math.max(shelfH, laid.height - 16) + 40);
         /* Six statuses fit one row at any width the play space is offered at; a shelf of groups
@@ -902,7 +964,9 @@
       } else {
         /* The selection (plan §2.2): on the center of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
-        const L = {w: 182}, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
+        /* A fanned card is 182 wide and 5:7 tall; the stage and the mat are measured from both (the height went missing in
+           R3.9b and left them NaN, G6d). */
+        const L = {w: 182, h: Math.round(182 * 7 / 5)}, n = selected.length, step = Math.min(L.w * .72, Math.max(28, (width - 64 - L.w) / Math.max(1, n - 1)));
         const fanW = L.w + step * (n - 1), x0 = Math.max(16, (width - fanW) / 2);
         const say = hooks.describe || ((r) => ({status: r.status || "", price: r.card && r.card.price != null ? "$" + Number(r.card.price).toFixed(2) : "", deck: ""}));
         const fan = selected.map((r, i) => { const d = say(r) || {}; return cardFace(r, {ghost: isGhost(r), size: "fan", big: true, cls: "cm-tt-chosen", style: `left:${Math.round(x0 + i * step)}px;top:${Math.round(Math.abs(i - (n - 1) / 2) * 6)}px;transform:rotate(${((i - (n - 1) / 2) * 3).toFixed(1)}deg);z-index:${i + 1};`}) + ""; }).join("");
@@ -966,8 +1030,10 @@
       else if (kind === "back") { hooks.onOpen && hooks.onOpen(t.dataset.pile); }
       else if (kind === "page") { hooks.onPage && hooks.onPage(Number(t.dataset.page)); }
       else if (kind === "tick") { ev.stopPropagation(); hooks.onTick && hooks.onTick(t.closest(".cm-tt-card").dataset.record); }
-      else if (kind === "card") { const id = t.dataset.record; if (ev.shiftKey) { hooks.onTick && hooks.onTick(id); return; } const ids = new Set(ticked); ids.add(id); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
-      else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
+      else if (kind === "card") { const id = t.dataset.record; if (ev.shiftKey) { hooks.onTick && hooks.onTick(id); return; } const ids = new Set(ticked); ids.add(id); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect(unstack(ids))); }
+      else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect(unstack(ids))); }
+      else if (kind === "sort-rename") { hooks.onSortRename && hooks.onSortRename(t.dataset.sort, t); }
+      else if (kind === "sort-clear") { hooks.onSortClear && hooks.onSortClear(t.dataset.sort); }
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
       else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
       /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go";
@@ -1000,22 +1066,24 @@
        it up put the pile away. The drawer is a source too: a card dragged from there carries
        itself, or the ticked set when it is one of them, so he can read a pile and move a card out
        of it without leaving the pile. */
-    const dragFrom = host.querySelector(mode === "selected" ? ".cm-tt-fanL" : ".cm-tt-drawer-strip");
-    if (dragFrom && hooks.onDrop) {
+    /* The drawer's rows are the open pile's, which is the one place they are certainly all
+       present -- `rowsById` only knows the bench, the statuses and the play space. A face there may
+       be a stack (G6b-2), and carries every copy under it. */
+    const inDrawer = new Map((openPile ? openPile.rows : []).map((r) => [r.recordId, r]));
+    const fromDrawer = (el) => {
+      const card = el && el.closest(".cm-tt-card[data-record]"); if (!card || !inDrawer.has(card.dataset.record)) return [];
+      return unstack(ticked.has(card.dataset.record) ? ticked : [card.dataset.record]).map((id) => inDrawer.get(id)).filter(Boolean);
+    };
+    /* A pile of your own is dragged whole (G6b-2): that is putting a sorted pile into a group. */
+    const fromSorting = (el) => { const b = el && el.closest(".cm-tt-pile.cm-tt-sort[data-pile]"); const p = b && findPile(model, b.dataset.pile); return p ? p.rows.slice() : []; };
+    const sources = hooks.onDrop ? [[host.querySelector(mode === "selected" ? ".cm-tt-fanL" : ".cm-tt-drawer-strip"), mode === "selected" ? (el) => (el && el.closest(".cm-tt-card") ? selected : []) : fromDrawer], [host.querySelector(".cm-tt-sorting"), fromSorting]] : [];
+    for (const [dragFrom, cargo] of sources) {
+      if (!dragFrom) continue;
       const fan = dragFrom; let drag = null;
-      /* The drawer's rows are the open pile's, which is the one place they are certainly all
-         present -- `rowsById` only knows the bench, the statuses and the play space. */
-      const inDrawer = new Map((openPile ? openPile.rows : []).map((r) => [r.recordId, r]));
-      const cargo = (el) => {
-        if (mode === "selected") return selected;
-        const card = el && el.closest(".cm-tt-card[data-record]"); if (!card) return [];
-        const here = inDrawer.get(card.dataset.record); if (!here) return [];
-        return ticked.has(here.recordId) ? [...ticked].map((id) => inDrawer.get(id)).filter(Boolean) : [here];
-      };
       let held = [];
       const clearMarks = () => host.querySelectorAll(".is-target, .is-refused").forEach((el) => el.classList.remove("is-target", "is-refused"));
       fan.onpointerdown = (ev) => {
-        if ((ev.button !== undefined && ev.button !== 0) || !ev.target.closest(".cm-tt-card")) return;
+        if (ev.button !== undefined && ev.button !== 0) return;
         /* NEITHER THE CAPTURE NOR THE preventDefault BELONGS ON THE PRESS. The drawer's cards are
            also ticked and clicked, and a pointer captured here retargets the click that follows to
            the capturing element -- so every tick in the drawer arrived as a click on the strip's
@@ -1060,7 +1128,7 @@
        PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
        the table at rest. */
     const focusables = (list) => list.filter((el) => el && !el.hidden);
-    const pileRows = () => [focusables([...host.querySelectorAll(".cm-tt-backrow .cm-tt-pile, .cm-tt-allchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
+    const pileRows = () => [focusables([...host.querySelectorAll(".cm-tt-backrow .cm-tt-pile, .cm-tt-allchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip, .cm-tt-pile.cm-tt-sort, .cm-tt-pile.cm-tt-sortnew")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
       /* ESCAPE SAYS WHERE IT CAME FROM. A control on the mat can open something of the host's
