@@ -117,6 +117,11 @@ try {
   const rob = await person("rob@example.com", {width: 1400, height: 900});
   const maya = await person("maya@example.com", {width: 390, height: 844});
 
+  /* THE PLAY TAB, marked for Play in the cloud: the table's page, not the local game host's (staging's Play release). */
+  await rob.page.goto(`${base}/index.html#game`);
+  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
+
   /* HOST: a new table. */
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});

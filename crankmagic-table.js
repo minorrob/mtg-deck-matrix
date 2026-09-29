@@ -10,8 +10,9 @@
  *   #table/<id>/<code>       an invitation: joins that seat, then shows the lobby
  *
  * SHUT UNTIL PLAY SHIPS. The page is only drawn where the build is marked for cloud Play
- * (<meta name="crankmagic-play" content="cloud">) and accounts are on; no release is, and releases leave this
- * file out with the rest of Play (tools/release-pages.mjs, PLAY). Anywhere else it says Coming Soon.
+ * (<meta name="crankmagic-play" content="cloud">) and accounts are on: staging is (2026-09-29), where the Play tab
+ * opens this page; production leaves this file out with the rest of Play (tools/release-pages.mjs, PLAY) and its
+ * Play tab says Coming Soon.
  *
  * While a game is on, the page is the board (crankmagic-board.js), which carries End game (two taps, Rob's
  * rule against accidental clicks) and Concede in its Tools. Once it is over, the lobby says so here.

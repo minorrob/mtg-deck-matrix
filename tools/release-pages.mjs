@@ -68,6 +68,10 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invite
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
 const PLAY = ["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js"];
+/* PLAY IN THE CLOUD (M5): the table's lobby and its board, over the Worker's /api/tables. The rest of PLAY is the
+   local game host's (a Node server on this machine or a tunnel), which no release carries. */
+const PLAY_CLOUD = ["crankmagic-table.js", "crankmagic-board.js"];
+const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
 const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {
@@ -96,9 +100,13 @@ export const PROFILES = {
     cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
       access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
   },
-  /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). */
+  /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). With PLAY IN
+     THE CLOUD since 2026-09-29 (Rob: "execute the play release and merge to staging"): the lobby and the board,
+     and the Worker binds TABLES, the table as a Durable Object. Its tables are playtest tables (M8b): a finished
+     game's full record may be downloaded. Production stays Coming Soon until Rob's go. */
   "cloud-staging": {
-    ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: PLAY, accounts: "on",
+    ...RELEASE, worker: "crankmagic-staging", origin: "https://staging.crankmagic.com/", leaveOut: LOCAL_PLAY, accounts: "on",
+    play: "cloud", tables: {playtest: true},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -126,7 +134,7 @@ export const HOST_FILES = {
   cloudflare: ({date, origin, profile}) => ({
     "wrangler.jsonc": JSON.stringify({
       name: profile.worker,
-      ...(profile.cloud ? {main: "cloud/worker.mjs"} : {}),
+      ...(profile.cloud ? {main: profile.tables ? PLAY_WORKER : "cloud/worker.mjs"} : {}),
       compatibility_date: date,
       assets: profile.cloud ? {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]} : {directory: "./"},
       routes: [{pattern: new URL(origin).host, custom_domain: true}],
@@ -134,14 +142,19 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud},
+        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {})},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
         ],
       } : {}),
+      /* Play: each table is a Durable Object (SQLite-backed, which every plan has), made once by this migration. */
+      ...(profile.cloud && profile.tables ? {
+        durable_objects: {bindings: [{name: "TABLES", class_name: "GameTable"}]},
+        migrations: [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}],
+      } : {}),
     }, null, 2) + "\n",
-    ".assetsignore": `.git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n${profile.cloud ? "cloud/\n" : ""}`,
+    ".assetsignore": `.git\n.wrangler\n.assetsignore\nwrangler.jsonc\n.nojekyll\nnode_modules\n${profile.cloud ? "cloud/\n" : ""}${profile.cloud && profile.tables ? "game/\n" : ""}`,
     /* Rob, 2026-09-24: "I don't want plain HTTP." Parsed by Cloudflare, never served. HSTS tells a browser
        that has been here once never to use http:// for this address again; the first visit's redirect is
        the zone's Always Use HTTPS, a setting outside what the wrangler sign-in may change. */
@@ -230,6 +243,33 @@ export function referencesOf(file, text, files) {
    ("generator": "tools/..."), and Load Live tells its maintainer which tool rebuilds its file. A
    fetch of such a file would be a 404 in the release, and the journeys (docs/release-pages.md)
    are what catch that. `mentions` lists them, so a reader can check. */
+/* THE ENGINE THE TABLE CARRIES. Play's Worker (cloud/play-worker.mjs) exports the table's Durable Object, which
+   imports the rules engine from game/. Those modules, and only those, ship in a Play release's tree for wrangler to
+   bundle -- never as files (.assetsignore keeps game/ off the site) -- found by following the entry's relative
+   imports through the same commit. A bare or node: import, or a module the commit lacks, is named: the Worker
+   could not be bundled from the release. */
+export const PLAY_WORKER = "cloud/play-worker.mjs";
+const IMPORT = /\b(?:import|export)\s+(?:[^;]*?\sfrom\s+)?["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+export function workerModules(source, entry = PLAY_WORKER) {
+  const seen = new Set(), queue = [entry], problems = [];
+  while (queue.length) {
+    const f = queue.pop();
+    if (seen.has(f)) continue;
+    if (!source.files.has(f)) {problems.push(`${f} is imported by Play's Worker and is not in the commit`); continue;}
+    seen.add(f);
+    source.readMany([f]);
+    for (const m of stripComments(source.read(f).toString("utf8")).matchAll(IMPORT)) {
+      const spec = m[1] || m[2];
+      if (!spec.startsWith(".")) {problems.push(`${f} imports ${spec}, which Play's Worker cannot bundle from the release`); continue;}
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(f), spec));
+      if (!/\.mjs$/.test(target)) {problems.push(`${f} imports ${target}, which is not a module`); continue;}
+      queue.push(target);
+    }
+  }
+  return {files: [...seen].sort(), problems};
+}
+const builtSource = (built) => ({files: new Set(built.keys()), readMany() {}, read: (f) => built.get(f)});
+
 export function walk(source, profile) {
   const leaveOut = new Set(profile.leaveOut), reachedFrom = new Map(), queue = [], mentions = [];
   for (const r of ROOTS) if (source.files.has(r)) {reachedFrom.set(r, "(root)"); queue.push(r);}
@@ -279,7 +319,8 @@ export function transform(file, text, {profile, version, origin}) {
 /* What the built folder must satisfy. Returns a list of problems; empty is a release. */
 export function verify(built, profile) {
   const problems = [], files = new Set(built.keys());
-  for (const f of files) if (NEVER.test(f)) problems.push(`${f} is in a folder that never ships`);
+  const engine = profile.cloud && profile.tables ? workerModules(builtSource(built)) : {files: [], problems: []};
+  for (const f of files) if (NEVER.test(f) && !(/^game\/.+\.mjs$/.test(f) && engine.files.includes(f))) problems.push(`${f} is in a folder that never ships`);
   for (const f of profile.leaveOut) if (files.has(f)) problems.push(PLAY.includes(f) ? `${f} is Play, and Play is not in this release` : `${f} is left out of this release, and is in it`);
   for (const [f, body] of built) {
     if (!TEXT.test(f)) continue;
@@ -304,7 +345,18 @@ export function verify(built, profile) {
     if (!profile.cloud && config?.main) problems.push("wrangler.jsonc gives a release without a cloud a Worker script");
     if (profile.cloud) {
       /* The API runs for /api/* and nothing else, against this profile's database, as Access's audience. */
-      if (config?.main !== "cloud/worker.mjs") problems.push("wrangler.jsonc does not run cloud/worker.mjs");
+      const main = profile.tables ? PLAY_WORKER : "cloud/worker.mjs";
+      if (config?.main !== main) problems.push(`wrangler.jsonc does not run ${main}`);
+      if (profile.tables) {
+        /* Play: the table as a Durable Object, the engine it carries, and nothing of game/ published as a file. */
+        if (JSON.stringify(config?.durable_objects) !== JSON.stringify({bindings: [{name: "TABLES", class_name: "GameTable"}]})) problems.push("wrangler.jsonc does not bind TABLES to the GameTable Durable Object");
+        if (!(config?.migrations || []).some((m) => (m.new_sqlite_classes || []).includes("GameTable"))) problems.push("wrangler.jsonc has no migration that makes the GameTable class");
+        problems.push(...engine.problems);
+        for (const f of ["cloud/game-room.mjs", "game/room/table.mjs", "game/room/room.mjs"]) if (!engine.files.includes(f)) problems.push(`${f} is missing, so the table cannot be bundled`);
+        if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("game/")) problems.push(".assetsignore would publish the engine's source as files");
+        for (const f of PLAY_CLOUD) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
+      } else if (config?.durable_objects || config?.migrations) problems.push("wrangler.jsonc binds a Durable Object in a release without Play");
+      if ((config?.vars?.PLAYTEST_TABLES === "on") !== !!profile.tables?.playtest) problems.push(profile.tables?.playtest ? "the playtest tables are not switched on (PLAYTEST_TABLES)" : "PLAYTEST_TABLES is on in a release whose tables are not playtest tables: every finished game's full record would be downloadable");
       if (config?.assets?.binding !== "ASSETS" || JSON.stringify(config?.assets?.run_worker_first) !== JSON.stringify(["/api/*"])) problems.push("wrangler.jsonc must run the Worker for /api/* only, with the assets bound as ASSETS");
       const db = (config?.d1_databases || [])[0];
       if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
@@ -382,6 +434,7 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
     const worker = [...source.files].filter((f) => /^cloud\/[\w.-]+\.mjs$|^cloud\/migrations\/[\w.-]+\.sql$/.test(f));
     source.readMany(worker);
     for (const f of worker) built.set(f, source.read(f));
+    if (profile.tables) for (const f of workerModules(source).files) if (!built.has(f)) built.set(f, source.read(f));
   }
   return {built, problems: verify(built, profile), version, mentions, reachedFrom};
 }

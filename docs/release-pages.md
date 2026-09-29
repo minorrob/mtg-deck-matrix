@@ -53,6 +53,25 @@ cd <folder> && npx --yes wrangler@4.139.0 deploy
 UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs
 ```
 
+**Play in the cloud is on staging only (since 2026-09-29).** The `cloud-staging` profile is marked
+`crankmagic-play` = `cloud`: the Play tab is the table's page, and the release carries the lobby and the board but
+none of the local game host's modules. Its Worker is `cloud/play-worker.mjs`, which exports the table's Durable
+Object (`GameTable`, bound as `TABLES`) beside the API. The rules engine that object carries (the `game/` modules it
+imports, about 350 KB) ships in the tree for wrangler to bundle, and `.assetsignore` keeps it off the site.
+`wrangler deploy` applies the Durable Object migration (`tables-v1`, a SQLite class) itself, so D1's migrations are
+still the only ones to apply by hand. `PLAYTEST_TABLES` = `on` makes every staging table a playtest table: a
+finished game's full record (seed, pod, decision tape, journal) may be downloaded (M8b). Before pushing a staging
+release that carries Play, walk it under `wrangler dev` too:
+
+```bash
+WRANGLER=<wrangler.js> UAT_SHOTS=<shots> node tests/uat/play-e2e.mjs
+```
+
+It covers the Play tab, a playtest table with an AI seat, the alarm launching the game, the board over the WebSocket
+(through a proxy that adds the Access token, as the edge does), End game and the full record replayed. Production
+stays Coming Soon, and binds no table, until Rob's go. Until M4 defines the decks' cards, the engine plays basic
+lands only: a real deck is refused by name, card by card.
+
 **Once, before the first release that carries R3.10a (Rob, in the Cloudflare dashboard).** Import by link
 (`GET /api/import/archidekt`, `cloud/import.mjs`) needs no account, but Access guards all of `/api/*` with the
 Invited policy, so until Access lets that one path through, only a signed-in person can import a deck by its
