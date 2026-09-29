@@ -81,7 +81,7 @@ try{
     github.io is retired. */
  const APP_URL='https://crankmagic.com/';
  await click('Menu');await page.locator('#cm-user-menu:popover-open').waitFor();
- eq(await page.locator('#cm-share-subscribe').count(),0,'Subscribe has left the Menu');ok((await page.locator('#cm-share-mail').getAttribute('href')).startsWith('mailto:?subject=CrankMagic'));ok((await page.locator('#cm-share-mail').getAttribute('href')).includes(encodeURIComponent(APP_URL)));
+ eq(await page.locator('#cm-share-subscribe').count(),0,'Subscribe has left the Menu');eq(await page.locator('#cm-share-mail').count(),0,'Share by email has left the Menu (Rob, 2026-09-29)');
  await page.locator('#cm-user-menu').getByRole('button',{name:'Show a QR code'}).click();await page.getByRole('dialog').waitFor();ok(await page.locator('#cm-dialog .cm-qr-code svg').count()===1);eq(await page.locator('#cm-dialog .cm-qr-link a').innerText(),APP_URL);ok(!(await page.locator('#cm-user-menu').evaluate(m=>m.matches(':popover-open'))));
  await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);

@@ -122,13 +122,20 @@ try {
   const id = made.json.table.tableId, url = `/api/tables/${id}`;
   const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Sol Ring", "Forest"]}});
   eq([refused.status, refused.json.unsupported], [422, ["Quintorius, Loremaster", "Sol Ring"]], "a real deck's cards are refused by name: the engine cannot play them until M4 defines them");
-  const lands = (land) => ({name: `${land}s`, commander: ["Wastes"], cards: Array(99).fill(land)});
-  eq((await api("POST", `${url}/deck`, {seatId: 0, deck: lands("Forest")})).status, 200, "Rob brings a deck of basic lands");
-  eq((await api("POST", `${url}/deck`, {seatId: 1, deck: lands("Island")})).status, 200, "and the AI's");
   /* The lobby, drawn from the release's own modules (Rob, 2026-09-29: it opened on "reading 'statusPill'"). */
   await page.goto(`${BASE}/index.html#table?id=${id}`);
   await page.locator(".cm-cloud-table .cm-lobby-seat").nth(1).waitFor({timeout: 30000});
   eq([await page.locator(".cm-cloud-table .cm-lobby-seat").count(), await page.locator("#cm-table-refused").count(), await page.locator(".cm-cloud-table .cm-seat-pill").count()], [2, 0, 2], "the lobby opens and draws both seats, each with its status");
+  /* THE BASIC LANDS TEST DECK (Rob, 2026-09-29), chosen in the table's own dialog, for Rob's seat and the AI's. */
+  for (const [seat, button] of [[0, "Choose a deck"], [1, "Choose its deck"]]) {
+    await page.locator(`.cm-lobby-seat[data-seat="${seat}"]`).getByRole("button", {name: button}).click();
+    await page.locator("#cm-dialog [data-action=table-use-test-deck]").waitFor({timeout: 15000});
+    if (!seat) await shot(page, "test-deck-1400");
+    await page.locator("#cm-dialog [data-action=table-use-test-deck]").click();
+    await page.locator(`.cm-lobby-seat[data-seat="${seat}"] .cm-seat-line`, {hasText: "Basic lands test deck"}).waitFor({timeout: 15000});
+  }
+  const seats = (await api("GET", url)).json.table.seats;
+  eq(seats.map((s) => s.deck && s.deck.name), ["Basic lands test deck", "Basic lands test deck"], "on this playtest table the deck dialog offers the basic lands test deck, and both seats take it");
   await shot(page, "lobby-1400");
   await api("POST", `${url}/ready`, {ready: true});
   eq((await api("POST", `${url}/start`)).status, 200, "Rob starts the countdown");
