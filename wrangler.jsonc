@@ -1,6 +1,6 @@
 {
   "name": "crankmagic-staging",
-  "main": "cloud/worker.mjs",
+  "main": "cloud/play-worker.mjs",
   "compatibility_date": "2026-09-29",
   "assets": {
     "directory": "./",
@@ -27,7 +27,8 @@
   ],
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
-    "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"
+    "ACCESS_AUD": "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5",
+    "PLAYTEST_TABLES": "on"
   },
   "ratelimits": [
     {
@@ -45,6 +46,22 @@
         "limit": 120,
         "period": 60
       }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TABLES",
+        "class_name": "GameTable"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "tables-v1",
+      "new_sqlite_classes": [
+        "GameTable"
+      ]
     }
   ]
 }
