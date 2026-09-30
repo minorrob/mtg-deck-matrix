@@ -4,7 +4,8 @@ import {createRequire} from 'node:module';
 import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
-import {importWorkbook,same} from '../tools/build-live-load.mjs';
+import {importWorkbook,newestWorkbook,same} from '../tools/build-live-load.mjs';
+import {basename} from 'node:path';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
 
@@ -179,9 +180,8 @@ eq(L.PASSWORD,'treycmload1');
    sums Excel computed, not this code. Needs openpyxl, like tests/generators.mjs's workbook check. */
 {
   let python=true;try{execFileSync('python3',['-c','import openpyxl'],{stdio:'ignore'});}catch{python=false;}
-  if(!python)console.log('live-load: the v25 workbook checks are SKIPPED (no openpyxl)');
-  else{
-    const book='data/source/Treys_MtG_Master_-_v25.xlsx';
+  if(!python)console.log('live-load: the v25 and 2026-09-30 workbook checks are SKIPPED (no openpyxl)');
+  else for(const book of ['data/source/Treys_MtG_Master_-_v25.xlsx','data/source/MtG_-_Master_-_2026-09-30.xlsx']){
     const rows=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
     const h=rows.findIndex(r=>r[0]==='Card ID'),H=rows[h],sums=rows[h-1],total=name=>Number(sums[H.indexOf(name)]);
     const {doc,built}=await importWorkbook(book,{prior:JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'))});
@@ -199,6 +199,35 @@ eq(L.PASSWORD,'treycmload1');
     eq(n(doc.ordered),total('Ordered'));
     eq(M.counters(built.state).owned,total('Own'));
     ok(doc.decks.every(d=>n(d.cards)===100));
+  }
+  /* 2026-09-30: THE MASTER SHEET ALONE (Rob's "MtG - Master - 9.30"). It has no deck_strategies and no
+     master_buy_upgrade, so each deck's id, commander, name and overview and the upgrade pairings are carried
+     from the committed file -- which v25's deck_strategies wrote (Rob: use v25's sheet if needed) -- and a
+     pairing the workbook has since settled is dropped rather than carried wrong. */
+  if(python){
+    const book='data/source/MtG_-_Master_-_2026-09-30.xlsx',prior=JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'));
+    eq(basename(await newestWorkbook()),basename(book));
+    eq(liveDoc.workbook,basename(book));
+    const {doc,notes}=await importWorkbook(book,{prior});
+    for(const d of doc.decks){const p=prior.decks.find(x=>x.id===d.id);
+      eq(d.commander,p.commander);eq(d.name,p.name);assert.deepEqual(d.strategy,p.strategy);checks++;}
+    eq(doc.decks.find(d=>d.id==='D1').strategy.strategy.split('.')[0],'Lorehold spirit recursion');
+    ok(notes.some(x=>/No master_buy_upgrade sheet; 111 upgrade pairings carried/.test(x)));
+    eq(doc.upgrades.length,prior.upgrades.length);
+    /* What was paid is history: the 9.30 Master's $ Each is the price to buy, so the committed figures for cards still
+       owned are kept -- every one of them, and never a figure for a card no longer owned. */
+    {const ownedNow=new Set([...Object.values(doc.owned.inDeck).flat(),...doc.owned.bench].map(r=>r[0]));
+     const keep=Object.keys(prior.paid).filter(n=>ownedNow.has(n));
+     ok(keep.length>700&&keep.every(n=>doc.paid[n]===prior.paid[n]));
+     ok(Object.keys(doc.paid).every(n=>ownedNow.has(n)));}
+    /* A settled pairing drops out: one whose card is already fully in its box, and one whose substitute left. */
+    const inBox=Object.entries(prior.owned.inDeck).flatMap(([deck,rows])=>rows.map(([card])=>({deck,card})))
+      .find(({deck,card})=>prior.decks.find(d=>d.id===deck).cards.some(c=>c[0]===card));
+    const settled={...prior,upgrades:[...prior.upgrades,{deck:inBox.deck,card:inBox.card,replaces:prior.upgrades.find(u=>u.deck===inBox.deck).replaces,tier:3,price:1,origin:'workbook',why:''},
+      {...prior.upgrades[0],replaces:'Sol Ring'}]};
+    const again=await importWorkbook(book,{prior:settled});
+    eq(again.doc.upgrades.length,prior.upgrades.length);
+    ok(again.notes.some(x=>/2 dropped as settled/.test(x)));
   }
 }
 /* A PRICE MOVING IS NOT A CHANGE (Rob, 2026-09-28). --check compares the collection, not the market: a buy row's
