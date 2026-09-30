@@ -11,3 +11,7 @@ design package. Mana SVG provenance is documented in `docs/glossary.md`.
 The mist remains procedural canvas artwork in `crankmagic-brand.js`; it is
 decorative, pausable, and disabled for reduced motion. Public artwork never
 encodes or implies a user's holdings.
+
+The card backs `card-back-{tan,blue,black,red,green}.webp` are Rob's own artwork (design/art-source/card_backgrounds/,
+2026-09-30), cropped to the card and scaled to 280x392 by `tools/build-card-backs.py`. Tan is the universal back; a
+seat's back follows its color on the Play board.
