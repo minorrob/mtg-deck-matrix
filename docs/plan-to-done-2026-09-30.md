@@ -146,7 +146,7 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
     priority, and not a choice, which is why the engine does it unasked. Two ways:
     - **Show the draw as its own beat (what Rob asked for):** entering the draw step shows *Draw a card* as the
       one button; the click draws (the engine's turn-based action, held until the click), then priority follows.
-      The same card; the player's timing. The room carries a "draw" acknowledgement in the draw step.
+      The same card; the player's timing. The room carries a "draw" acknowledgment in the draw step.
     - **Keep the automatic draw and make it visible:** the drawn card lifts in the hand and the strip says *You
       drew Island* until the next action. No rule bends; the surprise goes.
     Rob chooses; the first is his ask.
