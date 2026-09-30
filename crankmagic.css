@@ -3062,7 +3062,10 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-precon-tile ul{flex-direction:column;flex-wrap:nowrap;gap:6px;flex:1 1 auto;min-height:0;overflow:auto}
 #matrix-v2 .cm-precon-tile .cm-precon-chip{width:100%;padding:4px 10px;gap:0}
 .cm-precon-tile .cm-precon-chip strong{font-size:12px}
-.cm-precon-tile .cm-precon-chip span{font-size:11px}
+.cm-precon-tile .cm-precon-chip span{font-size:11px;flex-wrap:nowrap}
+.cm-precon-chip em{font-style:normal;min-width:0}
+.cm-precon-tile .cm-precon-chip em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-precon-tile .cm-precon-chip .cm-colors{flex:0 0 auto}
 .cm-precon-tile .cm-precon-latest-head .cm-muted{font-size:11px}
 .cm-precon-tile ul{gap:4px}
 @media(max-width:760px){.cm-precon-tile{aspect-ratio:auto}}

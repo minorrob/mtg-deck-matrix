@@ -808,7 +808,7 @@ C.preconLatest=async id=>{
   if(!el||!data||!data.decks.length)return;
   const today=M.today(),sets=[...new Set(data.decks.map(p=>p.setName))].join(' · ');
   el.innerHTML=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
-    <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span>${e(p.commander.map(c=>c.name).join(' + '))}${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button></li>`).join('')}</ul>`;
+    <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span><em class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}</em>${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button></li>`).join('')}</ul>`;
   el.hidden=false;
 };
 async function preconPicker(){
