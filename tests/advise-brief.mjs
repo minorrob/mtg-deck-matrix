@@ -60,13 +60,15 @@ ok(brief.candidates.every((c) => ((byName.get(Catalog.folded(c.name)) || {}).col
 ok(brief.candidates.every((c) => c.source && !/Not owned/.test(c.source)), "owned or on the person's lists only, unless not-owned is asked for");
 ok(brief.candidates.every((c, i, a) => i === 0 || a[i - 1].fills.length >= c.fills.length), "a card filling a short role comes before one that fills none");
 {
-  const oracle = (records.find((c) => c.name === "Krenko, Mob Boss") || {}).oracleId, stranger = records.find((c) => (c.colorIdentity || []).join("") === "R" && (c.roles || []).includes("removal") && !Object.values(state.cards).some((x) => x.name === c.name));
+  const oracle = (records.find((c) => c.name === "Krenko, Mob Boss") || {}).oracleId, stranger = records.find((c) => (c.colorIdentity || []).join("") === "R" && (c.roles || []).includes("removal") && c.price > 1 && !Object.values(state.cards).some((x) => x.name === c.name));
   const coPlay = (oid) => (oid === oracle ? new Map([[stranger.oracleId, {inclusion: 0.9, synergy: 0.5, decks: 1000}]]) : null);
   const wide = B.buildBrief({state, deckId: D6.id, cardOf, coPlay, byOracle: (oid) => (oid === stranger.oracleId ? {...stranger, id: Catalog.key(stranger.name)} : null), allowUnowned: true});
   const hit = wide.candidates.find((c) => c.name === stranger.name);
   ok(hit && hit.source === "Not owned" && hit.coPlay === 0.9, `asked, a co-play neighbour not owned is a candidate (${stranger.name})`);
-  const capped = B.buildBrief({state: {...state, decks: state.decks.map((d) => (d.id === D6.id ? {...d, definition: {...d.definition, perCardCap: 0.5}} : d))}, deckId: D6.id, cardOf});
-  ok(capped.candidates.every((c) => c.owned || c.price === null || c.price <= 0.5), "a card over the per-card cap is offered only if it is already owned");
+  const capped = B.buildBrief({state: {...state, decks: state.decks.map((d) => (d.id === D6.id ? {...d, definition: {...d.definition, perCardCap: 0.5}} : d))}, deckId: D6.id, cardOf,
+    coPlay, byOracle: (oid) => (oid === stranger.oracleId ? {...stranger, id: Catalog.key(stranger.name)} : null), allowUnowned: true});
+  ok(capped.candidates.every((c) => c.owned || c.price === null || c.price <= 0.5) && !capped.candidates.some((c) => c.name === stranger.name),
+    `a card over the per-card cap is offered only if it is already owned (${stranger.name} at $${stranger.price} is not, under a $0.50 cap)`);
 }
 
 /* HIDDEN: nothing the model should not see. */
