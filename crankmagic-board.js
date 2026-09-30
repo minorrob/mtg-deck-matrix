@@ -17,13 +17,14 @@
  *   Table view    four identical 16:9 boards in a 2×2 (2 · 3 / 4 · 1, you bottom right), each header on its outer
  *                 edge, sized to fit the window; the living mat and the active player's color fan behind them; the
  *                 logo at the true center opens Table vitals; your hand along the foot
- *   Focus view    your board the largest 16:9 that fits beside the 168px seat pane; the hand docked over its bottom
- *                 edge on a slate tray, cards peeking and lifting on hover; the pane ends in My board · Table view ·
+ *   Focus view    your board the largest 16:9 that fits beside the 168px seat pane with the hand's slate tray a
+ *                 full row beneath it, the cards whole and lifting on hover; the pane ends in My board · Table view ·
  *                 Coach, and collapses
  *   Full screen   a 44px rail; up to three opponents across the top 40%; the big board across the lower 60%, full
  *                 bleed and frameless, zones implied by where cards sit; ⟳ Rotate walks the big board round the
- *                 table (never a hand); the right column: every seat's vitals, the card under the pointer large
- *                 with what it can do, and the log
+ *                 table (never a hand); your hand whole along its foot; the right column: every seat's vitals, the
+ *                 card under the pointer large with what it can do, the log, and the Coach in its lower half. Full
+ *                 screen asks the browser for the whole document, so the Coach and the dialogs are seen in it
  *   Skip to end   passes priority for you through the rest of this turn, and stops the moment anything is on the
  *                 stack or the room asks you something else
  *   vitals        a pill per seat (life, poison, a bar per commander toward 21); any pill opens Table vitals
@@ -32,10 +33,12 @@
  *   Card zoom     a card under the pointer is shown large at the center of the screen (Table, Focus); in Full
  *                 screen it fills the right column; a long press or a right click opens it with what it can do
  *   card size     the app's slider, in Tools; ⌘/Ctrl + and − step it
- *   Coach         a chat panel sliding over the right edge: suggested prompts, a composer, turn dividers. The shell
- *                 only, as the handoff says: its reply says it is not switched on yet.
+ *   Coach         a chat panel sliding over the right edge (in Full screen, the side column's lower half):
+ *                 suggested prompts, a composer, turn dividers. The shell only, as the handoff says: its reply says it
+ *                 is not switched on yet.
  *   History       the table's history (game/room/history.mjs: public lines, the same for everyone), newest first:
- *                 a drop-down from the strip with a filter, the band on the Focus mat, a column in Full screen
+ *                 a drop-down from the strip with a filter (a press outside closes it), the band on the Focus mat,
+ *                 a column in Full screen; a clock opens it wherever it is offered
  *   Over          who won, or that it was ended early; Back to the table; and Download the record (M8b)
  *
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is reopened,
@@ -57,6 +60,15 @@
   /* An icon button: the glyph shown, the words for a reader. */
   const ib = (glyph, action, label, data = {}, {cls = "compact", disabled = false, pressed = null} = {}) =>
     `<button type="button" class="v-button ${cls}" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")} aria-label="${e(label)}" title="${e(label)}"${pressed === null ? "" : ` aria-pressed="${pressed}"`}${disabled ? " disabled" : ""}>${glyph}</button>`;
+  /* A button with a drawn glyph before its words (the app's button escapes its label, so it cannot carry one). */
+  const gb = (glyph, label, action, data = {}, {cls = "compact"} = {}) =>
+    `<button type="button" class="v-button ${cls} cm-board-glyphed" data-action="${e(action)}" ${Object.entries(data).map(([k, v]) => `data-${k}="${e(v)}"`).join(" ")}>${glyph}<span>${e(label)}</span></button>`;
+  /* THE TWO GLYPHS, each drawn once and used in every place (Rob, 2026-09-30). The history is a clock, everywhere it
+     opens: the strip's History ▾, Full screen's rail, the phone's rail, the band's own button -- never ☰, which is
+     the menu. The Coach is a speech bubble with the wand in it (Part 4's recommendation, decision 21), not the ✦
+     that read as another product's. */
+  const CLOCK = `<svg class="cm-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.6V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const COACH = `<svg class="cm-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 2.25h10A1.75 1.75 0 0 1 14.75 4v5.75A1.75 1.75 0 0 1 13 11.5H7.25L4 14.25V11.5H3A1.75 1.75 0 0 1 1.25 9.75V4A1.75 1.75 0 0 1 3 2.25z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M4.3 9.9l4.9-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 3l.56 1.43 1.53.09-1.19.97.39 1.49-1.29-.83-1.29.83.39-1.49-1.19-.97 1.53-.09z" fill="currentColor"/></svg>`;
 
   /* The step ribbon: the handoff's seven, each the engine's phases it covers. */
   const STEPS = [["Untap", ["UNTAP"]], ["Upkeep", ["UPKEEP"]], ["Draw", ["DRAW"]], ["Main 1", ["MAIN1"]],
@@ -214,9 +226,12 @@
   }
   /* A card's color identity and picture: the library's own record when it has one by that name. */
   let records = null;
+  /* The library holds only your own cards; everyone else's are found in the card records the app ships
+     (C.catalog), so a table of other people's decks is drawn with their pictures rather than a request to Scryfall
+     per card -- which a full board sends faster than Scryfall answers, and the ones it refuses draw no picture. */
   function recordOf(name) {
     if (!records) {records = new Map(); for (const c of C.cards()) if (c.name && !records.has(c.name)) records.set(c.name, c);}
-    return records.get(name) || null;
+    return records.get(name) || (C.catalog && C.catalog.exact(name)) || null;
   }
   const identityOf = (p) => {const c = commanderOf(p), r = c && recordOf(c.name); return WUBRG.filter((x) => ((r && r.colorIdentity) || []).includes(x));};
   const seatColor = (i) => {const p = players()[i], ci = p ? identityOf(p) : []; return ci.length ? `var(--mana-${ci[0]})` : SEAT_COLORS[i % 4];};
@@ -234,13 +249,16 @@
     return (r && r.image) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
   }
   const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId) : []);
+  /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
+     drawn upright, a tapped one with a small Tapped mark (Rob, 2026-09-30, item 17); on the mat it lies sideways. */
+  const UPRIGHT = new Set(["pick", "peek", "zoom"]);
   function card(c, {where = "mat", action = "board-card"} = {}) {
     if (!c.name) return `<div class="cm-bcard is-back" aria-label="A hidden card"></div>`;
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
-    const creature = c.types.includes("Creature") && c.power !== null;
-    const cls = ["cm-bcard", c.tapped ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
-    const marks = [c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
+    const creature = c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where);
+    const cls = ["cm-bcard", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
+    const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     const label = `${c.name}${c.tapped ? ", tapped" : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
       <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
@@ -274,7 +292,7 @@
       ${alsoButton()}
       <span class="cm-board-divider" aria-hidden="true"></span>
       ${switcher()}
-      <span class="cm-board-tools">${b("History ▾", "board-history", {}, false, {cls: "compact"})}${historyOpen ? historyMenu() : ""}</span>
+      <span class="cm-board-tools">${gb(CLOCK, "History ▾", "board-history")}${historyOpen ? historyMenu() : ""}</span>
       <span class="cm-board-tools">${b("Tools ▾", "board-tools", {}, false, {cls: "compact"})}${tools ? toolsMenu() : ""}</span>
       ${b(panelOpen ? "Panel ◂" : "Panel ▸", "board-panel", {}, false, {cls: "compact"})}
     </header>`;
@@ -299,7 +317,7 @@
       : b("End game", "board-end", {}, false, {disabled: over});
     const [lo, hi] = C.cardScaleRange();
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
-      <div class="cm-actions cm-board-menu-row">${b("✦ Recommended actions", "board-coach", {})}${b("Table vitals", "board-vitals", {})}</div>
+      <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · applies to mats, piles and hand · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
@@ -391,7 +409,7 @@
       ? `<nav class="cm-board-pane is-shut" aria-label="Boards">${ib("▸", "board-pane", "Show the boards", {}, {pressed: false})}${players().map((x) => `<button type="button" class="cm-board-dot${focus === x.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" style="--seat:${seatColor(x.playerId)}" aria-label="${e(seatLabel(x))}: ${x.health.life} life" title="${e(seatLabel(x))}">${x.health.life}</button>`).join("")}</nav>`
       : `<nav class="cm-board-pane" aria-label="Boards"><div class="cm-board-pane-head"><span>Boards</span>${ib("◂", "board-pane", "Collapse the boards", {}, {pressed: true})}</div>${players().map(tile).join("")}
         ${b("My board", "board-focus", {seat: String(view.seat)}, true)}${b("⊞ Table view", "board-view", {view: "table"})}
-        <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach"><img src="${LOGO}" alt="">Coach</button></nav>`;
+        <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button></nav>`;
     return `<div class="cm-board-body">${pane}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
@@ -402,8 +420,8 @@
     const {step, next} = stepInfo();
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
       ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}
-      <span class="cm-board-tools">${ib("☰", "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
-      ${ib("✦", "board-coach", "CrankMagic Coach")}
+      <span class="cm-board-tools">${ib(CLOCK, "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
+      ${ib(COACH, "board-coach", "CrankMagic Coach", {}, {pressed: coach.open})}
       <span class="cm-board-tools">${ib("⚙", "board-tools", "Tools")}${tools ? toolsMenu() : ""}</span>
       <span class="cm-board-spacer"></span>${ib("⎋", "board-view", "Leave full screen", {view: "focus"})}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
@@ -463,7 +481,7 @@
   const recordButton = () => view && view.status === "finished" ? b(table && table.playtest ? "Download the full record" : "Download your record", "board-record", {}, false, {cls: "compact"}) : "";
   function historyBand(count) {
     const recent = lines().filter((l) => l.mark !== "turn").slice(0, count);
-    return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib("⌕", "board-history", "Open the history")}</h3>
+    return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
       <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
   function stack() {
@@ -476,7 +494,7 @@
     if (!panelOpen) return "";
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     return `<aside class="cm-board-panel" aria-label="Panel"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
-      <section><h3>Card</h3>${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
+      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
   }
@@ -601,8 +619,8 @@
     const icon = (glyph, action, label, extra = "") => `<button type="button" class="cm-phone-icon" data-action="${action}" aria-label="${e(label)}" title="${e(label)}">${glyph}${extra}</button>`;
     const rail = `<nav class="cm-phone-rail" aria-label="Board">
       ${icon("✋", "board-show-hand", "Your hand", `<span class="cm-phone-badge">${me.zones.Hand.count}</span>`)}
-      <span class="cm-board-tools">${icon("☰", "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
-      ${icon("✦", "board-coach", "CrankMagic Coach")}
+      <span class="cm-board-tools">${icon(CLOCK, "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
+      ${icon(COACH, "board-coach", "CrankMagic Coach")}
       <span class="cm-board-tools">${icon("⚙", "board-tools", "Settings")}${tools ? toolsMenu() : ""}</span></nav>`;
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
@@ -623,17 +641,20 @@
     const panelEl = document.getElementById("cm-board-coach");
     if (!panelEl) return;
     panelEl.hidden = !coach.open;
+    /* In Full screen the Coach is not a slide-over: it takes the side column's lower half, under the log (item 22). */
+    panelEl.classList.toggle("is-docked", mode === "full" && !phone());
     if (!coach.open) {panelEl.innerHTML = ""; return;}
+    dock();
     const keep = panelEl.querySelector(".cm-coach-input");
     const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep;
     const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
-      : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<img class="cm-coach-avatar" src="${LOGO}" alt="">` : ""}<p>${e(m.text)}</p></li>`;
-    panelEl.innerHTML = `<header class="cm-coach-head"><img src="${LOGO}" alt="" class="cm-coach-logo">
-        <div><h2>CrankMagic Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
+      : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<span class="cm-coach-avatar">${COACH}</span>` : ""}<p>${e(m.text)}</p></li>`;
+    panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
+        <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
         <details class="cm-coach-more"><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
         <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
       <ol class="cm-coach-thread" aria-live="polite">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
-        ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><img class="cm-coach-avatar" src="${LOGO}" alt=""><p><i></i><i></i><i></i></p></li>` : ""}</ol>
+        ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><span class="cm-coach-avatar">${COACH}</span><p><i></i><i></i><i></i></p></li>` : ""}</ol>
       <div class="cm-coach-prompts">${COACH_PROMPTS.map((q) => `<button type="button" class="v-button compact" data-action="board-coach-ask" data-q="${e(q)}">${e(q)}</button>`).join("")}</div>
       <form class="cm-coach-compose" data-coach-form><textarea class="cm-coach-input" rows="1" placeholder="Ask the coach…" aria-label="Ask the coach"></textarea>
         <button type="submit" class="cm-coach-send" aria-label="Send">➤</button></form>`;
@@ -691,6 +712,7 @@
     }
     delete host.dataset.phone;
     host.dataset.view = mode;
+    host.dataset.coach = coach.open ? "open" : "shut";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${panel()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${strip()}${tableView()}${showHand()}${panel()}${banner()}`;
     else host.innerHTML = `${strip()}${focusView()}${showHand()}${panel()}${banner()}`;
@@ -721,26 +743,49 @@
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
-        /* The mat: the largest 16:9 beside the pane. The tray docks over the foot of the window; where the mat
-           reaches into it, the mat keeps that much clear below its Lands (the hand's card is 1.235× the mat's,
-           the tray shows the top 60% of it, plus its own chrome). */
-        const main = stage.parentElement, box = main.getBoundingClientRect(), scale = C.cardScale() / 100;
-        const matW = Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - 8) * 16 / 9)));
-        const hc = Math.min(168, Math.max(112, matW * .097)) * scale, trayH = hc * 7 / 5 * .6 + 40;
-        /* The tray docks on the mat's bottom edge: as low as the window allows, and never lower than 40px over
-           that edge (a wide window leaves the mat short, and the tray then hangs below it with the cards whole). */
-        const matBottom = 8 + matW * 9 / 16, trayTop = Math.round(Math.min(box.height - trayH, matBottom - 40));
-        const reserve = Math.max(0, Math.round(matBottom - trayTop));
-        main.style.setProperty("--mat-w", `${matW}px`);
-        main.style.setProperty("--mat-reserve", `${reserve}px`);
-        main.style.setProperty("--tray-top", `${trayTop}px`);
+        /* The mat: the largest 16:9 beside the pane with the hand's tray a full row beneath it, so the hand is whole
+           (Rob, 2026-09-30, item 25; the mock's tray over the mat's foot cut the cards off). The tray's card follows the
+           mat's width, so the two are settled together -- measured at a guess, then at the mat that leaves it room --
+           and a last step makes sure the pair fits the window, since a narrower mat never needs a taller tray. */
+        const main = stage.parentElement, box = main.getBoundingClientRect(), tray = main.querySelector(":scope > .cm-board-hand"), GAP = 8;
+        const widest = (trayH) => Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - 8 - GAP - trayH) * 16 / 9)));
+        const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? tray.getBoundingClientRect().height : 0;};
+        let matW = widest(0);
+        for (let k = 0; k < 4; k += 1) {const next = widest(trayAt(matW)); if (Math.abs(next - matW) < 1) break; matW = next;}
+        const trayH = trayAt(matW);
+        if (8 + matW * 9 / 16 + GAP + trayH > box.height) {matW = widest(trayH); trayAt(matW);}
+        main.style.setProperty("--mat-reserve", "0px");
+        main.style.setProperty("--tray-top", `${Math.round(8 + matW * 9 / 16 + GAP)}px`);
       }
       const big = host.querySelector(".cm-full-mine");
-      if (big) big.style.setProperty("--full-w", `${Math.round(big.getBoundingClientRect().width)}px`);
+      if (big) {
+        /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
+           clear under its Lands, and its cards no taller than a third of the big board leaves room for. */
+        const bigBox = big.getBoundingClientRect(), scale = C.cardScale() / 100;
+        big.style.setProperty("--full-w", `${Math.round(bigBox.width)}px`);
+        big.style.setProperty("--hc", `${Math.round(Math.min(112 * scale, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7)))}px`);
+        const tray = big.querySelector(":scope > .cm-board-hand"), trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
+        big.style.setProperty("--tray-h", `${trayH}px`);
+        /* and the board's own cards no larger than its two rows of piles can stand in what is left above the tray:
+           two card-height rows (5:7, with the pad) and their captions, under the 52px the pill takes. */
+        big.style.setProperty("--full-bc-max", `${Math.max(40, Math.floor((bigBox.height - 52 - trayH - 44) / 3.2))}px`);
+      }
       for (const opp of host.querySelectorAll(".cm-full-other")) opp.style.setProperty("--opp-w", `${Math.round(opp.getBoundingClientRect().width)}px`);
       overlap(host);
+      dock();
       if (tbl) sea(tbl); else stopSea();
     } finally {fitting = false;}
+  }
+  /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
+  function dock() {
+    const el = document.getElementById("cm-board-coach"), side = document.querySelector("#cm-board .cm-full-side"), host = document.getElementById("cm-board");
+    if (!el) return;
+    if (!side || !host || !el.classList.contains("is-docked")) {for (const k of ["--dock-x", "--dock-y", "--dock-w", "--dock-h"]) el.style.removeProperty(k); return;}
+    const s = side.getBoundingClientRect(), h = host.getBoundingClientRect(), top = Math.round(s.bottom + 6);
+    el.style.setProperty("--dock-x", `${Math.round(s.left)}px`);
+    el.style.setProperty("--dock-y", `${top}px`);
+    el.style.setProperty("--dock-w", `${Math.round(s.width)}px`);
+    el.style.setProperty("--dock-h", `${Math.max(120, Math.round(h.bottom - 8 - top))}px`);
   }
   function overlap(host) {
     for (const row of host.querySelectorAll(".cm-board-cards")) {
@@ -800,6 +845,8 @@
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
     /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
     outcomeOf,
+    /** The picture the board draws for a card by its name: the library's record, else the shipped card records'. */
+    pictureOf,
     close() {
       disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
@@ -874,11 +921,13 @@
   addEventListener("resize", () => {
     if (!document.getElementById("cm-board") || !view) return;
     const now = phone() ? (innerHeight > innerWidth ? "portrait" : "landscape") : "no";
-    if (now !== lastPhone) {lastPhone = now; draw();} else fit();
+    if (now !== lastPhone) {lastPhone = now; draw(); if (coach.open) drawCoach();} else fit();
   });
   actions["board-vitals"] = () => {if (view) tableVitals();};
   actions["board-view"] = (el) => setMode(el.dataset.view);
-  /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. */
+  /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. It asks for
+     the DOCUMENT, not the board: a browser shows only the fullscreen element's own subtree, and the Coach, the app's
+     dialogs (Table vitals, Card zoom) and its notices live beside the board, so they opened unseen (item 22). */
   function setMode(next) {
     if (!VIEWS.some(([k]) => k === next)) return;
     mode = next; tools = false; confirmEnd = false; menuOpen = false; stepsOpen = false; historyOpen = false;
@@ -886,10 +935,11 @@
     if (view) focus = mode === "full" ? view.seat : (focus ?? view.seat);
     try {localStorage.setItem(VIEW_KEY, mode);} catch {}
     const host = document.getElementById("cm-board");
-    if (mode === "full" && host && document.fullscreenEnabled && !document.fullscreenElement) host.requestFullscreen().catch(() => {});
+    if (mode === "full" && host && document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
     if (mode !== "full") leaveFullscreen();
     peek(null);
     draw();
+    if (coach.open) drawCoach();
   }
   function leaveFullscreen() {if (document.fullscreenElement) document.exitFullscreen().catch(() => {});}
 
@@ -979,6 +1029,15 @@
     event.preventDefault();
     const input = event.target.querySelector(".cm-coach-input"), q = input.value;
     input.value = ""; ask_(q);
+  });
+  /* HISTORY ▾ CLOSES ON A PRESS ANYWHERE OUTSIDE IT, as the app's popover menus do (item 16). The menu is taken out
+     where it is rather than by a redraw, so the press that closed it still reaches whatever it was on. */
+  document.addEventListener("pointerdown", (event) => {
+    if (!historyOpen || !document.getElementById("cm-board")) return;
+    const t = event.target;
+    if (t && t.closest && (t.closest("#cm-board-history") || t.closest("[data-action=board-history]"))) return;
+    historyOpen = false;
+    document.getElementById("cm-board-history")?.remove();
   });
   actions["board-history"] = () => {historyOpen = !historyOpen; tools = false; menuOpen = false; stepsOpen = false; draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
