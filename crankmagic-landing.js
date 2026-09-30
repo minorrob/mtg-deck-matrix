@@ -79,6 +79,7 @@
   </div>
   <div class="cm-landing-art" aria-hidden="true">
     <img class="cm-landing-hero-art" src="${ART}landing-cards.webp?v=1" alt="" width="1120" height="995" decoding="async" fetchpriority="high">
+    <video class="cm-landing-hero-video" muted loop playsinline disablepictureinpicture preload="none" poster="assets/crankmagic/landing-cards-poster.webp?v=1" width="808" height="656" hidden></video>
     <div class="cm-landing-sample"><div><strong>Krenko Goblins</strong><span>Bracket 3</span></div>${bar(85, 2, 13)}<p><span><b>85</b> in the box</span><span><b class="cm-landing-buy">13</b> to buy</span><span><b>$22</b> to finish</span></p></div>
   </div>
 </section>
@@ -103,6 +104,19 @@
     const run = (fn) => Promise.resolve().then(fn).catch((err) => C.notice(err.message, true));
     const onSubmit = (ev) => {ev.preventDefault(); run(() => start(input.value));};
     const onPaste = (ev) => {const text = ev.clipboardData?.getData("text") || ""; if (lines(text) < 2) return; ev.preventDefault(); run(() => C.startDeck.list(text));};
+    /* THE ART, ANIMATED (Rob, 2026-09-30), where it can be done seamlessly: his clip, lifted off its painted checkerboard
+       onto black (tools/lift-checkerboard-video.mjs), drawn with mix-blend-mode: screen, under which black is exactly the
+       page. So only on a dark theme, only where the reader has not asked for less motion, and only in a browser that
+       plays VP9; the still stays otherwise, and until the video is really playing, then cross-fades out. Nothing is
+       downloaded where it will not play. */
+    const video = C.main.querySelector(".cm-landing-hero-video"), artBox = C.main.querySelector(".cm-landing-art");
+    const dark = document.getElementById("matrix-v2")?.dataset.theme !== "light";
+    if (video && dark && !matchMedia("(prefers-reduced-motion: reduce)").matches && video.canPlayType('video/webm; codecs="vp9"')) {
+      video.hidden = false;
+      video.addEventListener("playing", () => artBox.classList.add("is-animated"), {once: true});
+      video.src = "assets/crankmagic/landing-cards.webm?v=1";
+      video.play().catch(() => {video.hidden = true;});
+    }
     /* New from Wizards: the newest release's precons, filled in once their few kilobytes arrive (crankmagic-decks.js). */
     if (C.preconLatest) C.preconLatest("cm-landing-precons");
     form.addEventListener("submit", onSubmit);
