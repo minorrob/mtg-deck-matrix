@@ -524,7 +524,7 @@ try {
   await rob.page.focus(".cm-board-panegrip [data-drag=pane]");
   for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowLeft");
   const pane3 = await paneGeo();
-  ok(pane3.pane === pane1.pane - 200 && pane3.mini === 0, `the arrow keys move it too, 20px a press: back to ${pane3.pane}px, the tiles tiles again`);
+  ok(pane3.pane === pane1.pane - 200 && pane3.mini === 0, `the arrow keys move it too, 20px a press: back to ${pane3.pane}px, and the tiles are plain tiles again`);
 
   /* Full screen: the page is the game's; a card picked shows large at the side with what it can do; ⎋ leaves. */
   await maya.page.click("[data-action=board-view][data-view=full]");

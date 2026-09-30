@@ -2952,6 +2952,14 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-landing-account{margin-left:auto;display:flex;gap:10px;align-items:center}
 #matrix-v2 .cm-landing-link{border:0;background:none;padding:0;min-height:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #matrix-v2 .cm-landing-account .cm-landing-link{text-decoration:none;font-weight:600;color:var(--v-muted);padding:8px 12px}
+/* THE ACCOUNT CHIP on the landing page (Rob, 2026-09-30): the rail's chip in the header's size; it opens the same menu. */
+#matrix-v2 .cm-landing-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:280px;padding:0 12px 0 6px;border-radius:999px;border:1px solid var(--v-line-strong);background:var(--v-panel);color:var(--v-ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+#matrix-v2 .cm-landing-chip:hover{background:var(--v-raised)}
+#matrix-v2 .cm-landing-chip .cm-chip-avatar{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:var(--v-raised);color:var(--v-ink);font-weight:800}
+.cm-landing-chip .cm-chip-avatar svg{width:18px;height:18px}
+#matrix-v2 .cm-landing-chip.is-signed-in .cm-chip-avatar{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}   /* as the rail's chip draws it */
+.cm-landing-chip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-landing-chip .cm-caret{width:10px;height:10px;flex:0 0 10px;fill:none;stroke:currentColor;stroke-width:1.6}
 #matrix-v2 .cm-landing-link:hover{color:var(--v-ink)}
 .cm-landing-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center;padding-top:40px;padding-bottom:72px;position:relative}
 .cm-landing-copy{display:flex;flex-direction:column;gap:20px;min-width:0}
@@ -2970,10 +2978,16 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-landing-or{margin:0;display:flex;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--v-muted)}
 .cm-landing-fine{margin:0;font-size:13px;color:var(--v-muted)}
 .cm-landing-art{position:relative;height:500px;min-width:0}
-.cm-landing-card{position:absolute;width:250px;aspect-ratio:var(--card-ratio);object-fit:cover;border-radius:14px;box-shadow:0 30px 60px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.08)}
-.cm-landing-card-1{left:4%;top:50px;transform:rotate(-12deg)}
-.cm-landing-card-2{left:30%;top:10px;transform:rotate(3deg);z-index:1}
-.cm-landing-card-3{left:52%;top:70px;transform:rotate(14deg)}
+/* Rob's art (2026-09-30), the three cards and their ring of light, as tall as the area; the Krenko box sits over its foot. */
+.cm-landing-hero-art{position:absolute;right:0;top:-10px;height:calc(100% + 10px);width:auto;max-width:100%;object-fit:contain;object-position:right center;transition:opacity .5s ease}
+/* The animation over it, on black and screen-blended, so black is the page; the still fades out once it plays. */
+.cm-landing-hero-video{position:absolute;right:0;top:-10px;height:calc(100% + 10px);width:auto;max-width:100%;object-fit:contain;object-position:right center;mix-blend-mode:screen;opacity:0;transition:opacity .5s ease;pointer-events:none}
+.cm-landing-art.is-animated .cm-landing-hero-video{opacity:1}
+.cm-landing-art.is-animated .cm-landing-hero-art{opacity:0}
+/* A light theme, or a reader asking for less motion after the page opened: the still again, the video away. */
+#matrix-v2[data-theme="light"] .cm-landing-hero-video{display:none}
+#matrix-v2[data-theme="light"] .cm-landing-art.is-animated .cm-landing-hero-art{opacity:1}
+@media (prefers-reduced-motion:reduce){.cm-landing-hero-video{display:none}.cm-landing-art.is-animated .cm-landing-hero-art{opacity:1}}
 .cm-landing-sample{position:absolute;left:0;bottom:20px;z-index:2;width:290px;padding:14px 16px;border-radius:16px;background:var(--v-panel);border:1px solid var(--v-line);box-shadow:0 20px 40px -20px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
 .cm-landing-sample>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .cm-landing-sample>div span,.cm-landing-sample p{font-size:12px;color:var(--v-muted)}
@@ -3024,8 +3038,8 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-landing-close{padding:40px;border-radius:26px;background:var(--v-accent);color:var(--color-on-accent);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
 #matrix-v2 .cm-landing-close h2{font-family:var(--font-hero);font-weight:var(--hero-weight);text-transform:var(--hero-case);font-size:clamp(30px,4vw,48px);max-width:640px}
 #matrix-v2 .cm-landing-close .v-button{background:var(--color-bg);color:var(--color-ink);border-color:transparent;height:52px;padding:0 22px}
-@media(max-width:900px){.cm-landing-hero{grid-template-columns:1fr;gap:28px}.cm-landing-art{height:380px;max-width:520px}.cm-landing-card{width:190px}}
-@media(max-width:760px){.cm-landing{--l-gutter:16px}.cm-landing-head{gap:10px 16px}.cm-landing-account{margin-left:0;width:100%;justify-content:space-between}.cm-landing-hero{padding-top:12px;padding-bottom:48px}.cm-landing-art{height:320px}.cm-landing-card{width:150px}.cm-landing-sample{width:min(290px,100%)}.cm-landing-section{padding-bottom:48px}.cm-landing-band .cm-landing-section{padding-top:48px}.cm-landing-close{padding:28px 22px}.cm-landing-door{min-height:0}}
+@media(max-width:900px){.cm-landing-hero{grid-template-columns:1fr;gap:28px}.cm-landing-art{height:380px;max-width:520px}}
+@media(max-width:760px){.cm-landing{--l-gutter:16px}.cm-landing-head{gap:10px 16px}.cm-landing-account{margin-left:0;width:100%;justify-content:space-between}.cm-landing-hero{padding-top:12px;padding-bottom:48px}.cm-landing-art{height:320px}.cm-landing-sample{width:min(290px,100%)}.cm-landing-section{padding-bottom:48px}.cm-landing-band .cm-landing-section{padding-top:48px}.cm-landing-close{padding:28px 22px}.cm-landing-door{min-height:0}}
 /* The Decks page with no decks (r3 wireframe, decks-hub-empty): one centered panel, the fan above it. */
 .cm-decks-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:40px 24px}
 .cm-decks-empty h2{margin:0;font-size:24px}

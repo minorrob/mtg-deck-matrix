@@ -110,6 +110,9 @@ eq([...referencesOf("index.html", '<meta property="og:image" content="https://mi
 
 /* PRIVACY, TERMS, AND ONE PUBLIC ADDRESS (Rob, 2026-09-24: "I don't want just anyone to see my personal email"). */
 ok(built.has("privacy.html") && built.has("terms.html"), "the privacy policy and the terms of use are published");
+/* The landing page's art ships whole: the still, and the animation and its poster (Rob, 2026-09-30), found by their
+   references like every other file -- a .webm is a file type the walk knows. */
+ok(["assets/crankmagic/landing-cards.webp", "assets/crankmagic/landing-cards.webm", "assets/crankmagic/landing-cards-poster.webp"].every((f) => built.has(f)), "the landing page's art ships: the still, the animation and its poster");
 /* The refusal with instructions (Rob, 2026-09-26; docs/play-invites.md): Access sends the uninvited here. */
 {
   const page = built.has("not-invited.html") ? built.get("not-invited.html").toString("utf8") : "";
