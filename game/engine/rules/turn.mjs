@@ -207,6 +207,9 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
+  /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
+  if (awaiting.kind === "draw-card")
+    return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
   if (awaiting.kind === "discard-to-hand-size") {
     const hand = cardsIn(state, "hand", awaiting.player);
     return {
@@ -267,6 +270,14 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, events);
     return events;
   }
+  if (awaiting.kind === "draw-card") {
+    if (!Array.isArray(indices) || indices.length !== 1 || indices[0] !== 0) throw new Error("Invalid selection");
+    const events = [];
+    state.awaiting = null;
+    draw(state, awaiting.player, events);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
@@ -312,7 +323,12 @@ function arrive(state, events) {
     playerTurn: {playerId: state.activePlayer, name: state.players[state.activePlayer].name},
   }));
   if (state.phase === "UNTAP") untap(state, events);
-  if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) draw(state, state.activePlayer, events);
+  if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
+    /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
+       until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
+    if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
+    else draw(state, state.activePlayer, events);
+  }
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */
   if (state.phase === "COMBAT_DECLARE_ATTACKERS") attackers.open(state);

@@ -7,8 +7,10 @@
  *
  *   Open      the lobby hands the page to the board once the game is on; both boards open over the socket.
  *   Hidden    Maya's frames never carry a card of Rob's hand or library, only its count; nor his hers.
- *   Decide    the opening hand's Keep; a land played from the hand by tapping it (bright = you can use it);
- *             Pass priority through the steps into turn 2, both boards following, the step ribbon with them.
+ *   Decide    the opening hand's Keep; turn 1's empty upkeep and draw passing by themselves, and saying so; a land
+ *             played from the hand by tapping it (bright = you can use it); Next step landing on the next step with
+ *             something to do; the draw its own beat, Draw a card; Resolve naming the spell on the stack, the strip
+ *             saying you may respond; Pass on another's turn; both boards following, the step ribbon with them.
  *   Views     the game fills the window. Table (identical 16:9 boards sized to the window, you at the foot, the
  *             Library pile drawn, the logo between them opening Table vitals), Focus (the mat the largest 16:9
  *             beside the pane, the hand docked over its foot), Full screen (the whole window; the other seat across
@@ -35,6 +37,7 @@
  *             library holds is drawn from the shipped card records.
  *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
  *             socket, the seat never marked away.
+ *   B5        the turn's words and beats (docs/plan-to-done-2026-09-30.md, items 10-13), in the Decide lines above.
  *   B4        the Table view's shape: the tabletop still; the bar between the rows dragged (and by the arrow keys), the
  *             rows' share remembered; the bar atop the hand tray growing the hand and shrinking every board alike; the
  *             pile cards on top of their frames; the mana reminder below the Lands; the life counter's slices and
@@ -59,8 +62,12 @@ const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
 
-/* THE SERVER, HERE. Each player's deck has cards only they own by name, so a leak can be looked for. */
-const cards = (name) => basicCards(name) ?? {types: ["Creature"], power: 2, toughness: 2, manaCost: "{2}"};
+/* THE SERVER, HERE. Each player's deck has cards only they own by name, so a leak can be looked for. Its creatures cost
+   one mana, so a land played leaves something to do (B5: a step with nothing to do passes by itself). */
+const ROB_INSTANT = (name) => {const m = /^Rob Secret (\d+)$/.exec(name); return !!m && Number(m[1]) % 4 === 2;};
+/* Every other one of Rob's spells is an instant at two mana: once he has two lands, he may respond on another player's
+   turn, and his button then reads Pass (B5, item 10). */
+const cards = (name) => basicCards(name) ?? (ROB_INSTANT(name) ? {types: ["Instant"], manaCost: "{2}"} : {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}"});
 const ROB = "rob@example.com", MAYA = "maya@example.com";
 let clock = Date.parse("2026-09-26T22:00:00Z");
 const map = new Map(), live = [];
@@ -183,7 +190,8 @@ try {
   ok(true, "both keep, and turn 1 begins on both boards");
 
   /* HIDDEN: nothing of the other seat's hand or library, in anything the room sent. */
-  const leaks = (email, owner) => frames[email].filter((f) => f.includes(`${owner} Secret`)).length;
+  /* A frame leaks when it names one of the owner's cards that was never made public (`open`: the ones cast in the open). */
+  const leaks = (email, owner, open = []) => frames[email].filter((f) => (f.match(new RegExp(`${owner} Secret [0-9]+`, "g")) || []).some((n) => !open.includes(n))).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
   await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   ok(/Rob's hand · 7/.test(await text(maya.page, ".cm-board-mat")), "Maya can look at Rob's board, and sees his hand as a count");
@@ -205,15 +213,15 @@ try {
   /* DECIDE: the active player plays a land by tapping it in the hand. */
   const active = /Turn 1 · You/.test(await text(rob.page, ".cm-board-turn")) ? rob : maya, other = active === rob ? maya : rob;
   const activeSeat = active === rob ? 0 : 1, land = active === rob ? "Forest" : "Island";
-  /* Turn 1 opens in the upkeep, where nothing in a hand can be played: both pass until the active player's main 1. */
-  for (let i = 0; i < 30 && !(await active.page.locator(".cm-board-hand .cm-bcard.is-bright").count()); i += 1) {
-    for (const who of [active, other]) {
-      const pass = who.page.locator("[data-action=board-pass]:not([disabled])");
-      if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200);}
-    }
-    await active.page.waitForTimeout(150);
-  }
-  ok(/Main 1/.test(await text(active.page, ".cm-board-step")), `Pass priority takes the table to main 1 (${(await text(active.page, ".cm-board-step")).trim()})`);
+  /* B5, item 11: turn 1's upkeep and its draw step (the first player's first draw is skipped, CR 103.8a) have nothing
+     to do in them, so they pass by themselves, and the table opens in main 1. */
+  await active.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
+  ok(/Main 1/.test(await text(active.page, ".cm-board-step")), `the empty upkeep and draw step pass by themselves: turn 1 opens in main 1, where there is something to do (${(await text(active.page, ".cm-board-step")).trim()})`);
+  await waitText(active.page, ".cm-board-band", /Upkeep, Draw step: nothing to do/);
+  ok((await active.page.locator(".cm-board-band li.is-quiet").first().innerText()).includes("Upkeep, Draw step: nothing to do"), "and the history says so, in one quieter line: Upkeep, Draw step: nothing to do");
+  /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
+  eq((await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
+  eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");
   const brightLand = active.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: land}).first();
   ok(await brightLand.count() === 1, `with priority in main 1, a ${land} in the hand is bright: it can be played now`);
   ok(await active.page.locator(".cm-board-hand .cm-bcard.is-dim").count() > 0, "and the cards that cannot be used now are dimmed");
@@ -231,18 +239,25 @@ try {
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
-  /* With the land down there are two things to do, pass or tap it for mana: Pass priority passes. */
+  /* With the land down there is its mana, and a creature it could pay for: Next step passes, and taps nothing. */
   await active.page.click("[data-action=board-also]");
   ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, You can also ▾ offers its mana");
   await active.page.click("[data-action=board-also]");
   await active.page.click("[data-action=board-pass]");
-  await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`));
-  eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Pass priority hands priority on, and taps nothing");
+  /* B5, items 10 and 11: one click, and the steps with nothing to do in them pass by themselves -- combat, with no
+     creature to attack with -- landing on main 2, where the creature could still be cast. */
+  await waitText(active.page, ".cm-board-step", /Main 2/);
+  eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Next step hands priority on, and taps nothing");
+  ok(/Main 2/.test(await text(active.page, ".cm-board-step")) && (await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim() === "Next step",
+    "one click of Next step lands on the next step with something to do: main 2");
+  await waitText(active.page, ".cm-board-band", /Beginning of combat, Declare attackers, End of combat: nothing to do/);
+  ok(true, "and the combat steps it passed through, empty, say so in one line: Beginning of combat, Declare attackers, End of combat: nothing to do");
 
   /* HISTORY: the table's history, public, newest first; a band on the Focus mat, and History ▾ with a filter. */
   const who = active === rob ? "Rob" : "Maya";
   await waitText(other.page, ".cm-board-band", new RegExp(`${who} played ${land}`));
-  ok((await other.page.locator(".cm-board-band li").first().innerText()).includes(`${who} played ${land}`), `the history band on the mat says it, newest first: "${who} played ${land}"`);
+  const bandRows = await other.page.locator(".cm-board-band li").allInnerTexts();
+  ok(bandRows[0].includes("nothing to do") && bandRows[1].includes(`${who} played ${land}`), `the history band on the mat says it, newest first: "${who} played ${land}", under the empty steps after it (${bandRows.slice(0, 2).join(" | ")})`);
   await active.page.click("[data-action=board-history]");
   await active.page.locator("#cm-board-history").waitFor();
   const rows = await active.page.locator("#cm-board-history .cm-history-list li").allInnerTexts();
@@ -253,9 +268,8 @@ try {
   const shown = await active.page.locator("#cm-board-history .cm-history-list li:not([hidden])").allInnerTexts();
   ok(shown.length >= 1 && shown.every((r) => r.includes(land)), `the filter keeps only the lines that match (${shown.length})`);
   /* A view arrives while the filter is being typed in: the filter keeps its focus, its words and its caret. */
-  const otherPass = other.page.locator("[data-action=board-pass]:not([disabled])");
   const before = views(active === rob ? ROB : MAYA).length;
-  if (await otherPass.count()) await otherPass.click();
+  await serial(async () => object.broadcast());
   await active.page.waitForTimeout(600);
   const kept = await active.page.evaluate(() => {const el = document.activeElement; return el && el.matches("[data-board-history-filter]") ? [el.value, el.selectionStart] : null;});
   ok(views(active === rob ? ROB : MAYA).length > before && kept && kept[0] === land && kept[1] === land.length, `a view arriving mid-filter leaves the filter as it was (${JSON.stringify(kept)})`);
@@ -528,28 +542,27 @@ try {
   ok(/Skipping/.test(await text(active.page, "[data-action=board-skip]")), "Skip to end says it is skipping");
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`), 10000);
   ok(true, "and the board passed priority for them, unasked");
-  /* DECIDE: Pass priority, whoever holds it, until turn 2; both boards follow. */
-  const seenSteps = new Set();
-  for (let i = 0; i < 80; i += 1) {
-    if (/Turn 2/.test(await text(rob.page, ".cm-board-turn"))) break;
-    let passed = false;
-    for (const who of [rob, maya]) {
-      const pass = who.page.locator("[data-action=board-pass]:not([disabled])");
-      if (await pass.count()) {
-        seenSteps.add((await text(who.page, ".cm-board-step")).trim());
-        await pass.click(); passed = true;
-        await who.page.waitForTimeout(150);
-      }
-      const other = who.page.locator("#cm-board-decision [data-action=board-option]").first();
-      if (!passed && !(await who.page.locator("[data-action=board-pass]:not([disabled])").count()) && await other.count() && !(await who.page.locator("#cm-board-decision [data-action=board-confirm]").count())) {await other.click(); passed = true;}
-      const confirm = who.page.locator("#cm-board-decision [data-action=board-confirm]:not([disabled])");
-      if (!passed && await confirm.count()) {await confirm.click(); passed = true;}
-    }
-    if (!passed) await rob.page.waitForTimeout(250);
-  }
+  /* B5, item 13: THE DRAW, ITS OWN BEAT. Turn 2 opens on the other player's draw step and one button, Draw a card; their
+     hand waits for the click, and the click draws. */
+  const drawButton = other.page.locator(".cm-board-strip [data-action=board-draw]:not([disabled])");
+  await drawButton.waitFor({timeout: 20000});
+  const handBefore = await other.page.locator(".cm-board-hand .cm-bcard").count();
+  const drawStrip = {turn: await text(other.page, ".cm-board-turn"), step: (await text(other.page, ".cm-board-step")).trim(), label: (await drawButton.innerText()).trim(),
+    passes: await other.page.locator(".cm-board-strip [data-action=board-pass]").count(), floats: await other.page.locator(".cm-board-ask #cm-board-decision").count()};
+  ok(/Turn 2/.test(drawStrip.turn) && drawStrip.step === "Draw" && drawStrip.label === "Draw a card" && drawStrip.passes === 0 && drawStrip.floats === 0,
+    `turn 2 opens in the draw step on one button, Draw a card, with nothing floated over the board (${drawStrip.step}: "${drawStrip.label}")`);
+  await other.page.waitForTimeout(400);
+  eq(await other.page.locator(".cm-board-hand .cm-bcard").count(), handBefore, "and the hand waits for the click: nothing is drawn unasked");
+  await shot(other.page, "draw-beat-" + (other === rob ? "1400" : "1280"));
+  await drawButton.click();
+  await other.page.waitForFunction((n) => document.querySelectorAll(".cm-board-hand .cm-bcard").length === n + 1, handBefore, {timeout: 10000});
+  ok(true, "the click draws the card: the hand is one larger");
+  /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
-  ok(seenSteps.size >= 3, `Pass priority walks the steps (${[...seenSteps].join(", ")}) into turn 2, on both boards`);
+  const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
+  ok(["MAIN1", "MAIN2", "DRAW"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2", "DRAW"].includes(p)),
+    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do (${[...askedIn].join(", ")}); the rest passed by themselves`);
   ok((await text(active.page, "[data-action=board-skip]")).trim() === "Skip to end", "at the turn's end Skip to end puts itself away");
   eq(await rob.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-board-mat .cm-board-ribbon li.is-now").count(), 1, "the step ribbon lights the current step on the active player's own board");
 
@@ -642,6 +655,43 @@ try {
   ok(!panelCard.heading.includes("Card"), `and no "Card" heading over it (${panelCard.heading.join(", ")})`);
   await shot(second.page, "panel-tapped-" + (second === rob ? "1400" : "1280"));
   await second.page.click("[data-action=board-panel]");
+
+  /* B5, items 10 and 12: A SPELL ON THE STACK. With the mana, the creature in hand is bright; cast, the button names what
+     passing will do -- Resolve and the spell's name -- on the caster's board and then on the other's, whose strip says
+     what is on the stack and that they may respond. */
+  const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
+  await toCast.click();
+  await waitText(second.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
+  eq((await text(second.page, ".cm-board-waiting")).trim(), "You may respond", `cast, ${castName} is on the stack: the caster's button reads Resolve ${castName}, and the strip says they may respond`);
+  await second.page.click(".cm-board-strip [data-action=board-pass]");
+  const firstBoard = second === rob ? maya : rob;
+  await waitText(firstBoard.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
+  const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
+  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
+  ok(new RegExp(`Waiting on ${firstName_}`).test(await text(second.page, ".cm-board-waiting")), "and the caster's strip says who the table waits on");
+  await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
+  await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
+  await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
+  ok(true, `and it resolves: ${castName} is on the battlefield`);
+  /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;
+     on Maya's turn 4 he may respond in her upkeep, his button reads Pass, and his strip says whose step it is. */
+  for (let i = 0; i < 80 && !/Turn 4/.test(await text(rob.page, ".cm-board-turn")); i += 1) {
+    let acted = false;
+    for (const who of [rob, maya]) {
+      const draw = who.page.locator(".cm-board-strip [data-action=board-draw]:not([disabled])");
+      if (await draw.count()) {await draw.click(); await who.page.waitForTimeout(250); acted = true; continue;}
+      const forest = who.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: "Forest"}).first();
+      if (who === rob && await forest.count()) {await forest.click(); await who.page.waitForTimeout(250); acted = true; continue;}
+      const pass = who.page.locator(".cm-board-strip [data-action=board-pass]:not([disabled])");
+      if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200); acted = true;}
+    }
+    if (!acted) await rob.page.waitForTimeout(250);
+  }
+  await rob.page.locator(".cm-board-strip [data-action=board-pass]:not([disabled])").waitFor({timeout: 20000});
+  const theirTurn = {turn: await text(rob.page, ".cm-board-turn"), label: (await text(rob.page, ".cm-board-strip [data-action=board-pass]")).trim(), says: (await text(rob.page, ".cm-board-waiting")).trim()};
+  ok(/Turn 4 · Maya/.test(theirTurn.turn) && theirTurn.label === "Pass" && /^Maya's upkeep · you may respond$/.test(theirTurn.says),
+    `on another player's turn, with the stack empty and an instant he can pay for, Rob's button reads Pass, and the strip says "${theirTurn.says}"`);
+  await shot(rob.page, "their-turn-1400");
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
@@ -792,15 +842,17 @@ try {
   await shot(maya.page, "phone-landscape");
   /* When the room asks her something, the board snaps back to hers, wherever she was looking. */
   let snapped = false;
+  /* asked: to pass, or (B5) to draw */
+  const mayaAsk = ".cm-phone-pill [data-action=board-pass]:not([disabled]), .cm-phone-pill [data-action=board-draw]:not([disabled])";
   for (let i = 0; i < 30 && !snapped; i += 1) {
-    const mayaAsked = await maya.page.locator(".cm-phone-pill [data-action=board-pass]:not([disabled])").count();
-    if (mayaAsked) {await maya.page.click(".cm-phone-pill [data-action=board-pass]"); await maya.page.waitForTimeout(250); continue;}
+    const mayaAsked = await maya.page.locator(mayaAsk).count();
+    if (mayaAsked) {await maya.page.locator(mayaAsk).first().click(); await maya.page.waitForTimeout(250); continue;}
     if (!(await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").count())) await maya.page.click(".cm-phone-seat[data-seat='0']");
     const robPass = rob.page.locator("[data-action=board-pass]:not([disabled])");
     if (!(await robPass.count())) {await rob.page.waitForTimeout(250); continue;}
     await robPass.click();
     await maya.page.waitForTimeout(500);
-    if (await maya.page.locator(".cm-phone-pill [data-action=board-pass]:not([disabled])").count()) snapped = await maya.page.locator(".cm-phone-center .cm-seatboard.is-you").count() === 1;
+    if (await maya.page.locator(mayaAsk).count()) snapped = await maya.page.locator(".cm-phone-center .cm-seatboard.is-you").count() === 1;
   }
   ok(snapped, "looking at Rob's board when the room asks her, the board snaps back to hers");
   /* ✋: the hand at a readable size; a card tapped is held up with what it can do; Back to hand. */
@@ -863,7 +915,9 @@ try {
   const [download] = await Promise.all([rob.page.waitForEvent("download", {timeout: 15000}), rob.page.click(".cm-board-over [data-action=board-record]")]);
   const rec = JSON.parse(readFileSync(await download.path(), "utf8"));
   eq([download.suggestedFilename(), rec.kind, rec.seatId, rec.playtest, "seed" in rec, "tape" in rec], [`CrankMagic-${rec.matchId}-your-record.json`, "seat", "s0", false, false, false], "the game over, Download your record gives Rob his own seat's record: no seed, no tape");
-  ok(!JSON.stringify(rec).includes("Maya Secret") && rec.history.length > 0, "with the table's history and nothing of Maya's hidden cards");
+  /* The one card of Maya's in it is the creature she cast (B5), public since it was cast. */
+  const mayaNamed = new Set(JSON.stringify(rec).match(/Maya Secret \d+/g) || []);
+  ok([...mayaNamed].every((n) => n === castName) && rec.history.length > 0, `with the table's history and nothing of Maya's hidden cards (of hers, only ${[...mayaNamed].join(", ") || "none"}, cast in the open)`);
   await waitText(rob.page, "#cm-notice", /Your record is downloaded/, 10000);
   eq(await rob.page.locator("#cm-notice .cm-toast-action").count(), 0, "and the board says what was downloaded, with no Undo: the download changed nothing");
   await shot(rob.page, "board-record-1400");
@@ -907,10 +961,10 @@ try {
   await shot(rob.page, "record-ai-game-1400");
   ok(/win/.test(aiRow) && /Table/.test(aiRow) && /\bAI\b/.test(aiRow), `a table game with an AI seat is badged AI on the Record (${aiRow.replace(/\s+/g, " ").trim()})`);
 
-  eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames)`);
+  eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya", [castName])], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames; ${castName} was cast in the open)`);
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the board's ${writes.length} writes carried Play's header and JSON`);
   await rob.context.close(); await maya.context.close();
 } finally {
   await close();
 }
-console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, a land tapped from the hand, Pass priority into turn 2, a refusal in words, a dropped socket reopened, End game's second tap.`);
+console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, the draw its own beat, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
