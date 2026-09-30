@@ -3046,6 +3046,28 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-precon{display:grid;gap:2px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--v-radius);background:var(--v-panel);border:1px solid var(--v-line);color:var(--v-ink);font:inherit;cursor:pointer;min-height:0}
 #matrix-v2 .cm-precon:hover,#matrix-v2 .cm-precon:focus-visible{border-color:var(--v-accent)}
 .cm-precon strong{font-size:14px}
+/* NEW FROM WIZARDS (Rob, 2026-09-30): the newest release's precons on the home screens, one click each. */
+.cm-precon-latest{margin:0 0 18px;padding:12px 14px;border:1px solid var(--v-line);border-radius:var(--v-radius-card);background:var(--v-panel)}
+.cm-precon-latest-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:8px}
+.cm-precon-latest-head h2{margin:0;font-size:15px}
+.cm-precon-latest ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+#matrix-v2 .cm-precon-chip{display:grid;gap:2px;padding:8px 12px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-raised);color:var(--v-ink);font:inherit;text-align:left;cursor:pointer;min-height:0}
+#matrix-v2 .cm-precon-chip:hover,#matrix-v2 .cm-precon-chip:focus-visible{border-color:var(--v-accent)}
+.cm-precon-chip strong{font-size:13px}
+.cm-precon-chip span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--v-muted)}
+.cm-precon-latest.is-landing{margin:18px 0 0;padding:12px 14px}
+/* On the Decks hub the strip is a tile at the head of the grid: a poster like the decks', the six as a column. */
+.cm-precon-tile{margin:0;display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:var(--v-radius-tile);min-width:0;min-height:100%}   /* as tall as its row; never clipped */
+.cm-precon-tile .cm-precon-latest-head{flex-direction:column;align-items:flex-start;gap:2px}
+.cm-precon-tile ul{flex-direction:column;flex-wrap:nowrap;gap:4px}
+#matrix-v2 .cm-precon-tile .cm-precon-chip{width:100%;padding:4px 10px;gap:0}
+.cm-precon-tile .cm-precon-chip strong{font-size:12px}
+.cm-precon-tile .cm-precon-chip span{font-size:11px;flex-wrap:nowrap}
+.cm-precon-chip em{font-style:normal;min-width:0}
+.cm-precon-tile .cm-precon-chip em{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-precon-tile .cm-precon-chip .cm-colors{flex:0 0 auto}
+.cm-precon-tile .cm-precon-latest-head .cm-muted{font-size:11px}
+.cm-precon-tile ul{gap:4px}
 .cm-precon-lead{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
 .cm-precon span.cm-muted{font-size:12px}
 /* BUILD A DECK (R3.11): the four steps, the strategy chips with their fit labels, and the review. */

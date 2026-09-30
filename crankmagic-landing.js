@@ -80,6 +80,7 @@
 <section class="cm-landing-section">
   <div class="cm-landing-section-head"><h2>Where do you want to start?</h2><p>Four ways in. Each one starts with a single step, and they all share the same library.</p></div>
   <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => [page, href, title, body, cta, tint, page === "Play" && !playSoon ? "" : badge]).map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
+  <section class="cm-precon-latest is-landing" id="cm-landing-precons" aria-label="New from Wizards" hidden></section>
 </section>
 <section class="cm-landing-band"><div class="cm-landing-section">
   <h2>From an idea to a deck you can shuffle</h2>
@@ -97,6 +98,8 @@
     const run = (fn) => Promise.resolve().then(fn).catch((err) => C.notice(err.message, true));
     const onSubmit = (ev) => {ev.preventDefault(); run(() => start(input.value));};
     const onPaste = (ev) => {const text = ev.clipboardData?.getData("text") || ""; if (lines(text) < 2) return; ev.preventDefault(); run(() => C.startDeck.list(text));};
+    /* New from Wizards: the newest release's precons, filled in once their few kilobytes arrive (crankmagic-decks.js). */
+    if (C.preconLatest) C.preconLatest("cm-landing-precons");
     form.addEventListener("submit", onSubmit);
     input.addEventListener("paste", onPaste);
     return () => {form.removeEventListener("submit", onSubmit); input.removeEventListener("paste", onPaste);};
