@@ -18,6 +18,8 @@
  *   8. The account chip (Rob, 2026-09-30): left of the way in, the app's own menu -- "Menu" where accounts are off,
  *      "Sign in" signed out, the person signed in -- opening under the chip, seen with the rail hidden, Account first.
  *   9. The hero art (Rob, 2026-09-30): his picture at twice its drawn width, the Krenko deck box over its foot.
+ *  10. The art animated: on a dark theme his clip plays on black, screen-blended so its edge cannot be seen; less motion,
+ *      or a light theme, keeps the still, and the video is not fetched where it will not play.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -129,6 +131,46 @@ try {
     await landing(page);
     ok(true, "#welcome opens the landing page");
     await context.close();
+  }
+
+  /* 10. THE ART, ANIMATED (Rob, 2026-09-30): on a dark theme, with motion allowed, his clip plays on black, screen-blended
+         so black is the page; the still fades out once it plays; asking for less motion, or a light theme, keeps the
+         still, and nothing is downloaded where it will not play. */
+  {
+    const {context, page} = await fresh();
+    const asked = [];
+    page.on("request", (r) => asked.push(new URL(r.url()).pathname));
+    await page.goto(`${base}/index.html`);
+    await landing(page);
+    await page.locator(".cm-landing-art.is-animated").waitFor({timeout: 20000});
+    await page.waitForTimeout(700);   /* the half-second cross-fade */
+    const anim = await page.evaluate(async () => {
+      const v = document.querySelector(".cm-landing-hero-video"), t0 = v.currentTime;
+      await new Promise((r) => setTimeout(r, 600));
+      return {src: v.currentSrc, playing: !v.paused && v.currentTime !== t0, loop: v.loop, muted: v.muted, blend: getComputedStyle(v).mixBlendMode,
+        video: getComputedStyle(v).opacity, still: getComputedStyle(document.querySelector(".cm-landing-hero-art")).opacity, box: (() => {const r = v.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];})()};
+    });
+    ok(/landing-cards\.webm/.test(anim.src) && anim.playing && anim.loop && anim.muted, `on a dark theme the art plays, muted and looping (${anim.src.split("/").pop()})`);
+    ok(anim.blend === "screen" && anim.video === "1" && anim.still === "0", "screen-blended over the page, the still faded out under it");
+    /* Seamless: just inside the video's box, where its black is, the page reads the same as just outside it. */
+    const [x, y, w] = anim.box, png = await page.screenshot({clip: {x: Math.max(0, x - 6), y: y + 40, width: 12, height: 1}});
+    const px = await page.evaluate(async (b64) => {const img = new Image(); img.src = "data:image/png;base64," + b64; await img.decode(); const c = document.createElement("canvas"); c.width = img.width; c.height = 1; const g = c.getContext("2d"); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, img.width, 1).data; return [[d[0], d[1], d[2]], [d[d.length - 4], d[d.length - 3], d[d.length - 2]]];}, png.toString("base64"));
+    ok(px[0].every((v, k) => Math.abs(v - px[1][k]) <= 2), `and the video's edge cannot be seen: the page beside it ${px[0].join(",")}, inside it ${px[1].join(",")}`);
+    await shot(page, "landing-animated-1400");
+    /* A light theme: the video goes, the still comes back. */
+    await page.evaluate(() => {for (const el of [document.documentElement, document.getElementById("matrix-v2")]) el.dataset.theme = "light";});
+    await page.waitForTimeout(700);
+    eq(await page.evaluate(() => [getComputedStyle(document.querySelector(".cm-landing-hero-video")).display, getComputedStyle(document.querySelector(".cm-landing-hero-art")).opacity]), ["none", "1"], "on a light theme the still is back and the video is away");
+    await context.close();
+    const quiet = await fresh({width: 1400, height: 900}, {reducedMotion: "reduce"});
+    const heard = [];
+    quiet.page.on("request", (r) => heard.push(new URL(r.url()).pathname));
+    await quiet.page.goto(`${base}/index.html`);
+    await landing(quiet.page);
+    await quiet.page.waitForTimeout(1500);
+    const still = await quiet.page.evaluate(() => {const v = document.querySelector(".cm-landing-hero-video"); return {src: v.getAttribute("src"), hidden: v.hidden, animated: !!document.querySelector(".cm-landing-art.is-animated")};});
+    ok(!still.src && still.hidden && !still.animated && !heard.some((p) => /\.webm$/.test(p)), "asking for less motion, the still stays and the video is never fetched");
+    await quiet.context.close();
   }
 
   /* 1. THE FRONT DOOR (Rob, 2026-09-29): with a library too, / is the landing page, and it offers the way in; the

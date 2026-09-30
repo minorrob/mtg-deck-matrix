@@ -45,6 +45,10 @@
       "version": 2,
       "sha": "f8de7bf34e989990"
     },
+    "assets/crankmagic/landing-cards-poster.webp": {
+      "version": 1,
+      "sha": "7b13abdcde778082"
+    },
     "assets/crankmagic/landing-cards.webp": {
       "version": 1,
       "sha": "3cc0812ddfe08cc9"
@@ -150,8 +154,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 424,
-      "sha": "3d61242b13b92a7a"
+      "version": 425,
+      "sha": "c5ac297436d5c5f3"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -238,8 +242,8 @@
       "sha": "7107decfb233f4dc"
     },
     "crankmagic-landing.js": {
-      "version": 7,
-      "sha": "b73cb3e9f3983c13"
+      "version": 8,
+      "sha": "764100dffa421e94"
     },
     "crankmagic-lens.js": {
       "version": 2,
@@ -314,8 +318,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 408,
-      "sha": "08c5827675d4ab6b"
+      "version": 409,
+      "sha": "e1511563d697a85a"
     },
     "crankmagic-table.js": {
       "version": 13,
@@ -338,8 +342,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 256,
-      "sha": "beab9cba8b0800f5"
+      "version": 257,
+      "sha": "844e800cf776ed66"
     },
     "custom-model.js": {
       "version": 3,
