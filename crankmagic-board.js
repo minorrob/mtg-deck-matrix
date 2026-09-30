@@ -103,6 +103,18 @@
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
   let attached = false;     /* the table page is showing the board (the board can hold a game with the page elsewhere) */
+  /* THE TABLE VIEW'S TWO BARS AND THE THREE CARD SIZES (items 4-6). The bar between the rows shares the tabletop's
+     height between the other seats' row and yours; the bar atop the hand tray is the hand's size, and the boards take
+     what it leaves them, all alike. The Tools slider is the table's card size; the board's cards and the hand's each
+     have their own, on those two bars, and moving Tools sets both to its value (Rob's rule). All of it is remembered
+     on this device, as the card size is. */
+  const ROWS_KEY = "cm-board-rows", ROWS = [0.3, 0.7], SCALE_KEY = {board: "cm-board-scale:board", hand: "cm-board-scale:hand"};
+  const stored = (k) => {try {return localStorage.getItem(k);} catch {return null;}};
+  const keep = (k, v) => {try {localStorage.setItem(k, String(v));} catch {/* applied, not remembered */}};
+  const rowShare = () => {const raw = stored(ROWS_KEY), v = Number(raw); return raw !== null && v >= ROWS[0] && v <= ROWS[1] ? v : 0.5;};
+  const inRange = (v) => {const [lo, hi] = C.cardScaleRange(); return Math.min(hi, Math.max(lo, Math.round(Number(v) || 100)));};
+  const scaleOf = (scope) => {const v = stored(SCALE_KEY[scope]); return v === null ? C.cardScale() : inRange(v);};
+  let drag = null;          /* a bar being dragged: {kind: "rows"|"hand", y, from, per} */
 
   /* ---- the socket ---- */
   function connect() {
@@ -239,7 +251,18 @@
     return records.get(name) || (C.catalog && C.catalog.exact(name)) || null;
   }
   const identityOf = (p) => {const c = commanderOf(p), r = c && recordOf(c.name); return WUBRG.filter((x) => ((r && r.colorIdentity) || []).includes(x));};
-  const seatColor = (i) => {const p = players()[i], ci = p ? identityOf(p) : []; return ci.length ? `var(--mana-${ci[0]})` : SEAT_COLORS[i % 4];};
+  /* Seats apart at a glance (the life counter's slices, the tiles, the damage bars): a seat whose commander's first
+     color an earlier seat already wears takes its next, and failing all of them a status color no one has. */
+  const seatColor = (i) => {
+    const taken = new Set();
+    for (const p of players()) {
+      const own = identityOf(p).map((x) => `var(--mana-${x})`);
+      const pick = own.find((c) => !taken.has(c)) || SEAT_COLORS.find((c) => !taken.has(c)) || SEAT_COLORS[p.playerId % 4];
+      if (p.playerId === i) return pick;
+      taken.add(pick);
+    }
+    return SEAT_COLORS[i % 4];
+  };
   function vitals(p, {big = false, button = true} = {}) {
     const h = p.health, from = Object.entries(h.commanderDamage || {}).map(([id, n]) => ({seat: commanderSeat(id), n}));
     const danger = h.life <= 10 || h.poison >= 7 || from.some((f) => f.n >= 15);
@@ -323,7 +346,7 @@
     const [lo, hi] = C.cardScaleRange();
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
-      <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · applies to mats, piles and hand · remembered on this device · ⌘/Ctrl + / − also work</p></div>
+      <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
@@ -345,6 +368,12 @@
   function ribbon(active, at = stepAt(view.state.phase)) {
     return `<ol class="cm-board-ribbon" aria-label="Steps">${STEPS.map(([label], i) => `<li class="${!active ? "" : i < at ? "is-done" : i === at ? "is-now" : ""}">${e(label)}</li>`).join("")}</ol>`;
   }
+  /* The two bars' sliders: one scope each, continuous, the value beside it (AGENTS.md: sizes are sliders). */
+  function scaleSlider(scope, label) {
+    const [lo, hi] = C.cardScaleRange(), v = scaleOf(scope);
+    return `<label class="cm-board-scale"><span>${e(label)}</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-board-scale="${scope}" aria-label="${e(label)}" aria-valuetext="${v}%"><output>${v}%</output></label>`;
+  }
+  const grip = (kind, label, now, [lo, hi]) => `<span class="cm-board-grip" role="separator" aria-orientation="horizontal" tabindex="0" data-drag="${kind}" aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
   /* A card-shaped zone: the top card (or the back of the library, its count on it), the name and the count below. */
   function pile(label, zone, top, {back = false} = {}) {
     const face = top ? card(top) : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
@@ -367,8 +396,8 @@
         ${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body">
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!creatures.length && !other.length ? `<p class="cm-board-empty">No permanents yet.</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
-        <div class="cm-mat-zone cm-board-lands" data-zone="lands"><div class="cm-board-cards">${lands.map((c) => card(c)).join("")}</div>
-          ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
+        <div class="cm-mat-zone cm-board-lands" data-zone="lands"><div class="cm-board-cards">${lands.map((c) => card(c)).join("")}</div><i class="cm-mat-label">Lands · ${lands.length}</i></div>
+        ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
         ${size === "focus" ? historyBand(6) : ""}
         ${pile("Library", z.Library, null, {back: true})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
@@ -391,13 +420,34 @@
 
   /* THE TABLE VIEW: every board at once, you at the bottom right and the others round from the top left (the
      handoff's "seats 2 · 3 / 4 · 1"). Fewer seats, fewer boards: two stack, three put you across the foot. The
-     boards are identical 16:9 tracks sized to the window (fit()); the logo at the true center opens Table vitals. */
+     boards are 16:9 tracks sized to the window (fit()), alike in a row; the bar between the rows shares the height
+     (item 4), identical boards until it is moved. At the true center, the life counter (item 9). */
   function tableView() {
     const ps = players(), n = ps.length, active = view.state.turnPlayerId;
     const bottom = n === 2 ? ["b"] : ["c", "d"];
-    const boards = ps.map((p) => {const area = areaOf(p.playerId); return `<div class="cm-board-slot" style="grid-area:${area}">${mat(p, {size: "table", head: bottom.includes(area) ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
-    return `<div class="cm-board-tabletop"><div class="cm-board-table" data-seats="${n}">${active === null ? "" : fan(active)}${boards}
-      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button></div>${ask()}</div>${hand()}`;
+    const boards = ps.map((p) => {const area = areaOf(p.playerId), low = bottom.includes(area); return `<div class="cm-board-slot" data-area="${area}" style="grid-area:${area};--row-w:var(${low ? "--bot-w" : "--top-w"})">${mat(p, {size: "table", head: low ? "bottom" : "top", focusButton: true})}</div>`;}).join("");
+    const rows = `<div class="cm-board-rowbar">${grip("rows", "The rows' sizes: drag, or use the arrow keys", Math.round(rowShare() * 100), [ROWS[0] * 100, ROWS[1] * 100])}${scaleSlider("board", "Board cards")}</div>`;
+    return `<div class="cm-board-tabletop"><div class="cm-board-table" data-seats="${n}">${active === null ? "" : fan(active)}${boards}${rows}${counter()}</div>${ask()}</div>${hand()}`;
+  }
+  /* THE LIFE COUNTER at the true center (item 9; wireframe 2e's counter()): a slice per seat in its color, on the side
+     its board sits -- four quarters, three thirds, two halves -- its life on it, and the logo in the middle, which
+     opens Table vitals. Degrees run clockwise from twelve o'clock, as a conic gradient draws them. */
+  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [90, 270], a: [270, 450]}};
+  function counter() {
+    const ps = players(), cut = SLICES[ps.length] || SLICES[4];
+    const parts = ps.map((p) => ({p, at: cut[areaOf(p.playerId)]})).filter((x) => x.at).sort((x, y) => x.at[0] - y.at[0]);
+    const pct = (deg) => `${Math.round(deg / 3.6 * 100) / 100}%`, tint = (p) => `color-mix(in srgb,${seatColor(p.playerId)} 78%,var(--mat-ink))`;
+    /* a slice past twelve o'clock (two seats' top half) is drawn in two pieces, the first from zero */
+    const stops = parts.flatMap(({p, at}) => at[1] > 360 ? [`${tint(p)} ${pct(at[0])} 100%`] : [`${tint(p)} ${pct(at[0])} ${pct(at[1])}`]);
+    const over = parts.find(({at}) => at[1] > 360);
+    if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
+    const totals = parts.map(({p, at}) => {
+      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 30 * Math.sin(mid), y = 50 - 30 * Math.cos(mid);
+      return `<b class="cm-board-pie-life" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%">${p.health.life}</b>`;
+    }).join("");
+    const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
+    return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${totals}
+      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button></div>`;
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its
      bottom edge. */
@@ -452,8 +502,9 @@
      every other seat, "n / 21" with its bar; the commander's own seat reads "—". */
   function tableVitals() {
     const ps = players(), head = `<div role="row" class="is-head"><span role="columnheader"></span>${ps.map((p) => `<span role="columnheader">${e(p.playerId === view.seat ? "You" : p.name)}</span>`).join("")}</div>`;
-    const row = (label, cells) => `<div role="row"><span role="rowheader">${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
-    const rows = [row("Life", ps.map((p) => `<b>${p.health.life}</b>`)), row("Poison", ps.map((p) => `${p.health.poison} / 10`))];
+    /* a heart for life, a skull and crossbones for poison, nothing for commander damage (item 9) */
+    const row = (label, cells, name = "") => `<div role="row"><span role="rowheader"${name ? ` class="cm-vitals-icon" aria-label="${e(name)}" title="${e(name)}"` : ""}>${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
+    const rows = [row("♥", ps.map((p) => `<b>${p.health.life}</b>`), "Life"), row("☠", ps.map((p) => `${p.health.poison} / 10`), "Poison")];
     const known = new Set();
     for (const src of ps) {
       const ids = visibleCards(src).filter((c) => c.commander).map((c) => c.cardId);
@@ -563,7 +614,8 @@
     const mine = players()[view.seat];
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
-    return `<section class="cm-board-hand" aria-label="Your hand"><h3><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><span class="cm-board-hand-title">Hand · ${cards.length}</span>${view.decision ? `<span class="cm-muted">Bright = you can use it now</span>` : ""}</h3>
+    const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag to resize the boards, or use the arrow keys", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
+    return `<section class="cm-board-hand" aria-label="Your hand">${bar}<h3><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><span class="cm-board-hand-title">Hand · ${cards.length}</span>${view.decision ? `<span class="cm-muted">Bright = you can use it now</span>` : ""}</h3>
       <div class="cm-board-hand-cards cm-board-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
   }
   /* SHOW HAND (the handoff's two states). Contemplate: the board dims and the hand fans in an arc, 170px cards
@@ -733,6 +785,7 @@
       return;
     }
     delete host.dataset.phone;
+    applyScales(host);
     host.dataset.view = mode;
     host.dataset.coach = coach.open ? "open" : "shut";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${panel()}${banner()}`;
@@ -758,10 +811,18 @@
       if (!host || !view) return;
       const tbl = host.querySelector(".cm-board-table");
       if (tbl) {
-        const n = Number(tbl.dataset.seats) || 4, cols = n === 2 ? 1 : 2, gap = 14;
-        const box = tbl.getBoundingClientRect();
-        const w = Math.max(200, Math.floor(Math.min((box.width - gap * (cols - 1)) / cols, ((box.height - gap) / 2) * 16 / 9)));
-        tbl.style.setProperty("--board-w", `${w}px`);
+        /* Each row the largest 16:9 its share of the height allows (item 4), no wider than a column; the bar and the
+           life counter sit in the gap between the rows, at the true center. */
+        const n = Number(tbl.dataset.seats) || 4, cols = n === 2 ? 1 : 2, gaps = getComputedStyle(tbl);
+        const gx = parseFloat(gaps.columnGap) || 14, gy = parseFloat(gaps.rowGap) || 22;
+        const box = tbl.getBoundingClientRect(), room = box.height - gy, col = (box.width - gx * (cols - 1)) / cols, share = rowShare();
+        const widest = (part) => Math.max(160, Math.floor(Math.min(col, part * room * 16 / 9)));
+        const top = widest(share), bot = widest(1 - share), used = (top + bot) * 9 / 16 + gy;
+        tbl.style.setProperty("--top-w", `${top}px`);
+        tbl.style.setProperty("--bot-w", `${bot}px`);
+        tbl.style.setProperty("--board-w", `${Math.max(top, bot)}px`);
+        tbl.style.setProperty("--grid-w", `${Math.round(Math.max(top, bot) * cols + gx * (cols - 1))}px`);
+        tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
@@ -783,7 +844,7 @@
       if (big) {
         /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
            clear under its Lands, and its cards no taller than a third of the big board leaves room for. */
-        const bigBox = big.getBoundingClientRect(), scale = C.cardScale() / 100;
+        const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100;
         big.style.setProperty("--full-w", `${Math.round(bigBox.width)}px`);
         big.style.setProperty("--hc", `${Math.round(Math.min(112 * scale, Math.max(56, (bigBox.height * .36 - 22) * 5 / 7)))}px`);
         const tray = big.querySelector(":scope > .cm-board-hand"), trayH = tray ? Math.ceil(tray.getBoundingClientRect().height) : 0;
@@ -820,10 +881,10 @@
       row.style.setProperty("--lap", `${-Math.ceil(lap)}px`);
     }
   }
-  /* The living mat under the Table view (the handoff: random cycle, ~45%). Every view that arrives redraws the
-     table, so the one canvas is moved into the new table rather than made again -- its animation carries on
-     across redraws and starts over only when the table's size has really changed, or the view is left. */
-  let seaCanvas = null, seaSize = "";
+  /* The mat under the Table view (the handoff: the living sea, ~45%; still for now, item 3). Every view that arrives
+     redraws the table, so the one canvas is moved into the new table rather than made again, and is painted again
+     only when the table's size has really changed, or the view is left. */
+  let seaCanvas = null, seaSize = "", seaElement = null;
   function sea(tbl) {
     if (typeof CrankSea === "undefined") return;
     const box = tbl.getBoundingClientRect(), size = `${Math.round(box.width / 40)}x${Math.round(box.height / 40)}`;
@@ -832,11 +893,42 @@
       seaCanvas = Object.assign(document.createElement("canvas"), {className: "cm-board-sea"});
       seaCanvas.setAttribute("aria-hidden", "true");
       seaSize = size;
-      try {seaStop = CrankSea.startSea(seaCanvas, {width: Math.max(160, Math.round(box.width / 2)), height: Math.max(90, Math.round(box.height / 2)), opacity: .45, cycleSeconds: 30});} catch {seaStop = null;}
+      /* Still, for now (item 3): one frame, of one element for the whole game, so a resize repaints the same field. */
+      try {seaStop = CrankSea.startSea(seaCanvas, {width: Math.max(160, Math.round(box.width / 2)), height: Math.max(90, Math.round(box.height / 2)), opacity: .45, still: true, ...(seaElement ? {element: seaElement} : {})});} catch {seaStop = null;}
+      seaElement = seaCanvas.dataset.element || seaElement;
     }
     if (seaCanvas.parentElement !== tbl) tbl.prepend(seaCanvas);
   }
   function stopSea() {if (seaStop) {try {seaStop();} catch {} seaStop = null;} if (seaCanvas) {seaCanvas.remove(); seaCanvas = null; seaSize = "";}}
+  /* The board's and the hand's card sizes on the board, where the CSS reads them (--board-scale, --hand-scale). */
+  function applyScales(host = document.getElementById("cm-board")) {
+    if (!host) return;
+    host.style.setProperty("--board-scale", String(scaleOf("board") / 100));
+    host.style.setProperty("--hand-scale", String(scaleOf("hand") / 100));
+  }
+  function setScale(scope, v) {
+    const n = inRange(v);
+    keep(SCALE_KEY[scope], n);
+    applyScales();
+    for (const el of document.querySelectorAll(`#cm-board [data-board-scale="${scope}"]`)) {
+      if (Number(el.value) !== n) el.value = String(n);
+      el.setAttribute("aria-valuetext", `${n}%`);
+      const out = el.parentElement.querySelector("output");
+      if (out) out.textContent = `${n}%`;
+    }
+    const g = document.querySelector(`#cm-board [data-drag="${scope}"]`);
+    if (g) g.setAttribute("aria-valuenow", String(n));
+    fit();
+    return n;
+  }
+  function setRows(v) {
+    const share = Math.min(ROWS[1], Math.max(ROWS[0], Math.round(v * 1000) / 1000));
+    keep(ROWS_KEY, share);
+    const g = document.querySelector('#cm-board [data-drag="rows"]');
+    if (g) g.setAttribute("aria-valuenow", String(Math.round(share * 100)));
+    fit();
+    return share;
+  }
   function watch() {
     if (observer || typeof ResizeObserver === "undefined") return;
     observer = new ResizeObserver(() => {if (view && document.getElementById("cm-board")) fit();});
@@ -1110,8 +1202,59 @@
     const confirm = foot.querySelector("[data-action=board-confirm]");
     if (confirm) confirm.disabled = total !== view.decision.total || sending;
   });
-  /* The card-size slider moves the cards under the pointer: the rows are fitted again as it does. */
-  document.addEventListener("cm-card-scale", () => {if (view && document.getElementById("cm-board")) fit();});
+  /* The card-size slider moves the cards under the pointer: the rows are fitted again as it does. Tools (and ⌘/Ctrl
+     + / −) is the table's size, and sets the board's and the hand's to its value (item 6). */
+  document.addEventListener("cm-card-scale", (event) => {
+    if (!view || !document.getElementById("cm-board")) return;
+    const n = event.detail && event.detail.scale;
+    if (n) {keep(SCALE_KEY.board, inRange(n)); keep(SCALE_KEY.hand, inRange(n));}
+    applyScales();
+    for (const scope of ["board", "hand"]) for (const el of document.querySelectorAll(`#cm-board [data-board-scale="${scope}"]`)) {
+      el.value = String(scaleOf(scope));
+      const out = el.parentElement.querySelector("output");
+      if (out) out.textContent = `${scaleOf(scope)}%`;
+    }
+    fit();
+  });
+  document.addEventListener("input", (event) => {
+    const el = event.target.closest && event.target.closest("#cm-board [data-board-scale]");
+    if (el) setScale(el.dataset.boardScale, el.value);
+  });
+  /* THE BARS, dragged: the one between the rows moves the share; the one atop the tray grows the hand's cards by the
+     height dragged (the boards shrinking alike to leave it room). Followed on the document, so a view that arrives
+     mid-drag and redraws the board does not drop it. */
+  document.addEventListener("pointerdown", (event) => {
+    const el = event.target.closest && event.target.closest("#cm-board [data-drag]");
+    if (!el || !view || event.button > 0) return;
+    event.preventDefault();
+    const kind = el.dataset.drag, tbl = document.querySelector("#cm-board .cm-board-table");
+    if (kind === "rows") {
+      if (!tbl) return;
+      const room = tbl.getBoundingClientRect().height - (parseFloat(getComputedStyle(tbl).rowGap) || 22);
+      drag = {kind, y: event.clientY, from: rowShare(), per: Math.max(1, room)};
+    } else {
+      const c = document.querySelector("#cm-board .cm-board-hand .cm-board-hand-cards .cm-bcard"), s = scaleOf("hand");
+      drag = {kind, y: event.clientY, from: s, per: Math.max(40, c ? c.getBoundingClientRect().height / (s / 100) : 104)};
+    }
+    document.documentElement.classList.add("cm-dragging");
+  });
+  document.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dy = event.clientY - drag.y;
+    if (drag.kind === "rows") setRows(drag.from + dy / drag.per);
+    else setScale("hand", drag.from - dy / drag.per * 100);
+  });
+  const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+  document.addEventListener("keydown", (event) => {
+    const el = event.target.closest && event.target.closest("#cm-board [data-drag]");
+    if (!el || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const up = event.key === "ArrowUp" ? 1 : -1;
+    if (el.dataset.drag === "rows") setRows(rowShare() - up * 0.02);
+    else setScale("hand", scaleOf("hand") + up * 5);
+  });
   /* A picture that does not come leaves the card's own frame, which already names it. */
   document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img")) t.remove();}, true);
 });
