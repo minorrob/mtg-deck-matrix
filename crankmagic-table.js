@@ -22,15 +22,21 @@
   const cloudPlay = () => document.querySelector('meta[name="crankmagic-play"]')?.content === "cloud"
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
-  /* The app's own mats (game/room/table.mjs, MATS), with their names. The last one chosen is remembered on this
+  /* The mats (game/room/table.mjs, MATS), with their names: the five the app draws, then Rob's own artwork
+     (2026-09-29; crankmagic-mats.css draws them from assets/playmats). The last one chosen is remembered on this
      device and put on the next table you sit at. */
-  const MATS = [["felt", "Felt"], ["forge", "Forge"], ["cavern", "Cavern"], ["sea", "Sea"], ["night", "Night"]];
+  const MATS = [["felt", "Felt"], ["forge", "Forge"], ["cavern", "Cavern"], ["sea", "Sea"], ["night", "Night"],
+    ["cloud-wolf", "Cloud Wolf"], ["sand-lion", "Sand Lion"], ["ember-serpent", "Ember Serpent"], ["grove-stag", "Grove Stag"], ["star-gate", "Star Gate"],
+    ["moon-altar", "Moon Altar"], ["sky-citadel", "Sky Citadel"], ["sky-dais", "Sky Dais"], ["star-tome", "Star Tome"], ["dragon-pact", "Dragon Pact"],
+    ["moon-wolf", "Moon Wolf"], ["falls-tree", "Falls Tree"], ["star-whale", "Star Whale"], ["grove-arch", "Grove Arch"], ["molten-sword", "Molten Sword"],
+    ["sky-tree", "Sky Tree"], ["void-ring", "Void Ring"], ["desert-portal", "Desert Portal"], ["night-citadel", "Night Citadel"], ["white-sanctum", "White Sanctum"],
+    ["grave-king", "Grave King"], ["tree-portal", "Tree Portal"], ["ringed-world", "Ringed World"], ["mirror-gates", "Mirror Gates"], ["orrery-bridge", "Orrery Bridge"]];
   const MAT_KEY = "cm-mat";
   const rememberedMat = () => {try {const m = localStorage.getItem(MAT_KEY); return MATS.some(([k]) => k === m) ? m : null;} catch {return null;}};
   const matApplied = new Set();   /* tables this page has already put the remembered mat on */
   let matPicked = null;
   const ORDER = [["br", 0], ["bl", 1], ["tr", 2], ["tl", 3]];   /* the quadrant corners the local table uses, seat 1 first */
-  let current = null;
+  let current = null, drawnKey = null;   /* the table last drawn, so a read that changed nothing redraws nothing */
   /* How far the table's clock is from this device's: the countdown is the server's, read in its own time. */
   let skew = 0;
   const tableNow = () => Date.now() + skew;
@@ -127,6 +133,11 @@
     applyRememberedMat(t);
     /* While the game is on, the page is the board's (crankmagic-board.js); it keeps its own socket. */
     if (C.board && C.board.wants(t)) return C.board.show(t);
+    /* The table is read every two seconds; a read that changed nothing leaves the page as it is (Rob, 2026-09-29:
+       every redraw restarted the seats' seas, and it loses whatever the reader was pointing at). */
+    const key = JSON.stringify(t);
+    if (key === drawnKey && C.main.querySelector(".cm-cloud-table")) return;
+    drawnKey = key;
     const art = C.seatArt;
     const seats = ORDER.map(([corner, i]) => {
       const s = t.seats[i];
@@ -287,13 +298,15 @@
     return `<ul class="cm-mat-strip" aria-label="Mats">${strip}</ul>
       <div class="cm-mat-preview cm-mat-swatch" data-mat="${matPicked}" id="cm-mat-preview" aria-label="Preview of the mat">
         ${zone("Battlefield")}${zone("Lands")}${zone("Command", " is-card")}${zone("Exile", " is-card")}${zone("History")}${zone("Library", " is-card")}${zone("Graveyard", " is-card")}</div>
-      <p class="cm-muted cm-mat-note">The app's own mats. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>
+      <p class="cm-muted cm-mat-note">Five mats the app draws, then CrankMagic's own artwork. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>
       <div class="cm-form-footer">${b("Use this mat", "table-mat-use", {}, true)}${b("Cancel", "close")}</div>`;
   }
   actions["table-mat"] = () => {
     const mine = current.seats.find((s) => s.you);
     matPicked = (mine && mine.mat) || "felt";
     C.modal("Choose mat", matDialog());
+    /* Thirty mats scroll: the one you are on is brought into view. */
+    document.querySelector(`.cm-mat-pick[aria-pressed="true"]`)?.scrollIntoView({block: "nearest"});
   };
   actions["table-mat-pick"] = (el) => {
     matPicked = el.dataset.mat;
