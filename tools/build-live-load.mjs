@@ -110,10 +110,9 @@ function starTable(workbook,name,{required=true}={}){
 }
 
 /* 2026-09-30 AND LATER: THE MASTER SHEET ALONE. Rob's "MtG - Master - 9.30" carries only the wide Master
-   sheet: no deck_strategies, no master_buy_upgrade. So what those sheets described is carried from the
-   committed file -- each deck's id, commander and name, its overview, and the upgrade pairings -- and the
-   pairings are re-checked against the new targets and boxes, so one the workbook has since settled drops
-   out on its own. The cards, the counts, the boxes and the orders are still the workbook's. */
+   sheet: no deck_strategies, no master_buy_upgrade. Each deck's id, commander, name and overview are carried
+   from the committed file (identical to v25's deck_strategies, which Rob allowed); the upgrade pairings are the
+   Master sheet's own Dn-Buy columns. The cards, the counts, the boxes and the orders are the workbook's. */
 function priorDecks(prior){
   const head=['Deck','Commander','Name'];
   return {head,rows:(prior?.decks||[]).map(d=>[d.id,d.commander,d.name]),get:(r,n)=>{const i=head.indexOf(n);return i<0?null:r[i];}};
@@ -254,22 +253,27 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
       tier:status==='LT'?3:2,price:marketPriceOf(lookup,card[upId].name,cash(up.get(r,'Price')))??0,origin:'workbook',
       why:''});
   }
-  /* No master_buy_upgrade: a committed pairing still holds while its card is short in the deck's box
-     (targeted, fewer copies in than the target calls for) and the card it waits behind is still in
-     the box without a target of its own -- a substitute holding the seat. Anything else is settled. */
-  if(!up&&prior?.upgrades?.length){
-    const count=(rows,name)=>{const r=rows.find(x=>Live.fold(x[0])===Live.fold(name));return r?r[1]:0;};
-    let dropped=0;
-    for(const u of prior.upgrades){
-      const deck=String(u.deck||''),name=canon(String(u.card||'').trim()),replaces=canon(String(u.replaces||'').trim());
-      if(!DECK_IDS.includes(deck)||!name||!replaces){dropped++;continue;}
-      const short=count(targets[deck],name)>count(actuals[deck],name),
-            standing=count(actuals[deck],replaces)>count(targets[deck],replaces);
-      if(!short||!standing){dropped++;continue;}
-      upgrades.push({...u,card:name,replaces,price:marketPriceOf(lookup,name,cash(u.price))??0});
+  /* THE UPGRADES FROM THE MASTER SHEET ITSELF (Rob, 2026-09-30, docs/plan-to-done-2026-09-30.md, AI-3): where a
+     deck's Actual and its Target differ, the Target is the upgrade for the Actual, and the row's Dn-Buy column names
+     the upgrade card's id (Negate: D2-Buy = c0967, Mystic Snake). So a row with a Dn-Buy is a copy in deck n's box
+     holding the seat of the card that id names. The tier is the committed pairing's when there was one, else 2. */
+  const buyCols=DECK_IDS.filter(d=>main.head.includes(d+'-Buy'));
+  if(!up&&buyCols.length){
+    const priorTier=new Map((prior?.upgrades||[]).map(u=>[[u.deck,Live.fold(u.card),Live.fold(u.replaces)].join('|'),u.tier]));
+    const missing=[];
+    for(const r of main.rows){
+      const id=String(main.get(r,'Card ID')).trim();if(!card[id])continue;
+      for(const d of buyCols){
+        const want=String(main.get(r,d+'-Buy')??'').trim();if(!want||want==='0')continue;
+        const target=card[want];if(!target){missing.push(`${card[id].name} (${d}): ${want}`);continue;}
+        const tier=priorTier.get([d,Live.fold(target.name),Live.fold(card[id].name)].join('|'))??2;
+        upgrades.push({deck:d,card:target.name,replaces:card[id].name,tier,price:marketPriceOf(lookup,target.name,target.paid)??0,origin:'workbook',why:''});
+      }
     }
-    notes.push(`No master_buy_upgrade sheet; ${upgrades.length} upgrade pairing${upgrades.length===1?'':'s'} carried from the committed file`+(dropped?`, ${dropped} dropped as settled (the card is in its box, or its substitute is gone).`:'.'));
+    ensure(!missing.length,`A Dn-Buy names a card id the Master sheet does not have: ${few(missing)}. Fix the workbook before building.`);
+    notes.push(`${upgrades.length} upgrade pairing${upgrades.length===1?'':'s'} read from the Master sheet's ${buyCols[0]}-Buy…${buyCols.at(-1)}-Buy columns.`);
   }
+  else if(!up)notes.push('No master_buy_upgrade sheet and no Dn-Buy columns: no upgrade pairings.');
 
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
     count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),

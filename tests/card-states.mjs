@@ -95,14 +95,14 @@ ok(!live.groups.some((g) => g.id === "group:live:upgrades"), "there is no Upgrad
 eq(copies((s) => s.stage === "buy"), 107, "so To buy is the decks' 107 needs, each counted once");
 eq(copies((s) => s.stage === "watching"), 13, "and Watching is the 13 candidates in the decks' own groups");
 const seated = M.projection(live).filter((r) => r.kind === "lot" && r.standInFor);
-eq(seated.length, 111, "111 substitutes record the seat they hold, one per upgrade");
-/* The seats they hold are the seats To buy fills, and the seats of the four upgrades bought since v25, which wait on
-   the Bench to go in. (v25's five Ready to add never had a substitute in their seat.) */
+eq(seated.length, 122, "122 substitutes record the seat they hold, one per pairing the 9.30 sheet's Dn-Buy columns name");
+/* The seats they hold: To buy's, but for D7's Peppersmoke, whose substitute the 9.30 sheet no longer names (v25 had
+   Bile-Vial Boggart); all nine Ready to add; and the rest are upgrades Rob owns in another deck's box. */
 const needSeats = new Set(M.projection(live).filter((r) => r.kind === "need").map((r) => r.slotId)), heldSeats = new Set(seated.map((r) => r.standInFor));
-ok([...needSeats].every((x) => heldSeats.has(x)), "every seat To buy fills is held by a substitute");
-const boughtSince = records.filter((r) => { const s = read(r); return s.stage === "owned" && !!s.deckId && !s.inBox && heldSeats.has(r.allocation?.slotId) && !needSeats.has(r.allocation?.slotId); });
-eq(boughtSince.map((r) => live.cards[r.cardId].name).sort(), ["Battle Screech", "Command Tower", "Solemn Simulacrum", "Warstorm Surge"], "and the rest are the four bought since v25, Ready to add");
-eq(heldSeats.size, needSeats.size + boughtSince.length, "so the seats held are exactly To buy's and those four");
+const slotCard = (id) => { for (const d of live.decks) { const r = d.slots.find((x) => x.id === id); if (r) return `${d.id.slice(-2)} ${live.cards[r.cardId].name}`; } return id; };
+eq([...needSeats].filter((x) => !heldSeats.has(x)).map(slotCard), ["D7 Peppersmoke"], "every seat To buy fills is held by a substitute but Peppersmoke's");
+const readyHeld = records.filter((r) => { const s = read(r); return s.stage === "owned" && !!s.deckId && !s.inBox; });
+ok(readyHeld.length === 9 && readyHeld.every((r) => heldSeats.has(r.allocation?.slotId)), "and each of the 9 Ready to add holds the seat it will take");
 eq(count((s, r) => r.kind === "entry" && r.groupId !== M.WANT_LIST && s.stage === "watching" && !!s.deckId && s.role === "upgrade"), 13, "the 13 entries in D4's and D6's own groups are Watching upgrades for their decks");
 eq(copies((s) => s.stage === "owned"), 1598, "and every owned copy is counted once: 577 + 9 + 123 + 889 = 1,598");
 /* PLAYABLE (Rob, 2026-09-26): a deck plays when none of its records is reserved -- every seat holds a card. The

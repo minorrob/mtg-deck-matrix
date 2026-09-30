@@ -201,9 +201,9 @@ eq(L.PASSWORD,'treycmload1');
     ok(doc.decks.every(d=>n(d.cards)===100));
   }
   /* 2026-09-30: THE MASTER SHEET ALONE (Rob's "MtG - Master - 9.30"). It has no deck_strategies and no
-     master_buy_upgrade, so each deck's id, commander, name and overview and the upgrade pairings are carried
-     from the committed file -- which v25's deck_strategies wrote (Rob: use v25's sheet if needed) -- and a
-     pairing the workbook has since settled is dropped rather than carried wrong. */
+     master_buy_upgrade: each deck's id, commander, name and overview are carried from the committed file -- which
+     v25's deck_strategies wrote (Rob: use v25's sheet if needed) -- and the upgrade pairings are the sheet's own
+     Dn-Buy columns: a row's Dn-Buy names the id of the card the row's copy stands in for in deck n. */
   if(python){
     const book='data/source/MtG_-_Master_-_2026-09-30.xlsx',prior=JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'));
     eq(basename(await newestWorkbook()),basename(book));
@@ -212,22 +212,21 @@ eq(L.PASSWORD,'treycmload1');
     for(const d of doc.decks){const p=prior.decks.find(x=>x.id===d.id);
       eq(d.commander,p.commander);eq(d.name,p.name);assert.deepEqual(d.strategy,p.strategy);checks++;}
     eq(doc.decks.find(d=>d.id==='D1').strategy.strategy.split('.')[0],'Lorehold spirit recursion');
-    ok(notes.some(x=>/No master_buy_upgrade sheet; 111 upgrade pairings carried/.test(x)));
-    eq(doc.upgrades.length,prior.upgrades.length);
+    const master=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
+    const mh=master.findIndex(r=>r[0]==='Card ID'),MH=master[mh],buyCells=master.slice(mh+1).flatMap(r=>MH.map((x,i)=>/^D\d+-Buy$/.test(String(x))&&r[i]!==null&&String(r[i]).trim()&&String(r[i]).trim()!=='0'?1:0)).reduce((a,b)=>a+b,0);
+    eq(doc.upgrades.length,buyCells);ok(buyCells>100);
+    ok(notes.some(x=>new RegExp(`^${buyCells} upgrade pairings read from the Master sheet's D1-Buy…D7-Buy columns`).test(x)));
+    /* Rob's example: Negate holds Mystic Snake's seat in D2 (D2-Buy = c0967). */
+    ok(doc.upgrades.some(u=>u.deck==='D2'&&u.card==='Mystic Snake'&&u.replaces==='Negate'));
+    /* Each pairing is what Rob says it is: the card is in the deck's target, and the copy standing in is in its box. */
+    {const count=(rows,name)=>(rows.find(r=>r[0]===name)||[,0])[1];
+     ok(doc.upgrades.every(u=>count(doc.decks.find(d=>d.id===u.deck).cards,u.card)>0&&count(doc.owned.inDeck[u.deck],u.replaces)>0));}
     /* What was paid is history: the 9.30 Master's $ Each is the price to buy, so the committed figures for cards still
        owned are kept -- every one of them, and never a figure for a card no longer owned. */
     {const ownedNow=new Set([...Object.values(doc.owned.inDeck).flat(),...doc.owned.bench].map(r=>r[0]));
      const keep=Object.keys(prior.paid).filter(n=>ownedNow.has(n));
      ok(keep.length>700&&keep.every(n=>doc.paid[n]===prior.paid[n]));
      ok(Object.keys(doc.paid).every(n=>ownedNow.has(n)));}
-    /* A settled pairing drops out: one whose card is already fully in its box, and one whose substitute left. */
-    const inBox=Object.entries(prior.owned.inDeck).flatMap(([deck,rows])=>rows.map(([card])=>({deck,card})))
-      .find(({deck,card})=>prior.decks.find(d=>d.id===deck).cards.some(c=>c[0]===card));
-    const settled={...prior,upgrades:[...prior.upgrades,{deck:inBox.deck,card:inBox.card,replaces:prior.upgrades.find(u=>u.deck===inBox.deck).replaces,tier:3,price:1,origin:'workbook',why:''},
-      {...prior.upgrades[0],replaces:'Sol Ring'}]};
-    const again=await importWorkbook(book,{prior:settled});
-    eq(again.doc.upgrades.length,prior.upgrades.length);
-    ok(again.notes.some(x=>/2 dropped as settled/.test(x)));
   }
 }
 /* A PRICE MOVING IS NOT A CHANGE (Rob, 2026-09-28). --check compares the collection, not the market: a buy row's

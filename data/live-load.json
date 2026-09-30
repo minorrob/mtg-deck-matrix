@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 7,
- "savedAt": "2026-09-30T15:51:33Z",
+ "savedAt": "2026-09-30T16:15:44Z",
  "workbook": "MtG_-_Master_-_2026-09-30.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
  "decks": [
@@ -18891,10 +18891,19 @@
  "upgrades": [
   {
    "deck": "D2",
-   "card": "Paradise Druid",
-   "replaces": "Foraging Wickermaw",
-   "tier": 3,
-   "price": 0.2,
+   "card": "Mystic Snake",
+   "replaces": "Negate",
+   "tier": 2,
+   "price": 1.51,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D3",
+   "card": "Contentious Plan",
+   "replaces": "Guardian of the Halls",
+   "tier": 2,
+   "price": 0.38,
    "origin": "workbook",
    "why": ""
   },
@@ -18908,110 +18917,47 @@
    "why": ""
   },
   {
-   "deck": "D7",
-   "card": "Peppersmoke",
-   "replaces": "Bile-Vial Boggart",
+   "deck": "D3",
+   "card": "Underground River",
+   "replaces": "Evolving Wilds",
    "tier": 3,
-   "price": 0.28,
+   "price": 1.72,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Boros Signet",
+   "replaces": "Borrowed Knowledge",
+   "tier": 3,
+   "price": 0.63,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Demand Answers",
+   "replaces": "Ragged Short Spear",
+   "tier": 3,
+   "price": 0.47,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Eyeblight's Ending",
-   "replaces": "Chain Assassination",
-   "tier": 3,
-   "price": 0.25,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Halo Forager",
-   "replaces": "Crude Bent Blade",
-   "tier": 3,
-   "price": 0.29,
+   "card": "Llanowar Elves",
+   "replaces": "Overgrown Battlement",
+   "tier": 2,
+   "price": 0.35,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D5",
-   "card": "Priest of Forgotten Gods",
-   "replaces": "Deadly Dispute",
-   "tier": 3,
-   "price": 0.59,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Llanowar Visionary",
-   "replaces": "Moonglove Extractor",
-   "tier": 3,
+   "card": "Morbid Opportunist",
+   "replaces": "Spectacular Tactics",
+   "tier": 2,
    "price": 0.31,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Garruk's Uprising",
-   "replaces": "Painful Truths",
-   "tier": 3,
-   "price": 0.53,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Lys Alana Huntmaster",
-   "replaces": "Pawn of Ulamog",
-   "tier": 3,
-   "price": 2.07,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Preordain",
-   "replaces": "Swampsnare Trap",
-   "tier": 3,
-   "price": 0.71,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Gilt-Leaf Winnower",
-   "replaces": "Vampire Hexmage",
-   "tier": 3,
-   "price": 0.26,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Woe Strider",
-   "replaces": "Viscera Seer",
-   "tier": 3,
-   "price": 0.29,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Coalition Relic",
-   "replaces": "Aetheric Amplifier",
-   "tier": 3,
-   "price": 0.49,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Springbloom Druid",
-   "replaces": "Changeling Wayfinder",
-   "tier": 3,
-   "price": 0.59,
    "origin": "workbook",
    "why": ""
   },
@@ -19034,128 +18980,47 @@
    "why": ""
   },
   {
-   "deck": "D3",
-   "card": "Arcane Signet",
-   "replaces": "Strixhaven Stadium",
-   "tier": 3,
-   "price": 0.93,
+   "deck": "D5",
+   "card": "Thought Vessel",
+   "replaces": "Pilgrim's Eye",
+   "tier": 2,
+   "price": 0,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Sower of Temptation",
-   "replaces": "Sundering Archaic",
-   "tier": 3,
-   "price": 2.67,
+   "card": "Elvish Mystic",
+   "replaces": "Explorer's Scope",
+   "tier": 2,
+   "price": 5.21,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D3",
-   "card": "Mystic Remora",
-   "replaces": "Tome of Legends",
+   "deck": "D2",
+   "card": "Whitemane Lion",
+   "replaces": "Bilbo Baggins, Burglar // Take a Glance",
    "tier": 3,
-   "price": 12.95,
+   "price": 0.24,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Blade Splicer",
+   "replaces": "Long Lake Nuisance",
+   "tier": 3,
+   "price": 0.32,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Brainstorm",
-   "replaces": "Boughside Wanderers",
+   "card": "Llanowar Visionary",
+   "replaces": "Moonglove Extractor",
    "tier": 3,
-   "price": 1.34,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Wall of Blossoms",
-   "replaces": "Elvish Visionary",
-   "tier": 3,
-   "price": 0.29,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Rampant Growth",
-   "replaces": "Kyoshi Island Plaza",
-   "tier": 3,
-   "price": 0.67,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Ilysian Caryatid",
-   "replaces": "Llanowar Elves",
-   "tier": 3,
-   "price": 0.54,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Rampant Growth",
-   "replaces": "Lys Alana Dignitary",
-   "tier": 3,
-   "price": 0.67,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Watcher for Tomorrow",
-   "replaces": "Lys Alana Informant",
-   "tier": 3,
-   "price": 0.3,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Realmwalker",
-   "replaces": "Mistmeadow Council",
-   "tier": 3,
-   "price": 1.92,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Elvish Rejuvenator",
-   "replaces": "Satyr Wayfinder",
-   "tier": 3,
-   "price": 0.25,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Topiary Stomper",
-   "replaces": "Sylvan Ranger",
-   "tier": 3,
-   "price": 0.92,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Command Tower",
-   "replaces": "Ash Barrens",
-   "tier": 3,
-   "price": 0.27,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Canopy Vista",
-   "replaces": "Bant Panorama",
-   "tier": 3,
-   "price": 0.33,
+   "price": 0.31,
    "origin": "workbook",
    "why": ""
   },
@@ -19170,334 +19035,10 @@
   },
   {
    "deck": "D3",
-   "card": "Llanowar Wastes",
-   "replaces": "Grand Coliseum",
-   "tier": 3,
-   "price": 0.76,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Den of the Bugbear",
-   "replaces": "Kher Keep",
-   "tier": 3,
-   "price": 1.48,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Llanowar Wastes",
-   "replaces": "Myriad Landscape",
-   "tier": 3,
-   "price": 0.76,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Prairie Stream",
-   "replaces": "Terramorphic Expanse",
-   "tier": 3,
-   "price": 0.31,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D1",
-   "card": "Boros Signet",
-   "replaces": "Borrowed Knowledge",
-   "tier": 3,
-   "price": 0.63,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Tireless Tracker",
-   "replaces": "Tatyova, Benthic Druid",
-   "tier": 3,
-   "price": 0.31,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D1",
-   "card": "Mizzix's Mastery",
-   "replaces": "Thrilling Discovery",
-   "tier": 3,
-   "price": 8.08,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Fathom Mage",
-   "replaces": "Voracious Tome-Skimmer",
-   "tier": 3,
-   "price": 0.73,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Kor Skyfisher",
-   "replaces": "Wavesifter",
-   "tier": 3,
-   "price": 0.57,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Goblin Motivator",
-   "replaces": "Anger",
-   "tier": 3,
-   "price": 0.22,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Mogg Raider",
-   "replaces": "Barrage of Expendables",
-   "tier": 3,
-   "price": 0.38,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Mizzium Mortars",
-   "replaces": "Burn, Burn, Tree and Fern",
-   "tier": 3,
-   "price": 0.59,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D1",
-   "card": "Reckless Impulse",
-   "replaces": "Burning Curiosity",
-   "tier": 3,
-   "price": 0.87,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Warstorm Surge",
-   "replaces": "Impact Tremors",
-   "tier": 3,
-   "price": 1.44,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Idol of Oblivion",
-   "replaces": "Light Up the Stage",
-   "tier": 3,
-   "price": 2.82,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Burn at the Stake",
-   "replaces": "Massive Raid",
-   "tier": 3,
-   "price": 1.11,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Hammer of Purphoros",
-   "replaces": "Ogre Battledriver",
-   "tier": 3,
-   "price": 0.27,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Rundvelt Hordemaster",
-   "replaces": "Outpost Siege",
-   "tier": 3,
-   "price": 3.49,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D1",
-   "card": "Demand Answers",
-   "replaces": "Ragged Short Spear",
-   "tier": 3,
-   "price": 0.47,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Assassin's Trophy",
-   "replaces": "Aetherize",
-   "tier": 3,
-   "price": 1.24,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Whitemane Lion",
-   "replaces": "Bilbo Baggins, Burglar // Take a Glance",
-   "tier": 3,
-   "price": 0.24,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Hypnotic Sprite // Mesmeric Glare",
-   "replaces": "Enchanted River's Grasp",
-   "tier": 3,
-   "price": 0.13,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Beast Whisperer",
-   "replaces": "Gandalf, Wandering Wizard",
-   "tier": 3,
-   "price": 9.03,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Blade Splicer",
-   "replaces": "Long Lake Nuisance",
-   "tier": 3,
-   "price": 0.32,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Sakura-Tribe Elder",
-   "replaces": "Peregrine Drake",
-   "tier": 3,
-   "price": 0.38,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Selfless Savior",
-   "replaces": "Shinestriker",
-   "tier": 3,
-   "price": 0.38,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Obyra, Dreaming Duelist",
-   "replaces": "Summit Sentinel",
-   "tier": 3,
-   "price": 0.37,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Frantic Search",
-   "replaces": "Unwelcome Sprite",
-   "tier": 3,
-   "price": 2.06,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Suture Priest",
-   "replaces": "Anointer Priest",
-   "tier": 3,
-   "price": 4.36,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Unbreakable Formation",
-   "replaces": "Frontline Medic",
-   "tier": 3,
-   "price": 1.37,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Soul Warden",
-   "replaces": "Impassioned Orator",
-   "tier": 3,
-   "price": 3.29,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Exsanguinate",
-   "replaces": "Kithkeeper",
-   "tier": 3,
-   "price": 0.38,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D2",
-   "card": "Yavimaya Dryad",
-   "replaces": "Kor Cartographer",
-   "tier": 3,
-   "price": 0.25,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Psychosis Crawler",
-   "replaces": "Secret Rendezvous",
-   "tier": 3,
-   "price": 2.43,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Battle Screech",
-   "replaces": "Spectral Procession",
-   "tier": 3,
-   "price": 0.23,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Spirited Companion",
-   "replaces": "Old Thrush",
-   "tier": 3,
-   "price": 0.34,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Underground River",
-   "replaces": "Evolving Wilds",
-   "tier": 3,
-   "price": 1.72,
+   "card": "Brainstorm",
+   "replaces": "Plunder the Trollshaws",
+   "tier": 2,
+   "price": 1.34,
    "origin": "workbook",
    "why": ""
   },
@@ -19511,83 +19052,47 @@
    "why": ""
   },
   {
-   "deck": "D5",
-   "card": "Austere Command",
-   "replaces": "Blight Rot",
-   "tier": 2,
-   "price": 0.35,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Vine Trellis",
-   "replaces": "Old Thrush",
-   "tier": 2,
-   "price": 1.15,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Brainstorm",
-   "replaces": "Plunder the Trollshaws",
-   "tier": 2,
-   "price": 1.34,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Grave Titan",
-   "replaces": "Dreadhorde Invasion",
-   "tier": 2,
-   "price": 0.34,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Austere Command",
-   "replaces": "Feed the Swarm",
-   "tier": 2,
-   "price": 0.35,
+   "deck": "D7",
+   "card": "Lys Alana Huntmaster",
+   "replaces": "Pawn of Ulamog",
+   "tier": 3,
+   "price": 2.07,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Faerie Mastermind",
-   "replaces": "Gloom Ripper",
-   "tier": 2,
-   "price": 12.03,
+   "card": "Gilt-Leaf Winnower",
+   "replaces": "Vampire Hexmage",
+   "tier": 3,
+   "price": 0.26,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Prairie Stream",
+   "replaces": "Terramorphic Expanse",
+   "tier": 3,
+   "price": 0.31,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Spellstutter Sprite",
-   "replaces": "Moonshadow",
+   "card": "Fact or Fiction",
+   "replaces": "Unexpected Assistance",
    "tier": 2,
-   "price": 5.33,
+   "price": 0.28,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Faerie Formation",
-   "replaces": "Pox Plague",
+   "card": "Elvish Visionary",
+   "replaces": "Great Fierce Bee",
    "tier": 2,
-   "price": 0.45,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Scion of Oona",
-   "replaces": "Ritual of Soot",
-   "tier": 2,
-   "price": 12.89,
+   "price": 0.26,
    "origin": "workbook",
    "why": ""
   },
@@ -19597,42 +19102,6 @@
    "replaces": "Terror",
    "tier": 2,
    "price": 5.08,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Ravenous Chupacabra",
-   "replaces": "Argentum Masticore",
-   "tier": 2,
-   "price": 1.02,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Vanquisher's Banner",
-   "replaces": "Dwarven Mattock",
-   "tier": 2,
-   "price": 4.65,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Elvish Mystic",
-   "replaces": "Explorer's Scope",
-   "tier": 2,
-   "price": 5.21,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D5",
-   "card": "Adeline, Resplendent Cathar",
-   "replaces": "Genesis Chamber",
-   "tier": 2,
-   "price": 2.82,
    "origin": "workbook",
    "why": ""
   },
@@ -19647,163 +19116,127 @@
   },
   {
    "deck": "D5",
-   "card": "Idol of Oblivion",
-   "replaces": "Ultima, Origin of Oblivion",
-   "tier": 2,
-   "price": 2.82,
+   "card": "Exsanguinate",
+   "replaces": "Kithkeeper",
+   "tier": 3,
+   "price": 0.38,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D4",
-   "card": "Saruli Caretaker",
-   "replaces": "Arboreal Grazer",
+   "deck": "D5",
+   "card": "Austere Command",
+   "replaces": "Blight Rot",
+   "tier": 2,
+   "price": 0.35,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Feed the Swarm",
+   "replaces": "Blight Rot",
    "tier": 2,
    "price": 0.22,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D4",
-   "card": "Doran, the Siege Tower",
-   "replaces": "Canopy Gargantuan",
+   "deck": "D6",
+   "card": "Vanquisher's Banner",
+   "replaces": "Dwarven Mattock",
    "tier": 2,
-   "price": 8.42,
+   "price": 4.65,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D7",
-   "card": "Jaspera Sentinel",
-   "replaces": "Farseek",
+   "deck": "D5",
+   "card": "Make a Stand",
+   "replaces": "Rootborn Defenses",
    "tier": 2,
-   "price": 0.26,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D4",
-   "card": "Guardian Project",
-   "replaces": "Follow the Lumarets",
-   "tier": 2,
-   "price": 15.18,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Contentious Plan",
-   "replaces": "Guardian of the Halls",
-   "tier": 2,
-   "price": 0.38,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D7",
-   "card": "Fyndhorn Elves",
-   "replaces": "Noxious Newt",
-   "tier": 2,
-   "price": 1.9,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D3",
-   "card": "Evolution Sage",
-   "replaces": "Ordeal of Nylea",
-   "tier": 2,
-   "price": 3.07,
+   "price": 0.14,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D2",
-   "card": "Rampant Growth",
-   "replaces": "Woodland Weavemaster",
-   "tier": 2,
-   "price": 0.67,
+   "card": "Watcher for Tomorrow",
+   "replaces": "Lys Alana Informant",
+   "tier": 3,
+   "price": 0.3,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D4",
-   "card": "Wall of Omens",
-   "replaces": "Yavimaya Elder",
+   "card": "Vine Trellis",
+   "replaces": "Old Thrush",
    "tier": 2,
-   "price": 0.32,
+   "price": 1.15,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Spirited Companion",
+   "replaces": "Old Thrush",
+   "tier": 3,
+   "price": 0.34,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Hypnotic Sprite // Mesmeric Glare",
+   "replaces": "Enchanted River's Grasp",
+   "tier": 3,
+   "price": 0.13,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D2",
-   "card": "Guardian Project",
-   "replaces": "Arcades, the Strategist",
+   "card": "Intruder Alarm",
+   "replaces": "Lake-town Mariners // Gone Fishing",
    "tier": 2,
-   "price": 15.18,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D1",
-   "card": "Boros Charm",
-   "replaces": "Deflecting Palm",
-   "tier": 2,
-   "price": 4.13,
+   "price": 5.79,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Faerie Impostor",
-   "replaces": "Pterafractyl",
+   "card": "Changeling Wayfinder",
+   "replaces": "Stratosoarer",
    "tier": 2,
-   "price": 0.32,
+   "price": 0.25,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D7",
-   "card": "Imperious Perfect",
-   "replaces": "Tom, Bert, and William",
-   "tier": 2,
-   "price": 0.33,
+   "deck": "D3",
+   "card": "Coalition Relic",
+   "replaces": "Aetheric Amplifier",
+   "tier": 3,
+   "price": 0.49,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D6",
-   "card": "Lightning Bolt",
-   "replaces": "Cinder Strike",
-   "tier": 2,
-   "price": 0.74,
+   "deck": "D3",
+   "card": "Arcane Signet",
+   "replaces": "Strixhaven Stadium",
+   "tier": 3,
+   "price": 0.93,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D6",
-   "card": "Lightning Greaves",
-   "replaces": "Naktamun Lorespinner // Wheel of Fortune",
-   "tier": 2,
-   "price": 3.87,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Goblin Cratermaker",
-   "replaces": "Siege Smash",
-   "tier": 2,
-   "price": 0.27,
-   "origin": "workbook",
-   "why": ""
-  },
-  {
-   "deck": "D6",
-   "card": "Demand Answers",
-   "replaces": "Thrill of Possibility",
-   "tier": 2,
-   "price": 0.47,
+   "deck": "D3",
+   "card": "Llanowar Wastes",
+   "replaces": "Grand Coliseum",
+   "tier": 3,
+   "price": 0.76,
    "origin": "workbook",
    "why": ""
   },
@@ -19817,20 +19250,506 @@
    "why": ""
   },
   {
-   "deck": "D2",
-   "card": "Mystic Snake",
-   "replaces": "Negate",
+   "deck": "D3",
+   "card": "Mystic Remora",
+   "replaces": "Tome of Legends",
+   "tier": 3,
+   "price": 12.95,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D3",
+   "card": "Garruk's Uprising",
+   "replaces": "Painful Truths",
+   "tier": 3,
+   "price": 0.53,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D3",
+   "card": "Fathom Mage",
+   "replaces": "Voracious Tome-Skimmer",
+   "tier": 3,
+   "price": 0.73,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D3",
+   "card": "Frantic Search",
+   "replaces": "Unwelcome Sprite",
+   "tier": 3,
+   "price": 2.06,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D3",
+   "card": "Evolution Sage",
+   "replaces": "Ordeal of Nylea",
    "tier": 2,
-   "price": 1.51,
+   "price": 3.07,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Demand Answers",
+   "replaces": "Thrill of Possibility",
+   "tier": 2,
+   "price": 0.47,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Boros Charm",
+   "replaces": "Deflecting Palm",
+   "tier": 2,
+   "price": 4.13,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Thrill of Possibility",
+   "replaces": "Big Score",
+   "tier": 2,
+   "price": 0.35,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Mizzix's Mastery",
+   "replaces": "Thrilling Discovery",
+   "tier": 3,
+   "price": 8.08,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Smuggler's Copter",
+   "replaces": "Seize the Spoils",
+   "tier": 2,
+   "price": 1.68,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Weathered Wayfarer",
+   "replaces": "Monastery Raid",
+   "tier": 2,
+   "price": 2.22,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D1",
+   "card": "Reckless Impulse",
+   "replaces": "Burning Curiosity",
+   "tier": 3,
+   "price": 0.87,
    "origin": "workbook",
    "why": ""
   },
   {
    "deck": "D7",
-   "card": "Fact or Fiction",
-   "replaces": "Unexpected Assistance",
+   "card": "Spellstutter Sprite",
+   "replaces": "Moonshadow",
    "tier": 2,
-   "price": 0.28,
+   "price": 5.33,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Guardian Project",
+   "replaces": "Arcades, the Strategist",
+   "tier": 2,
+   "price": 15.18,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Doran, the Siege Tower",
+   "replaces": "Canopy Gargantuan",
+   "tier": 2,
+   "price": 8.42,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Adeline, Resplendent Cathar",
+   "replaces": "Genesis Chamber",
+   "tier": 2,
+   "price": 2.82,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Wall of Blossoms",
+   "replaces": "Drumbellower",
+   "tier": 2,
+   "price": 0.29,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Warstorm Surge",
+   "replaces": "Impact Tremors",
+   "tier": 3,
+   "price": 1.44,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Idol of Oblivion",
+   "replaces": "Ultima, Origin of Oblivion",
+   "tier": 2,
+   "price": 2.82,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Lightning Greaves",
+   "replaces": "Naktamun Lorespinner // Wheel of Fortune",
+   "tier": 2,
+   "price": 3.87,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Grave Titan",
+   "replaces": "Dreadhorde Invasion",
+   "tier": 2,
+   "price": 0.34,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Assassin's Trophy",
+   "replaces": "Aetherize",
+   "tier": 3,
+   "price": 1.24,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Goblin Motivator",
+   "replaces": "Anger",
+   "tier": 3,
+   "price": 0.22,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Jaspera Sentinel",
+   "replaces": "Farseek",
+   "tier": 2,
+   "price": 0.26,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Woe Strider",
+   "replaces": "Viscera Seer",
+   "tier": 3,
+   "price": 0.29,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Idol of Oblivion",
+   "replaces": "Light Up the Stage",
+   "tier": 3,
+   "price": 2.82,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Canopy Vista",
+   "replaces": "Bant Panorama",
+   "tier": 3,
+   "price": 0.33,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Faerie Formation",
+   "replaces": "Pox Plague",
+   "tier": 2,
+   "price": 0.45,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Hammer of Purphoros",
+   "replaces": "Ogre Battledriver",
+   "tier": 3,
+   "price": 0.27,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Topiary Stomper",
+   "replaces": "Sylvan Ranger",
+   "tier": 3,
+   "price": 0.92,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Battle Screech",
+   "replaces": "Spectral Procession",
+   "tier": 3,
+   "price": 0.23,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Psychosis Crawler",
+   "replaces": "Secret Rendezvous",
+   "tier": 3,
+   "price": 2.43,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Springbloom Druid",
+   "replaces": "Changeling Wayfinder",
+   "tier": 3,
+   "price": 0.59,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Ilysian Caryatid",
+   "replaces": "Llanowar Elves",
+   "tier": 3,
+   "price": 0.54,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Command Tower",
+   "replaces": "Ash Barrens",
+   "tier": 3,
+   "price": 0.27,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Den of the Bugbear",
+   "replaces": "Kher Keep",
+   "tier": 3,
+   "price": 1.48,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Soul Warden",
+   "replaces": "Impassioned Orator",
+   "tier": 3,
+   "price": 3.29,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Rampant Growth",
+   "replaces": "Kyoshi Island Plaza",
+   "tier": 3,
+   "price": 0.67,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Eyeblight's Ending",
+   "replaces": "Chain Assassination",
+   "tier": 3,
+   "price": 0.25,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Priest of Forgotten Gods",
+   "replaces": "Deadly Dispute",
+   "tier": 3,
+   "price": 0.59,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Mogg Raider",
+   "replaces": "Barrage of Expendables",
+   "tier": 3,
+   "price": 0.38,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Kor Skyfisher",
+   "replaces": "Wavesifter",
+   "tier": 3,
+   "price": 0.57,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Selfless Savior",
+   "replaces": "Shinestriker",
+   "tier": 3,
+   "price": 0.38,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Ravenous Chupacabra",
+   "replaces": "Argentum Masticore",
+   "tier": 2,
+   "price": 1.02,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Imperious Perfect",
+   "replaces": "Tom, Bert, and William",
+   "tier": 2,
+   "price": 0.33,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Saruli Caretaker",
+   "replaces": "Arboreal Grazer",
+   "tier": 2,
+   "price": 0.22,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Faerie Mastermind",
+   "replaces": "Gloom Ripper",
+   "tier": 2,
+   "price": 12.03,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Rundvelt Hordemaster",
+   "replaces": "Outpost Siege",
+   "tier": 3,
+   "price": 3.49,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Sakura-Tribe Elder",
+   "replaces": "Peregrine Drake",
+   "tier": 3,
+   "price": 0.38,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Goblin Cratermaker",
+   "replaces": "Siege Smash",
+   "tier": 2,
+   "price": 0.27,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Paradise Druid",
+   "replaces": "Foraging Wickermaw",
+   "tier": 3,
+   "price": 0.2,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Llanowar Wastes",
+   "replaces": "Myriad Landscape",
+   "tier": 3,
+   "price": 0.76,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Fyndhorn Elves",
+   "replaces": "Noxious Newt",
+   "tier": 2,
+   "price": 1.9,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Scion of Oona",
+   "replaces": "Ritual of Soot",
+   "tier": 2,
+   "price": 12.89,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Burn at the Stake",
+   "replaces": "Massive Raid",
+   "tier": 3,
+   "price": 1.11,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Wall of Blossoms",
+   "replaces": "Elvish Visionary",
+   "tier": 3,
+   "price": 0.29,
    "origin": "workbook",
    "why": ""
   },
@@ -19844,11 +19763,20 @@
    "why": ""
   },
   {
-   "deck": "D4",
-   "card": "Wall of Blossoms",
-   "replaces": "Drumbellower",
+   "deck": "D5",
+   "card": "Night's Whisper",
+   "replaces": "Zack Fair",
    "tier": 2,
-   "price": 0.29,
+   "price": 6.25,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Tower Defense",
+   "replaces": "Belligerent Brontodon",
+   "tier": 2,
+   "price": 0.26,
    "origin": "workbook",
    "why": ""
   },
@@ -19863,28 +19791,199 @@
   },
   {
    "deck": "D5",
-   "card": "Make a Stand",
-   "replaces": "Rootborn Defenses",
-   "tier": 2,
-   "price": 0.14,
+   "card": "Suture Priest",
+   "replaces": "Anointer Priest",
+   "tier": 3,
+   "price": 4.36,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D5",
-   "card": "Morbid Opportunist",
-   "replaces": "Spectacular Tactics",
+   "deck": "D4",
+   "card": "Rampant Growth",
+   "replaces": "Lys Alana Dignitary",
+   "tier": 3,
+   "price": 0.67,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Lightning Bolt",
+   "replaces": "Cinder Strike",
    "tier": 2,
+   "price": 0.74,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Elvish Rejuvenator",
+   "replaces": "Satyr Wayfinder",
+   "tier": 3,
+   "price": 0.25,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Sylvan Ranger",
+   "replaces": "Zimone's Experiment",
+   "tier": 2,
+   "price": 0.34,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Tireless Tracker",
+   "replaces": "Tatyova, Benthic Druid",
+   "tier": 3,
    "price": 0.31,
    "origin": "workbook",
    "why": ""
   },
   {
-   "deck": "D5",
-   "card": "Night's Whisper",
-   "replaces": "Zack Fair",
+   "deck": "D2",
+   "card": "Yavimaya Dryad",
+   "replaces": "Kor Cartographer",
+   "tier": 3,
+   "price": 0.25,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Austere Command",
+   "replaces": "Feed the Swarm",
    "tier": 2,
-   "price": 6.25,
+   "price": 0.35,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D5",
+   "card": "Unbreakable Formation",
+   "replaces": "Frontline Medic",
+   "tier": 3,
+   "price": 1.37,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Faerie Impostor",
+   "replaces": "Pterafractyl",
+   "tier": 2,
+   "price": 0.32,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Wall of Omens",
+   "replaces": "Yavimaya Elder",
+   "tier": 2,
+   "price": 0.32,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Sower of Temptation",
+   "replaces": "Sundering Archaic",
+   "tier": 3,
+   "price": 2.67,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Halo Forager",
+   "replaces": "Crude Bent Blade",
+   "tier": 3,
+   "price": 0.29,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Mulldrifter",
+   "replaces": "Cloudblazer",
+   "tier": 2,
+   "price": 0.33,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D4",
+   "card": "Guardian Project",
+   "replaces": "Follow the Lumarets",
+   "tier": 2,
+   "price": 15.18,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Realmwalker",
+   "replaces": "Mistmeadow Council",
+   "tier": 3,
+   "price": 1.92,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Brainstorm",
+   "replaces": "Boughside Wanderers",
+   "tier": 3,
+   "price": 1.34,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Beast Whisperer",
+   "replaces": "Gandalf, Wandering Wizard",
+   "tier": 3,
+   "price": 9.03,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Obyra, Dreaming Duelist",
+   "replaces": "Summit Sentinel",
+   "tier": 3,
+   "price": 0.37,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D2",
+   "card": "Rampant Growth",
+   "replaces": "Woodland Weavemaster",
+   "tier": 2,
+   "price": 0.67,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D7",
+   "card": "Preordain",
+   "replaces": "Swampsnare Trap",
+   "tier": 3,
+   "price": 0.71,
+   "origin": "workbook",
+   "why": ""
+  },
+  {
+   "deck": "D6",
+   "card": "Mizzium Mortars",
+   "replaces": "Burn, Burn, Tree and Fern",
+   "tier": 3,
+   "price": 0.59,
    "origin": "workbook",
    "why": ""
   }
