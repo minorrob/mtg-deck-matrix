@@ -109,11 +109,23 @@ function starTable(workbook,name,{required=true}={}){
           get:(r,n)=>{const i=H.indexOf(n);return i<0?null:r[i];}};
 }
 
+/* 2026-09-30 AND LATER: THE MASTER SHEET ALONE. Rob's "MtG - Master - 9.30" carries only the wide Master
+   sheet: no deck_strategies, no master_buy_upgrade. Each deck's id, commander, name and overview are carried
+   from the committed file (identical to v25's deck_strategies, which Rob allowed); the upgrade pairings are the
+   Master sheet's own Dn-Buy columns. The cards, the counts, the boxes and the orders are the workbook's. */
+function priorDecks(prior){
+  const head=['Deck','Commander','Name'];
+  return {head,rows:(prior?.decks||[]).map(d=>[d.id,d.commander,d.name]),get:(r,n)=>{const i=head.indexOf(n);return i<0?null:r[i];}};
+}
+
 export async function importStarWorkbook(workbook,{prior=null,now=new Date(),lookup,canon,notes}){
   const main=starTable(workbook,'master_main'),tgt=starTable(workbook,'master_target'),
-        act=starTable(workbook,'master_actuals'),dk=starTable(workbook,'master_decks'),
+        act=starTable(workbook,'master_actuals'),
         up=starTable(workbook,'master_buy_upgrade',{required:false}),
         strat=starTable(workbook,'deck_strategies',{required:false});
+  let dk=starTable(workbook,'master_decks',{required:!prior?.decks?.length});
+  if(!dk){dk=priorDecks(prior);notes.push('No master_decks or deck_strategies sheet; each deck\'s id, commander and name were carried from the committed file.');}
+  if(!strat&&prior?.decks?.some(d=>d.strategy))notes.push('No deck_strategies sheet; each deck\'s overview was carried from the committed file.');
 
   /* The decks are whatever the workbook defines: every D<n>-T column is one. */
   const DECK_IDS=tgt.head.filter(h=>/^D\d+-T$/.test(h)).map(h=>h.slice(0,-2))
@@ -191,6 +203,7 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
     /* THE DECK OVERVIEW COMES FROM THE WORKBOOK when deck_strategies describes it. Trey
        maintains that sheet, so it wins over whatever the committed file carried. */
     if(strategyOf[id]){d.strategy=strategyOf[id];if(strategyOf[id].strategy)d.notes=strategyOf[id].strategy;}
+    else if(!strat&&p?.strategy)d.strategy=p.strategy;
     /* OPTIONS AND PLANS ARE CARRIED, BUT ONLY WHERE THEY STILL FIT. An Option flags a card
        that IS in the hundred as the first to swap out, and a Plan names one that is NOT. The
        target rewrite moves cards in and out, so a list carried from the committed file can
@@ -218,6 +231,15 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
     if(Object.keys(m).length)metadata[c.name]=m;
   }
   bench.sort(byName);ordered.sort(byName);buy.sort(byName);
+  /* WHAT WAS PAID IS HISTORY. From 2026-09-30 the Master's $ Each is filled only on rows still to buy (the
+     price to pay), and Value is the printing's market value, so neither says what a copy owned cost. A figure
+     the committed file holds for a card still owned is kept when the workbook gives none; one it does give wins. */
+  {const owned=new Set(order.filter(id=>card[id].own>0).map(id=>Live.fold(card[id].name)));let kept=0;
+   for(const [name,price] of Object.entries(prior?.paid||{})){const n=canon(name);
+     if(owned.has(Live.fold(n))&&!paid[n]&&cash(price)){paid[n]=cash(price);kept++;}}
+   if(kept)notes.push(`${kept} paid figure${kept===1?'':'s'} carried from the committed file for cards still owned; the workbook's $ Each gives none for them.`);
+   /* By name, so a rebuild that carries figures does not reshuffle the file. */
+   for(const [n,v] of Object.entries(paid).sort(byName)){delete paid[n];paid[n]=v;}}
 
   const upgrades=[];
   if(up)for(const r of up.rows){
@@ -231,6 +253,27 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
       tier:status==='LT'?3:2,price:marketPriceOf(lookup,card[upId].name,cash(up.get(r,'Price')))??0,origin:'workbook',
       why:''});
   }
+  /* THE UPGRADES FROM THE MASTER SHEET ITSELF (Rob, 2026-09-30, docs/plan-to-done-2026-09-30.md, AI-3): where a
+     deck's Actual and its Target differ, the Target is the upgrade for the Actual, and the row's Dn-Buy column names
+     the upgrade card's id (Negate: D2-Buy = c0967, Mystic Snake). So a row with a Dn-Buy is a copy in deck n's box
+     holding the seat of the card that id names. The tier is the committed pairing's when there was one, else 2. */
+  const buyCols=DECK_IDS.filter(d=>main.head.includes(d+'-Buy'));
+  if(!up&&buyCols.length){
+    const priorTier=new Map((prior?.upgrades||[]).map(u=>[[u.deck,Live.fold(u.card),Live.fold(u.replaces)].join('|'),u.tier]));
+    const missing=[];
+    for(const r of main.rows){
+      const id=String(main.get(r,'Card ID')).trim();if(!card[id])continue;
+      for(const d of buyCols){
+        const want=String(main.get(r,d+'-Buy')??'').trim();if(!want||want==='0')continue;
+        const target=card[want];if(!target){missing.push(`${card[id].name} (${d}): ${want}`);continue;}
+        const tier=priorTier.get([d,Live.fold(target.name),Live.fold(card[id].name)].join('|'))??2;
+        upgrades.push({deck:d,card:target.name,replaces:card[id].name,tier,price:marketPriceOf(lookup,target.name,target.paid)??0,origin:'workbook',why:''});
+      }
+    }
+    ensure(!missing.length,`A Dn-Buy names a card id the Master sheet does not have: ${few(missing)}. Fix the workbook before building.`);
+    notes.push(`${upgrades.length} upgrade pairing${upgrades.length===1?'':'s'} read from the Master sheet's ${buyCols[0]}-Buy…${buyCols.at(-1)}-Buy columns.`);
+  }
+  else if(!up)notes.push('No master_buy_upgrade sheet and no Dn-Buy columns: no upgrade pairings.');
 
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
     count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
@@ -424,8 +467,11 @@ export async function newestWorkbook(){
      because '-' sorts ahead of 'v', so the newest workbook was silently skipped and the
      build read a stale one. The version number is the thing being compared, so compare it. */
   const ver=f=>{const m=/[_-]v(\d+)/i.exec(f);return m?Number(m[1]):-1;};
+  /* From 2026-09-30 the Master is named by its date ("MtG - Master - 9.30"), committed with the ISO
+     date in its name. A dated workbook is newer than every versioned one, and dated ones sort by date. */
+  const dated=f=>(/(\d{4}-\d{2}-\d{2})/.exec(f)||[,''])[1];
   const books=(await readdir(dir)).filter(f=>/Master.*\.xlsx$/i.test(f)&&!f.startsWith('~$'))
-    .sort((a,b)=>ver(a)-ver(b)||a.localeCompare(b,undefined,{numeric:true}));
+    .sort((a,b)=>dated(a).localeCompare(dated(b))||ver(a)-ver(b)||a.localeCompare(b,undefined,{numeric:true}));
   ensure(books.length,'No *Master*.xlsx under data/source/ and no workbook named.');
   return fileURLToPath(new URL(books[books.length-1],dir));
 }

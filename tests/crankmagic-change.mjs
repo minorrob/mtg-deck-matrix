@@ -87,9 +87,13 @@ ok(CH.judge(hundred(38, 0).map((x, i) => i < 3 ? {card: {...x.card, gameChanger:
   /* A tag naming a seat that is not on the list is ignored rather than trusted — the projection
      validates it, so nothing downstream can read a pairing that has stopped being one. */
   const stale = JSON.parse(JSON.stringify(live));
-  const anyStandIn = M.projection(stale).find((r) => r.standIn && r.standInDeckId);
+  /* A substitute that does hold a seat, so the check cannot pass on one that never had a pairing (it did, on v25's
+     library, until the 9.30 workbook gave the first substitute a seat); and the edit is a new revision, because the
+     projection is kept per state and revision. */
+  const anyStandIn = M.projection(stale).find((r) => r.standIn && r.standInDeckId && r.standInFor);
   if (anyStandIn) {
     stale.lots.find((l) => l.id === anyStandIn.id).standInFor = "slot:does-not-exist";
+    stale.revision += 1;
     const row = M.projection(stale).find((r) => r.recordId === anyStandIn.recordId);
     eq(row.standInFor, "", "a seat that is not on the deck's list reads as no pairing at all");
   } else ok(true, "no substitute in the live library today");

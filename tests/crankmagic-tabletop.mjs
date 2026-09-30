@@ -139,7 +139,15 @@ eq(T.findPile(t, "bench").label, "Bench"); eq(T.findPile(t, t.statusPiles[0].id)
 const pileBy = (label, key) => (key ? T.table(rows, {...opts, groupBy: key}).groupPiles.find((p) => p.label === label) : t.statusPiles.find((p) => p.label === label));
 const ownedBench = rows.filter((r) => r.kind === "lot" && r.source === "owned" && !r.allocation && r.location?.kind !== "deck");
 const boxed = rows.filter((r) => r.kind === "lot" && r.source === "owned" && r.location?.kind === "deck");
-const needs = rows.filter((r) => r.kind === "need"), ordered = rows.filter((r) => r.kind === "lot" && r.source === "ordered");
+/* An ordered copy: the live library's own when it has one; the 9.30 library (2026-09-30) has nothing on order, so one is
+   made from a need the way Ordered does it (acquireSlots, source ordered), in a copy of the state. */
+const orderedRows = (st) => M.projection(st).filter((r) => r.kind === "lot" && r.source === "ordered").map((r) => ({...r, status: M.statusOf(r)}));
+const orderedFrom = () => {
+  if (orderedRows(state).length) return orderedRows(state);
+  const need = M.projection(state).find((r) => r.kind === "need");
+  return orderedRows(M.apply(state, {type: "acquireSlots", id: "tabletop-order", at: "2026-09-30T00:00:00Z", deckId: need.deckId, source: "ordered", slotIds: [need.slotId], quantities: {[need.slotId]: 1}, confirmed: true}).state);
+};
+const needs = rows.filter((r) => r.kind === "need"), ordered = orderedFrom();
 const planned = rows.filter((r) => r.kind === "entry" || r.kind === "option");
 ok(ownedBench.length > 5 && boxed.length > 5 && needs.length > 5 && ordered.length > 0 && planned.length > 0, "the live library has every kind of row the contract reads");
 eq(T.accepts(pileBy("Physical deck"), ownedBench.slice(0, 2)).action, "place", "an owned bench copy goes into a physical deck");
@@ -241,7 +249,7 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(T.playPiles(T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value})), [], "and none when no play space was asked for");
   /* The drop contract. The middle takes any copy; a tray takes an owned one and says what it costs. */
   const owned = rows.filter((r) => r.kind === "lot" && r.source === "owned").slice(0, 2);
-  const ordered = rows.filter((r) => r.kind === "lot" && r.source === "ordered").slice(0, 1);
+  const ordered = orderedFrom().slice(0, 1);
   const plan = rows.filter((r) => r.kind === "need").slice(0, 1);
   eq(T.accepts(P.draw, owned).action, "hold", "the middle takes an owned copy");
   ok(T.accepts(P.draw, ordered).ok, "and an ordered one — picking a card up claims nothing about it");
