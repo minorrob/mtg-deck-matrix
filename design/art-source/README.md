@@ -8,6 +8,7 @@ ships; the product ships the processed versions.
 |---|---|---|
 | `crankmagic_logo.png` | `crankmagic-logo-gear-v4-256.webp` (35KB) | `assets/crankmagic/` |
 | `card_backgrounds/card_background_{tan,blue,black,red,green}.png` | `card-back-{white,blue,black,red,green}.webp` (~120KB each) | `game/ui/assets/card-backs/` |
+| `landing/landing-cards-source.png` (2026-09-30) | `landing-cards.webp` (1120px, 529KB), the landing page's hero | `assets/crankmagic/` |
 
 Neither could be used as delivered. Both arrive 2752x1536 RGB with **no alpha**: the card backs'
 transparency checkerboard is baked in as real gray pixels, and the logo sits on a flat navy field
@@ -16,3 +17,8 @@ close to but not the same as the app header, which would have shown as a rectang
 The processing script is `game/tools/prep-art.py`, and it reads this folder. Re-run it after replacing a
 source file; it finds the real content, crops to it, keys the flat background out to alpha and
 resizes. `tan` is the white/Plains back — the art is cream rather than white.
+
+**The landing art (Rob, 2026-09-30)** came the same way, a painted checkerboard with no alpha, but its glow and haze
+fade into the checker rather than stopping at a card's edge, so a tight crop cannot work.
+`node tools/lift-checkerboard.mjs design/art-source/landing/landing-cards-source.png <out> 1120` lifts it (the method
+is in the tool's header) and reproduces the committed WebP byte for byte. A version on solid black would need none of it.
