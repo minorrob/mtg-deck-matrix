@@ -38,6 +38,8 @@
  *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
  *             socket, the seat never marked away.
  *   B5        the turn's words and beats (docs/plan-to-done-2026-09-30.md, items 10-13), in the Decide lines above.
+ *   B6        the hand tray (item 14): the count beside the ✋; the hand by type -- Land, Creature, Instant, Other -- as
+ *             castable now over in hand, agreeing with the cards lit; castable again once the mana is there.
  *   B4        the Table view's shape: the tabletop still; the bar between the rows dragged (and by the arrow keys), the
  *             rows' share remembered; the bar atop the hand tray growing the hand and shrinking every board alike; the
  *             pile cards on top of their frames; the mana reminder below the Lands; the life counter's slices and
@@ -222,6 +224,21 @@ try {
   /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
   eq((await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
   eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");
+  /* B6, item 14: THE HAND TRAY. The count beside the ✋, and the hand by type, castable now over in hand -- the same
+     fact that lights a card. */
+  const trayOf = (page, seat, email) => page.evaluate(([seat, state]) => {
+    const kind = (c) => !c ? "Other" : c.types.includes("Land") ? "Land" : c.types.includes("Instant") || (c.keywords || []).some((k) => /^flash$/i.test(k)) ? "Instant" : c.types.includes("Creature") ? "Creature" : "Other";
+    const byId = new Map(state.players[seat].zones.Hand.cards.map((c) => [String(c.cardId), c])), want = {Land: [0, 0], Creature: [0, 0], Instant: [0, 0], Other: [0, 0]};
+    for (const el of document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")) {const k = kind(byId.get(el.dataset.card)); want[k][1] += 1; if (el.classList.contains("is-bright")) want[k][0] += 1;}
+    return {count: (document.querySelector(".cm-board-hand .cm-board-hand-count") || {}).textContent, cards: document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard").length,
+      shown: Object.fromEntries([...document.querySelectorAll(".cm-board-hand-types li")].map((li) => [li.dataset.type, li.querySelector("b").textContent])),
+      want: Object.fromEntries(Object.entries(want).map(([k, [x, y]]) => [k, `${x}/${y}`])), words: document.querySelector(".cm-board-hand").innerText};
+  }, [seat, views(email).at(-1).state]);
+  const tray1 = await trayOf(active.page, activeSeat, active === rob ? ROB : MAYA);
+  ok(tray1.count === String(tray1.cards) && !/Hand ·|Bright = /.test(tray1.words), `the tray gives the hand's count beside the ✋ (${tray1.count}), and neither "Hand · n" nor "Bright = you can use it now"`);
+  eq(Object.keys(tray1.shown), ["Land", "Creature", "Instant", "Other"], "and the hand by type: Land, Creature, Instant, Other");
+  eq(tray1.shown, tray1.want, `each castable now over in hand, the same count the lit cards give (${Object.entries(tray1.shown).map(([k, v]) => `${k} ${v}`).join(" · ")})`);
+  ok(/^([1-9])\/\1$/.test(tray1.shown.Land) && /^0\//.test(tray1.shown.Creature) && /^0\//.test(tray1.shown.Instant), "in main 1 with the land drop unused every land can be played now, and nothing can be cast until there is mana");
   const brightLand = active.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: land}).first();
   ok(await brightLand.count() === 1, `with priority in main 1, a ${land} in the hand is bright: it can be played now`);
   ok(await active.page.locator(".cm-board-hand .cm-bcard.is-dim").count() > 0, "and the cards that cannot be used now are dimmed");
@@ -643,6 +660,11 @@ try {
   await second.page.click("[data-action=board-also]");
   await second.page.locator(".cm-board-also [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
+  /* B6: the mana in the pool, the creatures in hand are castable now, and the tray says so. */
+  await second.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 10000});
+  const tray2 = await trayOf(second.page, secondSeat, second === rob ? ROB : MAYA);
+  ok(/^([1-9])\/\1$/.test(tray2.shown.Creature) && /^0\//.test(tray2.shown.Land) && JSON.stringify(tray2.shown) === JSON.stringify(tray2.want),
+    `with mana in the pool the tray reads Creature ${tray2.shown.Creature}, the land drop spent reads Land ${tray2.shown.Land}, and it agrees with the lit cards`);
   await second.page.click("[data-action=board-panel]");
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().click();
   await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
