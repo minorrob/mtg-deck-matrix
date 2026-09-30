@@ -89,11 +89,13 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
    needs no inset. Measured, not assumed: the permutation pass reports the overlap in px2. */
 .cm-q-tr .cm-lobby-seat>header{right:22%}
 .cm-q-tl .cm-lobby-seat>header{left:22%}
-.cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
+/* WORDS OVER THE SEAS (the accessibility pass, docs/plan-to-done-2026-09-30.md Part 6): a seat's sea can be near white, so
+   its title, its lines, its pill and an empty card's ? each sit on the poster ground, dark enough for 4.5:1 over white. */
+.cm-seat-q .cm-lobby-seat h3{flex:0 1 auto;font-size:14px;line-height:1.2;color:var(--poster-ink);margin:0;padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-seat-q .cm-lobby-seat-sub{font-size:11px;color:color-mix(in srgb,var(--poster-ink) 72%,transparent)}
 .cm-seat-q .cm-lobby-ready{margin-left:auto}
 /* The status pill: a dot in the state's color and one word, as 2b draws it. */
-.cm-seat-pill{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;padding:3px 10px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(4px);font-size:11px;font-weight:600;color:var(--poster-ink)}
+.cm-seat-pill{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;padding:3px 10px;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--poster-ground) 72%,transparent);backdrop-filter:blur(4px);font-size:11px;font-weight:600;color:var(--poster-ink)}
 .cm-seat-pill i{width:7px;height:7px;border-radius:50%;background:var(--st-pull)}
 .cm-seat-pill[data-state="ready"] i{background:var(--st-inbox)}
 .cm-seat-pill[data-state="deck"] i,.cm-seat-pill[data-state="pending"] i{background:var(--st-ordered)}
@@ -118,11 +120,12 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-seat-card{height:76%;max-height:100%;aspect-ratio:var(--card-ratio);flex:0 0 auto;padding:0;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--poster-ink) 50%,transparent);box-shadow:0 6px 16px -6px var(--poster-ground);background:color-mix(in srgb,var(--poster-ground) 40%,transparent);cursor:zoom-in;display:grid;place-items:center}
 .cm-seat-card img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .cm-seat-card.is-empty,.cm-seat-card.is-blank{border-style:dashed;border-color:color-mix(in srgb,var(--poster-ink) 55%,transparent);cursor:default;background:color-mix(in srgb,var(--poster-ground) 28%,transparent)}
-.cm-seat-card.is-empty span,.cm-seat-card.is-blank span{font-size:22px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 70%,transparent)}
+.cm-seat-card.is-empty span,.cm-seat-card.is-blank span{font-size:22px;font-weight:600;color:var(--poster-ink);padding:0 8px;border-radius:6px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent)}
 .cm-seat-detail{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.4;text-shadow:0 1px 3px var(--poster-ground)}
 .cm-q-tl .cm-seat-detail,.cm-q-bl .cm-seat-detail{text-align:right}
 .cm-seat-name{margin:0;font-weight:600;font-size:13px;line-height:1.25}
-.cm-seat-line{margin:0;color:color-mix(in srgb,var(--poster-ink) 80%,transparent)}
+.cm-seat-line{margin:0;color:var(--poster-ink)}
+.cm-seat-name span,.cm-seat-line span{padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--poster-ground) 62%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* The player's own four controls, wrapping under their reading. */
 .cm-seat-controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .cm-q-tl .cm-seat-controls,.cm-q-bl .cm-seat-controls{justify-content:flex-end}

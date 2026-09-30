@@ -118,7 +118,7 @@
         if (s.invited) controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
       }
     }
-    const detail = `${pseudo ? `<p class="cm-seat-name">${e((s.deck.commander || [])[0] || s.deck.name)}</p>` : ""}<p class="cm-seat-line">${e(line)}</p>`;
+    const detail = `${pseudo ? `<p class="cm-seat-name"><span>${e((s.deck.commander || [])[0] || s.deck.name)}</span></p>` : ""}<p class="cm-seat-line"><span>${e(line)}</span></p>`;
     const inner = `<article class="cm-lobby-seat${s.kind === "ai" ? " is-ai" : " is-human"}${s.ready ? " is-ready" : ""}" data-seat="${s.seatId}" data-mat="${e(s.mat || "felt")}">
       <header><h3>${e(who)}</h3>${art.statusPill(state, s.ready)}</header>
       ${art.seatFigure(pseudo, detail, controls.length ? `<div class="cm-actions cm-seat-controls">${controls.join("")}</div>` : "")}
