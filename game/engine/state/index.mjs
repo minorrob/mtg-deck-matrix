@@ -33,12 +33,16 @@ const STARTING_LIFE = 40;
 /**
  * A new game state.
  *
- * @param {{matchId: string, seed: string, players: Array<{name: string}>}} pod
+ * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number}} pod
  */
 export function createState(pod) {
   const seats = pod?.players ?? [];
   if (seats.length < 2) throw new Error("A game needs at least two players");
   if (seats.length > 4) throw new Error("A table seats at most four players");
+  /* CR 903.7 starts a Commander game at 40 life; a table's host may set another as a house rule (Rob, 2026-09-30), and
+     the pod carries it. Anything but a whole number from 1 to 999 is refused rather than guessed at. */
+  const life = pod?.startingLife ?? STARTING_LIFE;
+  if (!Number.isInteger(life) || life < 1 || life > 999) throw new Error("A game starts each player at a whole number of life from 1 to 999");
 
   const zones = {};
   for (const zone of PER_PLAYER) zones[zone] = seats.map(() => []);
@@ -64,7 +68,7 @@ export function createState(pod) {
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
-      life: STARTING_LIFE,
+      life,
       poison: 0,
       /* Commander damage is per source, so it is a map keyed by the commander's object id and
          summed per player by whatever reads it — a seat with partners has two rows. */

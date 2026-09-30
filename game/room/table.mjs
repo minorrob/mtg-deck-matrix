@@ -61,7 +61,9 @@ function readDeck(deck, cards) {
   if (commander.length > 2 || commander.length + list.length === 0 || commander.length + list.length > 250) throw new TableError(400, "That is not a deck a table can hold.");
   const missing = [...new Set([...commander, ...list].filter((n) => !cards(n)))].sort();
   if (missing.length) throw new TableError(422, `The table cannot play ${missing.length === 1 ? "this card" : `these ${missing.length} cards`} yet: ${missing.join(", ")}.`, {unsupported: missing});
-  return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list, source: readSource(deck.source)};
+  /* The deck's bracket as its library measures it (the Decks page's B1-B5), which a table's limit is held to. */
+  const bracket = Number.isInteger(deck.bracket) && deck.bracket >= 1 && deck.bracket <= 5 ? deck.bracket : null;
+  return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list, bracket, source: readSource(deck.source)};
 }
 
 /* Which deck in the person's own library this was, so the finished game can be filed under it (M5: results
@@ -96,6 +98,11 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
   };
   const needHost = (email) => {if (!isHost(email)) throw new TableError(403, "Only the host can do that.");};
   const needSeat = (email) => {const s = seatOf(email); if (s === null) throw new TableError(403, "You do not have a seat at this table."); return s;};
+  /* THE TABLE'S RULES (Rob, 2026-09-30): the starting life (CR 903.7's 40 unless the host says otherwise) and a bracket
+     limit (none unless the host sets one). */
+  const rulesOf = () => {const r = (record.lifecycle && record.lifecycle.settings) || {};
+    return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null};};
+  const seatNames = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
 
   /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
   async function leaveSeat(seat, why, now) {
@@ -125,7 +132,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => ({kind: s && s.kind === "ai" ? "ai" : "human", name: clean(s && s.name) || (s && s.kind === "ai" ? `AI ${i + 2}` : `Seat ${i + 2}`)}))];
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
-        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, ...settings}}),
+        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
         members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
       await save();
@@ -177,11 +184,36 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const seat = record.lifecycle.seats[seatId];
       if (!seat) throw new TableError(400, "There is no such seat.");
       if (seat.kind === "ai" ? !isHost(email) : seatOf(email) !== seatId) throw new TableError(403, "That is not your seat to choose for.");
-      const read = readDeck(deck, cards);
+      const read = readDeck(deck, cards), limit = rulesOf().bracketLimit;
+      if (limit !== null && read.bracket !== null && read.bracket > limit)
+        throw new TableError(409, `${read.name} is bracket ${read.bracket}, above this table's limit of ${limit}. Choose a deck at bracket ${limit} or lower, or ask the host to raise the limit.`);
       const version = (await sha256(JSON.stringify(read))).slice(0, 16);
       step({type: "deck", seatId, deckVersion: version}, now);
       if (seat.kind === "ai") step({type: "ready", seatId, ready: true}, now);
       record.decks[seatId] = read;
+      await save();
+      return api.view(email);
+    },
+    /** The host's Table rules (Rob, 2026-09-30): the starting life and the bracket limit, and not once any seat is ready.
+        A change that would break the table is refused, saying what is wrong and what to do instead (AGENTS.md). */
+    async rules(email, body, now) {
+      await load(); needHost(email);
+      const t = record.lifecycle;
+      if (t.phase !== "selecting") throw new TableError(409, "The table's rules can change only before the game starts.");
+      const ready = t.seats.filter((x) => x.ready).map((x) => x.name);
+      if (ready.length) throw new TableError(409, `The rules can't change once a seat is ready, and ${seatNames(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready (an AI seat is ready once its deck is chosen, so choose AI decks after the rules), then edit the rules.`);
+      const now_ = rulesOf(), b = body || {};
+      const life = b.startingLife === undefined ? now_.startingLife : Number(b.startingLife);
+      if (!Number.isInteger(life) || life < 1 || life > 999) throw new TableError(400, "Starting life is a whole number from 1 to 999.");
+      const limit = b.bracketLimit === undefined ? now_.bracketLimit : b.bracketLimit === null || b.bracketLimit === "" ? null : Number(b.bracketLimit);
+      if (limit !== null && !(Number.isInteger(limit) && limit >= 1 && limit <= 5)) throw new TableError(400, "The bracket limit is 1 to 5, or none.");
+      if (limit !== null) {
+        const over = Object.entries(record.decks).filter(([, d]) => d && d.bracket !== null && d.bracket > limit).map(([seat, d]) => ({name: t.seats[seat].name, bracket: d.bracket}));
+        if (over.length) {const top = Math.max(...over.map((x) => x.bracket));
+          throw new TableError(409, `${seatNames(over.map((x) => `${x.name}'s deck (bracket ${x.bracket})`))} ${over.length === 1 ? "is" : "are"} above ${limit}. Change ${over.length === 1 ? "that deck" : "those decks"} first, or keep the limit at ${top} or higher.`);}
+      }
+      void now;
+      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit}, revision: t.revision + 1};
       await save();
       return api.view(email);
     },
@@ -228,7 +260,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
-      }))};
+      })), startingLife: rulesOf().startingLife};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`});
         step({type: "engine-started", launchId: matchId, matchId}, now);
@@ -339,11 +371,12 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         youAreHost: isHost(email), yourSeat: mine,
         countdownAt: t.countdownAt, launchError: t.launchError, matchId: t.phase === "playing" ? t.matchId : null,
         blockers: countdownBlockers(t).map(({seatId, reason}) => ({seatId, reason})),
+        rules: rulesOf(),
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
           seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
-          deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander} : null,
+          deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),
         })),
       };

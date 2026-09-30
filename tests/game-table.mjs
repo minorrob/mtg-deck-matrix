@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import {existsSync} from "node:fs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
+import {replayTape} from "../game/room/replay.mjs";
 import {tableOn, INVITE_TTL, MATS} from "../game/room/table.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 import {handle} from "../cloud/worker.mjs";
@@ -107,7 +108,7 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   }
   eq([ai.seats[3].deck.name, ai.seats[3].ready], ["ai deck", true], "the host brings the AI's deck, and an AI with a deck is ready");
   const mayaSees = await t.view(MAYA);
-  eq([mayaSees.seats[0].deck, mayaSees.seats[1].cards], [{name: "rob deck", commander: ["General rob"]}, 99], "she sees the host's deck by name and commander, and her own count");
+  eq([mayaSees.seats[0].deck, mayaSees.seats[1].cards], [{name: "rob deck", commander: ["General rob"], bracket: null}, 99], "she sees the host's deck by name, commander and bracket (none sent here), and her own count");
   ok(![...everyString(mayaSees)].some((s) => /Bear rob|Grove rob|Bear ai/.test(s)), "and not one card of anyone else's list");
 
   /* Start: the rules the host meets. */
@@ -229,6 +230,39 @@ function objectCtx() {
   eq((await call("POST", `/api/tables/${id}/explode`, {body: {}})).status, 404, "an unknown action is 404");
   eq((await call("GET", `/api/tables/${id}/ready`)).status, 405, "an action is a POST");
   eq((await call("POST", `/api/tables/${id}/join`, {as: MAYA, body: "x".repeat(70 * 1024)})).status, 400, "a body larger than a table needs is refused at the door");
+}
+
+/* THE TABLE'S RULES (Rob, 2026-09-30; docs/plan-to-done-2026-09-30.md, B3): the host sets the starting life and a bracket
+   limit, never once a seat is ready; a deck above the limit is refused, saying what to do instead; the game starts at
+   the host's life, and a playtest table's record replays to it. */
+{
+  const storage = memoryStorage(), t = tableOn(storage, {cards, random});
+  await t.create({tableId: "tablerules1", host: ROB, hostName: "Rob", seats: [{kind: "human", name: "Maya"}, {kind: "ai", name: "Shadrix"}], playtest: true});
+  await t.join(MAYA, (await t.invite(ROB, 1, now)).code, now);
+  eq((await t.view(ROB)).rules, {startingLife: 40, bracketLimit: null}, "a new table plays at 40 life (CR 903.7) with no bracket limit");
+  await refuses(t.rules(MAYA, {startingLife: 30}, now), 403, /Only the host/, "only the host edits the rules");
+  eq((await t.rules(ROB, {startingLife: 30, bracketLimit: 3}, now)).rules, {startingLife: 30, bracketLimit: 3}, "the host sets 30 life and bracket 3");
+  eq((await t.view(MAYA)).rules, {startingLife: 30, bracketLimit: 3}, "and everyone at the table sees them");
+  await refuses(t.rules(ROB, {startingLife: 0}, now), 400, /1 to 999/, "a starting life is a whole number from 1 to 999");
+  await refuses(t.rules(ROB, {bracketLimit: 7}, now), 400, /1 to 5/, "a bracket limit is 1 to 5, or none");
+  await refuses(t.deck(MAYA, 1, {...deckFor("maya"), bracket: 4}, now), 409, /^maya deck is bracket 4, above this table's limit of 3\. Choose a deck at bracket 3 or lower, or ask the host to raise the limit\.$/, "a deck above the limit is refused, saying what is wrong and what to do instead");
+  eq((await t.deck(MAYA, 1, {...deckFor("maya"), bracket: 3}, now)).seats[1].deck.bracket, 3, "a deck at the limit takes the seat, its bracket shown");
+  await refuses(t.rules(ROB, {bracketLimit: 2}, now), 409, /^Maya's deck \(bracket 3\) is above 2\. Change that deck first, or keep the limit at 3 or higher\.$/, "lowering the limit under a deck already chosen is refused, with the way out");
+  await t.ready(MAYA, true, now);
+  await refuses(t.rules(ROB, {startingLife: 20}, now), 409, /^The rules can't change once a seat is ready, and Maya is\. Take back Ready/, "once a seat is ready the rules are refused, saying how to change them");
+  await t.ready(MAYA, false, now);
+  eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null}, "with nobody ready, the host takes the limit off again");
+  await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 2, deckFor("shadrix"), now);
+  await refuses(t.rules(ROB, {startingLife: 25}, now), 409, /Shadrix is\. Take back Ready \(an AI seat is ready once its deck is chosen, so choose AI decks after the rules\)/, "an AI seat is ready once its deck is chosen, and the refusal says to set the rules first");
+  await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
+  await t.start(ROB, now); const matchId = await t.tick(now + 11000);
+  const room = await t.currentRoom();
+  eq(room.view("s0").state.players.map((p) => p.health.life), [30, 30, 30], "the game starts every seat at the host's 30 life");
+  await t.endGame(ROB, now + 12000);
+  const record = await t.record(ROB, matchId);
+  eq(record.pod.startingLife, 30, "the playtest record keeps the starting life with the pod");
+  const replayed = await replayTape({matchId, pod: record.pod, seed: record.seed, tape: record.tape, cards});
+  eq(replayed.view("s0").state.players.map((p) => p.health.life), [30, 30, 30], "and replays to the same 30 life");
 }
 
 console.log(`game-table: ${checks} checks passed — the approved journeys as rules: the host invites, the invited join as themselves, each brings a playable deck, the countdown waits for every person and the host can cancel it, and the door is shut until Play ships.`);
