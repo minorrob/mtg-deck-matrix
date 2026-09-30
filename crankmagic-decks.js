@@ -803,12 +803,13 @@ async function latestPrecons(){
   if(!r||!r.ok)return null;
   return A.expect(await r.json(),'preconsLatest');
 }
+/* NEW FROM WIZARDS: each chip names its (first) commander, so the card shows under the pointer as a Library name's does (Rob, 2026-09-30). */
 C.preconLatest=async id=>{
   const data=await latestPrecons().catch(()=>null),el=document.getElementById(id);
   if(!el||!data||!data.decks.length)return;
   const today=M.today(),sets=[...new Set(data.decks.map(p=>p.setName))].join(' · ');
   el.innerHTML=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
-    <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span><em class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}</em>${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button></li>`).join('')}</ul>`;
+    <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" data-card="${e(p.commander[0].name)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span><em class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}</em>${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button></li>`).join('')}</ul>`;
   el.hidden=false;
 };
 async function preconPicker(){

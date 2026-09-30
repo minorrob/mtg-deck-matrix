@@ -15,6 +15,11 @@
  *   5. What it loads: never the graph.
  *   6. On a phone: no sideways scroll, and Step one in reach.
  *   7. Decks with no decks: the page is Decks, and "No decks yet" offers a commander, a list and a backup.
+ *   8. The account chip (Rob, 2026-09-30): left of the way in, the app's own menu -- "Menu" where accounts are off,
+ *      "Sign in" signed out, the person signed in -- opening under the chip, seen with the rail hidden, Account first.
+ *   9. The hero art (Rob, 2026-09-30): his picture at twice its drawn width, the Krenko deck box over its foot.
+ *  10. The art animated: on a dark theme his clip plays on black, screen-blended so its edge cannot be seen; less motion,
+ *      or a light theme, keeps the still, and the video is not fetched where it will not play.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -60,6 +65,14 @@ try {
     ok(!/Start free|Free account/i.test(text), "it never says Start free or Free account: accounts are invite-only (M1·2)");
     ok(/Start without an account/.test(text) && /No account needed/.test(text), "it says Start without an account, and that none is needed");
     eq(await page.locator(".cm-landing [data-action=account-sign-in]").count(), 0, "and where accounts are off, it offers no Sign in");
+    /* 8. The chip, where accounts are off: the app's menu, opened from the header with the rail hidden. */
+    eq((await page.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "Menu", "where accounts are off the header's chip says Menu");
+    await page.locator(".cm-landing-chip").click();
+    await page.locator("#cm-user-menu:popover-open").waitFor({timeout: 10000});
+    const menuAt = await page.evaluate(() => {const m = document.getElementById("cm-user-menu").getBoundingClientRect(), c = document.querySelector(".cm-landing-chip").getBoundingClientRect(); const hit = document.elementFromPoint(m.left + m.width / 2, m.top + 20); return {seen: !!hit && !!hit.closest("#cm-user-menu"), under: m.top >= c.bottom && m.top <= c.bottom + 16 && m.right >= c.left && m.left <= c.right && m.right <= innerWidth};});
+    ok(menuAt.seen && menuAt.under, "and it opens the rail's own menu under the chip, seen though the rail is hidden");
+    ok(await page.locator("#cm-user-menu [data-action=open-settings]").isVisible(), "the menu with Settings in it");
+    await page.keyboard.press("Escape");
     eq(await page.$$eval(".cm-landing-door", (ds) => ds.map((d) => d.querySelector(".cm-landing-door-top").innerText.replace(/\s+/g, " ").trim())),
       ["DECKS", "LIBRARY", "EXPLORE", "PLAY Coming soon"], "four doors, and Play is Coming soon (M1·5)");
 
@@ -91,6 +104,14 @@ try {
     await closeDialog(page);
 
     /* 3. The doors. */
+    /* 9. The hero is Rob's art (2026-09-30): one picture at twice its drawn width, the three commander cards gone, and the
+          Krenko deck box over its foot. */
+    const art = await page.evaluate(async () => {const img = document.querySelector(".cm-landing-art .cm-landing-hero-art"); if (!img) return null; await img.decode().catch(() => {}); const a = img.getBoundingClientRect(), s = document.querySelector(".cm-landing-sample").getBoundingClientRect();
+      return {src: img.getAttribute("src"), natural: img.naturalWidth, drawn: Math.round(a.width), cards: document.querySelectorAll(".cm-landing-art img").length, over: s.right > a.left && s.bottom > a.top && s.top < a.bottom && Number(getComputedStyle(document.querySelector(".cm-landing-sample")).zIndex) > 0, hit: document.elementFromPoint((s.left + s.right) / 2, (s.top + s.bottom) / 2)?.closest(".cm-landing-sample") !== null};});
+    ok(art && /landing-cards\.webp/.test(art.src) && art.natural === 1120 && art.drawn * 1.5 <= art.natural && art.cards === 1, `the hero is Rob's art, 1120px drawn at ${art && art.drawn}px, in place of the three cards`);
+    ok(art.over && art.hit, "and the Krenko Goblins deck box sits over it, on top");
+    await page.evaluate(() => scrollTo(0, 0));
+    await shot(page, "landing-art-1400");
     eq(await page.$$eval(".cm-landing-door", (ds) => ds.map((d) => d.getAttribute("href"))), ["#decks", "#cards", "#discover", "#game"], "each door goes to its own page");
     await page.locator(".cm-landing-door[href='#decks']").click();
     await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
@@ -110,6 +131,46 @@ try {
     await landing(page);
     ok(true, "#welcome opens the landing page");
     await context.close();
+  }
+
+  /* 10. THE ART, ANIMATED (Rob, 2026-09-30): on a dark theme, with motion allowed, his clip plays on black, screen-blended
+         so black is the page; the still fades out once it plays; asking for less motion, or a light theme, keeps the
+         still, and nothing is downloaded where it will not play. */
+  {
+    const {context, page} = await fresh();
+    const asked = [];
+    page.on("request", (r) => asked.push(new URL(r.url()).pathname));
+    await page.goto(`${base}/index.html`);
+    await landing(page);
+    await page.locator(".cm-landing-art.is-animated").waitFor({timeout: 20000});
+    await page.waitForTimeout(700);   /* the half-second cross-fade */
+    const anim = await page.evaluate(async () => {
+      const v = document.querySelector(".cm-landing-hero-video"), t0 = v.currentTime;
+      await new Promise((r) => setTimeout(r, 600));
+      return {src: v.currentSrc, playing: !v.paused && v.currentTime !== t0, loop: v.loop, muted: v.muted, blend: getComputedStyle(v).mixBlendMode,
+        video: getComputedStyle(v).opacity, still: getComputedStyle(document.querySelector(".cm-landing-hero-art")).opacity, box: (() => {const r = v.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];})()};
+    });
+    ok(/landing-cards\.webm/.test(anim.src) && anim.playing && anim.loop && anim.muted, `on a dark theme the art plays, muted and looping (${anim.src.split("/").pop()})`);
+    ok(anim.blend === "screen" && anim.video === "1" && anim.still === "0", "screen-blended over the page, the still faded out under it");
+    /* Seamless: just inside the video's box, where its black is, the page reads the same as just outside it. */
+    const [x, y, w] = anim.box, png = await page.screenshot({clip: {x: Math.max(0, x - 6), y: y + 40, width: 12, height: 1}});
+    const px = await page.evaluate(async (b64) => {const img = new Image(); img.src = "data:image/png;base64," + b64; await img.decode(); const c = document.createElement("canvas"); c.width = img.width; c.height = 1; const g = c.getContext("2d"); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, img.width, 1).data; return [[d[0], d[1], d[2]], [d[d.length - 4], d[d.length - 3], d[d.length - 2]]];}, png.toString("base64"));
+    ok(px[0].every((v, k) => Math.abs(v - px[1][k]) <= 2), `and the video's edge cannot be seen: the page beside it ${px[0].join(",")}, inside it ${px[1].join(",")}`);
+    await shot(page, "landing-animated-1400");
+    /* A light theme: the video goes, the still comes back. */
+    await page.evaluate(() => {for (const el of [document.documentElement, document.getElementById("matrix-v2")]) el.dataset.theme = "light";});
+    await page.waitForTimeout(700);
+    eq(await page.evaluate(() => [getComputedStyle(document.querySelector(".cm-landing-hero-video")).display, getComputedStyle(document.querySelector(".cm-landing-hero-art")).opacity]), ["none", "1"], "on a light theme the still is back and the video is away");
+    await context.close();
+    const quiet = await fresh({width: 1400, height: 900}, {reducedMotion: "reduce"});
+    const heard = [];
+    quiet.page.on("request", (r) => heard.push(new URL(r.url()).pathname));
+    await quiet.page.goto(`${base}/index.html`);
+    await landing(quiet.page);
+    await quiet.page.waitForTimeout(1500);
+    const still = await quiet.page.evaluate(() => {const v = document.querySelector(".cm-landing-hero-video"); return {src: v.getAttribute("src"), hidden: v.hidden, animated: !!document.querySelector(".cm-landing-art.is-animated")};});
+    ok(!still.src && still.hidden && !still.animated && !heard.some((p) => /\.webm$/.test(p)), "asking for less motion, the still stays and the video is never fetched");
+    await quiet.context.close();
   }
 
   /* 1. THE FRONT DOOR (Rob, 2026-09-29): with a library too, / is the landing page, and it offers the way in; the
@@ -146,15 +207,28 @@ try {
     await page.route(`${base}/api/me`, (route) => who === "signed in" ? route.fulfill({json: {email: "reader@example.test"}}) : route.fulfill({status: 401, json: {}}));
     await page.route(`${base}/api/library`, (route) => route.fulfill({json: {head: null}}));
     await page.goto(`${base}/index.html`);
+    const leftOfWayIn = () => page.evaluate(() => {const c = document.querySelector(".cm-landing-account .cm-landing-chip").getBoundingClientRect(), g = document.querySelector(".cm-landing-account .v-button").getBoundingClientRect(); return c.right <= g.left && Math.abs((c.top + c.bottom) / 2 - (g.top + g.bottom) / 2) < 4;});
+    const openMenu = async () => {await page.locator(".cm-landing-chip").click(); await page.locator("#cm-user-menu:popover-open").waitFor({timeout: 10000}); return (await page.locator("#cm-account").innerText()).replace(/\s+/g, " ").trim();};
     if (who === "signed in") {
       await landing(page);
       await page.waitForFunction(() => document.querySelector(".cm-landing-account .v-button")?.textContent === "Open your decks", null, {timeout: 30000});
       eq(await page.locator(".cm-landing-account [data-action=account-sign-in]").count(), 0, "signed in, / is the landing page too (Rob, 2026-09-29): no Sign in, and Open your decks");
+      /* 8. Signed in, the chip shows who, left of Open your decks, and opens the menu with Sync now at its head. */
+      eq((await page.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "reader@example.test", "signed in, the header's chip shows who is signed in");
+      ok(await leftOfWayIn(), "to the left of Open your decks, on its line");
+      const account = await openMenu();
+      ok(/^Account Signed in as reader@example\.test/.test(account) && await page.locator("#cm-account [data-action=account-sync]").isVisible(), `and opens the menu: Account, who, and Sync now (${account.slice(0, 60)})`);
+      await shot(page, "landing-chip-signed-in-1400");
     } else {
       await landing(page);
       await page.waitForTimeout(1000);
-      eq(await page.locator(".cm-landing-account [data-action=account-sign-in]").innerText(), "Sign in", "signed out where accounts are on, the landing page offers Sign in");
+      /* 8. Signed out where accounts are on, the chip says Sign in; it opens the menu, whose Account says Sign in. */
+      eq((await page.locator(".cm-landing-account .cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "Sign in", "signed out where accounts are on, the landing page's chip says Sign in (Rob, 2026-09-30)");
+      ok(await leftOfWayIn(), "to the left of the way in, on its line");
       ok(/Sign in to keep it in the cloud/.test(await page.locator(".cm-landing-fine").innerText()), "and says what signing in adds");
+      const account = await openMenu();
+      ok(/^Account Sign In \(Save to Cloud\)/.test(account) && await page.locator("#cm-account [data-action=account-sign-in]").isVisible(), `and it opens the menu, Account at its head with Sign in (${account.slice(0, 60)})`);
+      await shot(page, "landing-chip-signed-out-1400");
     }
     await context.close();
   }
@@ -169,7 +243,7 @@ try {
     ok(wide[0] <= wide[1], `on a phone the landing page never scrolls sideways (${wide.join(" in ")}px)`);
     /* The page clips sideways overflow rather than scrolling, so "no scrollbar" alone would pass a card cut in half:
        every piece of the art is inside the screen, turned as it is. */
-    const art = await page.$$eval(".cm-landing-card, .cm-landing-sample, .cm-landing-door, .cm-landing-close", (els) => els.map((el) => { const r = el.getBoundingClientRect(); return [el.className, Math.round(r.left), Math.round(r.right)]; }));
+    const art = await page.$$eval(".cm-landing-hero-art, .cm-landing-sample, .cm-landing-door, .cm-landing-close", (els) => els.map((el) => { const r = el.getBoundingClientRect(); return [el.className, Math.round(r.left), Math.round(r.right)]; }));
     const out = art.filter(([, l, r]) => l < 0 || r > 390);
     eq(out, [], `and every card, door and panel sits inside the screen (${art.length} measured)`);
     const box = await page.locator("#cm-landing-start").boundingBox();
@@ -181,4 +255,4 @@ try {
 } finally {
   await close();
 }
-console.log(`landing-r3: ${checks} checks passed — / is the landing page for everyone, the rail's name and logo go back to it, its promises are invite-only, each door and Step one go where they say, and Decks with no decks says so.`);
+console.log(`landing-r3: ${checks} checks passed — / is the landing page for everyone, the rail's name and logo go back to it, its promises are invite-only, each door and Step one go where they say, its account chip opens the app's menu, and Decks with no decks says so.`);

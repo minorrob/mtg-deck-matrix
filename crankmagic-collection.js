@@ -1673,14 +1673,14 @@ actions['export-view']=()=>{const shop=buyTab(),chosen=shop?shopSelected:selecte
   const cols=[...chosen,...(shop?['price','cap','vendor','deck'].filter(k=>!chosen.includes(k)):[])].map(k=>columns.find(([c])=>c===k)).filter(Boolean).map(([key,label])=>({key,label}));C.download(shop?'CrankMagic-buy-list.csv':'CrankMagic-filtered-roster.csv',C.E.csv(rows,cols),'text/csv');C.notice('Exported the complete filtered view, including rows beyond the current page.');};
 });
 
-/* A HOVER PREVIEW INSTEAD OF A 26px THUMBNAIL. The thumbnails in every row were too small to
+/* A HOVER PREVIEW INSTEAD OF A 26px THUMBNAIL (and the commander of a New from Wizards chip, Rob, 2026-09-30). The thumbnails in every row were too small to
    read and set the row height; the art now appears beside the name while the pointer rests
    on it. One element, moved rather than made, and never on a touch screen. The same art
    answers a name in a deck's hundred, and it is drawn at twice its first size, where the
    card can actually be read (Rob, 24 September). It is a feature like the rest, so it has the
    app's C: a deck-list name carries no picture of its own and is looked up through C.card, and
    as a bare function outside the feature list that lookup threw "C is not defined". */
-(globalThis.CrankFeatures ||= []).push(function(C){const NAMES='.cm-table .cm-card-name,.cm-deck-list .cm-card-name';if(matchMedia('(hover:none)').matches)return;let box=null,img=null,timer=null,token=0,armed=null;
+(globalThis.CrankFeatures ||= []).push(function(C){const NAMES='.cm-table .cm-card-name,.cm-deck-list .cm-card-name,.cm-precon-chip[data-card]';if(matchMedia('(hover:none)').matches)return;let box=null,img=null,timer=null,token=0,armed=null;
   const ensure=()=>{if(box)return;box=document.createElement('div');box.className='cm-hover-art';box.hidden=true;box.innerHTML='<span class="cm-spinner" aria-hidden="true"></span><img alt="">';img=box.querySelector('img');img.addEventListener('load',()=>box.classList.remove('is-loading'));img.addEventListener('error',()=>{box.classList.remove('is-loading');box.hidden=true;});document.body.append(box);};
   const hide=()=>{clearTimeout(timer);timer=null;armed=null;token++;if(box)box.hidden=true;};
   /* Beside the name, on its right when there is room and its left when there is not, and never
@@ -1698,6 +1698,8 @@ actions['export-view']=()=>{const shop=buyTab(),chosen=shop?shopSelected:selecte
       if(!src){const id=name.dataset.card||name.closest('tr')?.dataset.card,c=id?(C.card(id)||C.catalog.get(id)):null;
         src=(c&&c.image)||'';
         if(!src){try{const full=c?await C.catalog.details(c,{onFail:()=>{}}):null;src=(full&&full.image)||'';}catch{src='';}}
+        /* New from Wizards names commanders too new for the catalog's pictures: Scryfall draws that one card by its name. */
+        if(!src&&name.matches('.cm-precon-chip'))src=`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(id)}&format=image&version=normal`;
         if(my!==token)return;
         if(!src){box.classList.remove('is-loading');box.hidden=true;return;}
         holder.dataset.art=src;}
