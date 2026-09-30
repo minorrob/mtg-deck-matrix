@@ -216,6 +216,11 @@ eq(L.PASSWORD,'treycmload1');
     const mh=master.findIndex(r=>r[0]==='Card ID'),MH=master[mh],buyCells=master.slice(mh+1).flatMap(r=>MH.map((x,i)=>/^D\d+-Buy$/.test(String(x))&&r[i]!==null&&String(r[i]).trim()&&String(r[i]).trim()!=='0'?1:0)).reduce((a,b)=>a+b,0);
     eq(doc.upgrades.length,buyCells);ok(buyCells>100);
     ok(notes.some(x=>new RegExp(`^${buyCells} upgrade pairings read from the Master sheet's D1-Buy…D7-Buy columns`).test(x)));
+    /* W1: the prints, read from the workbook by Rob's rules, are the committed ones: a row with one print group is
+       that print for every copy (Evolving Wilds' Quantity cell says 1 of its 5), a row with two keeps each group's. */
+    assert.deepEqual(doc.prints,prior.prints);checks++;
+    eq(doc.prints['Evolving Wilds'].length,1);eq(doc.prints['Evolving Wilds'][0].quantity,5);
+    eq(doc.prints['Negate'].map(p=>p.quantity).join(),'2,1');
     /* Rob's example: Negate holds Mystic Snake's seat in D2 (D2-Buy = c0967). */
     ok(doc.upgrades.some(u=>u.deck==='D2'&&u.card==='Mystic Snake'&&u.replaces==='Negate'));
     /* Each pairing is what Rob says it is: the card is in the deck's target, and the copy standing in is in its box. */
