@@ -260,7 +260,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
-      })), startingLife: rulesOf().startingLife};
+      })), startingLife: rulesOf().startingLife,
+      /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself. */
+      drawBeat: true, passEmpty: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`});
         step({type: "engine-started", launchId: matchId, matchId}, now);

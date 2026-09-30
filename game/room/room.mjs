@@ -21,13 +21,20 @@
  * receipts that make a retried action idempotent). A room reopened on the same storage -- the Durable Object
  * evicted and woken, say -- is the same game at the same question.
  *
+ * THE TABLE'S TWO BEATS (Rob, 2026-09-30; docs/plan-to-done-2026-09-30.md, items 11 and 13), each asked for by the pod
+ * and kept with the match, so a game made before them replays exactly as it was played:
+ *   `drawBeat`   the draw step's draw waits for its player's Draw a card (the engine holds it, CR 504.1);
+ *   `passEmpty`  a person whose only legal action is to pass, with the stack empty, passes by itself -- there was no
+ *                choice to make (AGENTS.md: decisions belong to the players, and this is not one) -- and a step that
+ *                passes by itself says so in the history: "Draw step: nothing to do".
+ *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
  * compiled once M7 lands"). Today that is the basic lands, as it is for the engine itself.
  */
 import {createState, addObject} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo} from "../engine/rules/actions.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
@@ -47,6 +54,10 @@ const MAX_CARDS = 250;           // a Commander deck is 100; this is only a boun
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
 const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
 const HISTORY_VIEW = 120;         // the newest of them, in every view
+/* The steps as the history names them when one passes by itself (the untap and cleanup steps give no priority). */
+const QUIET_STEP = {UPKEEP: "Upkeep", DRAW: "Draw step", MAIN1: "Main 1", COMBAT_BEGIN: "Beginning of combat", COMBAT_DECLARE_ATTACKERS: "Declare attackers",
+  COMBAT_DECLARE_BLOCKERS: "Declare blockers", COMBAT_FIRST_STRIKE_DAMAGE: "First-strike damage", COMBAT_DAMAGE: "Combat damage", COMBAT_END: "End of combat",
+  MAIN2: "Main 2", END_OF_TURN: "End step"};
 
 export class RoomError extends Error {
   constructor(status, message, extra = {}) {super(message); this.status = status; Object.assign(this, extra);}
@@ -119,6 +130,17 @@ function roomOn(storage, matchId, cards) {
   let leaving = [], departures = {}, ended = null;
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
   let history = [];
+  /* ITEM 11: whether a person with nothing to do passes by itself, and what the step in progress has seen -- a pass
+     the room made for someone, and anything anyone chose to do (a person's pass counts: they could have acted). */
+  let passEmpty = false, step = {key: null, quiet: false, acted: false};
+  const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
+  /* A step that passed by itself, said once; the quiet steps of a turn in a row share one line. */
+  function quietly(phase) {
+    const name = QUIET_STEP[phase] || String(phase).toLowerCase(), last = history[history.length - 1];
+    if (last && last.mark === "quiet" && last.turn === state.turn) {last.steps = [...(last.steps || [last.text.replace(/: nothing to do$/, "")]), name]; last.text = `${last.steps.join(", ")}: nothing to do`; return;}
+    history.push({turn: state.turn, text: `${name}: nothing to do`, mark: "quiet", steps: [name]});
+    if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);
+  }
   /* THE DECISION TAPE (M8): every input a person gives -- an answer, leaving, ending the game -- in order, numbered
      from the match's first. The journal is what the engine did; the tape is what people told it; with the seed the
      two replay the game (game/room/replay.mjs). House-pilot answers are not taped: the pilot is deterministic and
@@ -144,10 +166,12 @@ function roomOn(storage, matchId, cards) {
         leaving = [];
         continue;
       }
+      if (state.stepIndex !== undefined) track();
       if (state.awaiting) {
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
           const a = pilotFor(seat).answer(projectFor(state, seat), choice);
+          step.acted = true;
           write(resolveAwaiting(state, a.indices, a.amounts, rng, a));
           continue;
         }
@@ -156,7 +180,8 @@ function roomOn(storage, matchId, cards) {
       if (state.stepIndex === undefined) {write(beginGame(state)); continue;}
       if (state.priorityPlayer === null) {write(advance(state)); continue;}
       const seat = state.priorityPlayer, actions = legalActions(state, seat);
-      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions)); continue;}
+      if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
+      if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions));
       pendingSeat = seat; pendingActions = actions; return;
     }
@@ -182,16 +207,21 @@ function roomOn(storage, matchId, cards) {
       const action = pendingActions[answer.indices[0]];
       pendingActions = null;
       apply(seat, action);
-    } else write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+    } else {step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));}
     pendingSeat = null;
     drive();
   }
-  function apply(seat, action) {
+  /* `by`: a person, the house pilot, or the room passing for a person with nothing to do (item 11). */
+  function apply(seat, action, by = "person") {
     if (action.kind === "pass") {
+      if (by === "room") step.quiet = true; else if (by === "person") step.acted = true;
       const result = passPriority(state);
       write(result.events);
-      if (result.outcome === "step-ends") write(advance(state));
-    } else write(applyAction(state, seat, action));
+      if (result.outcome === "step-ends") {
+        if (step.quiet && !step.acted) quietly(state.phase);
+        write(advance(state));
+      }
+    } else {step.acted = true; write(applyAction(state, seat, action));}
   }
 
   /* Everything since the last save, then the checkpoint, then the room's own record (which names it). */
@@ -204,7 +234,7 @@ function roomOn(storage, matchId, cards) {
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, ...(passEmpty ? {passEmpty, step} : {})}));
   }
 
   const api = {
@@ -222,7 +252,9 @@ function roomOn(storage, matchId, cards) {
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
-      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {})});}
+      const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {})};
+      passEmpty = beats.passEmpty === true;
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
@@ -232,7 +264,7 @@ function roomOn(storage, matchId, cards) {
       journal = createJournal({matchId, seed});
       controller = createController();
       pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
-      await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {})}, seed});
+      await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();
@@ -244,6 +276,7 @@ function roomOn(storage, matchId, cards) {
       if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
       const point = await store.latestCheckpoint();
       if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
+      passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
       seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
       state = structuredClone(point.state);
       rng = createRng(point.seed, point.rng);

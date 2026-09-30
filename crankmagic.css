@@ -3435,6 +3435,7 @@ button.cm-vitals{cursor:pointer}
 .cm-history-list li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--v-line)}
 .cm-history-list li.is-turn{justify-content:center;font-weight:700;color:var(--v-accent);border-bottom-color:var(--v-accent)}
 .cm-history-list li.is-end,.cm-board-band li.is-end{font-weight:700}
+.cm-history-list li.is-quiet,.cm-board-band li.is-quiet{color:var(--v-muted)}   /* a step that passed by itself (item 11) */
 .cm-history-list li span:first-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cm-history-turn{flex:0 0 auto;color:var(--v-muted);font-variant-numeric:tabular-nums}
 .cm-board-band{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:8px;background:rgba(10,9,8,.55);border:0;min-width:0;min-height:0;overflow:hidden;color:var(--mat-ink)}

@@ -9,7 +9,7 @@
  * THE GAME FILLS THE WINDOW (the handoff: "the play surface is 100% of the window"). The app's rail is under it and
  * comes back from ☰; the right panel (Panel ▸) and the Coach slide OVER the surface and never narrow it.
  *
- *   the strip     one 48px line: ☰ · Turn · the step as a brass chip · n / 7 ▾ · Next · Pass priority · Skip to end ·
+ *   the strip     one 48px line: ☰ · Turn · the step as a brass chip · n / 7 ▾ · Next · the pass (Next step · Resolve … · Pass · Draw a card) · Skip to end ·
  *                 Table | Focus | Full screen · History ▾ · Tools ▾ · Panel ▸
  *   the playmat   ONE component at four sizes (mat()): Battlefield over Lands on the left; Command over Library and
  *                 Exile over Graveyard as card-shaped frames on the right; in Focus the History band between the two
@@ -78,6 +78,8 @@
   const STEPS = [["Untap", ["UNTAP"]], ["Upkeep", ["UPKEEP"]], ["Draw", ["DRAW"]], ["Main 1", ["MAIN1"]],
     ["Combat", ["COMBAT_BEGIN", "COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"]],
     ["Main 2", ["MAIN2"]], ["End", ["END_OF_TURN", "CLEANUP"]]];
+  /* A step as the strip says it on another player's turn (item 12): "Maya's combat · you may respond". */
+  const THEIR_STEP = {Untap: "untap step", Upkeep: "upkeep", Draw: "draw step", "Main 1": "first main phase", Combat: "combat", "Main 2": "second main phase", End: "end step"};
   const COMBAT_STEP = {COMBAT_BEGIN: "beginning of combat", COMBAT_DECLARE_ATTACKERS: "declare attackers", COMBAT_DECLARE_BLOCKERS: "declare blockers",
     COMBAT_FIRST_STRIKE_DAMAGE: "first-strike damage", COMBAT_DAMAGE: "combat damage", COMBAT_END: "end of combat"};
   const stepAt = (phase) => STEPS.findIndex(([, phases]) => phases.includes(phase));
@@ -299,12 +301,34 @@
     return {at, step: at < 0 ? "Opening hands" : STEPS[at][0], detail: COMBAT_STEP[s.phase] ? ` · ${COMBAT_STEP[s.phase]}` : "",
       next: at < 0 ? "" : at + 1 < STEPS.length ? STEPS[at + 1][0] : "Next turn"};
   };
+  /* What the strip says (item 12). Priority on another player's turn says whose step it is and that you may
+     respond; on your own turn the button's words carry it (item 10), and the draw's button is its own words. */
   const waitingText = () => {
-    const d = view.decision;
-    return view.status === "finished" ? "The game is over."
-      : d ? (sending ? "Sent…" : d.title) : view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";
+    const d = view.decision, s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
+    if (view.status === "finished") return "The game is over.";
+    if (d && sending) return "Sent…";
+    if (d && d.kind === "priority") {
+      if (top) return `${top.name || "A spell"} is on the stack · you may respond`;
+      const at = stepAt(s.phase);
+      return s.turnPlayerId === view.seat || at < 0 ? "" : `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
+    }
+    if (d) return d.kind === "draw" ? "" : d.title;
+    return view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";
   };
   const canPass = () => {const d = view.decision; return !!d && d.kind === "priority" && !sending && view.status !== "finished";};
+  /* ONE BUTTON THAT SAYS WHAT PASSING WILL DO (item 10): the same pass to the room, in the words for now -- Next
+     step on your turn with the stack empty, Resolve and the spell's name with something on it, Pass on another
+     player's turn. In the draw step of your turn it is Draw a card, and the click draws (item 13). */
+  function passLabel() {
+    const s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
+    if (top) return top.name ? `Resolve ${top.name}` : "Let it resolve";
+    return s.turnPlayerId === view.seat ? "Next step" : "Pass";
+  }
+  function passButton() {
+    const d = view.decision;
+    if (d && d.kind === "draw" && view.status !== "finished") return b("Draw a card", "board-draw", {}, true, {cls: "compact", disabled: sending});
+    return b(passLabel(), "board-pass", {}, true, {cls: "compact", disabled: !canPass()});
+  }
   function strip() {
     const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
     const {at, step, detail, next} = stepInfo();
@@ -315,7 +339,7 @@
       <span class="cm-board-step">${e(step)}${e(detail)}</span>
       <span class="cm-board-tools">${at < 0 ? "" : `<button type="button" class="cm-board-count" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}; show the steps">${at + 1} / ${STEPS.length} ▾</button>`}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-board-prompt">${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}<span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>${conn}</span>
-      ${b("Pass priority", "board-pass", {}, true, {cls: "compact", disabled: !canPass()})}
+      ${passButton()}
       ${b(skipping === null ? "Skip to end" : "Skipping · stop", "board-skip", {}, false, {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"})}
       ${alsoButton()}
       <span class="cm-board-divider" aria-hidden="true"></span>
@@ -481,7 +505,7 @@
       <span class="cm-board-spacer"></span>${ib("⎋", "board-view", "Leave full screen", {view: "focus"})}</nav>`;
     const pill = `<div class="cm-full-pill"><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
       <span class="cm-board-waiting" role="status" aria-live="polite">${e(waitingText())}</span>
-      ${b("Pass priority", "board-pass", {}, true, {cls: "compact", disabled: !canPass()})}${b(skipping === null ? "Skip to end" : "Stop skipping", "board-skip", {}, false, {cls: "compact"})}</div>`;
+      ${passButton()}${b(skipping === null ? "Skip to end" : "Stop skipping", "board-skip", {}, false, {cls: "compact"})}</div>`;
     /* The big board's corner: whose it is and their vitals; when it is not yours, ⟳ and My board are there too. */
     const viewing = big.playerId !== view.seat;
     const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${vitals(big, {big: true})}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
@@ -524,7 +548,7 @@
   }
   /* THE HISTORY, newest first. A turn's line is a divider; the others carry the turn they happened in. */
   const lines = () => [...(view.history || [])].reverse();
-  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
+  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
   const matches = (l) => !historyFilter || l.text.toLowerCase().includes(historyFilter.toLowerCase());
   function historyList() {
     return `<input type="search" class="cm-history-filter" data-board-history-filter placeholder="Search & filter by card or player…" aria-label="Filter the history" value="${e(historyFilter)}">
@@ -538,7 +562,7 @@
   function historyBand(count) {
     const recent = lines().filter((l) => l.mark !== "turn").slice(0, count);
     return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
-      <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
+      <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
   function stack() {
     const items = view.state.stack;
@@ -563,7 +587,7 @@
   const verbFor = (o) => `${VERB[o.act] || ""} ${o.label}`.trim();
   function decision() {
     const d = view.decision;
-    if (!d || view.status === "finished") return "";
+    if (!d || view.status === "finished" || d.kind === "draw") return "";
     const opt = (o, extra = "") => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${e(o.label)}</button>`;
     let body = "", foot = "";
     if (d.kind === "priority") {
@@ -597,9 +621,9 @@
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
-     floated: its cards are bright, and the rest is under "You can also ▾" beside Pass priority. */
+     floated: its cards are bright, and the rest is under "You can also ▾" beside the pass. */
   function ask() {
-    const d = view.decision, inner = `${stack()}${d && d.kind !== "priority" ? decision() : ""}`;
+    const d = view.decision, inner = `${stack()}${d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
     return inner ? `<div class="cm-board-ask">${inner}</div>` : "";
   }
   function alsoButton() {
@@ -681,7 +705,7 @@
       <span class="cm-board-tools">${icon("⚙", "board-tools", "Settings")}${tools ? toolsMenu() : ""}</span></nav>`;
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
-          ${b("Pass", "board-pass", {}, true, {cls: "compact", disabled: !canPass()})}</div>`
+          ${passButton()}</div>`
       : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}</div>`;
     const seats = [me, ...players().filter((x) => x.playerId !== view.seat)];
     const strip = `<aside class="cm-phone-seats" aria-label="Seats">
@@ -1018,6 +1042,10 @@
     if (!d || d.kind !== "priority") return;
     const pass = d.options.find((o) => o.label === "Pass priority");
     if (pass) send({indices: [pass.index]});
+  };
+  actions["board-draw"] = () => {
+    const d = view && view.decision;
+    if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
   };
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;

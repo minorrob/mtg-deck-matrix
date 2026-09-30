@@ -33,7 +33,7 @@ const STARTING_LIFE = 40;
 /**
  * A new game state.
  *
- * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number}} pod
+ * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number, drawBeat?: boolean}} pod
  */
 export function createState(pod) {
   const seats = pod?.players ?? [];
@@ -65,6 +65,10 @@ export function createState(pod) {
        resolution, never a running total. It lives in the state because a checkpoint taken part way
        through a round has to resume part way through it. */
     passes: 0,
+    /* The draw as its own beat (Rob, 2026-09-30; docs/plan-to-done-2026-09-30.md, item 13): a table that asks for it
+       holds the draw step's draw until its player says Draw a card. Only a pod that asks carries the key, so every
+       game made before it hashes, checkpoints and replays exactly as it did. */
+    ...(pod?.drawBeat === true ? {drawBeat: true} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
