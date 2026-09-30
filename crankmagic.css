@@ -3320,6 +3320,13 @@ button.cm-vitals{cursor:pointer}
 .cm-board-scale{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:rgba(0,0,0,.55);color:var(--mat-ink);font-size:11px;font-weight:600;white-space:nowrap;pointer-events:auto}
 #matrix-v2 .cm-board-scale input[type=range]{width:110px;min-height:0;height:14px;margin:0;padding:0;accent-color:var(--v-accent)}
 .cm-board-scale output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
+/* Tools › Sound (B8): the effects and the music, each a slider, and a mute. */
+.cm-board-sounds{display:grid;gap:6px;margin:0 0 10px}
+.cm-board-sounds h3{margin:0}
+.cm-board-sound{display:flex;align-items:center;gap:8px;height:26px;padding:0 10px;border-radius:999px;background:var(--v-raised);color:var(--v-ink);font-size:12px;font-weight:600;white-space:nowrap}
+#matrix-v2 .cm-board-sound input[type=range]{flex:1 1 auto;width:auto;min-height:0;height:14px;margin:0;padding:0;accent-color:var(--v-accent)}
+.cm-board-sound span{min-width:6ch}
+.cm-board-sound output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
 /* THE LIFE COUNTER at the true center (item 9): a slice per seat, its life on it, the logo in the middle. */
 .cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge);--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
 .cm-board-pie-life{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:calc(var(--pie) * .16);line-height:1;font-variant-numeric:tabular-nums;color:var(--table-ink);pointer-events:none}
