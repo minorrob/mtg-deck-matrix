@@ -667,6 +667,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-leave` — `tests/game-leave.mjs`
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
+- `room-beats` — `tests/room-beats.mjs`
 - `import-flow` — `tests/import-flow.mjs`
 - `deck-holds-cards` — `tests/deck-holds-cards.mjs`
 - `group-templates` — `tests/group-templates.mjs`
