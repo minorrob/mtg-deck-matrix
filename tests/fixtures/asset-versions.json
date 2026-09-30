@@ -45,6 +45,10 @@
       "version": 2,
       "sha": "f8de7bf34e989990"
     },
+    "assets/crankmagic/landing-cards.webp": {
+      "version": 1,
+      "sha": "3cc0812ddfe08cc9"
+    },
     "assets/crankmagic/satoshi-400.woff2": {
       "version": 1,
       "sha": "50dca57f0b77918e"
@@ -138,16 +142,16 @@
       "sha": "a35a68f87ac2dadf"
     },
     "crankmagic-account.js": {
-      "version": 10,
-      "sha": "6a42cf4a02223dcf"
+      "version": 11,
+      "sha": "ffcc18e35821f9d6"
     },
     "crankmagic-advisor.js": {
       "version": 10,
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 422,
-      "sha": "ea6ec1cbff19fb98"
+      "version": 424,
+      "sha": "3d61242b13b92a7a"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -234,8 +238,8 @@
       "sha": "7107decfb233f4dc"
     },
     "crankmagic-landing.js": {
-      "version": 6,
-      "sha": "0030c651705b397a"
+      "version": 7,
+      "sha": "b73cb3e9f3983c13"
     },
     "crankmagic-lens.js": {
       "version": 2,
@@ -310,8 +314,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 406,
-      "sha": "914880ff73a1ab92"
+      "version": 408,
+      "sha": "08c5827675d4ab6b"
     },
     "crankmagic-table.js": {
       "version": 13,
@@ -334,8 +338,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 255,
-      "sha": "04c09ba4b8fa32e2"
+      "version": 256,
+      "sha": "beab9cba8b0800f5"
     },
     "custom-model.js": {
       "version": 3,

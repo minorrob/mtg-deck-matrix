@@ -137,7 +137,7 @@
     box.innerHTML = who.email
       ? `<p>Account</p><p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
         + `<button type="button" data-action="account-sync">Sync now</button>${refresh}<hr>`
-      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign in to keep your library in the cloud</button>${refresh}<hr>`;
+      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign In (Save to Cloud)</button>${refresh}<hr>`;
     let out = C.$("#cm-account-out");
     if (who.email && !out) {out = document.createElement("div"); out.id = "cm-account-out"; out.innerHTML = `<hr><button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`; menu.append(out);}
     if (!who.email && out) out.remove();
@@ -158,6 +158,8 @@
   C.drawAccount = () => {settings(); danger();};
   /** Whether someone is signed in (false until the Worker has said). The landing page reads it for its header. */
   C.signedIn = () => !!who.email;
+  /** Who is signed in, or null: the landing page's chip shows it, as the rail's does. */
+  C.signedInAs = () => who.email || null;
 
   /* DELETE ACCOUNT (R3.3b; r3, 74-confirm-delete). The person types the address they are signed in as, the
      Worker checks it again, and everything the cloud holds for them goes in one step. This device's library
