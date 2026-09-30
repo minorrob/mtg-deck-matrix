@@ -124,6 +124,10 @@
   const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 168;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
+  /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
+  let audio = null;
+  const sound = () => audio || (audio = globalThis.CrankAudio ? CrankAudio.createPlayer({storage: (() => {try {return localStorage;} catch {return null;}})()}) : null);
+  const typeLineOf = (c) => {const r = c && c.name ? recordOf(c.name) : null; return (r && (r.typeLine || r.type_line)) || (c.types || []).join(" ");};
 
   /* ---- the socket ---- */
   function connect() {
@@ -157,8 +161,9 @@
      equal one is taken too, and a refusal's own view always is. */
   function adopt(next, force = false) {
     if (!force && view && next.revision < view.revision) return;
-    const before = view && view.decision && view.decision.id;
+    const before = view && view.decision && view.decision.id, was = view;
     view = next;
+    listen(was, next);
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
@@ -167,6 +172,16 @@
     skip();
     draw();
     fileResult(view);
+  }
+  /* What a view sounds like (B8): the moments between it and the last, then the bed for where the game is. Only while
+     the board is on the page and the player has pressed it once; the first view of a game is history. */
+  function listen(was, next) {
+    const a = audio;
+    if (!a || !a.isArmed() || !attached) return;
+    const over = next.status === "finished" && was && was.status !== "finished" ? (next.result && next.result.winner === next.seatId ? "won" : "lost") : null;
+    for (const slug of CrankAudio.momentsFor(was && was.matchId === next.matchId ? was : null, next, {seat: next.seat, typeLineOf, over})) a.play(slug);
+    const bed = CrankAudio.bedFor(next, next.seat);
+    if (bed) a.startBgm(bed);
   }
   /* SKIP TO END: your priority is passed for you through the rest of this turn. It stops by itself when the turn
      ends, when anything is on the stack (a spell you may want to answer), or when the room asks you something
@@ -383,10 +398,18 @@
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
+      ${soundMenu()}
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
 
+  /* The sound (B8; the pack's three ui rows): the effects and the music, each a slider, and a mute. */
+  function soundMenu() {
+    const a = sound();
+    if (!a) return "";
+    const v = a.volumes(), row = (bus, label) => `<label class="cm-board-sound"><span>${label}</span><input type="range" min="0" max="100" step="1" value="${Math.round(v[bus] * 100)}" data-board-sound="${bus}" aria-label="${label} volume" aria-valuetext="${Math.round(v[bus] * 100)}%"><output>${Math.round(v[bus] * 100)}%</output></label>`;
+    return `<div class="cm-board-sounds" role="group" aria-label="Sound"><h3>Sound</h3>${row("sfx", "Effects")}${row("bgm", "Music")}${b(v.muted ? "Sound off · turn on" : "Mute", "board-mute", {}, false, {cls: `compact${v.muted ? " is-on" : ""}`})}${a.isArmed() ? "" : `<p class="cm-muted">Sound starts at your first click on the board.</p>`}</div>`;
+  }
   /* ---- THE PLAYMAT, one component at four sizes ----
      focus  the Focus view's board: zone frames, labels, the History band, the step ribbon on your own board
      table  the Table view's four: the same frames at a small size, the header on the outer edge, ⤢ Focus
@@ -1052,6 +1075,7 @@
         stay, and the rail says a game is on. */
     detach() {
       attached = false;
+      if (audio) audio.stopBgm(400);
       stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
       coach.open = false; clearTimeout(coach.timer); coach.typing = false;
@@ -1065,6 +1089,7 @@
     pictureOf,
     close() {
       attached = false;
+      if (audio) audio.stopBgm(400);
       disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
@@ -1113,6 +1138,7 @@
     const d = view && view.decision;
     if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
   };
+  actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw();};
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;
     skipping = skipping === null ? view.state.turn : null;
@@ -1191,6 +1217,14 @@
     if (!el || !view) return;
     event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
   });
+  /* THE GESTURE (docs/plan-play-audio.md): the audio context is made and resumed inside the first press on the board,
+     with nothing awaited before it, or the browser refuses to play and says nothing. The bed starts with it. */
+  document.addEventListener("pointerdown", (event) => {
+    if (!view || !attached || !event.isTrusted || !event.target.closest || !event.target.closest("#cm-board")) return;
+    const a = sound();
+    if (!a || a.isArmed()) return;
+    a.arm().then((on) => {if (on && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);}});
+  }, true);
   let press = null;
   document.addEventListener("pointerdown", (event) => {
     if (event.pointerType === "mouse") return;
@@ -1313,6 +1347,13 @@
   document.addEventListener("input", (event) => {
     const el = event.target.closest && event.target.closest("#cm-board [data-board-scale]");
     if (el) setScale(el.dataset.boardScale, el.value);
+    const vol = event.target.closest && event.target.closest("#cm-board [data-board-sound]");
+    if (vol && sound()) {
+      const n = Math.round(sound().setBusVolume(vol.dataset.boardSound, Number(vol.value) / 100) * 100);
+      vol.setAttribute("aria-valuetext", `${n}%`);
+      const out = vol.parentElement.querySelector("output");
+      if (out) out.textContent = `${n}%`;
+    }
   });
   /* THE BARS, dragged: the one between the rows moves the share; the one atop the tray grows the hand's cards by the
      height dragged (the boards shrinking alike to leave it room). Followed on the document, so a view that arrives

@@ -8,6 +8,7 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {build, worktreeSource, verify, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
 
 let checks = 0;
@@ -162,6 +163,10 @@ const {ART_MATS} = await import("../game/room/table.mjs");
 ok(sb.has("crankmagic-mats.css") && ART_MATS.every((id) => sb.has(`assets/playmats/${id}.webp`) && sb.has(`assets/playmats/${id}-thumb.webp`)), `staging carries Rob's ${ART_MATS.length} artwork mats, each with its picture and thumbnail`);
 eq([...sb.keys()].filter((f) => f.startsWith("assets/playmats/")).length, ART_MATS.length * 2, "and nothing else from that folder");
 eq([built.has("crankmagic-mats.css"), [...built.keys()].filter((f) => f.startsWith("assets/playmats/")).length], [false, 0], "production, where Play is Coming Soon, carries neither the sheet nor its pictures");
+/* The board's sound (B8): Play only -- the script and Rob's whole pack on staging, none of it in production. */
+const pack = JSON.parse(readFileSync(new URL("../assets/audio/sound-index.json", import.meta.url), "utf8")).rows.filter((r) => r.kind !== "ui");
+ok(sb.has("crankmagic-audio.js") && sb.has("assets/audio/sound-index.json") && pack.every((r) => sb.has(`assets/audio/${r.kind === "bgm" ? "bgm" : "sfx"}/${r.slug}.mp3`)), `staging carries the board's sound: the script, the index and all ${pack.length} clips`);
+eq([built.has("crankmagic-audio.js"), [...built.keys()].filter((f) => f.startsWith("assets/audio/")).length], [false, 0], "production, where Play is Coming Soon, carries none of it");
 ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js"].every((f) => !sb.has(f)), "and none of the local game host's modules");
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");

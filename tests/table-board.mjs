@@ -38,6 +38,9 @@
  *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
  *             socket, the seat never marked away.
  *   B5        the turn's words and beats (docs/plan-to-done-2026-09-30.md, items 10-13), in the Decide lines above.
+ *   B8        the sound (Rob's pack, crankmagic-audio.js): nothing fetched before the first press on the board; then the
+ *             game's bed, a land played, a draw, a creature cast (on both boards), your turn; Tools › Sound's sliders
+ *             and mute, remembered.
  *   B7        Focus and Full screen (items 15, 18, 20): the seat pane's divider dragged, by the arrow keys too,
  *             remembered, and the tiles miniatures of their boards past the width; the Panel's divider and Full
  *             screen's side column's, the card to read growing with its share; Rob's card backs, the library's and,
@@ -166,6 +169,10 @@ try {
 
   const rob = await person(ROB, {width: 1400, height: 900});
   const maya = await person(MAYA, {width: 1280, height: 800}, {fullscreen: false});
+  /* B8: every clip each page asks for, by its path under assets/audio/. */
+  const heardBy = {[ROB]: [], [MAYA]: []};
+  for (const [email, who] of [[ROB, rob], [MAYA, maya]]) who.page.on("request", (r) => {const u = r.url(); if (u.includes("/assets/audio/")) heardBy[email].push(u.split("/assets/audio/")[1].split("?")[0]);});
+  const heard = async (email, name, ms = 10000) => {for (let t = 0; t < ms; t += 100) {if (heardBy[email].some((u) => u.endsWith(name))) return true; await new Promise((r) => setTimeout(r, 100));} return false;};
 
   /* OPEN */
   await rob.page.goto(`${base}/index.html#table?id=${TABLE}`);
@@ -173,6 +180,7 @@ try {
   await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
   await maya.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
+  eq([heardBy[ROB].length, heardBy[MAYA].length], [0, 0], "and nothing of the sound is fetched before the first press on the board (a browser would refuse to play it)");
   eq(await rob.page.locator(".cm-board-tile .cm-board-tile-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
   /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
      request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
@@ -194,6 +202,8 @@ try {
   }
   await rob.page.waitForFunction(() => /Turn 1/.test(document.querySelector(".cm-board-turn")?.innerText || ""), null, {timeout: 20000});
   ok(true, "both keep, and turn 1 begins on both boards");
+  /* B8: the first press (Keep) armed the sound: the pack's index, and the game's bed. */
+  ok(await heard(ROB, "sound-index.json") && await heard(ROB, "bgm/bgm_game_aether_voyage.mp3"), `the first press on the board starts the sound: the pack's index and the game's bed (${heardBy[ROB].join(", ")})`);
 
   /* HIDDEN: nothing of the other seat's hand or library, in anything the room sent. */
   /* A frame leaks when it names one of the owner's cards that was never made public (`open`: the ones cast in the open). */
@@ -257,6 +267,7 @@ try {
   await brightLand.click();
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
   ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-board-chip")), "tapping it plays it: Lands · 1, the land drop used (the reminder under the Lands says so)");
+  ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
@@ -637,6 +648,7 @@ try {
   await drawButton.click();
   await other.page.waitForFunction((n) => document.querySelectorAll(".cm-board-hand .cm-bcard").length === n + 1, handBefore, {timeout: 10000});
   ok(true, "the click draws the card: the hand is one larger");
+  ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
@@ -651,6 +663,14 @@ try {
   const w100 = await handWidth(rob.page);
   await rob.page.click("[data-action=board-tools]");
   ok(/60% – 160%/.test(await text(rob.page, "#cm-board-tools .cm-board-size")), "Tools carries the card-size slider, 60% to 160%");
+  /* B8: Tools › Sound, the pack's three settings: the effects and the music as sliders, and a mute, remembered. */
+  eq(await rob.page.locator("#cm-board-tools [data-board-sound]").evaluateAll((els) => els.map((el) => [el.dataset.boardSound, el.min, el.max, el.value])), [["sfx", "0", "100", "50"], ["bgm", "0", "100", "18"]], "Tools › Sound: Effects at 50% and Music at 18%, each a slider from 0 to 100%");
+  await rob.page.locator("#cm-board-tools [data-board-sound=sfx]").fill("30");
+  await rob.page.click("#cm-board-tools [data-action=board-mute]");
+  const soundKept = await rob.page.evaluate(() => [localStorage.getItem("crankmagic-audio-sfx"), localStorage.getItem("crankmagic-audio-muted")]);
+  ok(soundKept[0] === "0.3" && soundKept[1] === "true" && /turn on/.test(await text(rob.page, "#cm-board-tools [data-action=board-mute]")), `moving Effects and pressing Mute are remembered on the device (${soundKept.join(", ")})`);
+  await rob.page.click("#cm-board-tools [data-action=board-mute]");
+  await rob.page.locator("#cm-board-tools [data-board-sound=sfx]").fill("50");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("140");
   const w140 = await handWidth(rob.page);
   ok(Math.abs(w140 / w100 - 1.4) < 0.02, `the slider sizes the hand's cards as it moves (${w100.toFixed(0)}px → ${w140.toFixed(0)}px at 140%)`);
@@ -782,6 +802,7 @@ try {
   await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
   ok(true, `and it resolves: ${castName} is on the battlefield`);
+  ok(await heard(ROB, "sfx/sfx_cast_creature.mp3") && await heard(MAYA, "sfx/sfx_cast_creature.mp3"), "the creature cast is heard at both boards, as a creature summoned");
   /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;
      on Maya's turn 4 he may respond in her upkeep, his button reads Pass, and his strip says whose step it is. */
   for (let i = 0; i < 80 && !/Turn 4/.test(await text(rob.page, ".cm-board-turn")); i += 1) {
@@ -801,6 +822,7 @@ try {
   ok(/Turn 4 · Maya/.test(theirTurn.turn) && theirTurn.label === "Pass" && /^Maya's upkeep · you may respond$/.test(theirTurn.says),
     `on another player's turn, with the stack empty and an instant he can pay for, Rob's button reads Pass, and the strip says "${theirTurn.says}"`);
   await shot(rob.page, "their-turn-1400");
+  ok(await heard(ROB, "sfx/sfx_event_your_turn.mp3"), "and Rob's own turn 3 was announced to him as his turn");
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
