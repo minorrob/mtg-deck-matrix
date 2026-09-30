@@ -17,7 +17,9 @@
  * themes because a lit hearth is a lit hearth on cream as on slate. tests/design-tokens.mjs
  * exempts this file by name for that reason.
  *
- * Honors prefers-reduced-motion: the field is painted once and never animated.
+ * Honors prefers-reduced-motion: the field is painted once and never animated. `still: true` asks for the same
+ * whatever the setting (the game board's tabletop, for now: Rob, 2026-09-30, "make it static"), and paints the
+ * field at its first moment, so the same element at the same size is the same picture every time it is drawn.
  */
 (function (root) {
   "use strict";
@@ -59,7 +61,8 @@
     const clock = () => (root.performance && root.performance.now ? root.performance.now() : Date.now()) / 1000;
     let time = clock(), last = 0, frame = 0, elapsed = 0;
     let reduced = false;
-    const still = () => { try { return root.CrankMotion ? root.CrankMotion.reduced() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+    const fixed = !!o.still;
+    const still = () => { if (fixed) return true; try { return root.CrankMotion ? root.CrankMotion.reduced() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
     reduced = still();
 
     /* Layered sines with a warp term: cheap, smooth, and it looks like a fluid seen from above. */
@@ -107,7 +110,7 @@
       /* Reduce motion turned on mid-cycle stops here, on the frame just painted. */
       frame = still() ? 0 : requestAnimationFrame(tick);
     };
-    paint(time);
+    paint(fixed ? 0 : time);
     if (!reduced) frame = requestAnimationFrame(tick);
     const wake = () => { if (!frame && !still()) { last = 0; frame = requestAnimationFrame(tick); } };
     const unhear = root.CrankMotion ? root.CrankMotion.onChange(wake) : function () {};

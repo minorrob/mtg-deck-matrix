@@ -3169,11 +3169,13 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* PLAY IN THE CLOUD: THE BOARD (M5; crankmagic-board.js; the handoff's Table · Focus · Full screen, wireframes 2e
    and 2f and the Play Focus mock). THE GAME FILLS THE WINDOW: the board is fixed over the app, the rail comes back
    from ☰, and the panels slide over the surface rather than narrowing it. Sizes are measured, not guessed: the
-   board's fit() sets --board-w (Table view's identical 16:9 boards), --mat-w and --mat-reserve (Focus's mat, the
-   largest 16:9 beside the pane, with the hand tray's overlap kept clear), --full-w and --opp-w (Full screen), and
-   --lap, the overlap of a row of cards that would otherwise run past its zone. Cards are 5:7 by width, and every
-   size follows the card-size slider (--card-scale). */
-.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow:hidden;--bc:calc(78px * var(--card-scale,1));--hc:calc(112px * var(--card-scale,1))}
+   board's fit() sets --top-w and --bot-w (Table view's two rows of 16:9 boards, shared by the bar between them),
+   --board-w and --grid-w (the wider row, and the boards' span), --mid-y (the gap between the rows, where the bar and
+   the life counter sit), --mat-w and --mat-reserve (Focus's mat, the largest 16:9 beside the pane, with the hand
+   tray kept clear), --full-w and --opp-w (Full screen), and --lap, the overlap of a row of cards that would
+   otherwise run past its zone. Cards are 5:7 by width. Three card sizes: the table's (--card-scale, the Tools
+   slider), the boards' (--board-scale) and the hand's (--hand-scale), the last two on the board, Tools setting both. */
+.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow:hidden;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
 .cm-board[data-view="table"]{grid-template-rows:48px minmax(0,1fr) auto}
 .cm-board-loading{padding:40px;text-align:center;color:var(--v-muted)}
 /* THE STRIP, one 48px line that never wraps. */
@@ -3228,11 +3230,11 @@ button.cm-vitals{cursor:pointer}
 .cm-mat{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr);min-width:0;min-height:0;overflow:hidden;border-radius:var(--v-radius-card);color:var(--mat-ink);background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%);border:1px solid color-mix(in srgb,var(--mat-ink) 10%,transparent);--zone-line:color-mix(in srgb,var(--mat-ink) 40%,transparent);--pad:calc(var(--bc) * .09)}
 .cm-mat.is-you{box-shadow:0 0 0 2px var(--v-accent)}
 .cm-mat.is-bottom{grid-template-rows:minmax(0,1fr) auto}
-.cm-mat[data-fit="focus"]{--bc:calc(clamp(92px,var(--mat-w,1060px) * .078,136px) * var(--card-scale,1))}
-.cm-mat[data-fit="table"]{--bc:calc(clamp(30px,var(--board-w,620px) * .074,60px) * var(--card-scale,1));border-radius:10px}
-.cm-mat[data-fit="full"]{--bc:calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--card-scale,1))}
-.cm-mat[data-fit="opp"]{--bc:calc(clamp(28px,var(--opp-w,400px) * .11,48px) * var(--card-scale,1))}
-.cm-mat[data-fit="phone"]{--bc:calc(44px * var(--card-scale,1))}
+.cm-mat[data-fit="focus"]{--bc:calc(clamp(92px,var(--mat-w,1060px) * .078,136px) * var(--board-scale,1))}
+.cm-mat[data-fit="table"]{--bc:calc(clamp(30px,var(--row-w,var(--board-w,620px)) * .074,60px) * var(--board-scale,1));border-radius:10px}
+.cm-mat[data-fit="full"]{--bc:calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1))}
+.cm-mat[data-fit="opp"]{--bc:calc(clamp(28px,var(--opp-w,400px) * .11,48px) * var(--board-scale,1))}
+.cm-mat[data-fit="phone"]{--bc:calc(44px * var(--board-scale,1))}
 .cm-mat-head{display:flex;align-items:center;gap:10px;min-width:0;padding:6px 10px;font-size:13px;white-space:nowrap;overflow:hidden}
 .cm-mat[data-fit="table"] .cm-mat-head,.cm-mat[data-fit="opp"] .cm-mat-head{padding:4px 8px;gap:8px;font-size:12px}
 .cm-mat-name{font-weight:700;font-size:15px;flex:0 0 auto}
@@ -3242,13 +3244,18 @@ button.cm-vitals{cursor:pointer}
 .cm-board-tile-flag{font-size:11px;color:var(--v-accent);min-height:1.2em;flex:0 0 auto}
 .cm-mat-head .v-button{margin-left:auto}
 #matrix-v2 .cm-mat-head .v-button.compact{min-height:0;height:24px;padding:0 8px;font-size:11px}
-.cm-mat-grid{display:grid;grid-template-columns:minmax(0,1fr) calc(var(--bc) + 2 * var(--pad)) calc(var(--bc) + 2 * var(--pad));grid-template-rows:calc(var(--bc) * 7 / 5 + 2 * var(--pad) + 1.3em) minmax(0,1fr) calc(var(--bc) * 7 / 5 + 2 * var(--pad) + 1.3em);gap:calc(var(--bc) * .06);padding:var(--pad) var(--pad) calc(var(--pad) + var(--mat-reserve,0px));min-height:0;min-width:0;font-size:clamp(8px,calc(var(--bc) * .1),13px)}
+.cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5 + 2 * var(--pad) + 1.3em);display:grid;grid-template-columns:minmax(0,1fr) calc(var(--bc) + 2 * var(--pad)) calc(var(--bc) + 2 * var(--pad));grid-template-rows:var(--pile-row) minmax(0,1fr) var(--pile-row);gap:calc(var(--bc) * .06);padding:var(--pad) var(--pad) calc(var(--pad) + var(--mat-reserve,0px));min-height:0;min-width:0;font-size:clamp(8px,calc(var(--bc) * .1),13px)}
 .cm-mat-zone{position:relative;min-width:0;min-height:0;border:1px solid var(--zone-line);border-radius:10px;overflow:hidden}
 .cm-mat-label{position:absolute;left:8px;bottom:3px;font-style:normal;font-weight:700;letter-spacing:.02em;font-size:clamp(8px,calc(var(--bc) * .11),15px);color:color-mix(in srgb,var(--mat-ink) 75%,transparent);pointer-events:none;white-space:nowrap}
 .cm-board-field{grid-column:1;grid-row:1 / 3;display:flex;flex-direction:column;gap:calc(var(--bc) * .08);padding:var(--pad) var(--pad) calc(var(--pad) + 1.3em)}
 .cm-board-lands{grid-column:1;grid-row:3;display:flex;align-items:flex-start;gap:8px;padding:var(--pad) var(--pad) calc(var(--pad) + 1.3em)}
 .cm-board-lands .cm-board-cards{flex:1 1 auto;min-width:0}
-.cm-board-chip{flex:0 0 auto;padding:2px 8px;border-radius:8px;background:rgba(0,0,0,.4);font-size:clamp(9px,calc(var(--bc) * .09),12px);white-space:nowrap;color:var(--mat-ink)}
+/* The mana-open and land-drop reminder, directly outside and below the Lands frame at its right (item 8): your mat
+   gives it a line of its own under the Lands. */
+.cm-board-chip{grid-column:1;grid-row:4;justify-self:end;align-self:start;padding:1px 8px;border-radius:8px;background:rgba(0,0,0,.4);font-size:clamp(9px,calc(var(--bc) * .09),12px);line-height:1.35;white-space:nowrap;color:var(--mat-ink)}
+.cm-mat.is-you:not(.is-bare) .cm-mat-grid{grid-template-rows:var(--pile-row) minmax(0,1fr) var(--pile-row) auto}
+/* A bare mat has no frame to be below: the reminder keeps to the foot of the lands' row, at its right, under the cards. */
+.cm-mat.is-bare .cm-board-chip{grid-row:3;align-self:end;z-index:1}
 .cm-board-group{min-width:0}
 .cm-board-group h3{margin:0 0 4px;font-size:clamp(8px,calc(var(--bc) * .08),11px);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--mat-ink) 60%,transparent);white-space:nowrap}
 .cm-board-cards{display:flex;align-items:flex-end;gap:6px;min-width:0}
@@ -3260,9 +3267,16 @@ button.cm-vitals{cursor:pointer}
 .cm-board-pile[data-zone="library"]{grid-column:2;grid-row:3}
 .cm-board-pile[data-zone="graveyard"]{grid-column:3;grid-row:3}
 .cm-board-band{grid-column:2 / 4;grid-row:2}
+/* The commander, exile, library and graveyard cards sit on top of their frames, not inside (item 7): on the framed
+   mats (Focus, Table) the frame is a little narrower than the card, which lies over its lines at the mat's own card
+   size, the name and count beneath it inside the frame. */
+.cm-mat:not(.is-bare) .cm-board-pile{overflow:visible;padding:0;grid-template-rows:auto auto;align-content:space-between}
+.cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard,.cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard.is-tapped{justify-self:start;margin:-3px 0 0 -3px;z-index:1}   /* 2px past each side of the frame */
+.cm-mat:not(.is-bare) .cm-board-pile>.cm-bcard.is-empty:not(.is-back){visibility:hidden}   /* nothing there: the frame alone */
 .cm-board-pile figcaption{display:flex;justify-content:space-between;gap:4px;width:100%;line-height:1.3;padding:0 2px}
-.cm-board-pile figcaption em{font-style:normal;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 80%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-board-pile figcaption em{min-width:0;font-style:normal;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 80%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Bare (Full screen, phones): no frames and no zone names -- the zones are where the cards sit; counts stay. */
+.cm-mat:not(.is-bare) .cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5 + 1.3em + 2px);grid-template-columns:minmax(0,1fr) calc(var(--bc) - 4px) calc(var(--bc) - 4px);column-gap:calc(var(--bc) * .06 + 6px)}
 .cm-mat.is-bare{--zone-line:transparent;border-radius:6px}
 .cm-mat.is-bare .cm-mat-label,.cm-mat.is-bare .cm-board-group h3,.cm-mat.is-bare .cm-board-pile figcaption em{display:none}
 .cm-mat.is-bare .cm-board-pile figcaption{justify-content:center;font-weight:900;color:var(--mat-ink);text-shadow:0 1px 3px rgba(0,0,0,.8)}
@@ -3294,16 +3308,37 @@ button.cm-vitals{cursor:pointer}
 /* THE TABLE VIEW: the tabletop (the living mat and the active player's fan behind), the 2×2 of identical 16:9
    boards sized by fit(), the logo at the true center, and the hand along the foot. */
 .cm-board-tabletop{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;padding:14px 14px 8px}
-.cm-board-table{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(2,var(--board-w,45%));grid-template-rows:repeat(2,calc(var(--board-w,45%) * 9 / 16));grid-template-areas:"a b" "c d";gap:14px;justify-content:center;align-content:center;border-radius:var(--v-radius-tile);overflow:hidden;isolation:isolate}
+.cm-board-table{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(2,var(--board-w,45%));grid-template-rows:calc(var(--top-w,45%) * 9 / 16) calc(var(--bot-w,45%) * 9 / 16);grid-template-areas:"a b" "c d";gap:22px 14px;justify-content:center;align-content:center;border-radius:var(--v-radius-tile);overflow:hidden;isolation:isolate}
 .cm-board-table[data-seats="3"]{grid-template-areas:"a b" "c c"}
 .cm-board-table[data-seats="2"]{grid-template-columns:var(--board-w,90%);grid-template-areas:"a" "b"}
-.cm-board-slot{min-width:0;min-height:0;display:grid;z-index:1}
+.cm-board-slot{min-width:0;min-height:0;display:grid;z-index:1;width:var(--row-w,100%)}
+/* A row narrower than the columns keeps to the middle: the left seats to the right of their column, the right to the left. */
+.cm-board-slot[data-area="a"],.cm-board-slot[data-area="c"]{justify-self:end}
+.cm-board-slot[data-area="b"],.cm-board-slot[data-area="d"]{justify-self:start}
+.cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"],.cm-board-table[data-seats="2"] .cm-board-slot{justify-self:center}
 .cm-board-slot>.cm-mat{height:100%}
 .cm-board-sea{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block}
 .cm-board-fan{position:absolute;inset:0;z-index:-1;opacity:.35;pointer-events:none;transition:opacity .6s}
+.cm-board-table>.cm-board-fan{transition:none}   /* the tabletop is still, for now (item 3) */
 .cm-board-fan .cm-seat-fan{position:absolute;inset:0;width:100%;height:100%}
+/* THE BAR BETWEEN THE ROWS (item 4), in the row gap: dragged, it shares the height; its right end sizes the board's cards. */
+.cm-board-rowbar{position:absolute;left:50%;width:var(--grid-w,100%);top:var(--mid-y,50%);z-index:2;height:22px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;padding:0 6px;pointer-events:none}
+.cm-board-grip{flex:1 1 auto;align-self:stretch;position:relative;cursor:row-resize;pointer-events:auto;touch-action:none;border-radius:6px}
+.cm-board-grip::before{content:"";position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);border-radius:2px;background:color-mix(in srgb,var(--mat-ink) 22%,transparent)}
+.cm-board-grip:hover::before,.cm-board-grip:focus-visible::before,.cm-dragging .cm-board-grip::before{background:var(--v-accent)}
+.cm-board-grip:focus-visible{outline:2px solid var(--v-accent);outline-offset:1px}
+.cm-dragging,.cm-dragging *{cursor:row-resize!important;user-select:none}
+/* A bar's own slider: the scope's name, the track, the value -- a pill at the bar's right end. */
+.cm-board-scale{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:rgba(0,0,0,.55);color:var(--mat-ink);font-size:11px;font-weight:600;white-space:nowrap;pointer-events:auto}
+#matrix-v2 .cm-board-scale input[type=range]{width:110px;min-height:0;height:14px;margin:0;padding:0;accent-color:var(--v-accent)}
+.cm-board-scale output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
+/* THE LIFE COUNTER at the true center (item 9): a slice per seat, its life on it, the logo in the middle. */
+.cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge);--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
+.cm-board-pie-life{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:calc(var(--pie) * .16);line-height:1;font-variant-numeric:tabular-nums;color:var(--table-ink);pointer-events:none}
 .cm-board-center{position:absolute;left:50%;top:50%;z-index:3;width:34px;height:34px;padding:0;transform:translate(-50%,-50%);border-radius:50%;border:2px solid var(--v-accent);background:var(--mat-felt-edge);display:grid;place-items:center;cursor:pointer}
 .cm-board-center img{width:18px;height:18px;display:block}
+.cm-board-pie .cm-board-center{width:calc(var(--pie) * .4);height:calc(var(--pie) * .4);background:var(--mat-ink)}
+.cm-board-pie .cm-board-center img{width:62%;height:62%}
 /* GAME ON, in the rail on every page but the table's (item 19): where the game is, and the way back to it. */
 #matrix-v2 .cm-game-on{display:flex;align-items:center;gap:8px;margin:10px 0 0;padding:8px 12px;border-radius:10px;border:1px solid var(--v-accent);background:color-mix(in srgb,var(--v-accent) 14%,var(--v-panel));color:var(--v-ink);font-size:13px;text-decoration:none;white-space:nowrap}
 #matrix-v2 .cm-game-on:hover{background:color-mix(in srgb,var(--v-accent) 24%,var(--v-panel))}
@@ -3327,7 +3362,10 @@ button.cm-vitals{cursor:pointer}
 .cm-board-stack ol{margin:0;padding-left:18px;font-size:13px}
 /* THE HAND on its slate tray: a row along the foot in Table view; docked over the mat's bottom edge in Focus and
    Full screen, the cards peeking and lifting on hover (Space fans the whole hand). */
-.cm-board-hand{position:relative;z-index:5;display:flex;align-items:flex-start;gap:12px;padding:10px 16px 10px;border-radius:16px 16px 0 0;background:rgba(26,24,21,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;color:var(--mat-ink);min-width:0;overflow:visible}
+.cm-board-hand{position:relative;z-index:5;display:flex;align-items:flex-start;gap:12px;padding:30px 16px 10px;border-radius:16px 16px 0 0;background:rgba(26,24,21,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.12);border-bottom:0;color:var(--mat-ink);min-width:0;overflow:visible}
+/* The bar along the tray's top (item 5): dragged, it is the hand's size, and the boards take the room it leaves. */
+.cm-board-traybar{position:absolute;left:10px;right:10px;top:4px;height:22px;display:flex;align-items:center;gap:10px}
+.cm-board-traybar .cm-board-grip{cursor:ns-resize}
 .cm-board-hand h3{margin:4px 0 0;display:flex;flex-direction:column;gap:4px;flex:0 0 96px;font-size:12px;color:var(--mat-ink)}
 .cm-board-hand-title{font-size:18px;font-weight:900;letter-spacing:-.02em;white-space:nowrap}
 .cm-board-hand h3 .cm-muted{color:color-mix(in srgb,var(--mat-ink) 65%,transparent);font-size:11px;line-height:1.3}
@@ -3335,7 +3373,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-hand-cards{flex:1 1 auto;min-width:0;align-items:flex-start;gap:8px}
 .cm-board-hand .cm-bcard{--bc:var(--hc);cursor:pointer;transform-origin:50% 100%}
 .cm-board-hand .cm-bcard:hover{transform:translateY(-22%);z-index:3}
-.cm-board[data-view="table"] .cm-board-hand{margin:0 14px;--hc:calc(74px * var(--card-scale,1))}
+.cm-board[data-view="table"] .cm-board-hand{margin:0 14px;--hc:calc(74px * var(--hand-scale,1))}
 /* THE FOCUS VIEW: the seat pane, then the mat, the largest 16:9 that fits, the fan behind it, the tray over its foot. */
 .cm-board-body{display:grid;grid-template-columns:168px minmax(0,1fr);min-height:0;min-width:0}
 .cm-board-body:has(.cm-board-pane.is-shut){grid-template-columns:44px minmax(0,1fr)}
@@ -3362,7 +3400,7 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .v-button.cm-board-glyphed{display:inline-flex;align-items:center;gap:6px}
 .cm-phone-icon .cm-icon{width:20px;height:20px}
 .cm-board-coach-open[aria-pressed="true"]{background:color-mix(in srgb,var(--v-aether) 22%,transparent)}
-.cm-board-main{position:relative;min-width:0;min-height:0;overflow:hidden;--hc:calc(clamp(112px,var(--mat-w,1060px) * .097,168px) * var(--card-scale,1))}
+.cm-board-main{position:relative;min-width:0;min-height:0;overflow:hidden;--hc:calc(clamp(112px,var(--mat-w,1060px) * .097,168px) * var(--hand-scale,1))}
 .cm-board-stage{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:var(--mat-w,calc(100% - 16px));aspect-ratio:16 / 9;isolation:isolate;border-radius:var(--v-radius-card)}
 .cm-board-stage>.cm-board-fan{border-radius:var(--v-radius-card);opacity:.3}
 .cm-board-stage>.cm-mat{position:absolute;inset:0}
@@ -3382,9 +3420,9 @@ button.cm-vitals{cursor:pointer}
 .cm-full-others{display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:3px;min-height:0;min-width:0}
 .cm-full-other{min-width:0;min-height:0;display:grid}
 .cm-full-other>.cm-mat{height:100%}
-.cm-full-mine{position:relative;min-height:0;min-width:0;display:grid;--hc:calc(112px * var(--card-scale,1))}
+.cm-full-mine{position:relative;min-height:0;min-width:0;display:grid;--hc:calc(112px * var(--hand-scale,1))}
 .cm-full-mine>.cm-mat{height:100%;padding-top:52px;--mat-reserve:var(--tray-h,calc(var(--hc) * 7 / 5 + 22px))}   /* the pill over it; the whole hand tray along its foot (item 25) */
-.cm-full-mine>.cm-mat[data-fit="full"]{--bc:min(calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--card-scale,1)),var(--full-bc-max,112px))}
+.cm-full-mine>.cm-mat[data-fit="full"]{--bc:min(calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1)),var(--full-bc-max,112px))}
 .cm-full-pill{position:absolute;left:50%;top:8px;z-index:6;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;transform:translateX(-50%);border-radius:999px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);white-space:nowrap;max-width:calc(100% - 16px);color:var(--mat-ink)}
 .cm-full-pill .cm-board-waiting{color:var(--mat-ink)}
 #matrix-v2 .cm-full-corner .v-button.compact{min-height:0;height:28px;padding:0 10px}
@@ -3436,6 +3474,7 @@ button.cm-vitals{cursor:pointer}
 .cm-table-vitals [role=row]{display:grid;grid-template-columns:130px repeat(var(--cols),minmax(0,1fr));gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--v-line)}
 .cm-table-vitals .is-head{font-weight:700}
 .cm-table-vitals [role=rowheader]{color:var(--v-muted)}
+.cm-table-vitals .cm-vitals-icon{font-size:18px;line-height:1;color:var(--v-ink)}
 .cm-table-vitals b{font-size:18px;font-variant-numeric:tabular-nums}
 .cm-vitals-meter{display:block;height:4px;margin-top:3px;border-radius:2px;background:linear-gradient(to right,var(--seat) calc(var(--fill) * 100%),color-mix(in srgb,var(--seat) 25%,transparent) 0)}
 /* OVER, and the banner for a seat that left. */
@@ -3527,7 +3566,7 @@ button.cm-vitals{cursor:pointer}
 /* THE BOARD ON A PHONE (M5, the handoff's "Play on phones"): Focus only, the game surface landscape. A 52px icon
    rail, your board full-bleed, a 112px seat strip; the pill on top. Held upright, the surface itself is turned a
    quarter, so there is never a screen asking to turn the phone. */
-.cm-board[data-phone]{position:fixed;inset:0;z-index:60;display:grid;grid-template-rows:none;grid-template-columns:52px minmax(0,1fr) 112px;gap:6px;padding:6px;background:var(--v-bg);overflow:hidden;--bc:calc(44px * var(--card-scale,1));--hc:calc(96px * var(--card-scale,1))}
+.cm-board[data-phone]{position:fixed;inset:0;z-index:60;display:grid;grid-template-rows:none;grid-template-columns:52px minmax(0,1fr) 112px;gap:6px;padding:6px;background:var(--v-bg);overflow:hidden;--bc:calc(44px * var(--board-scale,1));--hc:calc(96px * var(--card-scale,1))}
 .cm-board[data-phone="portrait"]{inset:auto;top:0;left:0;width:100vh;height:100vw;transform:translateX(100vw) rotate(90deg);transform-origin:top left}
 .cm-phone-rail{display:flex;flex-direction:column;align-items:center;gap:8px}
 .cm-phone-icon{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);font-size:18px;cursor:pointer}
