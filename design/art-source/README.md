@@ -10,6 +10,7 @@ ships; the product ships the processed versions.
 | `card_backgrounds/card_background_{tan,blue,black,red,green}.png` | `card-back-{white,blue,black,red,green}.webp` (~120KB each) | `game/ui/assets/card-backs/` |
 | `landing/landing-cards-source.png` (2026-09-30) | `landing-cards.webp` (1120px, 529KB), the landing page's hero | `assets/crankmagic/` |
 | `landing/landing-cards-animation-source.mp4` (2026-09-30) | `landing-cards.webm` (808x656, 24 fps, 3.6 s loop, 646KB) and `landing-cards-poster.webp`, the hero animated | `assets/crankmagic/` |
+| the same five | `card-back-{tan,blue,black,red,green}.webp` (280x392, ~20KB each), the cloud board's backs | `assets/crankmagic/`, by `tools/build-card-backs.py` |
 
 Neither could be used as delivered. Both arrive 2752x1536 RGB with **no alpha**: the card backs'
 transparency checkerboard is baked in as real gray pixels, and the logo sits on a flat navy field

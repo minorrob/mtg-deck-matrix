@@ -213,3 +213,17 @@ different tool from the one that puts cards on screen to judge a layout.
 `sfx_event_counterspell` needs a telemetry row that does not exist; `sfx_event_equip` and
 `sfx_event_crew` need to know an ability *is* an equip or a crew, which is `CrankCardScript@1`
 from the engine plan — the same dependency the two blocked board alerts wait on.
+
+## The cloud board (B8, 2026-09-30)
+
+The cloud board plays the same pack, from `assets/audio/` (a copy of the one above, so it outlives the local host),
+through `crankmagic-audio.js`. The three modules are ported as one classic script, since the app has no build step:
+the card rules (R1-R7, R13) unchanged, and the player (two buses, lazy decode, crossfaded beds, volumes in
+`crankmagic-audio-*`) unchanged. The events half is new. The room does not send telemetry rows; it sends each seat its
+view of the public state, so a moment is what changed between two views: a new stack entry (voiced by its card), a
+land or permanent arriving, one leaving (a wipe once), a life total, poison, attackers and blockers, your turn, your
+draw, the game's end. The room's contract is unchanged. The gesture rule is kept: the context is built and resumed
+inside the first press on the board, and nothing is fetched before it. Tools › Sound has the Effects and Music sliders
+and Mute. Proof: `tests/crankmagic-audio.mjs` (the rules, the moments, the bed, the player) and `tests/table-board.mjs`
+(the clips a real game asks for, at both boards).
+
