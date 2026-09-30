@@ -3,7 +3,9 @@
 **For the executor (the next session, Opus).** This is the one plan: Rob's board findings of 2026-09-30 (Parts 1–2),
 the AI program he asked for (Part 3), the roadmap's remaining items merged in (Part 5), a validation that the whole
 of it covers the app's UI/UX, functional and non-functional requirements and its code's health (Part 6), and the road
-to done with its gates and the two sentences Rob wants to hear, verbatim, only when they are true (Part 7).
+to done with its gates and the two sentences Rob wants to hear, verbatim, only when they are true (Part 7). **Rob
+answered every decision on 2026-09-30 (Part 4) and accepted Part 5's recommendations; Part 8 is the prompt that
+starts the executing session.**
 
 **For the executor.** Rob walked staging.crankmagic.com with the board rebuilt to the wireframes (#443) and sent his
 findings across several messages, with screenshots, then asked for them as a plan to execute later, with the AI
@@ -95,7 +97,9 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
 2. The person who started the table sees a small **Edit** button beside *Table rules* in the center panel —
    smaller than the page's other buttons, so the panel's text is not disturbed. — DELTA B.5 put the rules edit
    under *Host tools ▾*; Rob wants it on the panel. Today's rules are starting life 40, the seats, invitations a
-   day, a dropped player five minutes; which are editable, and whether once a seat is ready, is his call at build.
+   day, a dropped player five minutes. **Rob, 2026-09-30: the host edits the bracket limit and the starting life,
+   and not once any seat is ready.** The bracket limit is new to the table's rules: a deck above it is refused at
+   Change deck with instructions (the deck's bracket is measured already).
 
 ### C. Table view, in game
 
@@ -149,10 +153,13 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
       The same card; the player's timing. The room carries a "draw" acknowledgment in the draw step.
     - **Keep the automatic draw and make it visible:** the drawn card lifts in the hand and the strip says *You
       drew Island* until the next action. No rule bends; the surprise goes.
-    Rob chooses; the first is his ask.
+    **Rob, 2026-09-30: the beat.** The room carries a "draw" acknowledgment in the draw step; the button reads
+    *Draw a card*; the click draws; priority follows.
 14. **The hand tray:** the count beside the ✋ (remove *Hand · 8*); remove *Bright = you can use it now*; keep the
-    space for something hand-specific. **Ideas:** counts by type (*Lands 5 · Creatures 2 · Instants 1*);
-    *castable now: 3*; the hand's card-size slider (item 6). The first two are the most useful in play.
+    space for something hand-specific. **Rob, 2026-09-30: counts by type, four types only — Land, Creature,
+    Instant (which includes any card with flash), Other — each shown as X/Y, X the number castable now and Y the
+    number in hand** (*Land 2/5 · Creature 0/2 · Instant 1/1 · Other 0/0*). "Castable now" is what the decision's
+    options say of each card (the same fact that brightens it).
 
 ### D. Focus view — generally good
 
@@ -184,13 +191,17 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
 20. **Full screen, rotated to another seat: the hand shows that seat's hand as card backs, using our CrankMagic
     card backs.** — Rotate keeps your own hand on the tray today. The room sends another seat's hand as a count
     only (`zones.Hand.count`), which is exactly what a row of backs draws. There is no card-back picture in the
-    repository yet: `.cm-bcard.is-back` is a CSS stripe (`--card-back`). **Rob supplies the CrankMagic back**
-    (his artwork, like the mats) or one is drawn from the wand mark; it goes in `assets/crankmagic/` and is used
-    everywhere a back is shown (the library pile too).
+    repository yet as an asset: `.cm-bcard.is-back` is a CSS stripe (`--card-back`). **Rob, 2026-09-30: his
+    artwork, like the mats — the card backgrounds he shared, in `design/art-source/card_backgrounds/`** (five:
+    black, blue, green, red, tan). The back is built from them as `assets/crankmagic/card-back-<color>.webp`
+    (downscaled, as the mats were), and used everywhere a back is shown: the other seats' hands in Full screen,
+    the library pile on every board. **One decision left for the build:** which of the five is the universal back
+    (recommended: tan), and whether a seat's back may follow its commander's first color (recommended: yes, the
+    seat's color, tan for colorless).
 21. **The Coach icon looks too much like Gemini's.** The ✦ glyph goes, everywhere the Coach is named (the strip,
     the pane, the phone rail, Full screen's rail, the Tools menu). **Idea:** the wand mark already stands for the
-    app; for the Coach a distinct glyph — a whistle, a compass rose, or a small speech bubble with the wand —
-    drawn once as an SVG and used in every place. Rob picks.
+    app; for the Coach a distinct glyph, drawn once as an SVG and used in every place. **Rob, 2026-09-30: a
+    speech bubble with the wand.**
 22. **In Full screen, clicking the Coach does nothing.** — Found the cause: Full screen asks the browser for the
     whole screen on `#cm-board`, and a browser shows only that element's subtree in fullscreen. The Coach panel
     (`#cm-board-coach`), the app's dialogs (`#cm-dialog`: Table vitals, Card zoom) and its notices live outside
@@ -249,7 +260,9 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
   outcome. The caps are checked before a call, on the worst case. `cloud/ai.mjs`'s price table gains the current
   models (Claude Opus 5.5 `claude-opus-5-5` $4/$20 per million tokens, Claude Sonnet 5.5 `claude-sonnet-5-5`
   $2/$10, Claude Haiku 4.5 `claude-haiku-4-5` $1/$5, cache reads a fifth of input), and an unknown model is still
-  priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job.
+  priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job. **Rob,
+  2026-09-30: `AI_MODEL_coach` Claude Sonnet 5.5 · `AI_MODEL_pilot` Claude Haiku 4.5 · `AI_MODEL_loader` Claude
+  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.**
 - **The agent is code; the model judges.** For each feature the Worker assembles a *brief* deterministically from
   the library and the game — the facts, the candidates, the constraints — and asks the model to choose and explain
   among the candidates only, with structured output (`output_config.format`, a JSON schema per feature) so the
@@ -286,8 +299,8 @@ a stub reply that says it is not switched on; in Full screen it will live in the
 - **The panel:** streams the answer as it comes (the Worker passes the stream through); replies carry the action
   chips the shell already draws (*Show me* highlights the named cards on the mat; *Why?* expands the reasoning);
   turn dividers as now. The Coach never acts: it names a play; the person makes it.
-- **Model and cost:** Rob sets `AI_MODEL_coach`; the plan proposes Claude Sonnet 5.5 at low effort for a chat that
-  must answer in a few seconds, with the eval deciding whether Claude Haiku 4.5 answers as well. Each game has its
+- **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
+  answer in a few seconds; the eval says whether Claude Haiku 4.5 answers as well. Each game has its
   own cap (a Worker variable) on top of the person's.
 - **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
   refused, a streamed answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
@@ -309,8 +322,8 @@ plays what the engine offers); the LLM seat is M6's "through the door".
   difficulty · pilot*); it costs per decision, so the pilot asks the model only at decisions that matter (a choice
   among more than one non-pass option; mulligans; blocks; targets) and answers priority-with-nothing-to-do itself.
   A per-game cap; when it is reached the seat finishes on the house pilot and the table says so.
-- **Model:** Rob sets `AI_MODEL_pilot`; Claude Haiku 4.5 at low effort is the candidate, measured against the house
-  pilot over 100 seeded games (M4's gate G1 harness) before a table offers it.
+- **Model:** `AI_MODEL_pilot` = Claude Haiku 4.5 (Rob's call) at low effort, measured against the house pilot
+  over 100 seeded games (M4's gate G1 harness) before a table offers it.
 - **Proof:** the engine's determinism holds (the tape records the answer, not the model); `tests/game-room.mjs`
   gains an LLM pilot with a stubbed provider; the lobby suite the configurator's pilot choice; M8's playtests use it.
 
@@ -340,11 +353,22 @@ compiler and the AI reconciliation for every card; the extraction design is writ
   the M4 storage adapter, and a nightly export to `data/engine/scripts/` in the repository so the data is versioned
   and reviewable, as the extraction design asks. A card is learned once, ever; the second deck that brings it
   loads at once.
-- **Cost:** once per card. The model for extraction is the accurate one, not the cheap one: Rob sets
-  `AI_MODEL_loader`; Claude Opus 5.5 at medium effort is proposed for the script, Claude Haiku 4.5 for the
-  fidelity read-back. A deck of 99 unknown cards is under a dollar at list prices; the ledger is the control, and a
-  per-table cap stops a runaway. The seven decks' 477 cards are the first batch (M4's tier 0), run as an offline
-  job by Rob rather than at a table.
+- **Cost:** once per card. `AI_MODEL_loader` = Claude Sonnet 5.5 (Rob's call) at medium effort for the script,
+  Claude Haiku 4.5 for the fidelity read-back; the eval on the seven decks' cards says whether Sonnet's scripts
+  pass the four checks at the rate the engine needs, and the ledger records what a card cost to learn. A deck of
+  99 unknown cards is well under a dollar at list prices; the ledger is the control, and a per-table cap stops a
+  runaway.
+- **The first batch is Rob's whole library, not the seven decks' 477 cards** (Rob, 2026-09-30, with the workbook
+  `MtG - Master - 9.30.xlsx`): every distinct card in the Master sheet — 1,132 rows on 2026-09-30 (Own 1,598
+  copies; In Deck 700 across D1–D7; Bench 898; Target 700; Buy 107 at $178.18) — learned as an offline job run
+  by Rob, so that everything he owns is playable before any table needs it. The workbook is the source of truth
+  and comes in through the existing sync (`tools/build-live-load.mjs` → `data/live-load.json`,
+  `tools/build-live-state.mjs` → `data/live-state.json`, the backup Rob restores into his account; the
+  `crankmagic-live-load-sync` skill's procedure: the `Dn-T` columns each sum to 100 before anything else; the
+  Actual columns are his and never written). What the sheet says, in his words: **the Actual columns (`D1-A`…`D7-A`,
+  `In Bench`) are where a copy physically is — a deck's box or the bench; where a deck's Actual and its Target
+  (`Dn-T`) differ, the Target is the upgrade for the Actual, and the `Dn-Buy` column names the upgrade card's id**
+  (row 6, Negate: `D2-Buy` = `c0967`). The sync must read all seven decks and both print groups (see W1).
 - **Proof:** `tests/engine-*`: a learned script passes the four checks; a deliberately wrong script fails each
   check; the lobby suite: a deck with unknown cards shows learning and then ready; the refusal with instructions
   for a card that fails; the eval: the seven decks' cards against their oracle text.
@@ -385,8 +409,36 @@ sketch strategy considerations and copilot recommendations.
 - **The eval (built first):** Rob's seven decks, each with the swaps he would make himself and the ones he would
   refuse, as a rubric of sound versus unsound; the agent is run on Haiku 4.5 and on Sonnet 5.5 and the scores are
   the evidence for the model chosen. The eval lives in `tests/ai-advise-eval/` and runs only when asked (it spends).
+  **Rob, 2026-09-30: the rubric is an afternoon of his, before AI-4 is judged.** The Master workbook already holds
+  his intent per deck (Target against Actual, the `Dn-Buy` upgrades), so the rubric starts from what the sheet
+  says and he adds the swaps he would refuse.
+- **Whether the advisor may name cards Rob does not own is a setting, not a rule** — see AI-6.
 - **Proof:** `tests/ai-door.mjs`: the brief's shape from a fixture library (candidates inside the identity and the
   cap; the weak roles first; never a hidden field); grounding refused; the review flow receives the swaps; the cap.
+
+### AI-6. AI Coach Settings, under Tools
+
+*Rob's ask (2026-09-30):* *"We will want an AI Coach Settings option in the Tools menu. Here the user would set
+these parameters using check boxes and dropdowns. We need to scope up what will be in this settings screen. We want
+to keep it simple."*
+
+- **Where:** *Tools ▾ › AI Coach settings…* on the board, and the same panel from Settings in the workshop (one
+  component, two doors), saved with the person's preferences and synced with the account like the rest.
+- **The scope, kept simple — six controls, nothing else:**
+  1. **Suggest cards I don't own** — checkbox, off by default (when on, a suggested card is priced and goes to
+     To buy on a tick; the deck's cost cap still binds);
+  2. **Prefer what I own first** — checkbox, on (the bench, then To buy and Watching, before anything else);
+  3. **Stay inside the deck's bracket** — checkbox, on;
+  4. **Advice length** — dropdown: *Short* (one line per change) or *Detailed* (the why, with the role and the
+     numbers), default Short;
+  5. **What the Coach may see at the table** — dropdown: *My board and hand* (default) or *My board only* (the
+     hand withheld; the Coach then advises on the board alone);
+  6. **Spending** — read-only: the person's meter against the cap, from the call log, and a link to the privacy
+     page's AI section.
+  The model per job is Rob's (Worker variables), never the person's. Nothing here turns a feature on: the door's
+  gates do that.
+- **Proof:** `tests/settings-r3.mjs` and the board suite: each control read by the advisor's brief and the Coach's
+  request (a card not owned never appears with 1 off; the hand withheld with 5 set to board only); the meter shown.
 
 ### AI-5. Your decks and the decks you can play — the connection
 
@@ -417,19 +469,21 @@ parallel tracks: the board's B3–B7 (one session each, B4 two), and the AI prog
 eval first), AI-3 (the loader: three sessions, on M4's script format), AI-1 (the Coach: two sessions), AI-2 (the
 pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck playable).
 
-**Decisions for Rob**, gathered:
+**Decisions — answered by Rob on 2026-09-30:**
 
-| # | Decision | Recommended |
+| # | Decision | Rob's answer |
 | --- | --- | --- |
-| 2 | Which table rules the host may edit, and whether once a seat is ready | Starting life; not once any seat is ready |
-| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | His ask: the beat |
-| 14 | What fills the hand tray's space | Counts by type, and *castable now* |
-| 20 | The CrankMagic card back | His artwork, like the mats |
-| 21 | The Coach's glyph | A speech bubble with the wand |
-| AI | The door's five steps (`docs/ai-door.md`): the Access application, the allowlist, the key, the caps, the privacy wording | — |
-| AI | A model per job: `AI_MODEL_coach`, `_pilot`, `_loader`, `_advise` | Sonnet 5.5 · Haiku 4.5 · Opus 5.5 · Haiku 4.5, each held to its eval |
-| AI | The advisor's rubric: his own swaps for the seven decks | An afternoon of his, before AI-4 is judged |
-| AI | Whether the advisor may name cards he does not own | Only when asked, priced against the cap |
+| 2 | Which table rules the host may edit, and whether once a seat is ready | **Bracket limit and starting life; not once any seat is ready** |
+| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | **The beat** |
+| 14 | What fills the hand tray's space | **Counts by type — Land, Creature, Instant (with flash), Other — as X/Y, castable now over in hand** |
+| 20 | The CrankMagic card back | **His artwork: `design/art-source/card_backgrounds/` (five colors)**; which is universal, and whether a seat's follows its color, at build (recommended tan; yes) |
+| 21 | The Coach's glyph | **A speech bubble with the wand** |
+| AI | The door's five steps (`docs/ai-door.md`) | **Rob does them** (the Access application, the allowlist, the key, the caps, the privacy wording) |
+| AI | A model per job | **Coach Sonnet 5.5 · pilot Haiku 4.5 · loader Sonnet 5.5 · advise Haiku 4.5, each held to its eval** |
+| AI | The advisor's rubric | **An afternoon of his, before AI-4 is judged**, starting from the workbook's Target-versus-Actual intent |
+| AI | Whether the advisor may name cards he does not own | **A person's setting, in AI Coach Settings (AI-6), off by default** |
+| AI-3 | The first batch of cards to learn | **His whole library from `MtG - Master - 9.30.xlsx` (1,132 cards), not the seven decks' 477** |
+| Part 5 | The roadmap's recommendations (Actions billing restored for CI and the refresh; the tracks and their order) | **Accepted** |
 
 ## Part 5 — The roadmap's remaining items, merged in
 
@@ -477,6 +531,17 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
   room's history events (the CME history contract of M4 is what they read), with the gesture rule kept (the context
   built inside the first `pointerdown`). Proof: the clips a real game plays, in `tests/table-board.mjs`.
 - **A harness note for Grok Bot** (M8): `docs/playtest-harness.md`.
+- **W1. One row per card, its prints within it** (Rob, 2026-09-30, from the workbook: *"the 2 groups of card ids
+  are where there is more than 1 card and they are different prints — do we have a mechanic to handle this so that
+  library shows 1 distinct row per card, then within that row shows the different card prints we have of it? If
+  not it should be added"*). — **Half exists:** the model keeps a copy's print on its lot (`printing` in
+  `collection-model.js`: set, collector number, foil, artist as the import gives them), and the Library folds a
+  card's lots into one row, saying *Various* where the prints differ (`crankmagic-collection.js`, the sheet's
+  fold). **To add:** the row opens to list each print — set · collector # · foil · artist · value — with its
+  count and where it is (a deck's box, the bench), and the workbook builder reads **both** print groups of the
+  Master sheet (columns *Series · Collector # · Quantity · Foil · Artist · Value* and *… – Card Type 2*) into
+  separate lots with their prints, so the second print is never folded into the first. Proof: `tests/live-load.mjs`
+  on a row with two prints; `tests/library-r3.mjs` for the opened row.
 - **An accessibility pass on the board and the lobby** (Part 6).
 - **A browser and device matrix** for the end-to-end walk (Part 6).
 
@@ -530,7 +595,7 @@ true, with the proof beneath.
 
 | Gate | What must be true | Proof |
 | --- | --- | --- |
-| **G-A Build** | Parts 2, 3 and 5's items built, each merged on the gate with Rob's approvals: B1–B8, the AI door's steps (Rob), AI-4 (eval first), AI-3 (the seven decks' cards learned and confirmed), M4's keyword families and G1, AI-1, AI-2, AI-5, M3's monitoring and backups, M2's data track once R2 is on, the A11y pass, the harness note | Each PR's local-gate PASS block; G1's 1,400 games with zero exceptions, identical replays and no leaks |
+| **G-A Build** | Parts 2, 3 and 5's items built, each merged on the gate with Rob's approvals: B1–B8, the AI door's steps (Rob), AI-4 (eval first), AI-3 (Rob's whole library learned and confirmed, the seven decks first), AI-6, M4's keyword families and G1, AI-1, AI-2, AI-5, W1, M3's monitoring and backups, M2's data track once R2 is on, the A11y pass, the harness note | Each PR's local-gate PASS block; G1's 1,400 games with zero exceptions, identical replays and no leaks |
 | **G-B Test end to end** | *Technical:* the whole gate green twice on `main`; `tests/uat/play-e2e.mjs` under wrangler dev; the engine gates; the hidden-information inspection of every frame; the five-second rule measured over the network. *UX:* `crankmagic-journeys.mjs` (the workshop) and the new `play-journeys.mjs` (a four-seat game with the seven decks through the real UI, every view, a phone seat, the Coach, the record) at 1280, 1400, 1920, 2560 and a phone in landscape; the browser and device matrix; the A11y pass's checks; screenshots to Rob at each size | The suites' counts; the matrix table; the screenshots |
 | **G-C Staging** | The release built from `main`, `release-acceptance.mjs` green on it, pushed to `release/cloud-staging`, Workers Builds green, the version read back from `wrangler deployments list`; the harness note published for Grok Bot; the four agents' access set by Rob | The release commit, the version id |
 
@@ -555,3 +620,29 @@ true, with the proof beneath.
 **Between the gates:** every finding from Grok Bot, the invitees or Rob is one PR each (or a grouped one where they
 share a cause), merged on the gate, released to staging, and reported back with the proof; `docs/ACTIVE.md` is
 updated at the end of every session; production moves only on Rob's go, every time.
+
+## Part 8 — The prompt that starts the executing session
+
+Paste this, unchanged, as the first message of the new session (Opus) in `C:\Users\robmi\CrankMagic\repo`:
+
+> Read `AGENTS.md`, then `docs/ACTIVE.md`, then `docs/plan-to-done-2026-09-30.md` in full — it is the one plan, and
+> Part 0 is your contract. You are executing that plan in its order: Part 4's order for the board and the AI work,
+> Part 5's tracks alongside, Part 7's gates as the road. Every decision in it is already made (Part 4's table and
+> the answers written into the items); do not reopen one, and where the plan says a choice is left for the build,
+> take the recommended one and say so in the PR.
+>
+> How you work: one proven PR at a time, each on its own `claude/<topic>` branch from `main`, each merged only on
+> a green `tools/local-ci.sh HEAD 2` (Actions is out; the toolchain and the procedure are in Part 0, rule 8) with
+> its PASS block on the PR, and each released to staging afterward the way Part 0 rule 9 says — staging first,
+> production never without Rob's go. Before you touch the board, render the four-seat fixture at 1280×720,
+> 1400×900, 1920×1080 and 2560×1080 and keep those renders as your before-and-after; send Rob screenshots at every
+> UI iteration. Extend `tests/table-board.mjs`; never delete a check. Move the pins of every served file you change.
+> Keep the ratchets where they are. US English only.
+>
+> Do not break Play: one playmat component, sizes measured by `fit()`, the room's contracts unchanged unless a
+> plan item changes them, hidden information never in a frame. Be sensitive to the app's connectivity — the
+> `C.*` contracts, the routes, the schema registry, the manifest, the service worker's lists — and to the UX: the
+> wireframes' shapes, the page budgets, the sliders-never-steps rule, the refusal-with-instructions rule.
+>
+> Start with PR B1 (Part 2). At the end of every session update `docs/ACTIVE.md` and push. Report each gate of
+> Part 7 with its proof, and say Part 7's two sentences only when every claim in them is true.
