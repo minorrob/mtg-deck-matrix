@@ -68,7 +68,6 @@
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
       <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
-    <section class="cm-precon-latest is-landing" id="cm-landing-precons" aria-label="New from Wizards" hidden></section>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>
   <div class="cm-landing-art" aria-hidden="true">
@@ -81,6 +80,7 @@
 <section class="cm-landing-section">
   <div class="cm-landing-section-head"><h2>Where do you want to start?</h2><p>Four ways in. Each one starts with a single step, and they all share the same library.</p></div>
   <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => [page, href, title, body, cta, tint, page === "Play" && !playSoon ? "" : badge]).map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
+  <section class="cm-precon-latest is-landing" id="cm-landing-precons" aria-label="New from Wizards" hidden></section>
 </section>
 <section class="cm-landing-band"><div class="cm-landing-section">
   <h2>From an idea to a deck you can shuffle</h2>

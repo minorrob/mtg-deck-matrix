@@ -13,8 +13,8 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 44 (34 JSON, 10 workbooks and documents) · 77.6 MB |
-| Served to the app | 16 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
+| Artifacts | 45 (35 JSON, 10 workbooks and documents) · 77.6 MB |
+| Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
 | Tool inputs | 7 |
 | Source workbooks and documents | 10 |
 | Archive (already, or should be) | 10 |
@@ -56,6 +56,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/live-load.json` | 563 KB | {schema, format, version, generator, count, savedAt, …} · metadata 1,001, paid 781 | format crankmagic-live-load, version 1, schema live-load@1 | 2026-09-26 | tools/build-live-load.mjs, tools/scryfall-cache.mjs | — |  | build-live-load.mjs, build-live-state.mjs, commander-strategies.mjs +4 | card-records.mjs, crankmagic-trace.mjs, live-load.mjs +1 | live-load.yml | **tool input** |  |
 | `data/live-state.json` | 1011 KB | {schema, format, version, generator, createdAt, checksum, …} | format crankmagic-backup, version 1, schema live-state@1 | 2026-09-26 | tools/render-routes.mjs, tools/build-live-state.mjs (declared), .github/workflows/live-load.yml (declared) | — |  | build-live-state.mjs, migrate-dry-run.mjs, refresh.mjs +4 | card-states.mjs, collection-model.mjs, commander-snapshots.mjs +17 | live-load.yml | **tool input** | Rob's library as a backup, which the browser walks restore through Menu → Restore; never served -- Load Live went on 2026-09-24 and tools/release-pages.mjs keeps it off the site |
 | `data/manifest.json` | 7 KB | {schema, generatedAt, generator, count, files} · files 23 | schema manifest@1 | 2026-09-30 | tools/data-manifest.mjs | — |  | data-manifest.mjs, refresh.mjs | data-manifest.mjs, engine-runtime.mjs, refresh.mjs | — | **tool input** |  |
+| `data/precons-latest.json` | 2 KB | {schema, generatedAt, generator, count, source, releaseDate, …} | schema precons-latest@1 | 2026-09-30 | tools/build-precons.mjs | crankmagic-assets.js, crankmagic-decks.js | on demand | build-precons.mjs | precons.mjs | — | **serve** |  |
 | `data/precons.json` | 398 KB | {schema, generatedAt, generator, count, source, decks} · decks 197 | schema precons@1 | 2026-09-28 | tools/build-precons.mjs | crankmagic-assets.js, crankmagic-decks.js | on demand | build-precons.mjs, refresh.mjs | precons.mjs | — | **serve** |  |
 | `data/simulation-summary.json` | 171 KB | {schema, generator, schemaVersion, generatedAt, engine, table, …} · builds 50, altCommanderCases 47 | schemaVersion 3, schema simulation-summary@3, engine v2.8 | 2026-09-08 | tools/sim/rate-decks.mjs (declared), tools/import_summary_metrics.py (declared) | crankmagic-sim.js |  | import_summary_metrics.py, refresh.mjs, bake-sweep.mjs +6 | crankmagic-sim.mjs, data-integrity.mjs, generators.mjs +2 | — | **serve** |  |
 | `data/source/CardPullList-2026-09-06-rev2.docx` | 19 KB | document | — | — | tools/import-pull-list.mjs | — |  | import-pull-list.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |

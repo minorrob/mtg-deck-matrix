@@ -208,10 +208,10 @@ const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k==
    in -- a commander, a list, a backup file you saved. The welcome and its slogan are the landing page's now (R3.8). */
 /* NEW FROM WIZARDS (Rob, 2026-09-30): the newest release's precons, one click each, under the head. The slot is drawn
    empty and filled once its few kilobytes arrive; the page never waits on it. */
-const latestSlot='<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards" hidden></section>';
+const latestSlot='<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards" hidden></section>',latestTile=latestSlot.replace('<section','<article').replace('</section>','</article>').replace('cm-precon-latest"','cm-precon-latest cm-precon-tile"');
 C.preconLatest('cm-precon-latest');
-C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+latestSlot+bar
-  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`+latestSlot)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
+C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+bar
+  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`+latestSlot)+(shown.length?`<div class="cm-deck-grid">${anyDecks?latestTile:''}${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
    a tick and the Compare button rather than a link to find in each footer. The mana pips sit
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
