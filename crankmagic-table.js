@@ -19,6 +19,21 @@
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, button: b, actions, views} = C;
+  /* HELP: THE TABLE AND THE BOARD, the keys among it (the accessibility pass, docs/plan-to-done-2026-09-30.md Part 6):
+     from the lobby's head and from the board's menu. */
+  C.HELP.table = {title: "Play: the table and the board", body: `<div class="cm-help"><h3>The table</h3>
+    <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone brings a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
+    <h3>The board</h3>
+    <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>Full screen</strong> gives the game the whole screen. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. In your draw step it is <em>Draw a card</em>. A step where you have nothing to do passes by itself, and the history says so.</p>
+    <h3>Keys</h3>
+    <ul class="cm-help-keys">
+      <li><kbd>Tab</kbd> moves through the strip, then the boards, then your hand. <kbd>Enter</kbd> or <kbd>Space</kbd> presses what has the focus.</li>
+      <li><kbd>Space</kbd>, with nothing focused, fans your hand. <kbd>1</kbd>–<kbd>9</kbd> holds that card up, <kbd>Enter</kbd> does its first thing, and <kbd>Escape</kbd> puts it back.</li>
+      <li><kbd>Escape</kbd> steps back: a held card, the fanned hand, an open menu, the Panel, full screen.</li>
+      <li><kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>+</kbd> and <kbd>−</kbd> change the card size.</li>
+      <li>On a divider (the bar between the rows, the one atop your hand, the Panel's, the side column's), <kbd>↑</kbd> and <kbd>↓</kbd> move it. On the seat pane's edge, <kbd>←</kbd> and <kbd>→</kbd> move it.</li>
+    </ul>
+    <p>Every card says its name and state to a screen reader: tapped, its power and toughness, damage, counters, and what it can do now. The card shown large under the pointer is announced as well. Sound starts at your first click on the board, and Tools › Sound sets it.</p></div>`};
   const cloudPlay = () => document.querySelector('meta[name="crankmagic-play"]')?.content === "cloud"
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
@@ -175,7 +190,7 @@
       const {state, inner} = seatBox(s, t);
       return art.quadrant(corner, s.you ? "is-you" : "", [], state, inner);
     }).join("");
-    C.main.innerHTML = C.pageHead("Play", "", "", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
+    C.main.innerHTML = C.pageHead("Play", "", "table", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
       + (t.phase === "rematch" ? gamePanel() : "")
       + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
     art.startSeas();
@@ -242,7 +257,7 @@
     const row = (n) => `<div class="cm-table-new-seat"><span>Seat ${n}</span>
       <select name="kind${n}" aria-label="Seat ${n}"><option value="human"${n === 2 ? " selected" : ""}>A person I will invite</option><option value="ai">An AI</option><option value="none"${n > 2 ? " selected" : ""}>Nobody</option></select>
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
-    C.main.innerHTML = C.pageHead("Play") + `<section class="v-panel cm-table-new"><h2>New table</h2>
+    C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
       <form id="cm-table-new"><label>Your name at the table<input name="hostName" maxlength="60" required></label>${row(2)}${row(3)}${row(4)}
       <div class="cm-actions">${b("Create the table", "table-create", {}, true)}</div></form></section>`;

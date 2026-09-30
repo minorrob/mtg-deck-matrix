@@ -138,6 +138,12 @@ try {
   /* HOST: a new table. */
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+  /* The accessibility pass: the page's "?" opens the table's help, the board's keys among it. */
+  await rob.page.click('#cm-main [data-action="page-help"][data-help="table"]');
+  await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
+  ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && /Space/.test(await pageText(rob.page, "#cm-dialog .cm-help-keys")), "New table's ? opens Play's help, the board's keys among it");
+  await rob.page.click("#cm-dialog [data-action=close]");
+  await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
   await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
   await rob.page.fill("#cm-table-new [name=name2]", "Maya");
   await rob.page.selectOption("#cm-table-new [name=kind3]", "ai");
@@ -146,6 +152,7 @@ try {
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
   eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  eq(await rob.page.locator('#cm-main .cm-page-head [data-action="page-help"]').getAttribute("data-help"), "table", "and its head carries the same ?, to the table's help");
   /* THE SEAS DO NOT JUMP (Rob, 2026-09-29: the background played "for about a second then jumping back to the
      beginning"). The lobby reads the table every two seconds; a read that changed nothing leaves the seats' seas
      running, and a redraw that did change something picks up where the last one was, on the page's clock. */
