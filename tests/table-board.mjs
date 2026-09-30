@@ -35,6 +35,11 @@
  *             library holds is drawn from the shipped card records.
  *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
  *             socket, the seat never marked away.
+ *   B4        the Table view's shape: the tabletop still; the bar between the rows dragged (and by the arrow keys), the
+ *             rows' share remembered; the bar atop the hand tray growing the hand and shrinking every board alike; the
+ *             pile cards on top of their frames; the mana reminder below the Lands; the life counter's slices and
+ *             totals at the true center; a heart and a skull in Table vitals; the board's and the hand's own card
+ *             sizes, and Tools setting both.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -222,7 +227,7 @@ try {
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
   await brightLand.click();
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
-  ok(/land drop used/i.test(await text(active.page, ".cm-board-lands")), "tapping it plays it: Lands · 1, the land drop used");
+  ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-board-chip")), "tapping it plays it: Lands · 1, the land drop used (the reminder under the Lands says so)");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
@@ -306,7 +311,7 @@ try {
     const table = document.querySelector(".cm-board-table").getBoundingClientRect(), tray = box(".cm-board-hand");
     return {mineBelow: mine.top >= theirs.bottom, ring: /2px/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
       ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.width <= table.width && theirs.top >= table.top - 1 && mine.bottom <= table.bottom + 1,
-      largest: Math.min(table.width, (table.height - 14) / 2 * 16 / 9) - mine.width < 2,
+      largest: Math.min(table.width, (table.height - parseFloat(getComputedStyle(document.querySelector(".cm-board-table")).rowGap)) / 2 * 16 / 9) - mine.width < 2,
       whole: host.left === 0 && host.top === 0 && host.width === innerWidth && host.height === innerHeight,
       library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: tray.top >= mine.bottom,
       logo: (document.querySelector(".cm-board-center img") || {}).src || "",
@@ -323,7 +328,10 @@ try {
   await rob.page.locator(".cm-table-vitals").waitFor();
   const vitalsRows = await rob.page.locator(".cm-table-vitals [role=row]").allInnerTexts();
   const flat = vitalsRows.map((r) => r.replace(/\s+/g, " ").trim());
-  ok(flat[0] === "You Maya" && flat[1] === "Life 40 40" && flat[2] === "Poison 0 / 10 0 / 10", `Table vitals: every seat's life and poison (${flat.slice(0, 3).join(" | ")})`);
+  ok(flat[0] === "You Maya" && flat[1] === "♥ 40 40" && flat[2] === "☠ 0 / 10 0 / 10", `Table vitals: every seat's life and poison (${flat.slice(0, 3).join(" | ")})`);
+  const vitalsHeads = await rob.page.locator(".cm-table-vitals [role=rowheader]").evaluateAll((els) => els.map((el) => [el.getAttribute("aria-label"), el.textContent.trim()]));
+  ok(vitalsHeads[0][0] === "Life" && vitalsHeads[1][0] === "Poison" && vitalsHeads.slice(2).every(([name, t]) => name === null && /^From /.test(t)),
+    `a heart names life and a skull and crossbones poison, each named for a screen reader; commander damage has no icon (${vitalsHeads.map(([n, t]) => n || t).join(" | ")})`);
   ok(flat.includes("From Rob General — 0 / 21") && flat.includes("From Maya General 0 / 21 —"), `and each commander's damage to every other seat, its own seat "—" (${flat.slice(3).join(" | ")})`);
   await shot(rob.page, "table-vitals-1400");
   await rob.page.keyboard.press("Escape");
@@ -331,6 +339,104 @@ try {
   await rob.page.locator(".cm-table-vitals").waitFor();
   ok(true, "any seat's vitals pill opens Table vitals too");
   await rob.page.keyboard.press("Escape");
+
+  /* B4, THE TABLE VIEW'S SHAPE (docs/plan-to-done-2026-09-30.md, items 3-9). Still: the sea is painted once. */
+  const seaAt = () => rob.page.evaluate(() => {const c = document.querySelector(".cm-board-table > .cm-board-sea"), f = document.querySelector(".cm-board-table > .cm-board-fan"); return {t: c ? c.dataset.t : null, fan: f ? getComputedStyle(f).transitionDuration : null};});
+  const sea1 = await seaAt();
+  await rob.page.waitForTimeout(1200);
+  const sea2 = await seaAt();
+  ok(sea1.t === "0.00" && sea2.t === "0.00" && (sea2.fan === null || sea2.fan === "0s"), `the tabletop is still: the sea painted once, at its first moment, and does not move (${sea1.t} → ${sea2.t})${sea2.fan === null ? "" : "; the fan does not fade"}`);
+  /* The life counter at the true center: a slice per seat in its own color, each seat's life on its own side. */
+  const pie = await rob.page.evaluate(() => {
+    const el = document.querySelector(".cm-board-table > .cm-board-pie"), r = el.getBoundingClientRect(), tbl = document.querySelector(".cm-board-table").getBoundingClientRect();
+    const theirs = document.querySelector(".cm-board-table .cm-seatboard:not(.is-you)").getBoundingClientRect(), mine = document.querySelector(".cm-board-table .cm-seatboard.is-you").getBoundingClientRect();
+    const mid = r.top + r.height / 2, bg = getComputedStyle(el).backgroundImage;
+    const life = (seat) => document.querySelector(`.cm-board-table .cm-seatboard[data-seat='${seat}'] .cm-vitals b`).textContent;
+    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.textContent, above: q.top + q.height / 2 < mid, pill: life(b.dataset.seat)};});
+    return {dx: r.left + r.width / 2 - (tbl.left + tbl.width / 2), dy: mid - (theirs.bottom + mine.top) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
+      totals, logo: !!el.querySelector(".cm-board-center img"), round: Math.abs(r.width - r.height) < 1};
+  });
+  ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the rows and across the middle, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
+  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill) && pie.totals.find((t) => t.seat === "1").above && !pie.totals.find((t) => t.seat === "0").above,
+    `a slice per seat, each its own color, its life on it: Maya's on the top half over her board, Rob's on the bottom (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
+  /* The pile cards on top of their frames, over the frame's lines; the reminder below the Lands. */
+  const pileOver = (page, q) => page.evaluate((sel) => {
+    const f = document.querySelector(sel), c = f.querySelector(".cm-bcard"), fr = f.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    const hit = document.elementFromPoint(fr.left + fr.width / 2, fr.top + 0.5);
+    return {crosses: cr.left < fr.left && cr.right > fr.right && cr.top < fr.top, over: !!hit && c.contains(hit), by: [Math.round((fr.left - cr.left) * 10) / 10, Math.round((cr.right - fr.right) * 10) / 10]};
+  }, q);
+  const libT = await pileOver(rob.page, ".cm-board-table .cm-seatboard.is-you [data-zone=library]");
+  ok(libT.crosses && libT.over, `the Library's card sits on top of its frame, over its lines, not inside it (${libT.by.join("px, ")}px past the sides)`);
+  const chip = await rob.page.evaluate(() => {const m = document.querySelector(".cm-board-table .cm-seatboard.is-you"), l = m.querySelector("[data-zone=lands]"), c = m.querySelector(".cm-board-chip"), lr = l.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    return {inside: l.contains(c), below: cr.top - lr.bottom, right: Math.abs(cr.right - lr.right), text: c.textContent};});
+  ok(!chip.inside && chip.below >= 0 && chip.below < 8 && chip.right < 2, `the mana and land-drop reminder sits directly outside and below the Lands frame, at its right ("${chip.text}", ${chip.below.toFixed(1)}px below)`);
+  /* The bar between the rows: dragged down, Maya's row grows and Rob's gives way; both stay 16:9. */
+  const geoT = () => rob.page.evaluate(() => {
+    const r = (q) => document.querySelector(q).getBoundingClientRect(), theirs = r(".cm-board-table .cm-seatboard:not(.is-you)"), mine = r(".cm-board-table .cm-seatboard.is-you");
+    const pie = r(".cm-board-table > .cm-board-pie"), bar = r(".cm-board-rowbar");
+    return {tw: theirs.width, th: theirs.height, mw: mine.width, mh: mine.height, trayTop: r(".cm-board-hand").top, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
+      centered: Math.abs(pie.top + pie.height / 2 - (theirs.bottom + mine.top) / 2) < 2 && Math.abs(bar.top + bar.height / 2 - (theirs.bottom + mine.top) / 2) < 2};
+  });
+  const rowsKept = () => rob.page.evaluate(() => localStorage.getItem("cm-board-rows"));
+  const even = await geoT();
+  const rowGrip = await rob.page.locator(".cm-board-rowbar [data-drag=rows]").boundingBox();
+  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2);
+  await rob.page.mouse.down();
+  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2 + 40, {steps: 4});
+  await rob.page.mouse.move(rowGrip.x + 40, rowGrip.y + rowGrip.height / 2 + 80, {steps: 4});
+  await rob.page.mouse.up();
+  const dragged = await geoT(), share = Number(await rowsKept());
+  ok(dragged.tw > even.tw + 20 && dragged.mw < even.mw - 20 && Math.abs(dragged.tw / dragged.th - 16 / 9) < 0.02 && Math.abs(dragged.mw / dragged.mh - 16 / 9) < 0.02 && share > 0.55 && dragged.centered,
+    `the bar between the rows drags: 80px down, Maya's row grows and Rob's gives way, both still 16:9, the bar and the life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
+  await rob.page.click("[data-action=board-view][data-view=focus]");
+  await rob.page.locator(".cm-board-mat").waitFor();
+  const libF = await pileOver(rob.page, ".cm-board-mat [data-zone=library]");
+  ok(libF.crosses && libF.over, `on the Focus mat too, the Library's card is on top of its frame (${libF.by.join("px, ")}px past the sides)`);
+  await rob.page.click("[data-action=board-view][data-view=table]");
+  await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
+  const redrawn = await geoT();
+  ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await rowsKept()) === share, "and the share is remembered on the device: the Table view drawn again keeps the rows as they were left");
+  await rob.page.focus(".cm-board-rowbar [data-drag=rows]");
+  for (let i = 0; i < 20; i += 1) await rob.page.keyboard.press("ArrowUp");
+  const keyed = await geoT(), low = Number(await rowsKept());
+  ok(low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, and it stops at 30% of the height (${low})`);
+  for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowDown");
+  const back = await geoT();
+  ok(Number(await rowsKept()) === 0.5 && Math.abs(back.tw - back.mw) < 1 && Math.abs(back.tw - even.tw) < 1, "and back at half, the boards are identical again");
+  /* The bar atop the hand tray: dragged up, the hand's cards grow and every board gives way alike. */
+  const trayGrip = await rob.page.locator(".cm-board-traybar [data-drag=hand]").boundingBox();
+  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2);
+  await rob.page.mouse.down();
+  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 20, {steps: 3});
+  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 40, {steps: 3});
+  await rob.page.mouse.up();
+  const grown = await geoT(), handOut = (await text(rob.page, ".cm-board-traybar output")).trim();
+  ok(grown.hand > even.hand * 1.2 && grown.tw < even.tw - 10 && Math.abs(grown.tw - grown.mw) < 1 && Math.abs(grown.th - grown.mh) < 1 && grown.trayTop < even.trayTop - 20 && /^1[2-9]\d%$/.test(handOut),
+    `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}) and every board gives way alike (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px, still identical)`);
+  /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
+  const sizes = () => rob.page.evaluate(() => {
+    const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
+    return {board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
+      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: [...document.querySelectorAll("#cm-board .cm-board-scale output")].map((o) => o.textContent)};
+  });
+  await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
+  const s100 = await sizes();
+  await rob.page.locator(".cm-board-rowbar [data-board-scale=board]").fill("80");
+  const sBoard = await sizes();
+  ok(Math.abs(sBoard.board / s100.board - 0.8) < 0.03 && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
+    `Board cards, on the bar between the rows, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
+  await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("130");
+  const sHand = await sizes();
+  ok(Math.abs(sHand.hand / s100.hand - 1.3) < 0.02 && Math.abs(sHand.board - sBoard.board) < 0.0005 && sHand.scopes[1] === "1.3" && sHand.outs[1] === "130%",
+    `Hand cards, on the tray's bar, sizes the hand's cards alone (${s100.hand.toFixed(0)} → ${sHand.hand.toFixed(0)}px; the boards' cards keep their size on their boards)`);
+  await rob.page.click("[data-action=board-tools]");
+  await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
+  const sTools = await sizes();
+  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs.join() === "120%,120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+    `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
+  await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
+  await rob.page.click("[data-action=board-tools]");
+  eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
   ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
