@@ -177,7 +177,7 @@ try {
   await g.goto(`${base}/index.html#cards`);
   await g.locator("#cm-roster-table").waitFor({timeout: 60000});
   const summary = await g.locator("#cm-main .cm-page-head").innerText();
-  ok(/1,400 copies/.test(summary) && !/1\.400/.test(summary), `the Library still says 1,400, the US way: ${summary.replace(/\s+/g, " ").slice(0, 80)}`);
+  ok(/1,598 copies/.test(summary) && !/1\.598/.test(summary), `the Library still says 1,598, the US way: ${summary.replace(/\s+/g, " ").slice(0, 80)}`);
   await g.goto(`${base}/index.html#settings`);
   await g.locator(".cm-settings").getByRole("button", {name: "See every change…"}).click();
   await g.locator("#cm-history-rows article").first().waitFor();

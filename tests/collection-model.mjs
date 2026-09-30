@@ -607,9 +607,13 @@ M.validate(s);checks++;
    moves and this check says so, rather than a status quietly changing under Rob. */
 {
   const live = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state;
-  const shortlisted = M.projection(live).filter((r) => r.shortlistedFor);
-  assert.equal(shortlisted.length, 0,
-    `the live library has ${shortlisted.length} owned copies shortlisted for a deck; it had 0 when Watched was expanded`); checks++;
+  /* It had 0 when Watched was expanded. The 9.30 workbook (2026-09-30) brought one: Rob bought Shamanic Revelation,
+     which D4's own group was watching for Felothar, so its Bench copy is shortlisted for D4 -- the rule working, and
+     named here so a second one cannot arrive unseen. */
+  const cardName = (id) => (live.cards[id] || {}).name;
+  const shortlisted = M.projection(live).filter((r) => r.shortlistedFor).map((r) => `${cardName(r.cardId)} for ${r.shortlistedFor}`);
+  assert.deepEqual(shortlisted, ["Shamanic Revelation for deck:live:D4"],
+    `the live library's owned copies shortlisted for a deck are exactly Rob's one purchase for D4's plan (${shortlisted.join("; ")})`); checks++;
 }
 
 /* today() is the local calendar date, not UTC's (walkthrough D4). A date built in local time at

@@ -4,7 +4,8 @@ import {createRequire} from 'node:module';
 import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
-import {importWorkbook,same} from '../tools/build-live-load.mjs';
+import {importWorkbook,newestWorkbook,same} from '../tools/build-live-load.mjs';
+import {basename} from 'node:path';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
 
@@ -179,9 +180,8 @@ eq(L.PASSWORD,'treycmload1');
    sums Excel computed, not this code. Needs openpyxl, like tests/generators.mjs's workbook check. */
 {
   let python=true;try{execFileSync('python3',['-c','import openpyxl'],{stdio:'ignore'});}catch{python=false;}
-  if(!python)console.log('live-load: the v25 workbook checks are SKIPPED (no openpyxl)');
-  else{
-    const book='data/source/Treys_MtG_Master_-_v25.xlsx';
+  if(!python)console.log('live-load: the v25 and 2026-09-30 workbook checks are SKIPPED (no openpyxl)');
+  else for(const book of ['data/source/Treys_MtG_Master_-_v25.xlsx','data/source/MtG_-_Master_-_2026-09-30.xlsx']){
     const rows=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
     const h=rows.findIndex(r=>r[0]==='Card ID'),H=rows[h],sums=rows[h-1],total=name=>Number(sums[H.indexOf(name)]);
     const {doc,built}=await importWorkbook(book,{prior:JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'))});
@@ -199,6 +199,34 @@ eq(L.PASSWORD,'treycmload1');
     eq(n(doc.ordered),total('Ordered'));
     eq(M.counters(built.state).owned,total('Own'));
     ok(doc.decks.every(d=>n(d.cards)===100));
+  }
+  /* 2026-09-30: THE MASTER SHEET ALONE (Rob's "MtG - Master - 9.30"). It has no deck_strategies and no
+     master_buy_upgrade: each deck's id, commander, name and overview are carried from the committed file -- which
+     v25's deck_strategies wrote (Rob: use v25's sheet if needed) -- and the upgrade pairings are the sheet's own
+     Dn-Buy columns: a row's Dn-Buy names the id of the card the row's copy stands in for in deck n. */
+  if(python){
+    const book='data/source/MtG_-_Master_-_2026-09-30.xlsx',prior=JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'));
+    eq(basename(await newestWorkbook()),basename(book));
+    eq(liveDoc.workbook,basename(book));
+    const {doc,notes}=await importWorkbook(book,{prior});
+    for(const d of doc.decks){const p=prior.decks.find(x=>x.id===d.id);
+      eq(d.commander,p.commander);eq(d.name,p.name);assert.deepEqual(d.strategy,p.strategy);checks++;}
+    eq(doc.decks.find(d=>d.id==='D1').strategy.strategy.split('.')[0],'Lorehold spirit recursion');
+    const master=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
+    const mh=master.findIndex(r=>r[0]==='Card ID'),MH=master[mh],buyCells=master.slice(mh+1).flatMap(r=>MH.map((x,i)=>/^D\d+-Buy$/.test(String(x))&&r[i]!==null&&String(r[i]).trim()&&String(r[i]).trim()!=='0'?1:0)).reduce((a,b)=>a+b,0);
+    eq(doc.upgrades.length,buyCells);ok(buyCells>100);
+    ok(notes.some(x=>new RegExp(`^${buyCells} upgrade pairings read from the Master sheet's D1-Buy…D7-Buy columns`).test(x)));
+    /* Rob's example: Negate holds Mystic Snake's seat in D2 (D2-Buy = c0967). */
+    ok(doc.upgrades.some(u=>u.deck==='D2'&&u.card==='Mystic Snake'&&u.replaces==='Negate'));
+    /* Each pairing is what Rob says it is: the card is in the deck's target, and the copy standing in is in its box. */
+    {const count=(rows,name)=>(rows.find(r=>r[0]===name)||[,0])[1];
+     ok(doc.upgrades.every(u=>count(doc.decks.find(d=>d.id===u.deck).cards,u.card)>0&&count(doc.owned.inDeck[u.deck],u.replaces)>0));}
+    /* What was paid is history: the 9.30 Master's $ Each is the price to buy, so the committed figures for cards still
+       owned are kept -- every one of them, and never a figure for a card no longer owned. */
+    {const ownedNow=new Set([...Object.values(doc.owned.inDeck).flat(),...doc.owned.bench].map(r=>r[0]));
+     const keep=Object.keys(prior.paid).filter(n=>ownedNow.has(n));
+     ok(keep.length>700&&keep.every(n=>doc.paid[n]===prior.paid[n]));
+     ok(Object.keys(doc.paid).every(n=>ownedNow.has(n)));}
   }
 }
 /* A PRICE MOVING IS NOT A CHANGE (Rob, 2026-09-28). --check compares the collection, not the market: a buy row's

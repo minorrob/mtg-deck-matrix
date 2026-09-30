@@ -57,7 +57,9 @@ assert.throws(() => M.cardState({kind: "fold"}), /not fold/); checks++;
 eq(M.STAGES.map((x) => x.label), ["Watching", "To buy", "Ordered", "Owned"], "the stages, in their order");
 eq(M.ROLES.map((x) => x.label), ["Target", "Substitute", "Upgrade", "Reserved"], "the roles: two in the box, two outside it");
 
-/* 2 and 3. Rob's library as committed. */
+/* 2 and 3. Rob's library as committed: rebuilt from "MtG - Master - 9.30" (2026-09-30). Against v25 no deck's target
+   or box moved; 198 more copies are owned, the six orders in flight are off the sheet, and four cards the decks
+   needed are now owned and on the Bench, so they are Ready to add instead of To buy. */
 const live = M.migrate(JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state); // as the app reads a backup: migrated to the current schema first
 
 /* The records a screen draws: copies and needs from the projection, the draft and option rows of each
@@ -79,24 +81,30 @@ eq(bad.slice(0, 5), [], `every one of Rob's ${records.length} records maps under
 const copies = (f) => records.filter((r) => f(read(r), r)).reduce((n, r) => n + (r.quantity || 1), 0);
 const count = (f) => records.filter((r) => f(read(r), r)).length;
 eq(copies((s) => s.stage === "owned" && s.role === "target" && s.inBox), 577, "577 owned targets in their deck's box");
-eq(copies((s) => s.stage === "owned" && !!s.deckId && !s.inBox), 5, "5 owned copies for a deck, not yet in its box: To add (Ready to add)");
+eq(copies((s) => s.stage === "owned" && !!s.deckId && !s.inBox), 9, "9 owned copies for a deck, not yet in its box: To add (Ready to add) -- v25's 5 and the 4 bought since");
 eq(copies((s) => s.stage === "owned" && s.role === "substitute"), 123, "123 substitutes");
-eq(copies((s) => s.stage === "owned" && !s.deckId), 695, "695 on the Bench");
-eq(copies((s) => s.stage === "ordered"), 6, "6 ordered");
-eq(copies((s, r) => s.stage === "buy" && r.kind === "need"), 111, "111 copies to buy for decks");
-eq(copies((s, r) => s.stage === "buy" && r.kind === "need" && s.role === "upgrade"), 111, "and all 111 are upgrades: every deck's box is full, so each replaces the substitute holding its seat");
+eq(copies((s) => s.stage === "owned" && !s.deckId), 889, "889 on the Bench");
+eq(copies((s) => s.stage === "ordered"), 0, "nothing ordered: the six in flight at v25 are off the 9.30 sheet");
+eq(copies((s, r) => s.stage === "buy" && r.kind === "need"), 107, "107 copies to buy for decks");
+eq(copies((s, r) => s.stage === "buy" && r.kind === "need" && s.role === "upgrade"), 107, "and all 107 are upgrades: every deck's box is full, so each replaces the substitute holding its seat");
 eq(copies((s) => s.role === "reserved"), 0, "nothing is reserved: no deck has an empty seat");
 /* The rebuilt library (step 3b): the To Buy list duplicated the decks' needs and is empty; the Upgrade Path is gone,
    because each of its entries was a need whose seat a substitute holds, and that seat is now on the substitute. */
 eq(count((s, r) => r.kind === "entry" && r.groupId === M.WANT_LIST), 0, "the To Buy list holds nothing the decks already need: none today");
 ok(!live.groups.some((g) => g.id === "group:live:upgrades"), "there is no Upgrade Path group");
-eq(copies((s) => s.stage === "buy"), 111, "so To buy is the decks' 111 needs, each counted once");
+eq(copies((s) => s.stage === "buy"), 107, "so To buy is the decks' 107 needs, each counted once");
 eq(copies((s) => s.stage === "watching"), 13, "and Watching is the 13 candidates in the decks' own groups");
 const seated = M.projection(live).filter((r) => r.kind === "lot" && r.standInFor);
-eq(seated.length, 111, "111 substitutes record the seat they hold, one per upgrade");
-eq(new Set(M.projection(live).filter((r) => r.kind === "need").map((r) => r.slotId)), new Set(seated.map((r) => r.standInFor)), "and the seats they hold are exactly the seats To buy fills");
+eq(seated.length, 122, "122 substitutes record the seat they hold, one per pairing the 9.30 sheet's Dn-Buy columns name");
+/* The seats they hold: To buy's, but for D7's Peppersmoke, whose substitute the 9.30 sheet no longer names (v25 had
+   Bile-Vial Boggart); all nine Ready to add; and the rest are upgrades Rob owns in another deck's box. */
+const needSeats = new Set(M.projection(live).filter((r) => r.kind === "need").map((r) => r.slotId)), heldSeats = new Set(seated.map((r) => r.standInFor));
+const slotCard = (id) => { for (const d of live.decks) { const r = d.slots.find((x) => x.id === id); if (r) return `${d.id.slice(-2)} ${live.cards[r.cardId].name}`; } return id; };
+eq([...needSeats].filter((x) => !heldSeats.has(x)).map(slotCard), ["D7 Peppersmoke"], "every seat To buy fills is held by a substitute but Peppersmoke's");
+const readyHeld = records.filter((r) => { const s = read(r); return s.stage === "owned" && !!s.deckId && !s.inBox; });
+ok(readyHeld.length === 9 && readyHeld.every((r) => heldSeats.has(r.allocation?.slotId)), "and each of the 9 Ready to add holds the seat it will take");
 eq(count((s, r) => r.kind === "entry" && r.groupId !== M.WANT_LIST && s.stage === "watching" && !!s.deckId && s.role === "upgrade"), 13, "the 13 entries in D4's and D6's own groups are Watching upgrades for their decks");
-eq(copies((s) => s.stage === "owned"), 1400, "and every owned copy is counted once: 577 + 5 + 123 + 695 = 1,400");
+eq(copies((s) => s.stage === "owned"), 1598, "and every owned copy is counted once: 577 + 9 + 123 + 889 = 1,598");
 /* PLAYABLE (Rob, 2026-09-26): a deck plays when none of its records is reserved -- every seat holds a card. The
    model's own flag and the roles agree, deck by deck. */
 for (const d of live.decks.filter((x) => !x.archived && x.status === "final")) eq(M.readiness(live, d).playable, !records.some((r) => { const st = read(r); return st.deckId === d.id && st.role === "reserved"; }), `${d.name}: playable exactly when nothing for it is reserved`);
@@ -124,7 +132,7 @@ ok(Object.keys(differ).every((k) => k === "Wanted" || k === "Watched (owned, sho
   const E = require("../collection-exchange.js"), book = E.workbook(live), lib = book.sheets.find((x) => x.name === "Library");
   ok(lib.columns.some((c) => c.key === "state" && c.label === "State"), "the Library sheet has a State column");
   const q = (f) => lib.rows.filter(f).reduce((n, r) => n + r.quantity, 0);
-  eq([q((r) => r.state === "Target"), q((r) => r.state === "To add · upgrade"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Ordered")], [577, 5, 123, 695, 6], "and it counts 577 Target, 5 To add (upgrades), 123 Substitute, 695 Bench, 6 Ordered, as the Library does");
+  eq([q((r) => r.state === "Target"), q((r) => r.state === "To add · upgrade"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Ordered")], [577, 9, 123, 889, 0], "and it counts 577 Target, 9 To add (upgrades), 123 Substitute, 889 Bench, 0 Ordered, as the Library does");
   ok(["Allocations", "Acquisition queue"].every((n) => book.sheets.find((x) => x.name === n).columns.some((c) => c.key === "state")), "Allocations and the Acquisition queue carry it too");
 }
 /* 6. The Table view's card-state piles take the drops their old labels took (step 2c). */
