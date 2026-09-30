@@ -7,13 +7,20 @@
  * starting from it needs: its name, set and release date, its commander(s) with their color identity, and the other
  * ninety-some cards by name and count. Everything else MTGJSON carries (printings, prices, rulings, art) stays there.
  *
- *   node tools/build-precons.mjs             fetch MTGJSON and write the file (a few minutes; the refresh runs it)
- *   node tools/build-precons.mjs --check     read the committed file and hold it to its promises, offline
+ *   node tools/build-precons.mjs             fetch MTGJSON and write both files (a few minutes; the refresh runs it)
+ *   node tools/build-precons.mjs --latest    rewrite data/precons-latest.json from the committed list (SetList.json only)
+ *   node tools/build-precons.mjs --check     read the committed files and hold them to their promises, offline
+ *
+ * data/precons-latest.json is the newest release's decks alone -- the ones sharing the latest release date, with
+ * their set's name -- a few kilobytes the home screens read to offer "New from Wizards" without the 400 KB list
+ * (Rob, 2026-09-30: the Reality Fracture precons, to add from the home screen). The full list is fetched only
+ * when one is chosen.
  *
  * The check needs no network, so it runs in every suite: each deck is a hundred cards, one or two commanders, ids
  * unique, newest first; every name is a card the committed Commander universe knows, or is listed on its deck as
- * `notInUniverse` (a card banned since it was printed, say), and that list is exactly what the universe says today.
- * Deterministic apart from the stamp: decks newest first then by name, cards by name. */
+ * `notInUniverse` (a card banned since it was printed, say), and that list is exactly what the universe says today;
+ * and the latest file is exactly the full list's newest release. Deterministic apart from the stamp: decks newest
+ * first then by name, cards by name. */
 import {readFileSync, writeFileSync, existsSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
@@ -21,8 +28,9 @@ import {stamp} from "./lib/envelope.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "data", "precons.json");
+const LATEST = path.join(ROOT, "data", "precons-latest.json");
 const BASE = "https://mtgjson.com/api/v5";
-const check = process.argv.includes("--check");
+const check = process.argv.includes("--check"), latestOnly = process.argv.includes("--latest");
 const fold = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "'").trim();
 
 /* The universe by folded name; a double-faced card is known by its whole name and by its front. */
@@ -58,6 +66,33 @@ export function rowOf(entry, deck) {
     total: commander.length + cards.reduce((n, [, q]) => n + q, 0)};
 }
 
+/* THE NEWEST RELEASE: every deck that shares the latest release date (a set and its Commander decks release
+   together), with the set's name from MTGJSON's SetList when it is known. The full row's cards are left out. */
+export function latestOf(body, setNames = new Map()) {
+  const newest = body.decks.length ? body.decks[0].releaseDate : null;
+  const decks = body.decks.filter((d) => d.releaseDate === newest).map(({id, code, name, releaseDate, commander, total, notInUniverse}) =>
+    ({id, code, setName: setNames.get(code) || code, name, releaseDate, commander, total, ...(notInUniverse ? {notInUniverse} : {})}));
+  return stamp("precons-latest@1", "tools/build-precons.mjs", {source: "the newest release date in data/precons.json; set names from MTGJSON SetList.json", releaseDate: newest, decks}, {count: decks.length});
+}
+function verifyLatest(latest, body) {
+  const problems = [];
+  if (!latest || latest.schema !== "precons-latest@1" || latest.generator !== "tools/build-precons.mjs") return ["the envelope is not precons-latest@1 from tools/build-precons.mjs"];
+  const want = latestOf(body);
+  if (latest.releaseDate !== want.releaseDate) problems.push(`its release date is ${latest.releaseDate}, and the full list's newest is ${want.releaseDate}`);
+  if (latest.count !== latest.decks.length) problems.push(`count says ${latest.count} but there are ${latest.decks.length} decks`);
+  if (JSON.stringify(latest.decks.map((d) => d.id)) !== JSON.stringify(want.decks.map((d) => d.id))) problems.push(`its decks are ${JSON.stringify(latest.decks.map((d) => d.id))}, and the full list's newest are ${JSON.stringify(want.decks.map((d) => d.id))}`);
+  latest.decks.forEach((d, i) => {
+    const full = want.decks[i];
+    if (!full) return;
+    if (d.name !== full.name || JSON.stringify(d.commander) !== JSON.stringify(full.commander) || d.total !== full.total || JSON.stringify(d.notInUniverse || []) !== JSON.stringify(full.notInUniverse || [])) problems.push(`${d.name}: not what the full list says of it`);
+    if (!d.setName) problems.push(`${d.name}: no set name`);
+  });
+  return problems;
+}
+async function setNames() {
+  const sets = (await getJson(`${BASE}/SetList.json`)).data;
+  return new Map(sets.map((s) => [s.code, s.name]));
+}
 function verify(body, known) {
   const problems = [];
   if (body.schema !== "precons@1" || body.generator !== "tools/build-precons.mjs") problems.push("the envelope is not precons@1 from tools/build-precons.mjs");
@@ -81,7 +116,14 @@ if (check) {
   const body = JSON.parse(readFileSync(OUT, "utf8"));
   const problems = verify(body, universe());
   if (problems.length) { console.error(`precons: data/precons.json fails its promises:\n  ${problems.slice(0, 12).join("\n  ")}`); process.exit(1); }
-  console.log(`precons: ${body.decks.length} Commander precons, each a hundred cards, every name known to the universe or listed — matches its promises`);
+  if (!existsSync(LATEST)) { console.error("precons: data/precons-latest.json is missing; run node tools/build-precons.mjs --latest"); process.exit(1); }
+  const latest = JSON.parse(readFileSync(LATEST, "utf8")), late = verifyLatest(latest, body);
+  if (late.length) { console.error(`precons: data/precons-latest.json fails its promises:\n  ${late.slice(0, 12).join("\n  ")}`); process.exit(1); }
+  console.log(`precons: ${body.decks.length} Commander precons, each a hundred cards, every name known to the universe or listed — matches its promises; the newest release (${latest.releaseDate}) is ${latest.decks.length} of them`);
+} else if (latestOnly) {
+  const body = JSON.parse(readFileSync(OUT, "utf8")), latest = latestOf(body, await setNames());
+  writeFileSync(LATEST, JSON.stringify(latest, null, 1) + "\n");
+  console.log(`wrote data/precons-latest.json: ${latest.decks.length} precons of ${latest.releaseDate} (${[...new Set(latest.decks.map((d) => d.setName))].join(", ")})`);
 } else if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const list = (await getJson(`${BASE}/DeckList.json`)).data.filter((d) => d.type === "Commander Deck");
   const known = universe(), rows = [], skipped = [];
@@ -95,5 +137,7 @@ if (check) {
   const problems = verify(body, known);
   if (problems.length) { console.error(`precons: the build fails its own promises:\n  ${problems.slice(0, 12).join("\n  ")}`); process.exit(1); }
   writeFileSync(OUT, JSON.stringify(body) + "\n");
-  console.log(`wrote data/precons.json: ${rows.length} Commander precons (${skipped.length} left out, not a hundred cards: ${skipped.map((s) => `${s.name} ${s.total}`).join(", ") || "none"})`);
+  const latest = latestOf(body, await setNames());
+  writeFileSync(LATEST, JSON.stringify(latest, null, 1) + "\n");
+  console.log(`wrote data/precons.json: ${rows.length} Commander precons (${skipped.length} left out, not a hundred cards: ${skipped.map((s) => `${s.name} ${s.total}`).join(", ") || "none"}); data/precons-latest.json: ${latest.decks.length} of ${latest.releaseDate}`);
 }

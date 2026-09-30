@@ -206,8 +206,12 @@ const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Sh
 const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k===stage)||[,''])[1].toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
 /* NO DECKS YET (r3 wireframe, decks-hub-empty): the page is still Decks, and the panel says the three honest ways
    in -- a commander, a list, a backup file you saved. The welcome and its slogan are the landing page's now (R3.8). */
-C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+bar
-  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
+/* NEW FROM WIZARDS (Rob, 2026-09-30): the newest release's precons, one click each, under the head. The slot is drawn
+   empty and filled once its few kilobytes arrive; the page never waits on it. */
+const latestSlot='<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards" hidden></section>';
+C.preconLatest('cm-precon-latest');
+C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{},true),'decks',summary)+latestSlot+bar
+  :C.pageHead('Decks',b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','wizard-create',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`+latestSlot)+(shown.length?`<div class="cm-deck-grid">${shown.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
    a tick and the Compare button rather than a link to find in each footer. The mana pips sit
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
@@ -790,6 +794,23 @@ async function precons(){
 }
 const usDate=d=>new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])=>`${q} ${n}`)).join('\n');
+/* NEW FROM WIZARDS (Rob, 2026-09-30: the Reality Fracture precons, to add from the home screen). The newest release's
+   decks alone come from data/precons-latest.json, a few kilobytes, and are drawn into a slot on the Decks hub and the
+   landing page; a click starts one exactly as the picker does, fetching the full list only then. Nothing waits on
+   it: the slot stays hidden until the file has arrived, and stays hidden if it never does. */
+async function latestPrecons(){
+  const A=globalThis.CrankAssets,r=await fetch(A.preconsLatest).catch(()=>null);
+  if(!r||!r.ok)return null;
+  return A.expect(await r.json(),'preconsLatest');
+}
+C.preconLatest=async id=>{
+  const data=await latestPrecons().catch(()=>null),el=document.getElementById(id);
+  if(!el||!data||!data.decks.length)return;
+  const today=M.today(),sets=[...new Set(data.decks.map(p=>p.setName))].join(' · ');
+  el.innerHTML=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
+    <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span>${e(p.commander.map(c=>c.name).join(' + '))}${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button></li>`).join('')}</ul>`;
+  el.hidden=false;
+};
 async function preconPicker(){
   const data=await precons(),today=M.today();  /* the reader's own calendar date: a deck out today is out */
   const d=modal('Start from a precon',`<label>Search<input id="cm-precon-q" type="search" placeholder="A deck, a commander or a set code" autocomplete="off"></label><p class="cm-muted" id="cm-precon-n" aria-live="polite"></p><ul class="cm-precon-list" id="cm-precon-list"></ul>`);

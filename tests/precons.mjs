@@ -22,6 +22,7 @@ let checks = 0;
 const ok = (c, msg) => { checks++; assert.ok(c, msg); };
 const eq = (a, b, msg) => { checks++; assert.deepEqual(a, b, msg); };
 const data = JSON.parse(readFileSync(new URL("../data/precons.json", import.meta.url), "utf8"));
+const latest = JSON.parse(readFileSync(new URL("../data/precons-latest.json", import.meta.url), "utf8"));
 const byId = new Map(data.decks.map((d) => [d.id, d]));
 const us = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"});
 
@@ -44,6 +45,23 @@ try {
     await page.locator(".cm-landing [data-action=start-precon]").waitFor({timeout: 60000});
     await page.waitForTimeout(800);
     eq(fetched.length, 0, "the precon list is not fetched until the picker opens");
+
+    /* 0. New from Wizards (Rob, 2026-09-30): the newest release's precons on the landing page, from the small file. */
+    await page.locator("#cm-landing-precons:not([hidden]) .cm-precon-chip").first().waitFor({timeout: 30000});
+    const chips = await page.$$eval("#cm-landing-precons .cm-precon-chip", (bs) => bs.map((b) => ({id: b.dataset.precon, text: b.innerText.replace(/\s+/g, " ").trim(), pips: b.querySelectorAll(".cm-pip").length})));
+    eq(chips.map((c) => c.id), latest.decks.map((d) => d.id), `the landing page offers the newest release's precons, ${latest.decks.length} of them, from data/precons-latest.json`);
+    ok(chips.every((c, i) => c.text.startsWith(latest.decks[i].name) && c.pips === new Set(latest.decks[i].commander.flatMap((x) => x.colorIdentity)).size), "each chip names the deck and its commander's colors");
+    const head = (await page.locator("#cm-landing-precons .cm-precon-latest-head").innerText()).replace(/\s+/g, " ");
+    ok(/New from Wizards/i.test(head) && latest.decks.every((d) => head.includes(d.setName)) && head.includes(us(latest.releaseDate)), `the strip names the sets and the US date: "${head}"`);
+    eq(fetched.length, 0, "and still the full list was not fetched");
+    const fracture = latest.decks.find((d) => /Reality Fracture/.test(d.setName)) || latest.decks[0];
+    await page.locator(`#cm-landing-precons [data-precon="${fracture.id}"]`).click();
+    await page.waitForFunction(() => document.querySelector("#cm-dialog[open] textarea[name=text]"), null, {timeout: 30000});
+    eq(await page.inputValue("#cm-dialog input[name=name]"), fracture.name, `one click starts it: ${fracture.name} (${fracture.setName}) is in the review, named`);
+    eq((await page.$eval("#cm-dialog textarea[name=text]", (t) => t.value)).split("\n").reduce((n, l) => n + Number(l.split(" ")[0]), 0), 100, "a hundred cards");
+    eq(fetched.length, 1, "the full list was fetched for it, once");
+    await page.keyboard.press("Escape");
+    fetched.length = 0;
 
     /* 1. The picker. */
     await page.locator(".cm-landing [data-action=start-precon]").click();
@@ -74,7 +92,7 @@ try {
     eq(lines[0], `1 ${pick.commander[0].name}`, "the commander first");
     eq(lines.reduce((n, l) => n + Number(l.split(" ")[0]), 0), 100, "a hundred cards");
     eq(await page.inputValue("#cm-dialog input[name=name]"), pick.name, "named after the precon");
-    eq(fetched.length, 1, "the list was fetched once");
+    eq(fetched.length, 0, "the list was not fetched again (it was cached by the click above)");
     await page.keyboard.press("Escape");
 
     /* 4. A card banned since it was printed. */
@@ -86,7 +104,7 @@ try {
     await page.locator(`#cm-precon-list [data-precon="${banned.id}"]`).click();
     await page.waitForFunction(() => document.querySelector("#cm-dialog[open] textarea[name=text]"), null, {timeout: 30000});
     ok(/Dockside Extortionist.*banned since it was printed/.test(await page.locator("#cm-notice").innerText()), "a precon with a banned card says so before the review");
-    eq(fetched.length, 1, "and the list was not fetched again");
+    eq(fetched.length, 0, "and the list was not fetched again");
     await context.close();
   }
   /* 1. The New deck wizard's From a precon. */
@@ -98,6 +116,9 @@ try {
     await page.locator("#cm-dialog [data-action=start-precon]").click();
     await page.locator("#cm-precon-list .cm-precon").first().waitFor({timeout: 30000});
     eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Start from a precon", "New deck offers From a precon, the same picker");
+    await page.keyboard.press("Escape");
+    await page.locator("#cm-precon-latest:not([hidden]) .cm-precon-chip").first().waitFor({timeout: 30000});
+    eq(await page.$$eval("#cm-precon-latest .cm-precon-chip", (bs) => bs.map((b) => b.dataset.precon)), latest.decks.map((d) => d.id), "the Decks hub carries the same New from Wizards strip");
     await context.close();
   }
 } finally {

@@ -68,6 +68,7 @@
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
       <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
+    <section class="cm-precon-latest is-landing" id="cm-landing-precons" aria-label="New from Wizards" hidden></section>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>
   <div class="cm-landing-art" aria-hidden="true">
@@ -97,6 +98,8 @@
     const run = (fn) => Promise.resolve().then(fn).catch((err) => C.notice(err.message, true));
     const onSubmit = (ev) => {ev.preventDefault(); run(() => start(input.value));};
     const onPaste = (ev) => {const text = ev.clipboardData?.getData("text") || ""; if (lines(text) < 2) return; ev.preventDefault(); run(() => C.startDeck.list(text));};
+    /* New from Wizards: the newest release's precons, filled in once their few kilobytes arrive (crankmagic-decks.js). */
+    if (C.preconLatest) C.preconLatest("cm-landing-precons");
     form.addEventListener("submit", onSubmit);
     input.addEventListener("paste", onPaste);
     return () => {form.removeEventListener("submit", onSubmit); input.removeEventListener("paste", onPaste);};
