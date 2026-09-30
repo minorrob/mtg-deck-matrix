@@ -1,0 +1,109 @@
+{
+ "schema": "precons-latest@1",
+ "generatedAt": "2026-09-30T12:57:14.154Z",
+ "generator": "tools/build-precons.mjs",
+ "count": 6,
+ "source": "the newest release date in data/precons.json; set names from MTGJSON SetList.json",
+ "releaseDate": "2026-10-02",
+ "decks": [
+  {
+   "id": "CallingAllAngels_FDC",
+   "code": "FDC",
+   "setName": "Foundations Commander",
+   "name": "Calling All Angels",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Giada, Font of Hope",
+     "colorIdentity": [
+      "W"
+     ]
+    }
+   ],
+   "total": 100
+  },
+  {
+   "id": "KeenEngineering_FDC",
+   "code": "FDC",
+   "setName": "Foundations Commander",
+   "name": "Keen Engineering",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Sai, Master Thopterist",
+     "colorIdentity": [
+      "U"
+     ]
+    }
+   ],
+   "total": 100
+  },
+  {
+   "id": "MultiverseReforged_FRC",
+   "code": "FRC",
+   "setName": "Reality Fracture Commander",
+   "name": "Multiverse Reforged",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Jace, Multiverse Architect",
+     "colorIdentity": [
+      "W",
+      "U",
+      "B",
+      "R"
+     ]
+    }
+   ],
+   "total": 100
+  },
+  {
+   "id": "ReignOfDragons_FDC",
+   "code": "FDC",
+   "setName": "Foundations Commander",
+   "name": "Reign of Dragons",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Lathliss, Dragon Queen",
+     "colorIdentity": [
+      "R"
+     ]
+    }
+   ],
+   "total": 100
+  },
+  {
+   "id": "TramplesaurusRex_FDC",
+   "code": "FDC",
+   "setName": "Foundations Commander",
+   "name": "Tramplesaurus Rex",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Ghalta, Primal Hunger",
+     "colorIdentity": [
+      "G"
+     ]
+    }
+   ],
+   "total": 100
+  },
+  {
+   "id": "WretchedRanks_FDC",
+   "code": "FDC",
+   "setName": "Foundations Commander",
+   "name": "Wretched Ranks",
+   "releaseDate": "2026-10-02",
+   "commander": [
+    {
+     "name": "Ghoulcaller Gisa",
+     "colorIdentity": [
+      "B"
+     ]
+    }
+   ],
+   "total": 100
+  }
+ ]
+}
