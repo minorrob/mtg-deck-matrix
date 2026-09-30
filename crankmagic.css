@@ -3172,6 +3172,7 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-board-strip .v-button.is-on{background:var(--v-soft);border-color:var(--v-accent)}
 .cm-board-menu{position:absolute;right:0;top:calc(100% + 6px);width:320px;padding:14px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .67);white-space:normal;z-index:10}
 .cm-board-menu p{margin:0 0 10px;font-size:12px}
+#cm-board-tools{width:min(380px,calc(100vw - 72px))}   /* wide enough for the card-size row: label, both ends, the value */
 .cm-board-menu h3{margin:0 0 8px;font-size:13px}
 .cm-board-nav{left:0;right:auto;width:220px}
 .cm-board-nav ul{list-style:none;margin:0 0 8px;padding:0}
@@ -3454,7 +3455,8 @@ button.cm-vitals{cursor:pointer}
 .cm-board[data-view="full"][data-coach="open"] .cm-full-side{align-self:start;height:calc(50% - 3px)}
 .cm-board-coach.is-docked{top:var(--dock-y,50%);left:var(--dock-x,auto);right:auto;bottom:auto;width:var(--dock-w,210px);height:var(--dock-h,50%);border:1px solid var(--v-line-strong);border-radius:8px;box-shadow:none;overflow:hidden}
 .cm-board-coach.is-docked .cm-coach-head{gap:6px;padding:8px 10px}
-.cm-board-coach.is-docked .cm-coach-head h2{font-size:13px}
+#matrix-v2 .cm-board-coach.is-docked .cm-coach-head h2{font-size:14px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-board-coach.is-docked .cm-coach-brand{display:none}   /* the column is narrow: "Coach", beside its glyph */
 .cm-board-coach.is-docked .cm-coach-head p{display:none}
 .cm-board-coach.is-docked .cm-coach-thread{padding:8px 10px;gap:8px}
 .cm-board-coach.is-docked .cm-coach-msg{max-width:100%}
