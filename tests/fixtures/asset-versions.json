@@ -45,6 +45,14 @@
       "version": 2,
       "sha": "f8de7bf34e989990"
     },
+    "assets/crankmagic/landing-cards-poster.webp": {
+      "version": 1,
+      "sha": "7b13abdcde778082"
+    },
+    "assets/crankmagic/landing-cards.webp": {
+      "version": 1,
+      "sha": "3cc0812ddfe08cc9"
+    },
     "assets/crankmagic/satoshi-400.woff2": {
       "version": 1,
       "sha": "50dca57f0b77918e"
@@ -138,23 +146,23 @@
       "sha": "a35a68f87ac2dadf"
     },
     "crankmagic-account.js": {
-      "version": 10,
-      "sha": "6a42cf4a02223dcf"
+      "version": 11,
+      "sha": "ffcc18e35821f9d6"
     },
     "crankmagic-advisor.js": {
       "version": 10,
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 429,
-      "sha": "92594c8383c6c69a"
+      "version": 432,
+      "sha": "742f5dc65d1cb06d"
     },
     "crankmagic-assets.js": {
       "version": 35,
       "sha": "07c2f6940e54854f"
     },
     "crankmagic-board.js": {
-      "version": 18,
+      "version": 17,
       "sha": "ce996c1e67e4a0ad"
     },
     "crankmagic-brand.js": {
@@ -178,12 +186,12 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 96,
-      "sha": "253b7ae48cc8367a"
+      "version": 97,
+      "sha": "74de59dcf173ee45"
     },
     "crankmagic-decks.js": {
-      "version": 95,
-      "sha": "a9e4147255e6cfc1"
+      "version": 96,
+      "sha": "94095a087097591c"
     },
     "crankmagic-design.css": {
       "version": 23,
@@ -234,8 +242,8 @@
       "sha": "7107decfb233f4dc"
     },
     "crankmagic-landing.js": {
-      "version": 6,
-      "sha": "0030c651705b397a"
+      "version": 8,
+      "sha": "764100dffa421e94"
     },
     "crankmagic-lens.js": {
       "version": 2,
@@ -310,8 +318,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 413,
-      "sha": "e73323197b78f6fa"
+      "version": 416,
+      "sha": "142bfc1c976c748d"
     },
     "crankmagic-table.js": {
       "version": 15,
@@ -334,8 +342,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 261,
-      "sha": "23dfae5c7b31c517"
+      "version": 263,
+      "sha": "8fbcc241a18e1d7a"
     },
     "custom-model.js": {
       "version": 3,
