@@ -2966,7 +2966,15 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-landing-fine{margin:0;font-size:13px;color:var(--v-muted)}
 .cm-landing-art{position:relative;height:500px;min-width:0}
 /* Rob's art (2026-09-30), the three cards and their ring of light, as tall as the area; the Krenko box sits over its foot. */
-.cm-landing-hero-art{position:absolute;right:0;top:-10px;height:calc(100% + 10px);width:auto;max-width:100%;object-fit:contain;object-position:right center}
+.cm-landing-hero-art{position:absolute;right:0;top:-10px;height:calc(100% + 10px);width:auto;max-width:100%;object-fit:contain;object-position:right center;transition:opacity .5s ease}
+/* The animation over it, on black and screen-blended, so black is the page; the still fades out once it plays. */
+.cm-landing-hero-video{position:absolute;right:0;top:-10px;height:calc(100% + 10px);width:auto;max-width:100%;object-fit:contain;object-position:right center;mix-blend-mode:screen;opacity:0;transition:opacity .5s ease;pointer-events:none}
+.cm-landing-art.is-animated .cm-landing-hero-video{opacity:1}
+.cm-landing-art.is-animated .cm-landing-hero-art{opacity:0}
+/* A light theme, or a reader asking for less motion after the page opened: the still again, the video away. */
+#matrix-v2[data-theme="light"] .cm-landing-hero-video{display:none}
+#matrix-v2[data-theme="light"] .cm-landing-art.is-animated .cm-landing-hero-art{opacity:1}
+@media (prefers-reduced-motion:reduce){.cm-landing-hero-video{display:none}.cm-landing-art.is-animated .cm-landing-hero-art{opacity:1}}
 .cm-landing-sample{position:absolute;left:0;bottom:20px;z-index:2;width:290px;padding:14px 16px;border-radius:16px;background:var(--v-panel);border:1px solid var(--v-line);box-shadow:0 20px 40px -20px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
 .cm-landing-sample>div{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .cm-landing-sample>div span,.cm-landing-sample p{font-size:12px;color:var(--v-muted)}
