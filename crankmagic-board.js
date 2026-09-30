@@ -302,15 +302,16 @@
       next: at < 0 ? "" : at + 1 < STEPS.length ? STEPS[at + 1][0] : "Next turn"};
   };
   /* What the strip says (item 12). Priority on another player's turn says whose step it is and that you may
-     respond; on your own turn the button's words carry it (item 10), and the draw's button is its own words. */
+     respond; on your own turn the button's words carry it (item 10) -- with a spell on the stack, that you may
+     respond, the button naming the spell -- and the draw's button is its own words. */
   const waitingText = () => {
-    const d = view.decision, s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
+    const d = view.decision, s = view.state;
     if (view.status === "finished") return "The game is over.";
     if (d && sending) return "Sent…";
     if (d && d.kind === "priority") {
-      if (top) return `${top.name || "A spell"} is on the stack · you may respond`;
       const at = stepAt(s.phase);
-      return s.turnPlayerId === view.seat || at < 0 ? "" : `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
+      if (s.turnPlayerId !== view.seat && at >= 0) return `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
+      return s.stack.length ? "You may respond" : "";
     }
     if (d) return d.kind === "draw" ? "" : d.title;
     return view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";

@@ -662,11 +662,13 @@ try {
   const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
   await toCast.click();
   await waitText(second.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
-  ok(true, `cast, ${castName} is on the stack, and the caster's button reads Resolve ${castName}`);
+  eq((await text(second.page, ".cm-board-waiting")).trim(), "You may respond", `cast, ${castName} is on the stack: the caster's button reads Resolve ${castName}, and the strip says they may respond`);
   await second.page.click(".cm-board-strip [data-action=board-pass]");
   const firstBoard = second === rob ? maya : rob;
   await waitText(firstBoard.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
-  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${castName} is on the stack · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says it is on the stack and that they may respond`);
+  const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
+  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
+  ok(new RegExp(`Waiting on ${firstName_}`).test(await text(second.page, ".cm-board-waiting")), "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
