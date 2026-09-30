@@ -8,6 +8,7 @@ ships; the product ships the processed versions.
 |---|---|---|
 | `crankmagic_logo.png` | `crankmagic-logo-gear-v4-256.webp` (35KB) | `assets/crankmagic/` |
 | `card_backgrounds/card_background_{tan,blue,black,red,green}.png` | `card-back-{white,blue,black,red,green}.webp` (~120KB each) | `game/ui/assets/card-backs/` |
+| the same five | `card-back-{tan,blue,black,red,green}.webp` (280x392, ~20KB each), the cloud board's backs | `assets/crankmagic/`, by `tools/build-card-backs.py` |
 
 Neither could be used as delivered. Both arrive 2752x1536 RGB with **no alpha**: the card backs'
 transparency checkerboard is baked in as real gray pixels, and the logo sits on a flat navy field

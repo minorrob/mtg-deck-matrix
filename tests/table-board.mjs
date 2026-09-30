@@ -38,6 +38,10 @@
  *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
  *             socket, the seat never marked away.
  *   B5        the turn's words and beats (docs/plan-to-done-2026-09-30.md, items 10-13), in the Decide lines above.
+ *   B7        Focus and Full screen (items 15, 18, 20): the seat pane's divider dragged, by the arrow keys too,
+ *             remembered, and the tiles miniatures of their boards past the width; the Panel's divider and Full
+ *             screen's side column's, the card to read growing with its share; Rob's card backs, the library's and,
+ *             rotated to another seat in Full screen, that seat's hand as backs in its color, never a face.
  *   B6        the hand tray (item 14): the count beside the ✋; the hand by type -- Land, Creature, Instant, Other -- as
  *             castable now over in hand, agreeing with the cards lit; castable again once the mana is there.
  *   B4        the Table view's shape: the tabletop still; the bar between the rows dragged (and by the arrow keys), the
@@ -473,6 +477,41 @@ try {
   ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
   await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
 
+  /* B7, item 15: THE PANE'S DIVIDER. Dragged wider, the tiles grow with it, and past 300px each is a miniature of that
+     seat's real board; the mat stays the largest 16:9 beside it; the width is remembered. */
+  const paneGeo = () => rob.page.evaluate(() => {
+    const pane = document.querySelector(".cm-board-pane").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), main = document.querySelector(".cm-board-main").getBoundingClientRect(), tray = document.querySelector(".cm-board-main > .cm-board-hand").getBoundingClientRect();
+    const tile = document.querySelector(".cm-board-tile[data-seat='1']"), mine = document.querySelector(".cm-board-tile[data-seat='0']");
+    return {pane: Math.round(pane.width), tile: Math.round(tile.getBoundingClientRect().width), mini: document.querySelectorAll(".cm-board-tile.is-mini .cm-board-mini .cm-mat[data-fit=mini]").length,
+      robLands: mine.querySelectorAll(".cm-board-mini [data-zone=lands] .cm-bcard").length, inert: !!tile.querySelector(".cm-board-mini[inert]"),
+      matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
+  });
+  const pane0 = await paneGeo();
+  const paneGrip = await rob.page.locator(".cm-board-panegrip [data-drag=pane]").boundingBox();
+  await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2, paneGrip.y + 200);
+  await rob.page.mouse.down();
+  await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 100, paneGrip.y + 200, {steps: 4});
+  await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
+  await rob.page.mouse.up();
+  const pane1 = await paneGeo();
+  ok(pane0.pane === 168 && Math.abs(pane1.pane - 368) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && pane1.largest && Math.abs(pane1.ratio - 1.78) < 0.02,
+    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside it`);
+  ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 300px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
+  await shot(rob.page, "pane-miniatures-1400");
+  await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
+  await rob.page.waitForFunction(() => /Maya's hand/.test(document.querySelector(".cm-board-mat")?.innerText || ""), null, {timeout: 5000});
+  ok(true, "a miniature is still the tile: a click on it puts that seat's board on the mat");
+  await rob.page.locator(".cm-board-tile[data-seat='0'] .cm-board-tile-main").click();
+  await rob.page.click("[data-action=board-view][data-view=table]");
+  await rob.page.click("[data-action=board-view][data-view=focus]");
+  await rob.page.locator(".cm-board-mat").waitFor();
+  const pane2 = await paneGeo();
+  ok(pane2.pane === pane1.pane && pane2.mini === 2 && Number(await rob.page.evaluate(() => localStorage.getItem("cm-board-pane"))) === pane1.pane, "and the width is remembered on the device: the Focus view drawn again keeps it");
+  await rob.page.focus(".cm-board-panegrip [data-drag=pane]");
+  for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowLeft");
+  const pane3 = await paneGeo();
+  ok(pane3.pane === pane1.pane - 200 && pane3.mini === 0, `the arrow keys move it too, 20px a press: back to ${pane3.pane}px, the tiles tiles again`);
+
   /* Full screen: the page is the game's; a card picked shows large at the side with what it can do; ⎋ leaves. */
   await maya.page.click("[data-action=board-view][data-view=full]");
   await maya.page.locator(".cm-full-rail").waitFor();
@@ -485,6 +524,19 @@ try {
   await maya.page.locator(".cm-full-pick").waitFor();
   ok((await maya.page.getAttribute(".cm-full-pick", "aria-label")) === firstName, `a card picked shows large at the side (${firstName}), and picking it does nothing else`);
   await shot(maya.page, "board-full-1280");
+  /* B7, item 18: Full screen's side column has the same bar between its card and its log: dragged up, the card keeps
+     5:7 in the smaller share and the log below gets the room. */
+  const sideGeo = () => maya.page.evaluate(() => {const c = document.querySelector("#cm-full-pick .cm-bcard").getBoundingClientRect(), log = document.querySelector(".cm-full-side .cm-board-band").getBoundingClientRect(); return {w: c.width, ratio: Math.round(c.width / c.height * 1000) / 1000, log: log.height};});
+  const sg0 = await sideGeo();
+  const sideGrip = await maya.page.locator(".cm-full-side [data-drag=side]").boundingBox();
+  await maya.page.mouse.move(sideGrip.x + 30, sideGrip.y + sideGrip.height / 2);
+  await maya.page.mouse.down();
+  await maya.page.mouse.move(sideGrip.x + 30, sideGrip.y + sideGrip.height / 2 - 80, {steps: 4});
+  await maya.page.mouse.move(sideGrip.x + 30, sideGrip.y + sideGrip.height / 2 - 160, {steps: 4});
+  await maya.page.mouse.up();
+  const sg1 = await sideGeo();
+  ok(sg1.w < sg0.w - 20 && Math.abs(sg1.ratio - 5 / 7) < 0.01 && sg1.log > sg0.log + 100, `Full screen's side column has the same divider: 160px up, the card ${sg0.w.toFixed(0)} → ${sg1.w.toFixed(0)}px, still 5:7, the log ${sg0.log.toFixed(0)} → ${sg1.log.toFixed(0)}px`);
+  await maya.page.evaluate(() => localStorage.removeItem("cm-board-split:side"));
   await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
   await maya.page.locator(".cm-board-strip").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
@@ -496,6 +548,17 @@ try {
   await maya.page.locator(".cm-full-mine .cm-seatboard[data-seat='0']").waitFor();
   ok(/Viewing Rob/.test(await text(maya.page, ".cm-full-viewing")) && await maya.page.locator(".cm-full-others .cm-seatboard.is-you").count() === 1 && await maya.page.locator(".cm-full-mine .cm-board-hand .cm-bcard").count() > 0, "⟳ walks the big board round the table: Rob's board large, hers across the top, her own hand still along the foot");
   ok(!(await maya.page.content()).includes("Rob Secret"), "and nothing of his hand came with it");
+  /* B7, item 20: rotated to another seat, the tray shows that seat's hand as the backs of its cards, Rob's art in the
+     seat's color (tan, here, for a commander no library knows), as many as he holds and never a face. */
+  const backs = await maya.page.evaluate(() => {
+    const tray = document.querySelector(".cm-full-mine .cm-board-hand"), cards = [...tray.querySelectorAll(".cm-bcard")];
+    return {backs: tray.classList.contains("is-backs"), n: cards.length, all: cards.every((c) => c.classList.contains("is-back") && !c.dataset.card), art: getComputedStyle(cards[0]).backgroundImage, label: tray.getAttribute("aria-label"),
+      pile: getComputedStyle(document.querySelector(".cm-full-mine [data-zone=library] .cm-bcard")).backgroundImage};
+  });
+  const robHandCount = views(MAYA).at(-1).state.players[0].zones.Hand.count;
+  ok(backs.backs && backs.n === robHandCount && backs.all && /card-back-tan\.webp/.test(backs.art), `the tray shows Rob's hand as ${backs.n} backs, as many as he holds (${robHandCount}), in Rob's card back, and not one face ("${backs.label}")`);
+  ok(/card-back-tan\.webp/.test(backs.pile), "and his library is drawn with the same back");
+  await shot(maya.page, "rotated-backs-1280");
   await maya.page.click(".cm-full-viewing [data-action=board-focus]");
   await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").waitFor();
   ok(true, "My board brings hers back");
@@ -676,6 +739,30 @@ try {
   ok(panelCard.tall && panelCard.transform === "none" && panelCard.mark === "Tapped" && /tapped/.test(panelCard.label) && panelCard.matTurned, `the Panel shows the tapped ${secondLand} upright with a small Tapped mark, while it lies turned on the mat`);
   ok(!panelCard.heading.includes("Card"), `and no "Card" heading over it (${panelCard.heading.join(", ")})`);
   await shot(second.page, "panel-tapped-" + (second === rob ? "1400" : "1280"));
+  /* B7, item 18: THE PANEL'S DIVIDER. Dragged down, the card takes more of the column and grows, 5:7; the history below
+     shows less; the share is remembered. */
+  const panelGeo = () => second.page.evaluate(() => ({card: document.querySelector(".cm-board-panel .cm-panel-card .cm-bcard").getBoundingClientRect().width,
+    hist: document.querySelector(".cm-board-panel .cm-panel-history").getBoundingClientRect().height, ratio: (() => {const r = document.querySelector(".cm-board-panel .cm-panel-card .cm-bcard").getBoundingClientRect(); return Math.round(r.width / r.height * 1000) / 1000;})()}));
+  const pg0 = await panelGeo();
+  const splitGrip = await second.page.locator(".cm-board-panel [data-drag=panel]").boundingBox();
+  await second.page.mouse.move(splitGrip.x + 40, splitGrip.y + splitGrip.height / 2);
+  await second.page.mouse.down();
+  await second.page.mouse.move(splitGrip.x + 40, splitGrip.y + splitGrip.height / 2 + 60, {steps: 4});
+  await second.page.mouse.move(splitGrip.x + 40, splitGrip.y + splitGrip.height / 2 + 120, {steps: 4});
+  await second.page.mouse.up();
+  const pg1 = await panelGeo(), panelShare = Number(await second.page.evaluate(() => localStorage.getItem("cm-board-split:panel")));
+  ok(pg1.card > pg0.card + 20 && pg1.hist < pg0.hist - 60 && Math.abs(pg1.ratio - 5 / 7) < 0.01 && panelShare > 0.5,
+    `the divider under the Panel's card drags: 120px down, the card ${pg0.card.toFixed(0)} → ${pg1.card.toFixed(0)}px wide, still 5:7, the history below ${pg0.hist.toFixed(0)} → ${pg1.hist.toFixed(0)}px (share ${panelShare})`);
+  await second.page.click("[data-action=board-panel]");
+  await second.page.click("[data-action=board-panel]");
+  await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().click();
+  await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
+  const pg2 = await panelGeo();
+  ok(Math.abs(pg2.card - pg1.card) < 1, "and the share is remembered on the device: the Panel opened again keeps it");
+  await second.page.focus(".cm-board-panel [data-drag=panel]");
+  for (let i = 0; i < 30; i += 1) await second.page.keyboard.press("ArrowUp");
+  ok(Number(await second.page.evaluate(() => localStorage.getItem("cm-board-split:panel"))) === 0.2 && (await panelGeo()).card < pg0.card, "the arrow keys move it too, and it stops at a fifth of the column");
+  await second.page.evaluate(() => localStorage.removeItem("cm-board-split:panel"));
   await second.page.click("[data-action=board-panel]");
 
   /* B5, items 10 and 12: A SPELL ON THE STACK. With the mana, the creature in hand is bright; cast, the button names what
