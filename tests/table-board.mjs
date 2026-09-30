@@ -899,7 +899,7 @@ try {
   }
   /* EVERY CARD SAYS ITS STATE: its name, tapped, its power and toughness, its damage and counters, as the card shows them. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
-    const cards = await who.page.evaluate(() => [...document.querySelectorAll("#cm-board .cm-bcard:not(.is-back)")].map((el) => {
+    const cards = await who.page.evaluate(() => [...document.querySelectorAll("#cm-board button.cm-bcard")].map((el) => {
       const l = el.getAttribute("aria-label") || "", name = (el.querySelector(".cm-bcard-name")?.textContent || "").trim(), pt = (el.querySelector(".cm-bcard-pt")?.textContent || "").trim();
       const marks = [...el.querySelectorAll(".cm-bcard-mark:not(.is-state)")].map((m) => m.textContent.trim());
       return {l, tapped: el.classList.contains("is-tapped"), said: l.startsWith(name) && (!el.classList.contains("is-tapped") || /, tapped\b/.test(l)) && (!pt || l.includes(pt)) && marks.every((m) => l.includes(m))};
@@ -911,22 +911,26 @@ try {
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
     await who.page.evaluate(() => {document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0);});
     await who.page.evaluate(() => document.body.focus());
-    const order = [];
-    for (let i = 0; i < 160; i += 1) {
+    const order = [], reached = {board: new Set(), hand: new Set()};
+    for (let i = 0; i < 200; i += 1) {
       await who.page.keyboard.press("Tab");
-      const at = await who.page.evaluate(() => {
+      const [at, cardId] = await who.page.evaluate(() => {
         const el = document.activeElement;
-        if (!el || el === document.body) return "none";
-        if (!el.closest("#cm-board")) return "page";
-        return el.closest(".cm-board-strip") ? "strip" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-pane") ? "seats" : el.closest(".cm-board-mat") ? "board" : el.closest(".cm-board-panel") ? "panel" : "other " + (el.getAttribute("aria-label") || el.className);
+        if (!el || el === document.body) return ["none", ""];
+        if (!el.closest("#cm-board")) return ["page", ""];
+        const at = el.closest(".cm-board-strip") ? "strip" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-pane") ? "seats" : el.closest(".cm-board-mat") ? "board" : el.closest(".cm-board-panel") ? "panel" : "other " + (el.getAttribute("aria-label") || el.className);
+        return [at, el.matches(".cm-bcard") ? el.dataset.card || "" : ""];
       });
+      if (cardId && reached[at]) reached[at].add(cardId);
       if (order.at(-1) !== at) order.push(at);
       if (order.includes("hand") && at !== "hand") break;
     }
     const board = order.filter((r) => r !== "page" && r !== "none");
     const runs = (r) => board.filter((x) => x === r).length;
+    const cardsIn = await who.page.evaluate(() => [".cm-board-mat", ".cm-board-hand"].map((q) => document.querySelectorAll(`${q} button.cm-bcard`).length));
     ok(board[0] === "strip" && board.indexOf("strip") < board.indexOf("board") && board.indexOf("board") < board.indexOf("hand") && ["strip", "board", "hand"].every((r) => runs(r) === 1),
       `at ${width} Tab walks the strip, then the boards, then the hand, each once (${board.join(" → ")})`);
+    ok(cardsIn[1] > 0 && reached.board.size === cardsIn[0] && reached.hand.size === cardsIn[1], `at ${width} and on the way it reaches every card on the mat (${reached.board.size} of ${cardsIn[0]}) and in the hand (${reached.hand.size} of ${cardsIn[1]})`);
     eq(await who.page.evaluate(() => [...document.querySelectorAll("#cm-board [tabindex]")].filter((el) => Number(el.getAttribute("tabindex")) > 0).length), 0, `at ${width} nothing on the board takes a tabindex above zero`);
   }
   /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
