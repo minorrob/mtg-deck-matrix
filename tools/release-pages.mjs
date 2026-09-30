@@ -195,7 +195,7 @@ export function worktreeSource() {
 }
 
 const TEXT = /\.(html|js|mjs|css|json|webmanifest|svg|md|txt)$/i;
-const PATHLIKE = /(?:^|[^A-Za-z0-9_./-])((?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(?:js|mjs|css|json|svg|png|webp|jpe?g|gif|ico|woff2?|html|md|txt|webmanifest|xlsx|docx|pdf))(?=$|[?#"'`\s)<>,;])/g;
+const PATHLIKE = /(?:^|[^A-Za-z0-9_./-])((?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(?:js|mjs|css|json|svg|png|webp|webm|jpe?g|gif|ico|woff2?|html|md|txt|webmanifest|xlsx|docx|pdf))(?=$|[?#"'`\s)<>,;])/g;
 
 /* Comments are prose about files, not references to them; a docs/ path in a comment is not a leak. */
 function stripComments(text) {
