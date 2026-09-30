@@ -40,6 +40,10 @@
  *                 a drop-down from the strip with a filter (a press outside closes it), the band on the Focus mat,
  *                 a column in Full screen; a clock opens it wherever it is offered
  *   Over          who won, or that it was ended early; Back to the table; and Download the record (M8b)
+ *   Away          leaving the table page does not leave the game (Rob, 2026-09-30, item 19): the board keeps its socket
+ *                 and the room's last view, the rail says "Game on · Turn n · Return" on every other page, and Play
+ *                 opens straight onto it. The socket stays open through the game's end -- a table takes no new socket
+ *                 once its game is over, and the ended game's views still arrive -- until Back to the table closes it
  *
  * Views arrive in order with the controller's revision; an older one is ignored. A dropped socket is reopened,
  * backing off to ten seconds, and the room sends the view again the moment it is back.
@@ -98,6 +102,7 @@
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
+  let attached = false;     /* the table page is showing the board (the board can hold a game with the page elsewhere) */
 
   /* ---- the socket ---- */
   function connect() {
@@ -304,7 +309,7 @@
   function menu() {
     const links = [["Decks", "#decks"], ["Library", "#cards"], ["Explore", "#discover"], ["Play", "#game"], ["Settings", "#settings"]];
     return `<div class="cm-board-menu cm-board-nav" role="menu" id="cm-board-nav"><ul>${links.map(([l, h]) => `<li><a role="menuitem" href="${h}">${l}</a></li>`).join("")}</ul>
-      <p class="cm-muted">The game keeps going at the table; open Play to come back to it.</p></div>`;
+      <p class="cm-muted">The game keeps going, and your seat with it: Play, or Game on in the rail, brings you back.</p></div>`;
   }
   function stepsMenu() {
     const at = stepAt(view.state.phase);
@@ -690,6 +695,7 @@
   }
   /* A view arrives whenever anyone acts; the history's filter keeps its focus and caret through the redraw. */
   function draw() {
+    gameChip();
     const active = document.activeElement;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
     render();
@@ -698,6 +704,22 @@
     if (caret === null) return;
     const filter = document.querySelector("#cm-board [data-board-history-filter]");
     if (filter) {filter.focus(); filter.setSelectionRange(caret, caret);}
+  }
+  /* THE RAIL SAYS A GAME IS ON, from any page but the table's (item 19): one line under the page links, back to it. */
+  function gameChip() {
+    let chip = document.getElementById("cm-game-on");
+    if (attached || !tableId || !view) {if (chip) chip.remove(); return;}
+    if (!chip) {
+      const at = document.querySelector(".cm-sidebar .v-nav-track");
+      if (!at) return;
+      chip = Object.assign(document.createElement("a"), {id: "cm-game-on", className: "cm-game-on"});
+      at.after(chip);
+    }
+    const over = view.status === "finished", turn = view.state && view.state.turn ? view.state.turn : 1;
+    chip.href = `#table?id=${encodeURIComponent(tableId)}`;
+    chip.classList.toggle("is-over", over);
+    chip.innerHTML = over ? `<b>Game over</b><span>Return</span>` : `<b>Game on</b><span>Turn ${turn}</span><span>Return</span>`;
+    chip.setAttribute("aria-label", over ? "Your game is over: return to the table" : `Your game is on, turn ${turn}: return to it`);
   }
   function render() {
     const host = document.getElementById("cm-board");
@@ -826,6 +848,7 @@
     /** The table is playing (or just finished): draw the board in the page, and keep the socket open. */
     show(t) {
       if (tableId !== t.tableId) {C.board.close(); tableId = t.tableId; view = null; focus = null; away.clear();}
+      attached = true;
       /* The table's list of who is away is the truth; the room's "away" frames only say it sooner. What it says
          of each seat (away, its mat) is redrawn when it changes. */
       const said = () => JSON.stringify([[...away], (table && table.seats || []).map((x) => x.mat)]);
@@ -843,12 +866,25 @@
     },
     /** Whether the board is what this table's page should show. */
     wants(t) {return t.phase === "playing" || (t.tableId === tableId && !!view);},
+    /** The table page is left, the game is not (item 19): the board's page goes, its socket and the room's last view
+        stay, and the rail says a game is on. */
+    detach() {
+      attached = false;
+      stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
+      tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
+      coach.open = false; clearTimeout(coach.timer); coach.typing = false;
+      gameChip();
+    },
+    /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
+    live() {return tableId && view && view.status !== "finished" ? {tableId, turn: view.state.turn} : null;},
     /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
     outcomeOf,
     /** The picture the board draws for a card by its name: the library's record, else the shipped card records'. */
     pictureOf,
     close() {
+      attached = false;
       disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
+      document.getElementById("cm-game-on")?.remove();
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
       coach.open = false; coach.thread = []; coach.typing = false; clearTimeout(coach.timer); peek(null); leaveFullscreen();

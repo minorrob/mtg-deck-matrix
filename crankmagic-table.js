@@ -173,6 +173,9 @@
       return;
     }
     const id = params.get("id"), code = params.get("code");
+    /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
+    const live = !id && C.board && C.board.live && C.board.live();
+    if (live) {location.replace(`#table?id=${encodeURIComponent(live.tableId)}`); return;}
     if (!id) return newTable();
     let stop = false, timer = null;
     const tick = () => {
@@ -192,7 +195,8 @@
       }
       loop();
     })();
-    return () => {stop = true; clearTimeout(timer); clearInterval(clock); if (C.board) C.board.close();};
+    /* Leaving the page is not leaving the game: the board keeps its socket, and the seat is never marked away. */
+    return () => {stop = true; clearTimeout(timer); clearInterval(clock); if (C.board) C.board.detach();};
   };
   function showError(error, id) {
     const signIn = error.signedOut ? b("Sign in", "account-sign-in", {}, true) : "";

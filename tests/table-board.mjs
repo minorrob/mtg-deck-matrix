@@ -33,6 +33,8 @@
  *             History closes on a press outside it; the Panel reads a tapped card upright; the hand's cards whole in
  *             Table, Focus, Full screen and Full screen after the browser's is left, at 1400 and at 1280; a card no
  *             library holds is drawn from the shipped card records.
+ *   B2        leaving the board does not lose the game: Decks and back by the rail's Game on, and again by Play, on one
+ *             socket, the seat never marked away.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -268,6 +270,31 @@ try {
   await active.page.mouse.click(Math.round((await active.page.viewportSize()).width / 2), Math.round((await active.page.viewportSize()).height / 2));
   await active.page.locator("#cm-board-history").waitFor({state: "detached", timeout: 3000});
   ok(true, "the band's clock opens the same drop-down, and a press on the board closes it");
+
+  /* B2, item 19: LEAVING THE BOARD DOES NOT LOSE THE GAME. Rob goes to Decks from the board's menu and comes back by the
+     rail's chip; goes again and comes back by Play. One socket all along, and the room never marks his seat away. */
+  const robSockets = routes[ROB].length, awayFrames = () => frames[MAYA].filter((f) => /"type":"away"/.test(f)).length, awayBefore = awayFrames();
+  await rob.page.click("[data-action=board-menu]");
+  await rob.page.click("#cm-board-nav a[href='#decks']");
+  await rob.page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
+  await rob.page.locator("#cm-game-on").waitFor({timeout: 10000});
+  ok(/Game on\s*Turn \d+\s*Return/.test(await rob.page.locator("#cm-game-on").textContent()) && await rob.page.locator(".cm-sidebar #cm-game-on").isVisible(), `on Decks the rail says the game is on (${(await rob.page.locator("#cm-game-on").textContent()).trim()})`);
+  ok(routes[ROB].length === robSockets && !routes[ROB].at(-1).server.closed, "and the board's socket stayed open: the same one");
+  const viewsAway = views(ROB).length;
+  await serial(async () => object.broadcast());
+  await rob.page.waitForTimeout(500);
+  ok(views(ROB).length > viewsAway && await rob.page.locator("#cm-game-on").count() === 1, "the room's views still reach Rob's page while he is on Decks");
+  await shot(rob.page, "game-on-decks-1400");
+  await rob.page.click("#cm-game-on");
+  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+  ok(await rob.page.locator("#cm-game-on").count() === 0 && routes[ROB].length === robSockets, "Game on brings the board back, on the same socket, and puts itself away");
+  await rob.page.click("[data-action=board-menu]");
+  await rob.page.click("#cm-board-nav a[href='#decks']");
+  await rob.page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
+  await rob.page.click(".cm-sidebar a[data-nav=game]");
+  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+  ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Play opens straight onto the game, on the same socket");
+  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag")), "and through all of it the room never marked Rob's seat away");
 
   /* THE THREE VIEWS. Table: both boards at once, you at the foot, the logo between them opening Table vitals. */
   await rob.page.click("[data-action=board-view][data-view=table]");
@@ -694,12 +721,20 @@ try {
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "table", "back at a desk, the desk board again, in the view she left it in: seats tapped on the phone changed nothing there");
   await maya.page.click("[data-action=board-view][data-view=focus]");
 
-  /* END: Tools › End game, two taps; both boards say so; back to the table. */
+  /* END: Tools › End game, two taps; both boards say so; back to the table. B2: Rob is on Decks when it ends -- his rail
+     says the game is over, his socket stays open, and Game over brings him to the result. */
+  await rob.page.click("[data-action=board-menu]");
+  await rob.page.click("#cm-board-nav a[href='#decks']");
+  await rob.page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
+  await rob.page.locator("#cm-game-on").waitFor({timeout: 10000});
   await maya.page.click("[data-action=board-tools]");
   await maya.page.click("#cm-board-tools [data-action=board-end]");
   eq((await text(maya.page, "#cm-board-tools [data-action=board-end][data-confirm='1']")).trim(), "End for everyone · keep the record", "End game in Tools asks a second tap first, naming what it does");
   await shot(maya.page, "board-end-1280");
   await maya.page.click("#cm-board-tools [data-action=board-end][data-confirm='1']");
+  await rob.page.waitForFunction(() => /Game over/.test(document.getElementById("cm-game-on")?.textContent || ""), null, {timeout: 15000});
+  ok(!routes[ROB].at(-1).server.closed, "the game ended with Rob on Decks: his rail says Game over, and his socket stays open (a table takes no new one once its game is over)");
+  await rob.page.click("#cm-game-on");
   await waitText(rob.page, ".cm-board-over", /ended early/);
   await waitText(maya.page, ".cm-board-over", /ended early/);
   ok(/record is kept/.test(await text(rob.page, ".cm-board-over")), "both boards say it was ended early, nobody lost, and the record is kept");
