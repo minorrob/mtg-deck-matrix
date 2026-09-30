@@ -238,4 +238,34 @@ eq(L.PASSWORD,'treycmload1');
   ok(!same(base,{...moved,paid:{'Sol Ring':2}}));
   ok(!same(base,{...moved,upgrades:[{deck:'D1',card:'Other',price:4.2}]}));
   ok(!same(base,{...moved,owned:{inDeck:{},bench:[['Sol Ring',2]]}}));}
+/* W1: A CARD'S PRINTS. Each owned copy wears its print, the dearest in the deck box and the cheaper on the bench (Rob,
+   2026-09-30); copies no print accounts for stay without one; a print carries its market value. */
+{const d=doc();d.owned.bench.push(['Filler 0',1]);
+  d.prints={'Filler 0':[{series:'Cheap Set',collector:'12',quantity:1,foil:false,artist:'An Artist',value:0.5},{series:'Dear Set',collector:'7',quantity:1,foil:true,artist:'An Artist',value:9}],
+    'Mountain':[{series:'Old Set',collector:'250',quantity:2,foil:false,artist:'Another',value:0.2}]};
+  const s2=L.build(d,{Model:M,lookup}).state,lotsOf=n=>s2.lots.filter(l=>s2.cards[l.cardId].name===n);
+  const f0=lotsOf('Filler 0'),box=f0.find(l=>l.location.kind==='deck'),bench=f0.find(l=>l.location.kind==='bench');
+  ok(box.printing.series==='Dear Set'&&box.printing.finish==='foil'&&box.value===9&&bench.printing.series==='Cheap Set'&&bench.value===0.5);// the dearest print is the deck's
+  const mtn=lotsOf('Mountain'),printed=mtn.filter(l=>l.printing.series).reduce((n,l)=>n+l.quantity,0),blank=mtn.filter(l=>!l.printing.series).reduce((n,l)=>n+l.quantity,0);
+  ok(printed===2&&blank===68&&mtn.filter(l=>l.printing.series).every(l=>l.location.kind==='deck'&&l.value===0.2));// two recorded, the rest left without a print
+  eq(mtn.reduce((n,l)=>n+l.quantity,0),70);// splitting by print loses no copy
+  ok(!('value' in lotsOf('Filler 1')[0])&&!('series' in lotsOf('Filler 1')[0].printing));// a card with no prints is as it was
+  M.validate(s2);checks++;}
+{const bad=doc();bad.prints={'Filler 0':[{series:'X',quantity:0}]};assert.throws(()=>L.check(bad),/invalid print/);checks++;}
+{const bad=doc();bad.prints={'Filler 0':[{series:'X',quantity:1,value:-2}]};assert.throws(()=>L.check(bad),/invalid print/);checks++;}
+/* The committed library, from MtG - Master - 9.30: both print groups read, and placed by Rob's rules. */
+{const live=JSON.parse(await readFile(new URL('../data/live-load.json',import.meta.url),'utf8'));
+  const owned=new Map();for(const rows of Object.values(live.owned.inDeck))for(const [n,q] of rows)owned.set(n,(owned.get(n)||0)+q);for(const [n,q] of live.owned.bench)owned.set(n,(owned.get(n)||0)+q);
+  const prints=Object.entries(live.prints||{});
+  ok(prints.length>=900&&prints.filter(([,l])=>l.length===2).length>=13);// every owned card's prints; thirteen with two
+  ok(prints.filter(([,l])=>l.length===1).every(([n,l])=>l[0].quantity===owned.get(n)));// one print on a row: every copy is that print (Evolving Wilds: 5, its Quantity cell 1)
+  eq(live.prints['Evolving Wilds'][0].quantity,5);
+  const gift=live.prints['Generous Gift'].map(p=>p.value).sort((a,b)=>a-b).join(',');eq(gift,'0.72,5.24');
+  const st=M.migrate(JSON.parse(await readFile(new URL('../data/live-state.json',import.meta.url),'utf8')).payload.state),lotsOf=n=>st.lots.filter(l=>st.cards[l.cardId].name===n);
+  const giftBox=lotsOf('Generous Gift').find(l=>l.location.kind==='deck'),wayBox=lotsOf('Weathered Wayfarer').find(l=>l.location.kind==='deck');
+  ok(giftBox.value===5.24&&giftBox.printing.series==='Secret Lair Drop'&&giftBox.printing.finish==='foil'&&lotsOf('Generous Gift').find(l=>l.location.kind==='bench').value===0.72);// the $5.24 foil is in D1's box
+  ok(wayBox.value===17.39&&wayBox.location.deckId==='deck:live:D5');// the $17.39 Onslaught print is D5's
+  const plains=lotsOf('Plains'),withPrint=plains.filter(l=>l.printing.series||l.printing.artist).reduce((n,l)=>n+l.quantity,0);
+  ok(withPrint===2&&plains.reduce((n,l)=>n+l.quantity,0)===96);// two Plains recorded, ninety-four left blank
+}
 console.log(`live-load: ${checks} checks passed; the hand-written file rebuilds a validated library, and the committed file loads clean.`);
