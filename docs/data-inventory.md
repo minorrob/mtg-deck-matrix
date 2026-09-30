@@ -13,10 +13,10 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 45 (35 JSON, 10 workbooks and documents) · 78.0 MB |
+| Artifacts | 46 (35 JSON, 11 workbooks and documents) · 78.4 MB |
 | Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
 | Tool inputs | 7 |
-| Source workbooks and documents | 10 |
+| Source workbooks and documents | 11 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
@@ -62,6 +62,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/source/CardPullList-2026-09-06-rev2.docx` | 19 KB | document | — | — | tools/import-pull-list.mjs | — |  | import-pull-list.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/CrankMagic-Load-Live-template.xlsx` | 7 KB | workbook | — | — | — | — |  | — | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/MTGDeckDecisionMatrix.xlsx` | 186 KB | workbook | — | — | — | — |  | import_budget_plan.py, import_summary_metrics.py | — | — | **source** | workbook or document the builders read; never fetched by a page |
+| `data/source/MtG_-_Master_-_2026-09-30.xlsx` | 475 KB | workbook | — | — | — | — |  | — | live-load.mjs | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/MtG_Deck_Flat.xlsx` | 105 KB | workbook | — | — | — | — |  | — | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/MtG_Deck_Master_v2.xlsx` | 239 KB | workbook | — | — | — | — |  | — | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Robs_MtG_Current_State.xlsx` | 40 KB | workbook | — | — | — | — |  | apply-current-state.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
