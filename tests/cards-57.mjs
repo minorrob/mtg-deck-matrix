@@ -31,7 +31,7 @@ ok(/--card-ratio:5\/7;/.test(tokens), "the design tokens define --card-ratio as 
 eq(css.match(/aspect-ratio:(488\/680|63\/88|5\/7)/g) || [], [], "no card surface spells its own ratio: every one reads --card-ratio");
 const SURFACES = [".cm-card-thumb", ".cm-inspector-art>img", ".cm-swap-card>img", ".cm-commander>img", ".cm-deck-hero-card img", ".cm-fan-card", ".cm-door-fan i",
   ".cm-card-view-art", ".cm-pop-noart", ".cm-hover-art", ".cm-load-art", ".cm-load-preview img", ".cm-trade-card img", ".cm-trade-noart", ".cm-seat-card",
-  ".cm-lobby-art", ".cm-lobby-art-fallback", ".cm-lobby-art-pop-card", ".cm-lobby-summary-art", ".cm-landing-card", ".cm-landing-vis-plan img",
+  ".cm-lobby-art", ".cm-lobby-art-fallback", ".cm-lobby-art-pop-card", ".cm-lobby-summary-art", ".cm-landing-vis-plan img",
   ".cm-tt-card", ".cm-tt-stack", ".cm-tt-draw-stack .cm-tt-card", ".cm-tt-tray-slot .cm-tt-card"];
 const rulesOf = (sel) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, s]) => s.split(",").some((x) => x.trim().replace(/^#matrix-v2(\.cm-stage)? /, "") === sel)).map(([, , body]) => body);
 for (const sel of SURFACES) {
@@ -59,8 +59,11 @@ try {
     const page = await context.newPage();
     if (stub) await stub(page);
     await page.goto(`${base}/index.html`);
-    await page.locator(".cm-landing-card").first().waitFor({timeout: 60000});
-    await expect57(page, ".cm-landing-card, .cm-landing-vis-plan img", "the landing page's cards");
+    /* The hero's three commander cards gave way to Rob's art (2026-09-30), a picture rather than a card surface: the
+       landing page's card is the Plan step's commander. */
+    await page.locator(".cm-landing-vis-plan img").first().waitFor({timeout: 60000});
+    eq(await page.locator(".cm-landing-card").count(), 0, "the hero draws Rob's art, not three cards");
+    await expect57(page, ".cm-landing-vis-plan img", "the landing page's card");
     await page.goto(`${base}/index.html#decks`);
     await page.locator(".cm-fan-card").first().waitFor({timeout: 30000});
     await expect57(page, ".cm-fan-card", "the Decks fan");

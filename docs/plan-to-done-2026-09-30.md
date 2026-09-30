@@ -489,12 +489,13 @@ pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck
 
 ### Rob's additions during the build (2026-09-30)
 
-Rob sent these while B1 was being built. Each is his ask as he wrote it. L1 is one PR, after B1 and before B2; the
-second joins W1 (Part 5), which already plans a card's prints within its one row.
+Rob sent these while B1 was being built. Each is his ask as he wrote it. L1 (with L1b, its animation) and N1 are one
+PR each, after B1; the largest-value rule joins W1 (Part 5), which already plans a card's prints within its one row.
 
 | PR | Rob's ask | What is built, and the choice taken where he left one |
 | --- | --- | --- |
 | **L1. The landing page** | *"Add the signed in menu, or if they're not signed in, they should say sign in ... when clicked, that should open the menu for settings that we have ... to the left of the Open Your Decks button."* And: replace the three cards with his PNG, keeping the Krenko Goblins deck box on top of it, downsized with good resolution; *"if possible ... I'd like to have it animated ... if we can make it work for good design, seamless integration."* | The app's own account chip (R3.2) in the landing header, left of Open your decks: *Sign in* when signed out, the person when signed in, opening the same menu (Account at its head, Sign in above Sync now). The art is his 2752×1536 PNG, whose checkerboard is painted in, so it is lifted off onto transparency before use. The animation (1280×704, 5 s) is used if it loops without a seam and sits on the page without a box; the still stays as its poster and for anyone who asks for reduced motion. Proof: `tests/landing-r3.mjs` (the chip and its menu, signed in and out; the art and the deck box; reduced motion). |
+| **N1. New from Wizards, the commander on hover** | *"On the Decks view ... On hover, show the commander card as a pop-up that disappears when the cursor moves off the precon deck."* | Each New from Wizards chip names its (first) commander, and the Library's card hover (the 360px picture beside a name, gone on the pointer's leaving) takes the chips too; a commander too new for the catalog's pictures is drawn by Scryfall by its name. The landing page's chips are the same component and do the same. Proof: `tests/precons.mjs` (the card beside the chip on hover, gone when the pointer moves off). |
 
 ## Part 5 — The roadmap's remaining items, merged in
 
