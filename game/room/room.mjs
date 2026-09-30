@@ -220,7 +220,10 @@ function roomOn(storage, matchId, cards) {
       seats = readPod(pod, cards);
       if (typeof seed !== "string" || !seed) throw new RoomError(400, "A match needs its seed.");
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
-      state = createState({matchId, seed, players: seats.map((s) => ({name: s.name}))});
+      /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
+      const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {})});}
+      catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
         for (const name of s.cards) addObject(state, {...cards(name), card: name, owner: seat, controller: seat}, "library", seat);
@@ -229,7 +232,7 @@ function roomOn(storage, matchId, cards) {
       journal = createJournal({matchId, seed});
       controller = createController();
       pilots = seats.map((s, seat) => (s.pilot === "house" ? housePilot({seat, cards: facts}) : null));
-      await store.saveMatch({pod: {seats}, seed});
+      await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {})}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();

@@ -169,6 +169,7 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
       if (route === "POST /table/mat") return reply(200, {table: await t.mat(email, String((await body()).mat || ""))});
+      if (route === "POST /table/rules") return reply(200, {table: await t.rules(email, await body(), now)});
       if (route === "POST /table/start") {await t.start(email, now); await this.schedule(); return reply(200, {table: await t.view(email)});}
       if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "POST /table/end") {const room = await this.load(); const view = await t.endGame(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}

@@ -67,7 +67,9 @@
     }
     /* source: which deck of this library it is, so the finished game is filed under it; the table shows it
        back to this seat alone. */
-    return {name: deck.name, commander: [...commanders].map(name).filter(Boolean), cards: cards.filter(Boolean), source: {deckId: deck.id, deckVersion: deck.version}};
+    /* bracket: the deck's own, as the Decks page shows it (B1-B5), which a table's limit is held to. */
+    const bracket = Number(deck.definition && deck.definition.baseBracket);
+    return {name: deck.name, commander: [...commanders].map(name).filter(Boolean), cards: cards.filter(Boolean), ...(Number.isInteger(bracket) ? {bracket} : {}), source: {deckId: deck.id, deckVersion: deck.version}};
   }
   const libraryDecks = () => (C.state.decks || []).filter((d) => !d.archived && (d.commanders || []).length);
 
@@ -119,11 +121,39 @@
     } else launch = `<p class="cm-table-launch">${e(t.phase === "playing" ? "The game is on." : t.phase === "rematch" ? "The game is over." : "Starting…")}</p>`;
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
-      <div class="cm-table-head"><h2>Table rules</h2><span class="cm-table-setby-top">set by the host</span></div>
-      <dl class="cm-table-rules"><div><dt>Starting life</dt><dd>40</dd></div><div><dt>Seats</dt><dd>${t.seats.length}</dd></div><div><dt>Invitations last</dt><dd>a day</dd></div><div><dt>A dropped player has</dt><dd>5 minutes</dd></div></dl>
+      <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" aria-label="Edit the table rules">Edit</button>` : ""}<span class="cm-table-setby-top">set by the host</span></div>
+      <dl class="cm-table-rules"><div><dt>Starting life</dt><dd>${rulesOf(t).startingLife}</dd></div><div><dt>Bracket limit</dt><dd>${rulesOf(t).bracketLimit ? `${rulesOf(t).bracketLimit} or lower` : "Any"}</dd></div><div><dt>Seats</dt><dd>${t.seats.length}</dd></div><div><dt>Invitations last</dt><dd>a day</dd></div><div><dt>A dropped player has</dt><dd>5 minutes</dd></div></dl>
       <div class="cm-table-launch-row" id="cm-table-launch">${launch}</div>
     </section>`;
   }
+  /* THE TABLE'S RULES (Rob, 2026-09-30): the host edits the starting life and the bracket limit from a small Edit beside
+     the panel's heading, and not once any seat is ready -- then the Edit is refused, saying how to change them. */
+  const rulesOf = (t) => t.rules || {startingLife: 40, bracketLimit: null};
+  const readyNames = (t) => t.seats.filter((x) => x.ready).map((x) => x.name);
+  const namesText = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
+  actions["table-rules"] = () => {
+    const ready = readyNames(current);
+    if (ready.length) throw Error(`The rules can't change once a seat is ready, and ${namesText(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready (an AI seat is ready once its deck is chosen, so choose AI decks after the rules), then edit the rules.`);
+    const r = rulesOf(current);
+    C.modal("Table rules", `<form id="cm-table-rules-form" class="cm-table-rules-form">
+      <label>Starting life<input type="number" name="startingLife" min="1" max="999" step="1" inputmode="numeric" value="${r.startingLife}" required></label>
+      <label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${r.bracketLimit === n ? " selected" : ""}>${n} or lower</option>`).join("")}</select></label>
+      <p class="cm-muted">A deck above the limit is refused when it is chosen. The rules can't change once a seat is ready.</p>
+      <div id="cm-table-rules-error" class="cm-note cm-warning" hidden></div>
+      <div class="cm-form-footer">${b("Save the rules", "table-rules-save", {}, true)}</div></form>`);
+  };
+  actions["table-rules-save"] = async () => {
+    const v = Object.fromEntries(new FormData(document.getElementById("cm-table-rules-form")));
+    try {
+      await api("POST", `${tableUrl(current.tableId)}/rules`, {startingLife: Number(v.startingLife), bracketLimit: v.bracketLimit ? Number(v.bracketLimit) : null});
+      actions.close();
+      await refresh(current.tableId);
+    } catch (error) {
+      const box = document.getElementById("cm-table-rules-error");
+      if (!box) throw error;
+      box.hidden = false; box.textContent = error.message;
+    }
+  };
   /* After the game: the board is put away and the lobby says so. (While it is on, the page is the board.) */
   function gamePanel() {
     return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
@@ -302,13 +332,14 @@
     return `<ul class="cm-mat-strip" aria-label="Mats">${strip}</ul>
       <div class="cm-mat-preview cm-mat-swatch" data-mat="${matPicked}" id="cm-mat-preview" aria-label="Preview of the mat">
         ${zone("Battlefield")}${zone("Lands")}${zone("Command", " is-card")}${zone("Exile", " is-card")}${zone("History")}${zone("Library", " is-card")}${zone("Graveyard", " is-card")}</div>
-      <p class="cm-muted cm-mat-note">Five mats the app draws, then CrankMagic's own artwork. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>
-      <div class="cm-form-footer">${b("Use this mat", "table-mat-use", {}, true)}${b("Cancel", "close")}</div>`;
+      <p class="cm-muted cm-mat-note">Five mats the app draws, then CrankMagic's own artwork. Everyone at the table sees yours; this device remembers it for your next table. Your own mat images arrive with file storage.</p>`;
   }
   actions["table-mat"] = () => {
     const mine = current.seats.find((s) => s.you);
     matPicked = (mine && mine.mat) || "felt";
     C.modal("Choose mat", matDialog());
+    /* Use this mat sits beside the ✕ in the header, off until a mat is picked; the ✕ is the way out (Rob, 2026-09-30). */
+    document.querySelector("#cm-dialog .cm-dialog-close")?.insertAdjacentHTML("beforebegin", b("Use this mat", "table-mat-use", {}, true, {cls: "compact cm-mat-use"}).replace("<button ", "<button disabled "));
     /* Thirty mats scroll: the one you are on is brought into view. */
     document.querySelector(`.cm-mat-pick[aria-pressed="true"]`)?.scrollIntoView({block: "nearest"});
   };
@@ -317,6 +348,8 @@
     document.querySelectorAll(".cm-mat-pick").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.mat === matPicked)));
     const preview = document.getElementById("cm-mat-preview");
     if (preview) preview.dataset.mat = matPicked;
+    const use = document.querySelector("#cm-dialog .cm-mat-use");
+    if (use) use.disabled = false;
   };
   actions["table-mat-use"] = async () => {
     await api("POST", `${tableUrl(current.tableId)}/mat`, {mat: matPicked});

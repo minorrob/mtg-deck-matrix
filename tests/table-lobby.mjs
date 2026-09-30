@@ -11,7 +11,10 @@
  *   Deck     from your own library; one the engine cannot play is refused naming its cards; nobody sees
  *            another seat's cards.
  *   Start    Ready, Start, the countdown's number, Cancel; then the game is on.
- *   Mat      Choose mat: the app's own mats, a preview, everyone sees it, remembered for the next table.
+ *   Mat      Choose mat: the app's own mats, a preview, everyone sees it, remembered for the next table; Use this mat
+ *            beside the ✕, on once a mat is picked, and no Cancel (Rob, 2026-09-30).
+ *   Rules    the host's small Edit beside Table rules: starting life and a bracket limit, a deck above it refused with
+ *            what to do instead, and Edit refused once a seat is ready; a guest sees the rules and no Edit.
  *   Board    once the game is on the page is the board's (tests/table-board.mjs); once over, the lobby says so.
  *   Shut     without the cloud-Play mark the page says Coming Soon; every write carries Play's header.
  *   Page     marked for Play, the page is staging's own release page, so a module it leaves out cannot be leaned on.
@@ -163,6 +166,30 @@ try {
   ok(wide.worst >= 4.5 && wide.inside && wide.apart, `the rules read at 1400: contrast ${wide.worst}, inside ${wide.inside}, apart ${wide.apart}`);
   await shot(rob.page, "lobby-new-1400");
 
+  /* THE TABLE'S RULES (Rob, 2026-09-30, B3): the host's small Edit beside the heading; starting life and a bracket limit; a
+     deck above the limit refused with what to do instead. */
+  const sizes = await rob.page.evaluate(() => {const e = document.querySelector(".cm-table-center .cm-table-rules-edit"), other = document.querySelector(".cm-lobby-seat [data-action=table-deck]"), h = document.querySelector(".cm-table-head h2"); if (!e || !other) return null; const r = e.getBoundingClientRect(), o = other.getBoundingClientRect(), hr = h.getBoundingClientRect(); return {edit: Math.round(r.height), other: Math.round(o.height), beside: r.left >= hr.right && Math.abs((r.top + r.bottom) / 2 - (hr.top + hr.bottom) / 2) < 8};});
+  ok(sizes && sizes.beside && sizes.edit < sizes.other * 0.75, `the host sees a small Edit beside Table rules (${sizes && sizes.edit}px, the page's buttons ${sizes && sizes.other}px)`);
+  await rob.page.click(".cm-table-rules-edit");
+  await rob.page.locator("#cm-table-rules-form").waitFor();
+  await rob.page.fill("#cm-table-rules-form [name=startingLife]", "30");
+  await rob.page.selectOption("#cm-table-rules-form [name=bracketLimit]", "2");
+  await rob.page.click("[data-action=table-rules-save]");
+  await waitText(rob.page, ".cm-table-rules", /Starting life\s*30/);
+  ok(/Bracket limit\s*2 or lower/.test(await pageText(rob.page, ".cm-table-rules")), "Save puts 30 life and a bracket limit of 2 on the table's rules");
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  await rob.page.locator(".cm-table-deck").first().waitFor();
+  await rob.page.locator(".cm-table-deck").first().click();
+  await rob.page.locator("#cm-table-deck-error").waitFor({state: "visible", timeout: 10000});
+  ok(/is bracket \d, above this table's limit of 2\. Choose a deck at bracket 2 or lower, or ask the host to raise the limit\./.test(await rob.page.locator("#cm-table-deck-error").innerText()), `a deck above the limit is refused, with what to do instead: "${(await rob.page.locator("#cm-table-deck-error").innerText()).trim()}"`);
+  await rob.page.keyboard.press("Escape");
+  await rob.page.click(".cm-table-rules-edit");
+  await rob.page.selectOption("#cm-table-rules-form [name=bracketLimit]", "");
+  await rob.page.click("[data-action=table-rules-save]");
+  await waitText(rob.page, ".cm-table-rules", /Bracket limit\s*Any/);
+  ok(true, "and the host takes the limit off again");
+  if (SHOTS) await rob.page.locator(".cm-table-center").screenshot({path: path.join(SHOTS, "lobby-rules-1400.png")});
+
   /* DECK: one the engine cannot play is refused, naming its card; then a playable one. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
   await rob.page.locator(".cm-table-deck").first().waitFor();
@@ -199,16 +226,25 @@ try {
   }
   await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Ready/);
   ok(true, "the host chose the AI's deck, and the AI is ready");
+  /* With a seat ready the rules are refused, saying how to change them. */
+  await rob.page.click(".cm-table-rules-edit");
+  await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready.*choose AI decks after the rules/);
+  eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with the AI ready, Edit is refused, saying how to change the rules; no dialog opens");
 
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
   await rob.page.locator("#cm-mat-preview").waitFor();
+  /* Rob, 2026-09-30: Use this mat beside the ✕ in the header, on once a mat is picked, and no Cancel (the ✕ closes). */
+  const matHead = await rob.page.evaluate(() => {const h = document.querySelector("#cm-dialog .cm-dialog-head"), use = h && h.querySelector("[data-action=table-mat-use]"), x = h && h.querySelector(".cm-dialog-close"); if (!use || !x) return null; const u = use.getBoundingClientRect(), c = x.getBoundingClientRect();
+    return {off: use.disabled, beside: u.right <= c.left + 1 && Math.abs((u.top + u.bottom) / 2 - (c.top + c.bottom) / 2) < 6, cancel: [...document.querySelectorAll("#cm-dialog button")].some((b) => b.textContent.trim() === "Cancel")};});
+  ok(matHead && matHead.beside && matHead.off && !matHead.cancel, "Use this mat sits beside the ✕ in the header, off until a mat is picked, and there is no Cancel");
   const picks = await rob.page.$$eval(".cm-mat-pick", (els) => els.map((el) => [el.dataset.mat, el.textContent.trim()]));
   eq(picks.slice(0, 5).map(([, name]) => name), ["Felt", "Forge", "Cavern", "Sea", "Night"], "Choose mat offers the five mats the app draws first");
   eq(picks.map(([id]) => id), [...MATS], "then Rob's 25 artwork mats (2026-09-29): exactly the mats the table accepts, in its order");
   const swatch = await rob.page.evaluate(() => {const r = document.querySelector(".cm-mat-pick .cm-mat-swatch").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)];});
   ok(swatch[0] >= 140 && Math.abs(swatch[0] / swatch[1] - 16 / 9) < 0.05, `each mat shows as a 16:9 swatch you can see (${swatch.join("×")})`);
   await rob.page.click(".cm-mat-pick[data-mat=forge]");
+  ok(!(await rob.page.locator("#cm-dialog [data-action=table-mat-use]").isDisabled()), "picking a mat turns Use this mat on");
   eq([await rob.page.getAttribute("#cm-mat-preview", "data-mat"), await rob.page.getAttribute(".cm-mat-pick[data-mat=forge]", "aria-pressed")], ["forge", "true"], "picking one previews the zones over it");
   /* ROB'S ARTWORK (2026-09-29): a thumbnail in the picker, the full picture in the preview, both served by the site. */
   await rob.page.locator(".cm-mat-pick[data-mat=moon-wolf]").scrollIntoViewIfNeeded();
@@ -263,6 +299,7 @@ try {
   eq(sideways, 0, "at 390 the lobby does not scroll sideways");
   await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
   await maya.page.locator(".cm-table-deck").first().waitFor();
+  eq([await maya.page.locator(".cm-table-rules-edit").count(), /Starting life\s*30/.test(await pageText(maya.page, ".cm-table-rules"))], [0, true], "a guest sees the host's rules, 30 life, and no Edit");
   for (let i = 0; i < 40; i += 1) {
     await maya.page.locator(".cm-table-deck").nth(i).click();
     await maya.page.waitForTimeout(300);
