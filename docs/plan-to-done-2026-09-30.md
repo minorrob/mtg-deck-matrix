@@ -44,7 +44,7 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
      guessed in CSS; `fit()` is synchronous so a board is never painted, or read by a test, at a fallback size;
    - the board is `position: fixed` over the app; the rail is under it; panels slide over the surface, never
      narrowing it;
-   - `tests/table-board.mjs` (121 checks) is the board's proof and **no check is removed without Rob**; a change
+   - `tests/table-board.mjs` (142 checks since B1) is the board's proof and **no check is removed without Rob**; a change
      that moves a thing changes the check to read the new place, and adds one for what is new;
    - the Choose-mat preview's `.cm-mat-zone` rules are scoped to `.cm-mat-preview`; the board's zones share the
      class name. Keep them apart.
@@ -79,8 +79,10 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
    --profile cloud-staging --commit` and a push of `release/cloud-staging` (Workers Builds deploys it; confirm with
    `wrangler deployments list --name crankmagic-staging`). Before a staging release that carries Play changes,
    `tests/uat/play-e2e.mjs` under wrangler dev. **Production only on Rob's go, every time.**
-10. **Screenshots to Rob at each UI iteration**, from a fixture at real sizes; a four-seat fixture harness for
-    the board is the pattern (the session of 2026-09-29 rendered every view from a hand-made view frame).
+10. **Screenshots to Rob at each UI iteration**, from a fixture at real sizes. The board's is
+    `node tools/board-fixture.mjs --out <dir>` (added with B1): a real four-seat table, Rob and three house pilots on
+    his first four decks, played to his turn 17, photographed in Table, Focus, Full screen and Full screen after the
+    browser's is left at 1280×720, 1400×900, 1920×1080 and 2560×1080, with `measure.json` beside the shots.
 11. **AI costs money and touches privacy.** Everything AI goes through the door (`docs/ai-door.md`): Rob's four
     gates, the allowlist, the caps, the call log, and the privacy wording approved before the browser offers a
     feature. Nothing sends a hidden card, another seat's hand, an email, or a price paid.
@@ -485,6 +487,15 @@ pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck
 | AI-3 | The first batch of cards to learn | **His whole library from `MtG - Master - 9.30.xlsx` (1,132 cards), not the seven decks' 477** |
 | Part 5 | The roadmap's recommendations (Actions billing restored for CI and the refresh; the tracks and their order) | **Accepted** |
 
+### Rob's additions during the build (2026-09-30)
+
+Rob sent these while B1 was being built. Each is his ask as he wrote it. L1 is one PR, after B1 and before B2; the
+second joins W1 (Part 5), which already plans a card's prints within its one row.
+
+| PR | Rob's ask | What is built, and the choice taken where he left one |
+| --- | --- | --- |
+| **L1. The landing page** | *"Add the signed in menu, or if they're not signed in, they should say sign in ... when clicked, that should open the menu for settings that we have ... to the left of the Open Your Decks button."* And: replace the three cards with his PNG, keeping the Krenko Goblins deck box on top of it, downsized with good resolution; *"if possible ... I'd like to have it animated ... if we can make it work for good design, seamless integration."* | The app's own account chip (R3.2) in the landing header, left of Open your decks: *Sign in* when signed out, the person when signed in, opening the same menu (Account at its head, Sign in above Sync now). The art is his 2752×1536 PNG, whose checkerboard is painted in, so it is lifted off onto transparency before use. The animation (1280×704, 5 s) is used if it loops without a seam and sits on the page without a box; the still stays as its poster and for anyone who asks for reduced motion. Proof: `tests/landing-r3.mjs` (the chip and its menu, signed in and out; the art and the deck box; reduced motion). |
+
 ## Part 5 — The roadmap's remaining items, merged in
 
 `docs/plan-to-100.md` (M1–M11, Rob's decisions of 2026-09-25 at its foot) is the road; this section lists what on
@@ -541,7 +552,12 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
   count and where it is (a deck's box, the bench), and the workbook builder reads **both** print groups of the
   Master sheet (columns *Series · Collector # · Quantity · Foil · Artist · Value* and *… – Card Type 2*) into
   separate lots with their prints, so the second print is never folded into the first. Proof: `tests/live-load.mjs`
-  on a row with two prints; `tests/library-r3.mjs` for the opened row.
+  on a row with two prints; `tests/library-r3.mjs` for the opened row. **And the row's price is the largest print's**
+  (Rob, 2026-09-30, during B1: *"For card displayed cost on the distinct row, always use the largest $ value if there
+  are more than 1 card with different prints for that card"*): the one row shows the largest of its prints' values
+  (the workbook's `Value` per print), a card with one print, or none recorded, its catalog price as now; 11 of the
+  13 cards with a second print on 2026-09-30 are priced differently (Ghalta the Immovable: $0.56, and $0.99 foil).
+  The library suite checks the one row's largest value.
 - **An accessibility pass on the board and the lobby** (Part 6).
 - **A browser and device matrix** for the end-to-end walk (Part 6).
 

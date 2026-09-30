@@ -27,6 +27,12 @@
  *   Record    once it is over, Download your record (M8b): this is not a playtest table, so it is Rob's own seat's
  *             view and the history, with no seed and nothing of Maya's hand.
  *   Shape     one 48px strip; 5:7 cards sized by width, hand larger than the mat's; no sideways scroll.
+ *   B1        Rob's board walk of 2026-09-30 (docs/plan-to-done-2026-09-30.md, PR B1): Full screen asks for the whole
+ *             document, so Table vitals and the Coach are seen in it, the Coach docked under the log; the Tools menu's
+ *             buttons whole in Full screen; the clock opens the history everywhere and the Coach is its own glyph;
+ *             History closes on a press outside it; the Panel reads a tapped card upright; the hand's cards whole in
+ *             Table, Focus, Full screen and Full screen after the browser's is left, at 1400 and at 1280; a card no
+ *             library holds is drawn from the shipped card records.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -148,6 +154,10 @@ try {
   await maya.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
   eq(await rob.page.locator(".cm-board-tile .cm-board-tile-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
+  /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
+     request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
+  const pic = await rob.page.evaluate(() => {const C = globalThis.__cm, mine = new Set(C.cards().map((c) => c.name)), other = C.catalog.all().map((c) => C.catalog.exact(c.name)).find((c) => c && c.image && c.image.startsWith("https://cards.scryfall.io/") && !mine.has(c.name)); return other ? {name: other.name, image: other.image, drawn: C.board.pictureOf(other.name)} : null;});
+  ok(pic && pic.drawn === pic.image && !/api.scryfall.com/.test(pic.drawn), `a card no library holds (${pic && pic.name}) is drawn from the shipped card records, not a request to Scryfall per card`);
 
   /* DECIDE: the opening hands. Whoever is asked keeps, until nobody is. */
   await waitText(rob.page, "#cm-board-decision", /Keep this hand\?/);
@@ -246,6 +256,18 @@ try {
   await active.page.keyboard.press("Escape");
   await active.page.locator("#cm-board-history").waitFor({state: "detached"});
   ok(true, "Escape closes it");
+  /* B1, item 16: a press anywhere outside it closes it too; a press inside it does not. */
+  await active.page.click(".cm-board-strip [data-action=board-history]");
+  await active.page.click("#cm-board-history .cm-history-filter");
+  ok(await active.page.locator("#cm-board-history").count() === 1, "a press inside History ▾ (its filter) keeps it open");
+  await active.page.click(".cm-board-mat .cm-mat-name");
+  await active.page.locator("#cm-board-history").waitFor({state: "detached", timeout: 3000});
+  ok(true, "a press outside it, on the mat, closes it");
+  await active.page.click(".cm-board-band [data-action=board-history]");
+  await active.page.locator("#cm-board-history").waitFor();
+  await active.page.mouse.click(Math.round((await active.page.viewportSize()).width / 2), Math.round((await active.page.viewportSize()).height / 2));
+  await active.page.locator("#cm-board-history").waitFor({state: "detached", timeout: 3000});
+  ok(true, "the band's clock opens the same drop-down, and a press on the board closes it");
 
   /* THE THREE VIEWS. Table: both boards at once, you at the foot, the logo between them opening Table vitals. */
   await rob.page.click("[data-action=board-view][data-view=table]");
@@ -317,12 +339,40 @@ try {
   await maya.page.locator(".cm-board-strip").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "and so does Escape");
 
-  /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. */
+  /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. B1, item 22: it
+     asks for the whole DOCUMENT -- a browser shows only the fullscreen element's own subtree, and the Coach and the
+     app's dialogs live beside the board -- so Table vitals and the Coach are seen in it. */
   await rob.page.click("[data-action=board-view][data-view=full]");
-  await rob.page.waitForFunction(() => document.fullscreenElement && document.fullscreenElement.id === "cm-board", null, {timeout: 10000});
+  await rob.page.waitForFunction(() => document.fullscreenElement === document.documentElement, null, {timeout: 10000});
+  ok(true, "where the browser allows it, Full screen is the whole screen, asked for the whole document");
+  const seenAt = (page, sel) => page.evaluate((q) => {const el = document.querySelector(q); if (!el) return false; const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(60, r.height / 2)); return r.width > 0 && !!hit && !!hit.closest(q);}, sel);
+  await rob.page.click(".cm-full-side .cm-full-vitals [data-action=board-vitals]");
+  await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
+  ok(await seenAt(rob.page, "#cm-dialog[open]"), "in the browser's full screen, Table vitals is seen over the game");
+  await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
+  await rob.page.click(".cm-full-rail [aria-label='CrankMagic Coach']");
+  await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
+  const docked = await rob.page.evaluate(() => {
+    const c = document.getElementById("cm-board-coach").getBoundingClientRect(), side = document.querySelector(".cm-full-side").getBoundingClientRect(), band = document.querySelector(".cm-full-side .cm-board-band").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
+    return {col: Math.abs(c.left - side.left) < 1 && Math.abs(c.width - side.width) < 1, under: c.top >= band.bottom - 0.5 && c.top >= side.bottom, lower: c.top > host.top + host.height * 0.45 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+  });
+  ok(await seenAt(rob.page, "#cm-board-coach") && docked.col && docked.under && docked.lower, `and the Coach is seen, in the side column's lower half under the log (${docked.width}px), not a slide-over`);
+  await shot(rob.page, "coach-full-1400");
+  await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
+  /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
+  await rob.page.click(".cm-full-rail [aria-label='Tools']");
+  await rob.page.locator("#cm-board-tools").waitFor();
+  const toolsMenu = await rob.page.evaluate(() => {
+    const bs = [...document.querySelectorAll("#cm-board-tools .v-button")].map((el) => ({r: el.getBoundingClientRect(), clipped: el.scrollWidth > el.clientWidth + 1}));
+    const overlap = bs.some((a, i) => bs.some((b, j) => j > i && a.r.left < b.r.right - 1 && b.r.left < a.r.right - 1 && a.r.top < b.r.bottom - 1 && b.r.top < a.r.bottom - 1));
+    return {n: bs.length, overlap, clipped: bs.filter((x) => x.clipped).length, narrow: bs.filter((x) => x.r.width <= 40).length};
+  });
+  ok(toolsMenu.n >= 4 && !toolsMenu.overlap && !toolsMenu.clipped && !toolsMenu.narrow, `in Full screen the Tools menu's ${toolsMenu.n} buttons are whole: none overlaps another, none is squared or clipped`);
+  await shot(rob.page, "tools-full-1400");
+  await rob.page.click(".cm-full-rail [aria-label='Tools']");
   await rob.page.click("[aria-label='Leave full screen']");
   await rob.page.waitForFunction(() => !document.fullscreenElement, null, {timeout: 10000});
-  ok(true, "where the browser allows it, Full screen is the whole screen, and ⎋ gives it back");
+  ok(true, "and ⎋ gives the screen back");
 
   /* The view is remembered on this device: Table, then a reload, and it is still Table. */
   await rob.page.click("[data-action=board-view][data-view=table]");
@@ -443,6 +493,22 @@ try {
   await waitText(second.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(second.page, ".cm-board-lands")).includes(secondLand), "Enter plays it: the hand is put away and the land is down");
   for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
+  /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
+  await second.page.click("[data-action=board-also]");
+  await second.page.locator(".cm-board-also [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
+  await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
+  await second.page.click("[data-action=board-panel]");
+  await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().click();
+  await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
+  const panelCard = await second.page.evaluate(() => {
+    const el = document.querySelector(".cm-board-panel .cm-panel-card .cm-bcard"), r = el.getBoundingClientRect(), onMat = document.querySelector(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped");
+    return {transform: getComputedStyle(el).transform, tall: r.height > r.width, mark: ((el.querySelector(".cm-bcard-mark.is-state") || {}).textContent || "").trim(), label: el.getAttribute("aria-label"),
+      heading: [...document.querySelectorAll(".cm-board-panel h3")].map((h) => h.textContent.trim()), matTurned: getComputedStyle(onMat).transform !== "none"};
+  });
+  ok(panelCard.tall && panelCard.transform === "none" && panelCard.mark === "Tapped" && /tapped/.test(panelCard.label) && panelCard.matTurned, `the Panel shows the tapped ${secondLand} upright with a small Tapped mark, while it lies turned on the mat`);
+  ok(!panelCard.heading.includes("Card"), `and no "Card" heading over it (${panelCard.heading.join(", ")})`);
+  await shot(second.page, "panel-tapped-" + (second === rob ? "1400" : "1280"));
+  await second.page.click("[data-action=board-panel]");
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
@@ -455,15 +521,56 @@ try {
       return {strip: Math.round(strip.height), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         ratios: [...mat, ...hand].map(ratio).map((x) => Math.round(x * 1000) / 1000),
         matWidth: mat.length ? mat[0].getBoundingClientRect().width : 0, handWidth: hand.length ? hand[0].getBoundingClientRect().width : 0,
-        boardRatio: Math.round(board.width / board.height * 100) / 100, largest: Math.min(main.width - 16, (main.height - 8) * 16 / 9) - board.width < 2,
-        docked: tray.top < board.bottom && tray.top >= board.bottom - 60 && tray.top + 100 <= main.bottom, clear: lands.bottom <= tray.top + 1};
+        boardRatio: Math.round(board.width / board.height * 100) / 100, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - board.width < 2,
+        docked: tray.top >= board.bottom - 0.5 && tray.top <= board.bottom + 12 && tray.bottom <= main.bottom + 0.5 && Math.abs(tray.width - board.width) < 1, clear: lands.bottom <= tray.top + 1};
     });
     ok(g.strip === 48 && g.sideways === 0, `at ${width} the strip is one 48px line (${g.strip}) and nothing scrolls sideways (${g.sideways})`);
-    ok(Math.abs(g.boardRatio - 1.78) < 0.02 && g.largest, `at ${width} the Focus mat is 16:9 (${g.boardRatio}), the largest that fits beside the pane`);
-    ok(g.docked && g.clear, `at ${width} the hand docks over the mat's bottom edge, and the Lands stay clear of it`);
+    ok(Math.abs(g.boardRatio - 1.78) < 0.02 && g.largest, `at ${width} the Focus mat is 16:9 (${g.boardRatio}), the largest that fits beside the pane with the hand's row beneath it`);
+    ok(g.docked && g.clear, `at ${width} the hand's tray is a full row under the mat, as wide as it, inside the window (B1, item 25), and the Lands stay clear of it`);
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }
+
+  /* B1, item 25: THE HAND IS WHOLE in every view -- Table, Focus, Full screen, and Full screen once the browser's own
+     full screen is left -- at 1400 (Rob, whose browser gives the whole screen) and at 1280 (Maya, whose does not). */
+  const handWhole = (page) => page.evaluate(() => {
+    const cards = [...document.querySelectorAll(".cm-board-hand .cm-bcard")], tray = document.querySelector(".cm-board-hand").getBoundingClientRect();
+    return {n: cards.length, whole: cards.length > 0 && cards.every((c) => {const r = c.getBoundingClientRect(); return r.bottom <= innerHeight + 0.5 && r.bottom <= tray.bottom + 0.5 && r.top >= 0;}), last: Math.round(cards.at(-1).getBoundingClientRect().bottom), h: innerHeight, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+  });
+  for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
+    await who.page.mouse.move(2, 2);
+    const seen = [];
+    for (const v of ["table", "focus", "full", "full-left"]) {
+      if (v === "full-left") {await who.page.evaluate(() => document.fullscreenElement && document.exitFullscreen()); await who.page.waitForFunction(() => !document.fullscreenElement, null, {timeout: 10000}); await who.page.waitForTimeout(300);}
+      else {await who.page.click(`[data-action=board-view][data-view=${v}]`); await who.page.locator(v === "full" ? ".cm-full-rail" : v === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();}
+      if (v === "full" && who === rob) await who.page.waitForFunction(() => !!document.fullscreenElement, null, {timeout: 10000});
+      const h = await handWhole(who.page);
+      seen.push(`${v} ${h.last}/${h.h}`);
+      ok(h.whole && h.sideways === 0, `at ${width}, ${v === "full-left" ? "Full screen after the browser's is left" : v}: every card of the hand is whole inside the window (${h.n} cards, the last ends at ${h.last} of ${h.h})`);
+    }
+    await shot(who.page, `hand-whole-full-${width}`);
+    await who.page.click("[data-action=board-view][data-view=focus]");
+    await who.page.locator(".cm-board-mat").waitFor();
+  }
+
+  /* B1, items 21 and 24: the history opens from a clock wherever it is offered, never ☰ (the menu's) or ⌕; the Coach is
+     its own glyph, the same wherever it is named, and ✦ is nowhere. */
+  await rob.page.click("[data-action=board-tools]");
+  const glyphs = await rob.page.evaluate(() => {
+    const svg = (el) => (el.querySelector("svg.cm-icon") || {}).outerHTML || "";
+    const hist = [...document.querySelectorAll("#cm-board [data-action=board-history]")], coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach]")];
+    return {hist: hist.length, histSame: hist.every((el) => svg(el) && svg(el) === svg(hist[0])), histText: hist.map((el) => el.textContent).join(""),
+      coach: coachEls.length, coachSame: coachEls.every((el) => svg(el) && svg(el) === svg(coachEls[0])), differ: svg(hist[0]) !== svg(coachEls[0]), star: document.getElementById("cm-board").innerHTML.includes("✦")};
+  });
+  ok(glyphs.hist >= 2 && glyphs.histSame && !/[☰⌕]/.test(glyphs.histText), `the strip's History ▾ and the band's button open the history from the same clock (${glyphs.hist} places), not ☰ or ⌕`);
+  ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the pane's Coach and Tools › Recommended actions carry the Coach's own glyph (${glyphs.coach} places), and ✦ is nowhere on the board`);
+  await rob.page.click("[data-action=board-tools]");
+  await rob.page.click("[data-action=board-view][data-view=full]");
+  await rob.page.locator(".cm-full-rail").waitFor();
+  const rail = await rob.page.evaluate(() => {const svg = (q) => (document.querySelector(q + " svg.cm-icon") || {}).outerHTML || ""; return {hist: svg(".cm-full-rail [data-action=board-history]"), coach: svg(".cm-full-rail [data-action=board-coach]"), band: svg(".cm-full-side [data-action=board-history]"), text: document.querySelector(".cm-full-rail").textContent};});
+  ok(rail.hist && rail.hist === rail.band && rail.coach && rail.coach !== rail.hist && !/[☰✦]/.test(rail.text), "Full screen's rail: the clock for the history, the Coach's glyph for the Coach, neither ☰ nor ✦");
+  await rob.page.click("[aria-label='Leave full screen']");
+  await rob.page.locator(".cm-board-mat").waitFor();
 
   /* THE COACH: a chat panel over the right edge; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
@@ -508,7 +615,7 @@ try {
   await maya.page.click(".cm-full-rail [aria-label='CrankMagic Coach']");
   await maya.page.locator("#cm-board-coach:not([hidden])").waitFor();
   const onTop = await maya.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 60); return !!el && !!el.closest("#cm-board-coach");});
-  ok(onTop, "in Full screen, ✦ in the rail opens it, above the game");
+  ok(onTop, "in Full screen, the Coach's glyph in the rail opens it, above the game");
   await maya.page.keyboard.press("Escape");
   await maya.page.click("[data-action=board-view][data-view=focus][aria-label='Leave full screen']");
 
