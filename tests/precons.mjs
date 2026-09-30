@@ -119,6 +119,14 @@ try {
     await page.keyboard.press("Escape");
     await page.locator("#cm-precon-latest:not([hidden]) .cm-precon-chip").first().waitFor({timeout: 30000});
     eq(await page.$$eval("#cm-precon-latest .cm-precon-chip", (bs) => bs.map((b) => b.dataset.precon)), latest.decks.map((d) => d.id), "the Decks hub carries the same New from Wizards strip");
+    /* Rob, 2026-09-30: on the Decks page, the pointer on a precon shows its commander's card, and moving off puts it away. */
+    await page.locator("#cm-precon-latest .cm-precon-chip").first().hover();
+    await page.locator(".cm-hover-art:not([hidden]) img[src]").waitFor({timeout: 10000});
+    const pop = await page.evaluate(() => {const box = document.querySelector(".cm-hover-art"), chip = document.querySelector("#cm-precon-latest .cm-precon-chip"), r = box.getBoundingClientRect(), c = chip.getBoundingClientRect(); return {card: chip.dataset.card, src: box.querySelector("img").getAttribute("src"), beside: r.left >= c.right - 1 || r.right <= c.left + 1, w: Math.round(r.width)};});
+    ok(pop.card === latest.decks[0].commander[0].name && pop.src && pop.beside && pop.w >= 300, `the pointer on a precon shows its commander's card beside it, ${pop.w}px (${pop.card})`);
+    await page.mouse.move(5, 5);
+    await page.locator(".cm-hover-art").waitFor({state: "hidden", timeout: 5000});
+    ok(true, "and it goes when the pointer moves off the precon");
     await context.close();
   }
 } finally {

@@ -78,7 +78,7 @@ try {
     /* A release with accounts offers sign-in to a person who is not signed in -- and nothing else changes. */
     if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
       await page.locator("#cm-account").waitFor({timeout: 15000});
-      ok(/Sign in to keep your library in the cloud/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
+      ok(/Sign In \(Save to Cloud\)/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
       ok(await page.locator("#cm-account [data-action=app-refresh]").count() === 1, "with Refresh under it (Rob, 2026-09-29)");
     }
     ok(!(await page.locator("#cm-share-mail").count()), "the Menu has no Share CrankMagic by email (Rob, 2026-09-29)");
