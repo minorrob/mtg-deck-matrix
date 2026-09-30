@@ -39,7 +39,7 @@
 
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {pushSpell} from "./stack.mjs";
-import {addMana, spend, parseManaCost, automaticPayment} from "./mana.mjs";
+import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast} from "./commander.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -118,6 +118,28 @@ export function legalActions(state, player) {
 }
 
 const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
+
+/**
+ * NOTHING TO DO (docs/plan-to-done-2026-09-30.md, item 11): the player holds priority, the stack is empty, and there
+ * is no action but to pass. A mana ability counts only while there is something the mana could be for -- a spell
+ * castable now, at its speed, with the pool and every untapped source together. That is a count, not a payment:
+ * colors are not matched, so a doubtful case is asked rather than passed for the player.
+ */
+export function nothingToDo(state, player, actions = legalActions(state, player)) {
+  if (state.priorityPlayer !== player || state.stack.length) return false;
+  if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
+  const sources = actions.filter((a) => a.kind === "activate-mana").length;
+  if (!sources) return true;
+  const mana = poolSize(state.players[player].manaPool) + sources;
+  const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);
+  const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)];
+  return !spells.some((id) => {
+    const object = state.objects[id];
+    if (!object.manaCost || (sorcerySpeed(object) && !mainNow)) return false;
+    const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
+    return manaValue(parseManaCost(object.manaCost)) + tax <= mana;
+  });
+}
 
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
