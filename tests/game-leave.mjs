@@ -110,7 +110,7 @@ assert.throws(() => {const s = engineGame("x"); concede(s, 1); concede(s, 1);}, 
 const DEFS = new Map();
 const def = (name, d) => {DEFS.set(name, d); return name;};
 const cards = (name) => DEFS.get(name) ?? basicCards(name);
-const deck = (tag) => ({commander: [def(`General ${tag}`, {types: ["Creature"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
+const deck = (tag) => ({commander: [def(`General ${tag}`, {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
   cards: [...Array.from({length: 38}, () => def(`Grove ${tag}`, FOREST)), ...Array.from({length: 61}, (_, i) => def(`Bear ${tag}-${i}`, {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}{G}"}))]});
 const POD = {seats: [{seatId: "s0", name: "Rob", pilot: "human", ...deck("a")}, {seatId: "s1", name: "Maya", pilot: "human", ...deck("b")}, {seatId: "s2", name: "Bot", pilot: "house", ...deck("c")}]};
 const answerer = (seed) => {const p = randomLegalPilot(createRng(seed)); return (d) => {const a = p.answer(d); return {kind: "answer", choiceId: d.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {}), ...(a.value !== undefined ? {value: a.value} : {})};};};
