@@ -23,6 +23,9 @@
 
 /** Zones each player has their own of (CR 400.1). */
 export const PER_PLAYER = ["library", "hand", "graveyard", "command"];
+/* The public zones (CR 400.2). What a card became in one of these can be found by an ability that triggered on the move
+   (CR 400.7e) -- "return that card to its owner's hand" -- so every move to one names it (`becomes`). */
+export const PUBLIC_ZONES = Object.freeze(["battlefield", "graveyard", "exile", "stack", "command"]);
 /** Zones shared by the table. */
 export const SHARED = ["battlefield", "stack", "exile"];
 /** Every zone, in no significant order. */
