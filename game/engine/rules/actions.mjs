@@ -38,6 +38,13 @@
  * names one it was not offered is refused. With no legal choice it is not offered at all. `label` stays the card's
  * name; `targetNames` says what each choice is aimed at.
  *
+ * A MANA ABILITY THAT CHOOSES (2.4b) is offered once per thing it can add, the way a spell is offered once per aim:
+ * "{T}: Add {W} or {U}" is two offers, "any color" five, and "any color in your commander's color identity" as many as
+ * that identity has -- none for a player with no commander (CR 903.4f). `produce` says which, and is part of what
+ * identifies the offer. A mana ability may cost more than {T} (a Signet's {1}, a pain land's damage, a life paid),
+ * and is offered only when that can be paid; it is still a mana ability, so all of it happens at once, off the stack
+ * (CR 605.3a). Each offer carries `mana`, what it adds, so a caller can count without knowing the rules.
+ *
  * NON-MANA ACTIVATED ABILITIES (CR 602) come from the card script: offered whenever their controller has priority
  * (or, for one marked `timing: "sorcery"`, when a sorcery could be cast), and only when every cost can be paid now.
  * The ability goes on the stack first and its costs are paid after (CR 602.2a, then 602.2b and 601.2h), so an ability that
@@ -48,10 +55,14 @@
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {pushSpell, pushAbility} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
-import {commanderTax, recordCommanderCast} from "./commander.mjs";
+import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
+import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
+import {runEffects} from "../script/effects/index.mjs";
+import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {collectTriggers, openTriggers} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
@@ -102,6 +113,41 @@ function costPayment(state, player, id, cost) {
   return {mana, life};
 }
 
+/**
+ * A player's commander's color identity (CR 903.4): the union of their commanders' (702.124c), as established when the
+ * game began (903.4a) -- the identity the definition carried, or read off the printed cost for an object without one.
+ * Empty for a player with no commander, which is what makes "any color in your commander's identity" add nothing.
+ */
+export function commanderIdentity(state, player) {
+  const found = new Set();
+  for (const object of Object.values(state.objects)) {
+    if (object.commander !== true || object.owner !== player) continue;
+    for (const color of object.colorIdentity ?? colorIdentity({manaCost: object.manaCost})) found.add(color);
+  }
+  return COLORS.filter((color) => found.has(color));
+}
+
+/** What a mana ability can add, one entry per alternative (2.4b). */
+export function manaAlternatives(state, player, ability) {
+  const count = ability.count ?? 1;
+  if (Array.isArray(ability.produces)) return ability.produces.map((m) => ({...m}));
+  if (ability.produces) return [{...ability.produces}];
+  if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
+  if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
+  return [];
+}
+
+/* Whether a mana ability's cost beyond {T} can be paid now: mana from the pool (unambiguously, as a cast's), and life. */
+function manaAbilityPayment(state, player, ability) {
+  const pool = state.players[player].manaPool;
+  const mana = ability.cost ? automaticPayment(pool, parseManaCost(ability.cost), {life: state.players[player].life}) : {mana: {}, life: 0};
+  if (!mana) return null;
+  if ((ability.payLife ?? 0) + mana.life > state.players[player].life) return null;
+  return mana;
+}
+
+const total = (mana) => Object.values(mana ?? {}).reduce((n, v) => n + v, 0);
+
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) - state.players[player].landsPlayed;
 
@@ -138,7 +184,13 @@ export function legalActions(state, player) {
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
          A land is never sick; a land animated this turn is a creature, and is. */
       if (ability.tapSelf && summoningSick(state, id)) continue;
-      actions.push({kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card});
+      if (!manaAbilityPayment(state, player, ability)) continue;
+      const alternatives = manaAlternatives(state, player, ability);
+      alternatives.forEach((mana, produce) => actions.push({
+        kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card, mana,
+        /* A fixed ability is one offer and looks as it always has; a choice says which it is. */
+        ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor ? {produce} : {}),
+      }));
     }
   }
 
@@ -194,9 +246,16 @@ const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPE
 export function nothingToDo(state, player, actions = legalActions(state, player)) {
   if (state.priorityPlayer !== player || state.stack.length) return false;
   if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
-  const sources = actions.filter((a) => a.kind === "activate-mana").length;
-  if (!sources) return true;
-  const mana = poolSize(state.players[player].manaPool) + sources;
+  /* Each source counted once, at the most it can add net of what it costs -- a Sol Ring is two, a Signet one, and a
+     dual land one however many colors it offers. */
+  const best = new Map();
+  for (const a of actions.filter((x) => x.kind === "activate-mana")) {
+    const ability = (state.objects[a.objectId].abilities ?? []).find((x) => x.id === a.abilityId);
+    const net = total(a.mana) - (ability?.cost ? manaValue(parseManaCost(ability.cost)) : 0);
+    best.set(a.objectId, Math.max(best.get(a.objectId) ?? 0, net));
+  }
+  if (!best.size) return true;
+  const mana = poolSize(state.players[player].manaPool) + [...best.values()].reduce((n, v) => n + Math.max(0, v), 0);
   const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);
   const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)];
   return !spells.some((id) => {
@@ -214,14 +273,38 @@ const targetKey = (action) => (action.targets ?? []).map((t) => `${t?.kind}:${t?
 const sameAction = (a, b) => a.kind === b.kind
   && (a.objectId ?? null) === (b.objectId ?? null)
   && (a.abilityId ?? null) === (b.abilityId ?? null)
+  && (a.produce ?? null) === (b.produce ?? null)
   && targetKey(a) === targetKey(b);
 
 /**
  * Perform an action, after checking the engine actually offered it.
  *
+ * AND THEN THE PLAYER RECEIVES PRIORITY AGAIN (CR 117.3c), which is two rules of its own. The count of passes in
+ * succession starts over (CR 117.4): without that, a player who answered a spell and passed would see it resolve
+ * before the player they answered had a chance to reply. And before they receive it, state-based actions are
+ * performed and waiting triggers go on the stack (CR 117.5): a land that gains a life as it enters triggers on the
+ * land drop, and a pain land at one life loses its controller the game then, not at the next step.
+ *
  * @returns {Array} events for the caller to journal
  */
 export function applyAction(state, player, action) {
+  const events = perform(state, player, action);
+  state.passes = 0;
+  events.push(...checkStateBasedActions(state));
+  collectTriggers(state, events);
+  if (!state.awaiting) openTriggers(state);
+  if (state.awaiting) state.priorityPlayer = null;
+  else if (state.players[player].lost) {
+    /* The actor lost to a state-based action: the round goes on from the next player still in the game (CR 800.4). */
+    const count = state.players.length;
+    let next = null;
+    for (let step = 1; step < count && next === null; step += 1) if (!state.players[(player + step) % count].lost) next = (player + step) % count;
+    state.priorityPlayer = gameOver(state) ? null : next;
+  }
+  return events;
+}
+
+function perform(state, player, action) {
   if (state.priorityPlayer !== player)
     throw new Error("That player does not hold priority");
   const offered = legalActions(state, player);
@@ -237,17 +320,13 @@ export function applyAction(state, player, action) {
   if (action.kind === "play-land") {
     const events = [];
     const card = cardRef(state, action.objectId);
-    const arrived = moveObject(state, action.objectId, "battlefield");
     state.players[player].landsPlayed += 1;
     /* The order matters to a reader: the land is announced as a land, then as the zone change it
        also is, which is what `match-telemetry.mjs` counts and what the audio rules listen for. */
     events.push(event("GameEventLandPlayed", state, {land: card, player: {playerId: player, name: state.players[player].name}}));
-    events.push(event("GameEventCardChangeZone", state, {
-      card,
-      enteredAs: arrived,
-      from: {zoneType: "Hand", player: {playerId: player}},
-      to: {zoneType: "Battlefield", player: {playerId: player}},
-    }));
+    /* CR 614.12: a land played enters the way any permanent does -- through the replacements that change how it
+       enters, its own "This land enters tapped" first. Moving it straight there let a tapped land arrive untapped. */
+    moveOne(state, action.objectId, "battlefield", events);
     return events;
   }
 
@@ -255,15 +334,25 @@ export function applyAction(state, player, action) {
     const events = [];
     const object = state.objects[action.objectId];
     const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    /* Recomputed rather than trusted, like a cast's payment: which alternative, and what it costs, now. */
+    const produced = manaAlternatives(state, player, ability)[action.produce ?? 0];
+    const payment = manaAbilityPayment(state, player, ability);
+    if (!produced || !payment) throw new Error(`${object.card} cannot add that mana now`);
+    const pool = state.players[player].manaPool;
+    spend(pool, payment.mana);
+    const life = (ability.payLife ?? 0) + payment.life;
+    if (life > 0) state.players[player].life -= life;
     if (ability.tapSelf) {
       object.tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
     }
-    addMana(state.players[player].manaPool, ability.produces);
+    addMana(pool, produced);
     events.push(event("GameEventManaPool", state, {
       player: {playerId: player, name: state.players[player].name},
-      produced: {...ability.produces}, source: cardRef(state, action.objectId),
+      produced: {...produced}, source: cardRef(state, action.objectId),
     }));
+    /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
+    if ((ability.then ?? []).length) events.push(...runEffects(state, ability.then, {controller: player, source: action.objectId}));
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
   }
