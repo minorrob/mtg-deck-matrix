@@ -155,13 +155,22 @@ export function resolveTop(state, effect = null) {
     effect(state, entry, events);
     return finishTop(state, entry, events, false);
   }
+  /* AN AURA SPELL (CR 303.4, 608.3): its target checked again as it resolves -- illegal now, and it does not resolve
+     (CR 608.3b) -- and the permanent enters attached to it (CR 303.4f). */
+  const enchanting = entry.kind === "spell" && entry.objectId !== null ? state.objects[entry.objectId]?.enchant : null;
+  if (enchanting) {
+    const context = {controller: entry.playerId, source: entry.objectId};
+    const {targets, fizzles} = recheckTargets(state, [enchanting], entry.targets, context);
+    return finishTop(state, entry, events, fizzles, fizzles ? null : targets[0]?.id ?? null);
+  }
   const script = scriptOf(state, entry);
   if (!script) return finishTop(state, entry, events, false);
 
   const source = entry.kind === "spell" ? entry.objectId : (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
   /* X (CR 107.3a): the spell's or ability's own; a permanent's ability uses the X paid to cast it (CR 107.3m). */
   const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
-  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})};
+  const attached = source !== null ? state.objects[source]?.attachedTo ?? null : null;
+  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
@@ -190,7 +199,7 @@ export function finishResolving(state) {
 
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
-function finishTop(state, entry, events, fizzled) {
+function finishTop(state, entry, events, fizzled, attachTo = null) {
   state.stack.pop();
 
   if (entry.objectId !== null) {
@@ -209,6 +218,11 @@ function finishTop(state, entry, events, fizzled) {
         types: object.types, abilities: object.abilities})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* An Aura enters attached to what it was cast at (CR 303.4f). */
+    if (to === "battlefield" && attachTo !== null && state.objects[attachTo]) {
+      state.objects[arrived].attachedTo = attachTo;
+      state.objects[attachTo].attachments = [...(state.objects[attachTo].attachments ?? []), arrived];
+    }
     /* "When this enters, each creature gets -X/-X": the X paid stays with the permanent (CR 107.3m). */
     if (to === "battlefield" && entry.x !== undefined) state.objects[arrived].xPaid = entry.x;
     if (entering) {

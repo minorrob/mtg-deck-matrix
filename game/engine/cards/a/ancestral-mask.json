@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ancestral Mask",
+    "oracleId": "db5380ed-ba28-4ea2-abc3-4998e2022903",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +2/+2 for each other enchantment on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +2/+2 for each other enchantment on the battlefield.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "types": [
+              "Enchantment"
+            ],
+            "another": true
+          },
+          "times": 2
+        },
+        "toughness": {
+          "count": {
+            "types": [
+              "Enchantment"
+            ],
+            "another": true
+          },
+          "times": 2
+        }
+      }
+    }
+  ]
+}
