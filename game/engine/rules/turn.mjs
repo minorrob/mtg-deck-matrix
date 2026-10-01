@@ -386,6 +386,7 @@ export function beginGame(state, startingPlayer = 0) {
   state.startingPlayer = startingPlayer;
   state.turn = 1;
   state.activePlayer = startingPlayer;
+  state.players[startingPlayer].turnBegan = 1;
   state.stepIndex = 0;
   state.phase = STEPS[0].phase;
   for (const player of state.players) player.landsPlayed = 0;
@@ -426,6 +427,7 @@ export function advance(state) {
        them; until then a turn is followed by the next living player's. */
     state.activePlayer = nextLivingPlayer(state, state.activePlayer);
     state.turn += 1;
+    state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
     /* CR 305.2 says "already played a land THIS TURN", so the count is per turn and resets for
        everyone, not only for whoever is about to take it. The difference shows the moment an
        effect lets somebody play a land on another player's turn: resetting only the active
