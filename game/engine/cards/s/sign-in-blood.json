@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sign in Blood",
+    "oracleId": "c6207f6a-a624-4754-88f5-dbe700c841ff",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws two cards and loses 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target player draws two cards and loses 2 life.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

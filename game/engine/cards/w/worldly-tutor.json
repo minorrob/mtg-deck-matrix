@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Worldly Tutor",
+    "oracleId": "e8863518-0bfa-49c3-8c6e-6c9116a81051",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a creature card, reveal it, then shuffle and put the card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a creature card, reveal it, then shuffle and put the card on top.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "shuffle": true,
+          "to": "top",
+          "reveal": true
+        }
+      ]
+    }
+  ]
+}

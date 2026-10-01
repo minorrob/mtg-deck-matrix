@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Opt",
+  "scenarios": [
+    {
+      "name": "Scry 1, then a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Opt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Opt"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ],
+          "extra": {
+            "toBottom": []
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
