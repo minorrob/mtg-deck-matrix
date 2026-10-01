@@ -136,6 +136,8 @@ function applyOne(state, {holderId, ability}, proposal) {
   /* "As this land enters, you may pay 2 life. If you don't, it enters tapped": tapped unless paid, and the payment is
      a question for its controller once it is there (rules/entering.mjs). */
   if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
+  /* "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, it enters tapped." */
+  if (ability.change?.unlessReveal) next.asks = [...(next.asks ?? []), {reveal: structuredClone(ability.change.unlessReveal)}];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     next.counters = {...(next.counters ?? {})};
