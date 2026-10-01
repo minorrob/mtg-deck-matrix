@@ -209,14 +209,17 @@ export function createCardIndex(entries) {
     const key = foldName(name);
     if (byName.has(key)) throw new Error(`Two definitions of ${name}${file ? ` (${file} and ${byName.get(key).path})` : ""}`);
     const {definition, problems} = compileScript(script);
-    byName.set(key, {name, oracleId: script.identity.oracleId ?? null, path: file, script, definition, problems});
+    /* Where it came from: written by hand, or by the card loader and still `provisional` until confirmed. */
+    const source = entry?.source ?? script.source ?? "hand", status = entry?.status ?? (source === "hand" ? "verified" : "provisional");
+    byName.set(key, {name, oracleId: script.identity.oracleId ?? null, path: file, script, definition, problems, source, status});
   }
   const names = [...byName.values()].map((e) => e.name).sort();
 
   /** A card's entry by name, however it is spelled -- or null. The same shape as forge-card-index's `resolve`. */
   const resolve = (name) => {
     const hit = byName.get(foldName(name));
-    return hit ? {name: hit.name, oracleId: hit.oracleId, path: hit.path, playable: hit.problems.length === 0, problems: [...hit.problems]} : null;
+    return hit ? {name: hit.name, oracleId: hit.oracleId, path: hit.path, playable: hit.problems.length === 0, problems: [...hit.problems],
+      source: hit.source, status: hit.status} : null;
   };
   /** The nearest names, for a name that does not resolve. */
   const suggest = (name, limit = 5) => {

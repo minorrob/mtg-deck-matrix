@@ -18,8 +18,10 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}], ability?, mana?}
- *            | {resolve: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
+ *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, optional?}
+ *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
+ *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
+ *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
@@ -126,10 +128,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
     const seat = seatOf(step);
     const [kind, card] = step.play ? ["play-land", step.play] : step.tap ? ["activate-mana", step.tap]
       : step.cast ? ["cast", step.cast] : ["activate", step.activate];
-    let found = offered({kind, card, seat}, kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
+    const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
+    let found = offered({kind, card, seat}, aim);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
     /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
+    if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
   }
@@ -194,6 +198,15 @@ export function runScenario(scenario, cards, fixtures = {}) {
          resolution put on the stack -- a permanent's "when this enters" -- waits for its own step. */
       const top = state.stack[state.stack.length - 1].stackId;
       for (let n = 0; n < STEP_LIMIT && state.stack.some((e) => e.stackId === top) && !state.awaiting; n += 1) stepOnce();
+    } else if (step.settle) {
+      for (let n = 0; n < STEP_LIMIT && (state.awaiting || state.stack.length); n += 1) {
+        if (state.awaiting) {
+          const choice = awaitingChoice(state);
+          const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
+          if (amounts && choice.total) amounts[0] = choice.total;
+          record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+        } else stepOnce();
+      }
     } else if (step.pass) {
       for (let n = 0; n < step.pass; n += 1) record(passPriority(state).events);
     } else if (step.to) goTo(step.to);
