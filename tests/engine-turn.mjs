@@ -34,6 +34,8 @@ import {
   awaitingChoice, resolveAwaiting,
 } from "../game/engine/rules/turn.mjs";
 import {hashState} from "../game/engine/journal.mjs";
+import {runEffects} from "../game/engine/script/effects/index.mjs";
+import {powerOf, toughnessOf, keywordsOf} from "../game/engine/rules/layers.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -231,6 +233,23 @@ function started(n = 4, cards = 60) {
   s.objects[bear].damage = 2;
   until(s, atPhase("CLEANUP"));
   eq(s.objects[bear].damage, 0, "damage wears off at cleanup rather than accumulating across turns");
+}
+
+/* ---- and "until end of turn" ends there too, with the damage (CR 514.2) ---- */
+{
+  const s = started();
+  const bear = addObject(s, {card: "Bear", types: ["Creature"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield");
+  runEffects(s, [{effect: "pump", targets: [bear], power: 3, toughness: 3}, {effect: "pumpAll", selector: {types: ["Creature"]}, power: 0, toughness: 0, keywords: ["Indestructible"]},
+    {effect: "effectUntil", layer: 6, affects: {ids: [bear]}, apply: {addKeywords: ["Flying"]}}], {controller: 0, source: null});
+  /* A static ability's effect has no duration: it lasts as long as its permanent (CR 611.3). */
+  addObject(s, {card: "Banner", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "a0", kind: "static", text: "Creatures you control have trample.", layer: 6, affects: {types: ["Creature"], controller: "you"}, apply: {addKeywords: ["Trample"]}}]}, "battlefield");
+  eq([powerOf(s, bear), keywordsOf(s, bear).sort()], [5, ["Flying", "Indestructible", "Trample"]], "a Giant Growth, Heroic Intervention's indestructible and a gained keyword, all this turn");
+  until(s, atPhase("END_OF_TURN"));
+  eq(powerOf(s, bear), 5, "still so in the end step: the effects last until the cleanup step");
+  until(s, atPhase("CLEANUP"));
+  eq([powerOf(s, bear), toughnessOf(s, bear), keywordsOf(s, bear)], [2, 2, ["Trample"]],
+    "in cleanup every \"until end of turn\" effect ends -- and only those: the Banner's static ability, which has no duration, stays");
 }
 
 /* ---- with nobody attacking, two combat steps do not happen (CR 506.5) ---- */
