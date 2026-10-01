@@ -62,6 +62,7 @@ import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -290,8 +291,13 @@ const sameAction = (a, b) => a.kind === b.kind
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
   state.passes = 0;
-  events.push(...checkStateBasedActions(state));
+  /* What the action did triggers now (CR 603.2), whatever is asked next; the triggers wait to go on the stack. */
   collectTriggers(state, events);
+  /* A land that asks as it enters (a shock land) asks first: it is part of the land's entering. */
+  if (askEntering(state)) { state.priorityPlayer = null; return events; }
+  const sba = checkStateBasedActions(state);
+  events.push(...sba);
+  collectTriggers(state, sba);
   if (!state.awaiting) openTriggers(state);
   if (state.awaiting) state.priorityPlayer = null;
   else if (state.players[player].lost) {
