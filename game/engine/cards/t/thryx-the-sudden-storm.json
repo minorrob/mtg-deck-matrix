@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thryx, the Sudden Storm",
+    "oracleId": "20004398-bd04-4583-8378-9df743246a32",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Giant"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\nSpells you cast with mana value 5 or greater cost {1} less to cast and can't be countered.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Spells you cast with mana value 5 or greater cost {1} less to cast and can't be countered.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "manaValue": {
+          "min": 5
+        }
+      },
+      "amount": 1
+    },
+    {
+      "kind": "static",
+      "text": "Spells you cast with mana value 5 or greater cost {1} less to cast and can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you",
+        "manaValue": {
+          "min": 5
+        }
+      }
+    }
+  ]
+}

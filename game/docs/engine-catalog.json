@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 506,
-  "everyRule": 1654
+  "defined": 515,
+  "everyRule": 1663
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8158,8 +8158,8 @@
      "forge": "Counter",
      "top": 21,
      "all": 110,
-     "blocks": 21,
-     "alone": 13
+     "blocks": 12,
+     "alone": 4
     },
     {
      "kind": "replacement",
