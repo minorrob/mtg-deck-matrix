@@ -21,6 +21,8 @@
  *      figure, the other cards keep theirs, and a second click lets every row back. On a phone the
  *      page brings the table up below the top bar, since the table sits a screen below the cards.
  *   8. A row shows the card's name first and its mana after; on a phone the name keeps its room.
+ *   9. W1: with one row per card, a card of two prints is priced at the dearest and opens to list each print, its value
+ *      and where it is; a card of one print opens nothing and keeps the catalog's price.
  *   6. INTAKE §3's Library items still stand: the ticked-rows bar, group bands, collection groups, the
  *      Sheet's editable cells and the Table view's piles.
  *
@@ -320,6 +322,35 @@ try {
   await page.goto(`${base}/index.html#cards?view=tabletop`);
   await page.locator(".cm-tt-pile").first().waitFor();
   ok((await page.locator(".cm-tt-pile").count()) > 1, "§3: the Table view draws its piles");
+
+  /* 9. W1: A CARD'S PRINTS IN ITS ONE ROW (docs/plan-to-done-2026-09-30.md). With one row per card, Generous Gift's row
+     -- a $0.72 Modern Horizons on the bench and a $5.24 Secret Lair foil in D1's box, as the sync placed them (Rob:
+     the dearest print is the deck's) -- is priced at the dearest, and opens to list both, each with its value and
+     where it is. A card of one print keeps the catalog's price and opens nothing. */
+  await page.evaluate(async () => { const r = await CrankRepository.open(); try { const s = await r.getState(); await r.commit({id: crypto.randomUUID(), type: "preferences", values: {foldPrints: true, columns: ["name", "status", "price"]}}, s.revision); } finally { r.close(); } });
+  await page.goto(LIB);
+  await page.reload();
+  await settle(page);
+  const rowOf = (name) => page.locator("#cm-roster-table tr.cm-row-card", {has: page.locator(".cm-card-name", {hasText: new RegExp(`^${name}`)})}).first();
+  await page.fill("#cm-roster-query", "Generous Gift");
+  await rowOf("Generous Gift").waitFor();
+  const gift = rowOf("Generous Gift"), giftPrice = (await gift.locator("td.cm-col-price").innerText()).trim();
+  ok(giftPrice === "$5.24" && /dearest of its 2 prints/.test(await gift.locator("td.cm-col-price .cm-price").getAttribute("title")), `the one row is priced at the dearest of its prints: ${giftPrice}`);
+  const toggle = gift.locator("[data-prints-toggle]");
+  ok((await toggle.innerText()).trim() === "2 prints ▸" && (await toggle.getAttribute("aria-expanded")) === "false", "and says it holds two prints, closed");
+  await toggle.click();
+  const printRows = await page.locator("#cm-roster-table .cm-print-rows .cm-prints li").allInnerTexts();
+  const flat = printRows.map((t) => t.replace(/\s+/g, " ").trim());
+  ok(flat.length === 2 && /^Secret Lair Drop · #R 2534 · Foil · Rudy Siswanto \$5\.24 1 in D1 Quintorius Spirits$/.test(flat[0]) && /^Modern Horizons \$0\.72 1 in Bench$/.test(flat[1]),
+    `opened, it lists each print, dearest first: set, number, foil, artist, value, and where it is (${flat.join(" | ")})`);
+  ok(await page.locator("#cm-roster-table [data-prints-toggle][aria-expanded=true]").count() === 1 && page.url().endsWith("#cards"), "opening it keeps the page where it is (the row still does not open the card)");
+  await page.locator("#cm-roster-table [data-prints-toggle]").click();
+  eq(await page.locator("#cm-roster-table .cm-print-rows").count(), 0, "and a second click closes it");
+  await page.fill("#cm-roster-query", "Evolving Wilds");
+  await rowOf("Evolving Wilds").waitFor();
+  const wilds = rowOf("Evolving Wilds");
+  ok(await wilds.locator("[data-prints-toggle]").count() === 0 && !(await wilds.locator("td.cm-col-price .cm-price").getAttribute("title")), "a card of one print (five Evolving Wilds, all the one print) opens nothing and keeps the catalog's price");
+  await page.fill("#cm-roster-query", "");
   await context.close();
 
   /* 4. A phone. */

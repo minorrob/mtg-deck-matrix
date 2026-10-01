@@ -1445,6 +1445,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-fchips .cm-text-button{font-size:12px;padding:0}
 #matrix-v2 .cm-filter-panel input:not([type=checkbox]),#matrix-v2 .cm-filter-panel select{height:36px;min-height:36px;padding-top:0;padding-bottom:0}
 .cm-fold-note{font-size:12px;white-space:nowrap}
+/* A card's prints within its row (W1): the toggle in the caption, and the list it opens under the row. */
+.cm-prints-toggle{font-size:12px;margin-left:6px}
+#matrix-v2 .cm-print-rows td{padding:6px 16px 12px 48px;background:var(--v-raised)}
+.cm-prints{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px}
+.cm-prints li{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.8fr);gap:12px;align-items:baseline}
+.cm-print-where{color:var(--v-muted)}
 #matrix-v2 .cm-hero-link{font-size:12px;padding:0;min-height:0;text-decoration:underline}
 .cm-skeleton h1{opacity:.7}
 @media(max-width:640px){

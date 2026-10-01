@@ -4,7 +4,7 @@
  "version": 1,
  "generator": "tools/build-live-load.mjs",
  "count": 7,
- "savedAt": "2026-09-30T16:15:44Z",
+ "savedAt": "2026-09-30T21:39:14Z",
  "workbook": "MtG_-_Master_-_2026-09-30.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
  "decks": [
@@ -19987,5 +19987,9281 @@
    "origin": "workbook",
    "why": ""
   }
- ]
+ ],
+ "prints": {
+  "Abigale, Eloquent First-Year": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Abrade": [
+   {
+    "series": "Hour of Devastation",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Abstract Paintmage": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "171",
+    "quantity": 1,
+    "foil": false,
+    "artist": "David Auden Nash",
+    "value": 0.29
+   }
+  ],
+  "Academic Ascent": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0002",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Randy Gallegos",
+    "value": null
+   }
+  ],
+  "Access Tunnel": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.47
+   }
+  ],
+  "Advanced Reconstruction": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Adventurous Eater // Have a Bite": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "72",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Josu Hernaiz",
+    "value": 0.12
+   }
+  ],
+  "Aetheric Amplifier": [
+   {
+    "series": "Aetherdrift Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.66
+   }
+  ],
+  "Aetherize": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.62
+   }
+  ],
+  "Afterthought Sentry": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0166",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Andrew Mar",
+    "value": null
+   }
+  ],
+  "Air Nomad Legacy": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Airship Engine Room": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "L 0265",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Andreas Rocha",
+    "value": 0.29
+   }
+  ],
+  "Ajani Resolute": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0195",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tyler Jacobson",
+    "value": 25.96
+   }
+  ],
+  "Ajani Unrelenting": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0242",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tyler Jacobson",
+    "value": 14.52
+   }
+  ],
+  "Akoum Hellhound": [
+   {
+    "series": "Zendikar Rising",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Alexios, Deimos of Kosmos": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.48
+   }
+  ],
+  "Alms Collector": [
+   {
+    "series": "Commander 2017",
+    "collector": "R 0001",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Bram Sels",
+    "value": 2.18
+   }
+  ],
+  "Ambitious Augmenter": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "140",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Mariah Tekulve",
+    "value": 0.28
+   }
+  ],
+  "An Unexpected Party // At the Door": [
+   {
+    "series": "The Hobbit",
+    "collector": "29",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Matt Stewart",
+    "value": 0.31
+   }
+  ],
+  "Ancestral Anger": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "106",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Ancient Greenwarden": [
+   {
+    "series": "Zendikar Rising",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 12.7
+   }
+  ],
+  "Angel of Indemnity": [
+   {
+    "series": "Outlaws of Thunder Junction Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.4
+   }
+  ],
+  "Anger": [
+   {
+    "series": "Judgment",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.6
+   }
+  ],
+  "Anguished Unmaking": [
+   {
+    "series": "Shadows over Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.54
+   }
+  ],
+  "Anointer Priest": [
+   {
+    "series": "Amonkhet",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Ao, the Dawn Sky": [
+   {
+    "series": "Kamigawa: Neon Dynasty",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Apex Witchstalker": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0048",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Jason Mowry",
+    "value": 0.66
+   }
+  ],
+  "Appeal to Eirdu": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "5",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Arbaaz Mir": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "U 0138",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Bastien L. Deharme",
+    "value": 0.3
+   }
+  ],
+  "Arboreal Grazer": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Arcades, the Strategist": [
+   {
+    "series": "Core Set 2019",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.66
+   }
+  ],
+  "Arcane Amphisbaena": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0097",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jason Mowry",
+    "value": 0.91
+   }
+  ],
+  "Arcane Sanctum": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.42
+   }
+  ],
+  "Arcane Signet": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 4,
+    "foil": false,
+    "artist": "",
+    "value": 0.57
+   }
+  ],
+  "Archaeomancer's Map": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.02
+   }
+  ],
+  "Archive Arbiter": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0167",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Valera Lutfullina",
+    "value": 0.99
+   }
+  ],
+  "Argentum Masticore": [
+   {
+    "series": "Phyrexia: All Will Be One",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Arno Dorian": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Artifist Acumen": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0073",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Anna Podedworna",
+    "value": 1.99
+   }
+  ],
+  "Artisan of Kozilek": [
+   {
+    "series": "Rise of the Eldrazi",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.48
+   }
+  ],
+  "Ascendant Dustspeaker": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "8",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Ash Barrens": [
+   {
+    "series": "Commander 2016",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Ashling, Rekindled // Ashling, Rimebound": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Assault Formation": [
+   {
+    "series": "Dragons of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Astral Cornucopia": [
+   {
+    "series": "Born of the Gods",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Atraxa, Praetors' Voice": [
+   {
+    "series": "Commander 2016",
+    "collector": "",
+    "quantity": 1,
+    "foil": true,
+    "artist": "",
+    "value": 27.97
+   }
+  ],
+  "Atsushi, the Blazing Sky": [
+   {
+    "series": "Kamigawa: Neon Dynasty",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Attercop": [
+   {
+    "series": "The Hobbit",
+    "collector": "116",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Augusta, Order Returned": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Auntie's Sentence": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Avatar of Burgeoning Echoes": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0122",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Eli Minaya",
+    "value": 14.99
+   }
+  ],
+  "Awaken the Erstwhile": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.4
+   }
+  ],
+  "Awaken the Inferno": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0074",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Kai Carpenter",
+    "value": 0.79
+   }
+  ],
+  "Axebane Guardian": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.67
+   }
+  ],
+  "Azorius Chancery": [
+   {
+    "series": "Dissension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Azorius Guildgate": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Azorius Signet": [
+   {
+    "series": "Dissension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Bag of Holding": [
+   {
+    "series": "Core Set 2020",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Balefire Liege": [
+   {
+    "series": "Eventide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Bant Panorama": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Bard the Bowman": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Barrage of Expendables": [
+   {
+    "series": "Magic 2014",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Bastion of Remembrance": [
+   {
+    "series": "Ikoria: Lair of Behemoths",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Battle Screech": [
+   {
+    "series": "Judgment",
+    "collector": "U 0003",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Randy Gallegos",
+    "value": 0.58
+   }
+  ],
+  "Battlefield Forge": [
+   {
+    "series": "Apocalypse",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   },
+   {
+    "series": "Magic 2015",
+    "collector": "R 0240",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Darrell Riche",
+    "value": 0.44
+   }
+  ],
+  "Bayek of Siwa": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Beetleback Chief": [
+   {
+    "series": "Planechase 2012",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Belligerent Brontodon": [
+   {
+    "series": "Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Berta, Wise Extrapolator": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "175",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tuan Duong Chu",
+    "value": 0.32
+   }
+  ],
+  "Bestial Incursion": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0098",
+    "quantity": 4,
+    "foil": false,
+    "artist": "Justin Gerard",
+    "value": null
+   }
+  ],
+  "Betor, Ancestor's Voice": [
+   {
+    "series": "Tarkir: Dragonstorm Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.67
+   }
+  ],
+  "Biblioplex Tomekeeper": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "247",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Raph Lomotan",
+    "value": 0.07
+   }
+  ],
+  "Big Score": [
+   {
+    "series": "Streets of New Capenna",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.43
+   }
+  ],
+  "Bilbo Baggins, Burglar // Take a Glance": [
+   {
+    "series": "The Hobbit",
+    "collector": "34",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Kieran Yanner",
+    "value": 0.14
+   }
+  ],
+  "Bilbo's Deadly Slice": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Bile-Vial Boggart": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Bitterthorn, Nissa's Animus": [
+   {
+    "series": "March of the Machine Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 5.73
+   }
+  ],
+  "Blacksmith's Skill": [
+   {
+    "series": "Modern Horizons 2",
+    "collector": "C 0381",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jason A. Engle",
+    "value": 0.32
+   }
+  ],
+  "Blasphemous Act": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.93
+   }
+  ],
+  "Blazing Crescendo": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0075",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Billy Christian",
+    "value": null
+   }
+  ],
+  "Blazing Firesinger // Seething Song": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "109",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Blessed Ghoul": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0123",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Igor Grechanyi",
+    "value": 1.99
+   }
+  ],
+  "Blight Pile": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Blight Rot": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Blizzard Strix": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Bloodthirsty Adversary": [
+   {
+    "series": "Innistrad: Midnight Hunt",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Bloom Hulk": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Blossom-Blessed Angel // Seed Suture": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0003",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Joshua Raphael",
+    "value": 1.96
+   }
+  ],
+  "Blossoming Sands": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Boar-q-pine": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Bofur, Reliable Guardian // Concerted Care": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Boggart Cursecrafter": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Boggart Mischief": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Bogslither's Embrace": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "94",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Boldwyr Aggressor": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "125",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Bolg's Company": [
+   {
+    "series": "The Hobbit",
+    "collector": "211",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Denman Rooke",
+    "value": 0.31
+   }
+  ],
+  "Bolrac-Clan Crusher": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.06
+   }
+  ],
+  "Bombur, Gentle Dreamer": [
+   {
+    "series": "The Hobbit",
+    "collector": "88",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Eric Deschamps",
+    "value": 0.2
+   }
+  ],
+  "Boneclub Berserker": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "126",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Slawomir Maniak",
+    "value": 0.16
+   }
+  ],
+  "Borrowed Knowledge": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "178",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Inkognit",
+    "value": 0.34
+   }
+  ],
+  "Bothersome Noisemaker": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Boughside Wanderers": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Branching Evolution": [
+   {
+    "series": "Jumpstart",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 8.09
+   }
+  ],
+  "Bristlebane Battler": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Bronze Guardian": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.46
+   }
+  ],
+  "Budding Insurgent": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0099",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jeff Miracola",
+    "value": null
+   }
+  ],
+  "Burdened Stoneback": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "8",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Carl Critchlow",
+    "value": 0.16
+   }
+  ],
+  "Buried Ruin": [
+   {
+    "series": "Magic 2012",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Burn, Burn, Tree and Fern": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Burning Curiosity": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "C 0129",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Jim Pavelec",
+    "value": 0.28
+   }
+  ],
+  "Burnished Hart": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Campus Crier": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0004",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Johan Grenier",
+    "value": null
+   }
+  ],
+  "Canopy Gargantuan": [
+   {
+    "series": "Tarkir: Dragonstorm Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.47
+   }
+  ],
+  "Carnivorous Cultivator // Enroot": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0100",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Martina Fačková",
+    "value": 5.37
+   }
+  ],
+  "Carven Caryatid": [
+   {
+    "series": "Ravnica: City of Guilds",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Cast Away Doubt": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0051",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Zara Alfonso",
+    "value": 1.98
+   }
+  ],
+  "Cast Out": [
+   {
+    "series": "Amonkhet",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Castle Ardenvale": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Castle Embereth": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Cathar Commando": [
+   {
+    "series": "Innistrad: Midnight Hunt",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Cathars' Crusade": [
+   {
+    "series": "Avacyn Restored",
+    "collector": "R 0010",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Karl Kopinski",
+    "value": 8.19
+   }
+  ],
+  "Cathartic Reunion": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Caves of Koilos": [
+   {
+    "series": "Apocalypse",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.82
+   }
+  ],
+  "Ceaseless Conflict": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Chain Assassination": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Chandra's Emberling": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0076",
+    "quantity": 3,
+    "foil": true,
+    "artist": "Borja Pindado",
+    "value": 0.86
+   }
+  ],
+  "Changeling Wayfinder": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "C 0001",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Quintin Gleim",
+    "value": 0.33
+   }
+  ],
+  "Chaos Spewer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Chaos Warp": [
+   {
+    "series": "Commander 2011",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Charge the Sanctum": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0125",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Néstor Ossandón Leal",
+    "value": 0.49
+   }
+  ],
+  "Charging Strifeknight": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "110",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Charming Prince": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Chelonian Tackle": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "142",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Chitinous Graspling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Chomping Changeling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "172",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.37
+   }
+  ],
+  "Chromatic Lantern": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.87
+   }
+  ],
+  "Chulane, Teller of Tales": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.22
+   }
+  ],
+  "Cinder Strike": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Civic Stalwart": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.05
+   }
+  ],
+  "Clachan Festival": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Claim Jumper": [
+   {
+    "series": "Outlaws of Thunder Junction",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.43
+   }
+  ],
+  "Clan Guildmage": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.06
+   }
+  ],
+  "Clifftop Retreat": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Cloud's Limit Break": [
+   {
+    "series": "Final Fantasy Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Cloudblazer": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Coiling Oracle": [
+   {
+    "series": "Dissension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Collective Effort": [
+   {
+    "series": "Eldritch Moon",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Combat Calligrapher": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Combustion Technique": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Command Tower": [
+   {
+    "series": "Commander 2011",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   },
+   {
+    "series": "Bloomburrow Commander",
+    "collector": "C 0130",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Zoltan Boros",
+    "value": 0.22
+   }
+  ],
+  "Compel Brutality": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0101",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Danny Schwartz",
+    "value": null
+   }
+  ],
+  "Concealed Courtyard": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.18
+   }
+  ],
+  "Condemn": [
+   {
+    "series": "Magic 2011",
+    "collector": "U 0011",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Daren Bader",
+    "value": 0.25
+   },
+   {
+    "series": "Zendikar Rising Commander",
+    "collector": "U 0012",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Daren Bader",
+    "value": 0.19
+   }
+  ],
+  "Conspicuous Snoop": [
+   {
+    "series": "Core Set 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.44
+   }
+  ],
+  "Conspiracy Theorist": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Contagion Clasp": [
+   {
+    "series": "Duel Decks: Elspeth vs. Tezzeret",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Containment Construct": [
+   {
+    "series": "Kamigawa: Neon Dynasty",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Corpse Knight": [
+   {
+    "series": "Core Set 2020",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.69
+   }
+  ],
+  "Counterspell": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.51
+   }
+  ],
+  "Court Street Denizen": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Crashing Drawbridge": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.05
+   }
+  ],
+  "Crude Bent Blade": [
+   {
+    "series": "The Hobbit",
+    "collector": "63",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Cruel Celebrant": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.32
+   }
+  ],
+  "Cryotheory Adept": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0027",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Kai Carpenter",
+    "value": null
+   }
+  ],
+  "Cultivate": [
+   {
+    "series": "Magic 2011",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.73
+   }
+  ],
+  "Curious Farm Animals": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Currency Converter": [
+   {
+    "series": "New Capenna Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.49
+   }
+  ],
+  "Dai Li Indoctrination": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Dáin, Lord of the Iron Hills": [
+   {
+    "series": "The Hobbit",
+    "collector": "8",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tomas Duchek",
+    "value": 0.23
+   }
+  ],
+  "Danitha Capashen, Paragon": [
+   {
+    "series": "Dominaria",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.97
+   }
+  ],
+  "Danitha, Sword of Hope": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0196",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Bryan Sola",
+    "value": 1.17
+   }
+  ],
+  "Dark Matter Manipulator": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0052",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Steven Belledin",
+    "value": 2.74
+   }
+  ],
+  "Dawn-Blessed Pennant": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "254",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Dawn's Light Archer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Day of Black Sun": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.38
+   }
+  ],
+  "Day of Judgment": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.07
+   }
+  ],
+  "Daydream": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "9",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Deadly Dispute": [
+   {
+    "series": "Adventures in the Forgotten Realms",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Dedicated Commons": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0175",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Josu Solano",
+    "value": 0.72
+   }
+  ],
+  "Deepchannel Duelist": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Deepglow Skate": [
+   {
+    "series": "Commander 2016",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Deflecting Palm": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "63",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Alex Stone",
+    "value": 2.26
+   }
+  ],
+  "Delay": [
+   {
+    "series": "Future Sight",
+    "collector": "U 0035",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Ron Spears",
+    "value": 9.84
+   }
+  ],
+  "Denzilore Fatehold": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0128",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Dmitry Burmak",
+    "value": 8.28
+   }
+  ],
+  "Deputy of Detention": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Desmond Miles": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Despark": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Desperate Futurescribe": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0129",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Sidharth Chaturvedi",
+    "value": 0.3
+   }
+  ],
+  "Destroy Evil": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Disenchant": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Dismal Backwater": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Divert Disaster": [
+   {
+    "series": "Edge of Eternities",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Divining Duelist": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0029",
+    "quantity": 2,
+    "foil": false,
+    "artist": "David Auden Nash",
+    "value": 0.3
+   }
+  ],
+  "Dori, Bearer of Friends": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Draconic Visitor": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0080",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Alexander Mokhov",
+    "value": 11.87
+   }
+  ],
+  "Dragon Fodder": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Dragonlord Dromoka": [
+   {
+    "series": "Dragons of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.88
+   }
+  ],
+  "Dreaded Bat-Cloud": [
+   {
+    "series": "The Hobbit",
+    "collector": "66",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andreia Ugrai",
+    "value": 0.22
+   },
+   {
+    "series": "",
+    "collector": "",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Andreia Ugrai",
+    "value": 0.28
+   }
+  ],
+  "Dreadhorde Invasion": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.01
+   }
+  ],
+  "Dream Stalker": [
+   {
+    "series": "Time Spiral",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Drift of Phantasms": [
+   {
+    "series": "Ravnica Remastered",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Drogskol Shieldmate": [
+   {
+    "series": "Eldritch Moon",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Drowned Catacomb": [
+   {
+    "series": "Magic 2010",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.2
+   }
+  ],
+  "Drumbellower": [
+   {
+    "series": "Neon Dynasty Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.97
+   }
+  ],
+  "Dundoolin Weaver": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Duty Beyond Death": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "4",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Zuzanna Wuzyk",
+    "value": 0.32
+   }
+  ],
+  "Dwarven Mattock": [
+   {
+    "series": "The Hobbit",
+    "collector": "172",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Dwarven Mauler": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Dwarven Provisioner": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Dwarven Shortsword": [
+   {
+    "series": "The Hobbit",
+    "collector": "10",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Eager Glyphmage": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "11",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Cristi Balanescu",
+    "value": 0.09
+   }
+  ],
+  "Eagle of the Great Shelf": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Eardrum Rattler": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0081",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Javier Charro",
+    "value": 0.24
+   }
+  ],
+  "Earth Kingdom Jailer": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Eclipsed Realms": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "263",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.72
+   }
+  ],
+  "Edgar, Ancient Bloodlord": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0270",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Joshua Raphael",
+    "value": 1.36
+   }
+  ],
+  "Eerie Ultimatum": [
+   {
+    "series": "Ikoria: Lair of Behemoths",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Elas il-Kor, Sadistic Pilgrim": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.44
+   }
+  ],
+  "Eldrazi Ravager": [
+   {
+    "series": "Modern Horizons 3",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Elspeth, Sun's Nemesis": [
+   {
+    "series": "Theros Beyond Death",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.8
+   }
+  ],
+  "Elvenking's Harper": [
+   {
+    "series": "The Hobbit",
+    "collector": "38",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Elvish Visionary": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Emergency Phytomedic // Seed Suture": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0130",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Dmitry Burmak",
+    "value": 1.21
+   }
+  ],
+  "Emeria, the Sky Ruin": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 7.4
+   }
+  ],
+  "Emptiness": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Empty the Warrens": [
+   {
+    "series": "Time Spiral",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Enchanted River's Grasp": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Endbringer": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Enraged Flamecaster": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Ephemerate": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 5.26
+   }
+  ],
+  "Esgaroth Garrison": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Essence Burn": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0369",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jeff Soto",
+    "value": 5.99
+   }
+  ],
+  "Essence Scatter": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "47",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Elliot Lang",
+    "value": 0.07
+   }
+  ],
+  "Essenceknit Scholar": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "187",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ioannis Fiore",
+    "value": 0.24
+   }
+  ],
+  "Eternal Witness": [
+   {
+    "series": "Fifth Dawn",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.22
+   }
+  ],
+  "Everflowing Chalice": [
+   {
+    "series": "Worldwake",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Evolving Wilds": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "264",
+    "quantity": 5,
+    "foil": false,
+    "artist": "Alayna Danner",
+    "value": 0.09
+   }
+  ],
+  "Excava, the Risen Past": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.62
+   }
+  ],
+  "Exotic Orchard": [
+   {
+    "series": "Conflux",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Explorer's Scope": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Explosive Prodigy": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Expressive Firedancer": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "114",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.05
+   }
+  ],
+  "Extended Absence": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0054",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 1.45
+   }
+  ],
+  "Extrapolate the Impossible": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0055",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Volkan Baǵa",
+    "value": 5.37
+   }
+  ],
+  "Eye of Jace": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0170",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Ioannis Fiore",
+    "value": 1.01
+   }
+  ],
+  "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki": [
+   {
+    "series": "Kamigawa: Neon Dynasty",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Fabled Passage": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.11
+   }
+  ],
+  "Faeburrow Elder": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.47
+   }
+  ],
+  "Faerie Duelist": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Faithless Looting": [
+   {
+    "series": "Dark Ascension",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Fall of the First Civilization": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Fanatical Firebrand": [
+   {
+    "series": "Rivals of Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Fancy Footwork": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Farhaven Elf": [
+   {
+    "series": "Shadowmoor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Farseek": [
+   {
+    "series": "Ravnica: City of Guilds",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.44
+   }
+  ],
+  "Fateful Absence": [
+   {
+    "series": "Innistrad: Midnight Hunt",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.4
+   }
+  ],
+  "Fateful Tempest": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Fatehold Annex": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0177",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Sergey Glushakov",
+    "value": 0.72
+   }
+  ],
+  "Fatehold Charm": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0132",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Rovina Cai",
+    "value": 1.07
+   }
+  ],
+  "Fatehold Chronologist // Peer Review": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0133",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Alexander Mokhov",
+    "value": 0.56
+   }
+  ],
+  "Fauna Shaman": [
+   {
+    "series": "Secret Lair Promo",
+    "collector": "P 0041",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nature Nurture",
+    "value": 4.98
+   }
+  ],
+  "Fblthp, the Lost": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Fearsome Goblin Pair": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Feed the Swarm": [
+   {
+    "series": "Zendikar Rising",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Feisty Spikeling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Fell the Mighty": [
+   {
+    "series": "Commander 2014",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Fellwar Stone": [
+   {
+    "series": "The Dark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.95
+   }
+  ],
+  "Felothar the Steadfast": [
+   {
+    "series": "Tarkir: Dragonstorm Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.12
+   }
+  ],
+  "Ferocity of the Hunt": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0134",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Elliot Lang",
+    "value": 1.15
+   }
+  ],
+  "Fertilid": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Fields of Strife": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "255",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Josu Solano",
+    "value": 0.15
+   }
+  ],
+  "Filigree Familiar": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Fire Nation Cadets": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Flame-Chain Mauler": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "138",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Flamekin Gildweaver": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "140",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.12
+   }
+  ],
+  "Flaring Cinder": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "225",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Flashback": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "115",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Flavio Greco Paglia",
+    "value": 3.08
+   }
+  ],
+  "Flow State": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "49",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Genel Jumalon",
+    "value": 1.89
+   }
+  ],
+  "Flux Channeler": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.3
+   }
+  ],
+  "Foggy Swamp Vinebender": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Follow the Lumarets": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "148",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Foraging Wickermaw": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "C 0256",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Ron Spencer",
+    "value": 0.27
+   }
+  ],
+  "Forest": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 80,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Formidable Commons": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0178",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Marco Gorlei",
+    "value": 0.73
+   }
+  ],
+  "Fortified Village": [
+   {
+    "series": "Shadows over Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Foundry Street Denizen": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Fractal Anomaly": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "50",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Fracture": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.63
+   }
+  ],
+  "Freed from the Real": [
+   {
+    "series": "Saviors of Kamigawa",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Freyalise, Llanowar's Fury": [
+   {
+    "series": "Commander 2014",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.22
+   }
+  ],
+  "Front Porch Sentries": [
+   {
+    "series": "The Hobbit",
+    "collector": "67",
+    "quantity": 5,
+    "foil": false,
+    "artist": "Stanislav Sherbakov",
+    "value": 0.12
+   }
+  ],
+  "Frontline Medic": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Frostbite Pyromental": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0135",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Wayne Reynolds",
+    "value": 0.99
+   }
+  ],
+  "Fuel for the Cause": [
+   {
+    "series": "Mirrodin Besieged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Furycalm Snarl": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Fynn, the Fangbearer": [
+   {
+    "series": "Kaldheim",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   },
+   {
+    "series": "Final Fantasy: Through the Ages",
+    "collector": "U 0046",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Square Enix",
+    "value": 0.3
+   }
+  ],
+  "Gandalf, Goblins' Bane // Flameshape": [
+   {
+    "series": "The Hobbit",
+    "collector": "96",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.65
+   }
+  ],
+  "Gandalf, Wandering Wizard": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Gangly Stompling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Garrison Excavator": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "116",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Cristi Balanescu",
+    "value": 0.22
+   }
+  ],
+  "Gathering of Darkness": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Geist of Saint Thalia": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0214",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ryan Pancoast",
+    "value": 0.77
+   }
+  ],
+  "Generous Gift": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.72
+   },
+   {
+    "series": "Secret Lair Drop",
+    "collector": "R 2534",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Rudy Siswanto",
+    "value": 5.24
+   }
+  ],
+  "Genesis Chamber": [
+   {
+    "series": "Darksteel",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.89
+   }
+  ],
+  "Germination Practicum": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "149",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Johan Grenier",
+    "value": 8.82
+   }
+  ],
+  "Getaway Barrel": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Ghalta the Immovable": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0197",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Antonio José Manzanedo",
+    "value": 0.56
+   },
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0197",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Antonio José Manzanedo",
+    "value": 0.99
+   }
+  ],
+  "Ghalta the Unstoppable": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0260",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Antonio José Manzanedo",
+    "value": 0.58
+   }
+  ],
+  "Ghor-Clan Wrecker": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Ghost Vacuum": [
+   {
+    "series": "Duskmourn: House of Horror",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.1
+   }
+  ],
+  "Giant Growth": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "52",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.05
+   }
+  ],
+  "Giant Koi": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Giant's Boulder": [
+   {
+    "series": "The Hobbit",
+    "collector": "173",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Gilt-Leaf's Embrace": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Glacial Fortress": [
+   {
+    "series": "Magic 2010",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Glamer Gifter": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "49",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Ben Hill",
+    "value": 0.21
+   }
+  ],
+  "Glamermite": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Glider Kids": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "C 0021",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Ikeda-cpt",
+    "value": 0.14
+   }
+  ],
+  "Glittering Massif": [
+   {
+    "series": "Edge of Eternities Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Glóin the Mighty // Easy Pickings": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Gloom Ripper": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Glorious Decay": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "150",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Camille Alquier",
+    "value": 0.14
+   }
+  ],
+  "Go for the Throat": [
+   {
+    "series": "Mirrodin Besieged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.62
+   }
+  ],
+  "Goblin Bombardment": [
+   {
+    "series": "Tempest",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.71
+   }
+  ],
+  "Goblin Chieftain": [
+   {
+    "series": "Magic 2010",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.71
+   }
+  ],
+  "Goblin Gathering": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Goblin Glasswright // Craft with Pride": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "117",
+    "quantity": 1,
+    "foil": false,
+    "artist": "David Auden Nash",
+    "value": 0.16
+   }
+  ],
+  "Goblin Instigator": [
+   {
+    "series": "Core Set 2019",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.4
+   }
+  ],
+  "Goblin Matron": [
+   {
+    "series": "Portal Second Age",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Goblin Plate Mail": [
+   {
+    "series": "The Hobbit",
+    "collector": "157",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Miklós Ligeti",
+    "value": 0.11
+   }
+  ],
+  "Goblin Rabblemaster": [
+   {
+    "series": "Magic 2015",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.65
+   }
+  ],
+  "Goblin Rally": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Goblin Ringleader": [
+   {
+    "series": "Apocalypse",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.96
+   }
+  ],
+  "Goblin Trashmaster": [
+   {
+    "series": "Core Set 2019",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 7.65
+   }
+  ],
+  "Goblin Warchief": [
+   {
+    "series": "Scourge",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.39
+   }
+  ],
+  "Goblin-town": [
+   {
+    "series": "The Hobbit",
+    "collector": "L 0183",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Sean Vo",
+    "value": 0.18
+   }
+  ],
+  "Goblin-town Flunkies": [
+   {
+    "series": "The Hobbit",
+    "collector": "100",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jason Kang",
+    "value": 0.15
+   }
+  ],
+  "Goldmeadow Nomad": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "18",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Paolo Parente",
+    "value": 0.2
+   }
+  ],
+  "Goldvein Pick": [
+   {
+    "series": "Kaldheim",
+    "collector": "239/285 C",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Dan Scott",
+    "value": 0.42
+   }
+  ],
+  "Golgari Guildgate": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.12
+   }
+  ],
+  "Golgari Signet": [
+   {
+    "series": "Ravnica: City of Guilds",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Gollum, Riddle Master": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.71
+   }
+  ],
+  "Gollum, Silent Slinker // Meager Meal": [
+   {
+    "series": "The Hobbit",
+    "collector": "71",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Gran-Gran": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Grand Coliseum": [
+   {
+    "series": "Onslaught",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Grateful Apparition": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Grazing Gladehart": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Great Fierce Bee": [
+   {
+    "series": "The Hobbit",
+    "collector": "C 0073",
+    "quantity": 2,
+    "foil": true,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Great Forest Druid": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "178",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Greenhouse Propagator": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0104",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ekaterina Burmak",
+    "value": 0.98
+   }
+  ],
+  "Grim Repriser": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0136",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Wayne Reynolds",
+    "value": 0.48
+   }
+  ],
+  "Gristle Glutton": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "C 0144",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Filip Burburan",
+    "value": 0.3
+   }
+  ],
+  "Guardian of Faith": [
+   {
+    "series": "Adventures in the Forgotten Realms",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.59
+   }
+  ],
+  "Guardian of the Halls": [
+   {
+    "series": "The Hobbit",
+    "collector": "127",
+    "quantity": 6,
+    "foil": false,
+    "artist": "Andreia Ugrai",
+    "value": 0.13
+   }
+  ],
+  "Guardian Scalelord": [
+   {
+    "series": "March of the Machine Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Gundabad Opportunist": [
+   {
+    "series": "The Hobbit",
+    "collector": "C 0101",
+    "quantity": 3,
+    "foil": true,
+    "artist": "Michele Giorgi",
+    "value": 0.25
+   }
+  ],
+  "Hall of Echoes": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0179",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Leon Tukker",
+    "value": 8.2
+   },
+   {
+    "series": "",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Serena Malyon",
+    "value": 12.29
+   }
+  ],
+  "Hallway Heckler // Vicious Verse": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0085",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Gustavo Pelissari",
+    "value": 1.99
+   }
+  ],
+  "Hanged Executioner": [
+   {
+    "series": "Core Set 2020",
+    "collector": "R 0022",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Johann Bodin",
+    "value": 0.18
+   }
+  ],
+  "Hanweir Garrison": [
+   {
+    "series": "Eldritch Moon",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 1.41
+   }
+  ],
+  "Harmonize": [
+   {
+    "series": "Modern Masters 2017",
+    "collector": "U 0128",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Rob Alexander",
+    "value": 0.49
+   }
+  ],
+  "Haystack": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Heartstring Puller": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0086",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Jessica Liu",
+    "value": null
+   }
+  ],
+  "Heartwood Crafter // Soul Tether": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0105",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Anastasia Ovchinnikova",
+    "value": 1.15
+   }
+  ],
+  "Heirloom Auntie": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "107",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Hemlock Vial": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Hexhaven Battalion": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0012",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Julia Griffin",
+    "value": 0.79
+   }
+  ],
+  "Hexhaven Dueling Arena": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0181",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Constantin Marin",
+    "value": 1.06
+   }
+  ],
+  "Hexhaven Invigorator": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0106",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Olivier Bernard",
+    "value": 34.01
+   }
+  ],
+  "Hidden Stockpile": [
+   {
+    "series": "Aether Revolt",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Hinterland Harbor": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Hofri Ghostforge": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Hop to It": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "6",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Alex Stone",
+    "value": 0.28
+   }
+  ],
+  "Hordeling Outburst": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.53
+   }
+  ],
+  "Huatli, the Sun's Heart": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.44
+   }
+  ],
+  "Hunter's Axe": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0108",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Richard Kane Ferguson",
+    "value": 1.05
+   }
+  ],
+  "Ichor Wellspring": [
+   {
+    "series": "Mirrodin Besieged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.54
+   }
+  ],
+  "Ichormoon Gauntlet": [
+   {
+    "series": "Phyrexia: All Will Be One",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 23.83
+   }
+  ],
+  "Identity Echo": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0087",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Aldo Domínguez",
+    "value": 2.65
+   }
+  ],
+  "Ikra Shidiqi, the Usurper": [
+   {
+    "series": "Commander 2016",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.47
+   }
+  ],
+  "Illusionist's Stratagem": [
+   {
+    "series": "Aether Revolt",
+    "collector": "U 0036",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Svetlin Velinov",
+    "value": 0.41
+   }
+  ],
+  "Impact Tremors": [
+   {
+    "series": "Dragons of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.32
+   }
+  ],
+  "Impassioned Orator": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Imperious Inkmage": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "195",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 0.07
+   }
+  ],
+  "Impolite Entrance": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "146",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Indomitable Ancients": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Indulging Patrician": [
+   {
+    "series": "Core Set 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Inexorable Tide": [
+   {
+    "series": "Scars of Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 5.71
+   }
+  ],
+  "Infinite Coursework": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0031",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Randy Vargas",
+    "value": 0.98
+   }
+  ],
+  "Innkeeper's Talent": [
+   {
+    "series": "Bloomburrow",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 10.91
+   }
+  ],
+  "Inspiring Call": [
+   {
+    "series": "Dragons of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Inspiring Vantage": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.54
+   }
+  ],
+  "Intangible Virtue": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Intruder Alarm": [
+   {
+    "series": "Stronghold",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 5.95
+   }
+  ],
+  "Iron Hills": [
+   {
+    "series": "The Hobbit",
+    "collector": "185",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Iron Hills Stalwart": [
+   {
+    "series": "The Hobbit",
+    "collector": "102",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Ironsoul Enforcer": [
+   {
+    "series": "Neon Dynasty Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.99
+   }
+  ],
+  "Island": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 82,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Isolated Chapel": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Jace, Reality Sculptor": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0216",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Martina Fačková",
+    "value": 7.5
+   }
+  ],
+  "Jaddi Offshoot": [
+   {
+    "series": "Battle for Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Jiang Yanggu, Alone": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0246",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Dmitry Burmak",
+    "value": 0.87
+   }
+  ],
+  "Jiang Yanggu, Never Alone": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0261",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Dmitry Burmak",
+    "value": 1.55
+   }
+  ],
+  "Joined Researchers // Secret Rendezvous": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "23",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Jungle Barrier": [
+   {
+    "series": "Apocalypse",
+    "collector": "106/143",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Edward P. Beard, Jr.",
+    "value": 0.16
+   }
+  ],
+  "Kambal, Profiteering Mayor": [
+   {
+    "series": "Outlaws of Thunder Junction",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.28
+   }
+  ],
+  "Kami of Ancient Law": [
+   {
+    "series": "Champions of Kamigawa",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Karmic Guide": [
+   {
+    "series": "Urza's Legacy",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Karn's Bastion": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.39
+   }
+  ],
+  "Keeper of the Accord": [
+   {
+    "series": "Commander Legends",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.67
+   }
+  ],
+  "Keeper of the Quiet Hour": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0171",
+    "quantity": 2,
+    "foil": false,
+    "artist": "John Tedrick",
+    "value": 1.08
+   }
+  ],
+  "Kher Keep": [
+   {
+    "series": "Time Spiral",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Kin-Tree Invocation": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Kinbinding": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "20",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Kindle the Inner Flame": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Kindred Judgment": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0013",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ekaterina Burmak",
+    "value": 7.62
+   }
+  ],
+  "Kiora of Salt and Sand": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0273",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Chris Rahn",
+    "value": 1.12
+   }
+  ],
+  "Kirol, History Buff // Pack a Punch": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "198",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Bryan Sola",
+    "value": 0.17
+   }
+  ],
+  "Kithkeeper": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "U 0023",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Filip Burburan",
+    "value": 0.22
+   }
+  ],
+  "Knight of Autumn": [
+   {
+    "series": "Guilds of Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.43
+   }
+  ],
+  "Knight of Old Benalia": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.06
+   }
+  ],
+  "Knight of the White Orchid": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.21
+   }
+  ],
+  "Konstrari Annex": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0183",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Sergey Glushakov",
+    "value": 0.75
+   }
+  ],
+  "Kor Cartographer": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Koth, the Geomancer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0248",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Kieran Yanner",
+    "value": 0.39
+   }
+  ],
+  "Krenko, Mob Boss": [
+   {
+    "series": "Magic 2013",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 2.73
+   }
+  ],
+  "Krenko, Tin Street Kingpin": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.51
+   }
+  ],
+  "Krenko's Command": [
+   {
+    "series": "Magic 2013",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Kulrath Zealot": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Kyoshi Island Plaza": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Laelia, the Blade Reforged": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Lake-town": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Lake-town Lookout": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Lake-town Mariners // Gone Fishing": [
+   {
+    "series": "The Hobbit",
+    "collector": "44",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Wei Guan",
+    "value": 0.13
+   }
+  ],
+  "Lake-town Toymaker": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Lapse of Certainty": [
+   {
+    "series": "Conflux",
+    "collector": "C 0009",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Anthony Francisco",
+    "value": 1.63
+   }
+  ],
+  "Large Bear": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Last Gasp": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0056",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jabari Weathers",
+    "value": 0.82
+   }
+  ],
+  "Latchkey Faerie": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Lavaleaper": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "150",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ron Spears",
+    "value": 0.35
+   }
+  ],
+  "Legion Warboss": [
+   {
+    "series": "Guilds of Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Lethal Scheme": [
+   {
+    "series": "New Capenna Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Light Up the Stage": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Lingering Souls": [
+   {
+    "series": "Dark Ascension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Little Bear": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Living Library": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0172",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Jarel Threat",
+    "value": 0.37
+   }
+  ],
+  "Llanowar Elves": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Long Goodbye": [
+   {
+    "series": "Murders at Karlov Manor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Long Lake Nuisance": [
+   {
+    "series": "The Hobbit",
+    "collector": "45",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Long-Bodied Grey Dog": [
+   {
+    "series": "The Hobbit",
+    "collector": "1",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Anna Podedworna",
+    "value": 0.15
+   }
+  ],
+  "Loot, the Anomaly": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0232",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Filip Burburan",
+    "value": 1.58
+   }
+  ],
+  "Lorehold Archivist // Restore Relic": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Lorehold Campus": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Lorehold Charm": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Lorehold Command": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Lorehold Excavation": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Lotus Field": [
+   {
+    "series": "Core Set 2020",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.57
+   }
+  ],
+  "Loyal Inventor": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Luminollusk": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Lys Alana Dignitary": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Lys Alana Informant": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "181",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Mabel, Bitter Recluse": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0233",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Matt Stewart",
+    "value": 1.46
+   }
+  ],
+  "Mabel, Valley Hero": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0274",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Matt Stewart",
+    "value": 0.98
+   }
+  ],
+  "Mage Tower Referee": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "249",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.05
+   }
+  ],
+  "Magnificent End": [
+   {
+    "series": "The Hobbit",
+    "collector": "20",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Make Your Move": [
+   {
+    "series": "Murders at Karlov Manor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Man-o'-War": [
+   {
+    "series": "Visions",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Mana Leak": [
+   {
+    "series": "Magic 2011",
+    "collector": "C 0062",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Howard Lyon",
+    "value": 0.18
+   }
+  ],
+  "Maralen, Fae Ascendant": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.47
+   }
+  ],
+  "Marwyn, the Clearcutter": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0249",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Quintin Gleim",
+    "value": 1.7
+   }
+  ],
+  "Marwyn, the Preserver": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0263",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Quintin Gleim",
+    "value": 1.67
+   }
+  ],
+  "Massive Raid": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Master's Councillors": [
+   {
+    "series": "The Hobbit",
+    "collector": "47",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Masterful Flourish": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "89",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Meandering River": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Meandering Towershell": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Meanders Guide": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Medic's Kitesail": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0173",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Paolo Parente",
+    "value": 1.99
+   }
+  ],
+  "Memory Lapse": [
+   {
+    "series": "Eternal Masters",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.6
+   }
+  ],
+  "Memory Trap": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0015",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Ekaterina Burmak",
+    "value": 0.33
+   }
+  ],
+  "Mentor of the Meek": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.76
+   }
+  ],
+  "Merfolk Skydiver": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Merrow Skyswimmer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "234",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Meticulous Commons": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0184",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Grady Frederick",
+    "value": 1
+   }
+  ],
+  "Mica, Reader of Ruins": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "124",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Josu Hernaiz",
+    "value": 0.21
+   }
+  ],
+  "Midnight Tilling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Migration Path": [
+   {
+    "series": "Ikoria: Lair of Behemoths",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Millikin": [
+   {
+    "series": "Odyssey",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Mind Meanderer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0141",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jason Mowry",
+    "value": 1.05
+   }
+  ],
+  "Mind Stone": [
+   {
+    "series": "Weatherlight",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Mindseeker Oculus": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0033",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Ioannis Fiore",
+    "value": null
+   }
+  ],
+  "Ministrant of Obligation": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Mirkwood": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 4,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Mirkwood Nurturer": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Mirkwood Pathmaker": [
+   {
+    "series": "The Hobbit",
+    "collector": "U 0129",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Sean Vo",
+    "value": 0.27
+   }
+  ],
+  "Mirrodin Avenged": [
+   {
+    "series": "March of the Machine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Mirrorform": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.96
+   }
+  ],
+  "Mistmeadow Council": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "183",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.06
+   }
+  ],
+  "Mistmeadow Witch": [
+   {
+    "series": "Shadowmoor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Mistveil Plains": [
+   {
+    "series": "Shadowmoor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Misty Mountains Raider": [
+   {
+    "series": "The Hobbit",
+    "collector": "105",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Mogg War Marshal": [
+   {
+    "series": "Time Spiral",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Moment of Glory": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Monastery Raid": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "U 0035",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Alexandre Honore",
+    "value": 0.29
+   }
+  ],
+  "Monologue Tax": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.11
+   }
+  ],
+  "Moonglove Extractor": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.06
+   }
+  ],
+  "Moonlit Lamenter": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Moonshadow": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "110",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 13.04
+   }
+  ],
+  "Moonshaker Cavalry": [
+   {
+    "series": "Wilds of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 9.26
+   }
+  ],
+  "Morcant's Eyes": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "185",
+    "quantity": 1,
+    "foil": false,
+    "artist": "David Palumbo",
+    "value": 0.27
+   }
+  ],
+  "Mortify": [
+   {
+    "series": "Guildpact",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Mountain": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 88,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Mulch": [
+   {
+    "series": "Stronghold",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Mulldrifter": [
+   {
+    "series": "Lorwyn",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Multiply by Zero": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0058",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Florian Herold",
+    "value": 0.95
+   }
+  ],
+  "Muse's Encouragement": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "61",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Myr Battlesphere": [
+   {
+    "series": "Scars of Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Myriad Landscape": [
+   {
+    "series": "Commander 2014",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Nadier's Nightblade": [
+   {
+    "series": "Commander Legends",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Naktamun Lorespinner // Wheel of Fortune": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.29
+   }
+  ],
+  "Nature's Lore": [
+   {
+    "series": "Ice Age",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.91
+   }
+  ],
+  "Naya Panorama": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Negate": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   },
+   {
+    "series": "Dragons of Tarkir",
+    "collector": "C 0065",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Willian Murai",
+    "value": 0.19
+   }
+  ],
+  "Night Market": [
+   {
+    "series": "Aetherdrift",
+    "collector": "C 0258",
+    "quantity": 1,
+    "foil": true,
+    "artist": "David Alvarez",
+    "value": 0.3
+   }
+  ],
+  "Nighthowl Pursuer": [
+   {
+    "series": "The Hobbit",
+    "collector": "78",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tomas Duchek",
+    "value": 0.3
+   }
+  ],
+  "Nightmare Sower": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "No Admittance": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0089",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Serena Malyon",
+    "value": 1.26
+   }
+  ],
+  "Nori, Teller of Tales": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Northern Air Temple": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Noxious Newt": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "155",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Nyx-Fleece Ram": [
+   {
+    "series": "Journey into Nyx",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Oblivion Ring": [
+   {
+    "series": "Shards of Alara",
+    "collector": "C 0020",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Franz Vohwinkel",
+    "value": 0.17
+   }
+  ],
+  "Octopus Form": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Odric, Lunarch Marshal": [
+   {
+    "series": "Shadows over Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.2
+   }
+  ],
+  "Ogre Battledriver": [
+   {
+    "series": "Magic 2014",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Óin the Brave": [
+   {
+    "series": "The Hobbit",
+    "collector": "106",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Old Fat Spider": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Old Fat Spider Can't See Me": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Old Thrush": [
+   {
+    "series": "The Hobbit",
+    "collector": "2",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Omnipresence": [
+   {
+    "series": "Reality Fracture",
+    "collector": "M 0110",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Bryan Sola",
+    "value": 25.16
+   }
+  ],
+  "Ordeal of Nylea": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Ordinary Bear": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Ori, Keeper of Songs": [
+   {
+    "series": "The Hobbit",
+    "collector": "C 0023",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Yigit Koroglu",
+    "value": 0.22
+   }
+  ],
+  "Origin of Metalbending": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Orzhov Basilica": [
+   {
+    "series": "Guildpact",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Orzhov Guildgate": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Orzhov Signet": [
+   {
+    "series": "Guildpact",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Ossification": [
+   {
+    "series": "Phyrexia: All Will Be One",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Outpost Siege": [
+   {
+    "series": "Fate Reforged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Overgrown Battlement": [
+   {
+    "series": "Rise of the Eldrazi",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Overgrown Farmland": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0185",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Titus Lunter",
+    "value": 4.03
+   }
+  ],
+  "Painful Truths": [
+   {
+    "series": "Battle for Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Paradox Gardens": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "258",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Leon Tukker",
+    "value": 0.17
+   }
+  ],
+  "Patchwork Banner": [
+   {
+    "series": "Bloomburrow",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.82
+   }
+  ],
+  "Path of Ancestry": [
+   {
+    "series": "Commander 2017",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Path to Exile": [
+   {
+    "series": "Conflux",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.49
+   }
+  ],
+  "Patient Instructor": [
+   {
+    "series": "The Hobbit",
+    "collector": "162",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Pawn of Ulamog": [
+   {
+    "series": "Rise of the Eldrazi",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.5
+   }
+  ],
+  "Peregrine Drake": [
+   {
+    "series": "Urza's Saga",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Perfect Intimidation": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "115",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Heather Hudson",
+    "value": 0.17
+   }
+  ],
+  "Perfected Theory": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0034",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Marta Nael",
+    "value": 0.25
+   }
+  ],
+  "Perpetual Timepiece": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Pest Mascot": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "209",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Filipe Pagliuso",
+    "value": 0.25
+   }
+  ],
+  "Phyrexian Arena": [
+   {
+    "series": "Apocalypse",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.19
+   }
+  ],
+  "Pilgrim's Eye": [
+   {
+    "series": "Worldwake",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Pitiless Plunderer": [
+   {
+    "series": "Rivals of Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.68
+   }
+  ],
+  "Plaguemaw Beast": [
+   {
+    "series": "Mirrodin Besieged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Plains": [
+   {
+    "series": "The Hobbit",
+    "collector": "189",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Chris Cold",
+    "value": 0.08
+   },
+   {
+    "series": "",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Justin Gerard",
+    "value": 0.08
+   }
+  ],
+  "Plan for All Outcomes": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0035",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Chris Cold",
+    "value": 0.96
+   }
+  ],
+  "Platypus-Bear": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Plaza of Heroes": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Plunder the Trollshaws": [
+   {
+    "series": "The Hobbit",
+    "collector": "51",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Portcullis Vine": [
+   {
+    "series": "Guilds of Ravnica",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Pox Plague": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "94",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Camille Alquier",
+    "value": 0.34
+   }
+  ],
+  "Precise Redaction": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0036",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Mathias Kollros",
+    "value": 0.48
+   }
+  ],
+  "Predictive Preparations": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0016",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": null
+   }
+  ],
+  "Pretending Poxbearers": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "C 0237",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Salvatorre Zee Yazzie",
+    "value": 0.16
+   }
+  ],
+  "Prideful Feastling": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Primal Witchstalker": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0144",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Kaitlyn McCulley",
+    "value": 1.73
+   }
+  ],
+  "Primary Research": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Proft, Consulting Detective": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0218",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Lindsey Look",
+    "value": 1.03
+   }
+  ],
+  "Proft, Sinister Mastermind": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0235",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Lindsey Look",
+    "value": 1.2
+   }
+  ],
+  "Promise of Loyalty": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Prophesied End": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0017",
+    "quantity": 1,
+    "foil": false,
+    "artist": "A. M. Sartor",
+    "value": 1.12
+   }
+  ],
+  "Prophetic Prism": [
+   {
+    "series": "Rise of the Eldrazi",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Protector of the Wastes": [
+   {
+    "series": "Tarkir: Dragonstorm Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Protege's Awakening": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0037",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Cynthia Sheppard",
+    "value": 0.87
+   }
+  ],
+  "Pterafractyl": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "215",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andrew Mar",
+    "value": 0.18
+   }
+  ],
+  "Pull from the Grave": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "95",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pauline Voss",
+    "value": 0.16
+   }
+  ],
+  "Purphoros, God of the Forge": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 30.45
+   }
+  ],
+  "Purphoros's Intervention": [
+   {
+    "series": "Theros Beyond Death",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Putrefy": [
+   {
+    "series": "Ravnica: City of Guilds",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Pyre Rhymer // Molten Tide": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0091",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andrea Piparo",
+    "value": 1.6
+   }
+  ],
+  "Quarrel": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Quest for the Goblin Lord": [
+   {
+    "series": "Worldwake",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.75
+   }
+  ],
+  "Quintorius Kand": [
+   {
+    "series": "The Lost Caverns of Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2
+   }
+  ],
+  "Quintorius, Field Historian": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Quintorius, History Chaser": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.66
+   }
+  ],
+  "Quintorius, Loremaster": [
+   {
+    "series": "March of the Machine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Rabid Attack": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "96",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Izzy",
+    "value": 0.2
+   }
+  ],
+  "Radiant Summit": [
+   {
+    "series": "Edge of Eternities Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Rage into the Valley": [
+   {
+    "series": "The Hobbit",
+    "collector": "79",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Antonio José Manzaneda",
+    "value": 0.16
+   }
+  ],
+  "Ragged Short Spear": [
+   {
+    "series": "The Hobbit",
+    "collector": "108",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Miklós Ligeti",
+    "value": 0.13
+   }
+  ],
+  "Raid Bombardment": [
+   {
+    "series": "Rise of the Eldrazi",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Raise the Alarm": [
+   {
+    "series": "Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Rally the Ancestors": [
+   {
+    "series": "Fate Reforged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Rampart Hunter": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0060",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Néstor Ossandón Leal",
+    "value": 1.25
+   }
+  ],
+  "Ratonhnhaké꞉ton": [
+   {
+    "series": "Assassin's Creed",
+    "collector": "R 0150",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andreia Ugrai",
+    "value": 1.47
+   }
+  ],
+  "Ravening Warg": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Read the Bones": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Reality Shift": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Reaping Willow": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Rebellious Captives": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Reckless Ransacking": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Reclamation Sage": [
+   {
+    "series": "Magic 2015",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Reconstruct History": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Red Elemental Blast": [
+   {
+    "series": "Fourth Edition",
+    "collector": "C 0218",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Richard Thomas",
+    "value": 4.09
+   }
+  ],
+  "Reflector Mage": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.48
+   }
+  ],
+  "Refute Destiny": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0018",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Billy Christian",
+    "value": 0.48
+   }
+  ],
+  "Rehearsed Debater": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "29",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Kim Sokol",
+    "value": 0.03
+   }
+  ],
+  "Relic Retriever": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.2
+   }
+  ],
+  "Reliquary Tower": [
+   {
+    "series": "Conflux",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 4.26
+   }
+  ],
+  "Reluctant Dounguard": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Remorseful Cleric": [
+   {
+    "series": "Core Set 2019",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Render Speechless": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "220",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Repel Calamity": [
+   {
+    "series": "Bloomburrow",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Repurposed Enforcer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0019",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Chris Rallis",
+    "value": 0.95
+   }
+  ],
+  "Requiem Angel": [
+   {
+    "series": "Dark Ascension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.83
+   }
+  ],
+  "Rescue Girl, First Responder": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0202",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Cristi Balanescu",
+    "value": 2
+   }
+  ],
+  "Resonating Lute": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "221",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.18
+   }
+  ],
+  "Restore with Empathy": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0112",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Eelis Kyttanen",
+    "value": 1.08
+   }
+  ],
+  "Retched Wretch": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "117",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Return to Dust": [
+   {
+    "series": "Time Spiral",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Rewrite Regrets": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0062",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Matt Stewart",
+    "value": 3
+   }
+  ],
+  "Rhox Faithmender": [
+   {
+    "series": "Magic 2013",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.14
+   }
+  ],
+  "Rime Chill": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "64",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Rimekin Recluse": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Rip Apart": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Ritual of Soot": [
+   {
+    "series": "Guilds of Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Riverguard's Reflexes": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Rocketeer Boostbuggy": [
+   {
+    "series": "Aetherdrift",
+    "collector": "U 0327",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Adam Volker",
+    "value": 0.25
+   }
+  ],
+  "Room of Refuge": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0188",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Constantin Marin",
+    "value": null
+   }
+  ],
+  "Roon of the Hidden Realm": [
+   {
+    "series": "Commander 2013",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Rootborn Defenses": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Royal Treatment": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "56",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Rubble Rouser": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "128",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Craig J Spearing",
+    "value": 0.16
+   }
+  ],
+  "Rugged Highlands": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Rugged Prairie": [
+   {
+    "series": "Eventide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Run Behind": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "66",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nereida",
+    "value": 0.05
+   }
+  ],
+  "Ruric Thar, Magecrusher": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0265",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Olivier Bernard",
+    "value": 0.99
+   }
+  ],
+  "Sacred Peaks": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Salvation Colossus": [
+   {
+    "series": "Modern Horizons 3 Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.77
+   }
+  ],
+  "Sandsteppe Citadel": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Sapling of Colfenor": [
+   {
+    "series": "Eventide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.21
+   }
+  ],
+  "Satyr Wayfinder": [
+   {
+    "series": "Born of the Gods",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Scathing Shadelock // Venomous Words": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "98",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Loïc Canueles",
+    "value": 0.19
+   }
+  ],
+  "Scoured Barrens": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Screeching Soulbreaker": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0065",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pavel Kolomeyets",
+    "value": 1.18
+   }
+  ],
+  "Seaside Citadel": [
+   {
+    "series": "Shards of Alara",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Secret Rendezvous": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Seize the Spoils": [
+   {
+    "series": "Kaldheim",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Selesnya Guildgate": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Selesnya Signet": [
+   {
+    "series": "Salvat 2005",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.42
+   }
+  ],
+  "Selfless Spirit": [
+   {
+    "series": "Eldritch Moon",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.41
+   }
+  ],
+  "Semester Foreseer // Peer Review": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0039",
+    "quantity": 4,
+    "foil": false,
+    "artist": "Alix Branwyn",
+    "value": 0.92
+   }
+  ],
+  "Senate Griffin": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Serra Paragon": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.5
+   }
+  ],
+  "Settle the Wreckage": [
+   {
+    "series": "Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.43
+   }
+  ],
+  "Sevinne's Reclamation": [
+   {
+    "series": "Commander 2019",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.39
+   }
+  ],
+  "Shadow Urchin": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "242",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Shadrix Silverquill": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Shalai, Voice of Plenty": [
+   {
+    "series": "Dominaria",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.08
+   }
+  ],
+  "Shamanic Revelation": [
+   {
+    "series": "New Capenna Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.51
+   }
+  ],
+  "Shared Animosity": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.81
+   }
+  ],
+  "Shared Roots": [
+   {
+    "series": "Secrets of Strixhaven Mystical Archive",
+    "collector": "58",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Lenka Šimečková",
+    "value": 0.36
+   }
+  ],
+  "Shattered Acolyte": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "31",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ashley Lovett",
+    "value": 0.22
+   }
+  ],
+  "Shatterwing Pegasus": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0021",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Antonio José Manzanedo",
+    "value": null
+   }
+  ],
+  "Sheltering Word": [
+   {
+    "series": "Avacyn Restored",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Shield-Wall Sentinel": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.41
+   }
+  ],
+  "Shinestriker": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Shopkeeper's Bane": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "159",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Filipe Pagliuso",
+    "value": 0.17
+   }
+  ],
+  "Shore Lurker": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.08
+   }
+  ],
+  "Shrieking Drake": [
+   {
+    "series": "Visions",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Sidar Kondo of Jamuraa": [
+   {
+    "series": "Commander 2016",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Siege Smash": [
+   {
+    "series": "Modern Horizons 3",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Siege-Gang Commander": [
+   {
+    "series": "Scourge",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Silence the Echo": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0066",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pavel Kolomeyets",
+    "value": null
+   }
+  ],
+  "Silvergill Peddler": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "70",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Silverquill Charm": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "225",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.23
+   }
+  ],
+  "Simic Guildgate": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.12
+   }
+  ],
+  "Simic Signet": [
+   {
+    "series": "Dissension",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Siren's Ruse": [
+   {
+    "series": "Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Skilled Battlecarver": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0092",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Evyn Fong",
+    "value": null
+   }
+  ],
+  "Skirk Prospector": [
+   {
+    "series": "Onslaught",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Skullclamp": [
+   {
+    "series": "Darksteel",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 4.94
+   }
+  ],
+  "Skyclave Apparition": [
+   {
+    "series": "Zendikar Rising",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Skyshroud Claim": [
+   {
+    "series": "Nemesis",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.73
+   }
+  ],
+  "Slaughter the Strong": [
+   {
+    "series": "Rivals of Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Smaug, the Great Calamity // Spew Flame": [
+   {
+    "series": "The Hobbit",
+    "collector": "109",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Smaug, Wicked Worm": [
+   {
+    "series": "The Hobbit",
+    "collector": "245",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.5
+   }
+  ],
+  "Smuggler's Copter": [
+   {
+    "series": "Kaladesh",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.67
+   }
+  ],
+  "Sol Ring": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.53
+   }
+  ],
+  "Solemn Simulacrum": [
+   {
+    "series": "Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Something Worth Saving": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0114",
+    "quantity": 3,
+    "foil": false,
+    "artist": "PINDURSKI",
+    "value": 1.6
+   }
+  ],
+  "Song of the Dryads": [
+   {
+    "series": "Commander 2014",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.16
+   }
+  ],
+  "Soul of New Phyrexia": [
+   {
+    "series": "Magic 2015",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.91
+   }
+  ],
+  "Soulherder": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.84
+   }
+  ],
+  "Sourbread Auntie": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Spectacular Tactics": [
+   {
+    "series": "Marvel's Spider-Man",
+    "collector": "C 0775",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Zoltan Boros",
+    "value": 0.25
+   }
+  ],
+  "Spectral Procession": [
+   {
+    "series": "Shadowmoor",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Spellbook Seeker // Careful Study": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "68",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Scott Murphy",
+    "value": 0.11
+   }
+  ],
+  "Sphinx's Approach": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0041",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 2.08
+   }
+  ],
+  "Spiral into Solitude": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Spirit of Resilience": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Splinter Twin": [
+   {
+    "series": "Special Guests",
+    "collector": "M 0167",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Marina Banker",
+    "value": 13.32
+   }
+  ],
+  "Squee, Dubious Monarch": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.77
+   }
+  ],
+  "Squee, Goblin Nabob": [
+   {
+    "series": "Mercadian Masques",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Squee, the Immortal": [
+   {
+    "series": "Dominaria",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.44
+   }
+  ],
+  "Stadium Tidalmage": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "232",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Ioannis Fiore",
+    "value": 0.06
+   }
+  ],
+  "Staff of the Storyteller": [
+   {
+    "series": "Phyrexia: All Will Be One Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.44
+   }
+  ],
+  "Stalactite Dagger": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Stand Up for Yourself": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "34",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 0.11
+   }
+  ],
+  "Steady Progress": [
+   {
+    "series": "Scars of Mirrodin",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Steal the Show": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "130",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pauline Voss",
+    "value": 0.28
+   }
+  ],
+  "Stinging Vitriol": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0152",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 2.01
+   }
+  ],
+  "Stir Up Trouble": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Stone by Sunlight": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Stone Docent": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "36",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Stone Quarry": [
+   {
+    "series": "Shadows over Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Stonecloaker": [
+   {
+    "series": "Planar Chaos",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Stony Strength": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Stony-Voiced Goblins": [
+   {
+    "series": "The Hobbit",
+    "collector": "85",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Marius Bota",
+    "value": 0.14
+   }
+  ],
+  "Stratosoarer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "72",
+    "quantity": 2,
+    "foil": false,
+    "artist": "John Tedrick",
+    "value": 0.08
+   }
+  ],
+  "Strixhaven Skycoach": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "252",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Strixhaven Stadium": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.4
+   }
+  ],
+  "Study Hall": [
+   {
+    "series": "Commander 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Summit Sentinel": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Sun Titan": [
+   {
+    "series": "Magic 2011",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Sun-Dappled Celebrant": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Sunbaked Canyon": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.57
+   }
+  ],
+  "Sundering Archaic": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "3",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Quintin Gleim",
+    "value": 0.17
+   }
+  ],
+  "Sunpetal Grove": [
+   {
+    "series": "Magic 2010",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Sunscorched Divide": [
+   {
+    "series": "Fallout",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Sureshot Sower": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0115",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Zara Alfonso",
+    "value": null
+   }
+  ],
+  "Surgical Precision": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0022",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Nathaniel Himawan",
+    "value": 1.99
+   }
+  ],
+  "Surly Farrier": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Swamp": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "269",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Joshua Raphael",
+    "value": 0.09
+   },
+   {
+    "series": "",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Erikas Perl",
+    "value": 0.09
+   }
+  ],
+  "Swampsnare Trap": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Swiftfoot Boots": [
+   {
+    "series": "Magic 2012",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2
+   }
+  ],
+  "Sword of the Animist": [
+   {
+    "series": "Magic Origins",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 6.05
+   }
+  ],
+  "Swords to Plowshares": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 1.56
+   }
+  ],
+  "Sylvan Brushstrider": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.13
+   }
+  ],
+  "Sylvan Caryatid": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.03
+   }
+  ],
+  "Sylvan Ranger": [
+   {
+    "series": "Magic 2011",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.34
+   }
+  ],
+  "Tam, Observant Sequencer // Deep Sight": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "237",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jodie Muir",
+    "value": 0.29
+   }
+  ],
+  "Tam, the Possibility": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0276",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Martina Fačková",
+    "value": 5.33
+   }
+  ],
+  "Tam's Resistance": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0153",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Samuel Perin",
+    "value": 0.34
+   }
+  ],
+  "Tatyova, Benthic Druid": [
+   {
+    "series": "Dominaria",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Tekuthal, Inquiry Dominus": [
+   {
+    "series": "Phyrexia: All Will Be One",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.23
+   }
+  ],
+  "Temple of Enlightenment": [
+   {
+    "series": "Born of the Gods",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Temple of Silence": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Temple of the False God": [
+   {
+    "series": "Scourge",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.37
+   }
+  ],
+  "Temple of Triumph": [
+   {
+    "series": "Theros",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Temporal Cleansing": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "78",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Tempt with Vengeance": [
+   {
+    "series": "Commander 2013",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Temur Sabertooth": [
+   {
+    "series": "Fate Reforged",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.89
+   }
+  ],
+  "Tend the Sprigs": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "197",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Iris Compiet",
+    "value": 0.16
+   }
+  ],
+  "Terramorphic Expanse": [
+   {
+    "series": "Salvat 2005",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Terror": [
+   {
+    "series": "Limited Edition Alpha",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Teshar, Ancestor's Apostle": [
+   {
+    "series": "Dominaria",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Tether Technician": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0094",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Victor Maury",
+    "value": 0.17
+   }
+  ],
+  "Teyo, Diamondblade Mage": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0236",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Anna Steinbauer",
+    "value": 0.4
+   }
+  ],
+  "Teyo, Lightshield Expert": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0204",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Anna Steinbauer",
+    "value": 1.19
+   }
+  ],
+  "Teysa Karlov": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.81
+   }
+  ],
+  "Tezzeret's Gambit": [
+   {
+    "series": "New Phyrexia",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "The Black Arrow": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "The Eternal Wanderer": [
+   {
+    "series": "Phyrexia: All Will Be One",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.1
+   }
+  ],
+  "The Misty Mountains Cold": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "The Restoration of Eiganjo // Architect of Restoration": [
+   {
+    "series": "Kamigawa: Neon Dynasty",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Theoretical Necromancer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0069",
+    "quantity": 4,
+    "foil": false,
+    "artist": "Chris Rallis",
+    "value": 1.99
+   }
+  ],
+  "Theorist's Proxy": [
+   {
+    "series": "Reality Fracture",
+    "collector": "R 0044",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Matt Stewart",
+    "value": 2.4
+   }
+  ],
+  "Theorix Annex": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0192",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Sergey Glushakov",
+    "value": 0.75
+   }
+  ],
+  "Theorix Charm": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0155",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Elliot Lang",
+    "value": 0.82
+   }
+  ],
+  "Theorix Metamage // Omit Variables": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0156",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Slawomir Maniak",
+    "value": 1.41
+   }
+  ],
+  "Thirsting Shade": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Thorin Oakenshield": [
+   {
+    "series": "The Hobbit",
+    "collector": "165",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.24
+   }
+  ],
+  "Thorin's Last Stand": [
+   {
+    "series": "The Hobbit",
+    "collector": "C 0026",
+    "quantity": 1,
+    "foil": true,
+    "artist": "John Di Giovanni",
+    "value": 0.18
+   }
+  ],
+  "Thornbite Staff": [
+   {
+    "series": "Morningtide",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 19.3
+   }
+  ],
+  "Thornwood Falls": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Thought Vessel": [
+   {
+    "series": "Commander 2015",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Thoughtweft Imbuer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Thousand-Year Elixir": [
+   {
+    "series": "Lorwyn",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 14.81
+   }
+  ],
+  "Thranduil, the Elvenking": [
+   {
+    "series": "The Hobbit",
+    "collector": "167",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Magali Villeneuve",
+    "value": 0.56
+   }
+  ],
+  "Thranduil's Decree": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Thrill of Possibility": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Thrilling Discovery": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.38
+   }
+  ],
+  "Throne of Geth": [
+   {
+    "series": "Scars of Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.1
+   }
+  ],
+  "Thrór's Map": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Thrummingbird": [
+   {
+    "series": "Scars of Mirrodin",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Tidings of War": [
+   {
+    "series": "The Hobbit",
+    "collector": "115",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Pavel Kolomeyets",
+    "value": 0.12
+   }
+  ],
+  "Tidus, Yuna's Guardian": [
+   {
+    "series": "Final Fantasy Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 2.64
+   }
+  ],
+  "Timber Gorge": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.22
+   }
+  ],
+  "Timid Shieldbearer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Tinybones, Pocket Nuisance": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0237",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Jesper Ejsing",
+    "value": 1.69
+   }
+  ],
+  "Tireless Provisioner": [
+   {
+    "series": "Modern Horizons 2",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.87
+   }
+  ],
+  "Titan's Grave": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "266",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Lorenzo Lanfranconi",
+    "value": 0.19
+   }
+  ],
+  "Titanbones, Towering Heart": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0266",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jesper Ejsing",
+    "value": 2.32
+   }
+  ],
+  "Tithe Taker": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.35
+   }
+  ],
+  "Tocasia's Welcome": [
+   {
+    "series": "The Brothers' War",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.81
+   }
+  ],
+  "Tom, Bert, and William": [
+   {
+    "series": "The Hobbit",
+    "collector": "169",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Tome Blast": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "135",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Filipe Pagliuso",
+    "value": 0.11
+   }
+  ],
+  "Tome of Legends": [
+   {
+    "series": "Throne of Eldraine",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Tormenting Voice": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Tower Defense": [
+   {
+    "series": "Gatecrash",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Tragic Arrogance": [
+   {
+    "series": "Magic Origins",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Tranquil Expanse": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Traxos, Academy Guardian": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0222",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Aaron Miller",
+    "value": 1.34
+   }
+  ],
+  "Traxos, Scourge Eternal": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0280",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Aaron Miller",
+    "value": 1.64
+   }
+  ],
+  "Tree of Perdition": [
+   {
+    "series": "Eldritch Moon",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.03
+   }
+  ],
+  "Tree of Redemption": [
+   {
+    "series": "Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.59
+   }
+  ],
+  "Treefolk Umbra": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Triskaidekaphobia": [
+   {
+    "series": "Shadows over Innistrad",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Troll Negotiations": [
+   {
+    "series": "The Hobbit",
+    "collector": "138",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.12
+   }
+  ],
+  "Troop of Ponies": [
+   {
+    "series": "The Hobbit",
+    "collector": "199",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Turbulent Steppe": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 6.59
+   }
+  ],
+  "Tweeze": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "162",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Scott Gustafson",
+    "value": 0.14
+   }
+  ],
+  "Twinned Vision": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0157",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Andreas Zafiratos",
+    "value": 1.52
+   }
+  ],
+  "Twisted Fates": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0158",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Lorenzo Mastroianni",
+    "value": 1.99
+   }
+  ],
+  "Ultima, Origin of Oblivion": [
+   {
+    "series": "Final Fantasy",
+    "collector": "R 0002",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Russell Lu",
+    "value": 1.87
+   }
+  ],
+  "Unbury": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Undercity's Embrace": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Underworld Breach": [
+   {
+    "series": "Theros Beyond Death",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 10.79
+   }
+  ],
+  "Undulating Witness": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0045",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Alexander Ostrowski",
+    "value": 0.79
+   }
+  ],
+  "Uneasy Partings": [
+   {
+    "series": "The Hobbit",
+    "collector": "C 0058",
+    "quantity": 2,
+    "foil": true,
+    "artist": "Javier Charro",
+    "value": 0.14
+   }
+  ],
+  "Unexpected Assistance": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Unflinching Hortimancer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0023",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Manuel Castañón",
+    "value": 0.36
+   },
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0023",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Manuel Castañón",
+    "value": 0.58
+   }
+  ],
+  "Unforgiving Aim": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.16
+   }
+  ],
+  "Unwelcome Sprite": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "81",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Valakut Exploration": [
+   {
+    "series": "Zendikar Rising",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 3.97
+   }
+  ],
+  "Valorous Stance": [
+   {
+    "series": "Fate Reforged",
+    "collector": "",
+    "quantity": 3,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Vampire Hexmage": [
+   {
+    "series": "Zendikar",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Vandalblast": [
+   {
+    "series": "Return to Ravnica",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.33
+   }
+  ],
+  "Vanguard of the Restless": [
+   {
+    "series": "Secrets of Strixhaven Commander",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.21
+   }
+  ],
+  "Vault of the Archangel": [
+   {
+    "series": "Dark Ascension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.86
+   }
+  ],
+  "Velvetwing Butterflies // Gaze in Wonder": [
+   {
+    "series": "The Hobbit",
+    "collector": "30",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Xabi Gaztelua",
+    "value": 0.12
+   }
+  ],
+  "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal": [
+   {
+    "series": "Final Fantasy",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Venerable Warsinger": [
+   {
+    "series": "Strixhaven: School of Mages",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Vigorbloom Annex": [
+   {
+    "series": "Reality Fracture",
+    "collector": "L 0194",
+    "quantity": 1,
+    "foil": true,
+    "artist": "Sergey Glushakov",
+    "value": 2
+   }
+  ],
+  "Vigorbloom Charm": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0160",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Kaitlyn McCulley",
+    "value": 0.98
+   }
+  ],
+  "Village Rites": [
+   {
+    "series": "Core Set 2021",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.88
+   }
+  ],
+  "Vindicate": [
+   {
+    "series": "Apocalypse",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.81
+   }
+  ],
+  "Violent Echoes": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0095",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andrea Piparo",
+    "value": null
+   }
+  ],
+  "Viral Drake": [
+   {
+    "series": "New Phyrexia",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 1.95
+   }
+  ],
+  "Viscera Seer": [
+   {
+    "series": "Magic 2011",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.42
+   }
+  ],
+  "Visionary's Dance": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "242",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Josiah \"Jo\" Cameron",
+    "value": 0.12
+   }
+  ],
+  "Void Extrapolator // Omit Variables": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0070",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Valera Lutfullina",
+    "value": 1.99
+   }
+  ],
+  "Voldaren Epicure": [
+   {
+    "series": "Innistrad: Crimson Vow",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.36
+   }
+  ],
+  "Voracious Tome-Skimmer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.26
+   }
+  ],
+  "Vow to Erebor": [
+   {
+    "series": "The Hobbit",
+    "collector": "31",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.15
+   }
+  ],
+  "Voyager Staff": [
+   {
+    "series": "Ravnica: City of Guilds",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.33
+   }
+  ],
+  "Wakestone Gargoyle": [
+   {
+    "series": "Dissension",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Walking Bulwark": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.3
+   }
+  ],
+  "Wall of Limbs": [
+   {
+    "series": "Magic 2015",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.28
+   }
+  ],
+  "Wall of Mulch": [
+   {
+    "series": "Onslaught",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Wall of Resurgence": [
+   {
+    "series": "Oath of the Gatewatch",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.1
+   }
+  ],
+  "Wander Off": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "104",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.11
+   }
+  ],
+  "Wanderer's Strike": [
+   {
+    "series": "War of the Spark",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Wanderwine Distracter": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.07
+   }
+  ],
+  "Warg Tactics": [
+   {
+    "series": "The Hobbit",
+    "collector": "139",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.19
+   }
+  ],
+  "Warrior's Blades": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0163",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Richard Kane Ferguson",
+    "value": null
+   }
+  ],
+  "Warstorm Surge": [
+   {
+    "series": "Commander Legends: Battle for Baldur's Gate",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.44
+   }
+  ],
+  "Wartime Protestors": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Wary Farmer": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "251",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.14
+   }
+  ],
+  "Wave of Reckoning": [
+   {
+    "series": "Mercadian Masques",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.54
+   }
+  ],
+  "Wavesifter": [
+   {
+    "series": "Modern Horizons 2",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.31
+   }
+  ],
+  "Way of the Deathbringer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0238",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Joshua Raphael",
+    "value": 1.51
+   }
+  ],
+  "Way of the Healer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0207",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pauline Voss",
+    "value": 1.22
+   }
+  ],
+  "Way of the Mind Sculptor": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0224",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Josh Hass",
+    "value": 1.11
+   }
+  ],
+  "Way of the Necromancer": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0239",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Pauline Voss",
+    "value": 1.22
+   }
+  ],
+  "Way of the Paradox": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0267",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Josh Hass",
+    "value": 1.28
+   }
+  ],
+  "Way of the Warlord": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0255",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Danny Schwartz",
+    "value": 1.06
+   }
+  ],
+  "Wayward Swordtooth": [
+   {
+    "series": "Rivals of Ixalan",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.31
+   }
+  ],
+  "Weathered Sentinels": [
+   {
+    "series": "New Capenna Commander",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 1.01
+   }
+  ],
+  "Weathered Wayfarer": [
+   {
+    "series": "Onslaught",
+    "collector": "59/350",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Greg & Tim Hildebrandt",
+    "value": 17.39
+   },
+   {
+    "series": "",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Javier Charro",
+    "value": 1.41
+   }
+  ],
+  "Welcoming Vampire": [
+   {
+    "series": "Innistrad: Crimson Vow",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 3.09
+   }
+  ],
+  "Well-Worn Spatula": [
+   {
+    "series": "The Hobbit",
+    "collector": "180",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Gaboleps",
+    "value": 0.13
+   }
+  ],
+  "Whiplash Wordsmith // Vicious Verse": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0164",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Anastasia Ovchinnikova",
+    "value": 1.19
+   }
+  ],
+  "White Orchid Phantom": [
+   {
+    "series": "Modern Horizons 3",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.27
+   }
+  ],
+  "Wild Hypothesis": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "167",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Lie Setiawan",
+    "value": 0.19
+   }
+  ],
+  "Wild Pack Squad": [
+   {
+    "series": "Marvel's Spider-Man",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.18
+   }
+  ],
+  "Wilderland Scrounger": [
+   {
+    "series": "The Hobbit",
+    "collector": "141",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Tomas Duchek",
+    "value": 0.17
+   }
+  ],
+  "Wilderness Reclamation": [
+   {
+    "series": "Ravnica Allegiance",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.12
+   }
+  ],
+  "Wildvine Pummeler": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "203",
+    "quantity": 4,
+    "foil": false,
+    "artist": "",
+    "value": 0.09
+   }
+  ],
+  "Wind-Scarred Crag": [
+   {
+    "series": "Khans of Tarkir",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Winds of Abandon": [
+   {
+    "series": "Modern Horizons",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 4.84
+   }
+  ],
+  "Wingmantle Chaplain": [
+   {
+    "series": "Dominaria United",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Winnowing": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.32
+   }
+  ],
+  "Wistfulness": [
+   {
+    "series": "Lorwyn Eclipsed",
+    "collector": "252",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jesper Ejsing",
+    "value": 4.23
+   }
+  ],
+  "Witty Roastmaster": [
+   {
+    "series": "Streets of New Capenna",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.37
+   }
+  ],
+  "Wood Elves": [
+   {
+    "series": "The Hobbit",
+    "collector": "142",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Andreia Ugrai",
+    "value": 0.25
+   }
+  ],
+  "Woodland Weavemaster": [
+   {
+    "series": "The Hobbit",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Wrath of the Bloodmane": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0096",
+    "quantity": 3,
+    "foil": false,
+    "artist": "Manuel Castañón",
+    "value": null
+   }
+  ],
+  "Wrecking Gecko": [
+   {
+    "series": "Reality Fracture",
+    "collector": "C 0120",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Raph Lomotan",
+    "value": null
+   }
+  ],
+  "Yargle, Glutton of Urborg": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0241",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Jehan Choo",
+    "value": 1.28
+   }
+  ],
+  "Yavimaya Elder": [
+   {
+    "series": "Urza's Destiny",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.17
+   }
+  ],
+  "Yip Yip!": [
+   {
+    "series": "Avatar: The Last Airbender",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": null
+   }
+  ],
+  "Yoshimaru, Beloved Companion": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0209",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Brian Valeza",
+    "value": 1.33
+   }
+  ],
+  "Yoshimaru, Scrappy Stray": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0269",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Brian Valeza",
+    "value": 1.03
+   }
+  ],
+  "Your Fate Ends Here": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0024",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Andrew Mar",
+    "value": 0.29
+   }
+  ],
+  "Yuriko, Blade of the Mighty": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0210",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Lie Setiawan",
+    "value": 1.94
+   }
+  ],
+  "Yuriko, Hope from the Shadows": [
+   {
+    "series": "Reality Fracture",
+    "collector": "U 0226",
+    "quantity": 2,
+    "foil": false,
+    "artist": "Lie Setiawan",
+    "value": 1.74
+   }
+  ],
+  "Zack Fair": [
+   {
+    "series": "Final Fantasy",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 0.25
+   }
+  ],
+  "Zaffai and the Tempests": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "246",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Olivier Bernard",
+    "value": 0.23
+   }
+  ],
+  "Zendikar's Roil": [
+   {
+    "series": "Magic Origins",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.34
+   }
+  ],
+  "Zetalpa, Primal Dawn": [
+   {
+    "series": "Rivals of Ixalan",
+    "collector": "",
+    "quantity": 2,
+    "foil": false,
+    "artist": "",
+    "value": 0.29
+   }
+  ],
+  "Zimone's Experiment": [
+   {
+    "series": "Secrets of Strixhaven",
+    "collector": "169",
+    "quantity": 1,
+    "foil": false,
+    "artist": "Izzy",
+    "value": 0.21
+   }
+  ],
+  "Zulaport Cutthroat": [
+   {
+    "series": "Battle for Zendikar",
+    "collector": "",
+    "quantity": 1,
+    "foil": false,
+    "artist": "",
+    "value": 1.09
+   }
+  ]
+ }
 }
