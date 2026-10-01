@@ -64,7 +64,7 @@ ok(brief.candidates.every((c, i, a) => i === 0 || a[i - 1].fills.length >= c.fil
   const coPlay = (oid) => (oid === oracle ? new Map([[stranger.oracleId, {inclusion: 0.9, synergy: 0.5, decks: 1000}]]) : null);
   const wide = B.buildBrief({state, deckId: D6.id, cardOf, coPlay, byOracle: (oid) => (oid === stranger.oracleId ? {...stranger, id: Catalog.key(stranger.name)} : null), allowUnowned: true});
   const hit = wide.candidates.find((c) => c.name === stranger.name);
-  ok(hit && hit.source === "Not owned" && hit.coPlay === 0.9, `asked, a co-play neighbour not owned is a candidate (${stranger.name})`);
+  ok(hit && hit.source === "Not owned" && hit.coPlay === 0.9, `asked, a co-play neighbor not owned is a candidate (${stranger.name})`);
   const capped = B.buildBrief({state: {...state, decks: state.decks.map((d) => (d.id === D6.id ? {...d, definition: {...d.definition, perCardCap: 0.5}} : d))}, deckId: D6.id, cardOf,
     coPlay, byOracle: (oid) => (oid === stranger.oracleId ? {...stranger, id: Catalog.key(stranger.name)} : null), allowUnowned: true});
   ok(capped.candidates.every((c) => c.owned || c.price === null || c.price <= 0.5) && !capped.candidates.some((c) => c.name === stranger.name),

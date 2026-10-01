@@ -95,7 +95,7 @@
   }
 
   /* THE CANDIDATES, found by code: the bench, To buy (the list's missing cards and the To buy group), Watching, and
-     only when asked the commander's co-play neighbours the person does not own; inside the identity, not already
+     only when asked the commander's co-play neighbors the person does not own; inside the identity, not already
      counted, priced within the per-card cap unless owned, scored by the short roles they fill, then co-play, owned
      before not, rank and price. */
   function candidatesOf(state, deck, cardOf, {counted, roles, identity, perCardCap, allowUnowned, coPlay, byOracle, commander, limit, seats}) {
@@ -149,7 +149,7 @@
 
   /**
    * The brief for one deck. `cardOf(id)` joins a library card to its record (the app's C.card); `coPlay(oracleId)` and
-   * `byOracle(oracleId)` are optional (the commander's co-play row, and a neighbour's record), as the role lens takes them.
+   * `byOracle(oracleId)` are optional (the commander's co-play row, and a neighbor's record), as the role lens takes them.
    */
   function buildBrief({state, deckId, cardOf, coPlay = null, byOracle = null, ask = "", allowUnowned = false, basis = "list", limit = LIMIT}) {
     const deck = (state.decks || []).find((d) => d.id === deckId);
