@@ -106,6 +106,53 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   eq(events.length, 0, "and nothing is reported, because nothing happened");
 }
 
+/* ---- destroyAll: a board wipe, decided at once (CR 701.8, 702.12b) ---- */
+{
+  const {s, ctx} = board();
+  const stone = addObject(s, creature({card: "Stone", owner: 2, controller: 2, keywords: ["Indestructible"]}), "battlefield");
+  const land = addObject(s, {card: "Forest", owner: 0, controller: 0, types: ["Land"]}, "battlefield");
+  run(s, {effect: "destroyAll", selector: {what: "permanent", types: ["Creature"]}}, ctx);
+  eq(cardsIn(s, "graveyard", 0).length + cardsIn(s, "graveyard", 1).length, 2, "destroyAll destroys every creature the selector matched, each to its owner's graveyard");
+  eq(zoneOf(s, stone), "battlefield", "an indestructible one survives it");
+  eq(zoneOf(s, land), "battlefield", "and what the selector did not match is untouched");
+}
+{
+  /* The lord comes first on the battlefield, so a wipe done one at a time would kill it first. */
+  const s = createState(pod);
+  for (let seat = 0; seat < 4; seat += 1) for (let i = 0; i < 5; i += 1) addObject(s, {card: `L${seat}-${i}`, owner: seat, controller: seat}, "library", seat);
+  beginGame(s);
+  const lord = addObject(s, creature({card: "Lord", owner: 0, controller: 0}), "battlefield");
+  const ward = addObject(s, creature({card: "Ward", owner: 0, controller: 0}), "battlefield");
+  s.objects[lord].abilities = [{id: "aegis", kind: "static", layer: 6, affects: {ids: [ward]}, apply: {addKeywords: ["Indestructible"]}}];
+  run(s, {effect: "destroyAll", selector: {what: "permanent", types: ["Creature"]}}, {controller: 0, source: lord});
+  eq(zoneOf(s, ward), "battlefield", "a creature the lord made indestructible survives the wipe that kills the lord: which ones die is decided before any of them moves");
+  eq(cardsIn(s, "graveyard", 0).length, 1, "and the lord is gone");
+}
+
+/* ---- mill: the top of a library into the graveyard (CR 701.13) ---- */
+{
+  const {s, ctx} = board();
+  const top = cardsIn(s, "library", 0).slice(0, 3).map((id) => s.objects[id].card);
+  const hand = cardsIn(s, "hand", 0).length;
+  run(s, {effect: "mill", count: 3, who: "you"}, ctx);
+  eq(cardsIn(s, "graveyard", 0).length, 3, "mill puts three cards into the graveyard");
+  eq(cardsIn(s, "library", 0).length, 17, "off the library");
+  eq(cardsIn(s, "graveyard", 0).map((id) => s.objects[id].card), top, "from the top, in order");
+  eq(cardsIn(s, "hand", 0).length, hand, "and not into the hand: milling is not drawing");
+}
+{
+  const {s, ctx} = board();
+  run(s, {effect: "mill", count: 2, who: "opponent"}, ctx);
+  eq([1, 2, 3].map((p) => cardsIn(s, "graveyard", p).length), [2, 2, 2], "mill can be aimed at each opponent");
+  eq(cardsIn(s, "graveyard", 0).length, 0, "and not at you");
+}
+{
+  const {s, ctx} = board();
+  run(s, {effect: "mill", count: 30, who: "you"}, ctx);
+  eq([cardsIn(s, "library", 0).length, cardsIn(s, "graveyard", 0).length], [0, 20], "told to mill more than the library holds, a player mills what there is (CR 701.13b)");
+  ok(!s.players[0].drewFromEmpty, "and is not marked for an empty-library draw: milling out is not drawing from an empty library");
+}
+
 /* ---- mana, tapping ---- */
 {
   const {s, ctx} = board();
@@ -279,4 +326,4 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
     "and a primitive that asks a player something refuses to be run directly, rather than running half of itself"); checks += 1;
 }
 
-console.log(`engine-effects: ${checks} checks passed — twenty-one of the twenty-five measured primitives, damage through prevention, pump that wears off because it was never written down, and indestructible that cannot be destroyed.`);
+console.log(`engine-effects: ${checks} checks passed — twenty-one of the twenty-five measured primitives, damage through prevention, pump that wears off because it was never written down, indestructible that cannot be destroyed, a board wipe decided at once, and mill that is not a draw.`);

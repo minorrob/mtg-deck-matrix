@@ -10,8 +10,8 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 
 | Scope | Cards | Playable now | Share |
 | --- | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 347 | 72.7% |
-| the card library | 2365 | 1261 | 53.3% |
+| Rob's seven decks | 477 | 353 | 74.0% |
+| the card library | 2365 | 1297 | 54.8% |
 
 ## What blocks the rest — Rob's seven decks
 
@@ -21,8 +21,6 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
 | `CombatDamageToughness` | static | 5 | no engine support yet |
-| `mill` | api | 4 | declared, not built |
-| `destroyAll` | api | 4 | declared, not built |
 | `surveil` | api | 4 | declared, not built |
 | `chooseCard` | api | 4 | declared, not built |
 | `copyPermanent` | api | 4 | declared, not built |
@@ -37,6 +35,8 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `sacrificeAll` | api | 3 | declared, not built |
 | `CantAttack` | static | 3 | no engine support yet |
 | `chooseType` | api | 3 | declared, not built |
+| `Class` | keyword | 2 | not declared |
+| `peekAndReveal` | api | 2 | declared, not built |
 
 ## What blocks the rest — the card library
 
@@ -49,12 +49,10 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `damageAll` | api | 43 | declared, not built |
 | `play` | api | 43 | declared, not built |
 | `sacrifice` | api | 41 | declared, not built |
-| `destroyAll` | api | 40 | declared, not built |
 | `etbCounter` | keyword | 33 | not declared |
 | `chooseType` | api | 31 | declared, not built |
 | `Enchant` | keyword | 31 | declared, no behavior |
 | `surveil` | api | 26 | declared, not built |
-| `mill` | api | 25 | declared, not built |
 | `immediateTrigger` | api | 25 | declared, not built |
 | `copyPermanent` | api | 25 | declared, not built |
 | `Cycling` | keyword | 24 | declared, no behavior |
@@ -62,4 +60,6 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `Chapter` | keyword | 24 | not declared |
 | `repeatFor` | api | 21 | declared, not built |
 | `Flashback` | keyword | 21 | declared, no behavior |
+| `chooseCard` | api | 20 | declared, not built |
+| `CantBlockBy` | static | 19 | no engine support yet |
 
