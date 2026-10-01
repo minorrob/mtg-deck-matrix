@@ -80,7 +80,8 @@ function main() {
   const blocks = new Map(), alone = new Map();
   let everyRule = 0;
   for (const [name, card] of topCards) {
-    const missing = missingFor(card);
+    /* A defined card has every rule it needs and holds nothing back (engine-coverage.mjs says why). */
+    const missing = directory.resolve(name)?.playable === true ? [] : missingFor(card);
     if (!missing.length) { everyRule += 1; continue; }
     const keys = [...new Set(missing.map((m) => `${m.kind}:${m.name}`))];
     for (const k of keys) blocks.set(k, (blocks.get(k) ?? 0) + 1);

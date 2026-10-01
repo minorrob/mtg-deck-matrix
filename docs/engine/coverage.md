@@ -12,22 +12,22 @@ what makes a flier unblockable by the ground.
 
 | Scope | Cards | Defined | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 123 | 279 | 58.5% |
-| the card library | 2365 | 222 | 1036 | 43.8% |
-| the most-played 80% of Commander cards | 3238 | 366 | 1400 | 43.2% |
+| Rob's seven decks | 477 | 123 | 289 | 60.6% |
+| the card library | 2365 | 222 | 1059 | 44.8% |
+| the most-played 80% of Commander cards | 3238 | 366 | 1452 | 44.8% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `ConditionPresent` | option | 30 | not built |
 | `RememberChanged` | option | 25 | not built |
 | `TargetMax` | option | 22 | not built |
 | `TargetMin` | option | 22 | not built |
-| `ConditionCompare` | option | 21 | not built |
 | `RememberObjects` | option | 20 | not built |
+| `ConditionPresent` | option | 20 | not built |
 | `MayPlay` | option | 16 | not built |
 | `ConditionDefined` | option | 13 | not built |
+| `ConditionCompare` | option | 11 | not built |
 | `CheckSVar` | option | 10 | not built |
 | `IsPresent` | option | 8 | not built |
 | `UnlessCost` | option | 7 | not built |
@@ -48,19 +48,19 @@ what makes a flier unblockable by the ground.
 | `TargetMin` | option | 124 | not built |
 | `TargetMax` | option | 123 | not built |
 | `RememberObjects` | option | 117 | not built |
-| `RememberChanged` | option | 117 | not built |
-| `ConditionPresent` | option | 102 | not built |
+| `RememberChanged` | option | 115 | not built |
+| `ConditionPresent` | option | 87 | not built |
 | `IsPresent` | option | 72 | not built |
-| `UnlessCost` | option | 70 | not built |
 | `MayPlay` | option | 67 | not built |
 | `ConditionDefined` | option | 66 | not built |
-| `ConditionCompare` | option | 54 | not built |
+| `UnlessCost` | option | 64 | not built |
 | `CheckSVar` | option | 53 | not built |
 | `copySpell` | api | 46 | declared, not built |
 | `ConditionCheckSVar` | option | 44 | not built |
 | `ETBReplacement` | keyword | 43 | not declared |
 | `damageAll` | api | 43 | declared, not built |
 | `play` | api | 43 | declared, not built |
+| `ConditionCompare` | option | 39 | not built |
 | `ConditionSVarCompare` | option | 37 | not built |
 | `SVarCompare` | option | 33 | not built |
 | `etbCounter` | keyword | 33 | not declared |
@@ -70,24 +70,24 @@ what makes a flier unblockable by the ground.
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `ConditionPresent` | option | 142 | not built |
 | `TargetMin` | option | 126 | not built |
-| `RememberChanged` | option | 124 | not built |
 | `RememberObjects` | option | 123 | not built |
 | `TargetMax` | option | 123 | not built |
+| `RememberChanged` | option | 122 | not built |
 | `IsPresent` | option | 114 | not built |
-| `ConditionCompare` | option | 104 | not built |
+| `ConditionPresent` | option | 112 | not built |
 | `MayPlay` | option | 99 | not built |
 | `CheckSVar` | option | 79 | not built |
-| `ConditionCheckSVar` | option | 75 | not built |
+| `ConditionCompare` | option | 74 | not built |
 | `ETBReplacement` | keyword | 68 | not declared |
-| `UnlessCost` | option | 66 | not built |
-| `ConditionSVarCompare` | option | 65 | not built |
+| `ConditionCheckSVar` | option | 65 | not built |
 | `copyPermanent` | api | 64 | declared, not built |
 | `Enchant` | keyword | 60 | declared, no behavior |
 | `SVarCompare` | option | 59 | not built |
 | `ConditionDefined` | option | 57 | not built |
+| `UnlessCost` | option | 56 | not built |
 | `DamageAmount` | count | 56 | not built |
+| `ConditionSVarCompare` | option | 55 | not built |
 | `repeatFor` | api | 41 | declared, not built |
 | `Condition` | option | 41 | not built |
 

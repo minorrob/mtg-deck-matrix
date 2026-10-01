@@ -10,7 +10,7 @@
  "top": {
   "cards": 3238,
   "defined": 366,
-  "everyRule": 1400
+  "everyRule": 1452
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8898,7 +8898,7 @@
      "forge": "ConditionPresent",
      "top": 142,
      "all": 1292,
-     "blocks": 142,
+     "blocks": 112,
      "alone": 0
     },
     {
@@ -8922,8 +8922,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 124,
-     "alone": 12
+     "blocks": 122,
+     "alone": 10
     },
     {
      "kind": "option",
@@ -8982,7 +8982,7 @@
      "forge": "ConditionCompare",
      "top": 104,
      "all": 684,
-     "blocks": 104,
+     "blocks": 74,
      "alone": 0
     },
     {
@@ -9030,7 +9030,7 @@
      "forge": "ConditionCheckSVar",
      "top": 75,
      "all": 603,
-     "blocks": 75,
+     "blocks": 65,
      "alone": 2
     },
     {
@@ -9042,8 +9042,8 @@
      "forge": "UnlessCost",
      "top": 66,
      "all": 677,
-     "blocks": 66,
-     "alone": 41
+     "blocks": 56,
+     "alone": 31
     },
     {
      "kind": "option",
@@ -9054,7 +9054,7 @@
      "forge": "ConditionSVarCompare",
      "top": 65,
      "all": 455,
-     "blocks": 65,
+     "blocks": 55,
      "alone": 0
     },
     {

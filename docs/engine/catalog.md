@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 366 defined and playable today; 1,400 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 366 defined and playable today; 1,452 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,10 +36,10 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Unless a player pays | — | missing | 41 | 66 |
 | option | An intervening "if" or "activate only if": a permanent present | — | missing | 40 | 114 |
 | keyword ability | Enchant | — | named | 36 | 60 |
 | effect | CopyPermanent | copyPermanent | named | 33 | 64 |
+| option | Unless a player pays | — | missing | 31 | 56 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 20 | 123 |
 | option | You may play or cast a card from another zone | — | missing | 19 | 99 |
 | trigger | AttackersDeclared | attackers declared | named | 15 | 33 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | option | Only once (or N times) each turn | — | missing | 14 | 29 |
 | static | CantBlockBy | — | missing | 13 | 26 |
 | replacement | Counter | — | missing | 13 | 21 |
-| option | Remembering what an effect moved | — | missing | 12 | 124 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | effect | DamageAll | damageAll | named | 11 | 27 |
+| option | Remembering what an effect moved | — | missing | 10 | 122 |
 
 ## Keyword abilities (CR 702)
 
@@ -824,20 +824,20 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | An amount the game counts (X, for each, devotion, greatest power) | script/amount.mjs, by kind | partial | 586 | 5550 | 0 | 0 |
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
-| An effect's condition: if a permanent is present | — | missing | 142 | 1292 | 142 | 0 |
+| An effect's condition: if a permanent is present | — | missing | 142 | 1292 | 112 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 124 | 12 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 122 | 10 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 123 | 20 |
 | An intervening "if" or "activate only if": a permanent present | — | missing | 114 | 1200 | 114 | 40 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
-| An effect's condition: a comparison | — | missing | 104 | 684 | 104 | 0 |
+| An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
 | You may play or cast a card from another zone | — | missing | 99 | 625 | 99 | 19 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
-| An effect's condition: a counted value | — | missing | 75 | 603 | 75 | 2 |
-| Unless a player pays | — | missing | 66 | 677 | 66 | 41 |
-| An effect's condition: a counted comparison | — | missing | 65 | 455 | 65 | 0 |
+| An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 2 |
+| Unless a player pays | — | missing | 66 | 677 | 56 | 31 |
+| An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |

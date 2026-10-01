@@ -14,6 +14,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {isBuilt} from "../game/engine/script/effects/index.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
 
 let checks = 0;
@@ -95,8 +96,14 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   eq([missingFor({triggers: ["LifeGained"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]}), missingFor({triggers: ["SpellCast"]})],
     [[{kind: "trigger", name: "life gained", why: "declared, not built"}], [], [], []],
     "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not, nor one built (batch 8: spell cast)");
-  const every = Object.values(inventory.top.perCard).filter((card) => missingFor(card).length === 0).length;
-  eq(catalog.top.everyRule, every, `the most-played cards with every mechanic built are coverage's own count (${every})`);
+  /* A defined card has every rule it needs, whatever Forge's script names: its shock lands' "pay 2 life or it enters
+     tapped" is an unless-cost to Forge, and the engine plays them (batch 5). */
+  const directory = loadCardIndex();
+  const playable = (name) => directory.resolve(name)?.playable === true;
+  const every = Object.entries(inventory.top.perCard).filter(([name, card]) => playable(name) || missingFor(card).length === 0).length;
+  eq(catalog.top.everyRule, every, `the most-played cards with every mechanic built are coverage's own count (${every}), a defined card among them`);
+  ok(playable("Watery Grave") && missingFor(inventory.top.perCard["Watery Grave"]).some((m) => m.name === "UnlessCost"),
+    "Watery Grave is defined though Forge names an unless-cost for it -- so it counts, and holds nothing back");
   const next = md.split("## What to build next")[1].split("\n## ")[0].split("\n").filter((l) => /^\| [a-z]/.test(l) && !l.startsWith("| Kind")).map((l) => l.split("|").map((c) => c.trim()));
   const alone = next.map((c) => Number(c[5]));
   ok(next.length > 0 && alone.every((n, i) => i === 0 || n <= alone[i - 1]), `what to build next is ordered by what each alone holds back (${next.slice(0, 3).map((c) => `${c[2]} ${c[5]}`).join(", ")})`);
