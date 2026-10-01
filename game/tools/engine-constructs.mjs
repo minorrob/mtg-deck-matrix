@@ -74,6 +74,36 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
+/* THE OPTIONS AND CONDITIONS (Rob, 2026-10-01: "actions, triggers, effects, actions, options, etc."): what Forge writes
+   as an ability's parameters, each with what it means at the table and where the engine stands. A card needing one the
+   engine has not built is held back like a card needing a missing effect -- before these were counted, "every rule
+   built" took in Rhystic Study, which needs "unless that player pays {1}". `partial` ones are counted as there. */
+export const FORGE_OPTIONS = Object.freeze({
+  UnlessCost: {name: "Unless a player pays", status: "missing"},
+  Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "missing"},
+  ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "missing"},
+  ConditionCompare: {name: "An effect's condition: a comparison", status: "missing"},
+  ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
+  ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
+  ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},
+  Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "missing"},
+  CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
+  IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "missing"},
+  SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
+  PresentCompare: {name: "A comparison of permanents present for a condition", status: "missing"},
+  ActivationLimit: {name: "Only once (or N times) each turn", status: "missing"},
+  ActivationPhases: {name: "Activate only during a step or phase", status: "missing"},
+  TargetMin: {name: "Fewer targets than the most (\"up to\", \"any number of\")", status: "missing"},
+  TargetMax: {name: "More than one target of a kind (\"up to N\")", status: "missing"},
+  MayPlay: {name: "You may play or cast a card from another zone", status: "missing"},
+  Duration: {name: "How long an effect lasts (until end of turn is built; others not)", status: "partial"},
+  Optional: {name: "You may (an optional effect, CR 603.5)", status: "built", engine: "modal (Yes / No)"},
+  OptionalDecider: {name: "You may, decided by a named player", status: "partial", engine: "modal (Yes / No)"},
+  RememberObjects: {name: "Remembering an object (\"the exiled card\", \"that creature\" later)", status: "missing"},
+  RememberChanged: {name: "Remembering what an effect moved", status: "missing"},
+  Imprint: {name: "Imprint (a card exiled with this)", status: "missing"},
+});
+
 /* Forge's trigger modes that stand for many events, some of which the compiler builds. */
 export const BROAD_TRIGGERS = Object.freeze(["ChangesZone", "ChangesZoneAll", "Phase"]);
 
@@ -107,6 +137,10 @@ export function missingFor(card) {
   for (const r of card.replacements ?? []) {
     if (FORGE_REPLACEMENT[r]) continue;
     missing.push({kind: "replacement", name: r, why: "no engine support yet"});
+  }
+  for (const option of card.options ?? []) {
+    const known = FORGE_OPTIONS[option];
+    if (known && known.status === "missing") missing.push({kind: "option", name: option, why: "not built"});
   }
   for (const keyword of card.keywords ?? []) {
     const word = normalizeKeyword(keyword);

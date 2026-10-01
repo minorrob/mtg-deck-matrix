@@ -14,7 +14,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {isBuilt} from "../game/engine/script/effects/index.mjs";
-import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS} from "../game/tools/engine-constructs.mjs";
+import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, FORGE_OPTIONS} from "../game/tools/engine-constructs.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -64,6 +64,15 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   eq(section("Keyword abilities (CR 702)").filter((e) => (e.status === "built") !== Boolean(behaves(e.name))).map((e) => e.name), [], "a keyword ability is built exactly when it behaves");
   ok(["built", "partial", "named", "missing"].includes(section("Choices").find((c) => c.rule === "603.5").status) && section("Choices").find((c) => c.rule === "603.5").status === "built",
     "\"you may\" is a built choice (CR 603.5)");
+}
+
+/* ---- options and conditions: what Forge writes as an ability's parameters ---- */
+{
+  eq(section("Options and conditions").map((e) => e.forge).sort(), Object.keys(FORGE_OPTIONS).sort(), "every option and condition the engine is measured against is an entry");
+  eq([missingFor({apis: ["Draw"], triggers: ["SpellCast"], options: ["OptionalDecider", "UnlessCost"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
+    [[{kind: "option", name: "UnlessCost", why: "not built"}], []],
+    "Rhystic Study's \"unless that player pays\" holds it back; a plain \"you may\" (built) does not");
+  ok(inventory.top.perCard["Rhystic Study"].options.includes("UnlessCost"), "the measurement records the option on the card itself");
 }
 
 /* ---- order ---- */

@@ -33,7 +33,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 import {loadCardIndex} from "./engine-cards.mjs";
-import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
+import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CR_INDEX = path.join(REPO, "game", "docs", "cr-index.json");
@@ -71,8 +71,8 @@ function main() {
 
   const inventory = JSON.parse(readFileSync(path.join(REPO, "game", "docs", "engine-inventory.json"), "utf8"));
   const countsOf = (scope, kind) => new Map((inventory[scope]?.counts?.[kind] ?? []).map(([name, n]) => [name, n]));
-  const TOP = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs"].map((k) => [k, countsOf("top", k)]));
-  const ALL = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs"].map((k) => [k, countsOf("forge", k)]));
+  const TOP = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params"].map((k) => [k, countsOf("top", k)]));
+  const ALL = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params"].map((k) => [k, countsOf("forge", k)]));
 
   /* What the most-played cards need that the engine has not got, and which of them one thing alone holds back. */
   const directory = loadCardIndex();
@@ -195,9 +195,13 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
     {name: "Two piles", rule: "700.2", engine: "twoPiles", status: isBuilt("twoPiles") ? "built" : "named"},
   ].map((c) => entry({kind: "choice", forge: null, ...c}));
 
+  /* Options and conditions: an ability's parameters that change what it does (engine-constructs.mjs FORGE_OPTIONS). */
+  const options = Object.entries(FORGE_OPTIONS).map(([param, o]) => entry({kind: "option", rule: null, name: o.name, engine: o.engine ?? null, status: o.status, forge: param,
+    top: TOP.params.get(param) ?? 0, all: ALL.params.get(param) ?? 0, ...byKey(`option:${param}`)}));
+
   const sections = [
     ["Keyword abilities (CR 702)", keywordAbilities], ["Keyword actions (CR 701)", keywordActions], ["Effects", effects], ["Triggers", triggers],
-    ["Static abilities", statics], ["Replacement effects", replacements], ["Costs", costs], ["Choices", choices()], ["Other keyword constructs", keywordConstructs],
+    ["Static abilities", statics], ["Replacement effects", replacements], ["Costs", costs], ["Options and conditions", options], ["Choices", choices()], ["Other keyword constructs", keywordConstructs],
   ];
   function choices() { return CHOICES; }
 
