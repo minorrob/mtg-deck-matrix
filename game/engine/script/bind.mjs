@@ -26,7 +26,8 @@
  * players, and `"self"` for the card the ability is on:
  *   `targets`   the objects among target n (an effect's object list: destroy, moveZone, pump, dealDamage ...);
  *   `who`       the players among target n (draw, gainLife, loseLife, dealDamage to a player ...);
- *   `toPlayer`  the one player of target n.
+ *   `toPlayer`  the one player of target n;
+ *   `spells`    the spells among target n, by their objects on the stack (counterSpell).
  * So "deal 3 damage to any target" is `{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}`:
  * whichever kind was chosen, the other binds to nothing.
  *
@@ -119,6 +120,7 @@ export function bindEffect(effect, context) {
   if (!effect || typeof effect !== "object") return effect;
   const bound = {...effect};
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
+  if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
   if ("who" in bound) bound.who = playersOf(bound.who, context);
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);

@@ -31,6 +31,7 @@ import {isBuilt, NEEDS_A_DECISION} from "../script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
+import {compileSelector} from "../script/filter.mjs";
 
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
@@ -40,8 +41,12 @@ const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpp
 
 /* A script's trigger, in the engine's events. The script names the event in the vocabulary's words; `who: "self"` is
    "when THIS enters", `yours: true` is "at the beginning of YOUR upkeep". */
+const ARRIVALS = ["self", "another", "any"];
 const TRIGGERS = {
-  enters: (t) => (t.who ?? "self") === "self" ? {on: "GameEventCardChangeZone", to: "Battlefield", who: "self"} : null,
+  /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the
+     selector the arrival must match. */
+  enters: (t) => (ARRIVALS.includes(t.who ?? "self")
+    ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   dies: (t) => (t.who ?? "self") === "self" ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: "self"} : null,
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
@@ -110,8 +115,9 @@ export function compileScript(script) {
     const id = ability.id ?? `a${index}`;
     for (const effect of effectsIn(ability.effects)) {
       if (!isBuilt(effect.effect)) problems.push(`${effect.effect}: declared, not built`);
-      /* counterSpell's targets are stack ids; the binder hands it objects. Its target is 2.4b's. */
-      if (effect.effect === "counterSpell") problems.push("counterSpell: countering a target spell is not wired yet");
+      /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
+         `spells: {target: n}` (script/bind.mjs). */
+      if (effect.effect === "counterSpell" && effect.targets !== undefined) problems.push("counterSpell: a script names the spell by `spells: {target: n}`, not by stack id");
     }
 
     if (ability.kind === "spell") {
@@ -138,8 +144,12 @@ export function compileScript(script) {
       const compile = TRIGGERS[ability.trigger.on];
       const trigger = compile ? compile(ability.trigger) : null;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
-      if ((ability.targets ?? []).length) problems.push(`${ability.text}: a trigger's targets are chosen as it goes on the stack, which is 2.4b's`);
+      if (ability.trigger.filter) {
+        try { compileSelector(ability.trigger.filter); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+      }
+
       abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects: ability.effects,
+        ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {})});
       return;
     }

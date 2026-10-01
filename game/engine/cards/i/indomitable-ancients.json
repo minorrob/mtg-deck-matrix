@@ -1,0 +1,26 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Indomitable Ancients",
+    "oracleId": "2764741c-1f3e-459a-a487-54cbac2c84a6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Warrior"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 10
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}

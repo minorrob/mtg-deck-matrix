@@ -107,18 +107,17 @@ const files = loadCardScenarios();
     /discard: a cost atom nothing pays/, "a cost atom nothing pays yet");
   problem(base([{kind: "triggered", text: "Whenever this attacks, draw.", trigger: {on: "attacks"}, effects: [{effect: "draw"}]}], ["Creature"]),
     /attacks: a trigger the engine does not watch/, "a trigger the engine does not watch for");
-  problem(base([{kind: "triggered", text: "Whenever another creature enters, gain 1.", trigger: {on: "enters", who: "another"}, effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]),
-    /enters \(another\)/, "an \"enters\" about some other permanent, which the engine cannot yet tell apart");
-  problem(base([{kind: "triggered", text: "When this enters, destroy target creature.", trigger: {on: "enters", who: "self"},
-    targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "destroy", targets: {target: 0}}]}], ["Creature"]), /2\.4b/,
-    "a trigger with targets, which are chosen as it goes on the stack");
+  problem(base([{kind: "triggered", text: "Whenever another creature dies, gain 1.", trigger: {on: "dies", who: "another"}, effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]),
+    /dies \(another\)/, "a death some other permanent's, which the engine cannot yet watch for");
+  problem(base([{kind: "triggered", text: "Whenever another creature enters, gain 1.", trigger: {on: "enters", who: "another", filter: {kind: "creature"}},
+    effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]), /no key "kind"/, "an arrival filter the selector grammar refuses");
   problem(base([{kind: "activated", text: "Sacrifice a Goblin: Add {R}.", cost: [{atom: "sacrifice", selector: {subtypes: ["Goblin"]}}], effects: [{effect: "addMana", mana: {R: 1}}]}], ["Creature"]),
     /mana ability the engine cannot run yet/, "a mana ability whose cost is a sacrifice of another permanent (Skirk Prospector)");
   problem(base([{kind: "activated", text: "{T}: Add one mana of any color that a land an opponent controls could produce.", cost: [{atom: "{T}"}],
     effects: [{effect: "addMana", anyColor: "opponents-lands"}]}], ["Artifact"]), /mana ability the engine cannot run yet/,
     "a mana ability whose colors depend on another player's lands (Fellwar Stone)");
   problem(base([{kind: "spell", text: "Counter target spell.", targets: [{what: "spell"}], effects: [{effect: "counterSpell", targets: {target: 0}}]}]),
-    /counterSpell/, "countering a target spell, whose binding is 2.4b's");
+    /counterSpell: a script names the spell by `spells/, "a counterspell naming its spell by stack id, which no script can know");
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
