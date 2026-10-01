@@ -241,6 +241,30 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
    /* By name, so a rebuild that carries figures does not reshuffle the file. */
    for(const [n,v] of Object.entries(paid).sort(byName)){delete paid[n];paid[n]=v;}}
 
+  /* PRINTS (W1, docs/plan-to-done-2026-09-30.md). The Master sheet records a card's prints in two groups -- Series ·
+     Collector # · Quantity · Foil · Artist · Value, and the same again as "- Card Type 2" -- each a printing and its
+     market value. Rob's rules (2026-09-30): a row with one print group is that print for every copy, whatever its
+     Quantity says; a row with two keeps each group's quantity, a blank first quantity taking what Own leaves; copies
+     no group accounts for (the basics, dozens of prints and two recorded) are left without one, never guessed. Where
+     each print sits is tools/live-load.js's: the dearest in the deck boxes. */
+  const PRINT=['Series','Collector #','Quantity','Foil','Artist','Value'],prints={};
+  if(PRINT.every(k=>main.head.includes(k))){
+    const txt=v=>v===null||v===undefined?'':String(v).trim();
+    for(const r of main.rows){
+      const c=card[String(main.get(r,'Card ID')).trim()];if(!c||c.own<=0)continue;
+      const groups=['',' - Card Type 2'].map(suffix=>{const g=k=>main.get(r,k+suffix);
+        if(![g('Series'),g('Collector #'),g('Artist')].some(v=>txt(v)))return null;
+        return {series:txt(g('Series')),collector:txt(g('Collector #')),quantity:int(g('Quantity')),foil:Number(g('Foil'))===1,artist:txt(g('Artist')),value:cash(g('Value'))};}).filter(Boolean);
+      if(!groups.length)continue;
+      if(groups.length===1)groups[0].quantity=c.own;
+      else if(!groups[0].quantity)groups[0].quantity=Math.max(0,c.own-groups.slice(1).reduce((n,g)=>n+g.quantity,0));
+      let left=c.own;const kept=[];for(const g of groups){const q=Math.min(g.quantity,left);if(q>0){kept.push({...g,quantity:q});left-=q;}}
+      if(kept.length)prints[c.name]=[...(prints[c.name]||[]),...kept];
+    }
+    const two=Object.values(prints).filter(l=>l.length>1).length;
+    notes.push(`Prints read for ${Object.keys(prints).length} owned cards (${two} with two), from the Master sheet's two print groups.`);
+  }
+
   const upgrades=[];
   if(up)for(const r of up.rows){
     const tempId=String(up.get(r,'Card ID')||'').trim(),upId=String(up.get(r,'Upgrade Card ID')||'').trim(),
@@ -278,7 +302,7 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
     count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
     note:"Rob's live collection, built by tools/build-live-load.mjs from the Master workbook's star schema (master_main and the tables that hang off it). The decks are discovered from master_target's D<n>-T columns, so adding one is a workbook edit. Card names are exact Scryfall names. decks[].cards is the target hundred and decks[].strategy is the overview from deck_strategies; owned.inDeck is what is physically in each box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list, priced from the catalog (Scryfall) rather than the workbook; paid maps a card owned to the $ Each Trey paid per copy, which is never a market price; metadata carries the workbook's own reading of each card (purpose, mechanics, bracket) so the app shows what the workbook says; upgrades name the card each temporary slot is waiting on.",
-    decks,owned:{inDeck,bench},ordered,buy,paid,metadata,upgrades};
+    decks,owned:{inDeck,bench},ordered,buy,paid,metadata,upgrades,...(Object.keys(prints).length?{prints:Object.fromEntries(Object.entries(prints).sort(byName))}:{})};
   Live.check(doc);
   const built=Live.build(doc,{Model,lookup});
   return {doc,notes,built};

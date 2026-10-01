@@ -1442,6 +1442,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-fchips .cm-text-button{font-size:12px;padding:0}
 #matrix-v2 .cm-filter-panel input:not([type=checkbox]),#matrix-v2 .cm-filter-panel select{height:36px;min-height:36px;padding-top:0;padding-bottom:0}
 .cm-fold-note{font-size:12px;white-space:nowrap}
+/* A card's prints within its row (W1): the toggle in the caption, and the list it opens under the row. */
+.cm-prints-toggle{font-size:12px;margin-left:6px}
+#matrix-v2 .cm-print-rows td{padding:6px 16px 12px 48px;background:var(--v-raised)}
+.cm-prints{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px}
+.cm-prints li{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.8fr);gap:12px;align-items:baseline}
+.cm-print-where{color:var(--v-muted)}
 #matrix-v2 .cm-hero-link{font-size:12px;padding:0;min-height:0;text-decoration:underline}
 .cm-skeleton h1{opacity:.7}
 @media(max-width:640px){
@@ -3175,7 +3181,7 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    tray kept clear), --full-w and --opp-w (Full screen), and --lap, the overlap of a row of cards that would
    otherwise run past its zone. Cards are 5:7 by width. Three card sizes: the table's (--card-scale, the Tools
    slider), the boards' (--board-scale) and the hand's (--hand-scale), the last two on the board, Tools setting both. */
-.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow:hidden;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
+.cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow:hidden;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--back-img:url(assets/crankmagic/card-back-tan.webp);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
 .cm-board[data-view="table"]{grid-template-rows:48px minmax(0,1fr) auto}
 .cm-board-loading{padding:40px;text-align:center;color:var(--v-muted)}
 /* THE STRIP, one 48px line that never wraps. */
@@ -3194,6 +3200,7 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-board-tools{position:relative;flex:0 0 auto}
 #matrix-v2 .cm-board-strip .v-button.compact,#matrix-v2 .cm-full-pill .v-button.compact,#matrix-v2 .cm-full-viewing .v-button.compact{min-height:0;height:32px;padding:0 12px}
 #matrix-v2 .cm-board-strip .v-button.is-on{background:var(--v-soft);border-color:var(--v-accent)}
+#matrix-v2 .cm-board-strip [data-action=board-pass]{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;line-height:32px}   /* Resolve and a long name */
 .cm-board-menu{position:absolute;right:0;top:calc(100% + 6px);width:320px;padding:14px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .67);white-space:normal;z-index:10}
 .cm-board-menu p{margin:0 0 10px;font-size:12px}
 #cm-board-tools{width:min(380px,calc(100vw - 72px))}   /* wide enough for the card-size row: label, both ends, the value */
@@ -3235,6 +3242,7 @@ button.cm-vitals{cursor:pointer}
 .cm-mat[data-fit="full"]{--bc:calc(clamp(64px,var(--full-w,1200px) * .075,112px) * var(--board-scale,1))}
 .cm-mat[data-fit="opp"]{--bc:calc(clamp(28px,var(--opp-w,400px) * .11,48px) * var(--board-scale,1))}
 .cm-mat[data-fit="phone"]{--bc:calc(44px * var(--board-scale,1))}
+.cm-mat[data-fit="mini"]{--bc:calc(var(--mini-w,300px) * .074 * var(--board-scale,1));border-radius:8px;--pad:calc(var(--bc) * .06)}
 .cm-mat-head{display:flex;align-items:center;gap:10px;min-width:0;padding:6px 10px;font-size:13px;white-space:nowrap;overflow:hidden}
 .cm-mat[data-fit="table"] .cm-mat-head,.cm-mat[data-fit="opp"] .cm-mat-head{padding:4px 8px;gap:8px;font-size:12px}
 .cm-mat-name{font-weight:700;font-size:15px;flex:0 0 auto}
@@ -3285,7 +3293,7 @@ button.cm-vitals{cursor:pointer}
 .cm-mat.is-bare .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
 .cm-board-group{flex:0 0 auto;max-width:100%}
 /* A small board has no height for two stacked groups: they sit side by side while there is room, and wrap under. */
-.cm-mat[data-fit="table"] .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
+.cm-mat[data-fit="table"] .cm-board-field,.cm-mat[data-fit="mini"] .cm-board-field{flex-direction:row;flex-wrap:wrap;align-items:flex-start;column-gap:calc(var(--bc) * .3);row-gap:calc(var(--bc) * .1)}
 .cm-board-group .cm-board-cards{max-width:100%}
 /* THE CARDS: 5:7 by width; the frame names the card until the picture comes. */
 .cm-bcard{position:relative;display:block;flex:0 0 auto;width:var(--bc);aspect-ratio:5 / 7;padding:0;overflow:hidden;border-radius:6% / 4.3%;border:1px solid rgb(0 0 0 / .6);background:linear-gradient(160deg,var(--card-face),var(--card-face-edge));color:var(--table-ink);font:inherit;text-align:left;cursor:default;box-shadow:0 6px 14px -6px rgb(0 0 0 / .85);transition:transform .16s ease}
@@ -3302,9 +3310,9 @@ button.cm-vitals{cursor:pointer}
 .cm-bcard.is-picked{box-shadow:0 0 0 3px var(--v-accent),0 0 18px var(--v-accent);translate:0 -4px}
 .cm-bcard.is-selected{outline:2px solid var(--v-aether);outline-offset:2px}
 .cm-bcard.is-dim{filter:brightness(.55) saturate(.6)}
-.cm-bcard.is-back{background:repeating-linear-gradient(45deg,var(--card-back) 0 6px,var(--card-back-edge) 6px 12px);border-color:color-mix(in srgb,var(--v-accent) 33%,transparent)}
+.cm-bcard.is-back{background:var(--back-img,none) center / cover no-repeat,repeating-linear-gradient(45deg,var(--card-back) 0 6px,var(--card-back-edge) 6px 12px);border-color:color-mix(in srgb,var(--v-accent) 33%,transparent)}
 .cm-bcard.is-empty{background:transparent;border:1px dashed color-mix(in srgb,var(--mat-ink) 33%,transparent);box-shadow:none}
-.cm-bcard.is-empty.is-back{background:repeating-linear-gradient(45deg,var(--card-back) 0 6px,var(--card-back-edge) 6px 12px);border:1px solid color-mix(in srgb,var(--v-accent) 33%,transparent);box-shadow:0 6px 14px -6px rgb(0 0 0 / .85)}
+.cm-bcard.is-empty.is-back{background:var(--back-img,none) center / cover no-repeat,repeating-linear-gradient(45deg,var(--card-back) 0 6px,var(--card-back-edge) 6px 12px);border:1px solid color-mix(in srgb,var(--v-accent) 33%,transparent);box-shadow:0 6px 14px -6px rgb(0 0 0 / .85)}
 /* THE TABLE VIEW: the tabletop (the living mat and the active player's fan behind), the 2×2 of identical 16:9
    boards sized by fit(), the logo at the true center, and the hand along the foot. */
 .cm-board-tabletop{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;padding:14px 14px 8px}
@@ -3332,6 +3340,13 @@ button.cm-vitals{cursor:pointer}
 .cm-board-scale{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:rgba(0,0,0,.55);color:var(--mat-ink);font-size:11px;font-weight:600;white-space:nowrap;pointer-events:auto}
 #matrix-v2 .cm-board-scale input[type=range]{width:110px;min-height:0;height:14px;margin:0;padding:0;accent-color:var(--v-accent)}
 .cm-board-scale output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
+/* Tools › Sound (B8): the effects and the music, each a slider, and a mute. */
+.cm-board-sounds{display:grid;gap:6px;margin:0 0 10px}
+.cm-board-sounds h3{margin:0}
+.cm-board-sound{display:flex;align-items:center;gap:8px;height:26px;padding:0 10px;border-radius:999px;background:var(--v-raised);color:var(--v-ink);font-size:12px;font-weight:600;white-space:nowrap}
+#matrix-v2 .cm-board-sound input[type=range]{flex:1 1 auto;width:auto;min-height:0;height:14px;margin:0;padding:0;accent-color:var(--v-accent)}
+.cm-board-sound span{min-width:6ch}
+.cm-board-sound output{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums}
 /* THE LIFE COUNTER at the true center (item 9): a slice per seat, its life on it, the logo in the middle. */
 .cm-board-pie{position:absolute;left:50%;top:var(--mid-y,50%);z-index:3;width:var(--pie,96px);height:var(--pie,96px);transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 0 2px var(--mat-felt-edge);--pie:clamp(64px,calc(var(--board-w,620px) * .13),112px)}
 .cm-board-pie-life{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:calc(var(--pie) * .16);line-height:1;font-variant-numeric:tabular-nums;color:var(--table-ink);pointer-events:none}
@@ -3366,16 +3381,36 @@ button.cm-vitals{cursor:pointer}
 /* The bar along the tray's top (item 5): dragged, it is the hand's size, and the boards take the room it leaves. */
 .cm-board-traybar{position:absolute;left:10px;right:10px;top:4px;height:22px;display:flex;align-items:center;gap:10px}
 .cm-board-traybar .cm-board-grip{cursor:ns-resize}
-.cm-board-hand h3{margin:4px 0 0;display:flex;flex-direction:column;gap:4px;flex:0 0 96px;font-size:12px;color:var(--mat-ink)}
-.cm-board-hand-title{font-size:18px;font-weight:900;letter-spacing:-.02em;white-space:nowrap}
-.cm-board-hand h3 .cm-muted{color:color-mix(in srgb,var(--mat-ink) 65%,transparent);font-size:11px;line-height:1.3}
+.cm-board-hand-side{margin:4px 0 0;display:flex;flex-direction:column;gap:6px;flex:0 0 104px;font-size:12px;color:var(--mat-ink)}
+.cm-board-hand-head{display:flex;align-items:center;gap:8px}
+.cm-board-hand-count{font-size:22px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+/* The hand by type (item 14): castable now over in hand; a type with something castable lit. */
+.cm-board-hand-types{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:1px;font-size:11px;font-weight:600}
+.cm-board-hand-types li{display:flex;justify-content:space-between;gap:6px;color:color-mix(in srgb,var(--mat-ink) 60%,transparent)}
+.cm-board-hand-types li b{font-variant-numeric:tabular-nums;font-weight:800}
+.cm-board-hand-types li.is-live{color:var(--mat-ink)}
+.cm-board-hand-types li.is-live b{color:var(--v-accent)}
+.cm-board-hand.is-backs{padding-top:10px}
+.cm-board-hand-whose{font-size:11px;font-weight:600;color:color-mix(in srgb,var(--mat-ink) 70%,transparent);white-space:nowrap}
+.cm-board-hand.is-backs .cm-bcard:hover{transform:none}
 .cm-board-showhand{width:34px;height:34px;border-radius:10px;border:0;background:var(--v-accent);color:var(--on-accent);font-size:17px;cursor:pointer}
 .cm-board-hand-cards{flex:1 1 auto;min-width:0;align-items:flex-start;gap:8px}
 .cm-board-hand .cm-bcard{--bc:var(--hc);cursor:pointer;transform-origin:50% 100%}
 .cm-board-hand .cm-bcard:hover{transform:translateY(-22%);z-index:3}
 .cm-board[data-view="table"] .cm-board-hand{margin:0 14px;--hc:calc(74px * var(--hand-scale,1))}
 /* THE FOCUS VIEW: the seat pane, then the mat, the largest 16:9 that fits, the fan behind it, the tray over its foot. */
-.cm-board-body{display:grid;grid-template-columns:168px minmax(0,1fr);min-height:0;min-width:0}
+.cm-board-body{position:relative;display:grid;grid-template-columns:var(--pane-w,168px) minmax(0,1fr);min-height:0;min-width:0}
+/* The divider between the pane and the mat (item 15): a bar along the pane's edge, dragged sideways. */
+.cm-board-panegrip{position:absolute;top:0;bottom:0;left:calc(var(--pane-w,168px) - 6px);z-index:6;width:12px;display:flex}
+.cm-board-grip.is-upright{cursor:col-resize;border-radius:6px}
+.cm-board-grip.is-upright::before{left:50%;right:auto;top:0;bottom:0;width:4px;height:auto;transform:translateX(-50%)}
+.cm-board-tile.is-mini{display:block;padding:0;background:var(--v-panel)}
+.cm-board-mini{position:absolute;inset:0;border-radius:inherit;overflow:hidden;--mini-w:calc(var(--pane-w,168px) - 20px)}
+.cm-board-mini>.cm-mat{height:100%}
+.cm-mat[data-fit="mini"] .cm-mat-label,.cm-mat[data-fit="mini"] .cm-board-group h3,.cm-mat[data-fit="mini"] .cm-board-pile figcaption,.cm-mat[data-fit="mini"] .cm-board-chip,.cm-mat[data-fit="mini"] .cm-board-empty{display:none}
+.cm-board-tile.is-mini .cm-board-tile-main{position:absolute;inset:0;z-index:2;align-content:start;padding:6px 8px;background:linear-gradient(to bottom,rgb(0 0 0 / .6),transparent 42%)}
+.cm-board-tile.is-mini .cm-vitals{position:absolute;left:8px;bottom:8px;z-index:3}
+.cm-board-tile.is-mini .cm-board-tile-flag{z-index:3}
 .cm-board-body:has(.cm-board-pane.is-shut){grid-template-columns:44px minmax(0,1fr)}
 .cm-board-pane{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0;overflow:auto;padding:10px;background:var(--v-panel);border-right:1px solid var(--v-line)}
 .cm-board-pane-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--v-muted)}
@@ -3434,7 +3469,7 @@ button.cm-vitals{cursor:pointer}
 .cm-full-vitals>div{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--seat) 30%,var(--mat-cavern)),var(--mat-cavern));font-size:11px;color:var(--mat-ink)}
 .cm-full-vitals>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm-full-pick{display:grid;gap:6px;justify-items:center;padding:6px;border-radius:8px;background:color-mix(in srgb,var(--vital-danger) 18%,var(--v-bg));border:2px solid color-mix(in srgb,var(--vital-danger) 65%,transparent)}
-.cm-full-pick .cm-bcard{--bc:calc(190px * var(--card-scale,1));max-width:100%;cursor:zoom-in}
+.cm-full-pick .cm-bcard{--bc:var(--pick-w,calc(190px * var(--card-scale,1)));max-width:100%;cursor:zoom-in}
 .cm-full-pick-empty{margin:0;padding:8px;font-size:11px;border-radius:8px;border:1px dashed var(--v-line)}
 .cm-full-side .cm-board-band{flex:1 1 auto;min-height:0;border-radius:6px}
 .cm-full-side .cm-board-band ol{overflow:auto}
@@ -3467,7 +3502,11 @@ button.cm-vitals{cursor:pointer}
 .cm-board-panel h3{margin:0 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--v-muted)}
 .cm-board-panel .cm-board-stack{box-shadow:none}
 .cm-panel-card{display:grid;gap:8px;justify-items:center}
-.cm-panel-card .cm-bcard{--bc:calc(200px * var(--card-scale,1));cursor:zoom-in}
+.cm-panel-card .cm-bcard{--bc:var(--pick-w,calc(200px * var(--card-scale,1)));cursor:zoom-in}
+/* The card to read takes its share of the column above the bar (item 18); the history below takes the rest. */
+.cm-panel-pick,#cm-full-pick{flex:0 0 var(--split,45%);min-height:0;overflow:hidden}
+.cm-board-splitbar{flex:0 0 14px;display:flex;align-items:stretch}
+.cm-board-splitbar .cm-board-grip{cursor:row-resize}
 .cm-panel-history{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px}
 .cm-panel-history .cm-history-list{flex:1 1 auto;min-height:0}
 /* TABLE VITALS, the dialog. */

@@ -558,7 +558,13 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
   are more than 1 card with different prints for that card"*): the one row shows the largest of its prints' values
   (the workbook's `Value` per print), a card with one print, or none recorded, its catalog price as now; 11 of the
   13 cards with a second print on 2026-09-30 are priced differently (Ghalta the Immovable: $0.56, and $0.99 foil).
-  The library suite checks the one row's largest value.
+  The library suite checks the one row's largest value. **Where each print is (Rob, 2026-09-30, asked during the build, since the sheet records
+  a card's prints and their counts but not which print is in which box):** *"Always assume the most expensive card is in
+  the deck when there are 2 prints for the same card"*; and *"leave blank the print info for cards without print info. If
+  many copies, such as basics, but no print info, then assume no print info for all. If print info is on a row with
+  quantity >2 but only print info on 1 card, assume all of that quantity are that print."* So a row with one print group
+  is that print for every copy; a row with two keeps each group's quantity (a blank first quantity takes what Own leaves);
+  copies no group accounts for stay without a print; and the dearest print fills the deck boxes first.
 - **An accessibility pass on the board and the lobby** (Part 6).
 - **A browser and device matrix** for the end-to-end walk (Part 6).
 

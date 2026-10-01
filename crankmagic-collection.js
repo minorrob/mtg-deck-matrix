@@ -63,7 +63,24 @@ function ownPair(r){
   if(!ownCache.map.has(key))ownCache.map.set(key,M.ownership(st,r.cardId,deckId));
   return ownCache.map.get(key);
 }
-function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.stateLabel||r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute'+(r.standInForCardId?` for ${(C.card(r.standInForCardId)||{}).name||''}`:''):''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
+/* A CARD'S PRINTS WITHIN ITS ROW (W1, docs/plan-to-done-2026-09-30.md). The copies a row folds together may be
+   different prints -- set, collector number, foil, artist, each with its market value. Grouped here by print, with
+   how many and where they are; a copy recorded with no print is not one of them. Where there are two or more, the
+   row's price is the dearest (Rob, 2026-09-30: "always use the largest $ value if there are more than 1 card with
+   different prints"); a card of one print, or none recorded, keeps its catalog price. */
+const PRINT_KEYS=['series','set','collector','finish','artist'];
+function printsOf(r){
+  const out=new Map();
+  for(const p of r.kind==='fold'?r.partRows:[r]){
+    const pr=p.printing||{};if(!PRINT_KEYS.some(k=>pr[k]))continue;
+    const key=PRINT_KEYS.map(k=>pr[k]||'').join('|'),seen=out.get(key)||{printing:pr,value:Number.isFinite(p.value)?p.value:null,count:0,where:new Map()};
+    const deck=p.location?.kind==='deck'&&p.location.deckId&&C.state.decks.find(d=>d.id===p.location.deckId),place=deck?deck.name:p.location?.kind==='bench'?'Bench':(p.placement||'Elsewhere');
+    seen.count+=p.quantity;seen.where.set(place,(seen.where.get(place)||0)+p.quantity);out.set(key,seen);
+  }
+  return [...out.values()].sort((a,b)=>(b.value??-1)-(a.value??-1));
+}
+const dearestOf=r=>{const ps=printsOf(r),vs=ps.map(p=>p.value).filter(Number.isFinite);return ps.length>1&&vs.length?Math.max(...vs):null;};
+function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:dearestOf(r)??c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.stateLabel||r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute'+(r.standInForCardId?` for ${(C.card(r.standInForCardId)||{}).name||''}`:''):''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
 /* GROUPING IS NOT THE SAME QUESTION AS SORTING. The Color column prints a card's identity
    letters, which as a grouping would make a heading per color pair and answer nothing:
    a reader grouping by color wants their mono-white cards together and everything gold
@@ -120,6 +137,7 @@ function statsHTML(shown,scoped){
    ticked copy records and say so when there are none. A folded row is several copies
    pretending to be one, which is why the table refuses ticks while prints are folded. */
 let picked=new Set(),pickScope='';
+const openPrints=new Set();   /* the rows opened to list their prints (W1), by record */
 const pickable=r=>r.kind==='lot'||r.kind==='draft'||r.kind==='need'||r.kind==='fold'&&r.partRows.some(p=>p.kind!=='fold'&&pickable(p));
 const pickedIds=()=>[...picked].filter(id=>C.state.lots.some(l=>l.id===id));
 function pickedSplit(){const lots=[],byDeck=new Map();for(const id of picked){if(C.state.lots.some(l=>l.id===id)){lots.push(id);continue;}const r=findRow(id);if(!r||(r.kind!=='draft'&&r.kind!=='need'))continue;if(!byDeck.has(r.deckId))byDeck.set(r.deckId,[]);byDeck.get(r.deckId).push(r);}return {lots,plans:[...byDeck]};}
@@ -979,7 +997,7 @@ const cell=(r,k)=>{
   const mixed=r.kind==='fold'&&r.mixed?.has(k==='deck'?'deckId':k==='status'?'stateLabel':k);
   const body=mixed?'<span class="cm-muted">Various</span>'
     :k==='color'?C.colors(r.card.colorIdentity)
-    :k==='price'?(!(r.card.price>0)?'<span class="cm-muted">—</span>':`<span class="cm-price">${C.money(r.card.price)}</span>`)
+    :k==='price'?(dearestOf(r)!==null?`<span class="cm-price" title="The dearest of its ${printsOf(r).length} prints">${C.money(dearestOf(r))}</span>`:!(r.card.price>0)?'<span class="cm-muted">—</span>':`<span class="cm-price">${C.money(r.card.price)}</span>`)
     :k==='cap'?capCell(r.card.price)
     :k==='vendor'?(value(r,k)?e(value(r,k)):'<span class="cm-muted">—</span>')
     :k==='paid'?(Number.isFinite(value(r,k))?(r.paidSource==='catalog'?`<span class="cm-muted cm-paid-list" title="Recorded at the catalog price when it was marked bought, not a price you typed. Click to set what you paid.">≈ ${C.money(value(r,k))} <small>catalog</small></span>`:C.money(value(r,k))):r.kind==='lot'&&r.card.price>0?`<span class="cm-muted cm-paid-list" title="No paid amount recorded; the list price stands in. Click to set what you paid.">≈ ${C.money(r.card.price)}</span>`:'<span class="cm-muted">$ —</span>')
@@ -1059,7 +1077,10 @@ const primaryPurpose=c=>{const CL=globalThis.MtgCardClassify;const p=CL&&CL.purp
 const rowMark=c=>/\bLand\b/.test(c.typeLine||'')&&!(c.manaCost||'').trim()
   ? `<span class="cm-row-land" aria-label="Land">L</span>`
   : ((c.manaCost||'').trim() ? `<span class="cm-row-mana">${C.mana(c.manaCost,c.typeLine)}</span>` : '');
-const rowHTML=r=>`<tr class="cm-row-card${isPicked(r)?' cm-row-ticked':''}" data-record="${e(r.recordId)}" data-action="card" data-card="${e(r.cardId)}">${ticks?`<td class="cm-tick-cell">${pickable(r)?`<input type="checkbox" class="cm-row-tick" data-record="${e(r.recordId)}"${isPicked(r)?' checked':''} aria-label="Tick ${e(r.card.name)}">`:''}</td>`:''}${shown.map(([k])=>`<td class="cm-col-${k}${canEdit(r,k)?' cm-cell-live':''}">${k==='name'?`<button class="cm-card-name" data-action="card" data-card="${e(r.cardId)}"><span data-art="${e(r.card.image||'')}">${e(r.card.name)}${(tight||r.kind==='fold')&&r.quantity>1?` <em>×${r.quantity}</em>`:''}</span></button>${rowMark(r.card)}${tight?(shop?`<span class="cm-row-primary">${primary(r)}</span>`:''):`<small>${r.kind==='fold'?foldCaption(r):`${primaryPurpose(r.card)?`<span class="cm-purpose-chip">${e(primaryPurpose(r.card))}</span>`:''}${/^(Bracket option|Upgrade)$/.test(value(r,'purpose'))?` <span class="cm-muted">${e(value(r,'purpose'))}</span>`:''}${r.kind==='option'?' <span class="cm-muted">Uncommitted suggestion</span>':''}`}</small>`}`:cell(r,k)}</td>`).join('')}<td class="cm-row-actions-cell">${r.kind==='fold'?`${!tight?primary(r):''}<span class="cm-muted cm-fold-note">${r.parts} records</span>`:`${!tight?primary(r):''}<button class="v-button compact cm-row-actions" data-action="row-actions" data-record="${e(r.recordId)}" aria-haspopup="menu" aria-label="Actions" title="Actions">⋯</button>`}</td></tr>`;
+const printsToggle=r=>{const n=printsOf(r).length;return n>1?` <button type="button" class="cm-text-button cm-prints-toggle" data-prints-toggle="${e(r.recordId)}" aria-expanded="${openPrints.has(r.recordId)}">${n} prints ${openPrints.has(r.recordId)?'▾':'▸'}</button>`:'';};
+const printsRow=r=>!openPrints.has(r.recordId)||printsOf(r).length<2?'':`<tr class="cm-print-rows"><td colspan="${span}"><ul class="cm-prints" aria-label="${e(r.card.name)}: its prints">${printsOf(r).map(p=>{const pr=p.printing,what=[pr.series||pr.set.toUpperCase(),pr.collector?'#'+pr.collector:'',pr.finish==='foil'?'Foil':'',pr.artist].filter(Boolean).map(e).join(' · ');
+  return `<li><span class="cm-print-what">${what}</span><span class="cm-price">${p.value===null?'<span class="cm-muted">—</span>':C.money(p.value)}</span><span class="cm-print-where">${[...p.where].map(([w,n])=>`${n} in ${e(w)}`).join(', ')}</span></li>`;}).join('')}</ul></td></tr>`;
+const rowHTML=r=>`<tr class="cm-row-card${isPicked(r)?' cm-row-ticked':''}" data-record="${e(r.recordId)}" data-action="card" data-card="${e(r.cardId)}">${ticks?`<td class="cm-tick-cell">${pickable(r)?`<input type="checkbox" class="cm-row-tick" data-record="${e(r.recordId)}"${isPicked(r)?' checked':''} aria-label="Tick ${e(r.card.name)}">`:''}</td>`:''}${shown.map(([k])=>`<td class="cm-col-${k}${canEdit(r,k)?' cm-cell-live':''}">${k==='name'?`<button class="cm-card-name" data-action="card" data-card="${e(r.cardId)}"><span data-art="${e(r.card.image||'')}">${e(r.card.name)}${(tight||r.kind==='fold')&&r.quantity>1?` <em>×${r.quantity}</em>`:''}</span></button>${rowMark(r.card)}${tight?(shop?`<span class="cm-row-primary">${primary(r)}</span>`:''):`<small>${r.kind==='fold'?foldCaption(r)+printsToggle(r):`${primaryPurpose(r.card)?`<span class="cm-purpose-chip">${e(primaryPurpose(r.card))}</span>`:''}${/^(Bracket option|Upgrade)$/.test(value(r,'purpose'))?` <span class="cm-muted">${e(value(r,'purpose'))}</span>`:''}${r.kind==='option'?' <span class="cm-muted">Uncommitted suggestion</span>':''}`}</small>`}`:cell(r,k)}</td>`).join('')}<td class="cm-row-actions-cell">${r.kind==='fold'?`${!tight?primary(r):''}<span class="cm-muted cm-fold-note">${r.parts} records</span>`:`${!tight?primary(r):''}<button class="v-button compact cm-row-actions" data-action="row-actions" data-record="${e(r.recordId)}" aria-haspopup="menu" aria-label="Actions" title="Actions">⋯</button>`}</td></tr>${printsRow(r)}`;
 const allFolded=bands.length>0&&bands.every(band=>collapsed.has(band.label));
 const foldAll=groupBy&&bands.length?` · <button type="button" class="cm-text-button" data-groups="${allFolded?'expand':'collapse'}">${allFolded?'Expand all groups':'Collapse all groups'}</button>`:'';
 /* With a count card picked, the line also counts copies, the unit the card counts in, so the figure on the card can be found again under it. */
@@ -1078,6 +1099,8 @@ $('#cm-roster-table').innerHTML=`${ticks?batchBar(shop):''}${longer?pagingHTML(t
       else for(const r of canTick)for(const id of tickIds(r))picked.delete(id);
       draw();return;
     }
+    const pt=ev.target.closest('[data-prints-toggle]');
+    if(pt){ev.stopPropagation();const k=pt.dataset.printsToggle;if(openPrints.has(k))openPrints.delete(k);else openPrints.add(k);draw();return;}
     const one=ev.target.closest('[data-group-toggle]'),every=ev.target.closest('[data-groups]');
     if(one){ev.stopPropagation();const label=one.dataset.groupToggle;if(collapsed.has(label))collapsed.delete(label);else collapsed.add(label);draw();return;}
     if(every){ev.stopPropagation();if(every.dataset.groups==='collapse')for(const band of bands)collapsed.add(band.label);else collapsed.clear();draw();return;}

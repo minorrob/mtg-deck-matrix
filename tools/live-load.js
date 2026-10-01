@@ -86,6 +86,12 @@
       ensure(typeof doc.metadata==='object'&&!Array.isArray(doc.metadata),'metadata must map card name to its workbook fields.');
       for(const [name,m] of Object.entries(doc.metadata))ensure(m&&typeof m==='object'&&!Array.isArray(m),`metadata: ${name} must be an object.`);
     }
+    /* `prints` is optional (W1): card name -> the prints of its owned copies, each with how many. */
+    if(doc.prints!==undefined){
+      ensure(doc.prints&&typeof doc.prints==='object'&&!Array.isArray(doc.prints),'prints must map card name to its prints.');
+      for(const [name,list] of Object.entries(doc.prints)){ensure(Array.isArray(list)&&list.length,`prints: ${name} needs a list of prints.`);
+        for(const p of list)ensure(p&&typeof p==='object'&&isQty(p.quantity)&&p.quantity>0&&(p.value===null||p.value===undefined||Number.isFinite(p.value)&&p.value>=0),`prints: ${name} has an invalid print.`);}
+    }
     /* `paid` is optional: a live-load written before it existed still loads. */
     if(doc.paid!==undefined&&doc.paid!==null){
       ensure(typeof doc.paid==='object'&&!Array.isArray(doc.paid),'paid must map card name to the price paid per copy.');
@@ -195,6 +201,27 @@
     }
     for(const [name,qty,forId] of doc.owned.bench)lot(idOf(name),qty,'owned',{kind:'bench',box:''},'',forId?groupOf[forId]:'');
     for(const [name,qty,forId] of doc.ordered)lot(idOf(name),qty,'ordered',null,'',forId?groupOf[forId]:'');
+    /* PRINTS (W1). Each owned copy wears the print it is. A card's copies are split by the prints the file records, the
+       dearest print first into the deck boxes and the rest to the bench (Rob, 2026-09-30: "always assume the most
+       expensive card is in the deck when there are 2 prints for the same card"); copies no print accounts for are
+       left without one. A copy carries its print's market value as `value`. */
+    for(const [name,list] of Object.entries(doc.prints||{})){
+      if(!cards.has(fold(name)))continue;
+      const cardId=idOf(name),queue=list.map(p=>({...p})).sort((a,b)=>(Number.isFinite(b.value)?b.value:-1)-(Number.isFinite(a.value)?a.value:-1));
+      const copies=state.lots.filter(l=>l.cardId===cardId&&l.source==='owned').sort((a,b)=>(a.location?.kind==='deck'?0:1)-(b.location?.kind==='deck'?0:1));
+      for(const l of copies){
+        while(l.quantity>0&&queue.length&&!l.printed){
+          const p=queue[0],take=Math.min(l.quantity,p.quantity);
+          let part=l;
+          if(take<l.quantity){part={...Model.clone(l),id:'lot:live:'+(++serial),quantity:take};l.quantity-=take;state.lots.push(part);}
+          part.printing=Model.print({series:p.series,collector:p.collector,finish:p.foil?'foil':'',artist:p.artist});
+          if(Number.isFinite(p.value))part.value=p.value;
+          part.printed=true;p.quantity-=take;if(!p.quantity)queue.shift();
+        }
+        if(!queue.length)break;
+      }
+    }
+    for(const l of state.lots)delete l.printed;
     /* Reserve bench and ordered copies for the decks that still need them, in file order:
        the first deck in the file is the first deck served. Owned before ordered, always. */
     for(const d of doc.decks){

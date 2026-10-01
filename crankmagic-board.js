@@ -116,7 +116,18 @@
   const rowShare = () => {const raw = stored(ROWS_KEY), v = Number(raw); return raw !== null && v >= ROWS[0] && v <= ROWS[1] ? v : 0.5;};
   const inRange = (v) => {const [lo, hi] = C.cardScaleRange(); return Math.min(hi, Math.max(lo, Math.round(Number(v) || 100)));};
   const scaleOf = (scope) => {const v = stored(SCALE_KEY[scope]); return v === null ? C.cardScale() : inRange(v);};
-  let drag = null;          /* a bar being dragged: {kind: "rows"|"hand", y, from, per} */
+  /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
+     past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
+     column, given to the card above its divider. */
+  const PANE_KEY = "cm-board-pane", PANE = [140, 560], MINI_AT = 300;
+  const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
+  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 168;};
+  const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
+  let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
+  /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
+  let audio = null;
+  const sound = () => audio || (audio = globalThis.CrankAudio ? CrankAudio.createPlayer({storage: (() => {try {return localStorage;} catch {return null;}})()}) : null);
+  const typeLineOf = (c) => {const r = c && c.name ? recordOf(c.name) : null; return (r && (r.typeLine || r.type_line)) || (c.types || []).join(" ");};
 
   /* ---- the socket ---- */
   function connect() {
@@ -150,8 +161,9 @@
      equal one is taken too, and a refusal's own view always is. */
   function adopt(next, force = false) {
     if (!force && view && next.revision < view.revision) return;
-    const before = view && view.decision && view.decision.id;
+    const before = view && view.decision && view.decision.id, was = view;
     view = next;
+    listen(was, next);
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
@@ -160,6 +172,16 @@
     skip();
     draw();
     fileResult(view);
+  }
+  /* What a view sounds like (B8): the moments between it and the last, then the bed for where the game is. Only while
+     the board is on the page and the player has pressed it once; the first view of a game is history. */
+  function listen(was, next) {
+    const a = audio;
+    if (!a || !a.isArmed() || !attached) return;
+    const over = next.status === "finished" && was && was.status !== "finished" ? (next.result && next.result.winner === next.seatId ? "won" : "lost") : null;
+    for (const slug of CrankAudio.momentsFor(was && was.matchId === next.matchId ? was : null, next, {seat: next.seat, typeLineOf, over})) a.play(slug);
+    const bed = CrankAudio.bedFor(next, next.seat);
+    if (bed) a.startBgm(bed);
   }
   /* SKIP TO END: your priority is passed for you through the rest of this turn. It stops by itself when the turn
      ends, when anything is on the stack (a spell you may want to answer), or when the room asks you something
@@ -265,6 +287,10 @@
     }
     return SEAT_COLORS[i % 4];
   };
+  /* THE CARD BACKS (item 20): Rob's five, tan the universal one, a seat's following its color. */
+  const BACKS = {W: "tan", U: "blue", B: "black", R: "red", G: "green"};
+  const backOf = (i) => {const m = /--mana-([WUBRG])/.exec(seatColor(i)); return m ? BACKS[m[1]] : "tan";};
+  const backStyle = (i) => `--back-img:url(assets/crankmagic/card-back-${backOf(i)}.webp)`;
   function vitals(p, {big = false, button = true} = {}) {
     const h = p.health, from = Object.entries(h.commanderDamage || {}).map(([id, n]) => ({seat: commanderSeat(id), n}));
     const danger = h.life <= 10 || h.poison >= 7 || from.some((f) => f.n >= 15);
@@ -372,10 +398,18 @@
     return `<div class="cm-board-menu" role="menu" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}</div>
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
+      ${soundMenu()}
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
 
+  /* The sound (B8; the pack's three ui rows): the effects and the music, each a slider, and a mute. */
+  function soundMenu() {
+    const a = sound();
+    if (!a) return "";
+    const v = a.volumes(), row = (bus, label) => `<label class="cm-board-sound"><span>${label}</span><input type="range" min="0" max="100" step="1" value="${Math.round(v[bus] * 100)}" data-board-sound="${bus}" aria-label="${label} volume" aria-valuetext="${Math.round(v[bus] * 100)}%"><output>${Math.round(v[bus] * 100)}%</output></label>`;
+    return `<div class="cm-board-sounds" role="group" aria-label="Sound"><h3>Sound</h3>${row("sfx", "Effects")}${row("bgm", "Music")}${b(v.muted ? "Sound off · turn on" : "Mute", "board-mute", {}, false, {cls: `compact${v.muted ? " is-on" : ""}`})}${a.isArmed() ? "" : `<p class="cm-muted">Sound starts at your first click on the board.</p>`}</div>`;
+  }
   /* ---- THE PLAYMAT, one component at four sizes ----
      focus  the Focus view's board: zone frames, labels, the History band, the step ribbon on your own board
      table  the Table view's four: the same frames at a small size, the header on the outer edge, ⤢ Focus
@@ -398,7 +432,7 @@
     const [lo, hi] = C.cardScaleRange(), v = scaleOf(scope);
     return `<label class="cm-board-scale"><span>${e(label)}</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-board-scale="${scope}" aria-label="${e(label)}" aria-valuetext="${v}%"><output>${v}%</output></label>`;
   }
-  const grip = (kind, label, now, [lo, hi]) => `<span class="cm-board-grip" role="separator" aria-orientation="horizontal" tabindex="0" data-drag="${kind}" aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
+  const grip = (kind, label, now, [lo, hi], orient = "horizontal") => `<span class="cm-board-grip${orient === "vertical" ? " is-upright" : ""}" role="separator" aria-orientation="${orient}" tabindex="0" data-drag="${kind}" aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
   /* A card-shaped zone: the top card (or the back of the library, its count on it), the name and the count below. */
   function pile(label, zone, top, {back = false} = {}) {
     const face = top ? card(top) : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
@@ -428,7 +462,7 @@
         ${pile("Library", z.Library, null, {back: true})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
       </div>`;
     const cls = `cm-mat ${size === "focus" ? "cm-board-mat" : "cm-seatboard"}${you ? " is-you" : ""}${head === "bottom" ? " is-bottom" : ""}${bare ? " is-bare" : ""}${active ? " is-active" : ""}`;
-    return `<section class="${cls}" data-seat="${i}" data-fit="${size}" data-mat="${e(matOf(i))}" aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${head === "bottom" ? body + header : header + body}</section>`;
+    return `<section class="${cls}" data-seat="${i}" data-fit="${size}" data-mat="${e(matOf(i))}" style="${backStyle(i)}" aria-label="${e(you ? "Your board" : `${p.name}'s board`)}">${head === "bottom" ? body + header : header + body}</section>`;
   }
   /* The active player's color fan, from their corner across the table (the handoff's tabletop). */
   const CORNER = {a: "tl", b: "tr", c: "bl", d: "br"};
@@ -476,10 +510,12 @@
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its
      bottom edge. */
+  /* A tile past MINI_AT wide is a miniature of that seat's board (item 15): the same playmat at its smallest, only to
+     look at (inert), the tile's own button over it. */
   function tile(p) {
-    const i = p.playerId, commander = commanderOf(p);
-    return `<div class="cm-board-tile${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}" data-seat="${i}" style="--seat:${seatColor(i)}">
-      <button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
+    const i = p.playerId, commander = commanderOf(p), mini = paneWidth() >= MINI_AT;
+    return `<div class="cm-board-tile${mini ? " is-mini" : ""}${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}" data-seat="${i}" style="--seat:${seatColor(i)}">
+      ${mini ? `<div class="cm-board-mini" inert>${mat(p, {size: "mini", head: "none"})}</div>` : ""}<button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
         <span class="cm-board-tile-name">${e(seatLabel(p))}</span><span class="cm-muted">${e(commander ? commander.name : "")}</span></button>
       ${vitals(p)}<span class="cm-board-tile-flag">${e(seatFlag(p))}</span></div>`;
   }
@@ -490,7 +526,8 @@
       : `<nav class="cm-board-pane" aria-label="Boards"><div class="cm-board-pane-head"><span>Boards</span>${ib("◂", "board-pane", "Collapse the boards", {}, {pressed: true})}</div>${players().map(tile).join("")}
         ${b("My board", "board-focus", {seat: String(view.seat)}, true)}${b("⊞ Table view", "board-view", {view: "table"})}
         <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button></nav>`;
-    return `<div class="cm-board-body">${pane}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+    const paneGrip = paneShut ? "" : `<span class="cm-board-panegrip">${grip("pane", "The boards' width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>`;
+    return `<div class="cm-board-body" style="--pane-w:${paneShut ? 44 : paneWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
@@ -513,9 +550,9 @@
       ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}` : ""}</div>`;
     return `${rail}<div class="cm-full-center">
         <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => `<div class="cm-full-other" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "opp", focusButton: true})}</div>`).join("")}</div>
-        <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${hand()}</div></div>
-      <aside class="cm-full-side" aria-label="The table"><div class="cm-full-vitals">${players().map((p) => `<div style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
-        <div id="cm-full-pick">${pickPanel()}</div>${decision()}${stack()}${historyBand(30)}</aside>`;
+        <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${viewing ? handBacks(big) : hand()}</div></div>
+      <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
+        <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${decision()}${stack()}${historyBand(30)}</aside>`;
   }
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
@@ -574,9 +611,9 @@
   function panel() {
     if (!panelOpen) return "";
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
-    return `<aside class="cm-board-panel" aria-label="Panel"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
+    return `<aside class="cm-board-panel" aria-label="Panel" style="--split:${Math.round(splitOf("panel") * 100)}%"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
       <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
-      ${stack()}
+      ${splitBar("panel")}${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
   }
 
@@ -634,15 +671,34 @@
     if (!n) return "";
     return `<span class="cm-board-tools">${b(`You can also ▾`, "board-also", {}, false, {cls: `compact${alsoOpen ? " is-on" : ""}`})}${alsoOpen ? `<div class="cm-board-menu cm-board-also" role="dialog" aria-label="What you can do">${decision()}</div>` : ""}</span>`;
   }
-  /* YOUR HAND on its slate tray: ✋ (Show hand), the count, the cards; bright = something you can do with it now. */
+  /* YOUR HAND on its slate tray (item 14): ✋ (Show hand) with the count beside it, and what is in it by type -- Land,
+     Creature, Instant (any card with flash too), Other -- each as X/Y, castable now over in hand. Castable is what the
+     decision offers for the card, the same fact that brightens it. */
+  const HAND_TYPES = ["Land", "Creature", "Instant", "Other"];
+  const handType = (c) => !c.name ? "Other" : c.types.includes("Land") ? "Land"
+    : c.types.includes("Instant") || (c.keywords || []).some((k) => /^flash$/i.test(k)) ? "Instant" : c.types.includes("Creature") ? "Creature" : "Other";
+  function handTypes(cards) {
+    const n = Object.fromEntries(HAND_TYPES.map((k) => [k, [0, 0]])), live = view.decision && !sending;
+    for (const c of cards) {const k = handType(c); n[k][1] += 1; if (live && optionsFor(c.cardId).length) n[k][0] += 1;}
+    return `<ul class="cm-board-hand-types" aria-label="Castable now, of each type in your hand">${HAND_TYPES.map((k) => `<li data-type="${k}"${n[k][0] ? ' class="is-live"' : ""} aria-label="${k}: ${n[k][0]} of ${n[k][1]} castable now"><span>${k}</span><b>${n[k][0]}/${n[k][1]}</b></li>`).join("")}</ul>`;
+  }
   function hand() {
     const mine = players()[view.seat];
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
     const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag to resize the boards, or use the arrow keys", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
-    return `<section class="cm-board-hand" aria-label="Your hand">${bar}<h3><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><span class="cm-board-hand-title">Hand · ${cards.length}</span>${view.decision ? `<span class="cm-muted">Bright = you can use it now</span>` : ""}</h3>
+    return `<section class="cm-board-hand" aria-label="Your hand">${bar}<div class="cm-board-hand-side"><span class="cm-board-hand-head"><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><b class="cm-board-hand-count" aria-label="${cards.length} ${cards.length === 1 ? "card" : "cards"} in your hand">${cards.length}</b></span>${handTypes(cards)}</div>
       <div class="cm-board-hand-cards cm-board-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
   }
+  /* ROTATED TO ANOTHER SEAT (item 20): their hand on the tray as the backs of their cards, in their color. The room
+     sends another seat's hand as a count, and a count is all this draws. */
+  function handBacks(p) {
+    const n = p.zones.Hand.count;
+    return `<section class="cm-board-hand is-backs" aria-label="${e(p.name)}'s hand, ${n} ${n === 1 ? "card" : "cards"}" style="${backStyle(p.playerId)}"><div class="cm-board-hand-side"><span class="cm-board-hand-head"><b class="cm-board-hand-count">${n}</b></span><span class="cm-board-hand-whose">${e(p.name)}'s hand</span></div>
+      <div class="cm-board-hand-cards cm-board-cards">${Array.from({length: n}, () => `<div class="cm-bcard is-back" aria-hidden="true"></div>`).join("")}</div></section>`;
+  }
+  /* The bar under a card to read (item 18): dragged, the card takes more of the column or less, the rest below. */
+  const splitBar = (k) => `<div class="cm-board-splitbar">${grip(k, "The card's share of the column: drag, or use the arrow keys", Math.round(splitOf(k) * 100), [SPLIT[0] * 100, SPLIT[1] * 100])}</div>`;
   /* SHOW HAND (the handoff's two states). Contemplate: the board dims and the hand fans in an arc, 170px cards
      turned 5° apiece, 132px apart. Held: the card chosen floats at 190px in a brass ring with what it can do,
      the rest waiting below. Nothing is done until a button (or Enter) says so. */
@@ -879,6 +935,11 @@
         big.style.setProperty("--full-bc-max", `${Math.max(40, Math.floor((bigBox.height - 52 - trayH - 44) / 3.2))}px`);
       }
       for (const opp of host.querySelectorAll(".cm-full-other")) opp.style.setProperty("--opp-w", `${Math.round(opp.getBoundingClientRect().width)}px`);
+      /* The card to read, the largest 5:7 its share of the column holds, what it can do under it (item 18). */
+      for (const sec of host.querySelectorAll(".cm-panel-pick, #cm-full-pick")) {
+        const box = sec.getBoundingClientRect(), opts = sec.querySelector(".cm-board-options"), room = box.height - 20 - (opts && opts.children.length ? opts.getBoundingClientRect().height + 8 : 0);
+        sec.style.setProperty("--pick-w", `${Math.max(56, Math.floor(Math.min(box.width - 20, room * 5 / 7)))}px`);
+      }
       overlap(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
@@ -954,6 +1015,33 @@
     fit();
     return share;
   }
+  /* The pane's width (item 15): the tiles grow with it, and past MINI_AT turn to miniatures, so the board is redrawn
+     when that line is crossed and only fitted otherwise. */
+  function setPane(v) {
+    const was = paneWidth() >= MINI_AT, w = Math.min(PANE[1], Math.max(PANE[0], Math.round(v)));
+    keep(PANE_KEY, w);
+    if (was !== (w >= MINI_AT)) {render(); refocus("pane");}
+    else {
+      const body = document.querySelector("#cm-board .cm-board-body");
+      if (body) body.style.setProperty("--pane-w", `${w}px`);
+      const g = document.querySelector('#cm-board [data-drag="pane"]');
+      if (g) g.setAttribute("aria-valuenow", String(w));
+      fit();
+    }
+    return w;
+  }
+  function setSplit(k, v) {
+    const share = Math.min(SPLIT[1], Math.max(SPLIT[0], Math.round(v * 1000) / 1000));
+    keep(SPLIT_KEY[k], share);
+    const col = document.querySelector(k === "panel" ? "#cm-board .cm-board-panel" : "#cm-board .cm-full-side");
+    if (col) col.style.setProperty("--split", `${Math.round(share * 100)}%`);
+    const g = document.querySelector(`#cm-board [data-drag="${k}"]`);
+    if (g) g.setAttribute("aria-valuenow", String(Math.round(share * 100)));
+    fit();
+    return share;
+  }
+  /* A redraw mid-keypress keeps the grip's focus, so the arrow keys go on working. */
+  function refocus(kind) {const g = document.querySelector(`#cm-board [data-drag="${kind}"]`); if (g && document.activeElement !== g && !drag) g.focus();}
   function watch() {
     if (observer || typeof ResizeObserver === "undefined") return;
     observer = new ResizeObserver(() => {if (view && document.getElementById("cm-board")) fit();});
@@ -987,6 +1075,7 @@
         stay, and the rail says a game is on. */
     detach() {
       attached = false;
+      if (audio) audio.stopBgm(400);
       stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
       coach.open = false; clearTimeout(coach.timer); coach.typing = false;
@@ -1000,6 +1089,7 @@
     pictureOf,
     close() {
       attached = false;
+      if (audio) audio.stopBgm(400);
       disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
@@ -1048,6 +1138,7 @@
     const d = view && view.decision;
     if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
   };
+  actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw();};
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;
     skipping = skipping === null ? view.state.turn : null;
@@ -1126,6 +1217,14 @@
     if (!el || !view) return;
     event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
   });
+  /* THE GESTURE (docs/plan-play-audio.md): the audio context is made and resumed inside the first press on the board,
+     with nothing awaited before it, or the browser refuses to play and says nothing. The bed starts with it. */
+  document.addEventListener("pointerdown", (event) => {
+    if (!view || !attached || !event.isTrusted || !event.target.closest || !event.target.closest("#cm-board")) return;
+    const a = sound();
+    if (!a || a.isArmed()) return;
+    a.arm().then((on) => {if (on && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);}});
+  }, true);
   let press = null;
   document.addEventListener("pointerdown", (event) => {
     if (event.pointerType === "mouse") return;
@@ -1248,6 +1347,13 @@
   document.addEventListener("input", (event) => {
     const el = event.target.closest && event.target.closest("#cm-board [data-board-scale]");
     if (el) setScale(el.dataset.boardScale, el.value);
+    const vol = event.target.closest && event.target.closest("#cm-board [data-board-sound]");
+    if (vol && sound()) {
+      const n = Math.round(sound().setBusVolume(vol.dataset.boardSound, Number(vol.value) / 100) * 100);
+      vol.setAttribute("aria-valuetext", `${n}%`);
+      const out = vol.parentElement.querySelector("output");
+      if (out) out.textContent = `${n}%`;
+    }
   });
   /* THE BARS, dragged: the one between the rows moves the share; the one atop the tray grows the hand's cards by the
      height dragged (the boards shrinking alike to leave it room). Followed on the document, so a view that arrives
@@ -1257,7 +1363,11 @@
     if (!el || !view || event.button > 0) return;
     event.preventDefault();
     const kind = el.dataset.drag, tbl = document.querySelector("#cm-board .cm-board-table");
-    if (kind === "rows") {
+    if (kind === "pane") drag = {kind, x: event.clientX, from: paneWidth()};
+    else if (kind === "panel" || kind === "side") {
+      const col = el.closest(kind === "panel" ? ".cm-board-panel" : ".cm-full-side");
+      drag = {kind, y: event.clientY, from: splitOf(kind), per: Math.max(1, col ? col.getBoundingClientRect().height : 600)};
+    } else if (kind === "rows") {
       if (!tbl) return;
       const room = tbl.getBoundingClientRect().height - (parseFloat(getComputedStyle(tbl).rowGap) || 22);
       drag = {kind, y: event.clientY, from: rowShare(), per: Math.max(1, room)};
@@ -1269,8 +1379,10 @@
   });
   document.addEventListener("pointermove", (event) => {
     if (!drag) return;
+    if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
     const dy = event.clientY - drag.y;
-    if (drag.kind === "rows") setRows(drag.from + dy / drag.per);
+    if (drag.kind === "panel" || drag.kind === "side") setSplit(drag.kind, drag.from + dy / drag.per);
+    else if (drag.kind === "rows") setRows(drag.from + dy / drag.per);
     else setScale("hand", drag.from - dy / drag.per * 100);
   });
   const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
@@ -1278,10 +1390,16 @@
   document.addEventListener("pointercancel", endDrag);
   document.addEventListener("keydown", (event) => {
     const el = event.target.closest && event.target.closest("#cm-board [data-drag]");
-    if (!el || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+    if (!el) return;
+    if (el.dataset.drag === "pane") {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault(); setPane(paneWidth() + (event.key === "ArrowRight" ? 20 : -20)); return;
+    }
+    if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
     event.preventDefault();
     const up = event.key === "ArrowUp" ? 1 : -1;
-    if (el.dataset.drag === "rows") setRows(rowShare() - up * 0.02);
+    if (el.dataset.drag === "panel" || el.dataset.drag === "side") setSplit(el.dataset.drag, splitOf(el.dataset.drag) - up * 0.02);
+    else if (el.dataset.drag === "rows") setRows(rowShare() - up * 0.02);
     else setScale("hand", scaleOf("hand") + up * 5);
   });
   /* A picture that does not come leaves the card's own frame, which already names it. */
