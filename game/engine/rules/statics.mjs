@@ -18,6 +18,7 @@
 
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
+import {amountOf} from "../script/amount.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
@@ -27,6 +28,10 @@ export const STATIC_RULES = Object.freeze({
   "no-maximum-hand-size": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
+  /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
+      Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
+      is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). */
+  "this-costs-less": "rules/actions.mjs",
 });
 
 /**
@@ -51,6 +56,8 @@ export function costReduction(state, player, cardId) {
       total += ability.amount ?? 1;
     }
   }
+  for (const ability of object.abilities ?? [])
+    if (ability.kind === "static" && ability.rule === "this-costs-less") total += amountOf(state, ability.amount ?? 1, {controller: player, source: cardId});
   return total;
 }
 

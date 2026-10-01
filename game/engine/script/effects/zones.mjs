@@ -111,7 +111,10 @@ export function moveZoneAll(state, params, context) {
   const events = [];
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
-  for (const id of [...matched]) moveOne(state, id, params.to ?? "graveyard", events);
+  for (const id of [...matched]) {
+    const moved = moveOne(state, id, params.to ?? "graveyard", events);
+    if (params.tapped === true && moved !== null && state.objects[moved]?.zone === "battlefield") state.objects[moved].tapped = true;
+  }
   return events;
 }
 

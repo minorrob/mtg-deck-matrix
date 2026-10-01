@@ -87,18 +87,23 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (!Array.isArray(actions) || actions.length === 0) throw new Error("There are no legal actions to choose from");
       const land = actions.find((a) => a.kind === "play-land");
       if (land) return land;
-      const casts = actions.filter((a) => a.kind === "cast" && (!(a.targets ?? []).length || aim(view, a) > 0));
-      if (casts.length) return casts.reduce((best, a) => (manaValue(a.label) > manaValue(best.label)
-        || (manaValue(a.label) === manaValue(best.label) && aim(view, a) > aim(view, best)) ? a : best));
+      /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
+      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && (!(a.targets ?? []).length || aim(view, a) > 0));
+      const worth = (a) => manaValue(a.label) + (a.x ?? 0);
+      const best = casts.length ? casts.reduce((top, a) => (worth(a) > worth(top) || (worth(a) === worth(top) && aim(view, a) > aim(view, top)) ? a : top)) : null;
+      /* An X spell waits for every source to be tapped first, so X is as large as the mana allows. */
+      const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
+      if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
+      if (best) return best;
       /* Tap for mana only for a spell that would then fit: in its own main phase with the stack empty,
          a nonland card it holds (or its commander) costing no more than the mana it could have. */
       /* Never a source whose cost is a creature (Ashnod's Altar): the pilot does not trade its board for mana. */
       const sources = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (sources.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) {
         const could = new Set(sources.map((a) => a.objectId)).size + poolTotal(self);
-        const wanted = [...zone(self, "Hand"), ...zone(self, "Command").filter((c) => c.commander)]
-          .filter((c) => c.name && !isLand(c))
-          .some((c) => manaValue(c.name) <= could && manaValue(c.name) > poolTotal(self));
+        const spells = [...zone(self, "Hand"), ...zone(self, "Command").filter((c) => c.commander)].filter((c) => c.name && !isLand(c));
+        /* A spell with {X} wants every source tapped: X is as large as the mana (CR 107.3). */
+        const wanted = spells.some((c) => manaValue(c.name) <= could && (manaValue(c.name) > poolTotal(self) || known(c.name)?.x === true));
         if (wanted) return sources[0];
       }
       return actions.find((a) => a.kind === "pass") ?? actions[0];
