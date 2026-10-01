@@ -53,6 +53,8 @@ export const ENGINE_STATUS = Object.freeze({
     "mana-abilities",
     /* 2.4c: a trigger's targets, countering a target spell, another creature entering, and "non-" selectors. */
     "trigger-targets",
+    /* AI-3's loader: the four checks a model-written script must pass (cards/compile.mjs), and its offline run. */
+    "compile",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });
