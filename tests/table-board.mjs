@@ -52,6 +52,9 @@
  *             pile cards on top of their frames; the mana reminder below the Lands; the life counter's slices and
  *             totals at the true center; a heart and a skull in Table vitals; the board's and the hand's own card
  *             sizes, and Tools setting both.
+ *   A11y      the accessibility pass (Part 6): every word on a mat at 4.5:1 over a white mat, in Focus and Table; every
+ *             card's label saying its state; Tab walking the strip, the boards, the hand; the pop-up announced; Keys
+ *             and help from ☰; Escape closing Tools and the menu.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -679,7 +682,10 @@ try {
   const w130 = await handWidth(rob.page);
   ok(Math.abs(w130 / w100 - 1.3) < 0.02, `and Ctrl − steps it down by ten (${w130.toFixed(0)}px at 130%)`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
-  await rob.page.click("[data-action=board-tools]");
+  /* The accessibility pass: Escape closes Tools, as it closes every menu on the board. */
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator("#cm-board-tools").waitFor({state: "detached", timeout: 5000});
+  ok(true, "Escape closes Tools");
 
   /* CARD ZOOM: held under the pointer, a card shows large; a right click opens it with what it can do. */
   const robCard = rob.page.locator(".cm-board-hand .cm-bcard").first(), robCardName = (await robCard.getAttribute("aria-label")).split(/[,:]/)[0];
@@ -688,6 +694,9 @@ try {
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
   ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && Math.abs(peekBox[1] - peekBox[3]) < 2 && (await text(rob.page, "#cm-board-peek")).includes(robCardName), `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
+  /* The accessibility pass: the pop-up is said as well as shown, a polite status naming the card, its picture not read twice. */
+  const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), sr = p.querySelector(".cm-sr-only"), r = sr && sr.getBoundingClientRect(); return {role: p.getAttribute("role"), live: p.getAttribute("aria-live"), said: sr ? sr.textContent : "", hidden: !!p.querySelector("[aria-hidden=true] .cm-bcard"), tiny: !!r && r.width <= 1 && r.height <= 1};});
+  ok(peekSaid.role === "status" && peekSaid.live === "polite" && peekSaid.said === `Showing ${robCardName}` && peekSaid.hidden && peekSaid.tiny, `and a screen reader is told: "${peekSaid.said}", politely, the picture itself hidden from it (${JSON.stringify(peekSaid)})`);
   await rob.page.mouse.move(5, 5);
   await rob.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   await robCard.click({button: "right"});
@@ -743,6 +752,9 @@ try {
   await second.page.click("[data-action=board-also]");
   await second.page.locator(".cm-board-also [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
+  /* The accessibility pass: a tapped card says so. */
+  const tappedSaid = await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().getAttribute("aria-label");
+  ok(/^(Forest|Island), tapped/.test(tappedSaid), `a tapped land says so: "${tappedSaid}"`);
   /* B6: the mana in the pool, the creatures in hand are castable now, and the tray says so. */
   await second.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 10000});
   const tray2 = await trayOf(second.page, secondSeat, second === rob ? ROB : MAYA);
@@ -844,6 +856,98 @@ try {
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }
+
+  /* THE ACCESSIBILITY PASS (docs/plan-to-done-2026-09-30.md Part 6). WORDS OVER ARTWORK: a mat can be any picture, so
+     every word on one is read against the worst of them, plain white under everything the word sits on -- its own
+     backing and every one between it and the mat, their opacity counted -- and must reach 4.5:1. */
+  /* EVERY CARD SAYS ITS STATE: a creature its power and toughness. */
+  const creatureSaid = await rob.page.evaluate(() => [...document.querySelectorAll("#cm-board .cm-bcard")].map((el) => el.getAttribute("aria-label")).find((l) => /, [0-9]+\/[0-9]+/.test(l || "")) || "");
+  ok(/, [0-9]+\/[0-9]+/.test(creatureSaid), `a creature says its power and toughness: "${creatureSaid}"`);
+  const overWhite = (page) => page.evaluate(() => {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 1;
+    const cx = cv.getContext("2d", {willReadFrequently: true});
+    const rgba = (css) => {cx.clearRect(0, 0, 1, 1); cx.fillStyle = "rgb(1, 2, 3)"; cx.fillStyle = css; cx.fillRect(0, 0, 1, 1); const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data; return [r, g, b, a / 255];};
+    const over = ([r, g, b, a], [R, G, B]) => [r * a + R * (1 - a), g * a + G * (1 - a), b * a + B * (1 - a)];
+    const lum = (c) => {const [r, g, b] = c.map((v) => {v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;}); return 0.2126 * r + 0.7152 * g + 0.0722 * b;};
+    const seen = [];
+    for (const mat of document.querySelectorAll("#cm-board .cm-mat")) {
+      for (const el of mat.querySelectorAll("*")) {
+        if (el.closest(".cm-bcard, .cm-sr-only, svg") || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+        const r = el.getBoundingClientRect(), st = getComputedStyle(el);
+        if (!r.width || !r.height || st.visibility === "hidden") continue;
+        const chain = [];
+        for (let n = el; n && n !== mat; n = n.parentElement) chain.push(n);
+        const opacity = (i) => chain.slice(i).reduce((p, n) => p * Number(getComputedStyle(n).opacity), 1);
+        let base = [255, 255, 255];
+        for (let i = chain.length - 1; i >= 0; i -= 1) {const [r0, g0, b0, a0] = rgba(getComputedStyle(chain[i]).backgroundColor); base = over([r0, g0, b0, a0 * opacity(i)], base);}
+        const [r1, g1, b1, a1] = rgba(st.color), ink = over([r1, g1, b1, a1 * opacity(0)], base);
+        const L = [lum(ink), lum(base)].sort((x, y) => y - x);
+        seen.push({text: el.textContent.trim().slice(0, 24), cls: String(el.className || el.tagName).slice(0, 30), ratio: Math.round((L[0] + 0.05) / (L[1] + 0.05) * 100) / 100});
+      }
+    }
+    return seen.sort((x, y) => x.ratio - y.ratio);
+  });
+  for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
+    for (const v of ["focus", "table"]) {
+      await who.page.click(`[data-action=board-view][data-view=${v}]`);
+      await who.page.locator(v === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();
+      const words = await overWhite(who.page), low = words.filter((w) => w.ratio < 4.5), worst = (low.length ? low : words.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ");
+      ok(words.length >= 6 && words[0].ratio >= 4.5, `at ${width}, ${v === "table" ? "Table" : "Focus"}: every word on a mat reads at 4.5:1 or better over a white mat (${words.length} read; the lowest ${worst})`);
+    }
+    await who.page.click("[data-action=board-view][data-view=focus]");
+    await who.page.locator(".cm-board-mat").waitFor();
+  }
+  /* EVERY CARD SAYS ITS STATE: its name, tapped, its power and toughness, its damage and counters, as the card shows them. */
+  for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
+    const cards = await who.page.evaluate(() => [...document.querySelectorAll("#cm-board button.cm-bcard")].map((el) => {
+      const l = el.getAttribute("aria-label") || "", name = (el.querySelector(".cm-bcard-name")?.textContent || "").trim(), pt = (el.querySelector(".cm-bcard-pt")?.textContent || "").trim();
+      const marks = [...el.querySelectorAll(".cm-bcard-mark:not(.is-state)")].map((m) => m.textContent.trim());
+      return {l, tapped: el.classList.contains("is-tapped"), said: l.startsWith(name) && (!el.classList.contains("is-tapped") || /, tapped\b/.test(l)) && (!pt || l.includes(pt)) && marks.every((m) => l.includes(m))};
+    }));
+    const unsaid = cards.filter((c) => !c.said).map((c) => c.l);
+    ok(cards.length >= 8 && !unsaid.length, `at ${width} every card's label says what the card shows (${cards.length} cards${unsaid.length ? "; not said: " + unsaid.join(" | ") : ""})`);
+  }
+  /* THE TAB ORDER: the strip, then the boards, then the hand; nothing jumps the queue with a tabindex above zero. */
+  for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
+    await who.page.evaluate(() => {document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0);});
+    await who.page.evaluate(() => document.body.focus());
+    const order = [], reached = {board: new Set(), hand: new Set()};
+    for (let i = 0; i < 200; i += 1) {
+      await who.page.keyboard.press("Tab");
+      const [at, cardId] = await who.page.evaluate(() => {
+        const el = document.activeElement;
+        if (!el || el === document.body) return ["none", ""];
+        if (!el.closest("#cm-board")) return ["page", ""];
+        const at = el.closest(".cm-board-strip") ? "strip" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-pane") ? "seats" : el.closest(".cm-board-mat") ? "board" : el.closest(".cm-board-panel") ? "panel" : "other " + (el.getAttribute("aria-label") || el.className);
+        return [at, el.matches(".cm-bcard") ? el.dataset.card || "" : ""];
+      });
+      if (cardId && reached[at]) reached[at].add(cardId);
+      if (order.at(-1) !== at) order.push(at);
+      if (order.includes("hand") && at !== "hand") break;
+    }
+    const board = order.filter((r) => r !== "page" && r !== "none");
+    const runs = (r) => board.filter((x) => x === r).length;
+    const cardsIn = await who.page.evaluate(() => [".cm-board-mat", ".cm-board-hand"].map((q) => document.querySelectorAll(`${q} button.cm-bcard`).length));
+    ok(board[0] === "strip" && board.indexOf("strip") < board.indexOf("board") && board.indexOf("board") < board.indexOf("hand") && ["strip", "board", "hand"].every((r) => runs(r) === 1),
+      `at ${width} Tab walks the strip, then the boards, then the hand, each once (${board.join(" → ")})`);
+    ok(cardsIn[1] > 0 && reached.board.size === cardsIn[0] && reached.hand.size === cardsIn[1], `at ${width} and on the way it reaches every card on the mat (${reached.board.size} of ${cardsIn[0]}) and in the hand (${reached.hand.size} of ${cardsIn[1]})`);
+    eq(await who.page.evaluate(() => [...document.querySelectorAll("#cm-board [tabindex]")].filter((el) => Number(el.getAttribute("tabindex")) > 0).length), 0, `at ${width} nothing on the board takes a tabindex above zero`);
+  }
+  /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
+  await rob.page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await rob.page.click("[data-action=board-menu]");
+  await rob.page.click("#cm-board-nav [data-action=page-help]");
+  await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
+  const keys = await rob.page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents();
+  ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && ["Tab", "Space", "Enter", "Escape", "1", "9", "+", "↑", "←"].every((k) => keys.includes(k)),
+    `☰ › Keys and help opens the table's help with the keys (${[...new Set(keys)].join(" ")})`);
+  await rob.page.click("#cm-dialog [data-action=close]");
+  await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
+  await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
+  ok(await rob.page.locator("#cm-board-nav").count() === 1, "closing Help leaves the board where it was, the menu still open");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator("#cm-board-nav").waitFor({state: "detached", timeout: 5000});
+  ok(true, "and Escape closes the menu");
 
   /* B1, item 25: THE HAND IS WHOLE in every view -- Table, Focus, Full screen, and Full screen once the browser's own
      full screen is left -- at 1400 (Rob, whose browser gives the whole screen) and at 1280 (Maya, whose does not). */
