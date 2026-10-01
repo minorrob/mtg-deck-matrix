@@ -156,6 +156,7 @@ if (browser) try {
   await page.goto(`${base}/index.html#pull?deck=deck%3Alive%3AD1`);
   await page.locator("#cm-pull-free").waitFor({timeout: 30000});
   ok((await page.locator("#cm-pull-free").innerText()).includes(late.name), `Ready to add lists it under Also on your Bench: ${late.name}`);
+  await shot(page, "ready-to-add-also-on-bench-1280");
   await page.locator("#cm-pull-free").getByRole("button", {name: "Reserve them"}).click();
   await page.locator("#cm-dialog[open] button[type=submit]", {hasText: "Confirm change"}).click({timeout: 15000});
   await page.locator("#cm-pull-free").waitFor({state: "detached", timeout: 15000});
