@@ -87,6 +87,9 @@ function affects(state, effect, current, sourceController) {
   if (rule.self === true && current.id !== effect.sourceId) return false;
   /* "Equipped creature has haste": the one its source is attached to (CR 301.5). */
   if (rule.attachedBy === "self" && state.objects[effect.sourceId]?.attachedTo !== current.id) return false;
+  /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
+     time layers 6 and 7 ask. */
+  if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
   return true;
 }
 

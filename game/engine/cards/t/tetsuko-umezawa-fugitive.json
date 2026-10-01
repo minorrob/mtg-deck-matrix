@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tetsuko Umezawa, Fugitive",
+    "oracleId": "ceeeacbc-01b0-4421-aaca-2ce6cdbe45d7",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Creatures you control with power or toughness 1 or less can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control with power or toughness 1 or less can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "anyOf": [
+          {
+            "power": {
+              "max": 1
+            }
+          },
+          {
+            "toughness": {
+              "max": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

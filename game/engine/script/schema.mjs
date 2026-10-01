@@ -185,7 +185,13 @@ function checkAbility(ability, path, errors) {
       if (!ability.apply) errors.push({path: `${path}.apply`, message: "A static ability says what it does"});
     }
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
-    else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule === "spells-cost-less"});
+    /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
+       control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
+    else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    if (ability.rule === "cant-be-blocked-by") {
+      if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
+      if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
+    }
   }
 
   if (ability.kind === "replacement") {
