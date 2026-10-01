@@ -150,12 +150,13 @@
     const ready = readyNames(current);
     if (ready.length) throw Error(`The rules can't change once a seat is ready, and ${namesText(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready (an AI seat is ready once its deck is chosen, so choose AI decks after the rules), then edit the rules.`);
     const r = rulesOf(current);
-    C.modal("Table rules", `<form id="cm-table-rules-form" class="cm-table-rules-form">
+    const dialog = C.modal("Table rules", `<form id="cm-table-rules-form" class="cm-table-rules-form">
       <label>Starting life<input type="number" name="startingLife" min="1" max="999" step="1" inputmode="numeric" value="${r.startingLife}" required></label>
       <label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${r.bracketLimit === n ? " selected" : ""}>${n} or lower</option>`).join("")}</select></label>
       <p class="cm-muted">A deck above the limit is refused when it is chosen. The rules can't change once a seat is ready.</p>
       <div id="cm-table-rules-error" class="cm-note cm-warning" hidden></div>
       <div class="cm-form-footer">${b("Save the rules", "table-rules-save", {}, true)}</div></form>`);
+    dialog.classList.add("cm-table-rules-dialog");
   };
   actions["table-rules-save"] = async () => {
     const v = Object.fromEntries(new FormData(document.getElementById("cm-table-rules-form")));
