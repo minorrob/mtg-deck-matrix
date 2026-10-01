@@ -31,6 +31,7 @@ import {hashState} from "../journal.mjs";
 import {EFFECTS, NEEDS_A_DECISION} from "../script/effects/index.mjs";
 import {SELECTOR_KEYS} from "../script/filter.mjs";
 import {STATIC_RULES} from "../rules/statics.mjs";
+import {PREDEFINED_TOKENS} from "../script/effects/permanents.mjs";
 
 export const COMPILED_SCHEMA = "CrankCompiledCard@1";
 
@@ -97,7 +98,9 @@ export function oracleClauses(text) {
  */
 export function checkFidelity(script) {
   const full = normalize(String(script.oracleText ?? "").replace(/[()]/g, ""));
-  const texts = (script.abilities ?? []).map((a) => normalize(a?.text));
+  /* Both sides with the parentheses dropped: a spell's text is the card's whole text, and a reminder in the middle
+     of it (Opt's "Scry 1. (Look at ...)\nDraw a card.") is quoted with its parentheses. */
+  const texts = (script.abilities ?? []).map((a) => normalize(a?.text === undefined || a?.text === null ? a?.text : String(a.text).replace(/[()]/g, "")));
   const invented = (script.abilities ?? []).filter((a, i) => !texts[i] || !full.includes(texts[i])).map((a) => String(a?.text ?? ""));
   const unclaimed = oracleClauses(script.oracleText).filter((clause) => {
     const c = normalize(clause);
@@ -172,8 +175,13 @@ export function smokeScenario(script) {
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
   const instantSpeed = !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
+  /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
+  const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
+  const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
+  const fodderField = extra.some((a) => a?.atom === "sacrifice") ? ["Smoke Bear", "Smoke Relic"] : [];
   const steps = [];
-  if (isLand) steps.push({play: name, seat: 0});
+  /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
+  if (isLand) steps.push({play: name, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
     if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1}, {pass: 1});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
@@ -192,8 +200,8 @@ export function smokeScenario(script) {
       ...(instantSpeed ? {at: {turn: 2, phase: "MAIN1"}} : {}),
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
-        {seat: 0, zone: "battlefield", cards: lands},
-        ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
+        {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
+        ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},
       ],
@@ -259,6 +267,8 @@ export function scriptVocabulary() {
     selectorKeys: [...SELECTOR_KEYS, "anyOf (a choice of selectors, for 'any target')"],
     triggers: ["enters (who: self|another|any, filter?: selector)", "dies (who: self)", "upkeep (yours: true|false)", "end step (yours: true|false)"],
     costAtoms: ["{atom: \"{T}\"}", "{atom: \"mana\", cost: \"{1}{G}\"}", "{atom: \"payLife\", amount: n}", "{atom: \"sacrifice\", self: true}"],
+    additionalCosts: ["{atom: \"discard\"}", "{atom: \"sacrifice\", selector: {types: [\"Creature\"]}} (or anyOf)"],
+    predefinedTokens: Object.keys(PREDEFINED_TOKENS),
     staticRules: Object.keys(STATIC_RULES),
   };
 }
@@ -274,6 +284,9 @@ export function writerSystem(examples) {
     "Targets: an ability lists them in `targets` as selectors (keys: " + v.selectorKeys.join(", ") + "), and an effect names its target as {\"target\": n}: in `targets` for objects, `who` or `toPlayer` for players, `spells` for a spell to counter. \"self\" is the card itself.",
     "Activated abilities have `cost`, a list of cost atoms: " + v.costAtoms.join(", ") + ". A mana ability is activated, with `mana: true`, and its first effect is addMana with `mana` (fixed), `choice` (alternatives) or `anyColor` (true, or \"identity\" for the commander's color identity).",
     "Triggered abilities have `trigger` with `on`: " + v.triggers.join("; ") + ".",
+    "A spell whose text begins \"As an additional cost to cast this spell\" has `additionalCost`, a list of: " + v.additionalCosts.join(", ") + "; its `text` is the card's whole text.",
+    "A predefined token (" + v.predefinedTokens.join(", ") + ") is createToken with `token: {predefined: name}`.",
+    "\"Equip {N}\" is an activated ability: cost [{atom: \"mana\", cost: \"{N}\"}], timing \"sorcery\", targets [{what: \"permanent\", types: [\"Creature\"], controller: \"you\"}], effects [{effect: \"attach\", targets: {target: 0}}]. What an Equipment grants (\"Equipped creature gets +1/+1 and has haste\") is a static ability per layer whose `affects` is {what: \"permanent\", attachedBy: \"self\"}.",
     "Keyword abilities have `keyword`, lowercase (\"flying\"). Static abilities change a characteristic in a `layer` with `apply` and `affects`, or a `rule`, one of: " + v.staticRules.join(", ") + ". Replacement abilities have `watches` and `change` (\"This land enters tapped\" is watches {event: \"enters\", who: \"self\"}, change {entersTapped: true}).",
     "Use only the names above. If the card needs something not listed, write it as best the vocabulary allows and say so in `notes`; never invent a primitive.",
     "List in `crFlags` any interaction of layers (CR 613), replacement effects (CR 614), copying (CR 707) or other rule your definition depends on, as \"CR 613.1: why\". Reminder text in parentheses is not an ability.",

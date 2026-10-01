@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sodden Verdure",
+  "scenarios": [
+    {
+      "name": "Two basic lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sodden Verdure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sodden Verdure"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sodden Verdure",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sodden Verdure"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sodden Verdure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sodden Verdure"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sodden Verdure"
+        }
+      ]
+    }
+  ]
+}

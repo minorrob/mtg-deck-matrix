@@ -60,8 +60,10 @@ import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
+import {compileSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -76,6 +78,25 @@ const cardRef = (state, id) => {
 };
 
 const isLand = (object) => (object.types ?? []).includes("Land");
+
+/* A spell's additional cost (CR 601.2b, 601.2h): "As an additional cost to cast this spell, discard a card" or
+   "sacrifice a creature". The player chooses what as they cast, so each choice is its own offer, as targets are --
+   one per card that could be discarded (never the spell itself) or permanent that could be sacrificed. An additional
+   cost nobody could pay leaves the spell unoffered. */
+function additionalChoices(state, player, spellId, costs) {
+  let choices = [{}];
+  for (const atom of costs ?? []) {
+    let options = [];
+    if (atom.atom === "discard") options = cardsIn(state, "hand", player).filter((id) => id !== spellId).map((id) => ({discard: id}));
+    if (atom.atom === "sacrifice") {
+      const alternatives = Array.isArray(atom.selector?.anyOf) ? atom.selector.anyOf : [atom.selector ?? {}];
+      const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+      options = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).map((id) => ({sacrifice: id}));
+    }
+    choices = choices.flatMap((chosen) => options.filter((o) => !Object.values(chosen).includes(Object.values(o)[0])).map((o) => ({...chosen, ...o})));
+  }
+  return choices;
+}
 
 /* One offer per way to choose the targets (script/bind.mjs); a single offer, unchanged, when there are none. */
 function withTargets(state, base, ability, context) {
@@ -213,7 +234,11 @@ export function legalActions(state, player) {
     const cost = parseManaCost(object.manaCost);
     const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
     if (!payment) continue;
-    actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax}, object.spell, {controller: player, source: id}));
+    const extra = object.spell?.additionalCost ?? [];
+    const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
+    for (const costChoice of paysFor)
+      actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((x) => state.objects[x].card)} : {})},
+        object.spell, {controller: player, source: id}));
   }
 
   /* CR 602.2: a permanent's activated abilities, whenever its controller has priority; a sorcery-speed one only
@@ -269,7 +294,8 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
    across a network boundary submits a copy, not the object it was handed. */
-const targetKey = (action) => (action.targets ?? []).map((t) => `${t?.kind}:${t?.id}`).join(",");
+const targetKey = (action) => (action.targets ?? []).map((t) => `${t?.kind}:${t?.id}`).join(",")
+  + "|" + Object.entries(action.costChoice ?? {}).map(([k, v]) => `${k}:${v}`).join(",");
 const sameAction = (a, b) => a.kind === b.kind
   && (a.objectId ?? null) === (b.objectId ?? null)
   && (a.abilityId ?? null) === (b.abilityId ?? null)
@@ -290,8 +316,13 @@ const sameAction = (a, b) => a.kind === b.kind
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
   state.passes = 0;
-  events.push(...checkStateBasedActions(state));
+  /* What the action did triggers now (CR 603.2), whatever is asked next; the triggers wait to go on the stack. */
   collectTriggers(state, events);
+  /* A land that asks as it enters (a shock land) asks first: it is part of the land's entering. */
+  if (askEntering(state)) { state.priorityPlayer = null; return events; }
+  const sba = checkStateBasedActions(state);
+  events.push(...sba);
+  collectTriggers(state, sba);
   if (!state.awaiting) openTriggers(state);
   if (state.awaiting) state.priorityPlayer = null;
   else if (state.players[player].lost) {
@@ -353,6 +384,9 @@ function perform(state, player, action) {
     }));
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
     if ((ability.then ?? []).length) events.push(...runEffects(state, ability.then, {controller: player, source: action.objectId}));
+    /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
+       cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
+    if (ability.sacrificeSelf && state.objects[action.objectId]) moveOne(state, action.objectId, "graveyard", events);
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
   }
@@ -377,7 +411,17 @@ function perform(state, player, action) {
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
     const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
+    /* The additional cost chosen, paid with the rest of the cost (CR 601.2h), its cards named before they move. */
+    const extraPaid = [];
+    for (const [kind, id] of Object.entries(action.costChoice ?? {})) {
+      if (!state.objects[id]) throw new Error("That additional cost can no longer be paid");
+      extraPaid.push([kind, id]);
+    }
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets});
+    for (const [kind, id] of extraPaid) {
+      const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+      if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
+    }
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},

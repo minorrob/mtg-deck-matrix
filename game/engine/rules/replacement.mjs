@@ -133,6 +133,9 @@ function applyOne(state, {holderId, ability}, proposal) {
      of putting it there -- which is what makes it one event rather than a permanent that arrives
      and is then tapped. */
   if (ability.change?.entersTapped === true) next.tapped = true;
+  /* "As this land enters, you may pay 2 life. If you don't, it enters tapped": tapped unless paid, and the payment is
+     a question for its controller once it is there (rules/entering.mjs). */
+  if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     next.counters = {...(next.counters ?? {})};
@@ -198,7 +201,7 @@ export function enteringModifications(state, {objectId, player, types, abilities
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
-  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}};
+  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
 }
 
 /** The choice (§12.1) for CR 616.1: which applicable effect happens first. */

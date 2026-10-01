@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stormcarved Coast",
+  "scenarios": [
+    {
+      "name": "Two other lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stormcarved Coast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Stormcarved Coast"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Stormcarved Coast",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Stormcarved Coast"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stormcarved Coast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Stormcarved Coast"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Stormcarved Coast"
+        }
+      ]
+    }
+  ]
+}

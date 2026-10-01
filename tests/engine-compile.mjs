@@ -61,6 +61,11 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   eq([partial.ok, partial.invented, partial.unclaimed], [false, [], ["You lose 2 life."]],
     "and a clause no ability claims is refused on its own: the card only partly understood");
   eq(oracleClauses("Defender (This creature can't attack.)\n{T}: Add {G}."), ["Defender", "{T}: Add {G}."], "reminder text in parentheses claims nothing");
+  const opt = handOf("Opt");
+  eq([opt.abilities[0].text === opt.oracleText, checkFidelity(opt).ok], [true, true],
+    "a spell quoting the card whole, a reminder in parentheses in the middle of it, is faithful: both sides are read without the parentheses");
+  const scry2 = checkFidelity({...opt, abilities: [{...opt.abilities[0], text: opt.oracleText.replace("Scry 1.", "Scry 2.")}]});
+  eq(scry2.ok, false, "and changing a word of it is still an invention");
   eq(oracleClauses("({T}: Add {W}.)"), ["{T}: Add {W}."], "unless it is the whole line, as a basic land's ability is");
   eq(oracleClauses("Flying, double strike, vigilance"), ["Flying", "double strike", "vigilance"], "a keyword line is a clause per keyword");
 
@@ -78,6 +83,12 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   ok(zoneProblems(s).some((p) => /object 1 is in hand and battlefield/.test(p)), "the smoke game's state check finds a card in two zones");
   const lens = smokeScenario(handOf("Counterspell"));
   ok(lens.scenario.at?.turn === 2 && lens.scenario.steps[0].cast === "Smoke Sorcery", "an instant is smoked in the opponent's turn, in answer to a sorcery");
+  const handAt = (sc, seat, zone) => sc.scenario.setup.filter((e) => e.seat === seat && e.zone === zone).flatMap((e) => e.cards);
+  eq([handAt(smokeScenario(handOf("Big Score")), 0, "hand"), handAt(smokeScenario(handOf("Opt")), 0, "hand")], [["Big Score", "Smoke Charm"], ["Opt"]],
+    "a spell with a discard as an additional cost is smoked with a card to discard; one without, alone");
+  ok(["Smoke Bear", "Smoke Relic"].every((c) => handAt(smokeScenario(handOf("Deadly Dispute")), 0, "battlefield").includes(c))
+    && !handAt(smokeScenario(handOf("Opt")), 0, "battlefield").includes("Smoke Bear"), "and one that sacrifices, with a creature and an artifact of its own");
+  eq(["Big Score", "Village Rites", "Deadly Dispute"].map((n) => smokeTest(handOf(n), index.definition).played), [true, true, true], "so the smoke game casts them");
 }
 
 /* ---- the request: the engine's own vocabulary, and a schema the API accepts ---- */
@@ -87,6 +98,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   ok(examples.length >= 5 && examples.every((e) => system.includes(JSON.stringify(e.abilities))), "the writer is shown finished definitions from the directory");
   ok(["dealDamage", "counterSpell", "createToken"].every((p) => system.includes(p)) && system.includes("{\"target\": n}"), "and the engine's own primitives and binding, read off the engine");
   ok(!/surveil/.test(system), "never a primitive the engine has not built");
+  ok(system.includes("additionalCost") && ["Treasure", "Food", "Clue"].every((t) => system.includes(t)) && system.includes("attachedBy") && system.includes("\"Equip {N}\""),
+    "the writer is told how an additional cost, a predefined token and Equip are written");
   const strict = (schema) => schema.type !== "object" || (schema.additionalProperties === false && Object.values(schema.properties).every((p) => strict(p.items ?? p)));
   ok(strict(WRITER_SCHEMA) && strict(READBACK_SCHEMA), "both schemas close every object, as structured output requires (no open objects, no recursion)");
   const req = JSON.parse(writerRequest(ORACLE.get("Lightning Bolt"), ["abilities[0].text: missing"]));

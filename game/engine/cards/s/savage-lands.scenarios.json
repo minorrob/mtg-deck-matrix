@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Savage Lands",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Savage Lands"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Savage Lands"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Savage Lands"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Savage Lands"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Savage Lands"
+          },
+          "count": 3,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

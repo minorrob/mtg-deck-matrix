@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Viridescent Bog",
+  "scenarios": [
+    {
+      "name": "{1} and {T} for two colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Viridescent Bog",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Viridescent Bog"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Viridescent Bog"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "G": 1,
+            "C": 0
+          }
+        }
+      ]
+    }
+  ]
+}

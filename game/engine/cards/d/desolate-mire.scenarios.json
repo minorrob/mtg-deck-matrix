@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Desolate Mire",
+  "scenarios": [
+    {
+      "name": "{1} and {T} for two colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Desolate Mire",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Desolate Mire"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Desolate Mire"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "B": 1,
+            "C": 0
+          }
+        }
+      ]
+    }
+  ]
+}

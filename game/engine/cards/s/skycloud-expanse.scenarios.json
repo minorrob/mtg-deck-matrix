@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Skycloud Expanse",
+  "scenarios": [
+    {
+      "name": "{1} and {T} for two colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skycloud Expanse",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Skycloud Expanse"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Skycloud Expanse"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "U": 1,
+            "C": 0
+          }
+        }
+      ]
+    }
+  ]
+}

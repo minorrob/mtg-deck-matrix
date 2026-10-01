@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wooded Ridgeline",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wooded Ridgeline"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Wooded Ridgeline"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Wooded Ridgeline"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wooded Ridgeline"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Wooded Ridgeline"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

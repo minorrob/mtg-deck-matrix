@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stomping Ground",
+  "scenarios": [
+    {
+      "name": "Paid 2 life as it enters: untapped (CR 614.12)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stomping Ground"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Stomping Ground"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 2 life: Stomping Ground enters untapped",
+                  "Don't pay: Stomping Ground enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Stomping Ground",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Stomping Ground"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: tapped, and no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stomping Ground"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Stomping Ground"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Stomping Ground"
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

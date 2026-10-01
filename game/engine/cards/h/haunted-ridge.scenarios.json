@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Haunted Ridge",
+  "scenarios": [
+    {
+      "name": "Two other lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Haunted Ridge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Haunted Ridge"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Haunted Ridge",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Haunted Ridge"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Haunted Ridge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Haunted Ridge"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Haunted Ridge"
+        }
+      ]
+    }
+  ]
+}

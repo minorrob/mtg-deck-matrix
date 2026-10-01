@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blood Crypt",
+  "scenarios": [
+    {
+      "name": "Paid 2 life as it enters: untapped (CR 614.12)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blood Crypt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blood Crypt"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 2 life: Blood Crypt enters untapped",
+                  "Don't pay: Blood Crypt enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blood Crypt",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Blood Crypt"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: tapped, and no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blood Crypt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blood Crypt"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blood Crypt"
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

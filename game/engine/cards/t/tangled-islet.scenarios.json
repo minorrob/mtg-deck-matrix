@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tangled Islet",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tangled Islet"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Tangled Islet"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Tangled Islet"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Tangled Islet"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Tangled Islet"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

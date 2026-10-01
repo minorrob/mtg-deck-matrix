@@ -87,6 +87,12 @@ const FORGE_REPLACEMENT = {Moved: "replacement"};
    exists is that the engine knew the word `Flying` for a week and did nothing with it. */
 const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
 
+/* Keywords that stand for an ability rather than a behavior, built once the primitive the ability uses is. Equip is
+   "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery" (CR 702.6a): an
+   activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
+   attached to (`attachedBy`). */
+const ABILITY_KEYWORDS = {Equip: "attach"};
+
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
 function missingFor(card) {
@@ -118,6 +124,7 @@ function missingFor(card) {
     const word = normalizeKeyword(keyword);
     const known = [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === word.toLowerCase());
     if (known) continue;
+    if (ABILITY_KEYWORDS[word] && isBuilt(ABILITY_KEYWORDS[word])) continue;
     missing.push({kind: "keyword", name: keyword, why: isKeyword(word.toLowerCase()) ? "declared, no behavior" : "not declared"});
   }
   return missing;

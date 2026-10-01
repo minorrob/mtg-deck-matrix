@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Overflowing Basin",
+  "scenarios": [
+    {
+      "name": "{1} and {T} for two colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Overflowing Basin",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Overflowing Basin"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Overflowing Basin"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1,
+            "C": 0
+          }
+        }
+      ]
+    }
+  ]
+}

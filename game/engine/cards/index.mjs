@@ -83,7 +83,7 @@ function manaAbility(ability, id) {
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
-  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom))) return "unbuilt";
+  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && a.self === true))) return "unbuilt";
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
   const adds = MANA(first.mana) ? {produces: {...first.mana}}
     : Array.isArray(first.choice) && first.choice.length > 1 && first.choice.every(MANA) ? {produces: first.choice.map((m) => ({...m}))}
@@ -93,7 +93,8 @@ function manaAbility(ability, id) {
   const mana = cost.find((a) => a.atom === "mana");
   const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
-    ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {})};
+    ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
+    ...(cost.some((a) => a.atom === "sacrifice") ? {sacrificeSelf: true} : {})};
 }
 
 /**
@@ -122,7 +123,9 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
-      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects};
+      for (const atom of ability.additionalCost ?? [])
+        if (!["discard", "sacrifice"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
+      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
       return;
     }
     if (ability.kind === "keyword") {

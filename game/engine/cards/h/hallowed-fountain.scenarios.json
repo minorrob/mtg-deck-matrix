@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hallowed Fountain",
+  "scenarios": [
+    {
+      "name": "Paid 2 life as it enters: untapped (CR 614.12)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hallowed Fountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hallowed Fountain"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 2 life: Hallowed Fountain enters untapped",
+                  "Don't pay: Hallowed Fountain enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hallowed Fountain",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Hallowed Fountain"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: tapped, and no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hallowed Fountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hallowed Fountain"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hallowed Fountain"
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

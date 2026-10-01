@@ -43,6 +43,7 @@ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged} from "./statics.mjs";
+import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -209,6 +210,7 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
+  if (awaiting.kind === "entering-choice") return enteringChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
@@ -268,6 +270,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "trigger-targets") {
     const events = resolveTriggerTargets(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  if (awaiting.kind === "entering-choice") {
+    const events = resolveEnteringChoice(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }
@@ -368,13 +375,19 @@ function arrive(state, events) {
  * begins, so the creatures it killed are already gone by the time anybody could respond. */
 function grantStepPriority(state, events = []) {
   if (hasPriority(state) && !state.awaiting) {
-    events.push(...checkStateBasedActions(state));
-    /* CR 603.3: waiting triggers go on the stack the next time a player would receive priority —
-       which is here, after state-based actions, so a trigger sees a board where the dead are
-       already gone. `openTriggers` returns true when a player has more than one and has to be
-       asked for the order, and that question holds priority off until it is answered. */
+    /* What just happened triggers now (CR 603.2). A permanent that entered asking is then answered before anything
+       else happens (rules/entering.mjs). */
     collectTriggers(state, events);
-    openTriggers(state);
+    if (!askEntering(state)) {
+      const sba = checkStateBasedActions(state);
+      events.push(...sba);
+      /* CR 603.3: waiting triggers go on the stack the next time a player would receive priority —
+         which is here, after state-based actions, so a trigger sees a board where the dead are
+         already gone. `openTriggers` returns true when a player has more than one and has to be
+         asked for the order, and that question holds priority off until it is answered. */
+      collectTriggers(state, sba);
+      openTriggers(state);
+    }
   }
   /* Re-read after the above: a player can lose during their own turn, and ordering triggers can
      have set a new wait. Either way priority goes to nobody. */

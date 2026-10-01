@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Steam Vents",
+  "scenarios": [
+    {
+      "name": "Paid 2 life as it enters: untapped (CR 614.12)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Steam Vents"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Steam Vents"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 2 life: Steam Vents enters untapped",
+                  "Don't pay: Steam Vents enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Steam Vents",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Steam Vents"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: tapped, and no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Steam Vents"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Steam Vents"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Steam Vents"
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

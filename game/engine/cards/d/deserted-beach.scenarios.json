@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Deserted Beach",
+  "scenarios": [
+    {
+      "name": "Two other lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Deserted Beach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Deserted Beach"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Deserted Beach",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Deserted Beach"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Deserted Beach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Deserted Beach"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Deserted Beach"
+        }
+      ]
+    }
+  ]
+}

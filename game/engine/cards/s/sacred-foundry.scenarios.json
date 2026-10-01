@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sacred Foundry",
+  "scenarios": [
+    {
+      "name": "Paid 2 life as it enters: untapped (CR 614.12)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sacred Foundry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sacred Foundry"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 2 life: Sacred Foundry enters untapped",
+                  "Don't pay: Sacred Foundry enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sacred Foundry",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sacred Foundry"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: tapped, and no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sacred Foundry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sacred Foundry"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sacred Foundry"
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

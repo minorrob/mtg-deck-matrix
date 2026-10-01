@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jungle Shrine",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jungle Shrine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Jungle Shrine"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Jungle Shrine"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Jungle Shrine"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Jungle Shrine"
+          },
+          "count": 3,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

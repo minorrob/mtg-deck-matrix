@@ -38,6 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
+  "attachedBy",
 ]);
 
 /** What a selector can be about. */
@@ -146,6 +147,12 @@ export function compileSelector(selector) {
       const holder = controllerOf(state, id);
       if (selector.controller === "you" && holder !== chooser) return false;
       if (selector.controller === "opponent" && holder === chooser) return false;
+    }
+
+    /* "Equipped creature": the permanent the source is attached to (CR 301.5, 701.3). */
+    if (selector.attachedBy === "self") {
+      if (context.source === undefined || context.source === null) throw new Error("A selector using `attachedBy` needs the source attached to it");
+      if (state.objects[context.source]?.attachedTo !== id) return false;
     }
 
     /* CR 109.5 */

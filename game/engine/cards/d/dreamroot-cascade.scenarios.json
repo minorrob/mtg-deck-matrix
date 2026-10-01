@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dreamroot Cascade",
+  "scenarios": [
+    {
+      "name": "Two other lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dreamroot Cascade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dreamroot Cascade"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dreamroot Cascade",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Dreamroot Cascade"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dreamroot Cascade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dreamroot Cascade"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dreamroot Cascade"
+        }
+      ]
+    }
+  ]
+}

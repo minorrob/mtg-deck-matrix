@@ -1,0 +1,198 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Darksteel Plate",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Runeclaw Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Equipped at sorcery speed, the creature has what it grants; moved to another, the first loses it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Darksteel Plate",
+            "Grizzly Bears",
+            "Runeclaw Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Darksteel Plate"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Grizzly Bears"
+                ],
+                [
+                  "Runeclaw Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Darksteel Plate",
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Grizzly Bears",
+                "has": [
+                  "Indestructible"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grizzly Bears",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Runeclaw Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Darksteel Plate",
+          "targets": [
+            {
+              "card": "Runeclaw Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Runeclaw Bear",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grizzly Bears",
+            "lacks": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Runeclaw Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grizzly Bears",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not in combat: Equip is sorcery-speed (CR 702.6a)",
+      "at": {
+        "turn": 1,
+        "phase": "COMBAT_BEGIN"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Darksteel Plate",
+            "Grizzly Bears",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Darksteel Plate"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

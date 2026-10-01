@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Temple of Mystery",
+  "scenarios": [
+    {
+      "name": "It enters tapped, and its trigger scries 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Temple of Mystery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Temple of Mystery"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Temple of Mystery"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Wastes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ],
+          "extra": {
+            "toBottom": [
+              0
+            ]
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {
+            "scryedToBottom": 1
+          }
+        }
+      ]
+    }
+  ]
+}

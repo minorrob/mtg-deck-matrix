@@ -144,6 +144,19 @@ export function checkStateBasedActions(state) {
       }
     }
 
+    /* CR 704.5n: an Equipment attached to a permanent that has gone, or is no longer a creature, becomes unattached and
+       stays on the battlefield. */
+    for (const id of state.zones.battlefield) {
+      const object = state.objects[id];
+      if (object.attachedTo === null || object.attachedTo === undefined) continue;
+      const host = state.objects[object.attachedTo];
+      const equipment = (object.subtypes ?? []).includes("Equipment");
+      if (host && host.zone === "battlefield" && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))) continue;
+      if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
+      object.attachedTo = null;
+      acted = true;
+    }
+
     for (const id of [...state.zones.battlefield]) {
       const object = state.objects[id];
       /* Through the layers: a land animated this turn is a creature and dies like one, and a
