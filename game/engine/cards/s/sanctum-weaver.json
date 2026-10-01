@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sanctum Weaver",
+    "oracleId": "acfe7ec0-0606-4d5e-b1fa-25f0c7aeec47",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add X mana of any one color, where X is the number of enchantments you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add X mana of any one color, where X is the number of enchantments you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

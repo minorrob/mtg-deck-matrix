@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cabal Stronghold",
+    "oracleId": "066cd584-773c-4623-be53-8f6feda5a26a",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{3}, {T}: Add {B} for each basic Swamp you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}, {T}: Add {B} for each basic Swamp you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": {
+              "count": {
+                "controller": "you",
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ],
+                "supertypes": [
+                  "Basic"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

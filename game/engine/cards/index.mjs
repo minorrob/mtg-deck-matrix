@@ -26,6 +26,7 @@
  * A table refuses it at prepare, never on the turn it is drawn.
  */
 
+import {isCounted} from "../script/amount.mjs";
 import {validateScript} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION} from "../script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
@@ -93,7 +94,7 @@ function effectsIn(list, out = []) {
    may be {T}, mana and life; anything after the mana (a pain land's damage to you) happens with it, at once. Anything
    else that adds mana -- a sacrifice, a target, a question -- is a problem until it is built. */
 const MANA = (m) => m && typeof m === "object" && !Array.isArray(m) && Object.keys(m).length > 0
-  && Object.entries(m).every(([color, n]) => /^[WUBRGC]$/.test(color) && Number.isInteger(n) && n > 0);
+  && Object.entries(m).every(([color, n]) => /^[WUBRGC]$/.test(color) && ((Number.isInteger(n) && n > 0) || isCounted(n)));
 function manaAbility(ability, id) {
   if (ability.kind !== "activated") return null;
   const [first, ...then] = ability.effects ?? [];
@@ -158,7 +159,9 @@ export function compileScript(script) {
       if (mana) { abilities.push(mana); return; }
       for (const atom of ability.cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],
-        effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {})});
+        effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
+        /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
+        ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {})});
       return;
     }
     if (ability.kind === "triggered") {

@@ -14,7 +14,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {isBuilt} from "../game/engine/script/effects/index.mjs";
-import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, FORGE_OPTIONS} from "../game/tools/engine-constructs.mjs";
+import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -73,6 +73,19 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
     [[{kind: "option", name: "UnlessCost", why: "not built"}], []],
     "Rhystic Study's \"unless that player pays\" holds it back; a plain \"you may\" (built) does not");
   ok(inventory.top.perCard["Rhystic Study"].options.includes("UnlessCost"), "the measurement records the option on the card itself");
+}
+
+/* ---- amounts the game counts, kind by kind (batch 10) ---- */
+{
+  const kinds = section("Amounts the game counts");
+  ok(Object.keys(FORGE_COUNTS).every((k) => kinds.some((e) => e.forge === k)), "every kind of count the engine is measured against is an entry");
+  eq(kinds.find((e) => e.forge === "xPaid").status, "built", "X is a built count");
+  eq([missingFor({apis: ["LoseLife"], counts: ["Devotion"]}), missingFor({apis: ["GainLife"], counts: ["ThisTurnCast"]}), missingFor({apis: ["Draw"], counts: ["NoSuchKind"]})],
+    [[], [{kind: "count", name: "ThisTurnCast", why: "not built"}], [{kind: "count", name: "NoSuchKind", why: "unknown"}]],
+    "Gray Merchant's devotion holds nothing back; Aetherflux Reservoir's spells-cast-this-turn does, and a kind nobody listed does too");
+  eq(missingFor({apis: ["Draw"], options: ["Count"]}), [{kind: "count", name: "Count", why: "not measured by kind"}], "a card measured before kinds were is held back by any count, not waved through");
+  ok(inventory.top.perCard["Gray Merchant of Asphodel"].counts.includes("Devotion"), "the measurement records the kind on the card itself");
+  eq(section("Choices").find((e) => e.name === "A value for X").status, "built", "and a value for X is a built choice: one offer per value the pool can pay");
 }
 
 /* ---- order ---- */

@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sanctum Weaver",
+  "fixtures": {
+    "Ench": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X mana of any one color, X the enchantments Rob controls, itself among them",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sanctum Weaver",
+            "Ench",
+            "Ench"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sanctum Weaver"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "Sanctum Weaver",
+          "mana": {
+            "G": 3
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 3
+          }
+        }
+      ]
+    }
+  ]
+}

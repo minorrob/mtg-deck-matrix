@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Takenuma, Abandoned Mire",
+    "oracleId": "ac2dd694-d2f1-4025-8400-12332bdc882a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {B}.\nChannel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Channel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{B}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "costLess": {
+        "count": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

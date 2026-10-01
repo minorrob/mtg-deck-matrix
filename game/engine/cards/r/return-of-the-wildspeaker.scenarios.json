@@ -1,0 +1,164 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Return of the Wildspeaker",
+  "fixtures": {
+    "Big Beast": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Human Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Draw cards equal to the greatest power among non-Humans",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Return of the Wildspeaker"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Big Beast",
+            "Human Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Return of the Wildspeaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Draw cards equal to the greatest power among non-Human creatures you control."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "name": "Or non-Humans get +3/+3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Return of the Wildspeaker"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Big Beast",
+            "Human Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Return of the Wildspeaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Non-Human creatures you control get +3/+3 until end of turn."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Big Beast",
+            "power": 8,
+            "toughness": 8
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Human Pal",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

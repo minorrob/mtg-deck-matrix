@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Circle of Dreams Druid",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{G} for each creature Rob controls",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Circle of Dreams Druid",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Circle of Dreams Druid"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2
+          }
+        }
+      ]
+    }
+  ]
+}

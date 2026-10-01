@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cabal Stronghold",
+  "fixtures": {
+    "Murky Swamp": {
+      "types": [
+        "Land"
+      ],
+      "subtypes": [
+        "Swamp"
+      ],
+      "abilities": [
+        {
+          "id": "t-b",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{3}, {T}: {B} for each BASIC Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cabal Stronghold",
+            "Swamp",
+            "Swamp",
+            "Murky Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Murky Swamp"
+        },
+        {
+          "tap": "Cabal Stronghold",
+          "mana": {
+            "B": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2
+          }
+        }
+      ]
+    }
+  ]
+}

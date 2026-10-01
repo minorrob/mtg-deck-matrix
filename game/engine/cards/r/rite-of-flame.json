@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rite of Flame",
+    "oracleId": "8a2e53f9-8100-488f-8504-b59e9bd1cc29",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": {
+              "count": {
+                "what": "card",
+                "zone": "graveyard",
+                "named": "Rite of Flame"
+              },
+              "plus": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

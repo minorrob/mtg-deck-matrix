@@ -85,7 +85,7 @@ function entryFor(state, {objectId, cardId, name, playerId, kind, abilityId, tar
  * `permanent` says where the card goes when it resolves. It is declared at cast time because the
  * card directory does not exist until phase 2; from then on the type line answers it.
  */
-export function pushSpell(state, objectId, {controller, targets = [], permanent = false, abilityId = null} = {}) {
+export function pushSpell(state, objectId, {controller, targets = [], permanent = false, abilityId = null, x = null} = {}) {
   const object = state.objects[objectId];
   if (!object) throw new Error(`There is no object ${objectId} to cast`);
   const name = object.card;
@@ -95,6 +95,8 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
     kind: "spell", abilityId, targets,
   });
   entry.permanent = permanent === true;
+  /* The value chosen for X (CR 601.2b), part of the spell until it leaves the stack (CR 107.3a). */
+  if (x !== null) entry.x = x;
   state.stack.push(entry);
   return entry;
 }
@@ -105,7 +107,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -116,6 +118,9 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects});
   /* What a trigger is about -- the spell cast, the attacker, the player dealt damage -- for "that player" (trigger.mjs). */
   if (about) entry.about = structuredClone(about);
+  /* X chosen as it was activated (CR 602.2b); and its source as it last was, for a source the cost sacrificed. */
+  if (x !== null) entry.x = x;
+  if (lastKnown) entry.lastKnown = structuredClone(lastKnown);
   state.stack.push(entry);
   return entry;
 }
@@ -153,7 +158,9 @@ export function resolveTop(state, effect = null) {
   if (!script) return finishTop(state, entry, events, false);
 
   const source = entry.kind === "spell" ? entry.objectId : (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
-  const context = {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {})};
+  /* X (CR 107.3a): the spell's or ability's own; a permanent's ability uses the X paid to cast it (CR 107.3m). */
+  const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
+  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
@@ -198,6 +205,8 @@ function finishTop(state, entry, events, fizzled) {
         types: object.types, abilities: object.abilities})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* "When this enters, each creature gets -X/-X": the X paid stays with the permanent (CR 107.3m). */
+    if (to === "battlefield" && entry.x !== undefined) state.objects[arrived].xPaid = entry.x;
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});

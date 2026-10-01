@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shamanic Revelation",
+    "oracleId": "d1d171de-1c6d-4fb9-817a-9c689c709f3d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card for each creature you control.\nFerocious — You gain 4 life for each creature you control with power 4 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw a card for each creature you control.\nFerocious — You gain 4 life for each creature you control with power 4 or greater.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "power": {
+                "min": 4
+              }
+            },
+            "times": 4
+          }
+        }
+      ]
+    }
+  ]
+}

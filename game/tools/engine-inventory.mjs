@@ -32,7 +32,7 @@ const {buildForgeCardIndex}=await import(new URL('../contracts/forge-card-index.
 const index=buildForgeCardIndex(F);
 const BS=String.fromCharCode(92);
 function parseScript(text){
-  const out={apis:new Set(),triggers:new Set(),statics:new Set(),replacements:new Set(),keywords:new Set(),costs:new Set(),lines:0,params:new Set()};
+  const out={apis:new Set(),triggers:new Set(),statics:new Set(),replacements:new Set(),keywords:new Set(),costs:new Set(),lines:0,params:new Set(),amounts:new Set()};
   for(const raw of text.split(/\r?\n/)){
     const line=raw.trim(); if(!line) continue; out.lines++;
     for(const m of line.matchAll(/\b(AB|SP|DB)\$\s*([A-Za-z0-9]+)/g)) out.apis.add(m[2]);
@@ -43,6 +43,9 @@ function parseScript(text){
     if((m=line.match(/^K:([A-Za-z][A-Za-z ']*?)(?::|$| \d)/))) out.keywords.add(m[1].trim());
     for(const c of line.matchAll(/Cost\$\s*([^|]+)/g)) for(const tok of c[1].trim().split(/\s+/)){ const t=tok.replace(/<.*$/,'').replace(/^[0-9]+$/,'GENERIC').replace(/^[WUBRGCXPS]$/,'MANA').replace(/^[WUBRG]\/[WUBRGP]$/,'MANA'); if(t) out.costs.add(t);}
     for(const p of line.matchAll(/\b([A-Z][A-Za-z0-9]+)\$/g)) out.params.add(p[1]);
+    /* WHAT AN AMOUNT COUNTS, by the kind's name alone -- Valid (things matching a description), xPaid, CardCounters,
+       Devotion -- so coverage can say which counts a card needs (engine-constructs.mjs FORGE_COUNTS). */
+    for(const a of line.matchAll(/Count\$([A-Za-z]+)/g)) out.amounts.add(a[1]);
   }
   return out;
 }
@@ -53,14 +56,14 @@ const OPTION_PARAMS=new Set(['UnlessCost','Count','ConditionPresent','ConditionC
   'CheckSVar','IsPresent','SVarCompare','PresentCompare','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
   'RememberObjects','RememberChanged','Imprint']);
 function tally(pool){
-  const dims=['apis','triggers','statics','replacements','keywords','costs','params'];
+  const dims=['apis','triggers','statics','replacements','keywords','costs','params','amounts'];
   const counts=Object.fromEntries(dims.map(d=>[d,{}]));
   let vanilla=0, missing=[], perCard={};
   for(const [name,script] of pool){
     if(!script){missing.push(name);continue;}
     const p=parseScript(readFileSync(join(F,script),'utf8'));
     if(!p.apis.size&&!p.triggers.size&&!p.statics.size&&!p.replacements.size) vanilla++;
-    perCard[name]={apis:[...p.apis],triggers:[...p.triggers],statics:[...p.statics],replacements:[...p.replacements],keywords:[...p.keywords],options:[...p.params].filter(k=>OPTION_PARAMS.has(k)).sort()};
+    perCard[name]={apis:[...p.apis],triggers:[...p.triggers],statics:[...p.statics],replacements:[...p.replacements],keywords:[...p.keywords],options:[...p.params].filter(k=>OPTION_PARAMS.has(k)).sort(),counts:[...p.amounts].sort()};
     for(const d of dims) for(const v of p[d]) counts[d][v]=(counts[d][v]||0)+1;
   }
   const sorted=Object.fromEntries(dims.map(d=>[d,Object.entries(counts[d]).sort((a,b)=>b[1]-a[1])]));

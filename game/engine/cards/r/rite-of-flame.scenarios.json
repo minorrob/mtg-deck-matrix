@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rite of Flame",
+  "scenarios": [
+    {
+      "name": "{R}{R}, and {R} for each Rite of Flame in each graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rite of Flame"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rite of Flame"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rite of Flame"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Rite of Flame"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 4
+          }
+        }
+      ]
+    }
+  ]
+}

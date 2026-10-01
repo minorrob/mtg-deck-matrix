@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Krenko, Mob Boss",
+  "fixtures": {
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: X Goblins, X the Goblins Rob controls, itself among them",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Krenko, Mob Boss",
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Krenko, Mob Boss"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin",
+            "Goblin",
+            "Goblin Pal",
+            "Krenko, Mob Boss"
+          ]
+        }
+      ]
+    }
+  ]
+}

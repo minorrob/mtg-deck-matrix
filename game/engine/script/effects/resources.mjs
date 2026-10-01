@@ -88,8 +88,12 @@ export function gainLife(state, params, context) {
  */
 export function loseLife(state, params, context) {
   const events = [];
-  for (const player of playersFor(state, params.who, context.controller))
+  /* playersFor leaves out a player who has left the game (CR 800.4a): nothing is lost for them, nor gained. */
+  for (const player of playersFor(state, params.who, context.controller)) {
     changeLife(state, player, -(params.amount ?? 0), events);
+    /* "You gain life equal to the life lost this way" (script/amount.mjs lifeLostThisWay): kept with the resolution. */
+    context.lifeLost = (context.lifeLost ?? 0) + Math.max(0, params.amount ?? 0);
+  }
   return events;
 }
 

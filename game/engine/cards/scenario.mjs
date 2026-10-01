@@ -18,7 +18,7 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, optional?}
+ *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
@@ -143,6 +143,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
     /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
+    /* The value chosen for X (CR 107.3): the offer that names it. */
+    if (step.x !== undefined) found = found.filter((a) => a.x === step.x);
     /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
     for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     if (!found.length && step.optional) return;

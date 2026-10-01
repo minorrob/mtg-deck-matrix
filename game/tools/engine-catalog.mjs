@@ -33,7 +33,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 import {loadCardIndex} from "./engine-cards.mjs";
-import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
+import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, FORGE_OPTIONS, FORGE_COUNTS, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CR_INDEX = path.join(REPO, "game", "docs", "cr-index.json");
@@ -71,8 +71,8 @@ function main() {
 
   const inventory = JSON.parse(readFileSync(path.join(REPO, "game", "docs", "engine-inventory.json"), "utf8"));
   const countsOf = (scope, kind) => new Map((inventory[scope]?.counts?.[kind] ?? []).map(([name, n]) => [name, n]));
-  const TOP = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params"].map((k) => [k, countsOf("top", k)]));
-  const ALL = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params"].map((k) => [k, countsOf("forge", k)]));
+  const TOP = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params", "amounts"].map((k) => [k, countsOf("top", k)]));
+  const ALL = Object.fromEntries(["apis", "triggers", "statics", "replacements", "keywords", "costs", "params", "amounts"].map((k) => [k, countsOf("forge", k)]));
 
   /* What the most-played cards need that the engine has not got, and which of them one thing alone holds back. */
   const directory = loadCardIndex();
@@ -187,7 +187,7 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
     {name: "Additional cost: which card or permanent", rule: "601.2b", engine: "one offer per choice", status: "built"},
     {name: "Divide combat damage among blockers", rule: "510.1c", engine: "assign-combat-damage", status: "built"},
     {name: "Attackers and blockers", rule: "508.1, 509.1", engine: "declare-attackers, declare-blockers", status: "built"},
-    {name: "A value for X", rule: "107.3", engine: null, status: "missing"},
+    {name: "A value for X", rule: "107.3", engine: "one offer per value the pool can pay", status: "built"},
     {name: "Divide damage or counters as a spell resolves", rule: "601.2d", engine: null, status: "missing"},
     {name: "Choose a color, a card type or a creature type", rule: "700.2", engine: "chooseType", status: isBuilt("chooseType") ? "built" : "named"},
     {name: "Choose a player or opponent", rule: "115.1", engine: null, status: "missing"},
@@ -199,9 +199,16 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
   const options = Object.entries(FORGE_OPTIONS).map(([param, o]) => entry({kind: "option", rule: null, name: o.name, engine: o.engine ?? null, status: o.status, forge: param,
     top: TOP.params.get(param) ?? 0, all: ALL.params.get(param) ?? 0, ...byKey(`option:${param}`)}));
 
+  /* Amounts the game counts, kind by kind (engine-constructs.mjs FORGE_COUNTS): every kind Forge counts by, and any it
+     counts by that the table does not list, as missing. */
+  const countKinds = [...new Set([...Object.keys(FORGE_COUNTS), ...ALL.amounts.keys(), ...TOP.amounts.keys()])];
+  const amounts = countKinds.map((kind) => { const c = FORGE_COUNTS[kind] ?? {name: kind, status: "missing"};
+    return entry({kind: "count", rule: kind.startsWith("Devotion") ? "700.5" : kind === "xPaid" ? "107.3" : null, name: c.name, engine: c.engine ?? null, status: c.status, forge: kind,
+      top: TOP.amounts.get(kind) ?? 0, all: ALL.amounts.get(kind) ?? 0, ...byKey(`count:${kind}`)}); });
+
   const sections = [
     ["Keyword abilities (CR 702)", keywordAbilities], ["Keyword actions (CR 701)", keywordActions], ["Effects", effects], ["Triggers", triggers],
-    ["Static abilities", statics], ["Replacement effects", replacements], ["Costs", costs], ["Options and conditions", options], ["Choices", choices()], ["Other keyword constructs", keywordConstructs],
+    ["Static abilities", statics], ["Replacement effects", replacements], ["Costs", costs], ["Options and conditions", options], ["Amounts the game counts", amounts], ["Choices", choices()], ["Other keyword constructs", keywordConstructs],
   ];
   function choices() { return CHOICES; }
 

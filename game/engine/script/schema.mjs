@@ -37,6 +37,10 @@ import {compileSelector} from "./filter.mjs";
 import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES} from "../rules/statics.mjs";
+import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
+
+/* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
+const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
 
 export const SCRIPT_SCHEMA = "CrankCardScript@1";
 
@@ -74,6 +78,15 @@ function checkEffect(effect, path, errors) {
   if (!isPrimitive(name)) {
     errors.push({path, message: `${JSON.stringify(name)} is not a primitive in the catalog (§12.2)`});
     return;
+  }
+  /* A counted amount (script/amount.mjs) where an effect takes a number: "X", or one of its closed kinds. */
+  for (const key of AMOUNT_PARAMS) {
+    const value = effect[key];
+    if (value === undefined || typeof value === "number") continue;
+    /* A fact about a target ({powerOf: {target: 0}}, bind.mjs's), read as the resolution begins; anything else is a count. */
+    const keys = value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value) : [];
+    if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
+    for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
   }
   const children = COMPOSERS[name];
   if (!children) return;

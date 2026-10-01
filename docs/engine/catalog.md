@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 320 defined and playable today; 1,238 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 366 defined and playable today; 1,400 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -25,8 +25,9 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 23 | 1 | 2 | 0 | 20 |
-| Choices | 15 | 9 | 0 | 2 | 4 |
+| Options and conditions | 23 | 1 | 3 | 0 | 19 |
+| Amounts the game counts | 188 | 7 | 1 | 0 | 180 |
+| Choices | 15 | 10 | 0 | 2 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
 
 ## What to build next
@@ -35,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | An amount the game counts (X, for each, devotion, greatest power) | — | missing | 210 | 586 |
+| option | Unless a player pays | — | missing | 41 | 66 |
 | option | An intervening "if" or "activate only if": a permanent present | — | missing | 40 | 114 |
-| option | Unless a player pays | — | missing | 38 | 66 |
-| effect | CopyPermanent | copyPermanent | named | 29 | 64 |
-| keyword ability | Enchant | — | named | 29 | 60 |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 21 | 123 |
-| option | You may play or cast a card from another zone | — | missing | 18 | 99 |
-| effect | Surveil | surveil | named | 14 | 21 |
-| trigger | LifeGained | life gained | named | 13 | 18 |
-| trigger | DamageDoneOnce | damage dealt once | named | 12 | 34 |
-| option | Only once (or N times) each turn | — | missing | 12 | 29 |
-| static | CantBlockBy | — | missing | 12 | 26 |
+| keyword ability | Enchant | — | named | 36 | 60 |
+| effect | CopyPermanent | copyPermanent | named | 33 | 64 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 20 | 123 |
+| option | You may play or cast a card from another zone | — | missing | 19 | 99 |
+| trigger | AttackersDeclared | attackers declared | named | 15 | 33 |
+| effect | Surveil | surveil | named | 15 | 21 |
+| keyword construct | etbCounter | — | missing | 14 | 35 |
+| option | Only once (or N times) each turn | — | missing | 14 | 29 |
+| static | CantBlockBy | — | missing | 13 | 26 |
+| replacement | Counter | — | missing | 13 | 21 |
+| option | Remembering what an effect moved | — | missing | 12 | 124 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
-| trigger | AttackersDeclared | attackers declared | named | 11 | 33 |
-| replacement | DamageDone | — | missing | 11 | 22 |
+| effect | DamageAll | damageAll | named | 11 | 27 |
 
 ## Keyword abilities (CR 702)
 
@@ -59,7 +60,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.19 | Trample | Trample | built | 88 | 1028 | 0 | 0 |
 | 702.6 | Equip | Equip | built | 72 | 623 | 0 | 0 |
 | 702.20 | Vigilance | Vigilance | built | 61 | 748 | 0 | 0 |
-| 702.5 | Enchant | — | named | 60 | 1264 | 60 | 29 |
+| 702.5 | Enchant | — | named | 60 | 1264 | 60 | 36 |
 | 702.8 | Flash | Flash | built | 54 | 632 | 0 | 0 |
 | 702.15 | Lifelink | Lifelink | built | 49 | 384 | 0 | 0 |
 | 702.29 | Cycling | Cycling | built | 42 | 306 | 0 | 0 |
@@ -69,15 +70,15 @@ The things that alone hold back the most of the most-played cards.
 | 702.12 | Indestructible | Indestructible | built | 37 | 111 | 0 | 0 |
 | 702.17 | Reach | Reach | built | 31 | 436 | 0 | 0 |
 | 702.111 | Menace | Menace | built | 26 | 411 | 0 | 0 |
-| 702.21 | Ward | — | named | 26 | 212 | 26 | 7 |
+| 702.21 | Ward | — | named | 26 | 212 | 26 | 8 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
 | 702.34 | Flashback | — | named | 14 | 214 | 14 | 9 |
 | 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 6 |
-| 702.51 | Convoke | — | named | 11 | 106 | 11 | 1 |
-| 702.184 | Station | — | missing | 11 | 35 | 11 | 3 |
+| 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
+| 702.184 | Station | — | missing | 11 | 35 | 11 | 7 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
-| 702.73 | Changeling | — | named | 10 | 63 | 10 | 4 |
+| 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 4 |
 | 702.108 | Prowess | — | missing | 8 | 93 | 8 | 2 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 4 |
@@ -86,13 +87,13 @@ The things that alone hold back the most of the most-played cards.
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 3 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 3 |
-| 702.16 | Protection | — | named | 6 | 58 | 6 | 0 |
+| 702.16 | Protection | — | named | 6 | 58 | 6 | 1 |
 | 702.74 | Evoke | — | named | 6 | 36 | 6 | 2 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 1 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 0 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 3 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 0 |
-| 702.14 | Landwalk | — | named | 5 | 131 | 5 | 3 |
+| 702.14 | Landwalk | — | named | 5 | 131 | 5 | 2 |
 | 702.11 | Hexproof | Hexproof | built | 5 | 94 | 0 | 0 |
 | 702.41 | Affinity | — | missing | 5 | 77 | 5 | 4 |
 | 702.85 | Cascade | — | missing | 5 | 37 | 5 | 4 |
@@ -100,25 +101,25 @@ The things that alone hold back the most of the most-played cards.
 | 702.143 | Foretell | — | missing | 4 | 55 | 4 | 2 |
 | 702.90 | Infect | — | named | 4 | 45 | 4 | 2 |
 | 702.79 | Persist | — | missing | 4 | 24 | 4 | 2 |
-| 702.100 | Evolve | — | named | 4 | 23 | 4 | 0 |
+| 702.100 | Evolve | — | named | 4 | 23 | 4 | 2 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 2 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 3 |
 | 702.75 | Hideaway | — | named | 4 | 15 | 4 | 0 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
-| 702.35 | Madness | — | missing | 3 | 62 | 3 | 0 |
+| 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 2 |
 | 702.88 | Rebound | — | named | 3 | 35 | 3 | 1 |
 | 702.189 | Firebending | — | missing | 3 | 26 | 3 | 0 |
-| 702.126 | Improvise | — | missing | 3 | 24 | 3 | 1 |
+| 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
-| 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 2 |
-| 702.94 | Miracle | — | missing | 3 | 17 | 3 | 1 |
+| 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
+| 702.94 | Miracle | — | missing | 3 | 17 | 3 | 2 |
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 1 |
 | 702.89 | Umbra Armor | — | named | 3 | 15 | 3 | 0 |
 | 702.52 | Dredge | — | missing | 3 | 14 | 3 | 1 |
 | 702.37 | Morph | — | missing | 2 | 153 | 2 | 1 |
 | 702.30 | Echo | — | named | 2 | 52 | 2 | 1 |
-| 702.103 | Bestow | — | missing | 2 | 43 | 2 | 0 |
+| 702.103 | Bestow | — | missing | 2 | 43 | 2 | 1 |
 | 702.28 | Shadow | — | missing | 2 | 39 | 2 | 1 |
 | 702.83 | Exalted | — | missing | 2 | 35 | 2 | 2 |
 | 702.138 | Escape | — | named | 2 | 33 | 2 | 1 |
@@ -128,7 +129,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.63 | Vanishing | — | missing | 2 | 21 | 2 | 2 |
 | 702.134 | Mentor | — | named | 2 | 19 | 2 | 1 |
 | 702.101 | Extort | — | missing | 2 | 18 | 2 | 1 |
-| 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 1 |
+| 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 1 |
 | 702.129 | Eternalize | — | missing | 2 | 12 | 2 | 1 |
 | 702.121 | Melee | — | missing | 2 | 12 | 2 | 0 |
@@ -142,15 +143,15 @@ The things that alone hold back the most of the most-played cards.
 | 702.36 | Fear | — | missing | 1 | 40 | 1 | 0 |
 | 702.170 | Plot | — | missing | 1 | 33 | 1 | 1 |
 | 702.47 | Splice | — | missing | 1 | 30 | 1 | 1 |
-| 702.127 | Aftermath | — | missing | 1 | 27 | 1 | 0 |
+| 702.127 | Aftermath | — | missing | 1 | 27 | 1 | 1 |
 | 702.80 | Wither | — | missing | 1 | 27 | 1 | 1 |
 | 702.141 | Encore | — | named | 1 | 26 | 1 | 1 |
 | 702.110 | Exploit | — | missing | 1 | 25 | 1 | 0 |
-| 702.82 | Devour | — | missing | 1 | 24 | 1 | 0 |
+| 702.82 | Devour | — | missing | 1 | 24 | 1 | 1 |
 | 702.43 | Modular | — | missing | 1 | 24 | 1 | 1 |
 | 702.166 | Bargain | — | missing | 1 | 22 | 1 | 0 |
 | 702.109 | Dash | — | missing | 1 | 22 | 1 | 0 |
-| 702.93 | Undying | — | missing | 1 | 22 | 1 | 0 |
+| 702.93 | Undying | — | missing | 1 | 22 | 1 | 1 |
 | 702.152 | Blitz | — | missing | 1 | 19 | 1 | 0 |
 | 702.182 | Job Select | — | missing | 1 | 19 | 1 | 1 |
 | 702.102 | Fuse | — | missing | 1 | 17 | 1 | 1 |
@@ -163,7 +164,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.58 | Graft | — | missing | 1 | 13 | 1 | 1 |
 | 702.173 | Freerunning | — | missing | 1 | 12 | 1 | 0 |
 | 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 0 |
-| 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 0 |
+| 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 1 |
 | 702.137 | Spectacle | — | missing | 1 | 11 | 1 | 0 |
 | 702.76 | Prowl | — | named | 1 | 10 | 1 | 0 |
 | 702.150 | Compleated | — | missing | 1 | 7 | 1 | 0 |
@@ -264,9 +265,9 @@ The things that alone hold back the most of the most-played cards.
 | 701.6 | Counter | counterSpell | built | 48 | 517 | 0 | 0 |
 | 701.22 | Scry | scry | built | 42 | 445 | 0 | 0 |
 | 701.34 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
-| 701.18 | Play | play | named | 35 | 315 | 35 | 4 |
+| 701.18 | Play | play | named | 35 | 315 | 35 | 5 |
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
-| 701.25 | Surveil | surveil | named | 21 | 226 | 21 | 14 |
+| 701.25 | Surveil | surveil | named | 21 | 226 | 21 | 15 |
 | 701.27 | Transform | setState | named | 19 | 280 | 19 | 3 |
 | 701.14 | Fight | fight | named | 15 | 148 | 15 | 5 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
@@ -275,7 +276,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.15 | Goad | — | missing | 11 | 67 | 0 | 0 |
 | 701.66 | Earthbend | — | missing | 10 | 36 | 0 | 0 |
 | 701.47 | Amass | amass | named | 7 | 72 | 7 | 5 |
-| 701.24 | Shuffle | shuffle | named | 6 | 66 | 6 | 0 |
+| 701.24 | Shuffle | shuffle | named | 6 | 66 | 6 | 1 |
 | 701.57 | Discover | discover | named | 6 | 35 | 6 | 3 |
 | 701.65 | Airbend | — | missing | 4 | 13 | 0 | 0 |
 | 701.16 | Investigate (a Clue (CR 111.10f)) | createToken | built | 3 | 142 | 0 | 0 |
@@ -348,40 +349,40 @@ The things that alone hold back the most of the most-played cards.
 | Discard | discard | built | 70 | 1063 | 0 | 0 |
 | ChangeZoneAll | moveZoneAll | built | 67 | 585 | 0 | 0 |
 | Mill | mill | built | 65 | 582 | 0 | 0 |
-| CopyPermanent | copyPermanent | named | 64 | 353 | 64 | 29 |
+| CopyPermanent | copyPermanent | named | 64 | 353 | 64 | 33 |
 | Untap | untap | built | 61 | 474 | 0 | 0 |
 | Sacrifice | sacrifice | built | 56 | 839 | 0 | 0 |
 | Counter | counterSpell | built | 48 | 517 | 0 | 0 |
 | Animate | animate | built | 46 | 955 | 0 | 0 |
 | PutCounterAll | putCounterAll | built | 43 | 295 | 0 | 0 |
 | Scry | scry | built | 42 | 445 | 0 | 0 |
-| RepeatEach | repeatFor | named | 41 | 326 | 41 | 5 |
+| RepeatEach | repeatFor | named | 41 | 326 | 41 | 8 |
 | DestroyAll | destroyAll | built | 40 | 338 | 0 | 0 |
 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
 | DelayedTrigger | delayedTrigger | built | 37 | 447 | 0 | 0 |
-| Play | play | named | 35 | 315 | 35 | 4 |
+| Play | play | named | 35 | 315 | 35 | 5 |
 | CopySpellAbility | copySpell | named | 35 | 241 | 35 | 11 |
-| ChooseType | chooseType | named | 35 | 176 | 35 | 4 |
+| ChooseType | chooseType | named | 35 | 176 | 35 | 6 |
 | UntapAll | untapAll | built | 30 | 126 | 0 | 0 |
-| Clone | — | missing | 29 | 167 | 29 | 6 |
+| Clone | — | missing | 29 | 167 | 29 | 8 |
 | ChooseCard | chooseCard | built | 28 | 381 | 0 | 0 |
-| DamageAll | damageAll | named | 27 | 402 | 27 | 8 |
+| DamageAll | damageAll | named | 27 | 402 | 27 | 11 |
 | ReplaceEffect | effectUntil | built | 27 | 156 | 0 | 0 |
 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | AddPhase | — | missing | 24 | 58 | 24 | 9 |
 | GainControl | gainControl | named | 22 | 316 | 22 | 9 |
-| Surveil | surveil | named | 21 | 226 | 21 | 14 |
-| GenericChoice | genericChoice | named | 21 | 153 | 21 | 2 |
+| Surveil | surveil | named | 21 | 226 | 21 | 15 |
+| GenericChoice | genericChoice | named | 21 | 153 | 21 | 5 |
 | SetState | setState | named | 19 | 280 | 19 | 3 |
 | SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 5 |
-| ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 0 |
-| DigUntil | — | missing | 18 | 167 | 18 | 4 |
+| ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
+| DigUntil | — | missing | 18 | 167 | 18 | 5 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | named | 15 | 148 | 15 | 5 |
 | WinsGame | — | missing | 15 | 43 | 15 | 2 |
-| ChooseColor | — | missing | 14 | 132 | 14 | 0 |
-| Branch | branch | named | 14 | 113 | 14 | 1 |
+| ChooseColor | — | missing | 14 | 132 | 14 | 2 |
+| Branch | branch | named | 14 | 113 | 14 | 4 |
 | Regenerate | — | missing | 12 | 269 | 12 | 10 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 3 |
@@ -391,9 +392,9 @@ The things that alone hold back the most of the most-played cards.
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 4 |
 | Poison | — | missing | 11 | 36 | 11 | 5 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
-| BecomeMonarch | — | missing | 10 | 62 | 10 | 1 |
+| BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
 | ChangeTargets | — | missing | 10 | 43 | 10 | 2 |
-| Earthbend | — | missing | 10 | 36 | 10 | 2 |
+| Earthbend | — | missing | 10 | 36 | 10 | 3 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 0 |
@@ -401,7 +402,7 @@ The things that alone hold back the most of the most-played cards.
 | RollDice | — | missing | 7 | 131 | 7 | 3 |
 | Amass | amass | named | 7 | 72 | 7 | 5 |
 | StoreSVar | — | missing | 6 | 68 | 6 | 0 |
-| Shuffle | shuffle | named | 6 | 66 | 6 | 0 |
+| Shuffle | shuffle | named | 6 | 66 | 6 | 1 |
 | LosesGame | — | missing | 6 | 45 | 6 | 1 |
 | Discover | discover | named | 6 | 35 | 6 | 3 |
 | AlterAttribute | alterAttribute | named | 5 | 115 | 5 | 0 |
@@ -409,7 +410,7 @@ The things that alone hold back the most of the most-played cards.
 | Protection | — | missing | 5 | 53 | 5 | 4 |
 | MoveCounter | moveCounters | named | 5 | 32 | 5 | 2 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
-| Radiation | — | missing | 4 | 22 | 4 | 0 |
+| Radiation | — | missing | 4 | 22 | 4 | 1 |
 | Airbend | — | missing | 4 | 13 | 4 | 0 |
 | Investigate | investigate | named | 3 | 142 | 3 | 2 |
 | Connive | connive | named | 3 | 51 | 3 | 1 |
@@ -433,9 +434,9 @@ The things that alone hold back the most of the most-played cards.
 | RemoveFromCombat | — | missing | 1 | 28 | 1 | 1 |
 | MustBlock | — | missing | 1 | 26 | 1 | 0 |
 | ChangeText | — | missing | 1 | 12 | 1 | 0 |
-| Endure | — | missing | 1 | 12 | 1 | 0 |
+| Endure | — | missing | 1 | 12 | 1 | 1 |
 | GainControlVariant | — | missing | 1 | 10 | 1 | 1 |
-| ProtectionAll | — | missing | 1 | 10 | 1 | 0 |
+| ProtectionAll | — | missing | 1 | 10 | 1 | 1 |
 | ControlPlayer | — | missing | 1 | 9 | 1 | 0 |
 | EndTurn | — | missing | 1 | 9 | 1 | 1 |
 | Unattach | — | missing | 1 | 8 | 1 | 0 |
@@ -531,21 +532,21 @@ The things that alone hold back the most of the most-played cards.
 | SpellCast | spell cast | built | 200 | 1360 | 0 | 0 |
 | Attacks | attacks | built | 122 | 1582 | 0 | 0 |
 | DamageDone | damage dealt | partial | 110 | 863 | 0 | 0 |
-| DamageDoneOnce | damage dealt once | named | 34 | 204 | 34 | 12 |
+| DamageDoneOnce | damage dealt once | named | 34 | 204 | 34 | 7 |
 | Drawn | drawn | built | 31 | 145 | 0 | 0 |
-| AttackersDeclared | attackers declared | named | 25 | 227 | 33 | 11 |
+| AttackersDeclared | attackers declared | named | 25 | 227 | 33 | 15 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
-| LifeGained | life gained | named | 18 | 94 | 18 | 13 |
+| LifeGained | life gained | named | 18 | 94 | 18 | 9 |
 | TapsForMana | — | missing | 18 | 64 | 18 | 4 |
 | Sacrificed | sacrificed | named | 17 | 114 | 17 | 9 |
 | Discarded | discarded | named | 17 | 76 | 19 | 8 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 5 |
-| AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 33 | 11 |
-| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 1 |
-| LifeLost | — | missing | 6 | 20 | 6 | 4 |
+| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
+| AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 33 | 15 |
+| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
+| LifeLost | — | missing | 6 | 20 | 6 | 0 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 2 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 2 |
-| Cycled | — | missing | 4 | 77 | 4 | 2 |
+| Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 0 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 1 |
@@ -560,8 +561,8 @@ The things that alone hold back the most of the most-played cards.
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 0 |
 | DiscardedAll | discarded | named | 2 | 22 | 19 | 8 |
 | DamageAll | — | missing | 2 | 9 | 2 | 1 |
-| CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 2 |
-| SearchedLibrary | — | missing | 2 | 4 | 2 | 1 |
+| CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 1 |
+| SearchedLibrary | — | missing | 2 | 4 | 2 | 2 |
 | MilledAll | — | missing | 2 | 3 | 2 | 0 |
 | TokenCreated | — | missing | 2 | 3 | 2 | 1 |
 | AttackerUnblocked | — | missing | 1 | 37 | 1 | 0 |
@@ -575,7 +576,7 @@ The things that alone hold back the most of the most-played cards.
 | MilledOnce | — | missing | 1 | 2 | 1 | 0 |
 | TapAll | — | missing | 1 | 2 | 1 | 1 |
 | AttackerUnblockedOnce | — | missing | 1 | 1 | 1 | 0 |
-| DamagePreventedOnce | — | missing | 1 | 1 | 1 | 1 |
+| DamagePreventedOnce | — | missing | 1 | 1 | 1 | 0 |
 | ManaAdded | — | missing | 1 | 1 | 1 | 0 |
 | SacrificedOnce | — | missing | 1 | 1 | 1 | 1 |
 | ChaosEnsues | — | missing | 0 | 158 | 0 | 0 |
@@ -671,23 +672,23 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
-| CantBlockBy | — | missing | 26 | 353 | 26 | 12 |
+| CantBlockBy | — | missing | 26 | 353 | 26 | 13 |
 | AlternativeCost | — | missing | 24 | 148 | 24 | 5 |
 | Panharmonicon | — | missing | 19 | 37 | 19 | 8 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
-| CastWithFlash | — | missing | 12 | 56 | 12 | 6 |
-| CantAttack | — | missing | 10 | 204 | 10 | 1 |
-| RaiseCost | — | missing | 10 | 91 | 10 | 7 |
+| CastWithFlash | — | missing | 12 | 56 | 12 | 7 |
+| CantAttack | — | missing | 10 | 204 | 10 | 2 |
+| RaiseCost | — | missing | 10 | 91 | 10 | 8 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
-| CantAttackUnless | — | missing | 7 | 26 | 7 | 5 |
+| CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
 | UntapOtherPlayer | — | missing | 7 | 15 | 7 | 7 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 2 |
 | MustAttack | — | missing | 4 | 100 | 4 | 0 |
 | CantGainLife | — | missing | 4 | 20 | 4 | 2 |
 | AttackRestrict | — | missing | 4 | 8 | 4 | 1 |
 | CombatDamageToughness | rules/statics | built | 3 | 20 | 0 | 0 |
-| ManaConvert | — | missing | 3 | 14 | 3 | 1 |
-| IgnoreLegendRule | — | missing | 3 | 11 | 3 | 0 |
+| ManaConvert | — | missing | 3 | 14 | 3 | 2 |
+| IgnoreLegendRule | — | missing | 3 | 11 | 3 | 1 |
 | UnspentMana | — | missing | 3 | 6 | 3 | 0 |
 | MinMaxBlocker | — | missing | 2 | 41 | 2 | 0 |
 | CanAttackDefender | — | missing | 2 | 32 | 2 | 2 |
@@ -696,7 +697,7 @@ The things that alone hold back the most of the most-played cards.
 | ActivateAbilityAsIfHaste | — | missing | 2 | 4 | 2 | 1 |
 | OptionalCost | — | missing | 1 | 40 | 1 | 1 |
 | OptionalAttackCost | — | missing | 1 | 28 | 1 | 0 |
-| AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 0 |
+| AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
 | CantBlockUnless | — | missing | 1 | 9 | 1 | 0 |
 | DisableTriggers | — | missing | 1 | 8 | 1 | 0 |
 | CantDraw | — | missing | 1 | 7 | 1 | 1 |
@@ -752,18 +753,18 @@ The things that alone hold back the most of the most-played cards.
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
-| DamageDone | — | missing | 22 | 209 | 22 | 11 |
-| Counter | — | missing | 21 | 110 | 21 | 11 |
+| DamageDone | — | missing | 22 | 209 | 22 | 2 |
+| Counter | — | missing | 21 | 110 | 21 | 13 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
 | AddCounter | — | missing | 15 | 30 | 15 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 3 |
-| GainLife | — | missing | 6 | 21 | 6 | 3 |
-| Untap | — | missing | 5 | 157 | 5 | 3 |
+| GainLife | — | missing | 6 | 21 | 6 | 1 |
+| Untap | — | missing | 5 | 157 | 5 | 4 |
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |
-| Mill | — | missing | 2 | 2 | 2 | 1 |
+| Mill | — | missing | 2 | 2 | 2 | 0 |
 | BeginPhase | — | missing | 1 | 21 | 1 | 0 |
 | GameLoss | — | missing | 1 | 18 | 1 | 0 |
-| LifeReduced | — | missing | 1 | 8 | 1 | 1 |
+| LifeReduced | — | missing | 1 | 8 | 1 | 0 |
 | TurnFaceUp | — | missing | 1 | 8 | 1 | 0 |
 | BeginTurn | — | missing | 1 | 5 | 1 | 0 |
 | GameWin | — | missing | 1 | 5 | 1 | 0 |
@@ -772,7 +773,7 @@ The things that alone hold back the most of the most-played cards.
 | Transform | — | missing | 1 | 4 | 1 | 0 |
 | RemoveCounter | — | missing | 1 | 2 | 1 | 0 |
 | CopySpell | — | missing | 1 | 1 | 1 | 0 |
-| Proliferate | — | missing | 1 | 1 | 1 | 1 |
+| Proliferate | — | missing | 1 | 1 | 1 | 0 |
 | Destroy | — | missing | 0 | 5 | 0 | 0 |
 | Attached | — | missing | 0 | 3 | 0 | 0 |
 | DrawCards | — | missing | 0 | 2 | 0 | 0 |
@@ -821,35 +822,228 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| An amount the game counts (X, for each, devotion, greatest power) | — | missing | 586 | 5550 | 586 | 210 |
+| An amount the game counts (X, for each, devotion, greatest power) | script/amount.mjs, by kind | partial | 586 | 5550 | 0 | 0 |
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | — | missing | 142 | 1292 | 142 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 124 | 10 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 124 | 12 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 123 | 21 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 123 | 20 |
 | An intervening "if" or "activate only if": a permanent present | — | missing | 114 | 1200 | 114 | 40 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 104 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 99 | 18 |
-| An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 0 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 99 | 19 |
+| An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 75 | 2 |
-| Unless a player pays | — | missing | 66 | 677 | 66 | 38 |
+| Unless a player pays | — | missing | 66 | 677 | 66 | 41 |
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 65 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
-| An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 6 |
+| An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
 | A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 0 |
-| Only once (or N times) each turn | — | missing | 29 | 289 | 29 | 12 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 0 |
+| Only once (or N times) each turn | — | missing | 29 | 289 | 29 | 14 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 1 |
 | Activate only during a step or phase | — | missing | 1 | 150 | 1 | 0 |
+
+## Amounts the game counts
+
+| Rule | Name | Engine | Status | Top | All | Holds back | Alone |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| — | For each permanent of a kind ("for each creature you control") | {count: selector} | partial | 244 | 1813 | 0 | 0 |
+| 107.3 | X, chosen as it is cast or activated (CR 107.3) | "X", one offer per value | built | 103 | 923 | 0 | 0 |
+| — | Damage dealt | — | missing | 56 | 373 | 56 | 9 |
+| — | Counters on this card | {countersOn, counter} | built | 33 | 288 | 0 | 0 |
+| — | Cards in a graveyard | {count: {what: "card", zone: "graveyard"}} | built | 30 | 460 | 0 | 0 |
+| — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |
+| — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
+| — | A comparison ("if you control ...") | — | missing | 17 | 146 | 17 | 10 |
+| — | CounterNum | — | missing | 16 | 32 | 16 | 0 |
+| — | Cards in a library | — | missing | 13 | 63 | 13 | 3 |
+| — | Spells cast this turn | — | missing | 12 | 139 | 12 | 2 |
+| — | Life you gained this turn | — | missing | 12 | 84 | 12 | 1 |
+| — | What entered or died this turn | — | missing | 11 | 174 | 11 | 3 |
+| 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
+| — | LifeAmount | — | missing | 11 | 38 | 11 | 0 |
+| — | Your life total | — | missing | 10 | 92 | 10 | 2 |
+| — | Amount | — | missing | 10 | 43 | 10 | 1 |
+| — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 1 |
+| — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 0 |
+| — | The monarch | — | missing | 7 | 15 | 7 | 0 |
+| 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
+| — | A number a player chose | — | missing | 5 | 77 | 5 | 0 |
+| — | Attackers declared | — | missing | 5 | 62 | 5 | 0 |
+| — | Cards in exile | — | missing | 5 | 42 | 5 | 1 |
+| — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
+| — | LifeGained | — | missing | 5 | 20 | 5 | 0 |
+| — | Whether it was kicked | — | missing | 3 | 92 | 3 | 0 |
+| — | Times kicked | — | missing | 3 | 30 | 3 | 0 |
+| — | Life your opponents lost this turn | — | missing | 3 | 26 | 3 | 0 |
+| — | An amount the trigger carries | — | missing | 3 | 21 | 3 | 1 |
+| — | Your experience counters | — | missing | 3 | 15 | 3 | 1 |
+| — | Abilities activated this turn | — | missing | 3 | 13 | 3 | 0 |
+| — | A gift promised | — | missing | 3 | 11 | 3 | 0 |
+| — | Number | — | missing | 3 | 8 | 3 | 0 |
+| — | The Urza lands | — | missing | 3 | 3 | 3 | 3 |
+| — | Morbid (a creature died this turn) | — | missing | 2 | 41 | 2 | 1 |
+| — | A number an effect remembered | — | missing | 2 | 38 | 2 | 1 |
+| — | Cards you drew this turn | — | missing | 2 | 30 | 2 | 1 |
+| — | This card's mana value | — | missing | 2 | 12 | 2 | 1 |
+| — | MostCardName | — | missing | 2 | 4 | 2 | 0 |
+| — | ValidStack | — | missing | 2 | 4 | 2 | 0 |
+| — | wasCastFromExile | — | missing | 2 | 4 | 2 | 0 |
+| — | CastTotalManaSpent | — | missing | 1 | 32 | 1 | 0 |
+| — | Colors of mana spent (converge) | — | missing | 1 | 31 | 1 | 1 |
+| — | CardToughness | — | missing | 1 | 20 | 1 | 0 |
+| — | Adamant | — | missing | 1 | 19 | 1 | 0 |
+| — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 0 |
+| — | YourTurns | — | missing | 1 | 11 | 1 | 0 |
+| — | Blessing | — | missing | 1 | 10 | 1 | 0 |
+| — | Delirium | — | missing | 1 | 9 | 1 | 0 |
+| — | AltCost | — | missing | 1 | 8 | 1 | 0 |
+| — | CreaturesAttackedThisTurn | — | missing | 1 | 7 | 1 | 0 |
+| — | MostProminentCreatureType | — | missing | 1 | 7 | 1 | 0 |
+| — | Threshold (seven cards in your graveyard) | — | missing | 1 | 7 | 1 | 1 |
+| — | IfCastInOwnMainPhase | — | missing | 1 | 6 | 1 | 0 |
+| — | ValidAll | — | missing | 1 | 6 | 1 | 0 |
+| — | Ignore | — | missing | 1 | 4 | 1 | 0 |
+| — | ManaPool | — | missing | 1 | 3 | 1 | 0 |
+| — | Num | — | missing | 1 | 3 | 1 | 0 |
+| — | Times your commander was cast from the command zone | — | missing | 1 | 3 | 1 | 1 |
+| — | ValidCommand | — | missing | 1 | 3 | 1 | 0 |
+| — | CardBasePower | — | missing | 1 | 2 | 1 | 0 |
+| — | HasPropertyHasCardsInHand | — | missing | 1 | 2 | 1 | 0 |
+| — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 0 |
+| — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 0 |
+| — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 0 |
+| — | Colors in your commanders' identity | — | missing | 1 | 1 | 1 | 1 |
+| — | FinishedEndOfTurnsThisTurn | — | missing | 1 | 1 | 1 | 0 |
+| — | NonCombatDamageThisTurn | — | missing | 1 | 1 | 1 | 0 |
+| — | Domain | — | missing | 0 | 66 | 0 | 0 |
+| — | Party | — | missing | 0 | 39 | 0 | 0 |
+| — | CardsInYourHand | — | missing | 0 | 30 | 0 | 0 |
+| — | Intensity | — | missing | 0 | 20 | 0 | 0 |
+| — | ValidBattlefield | — | missing | 0 | 17 | 0 | 0 |
+| — | Random | — | missing | 0 | 16 | 0 | 0 |
+| — | UniqueManaColorsProduced | — | missing | 0 | 15 | 0 | 0 |
+| — | Void | — | missing | 0 | 15 | 0 | 0 |
+| — | YourCountersEnergy | — | missing | 0 | 15 | 0 | 0 |
+| — | StartingPlayer | — | missing | 0 | 13 | 0 | 0 |
+| — | wasCastFromYourHandByYou | — | missing | 0 | 12 | 0 | 0 |
+| — | CountersAddedThisTurn | — | missing | 0 | 11 | 0 | 0 |
+| — | OptionalGenericCostPaid | — | missing | 0 | 11 | 0 | 0 |
+| — | Teamwork | — | missing | 0 | 11 | 0 | 0 |
+| — | wasCastFromGraveyard | — | missing | 0 | 11 | 0 | 0 |
+| — | LastStateBattlefieldWithFallback | — | missing | 0 | 8 | 0 | 0 |
+| — | LeftGraveyardThisTurn | — | missing | 0 | 8 | 0 | 0 |
+| — | LifeYouLostThisTurn | — | missing | 0 | 8 | 0 | 0 |
+| — | Result | — | missing | 0 | 8 | 0 | 0 |
+| — | TotalDamageDoneByThisTurn | — | missing | 0 | 8 | 0 | 0 |
+| — | CommittedCrimeThisTurn | — | missing | 0 | 6 | 0 | 0 |
+| — | Presence | — | missing | 0 | 6 | 0 | 0 |
+| — | TopOfLibraryCMC | — | missing | 0 | 6 | 0 | 0 |
+| — | ValidSelf | — | missing | 0 | 6 | 0 | 0 |
+| — | Bargained | — | missing | 0 | 5 | 0 | 0 |
+| — | CardNumColors | — | missing | 0 | 5 | 0 | 0 |
+| — | Landfall | — | missing | 0 | 5 | 0 | 0 |
+| — | TimesMutated | — | missing | 0 | 5 | 0 | 0 |
+| — | YourSpeed | — | missing | 0 | 5 | 0 | 0 |
+| — | ChosenSize | — | missing | 0 | 4 | 0 | 0 |
+| — | Chroma | — | missing | 0 | 4 | 0 | 0 |
+| — | Devoured | — | missing | 0 | 4 | 0 | 0 |
+| — | DifferentCounterKinds | — | missing | 0 | 4 | 0 | 0 |
+| — | DraftNotesHighest | — | missing | 0 | 4 | 0 | 0 |
+| — | Metalcraft | — | missing | 0 | 4 | 0 | 0 |
+| — | NumDamageThisTurn | — | missing | 0 | 4 | 0 | 0 |
+| — | ScryNum | — | missing | 0 | 4 | 0 | 0 |
+| — | TotalOppPoisonCounters | — | missing | 0 | 4 | 0 | 0 |
+| — | CountersRemovedThisTurn | — | missing | 0 | 3 | 0 | 0 |
+| — | EachSpentToCast | — | missing | 0 | 3 | 0 | 0 |
+| — | Foretold | — | missing | 0 | 3 | 0 | 0 |
+| — | Hellbent | — | missing | 0 | 3 | 0 | 0 |
+| — | ImprintedSize | — | missing | 0 | 3 | 0 | 0 |
+| — | LastStateGraveyardWithFallback | — | missing | 0 | 3 | 0 | 0 |
+| — | LeftBattlefieldThisTurn | — | missing | 0 | 3 | 0 | 0 |
+| — | Madness | — | missing | 0 | 3 | 0 | 0 |
+| — | OppGreatestLifeTotal | — | missing | 0 | 3 | 0 | 0 |
+| — | TotalDamageReceivedThisTurn | — | missing | 0 | 3 | 0 | 0 |
+| — | TotalManaSpent | — | missing | 0 | 3 | 0 | 0 |
+| — | ValidSideboard | — | missing | 0 | 3 | 0 | 0 |
+| — | YouSurveilThisTurn | — | missing | 0 | 3 | 0 | 0 |
+| — | DomainActivePlayer | — | missing | 0 | 2 | 0 | 0 |
+| — | EnchantedControllerCreatures | — | missing | 0 | 2 | 0 | 0 |
+| — | HasNumChosenColors | — | missing | 0 | 2 | 0 | 0 |
+| — | LastStateBattlefield | — | missing | 0 | 2 | 0 | 0 |
+| — | ManaColorsPaid | — | missing | 0 | 2 | 0 | 0 |
+| — | Night | — | missing | 0 | 2 | 0 | 0 |
+| — | NumInAllHands | — | missing | 0 | 2 | 0 | 0 |
+| — | Revolt | — | missing | 0 | 2 | 0 | 0 |
+| — | UnlockedDoors | — | missing | 0 | 2 | 0 | 0 |
+| — | YouCastThisGame | — | missing | 0 | 2 | 0 | 0 |
+| — | YouDescendedThisTurn | — | missing | 0 | 2 | 0 | 0 |
+| — | YouScryThisTurn | — | missing | 0 | 2 | 0 | 0 |
+| — | AbilityYouCtrl | — | missing | 0 | 1 | 0 | 0 |
+| — | ActivatedThisGame | — | missing | 0 | 1 | 0 | 0 |
+| — | AllFourBend | — | missing | 0 | 1 | 0 | 0 |
+| — | Bargain | — | missing | 0 | 1 | 0 | 0 |
+| — | CardNumAttacksThisGame | — | missing | 0 | 1 | 0 | 0 |
+| — | CastSinceBeginningOfYourLastTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | ChromaInGrave | — | missing | 0 | 1 | 0 | 0 |
+| — | ChromaSource | — | missing | 0 | 1 | 0 | 0 |
+| — | CrewSize | — | missing | 0 | 1 | 0 | 0 |
+| — | DamageThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | DistinctUnlockedDoors | — | missing | 0 | 1 | 0 | 0 |
+| — | DraftNotesCount | — | missing | 0 | 1 | 0 | 0 |
+| — | Emerged | — | missing | 0 | 1 | 0 | 0 |
+| — | Escaped | — | missing | 0 | 1 | 0 | 0 |
+| — | ExactManaCostGraveyard | — | missing | 0 | 1 | 0 | 0 |
+| — | FatefulHour | — | missing | 0 | 1 | 0 | 0 |
+| — | FinishedUpkeepsThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | Freerunning | — | missing | 0 | 1 | 0 | 0 |
+| — | HighestSpeed | — | missing | 0 | 1 | 0 | 0 |
+| — | ImprintedCardManaCost | — | missing | 0 | 1 | 0 | 0 |
+| — | Initiative | — | missing | 0 | 1 | 0 | 0 |
+| — | InOwnMainPhase | — | missing | 0 | 1 | 0 | 0 |
+| — | IsPrime | — | missing | 0 | 1 | 0 | 0 |
+| — | LastStateGraveyard | — | missing | 0 | 1 | 0 | 0 |
+| — | LastTurnEntered | — | missing | 0 | 1 | 0 | 0 |
+| — | LifeYourTeamGainedThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | MaxCombatDamageThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | MaxDistinctOnStack | — | missing | 0 | 1 | 0 | 0 |
+| — | MaxSameStoredRolls | — | missing | 0 | 1 | 0 | 0 |
+| — | MaxSpeed | — | missing | 0 | 1 | 0 | 0 |
+| — | NotedNumber | — | missing | 0 | 1 | 0 | 0 |
+| — | NumCombatDamageThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | NumPiledGuessedSA | — | missing | 0 | 1 | 0 | 0 |
+| — | RegeneratedThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | RememberedWithSharedCardType | — | missing | 0 | 1 | 0 | 0 |
+| — | SacrificedThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | ScryBottom | — | missing | 0 | 1 | 0 | 0 |
+| — | SearchedLibrary | — | missing | 0 | 1 | 0 | 0 |
+| — | SecondMostProminentColor | — | missing | 0 | 1 | 0 | 0 |
+| — | SingleMaxDamageThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | TotalDamageThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | TotalTurns | — | missing | 0 | 1 | 0 | 0 |
+| — | TotalValue | — | missing | 0 | 1 | 0 | 0 |
+| — | TriggeredCardManaCost | — | missing | 0 | 1 | 0 | 0 |
+| — | TriggeredManaCostDevotion | — | missing | 0 | 1 | 0 | 0 |
+| — | TriggeredPayingMana | — | missing | 0 | 1 | 0 | 0 |
+| — | TypesSharedWith | — | missing | 0 | 1 | 0 | 0 |
+| — | wasCastFromYourHand | — | missing | 0 | 1 | 0 | 0 |
+| — | wasCastFromYourLibrary | — | missing | 0 | 1 | 0 | 0 |
+| — | xColorPaid | — | missing | 0 | 1 | 0 | 0 |
+| — | YouDrewLastTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | YouFlipThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | YourCountersRAD | — | missing | 0 | 1 | 0 | 0 |
+| — | YouRolledThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | YouRollThisTurn | — | missing | 0 | 1 | 0 | 0 |
+| — | YourStartingLibrarySize | — | missing | 0 | 1 | 0 | 0 |
 
 ## Choices
 
 | Rule | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
-| 107.3 | A value for X | — | missing | 0 | 0 | 0 | 0 |
+| 107.3 | A value for X | one offer per value the pool can pay | built | 0 | 0 | 0 | 0 |
 | 601.2b | Additional cost: which card or permanent | one offer per choice | built | 0 | 0 | 0 | 0 |
 | 508.1, 509.1 | Attackers and blockers | declare-attackers, declare-blockers | built | 0 | 0 | 0 | 0 |
 | 700.2 | Choose a color, a card type or a creature type | chooseType | named | 0 | 0 | 0 | 0 |
@@ -869,9 +1063,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 68 | 1 |
-| etbCounter | — | missing | 35 | 475 | 35 | 1 |
-| Chapter | — | missing | 19 | 236 | 19 | 5 |
+| ETBReplacement | — | missing | 68 | 408 | 68 | 3 |
+| etbCounter | — | missing | 35 | 475 | 35 | 14 |
+| Chapter | — | missing | 19 | 236 | 19 | 6 |
 | Class | — | missing | 9 | 38 | 9 | 3 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 2 |
 | MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 2 |
@@ -879,7 +1073,7 @@ The things that alone hold back the most of the most-played cards.
 | Start your engines | — | missing | 3 | 46 | 3 | 0 |
 | AlternateAdditionalCost | — | missing | 3 | 44 | 3 | 2 |
 | Protection from black | — | missing | 2 | 48 | 2 | 0 |
-| Protection from white | — | missing | 2 | 32 | 2 | 0 |
+| Protection from white | — | missing | 2 | 32 | 2 | 1 |
 | Strive | — | missing | 2 | 20 | 2 | 0 |
 | Multikicker | — | named | 2 | 19 | 2 | 0 |
 | Partner with | — | missing | 1 | 52 | 1 | 0 |

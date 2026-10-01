@@ -64,6 +64,9 @@ import {compileSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction} from "./statics.mjs";
+import {countMana, amountOf, countEffect} from "../script/amount.mjs";
+import {bindEffect} from "../script/bind.mjs";
+import {lastKnown} from "./layers.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 
@@ -137,7 +140,7 @@ function sacrificeChoices(state, player, sourceId, selector) {
 }
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 
-function costPayment(state, player, id, cost) {
+function costPayment(state, player, id, cost, x = 0, less = 0) {
   const object = state.objects[id];
   let mana = null, life = 0;
   for (const atom of cost ?? []) {
@@ -150,7 +153,11 @@ function costPayment(state, player, id, cost) {
     }
     if (atom.atom === "mana") {
       if (mana) return null;
-      mana = automaticPayment(state.players[player].manaPool, parseManaCost(atom.cost), {life: state.players[player].life});
+      const printed = parseManaCost(atom.cost);
+      /* Generic mana only, never below nothing (CR 601.2f). */
+      printed.generic -= Math.min(printed.generic, Math.max(0, less));
+      /* {X} in an ability's cost: X generic for each X symbol (CR 107.3, 602.2b). */
+      mana = automaticPayment(state.players[player].manaPool, printed, {life: state.players[player].life, x: x * printed.variable});
       if (!mana) return null;
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
@@ -174,11 +181,12 @@ export function commanderIdentity(state, player) {
   return COLORS.filter((color) => found.has(color));
 }
 
-/** What a mana ability can add, one entry per alternative (2.4b). */
-export function manaAlternatives(state, player, ability) {
-  const count = ability.count ?? 1;
-  if (Array.isArray(ability.produces)) return ability.produces.map((m) => ({...m}));
-  if (ability.produces) return [{...ability.produces}];
+/** What a mana ability can add, one entry per alternative (2.4b); a counted amount counted now ("{G} for each creature you control"). */
+export function manaAlternatives(state, player, ability, source = null) {
+  const context = {controller: player, source};
+  const count = amountOf(state, ability.count ?? 1, context);
+  if (Array.isArray(ability.produces)) return ability.produces.map((m) => countMana(state, {...m}, context));
+  if (ability.produces) return [countMana(state, {...ability.produces}, context)];
   if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
   return [];
@@ -194,6 +202,20 @@ function manaAbilityPayment(state, player, ability) {
 }
 
 const total = (mana) => Object.values(mana ?? {}).reduce((n, v) => n + v, 0);
+
+/* The values X may take for a cost with {X} (CR 107.3): nothing up to what the pool holds past the rest of the cost,
+   each X symbol taking X (CR 107.3a). A cost without X: the one null. `extra` is generic already owed (the tax). */
+function xValues(pool, cost, extra = 0) {
+  if (!cost.variable) return [null];
+  const rest = cost.symbols.filter((s) => s.kind !== "variable" && s.kind !== "generic").length + cost.generic + extra;
+  const most = Math.floor((poolSize(pool) - rest) / cost.variable);
+  return most < 0 ? [] : Array.from({length: most + 1}, (_, i) => i);
+}
+const abilityLess = (state, player, id, ability) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id}));
+function abilityXValues(state, player, ability) {
+  const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
+  return atom ? xValues(state.players[player].manaPool, parseManaCost(atom.cost)) : [null];
+}
 
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) - state.players[player].landsPlayed;
@@ -232,7 +254,7 @@ export function legalActions(state, player) {
          A land is never sick; a land animated this turn is a creature, and is. */
       if (ability.tapSelf && summoningSick(state, id)) continue;
       if (!manaAbilityPayment(state, player, ability)) continue;
-      const alternatives = manaAlternatives(state, player, ability);
+      const alternatives = manaAlternatives(state, player, ability, id);
       const fodder = ability.sacrifice ? sacrificeChoices(state, player, id, ability.sacrifice).map((x) => ({sacrifice: x})) : [null];
       for (const costChoice of fodder) alternatives.forEach((mana, produce) => actions.push({
         kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card, mana,
@@ -260,13 +282,16 @@ export function legalActions(state, player) {
       continue;
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
     const {cost, x} = castCost(state, player, id, tax);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x});
-    if (!payment) continue;
-    const extra = object.spell?.additionalCost ?? [];
-    const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
-    for (const costChoice of paysFor)
-      actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((x) => state.objects[x].card)} : {})},
-        object.spell, {controller: player, source: id}));
+    /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
+    for (const X of xValues(state.players[player].manaPool, cost, x)) {
+      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (X ?? 0) * cost.variable});
+      if (!payment) continue;
+      const extra = object.spell?.additionalCost ?? [];
+      const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
+      for (const costChoice of paysFor)
+        actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {})},
+          object.spell, {controller: player, source: id}));
+    }
   }
 
   /* CR 602.2: a permanent's activated abilities, whenever its controller has priority; a sorcery-speed one only
@@ -278,13 +303,15 @@ export function legalActions(state, player) {
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
-      const payment = costPayment(state, player, id, ability.cost);
-      if (!payment) continue;
-      const atom = sacrificeAtom(ability.cost);
-      const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((x) => ({sacrifice: x})) : [null];
-      for (const costChoice of fodder)
-        actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
-          ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {})}, ability, {controller: player, source: id}));
+      for (const X of abilityXValues(state, player, ability)) {
+        const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
+        if (!payment) continue;
+        const atom = sacrificeAtom(ability.cost);
+        const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s})) : [null];
+        for (const costChoice of fodder)
+          actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
+            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {})}, ability, {controller: player, source: id}));
+      }
     }
   }
 
@@ -295,7 +322,7 @@ export function legalActions(state, player) {
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated" || ability.zone !== "hand") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
-      const payment = costPayment(state, player, id, ability.cost);
+      const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
       if (!payment) continue;
       actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},
         ability, {controller: player, source: id}));
@@ -349,6 +376,7 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.objectId ?? null) === (b.objectId ?? null)
   && (a.abilityId ?? null) === (b.abilityId ?? null)
   && (a.produce ?? null) === (b.produce ?? null)
+  && (a.x ?? null) === (b.x ?? null)
   && targetKey(a) === targetKey(b);
 
 /**
@@ -415,7 +443,7 @@ function perform(state, player, action) {
     const object = state.objects[action.objectId];
     const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed rather than trusted, like a cast's payment: which alternative, and what it costs, now. */
-    const produced = manaAlternatives(state, player, ability)[action.produce ?? 0];
+    const produced = manaAlternatives(state, player, ability, action.objectId)[action.produce ?? 0];
     const payment = manaAbilityPayment(state, player, ability);
     if (!produced || !payment) throw new Error(`${object.card} cannot add that mana now`);
     const pool = state.players[player].manaPool;
@@ -432,7 +460,11 @@ function perform(state, player, action) {
       produced: {...produced}, source: cardRef(state, action.objectId),
     }));
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
-    if ((ability.then ?? []).length) events.push(...runEffects(state, ability.then, {controller: player, source: action.objectId}));
+    if ((ability.then ?? []).length) {
+      /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). */
+      const context = {controller: player, source: action.objectId};
+      events.push(...runEffects(state, ability.then.map((e) => countEffect(state, bindEffect(e, context), context)), context));
+    }
     /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
        cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
     if (ability.sacrificeSelf && state.objects[action.objectId]) moveOne(state, action.objectId, "graveyard", events);
@@ -450,7 +482,7 @@ function perform(state, player, action) {
     const fromCommand = object.zone === "command";
     const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
     const {cost, x} = castCost(state, player, action.objectId, tax);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x});
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (action.x ?? 0) * cost.variable});
     if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     spend(state.players[player].manaPool, payment.mana);
@@ -467,7 +499,7 @@ function perform(state, player, action) {
       if (!state.objects[id]) throw new Error("That additional cost can no longer be paid");
       extraPaid.push([kind, id]);
     }
-    const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets});
+    const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {})});
     for (const [kind, id] of extraPaid) {
       const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
@@ -491,13 +523,16 @@ function perform(state, player, action) {
     const object = state.objects[action.objectId];
     const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
-    const payment = costPayment(state, player, action.objectId, ability.cost);
+    const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
     if (!payment) throw new Error(`${object.card}'s ability cannot be paid for now`);
+    /* A source the cost sacrifices is read as it last was ("a 2/2 Spider for each counter on this creature"). */
+    const sacrificesSelf = (ability.cost ?? []).some((a) => a.atom === "sacrifice" && a.self === true);
     const card = cardRef(state, action.objectId);
     const targets = structuredClone(action.targets ?? []);
     const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
     /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
-    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability});
+    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability,
+      ...(action.x !== undefined ? {x: action.x} : {}), ...(sacrificesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text},

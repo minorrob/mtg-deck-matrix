@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Secure the Wastes",
+    "oracleId": "b2347910-d6c6-4681-8316-7ef27056485c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create X 1/1 white Warrior creature tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create X 1/1 white Warrior creature tokens.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Warrior",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Warrior"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

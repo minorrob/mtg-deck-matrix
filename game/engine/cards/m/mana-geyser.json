@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mana Geyser",
+    "oracleId": "a8dba58b-2956-492e-ae30-49db2ae68e53",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {R} for each tapped land your opponents control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {R} for each tapped land your opponents control.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": {
+              "count": {
+                "types": [
+                  "Land"
+                ],
+                "tapped": true,
+                "controller": "opponent"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

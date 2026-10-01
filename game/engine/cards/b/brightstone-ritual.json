@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brightstone Ritual",
+    "oracleId": "08e90e85-4103-4acb-a8a7-e1329b460aa7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {R} for each Goblin on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {R} for each Goblin on the battlefield.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": {
+              "count": {
+                "subtypes": [
+                  "Goblin"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

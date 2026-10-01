@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors",
+  "attachedBy", "colors", "tapped", "counters", "power", "self",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -205,6 +205,16 @@ export function compileSelector(selector) {
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue)) return false;
+    /* "Tapped land your opponents control" (CR 110.5), "creature with a +1/+1 counter on it" (CR 122.1), "power 4 or
+       greater" (through the layers), "this creature" itself. */
+    if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
+    if (selector.counters !== undefined && !((object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    if (selector.power) {
+      const power = characteristicsOf(state, id).power ?? 0;
+      if (selector.power.min !== undefined && power < selector.power.min) return false;
+      if (selector.power.max !== undefined && power > selector.power.max) return false;
+    }
+    if (selector.self === true && id !== context.source) return false;
     if (selector.target === true && !canBeTargetedBy(state, id, chooser)) return false;
 
     return true;

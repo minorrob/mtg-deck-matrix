@@ -80,7 +80,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
    built" took in Rhystic Study, which needs "unless that player pays {1}". `partial` ones are counted as there. */
 export const FORGE_OPTIONS = Object.freeze({
   UnlessCost: {name: "Unless a player pays", status: "missing"},
-  Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "missing"},
+  /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell
+     you've cast this turn" is not. */
+  Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},
   ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "missing"},
   ConditionCompare: {name: "An effect's condition: a comparison", status: "missing"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
@@ -102,6 +104,51 @@ export const FORGE_OPTIONS = Object.freeze({
   RememberObjects: {name: "Remembering an object (\"the exiled card\", \"that creature\" later)", status: "missing"},
   RememberChanged: {name: "Remembering what an effect moved", status: "missing"},
   Imprint: {name: "Imprint (a card exiled with this)", status: "missing"},
+});
+
+/* WHAT AN AMOUNT COUNTS, kind by kind (M4 phase 3, batch 10; game/engine/script/amount.mjs): the name after Forge's
+   "Count$", with what it means and where the engine stands. A card needing a kind not built is held back by it. `Valid`
+   -- things matching a description -- is partial: the engine counts by type, subtype, supertype, color, controller,
+   tapped, counters, power and name, not every description Forge can write. A kind not listed here is missing. */
+export const FORGE_COUNTS = Object.freeze({
+  Valid: {name: "For each permanent of a kind (\"for each creature you control\")", status: "partial", engine: "{count: selector}"},
+  xPaid: {name: "X, chosen as it is cast or activated (CR 107.3)", status: "built", engine: "\"X\", one offer per value"},
+  CardCounters: {name: "Counters on this card", status: "built", engine: "{countersOn, counter}"},
+  CardPower: {name: "This card's power", status: "built", engine: "{powerOf: \"self\"}"},
+  ValidHand: {name: "Cards in a hand", status: "built", engine: "{count: {what: \"card\", zone: \"hand\"}}"},
+  ValidGraveyard: {name: "Cards in a graveyard", status: "built", engine: "{count: {what: \"card\", zone: \"graveyard\"}}"},
+  ValidLibrary: {name: "Cards in a library", status: "missing"},
+  ValidExile: {name: "Cards in exile", status: "missing"},
+  Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
+  DevotionDual: {name: "Devotion to two colors (CR 700.5)", status: "built", engine: "{devotion: [color, color]}"},
+  Compare: {name: "A comparison (\"if you control ...\")", status: "missing"},
+  YourLifeTotal: {name: "Your life total", status: "missing"},
+  LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "missing"},
+  LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},
+  ThisTurnEntered: {name: "What entered or died this turn", status: "missing"},
+  ThisTurnCast: {name: "Spells cast this turn", status: "missing"},
+  ThisTurnActivated: {name: "Abilities activated this turn", status: "missing"},
+  ResolvedThisTurn: {name: "Times this resolved this turn", status: "missing"},
+  YouDrewThisTurn: {name: "Cards you drew this turn", status: "missing"},
+  RememberedSize: {name: "How many things an effect remembered", status: "missing"},
+  RememberedNumber: {name: "A number an effect remembered", status: "missing"},
+  TriggerRememberAmount: {name: "An amount the trigger carries", status: "missing"},
+  ChosenNumber: {name: "A number a player chose", status: "missing"},
+  CardManaCost: {name: "This card's mana value", status: "missing"},
+  ColorsColorIdentity: {name: "Colors in your commanders' identity", status: "missing"},
+  CommanderCastFromCommandZone: {name: "Times your commander was cast from the command zone", status: "missing"},
+  Converge: {name: "Colors of mana spent (converge)", status: "missing"},
+  Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  Morbid: {name: "Morbid (a creature died this turn)", status: "missing"},
+  UrzaLands: {name: "The Urza lands", status: "missing"},
+  Monarch: {name: "The monarch", status: "missing"},
+  YourStartingLife: {name: "Your starting life total", status: "missing"},
+  DamageAmount: {name: "Damage dealt", status: "missing"},
+  AttackersDeclared: {name: "Attackers declared", status: "missing"},
+  TimesKicked: {name: "Times kicked", status: "missing"},
+  Kicked: {name: "Whether it was kicked", status: "missing"},
+  PromisedGift: {name: "A gift promised", status: "missing"},
+  YourCountersExperience: {name: "Your experience counters", status: "missing"},
 });
 
 /* Forge's trigger modes that stand for many events, some of which the compiler builds. */
@@ -141,6 +188,12 @@ export function missingFor(card) {
   for (const option of card.options ?? []) {
     const known = FORGE_OPTIONS[option];
     if (known && known.status === "missing") missing.push({kind: "option", name: option, why: "not built"});
+  }
+  /* An amount it counts, kind by kind; a card measured before kinds were (no `counts`) is held back by any count. */
+  if (!card.counts && (card.options ?? []).includes("Count")) missing.push({kind: "count", name: "Count", why: "not measured by kind"});
+  for (const kind of card.counts ?? []) {
+    const known = FORGE_COUNTS[kind];
+    if (!known || known.status === "missing") missing.push({kind: "count", name: kind, why: known ? "not built" : "unknown"});
   }
   for (const keyword of card.keywords ?? []) {
     const word = normalizeKeyword(keyword);

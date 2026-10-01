@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kessig Wolf Run",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{X}{R}{G}: +X/+0 and trample, X chosen as it is activated",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kessig Wolf Run",
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Kessig Wolf Run"
+              },
+              "count": 3
+            }
+          ]
+        },
+        {
+          "activate": "Kessig Wolf Run",
+          "x": 2,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Trample"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Kessig Wolf Run"
+        }
+      ]
+    }
+  ]
+}

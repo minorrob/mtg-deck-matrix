@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exsanguinate",
+    "oracleId": "8164b1e8-3350-465e-8a17-75f57d326344",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each opponent loses X life. You gain life equal to the life lost this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each opponent loses X life. You gain life equal to the life lost this way.",
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": "X"
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "lifeLostThisWay": true
+          }
+        }
+      ]
+    }
+  ]
+}
