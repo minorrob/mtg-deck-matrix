@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 542 defined and playable today; 1,692 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 550 defined and playable today; 1,702 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 36 | 1 | 27 | 128 |
-| Triggers | 138 | 3 | 4 | 15 | 116 |
+| Triggers | 138 | 5 | 4 | 13 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -40,7 +40,6 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Flashback | — | named | 11 | 14 |
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
-| trigger | Discarded | discarded | named | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | Regenerate | — | missing | 10 | 12 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
+| static | Panharmonicon | — | missing | 8 | 19 |
 
 ## Keyword abilities (CR 702)
 
@@ -539,7 +539,7 @@ The things that alone hold back the most of the most-played cards.
 | LifeGained | life gained | named | 18 | 94 | 18 | 9 |
 | TapsForMana | — | missing | 18 | 64 | 18 | 6 |
 | Sacrificed | sacrificed | named | 17 | 114 | 17 | 9 |
-| Discarded | discarded | named | 17 | 76 | 19 | 10 |
+| Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
 | AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 26 | 5 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
@@ -559,7 +559,7 @@ The things that alone hold back the most of the most-played cards.
 | Blocks | blocks | named | 2 | 127 | 2 | 1 |
 | Always | — | missing | 2 | 62 | 2 | 0 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 0 |
-| DiscardedAll | discarded | named | 2 | 22 | 19 | 10 |
+| DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
 | DamageAll | — | missing | 2 | 9 | 2 | 1 |
 | CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 1 |
 | SearchedLibrary | — | missing | 2 | 4 | 2 | 2 |

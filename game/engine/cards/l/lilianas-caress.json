@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Liliana's Caress",
+    "oracleId": "a4aec0d6-13fa-4709-b1a9-2f483f032744",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent discards a card, that player loses 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent discards a card, that player loses 2 life.",
+      "trigger": {
+        "on": "discarded",
+        "discarder": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

@@ -107,8 +107,9 @@ const files = loadCardScenarios();
   };
   problem(base([{kind: "spell", text: "Separate all creatures into two piles.", effects: [{effect: "twoPiles"}]}]), /twoPiles: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
-  problem(base([{kind: "activated", text: "Discard a card: Draw a card.", cost: [{atom: "discard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
-    /discard: a cost atom nothing pays/, "a cost atom nothing pays yet");
+  /* (Batch 27 built "Discard a card"; the example of a cost nothing pays is now one that still is not.) */
+  problem(base([{kind: "activated", text: "Exile a card from your graveyard: Draw a card.", cost: [{atom: "exileFromGraveyard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
+    /exileFromGraveyard: a cost atom nothing pays/, "a cost atom nothing pays yet");
   /* Batch 8 built "whenever this attacks": it compiles now, and a trigger still unbuilt is refused by name. */
   eq(compileScript(base([{kind: "triggered", text: "Whenever this attacks, draw.", trigger: {on: "attacks"}, effects: [{effect: "draw"}]}], ["Creature"])).problems, [],
     "\"whenever this attacks\" compiles");

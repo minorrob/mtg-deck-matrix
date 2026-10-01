@@ -131,6 +131,8 @@ const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
 export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object")))
   /* "Discard this card" (cycling, CR 702.29a): a card's ability activated from its owner's hand. */
   || (atom?.atom === "discard" && atom.self === true)
+  /* "{1}{R}, Discard a card: Draw a card" (Glint-Horn Buccaneer): which card is chosen as it is activated, one offer each. */
+  || (atom?.atom === "discard" && atom.self !== true)
   /* "Return a Forest you control to its owner's hand" (Quirion Ranger): which one is chosen as it is activated, like a
      sacrifice -- each its own offer. */
   || (atom?.atom === "returnToHand" && Boolean(atom.selector) && typeof atom.selector === "object")
@@ -157,6 +159,7 @@ function sacrificeChoices(state, player, sourceId, selector) {
 }
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 const returnAtom = (cost) => (cost ?? []).find((a) => a?.atom === "returnToHand" && a.selector);
+const discardAtom = (cost) => (cost ?? []).find((a) => a?.atom === "discard" && a.self !== true);
 
 function costPayment(state, player, id, cost, x = 0, less = 0) {
   const object = state.objects[id];
@@ -370,13 +373,15 @@ export function legalActions(state, player) {
       for (const X of abilityXValues(state, player, ability)) {
         const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
         if (!payment) continue;
-        const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost);
-        /* A permanent you control to sacrifice, or to return to its owner's hand: one offer each (CR 602.2b). */
+        const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
+        /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
+           offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
         const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
-          : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null];
+          : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
+          : toss ? cardsIn(state, "hand", player).filter((c) => c !== id).map((d) => ({discard: d})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
-            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice ?? costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id}));
+            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard].card]} : {})}, ability, {controller: player, source: id}));
       }
     }
   }
@@ -635,6 +640,9 @@ function perform(state, player, action) {
         payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
+      /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
+      if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined
+        && moveOne(state, action.costChoice.discard, "graveyard", events, {owner: state.objects[action.costChoice.discard].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) moveOne(state, action.objectId, "graveyard", events);

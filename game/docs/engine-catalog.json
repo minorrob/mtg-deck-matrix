@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 542,
-  "everyRule": 1692
+  "defined": 550,
+  "everyRule": 1702
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 3,
+    "built": 5,
     "partial": 4,
-    "named": 15,
+    "named": 13,
     "missing": 116
    },
    "entries": [
@@ -5674,12 +5674,12 @@
      "rule": null,
      "name": "Discarded",
      "engine": "discarded",
-     "status": "named",
+     "status": "built",
      "forge": "Discarded",
      "top": 17,
      "all": 76,
-     "blocks": 19,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5914,12 +5914,12 @@
      "rule": null,
      "name": "DiscardedAll",
      "engine": "discarded",
-     "status": "named",
+     "status": "built",
      "forge": "DiscardedAll",
      "top": 2,
      "all": 22,
-     "blocks": 19,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
