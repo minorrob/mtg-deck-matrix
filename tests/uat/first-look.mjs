@@ -17,7 +17,7 @@
 import path from "node:path";
 import {mkdirSync} from "node:fs";
 import {pathToFileURL} from "node:url";
-import {findPlaywright, ROOT} from "./browser-runner.mjs";
+import {findPlaywright, launchBrowser, ROOT} from "./browser-runner.mjs";
 
 const BASE = (process.env.UAT_BASE || "").replace(/\/+$/, "");
 if (!BASE) { console.error("first-look: set UAT_BASE to the release's address"); process.exit(2); }
@@ -27,8 +27,8 @@ if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const entry = findPlaywright();
 if (!entry) { console.error("first-look: Playwright is not installed (set UAT_PLAYWRIGHT)"); process.exit(1); }
 const pw = await import(path.isAbsolute(entry) ? pathToFileURL(entry).href : entry);
-const chromium = pw.chromium || pw.default.chromium;
-const browser = await chromium.launch({headless: true, args: ["--host-resolver-rules=MAP crankmagic.localhost 127.0.0.1"], ...(process.env.UAT_CHROME ? {executablePath: process.env.UAT_CHROME} : {})});
+/* The browser UAT_BROWSER names (the matrix, browser-runner.mjs); Chromium by default. */
+const browser = await launchBrowser(pw);
 
 const results = [];
 const verdict = (item, pass, detail = "") => { results.push({item, pass}); console.log(`${pass ? "  ok  " : "  FAIL"} ${item}${detail ? " -- " + detail : ""}`); };
