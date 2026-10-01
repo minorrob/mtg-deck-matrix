@@ -12,15 +12,14 @@ what makes a flier unblockable by the ground.
 
 | Scope | Cards | Defined | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 102 | 356 | 74.6% |
-| the card library | 2365 | 167 | 1311 | 55.4% |
-| the most-played 80% of Commander cards | 3238 | 235 | 1769 | 54.6% |
+| Rob's seven decks | 477 | 102 | 363 | 76.1% |
+| the card library | 2365 | 167 | 1369 | 57.9% |
+| the most-played 80% of Commander cards | 3238 | 235 | 1820 | 56.2% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `Equip` | keyword | 8 | declared, no behavior |
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
 | `surveil` | api | 4 | declared, not built |
@@ -40,12 +39,12 @@ what makes a flier unblockable by the ground.
 | `peekAndReveal` | api | 2 | declared, not built |
 | `Cycling` | keyword | 2 | declared, no behavior |
 | `Echo` | keyword | 2 | declared, no behavior |
+| `alterAttribute` | api | 2 | declared, not built |
 
 ## What blocks the rest — the card library
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `Equip` | keyword | 79 | declared, no behavior |
 | `ReduceCost` | static | 61 | no engine support yet |
 | `copySpell` | api | 46 | declared, not built |
 | `ETBReplacement` | keyword | 43 | not declared |
@@ -65,13 +64,13 @@ what makes a flier unblockable by the ground.
 | `CantBlockBy` | static | 19 | no engine support yet |
 | `alterAttribute` | api | 16 | declared, not built |
 | `Crew` | keyword | 15 | declared, no behavior |
+| `Counter` | replacement | 13 | no engine support yet |
 
 ## What blocks the rest — the most-played 80% of Commander cards
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
 | `ReduceCost` | static | 100 | no engine support yet |
-| `Equip` | keyword | 72 | declared, no behavior |
 | `ETBReplacement` | keyword | 68 | not declared |
 | `copyPermanent` | api | 64 | declared, not built |
 | `Enchant` | keyword | 60 | declared, no behavior |
@@ -90,4 +89,5 @@ what makes a flier unblockable by the ground.
 | `AddPhase` | api | 24 | unmapped |
 | `gainControl` | api | 22 | declared, not built |
 | `DamageDone` | replacement | 22 | no engine support yet |
+| `Counter` | replacement | 21 | no engine support yet |
 
