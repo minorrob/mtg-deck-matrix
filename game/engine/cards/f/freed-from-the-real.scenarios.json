@@ -1,0 +1,278 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Freed from the Real",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{U}: tap the enchanted creature; {U}: untap it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Freed from the Real"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Island",
+            "Island",
+            "Island",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Freed from the Real",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Freed from the Real",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Freed from the Real",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Its creature destroyed, the Aura goes to the graveyard too (CR 704.5m)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Freed from the Real",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Freed from the Real",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Freed from the Real",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its target gone before it resolves: it does not resolve (CR 608.3b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Freed from the Real",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Freed from the Real",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Freed from the Real",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

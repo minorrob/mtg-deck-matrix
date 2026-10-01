@@ -1,0 +1,248 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ethereal Armor",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Ench": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast at the Bear: 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ethereal Armor"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Bear",
+            "Ench"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ench"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Ethereal Armor",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "First Strike"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its creature destroyed, the Aura goes to the graveyard too (CR 704.5m)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ethereal Armor",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Ethereal Armor",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ethereal Armor",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its target gone before it resolves: it does not resolve (CR 608.3b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ethereal Armor",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Ethereal Armor",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ethereal Armor",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

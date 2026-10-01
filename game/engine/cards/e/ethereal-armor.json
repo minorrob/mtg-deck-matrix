@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ethereal Armor",
+    "oracleId": "dbba75f5-2404-4bd5-982b-f6c4effa5316",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 for each enchantment you control and has first strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +1/+1 for each enchantment you control and has first strike.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "types": [
+              "Enchantment"
+            ],
+            "controller": "you"
+          }
+        },
+        "toughness": {
+          "count": {
+            "types": [
+              "Enchantment"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +1/+1 for each enchantment you control and has first strike.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      }
+    }
+  ]
+}

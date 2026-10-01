@@ -138,8 +138,18 @@ export function compileScript(script) {
   const keywords = [];
   let spell = null;
 
+  /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
+     only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
+     curse (Pacifism), so a pilot aims it at an opponent's creature. */
+  let enchant = null;
   script.abilities.forEach((ability, index) => {
     const id = ability.id ?? `a${index}`;
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "enchant") {
+      if (!ability.target || typeof ability.target !== "object") { problems.push(`${ability.text}: Enchant says what it may enchant, as a selector in \`target\``); return; }
+      try { compileSelector(ability.target.anyOf ? ability.target.anyOf[0] : ability.target); } catch (error) { problems.push(`${ability.text}: ${error.message}`); return; }
+      enchant = {target: ability.target, text: ability.text, hostile: ability.hostile === true};
+      return;
+    }
     for (const effect of effectsIn(ability.effects)) {
       if (!isBuilt(effect.effect)) problems.push(`${effect.effect}: declared, not built`);
       /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
@@ -199,6 +209,10 @@ export function compileScript(script) {
 
   const types = identity.types;
   if (!spell && types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("an instant or sorcery with no spell ability does nothing");
+  if (enchant && !(identity.subtypes ?? []).includes("Aura")) problems.push("Enchant on a card that is not an Aura");
+  if (enchant && spell) problems.push("an Aura's spell is its Enchant target, and it has no other");
+  /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
+  if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
 
   const definition = {
     oracleId: identity.oracleId,
@@ -213,6 +227,7 @@ export function compileScript(script) {
     keywords,
     abilities,
     ...(spell ? {spell} : {}),
+    ...(enchant ? {enchant: enchant.target} : {}),
   };
   return {definition: problems.length ? null : definition, problems: [...new Set(problems)]};
 }

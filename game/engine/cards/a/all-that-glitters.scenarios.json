@@ -1,0 +1,259 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "All That Glitters",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    },
+    "Ench": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast at the Bear: 5/5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "All That Glitters"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Plains",
+            "Bear",
+            "Rock",
+            "Ench"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "All That Glitters",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 5,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its creature destroyed, the Aura goes to the graveyard too (CR 704.5m)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "All That Glitters",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "All That Glitters",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "All That Glitters",
+            "Bear",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its target gone before it resolves: it does not resolve (CR 608.3b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "All That Glitters",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "All That Glitters",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "All That Glitters",
+            "Bear",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

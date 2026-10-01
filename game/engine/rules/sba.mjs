@@ -36,6 +36,7 @@
 import {moveObject, PER_PLAYER} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf} from "./layers.mjs";
+import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -142,6 +143,27 @@ export function checkStateBasedActions(state) {
           acted = true;
         }
       }
+    }
+
+    /* CR 704.5m: an Aura attached to nothing, or to a permanent its Enchant could not enchant, is put into its owner's
+       graveyard -- through the replacements and with its last known information, so "when this Aura is put into a
+       graveyard" still sees it. Unlike an Equipment, it does not stay. */
+    for (const id of [...state.zones.battlefield]) {
+      const object = state.objects[id];
+      if (!object.enchant) continue;
+      const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
+      if (host && host.zone === "battlefield" && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id})) continue;
+      if (host) host.attachments = (host.attachments ?? []).filter((a) => a !== id);
+      const card = cardRef(state, id);
+      const leftBehind = lastKnown(state, id);
+      const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
+      moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      events.push(event("GameEventCardChangeZone", state, {
+        card, leftBehind,
+        from: {zoneType: "Battlefield", player: {playerId: object.controller}},
+        to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
+      }));
+      acted = true;
     }
 
     /* CR 704.5n: an Equipment attached to a permanent that has gone, or is no longer a creature, becomes unattached and

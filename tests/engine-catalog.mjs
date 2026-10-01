@@ -98,6 +98,12 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
     "the measurement tells the two apart, on the card itself");
 }
 
+/* ---- Enchant (batch 12) ---- */
+{
+  eq(missingFor({keywords: ["Enchant"], statics: ["Continuous"]}), [], "an Aura's Enchant is built once its primitive, attach, is (batch 12)");
+  eq(section("Keyword abilities (CR 702)").find((e) => e.name === "Enchant")?.status, "built", "and the catalog says so");
+}
+
 /* ---- order ---- */
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every

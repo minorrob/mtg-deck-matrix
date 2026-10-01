@@ -70,7 +70,7 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
    attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
    and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
-export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard"};
+export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
