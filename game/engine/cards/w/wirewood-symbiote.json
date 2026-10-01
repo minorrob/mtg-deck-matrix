@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wirewood Symbiote",
+    "oracleId": "67a52a74-9474-4f4e-8785-6ff54078a8ca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Return an Elf you control to its owner's hand: Untap target creature. Activate only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Return an Elf you control to its owner's hand: Untap target creature. Activate only once each turn.",
+      "cost": [
+        {
+          "atom": "returnToHand",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "limit": 1
+    }
+  ]
+}

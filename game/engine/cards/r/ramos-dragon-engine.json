@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ramos, Dragon Engine",
+    "oracleId": "3ed41d2d-211b-4013-8562-8c64d54cc43a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever you cast a spell, put a +1/+1 counter on Ramos for each of that spell's colors.\nRemove five +1/+1 counters from Ramos: Add {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}. Activate only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, put a +1/+1 counter on Ramos for each of that spell's colors.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": {
+            "colorsOf": "that card"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Remove five +1/+1 counters from Ramos: Add {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}. Activate only once each turn.",
+      "cost": [
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "+1/+1",
+          "count": 5
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 2,
+            "U": 2,
+            "B": 2,
+            "R": 2,
+            "G": 2
+          }
+        }
+      ],
+      "limit": 1
+    }
+  ]
+}

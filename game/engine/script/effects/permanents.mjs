@@ -35,6 +35,9 @@ function pushEffect(state, effect) {
 
 /* Predefined tokens (CR 111.10): what "a Treasure token" is, so a card need only name it. */
 export const PREDEFINED_TOKENS = Object.freeze({
+  /* "A 1/1 black and green Pest creature token with 'When this token dies, you gain 1 life.'" (Strixhaven's). */
+  Pest: {name: "Pest", types: ["Creature"], subtypes: ["Pest"], colors: ["B", "G"], power: 1, toughness: 1,
+    abilities: [{id: "pest", kind: "triggered", text: "When this token dies, you gain 1 life.", trigger: {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: "self"}, effects: [{effect: "gainLife", amount: 1}]}]},
   /* CR 111.10a */
   Treasure: {name: "Treasure", types: ["Artifact"], subtypes: ["Treasure"],
     abilities: [{id: "treasure", kind: "mana", tapSelf: true, anyColor: true, sacrificeSelf: true, text: "{T}, Sacrifice this artifact: Add one mana of any color."}]},
@@ -164,7 +167,8 @@ export function createToken(state, params, context) {
       controller,
       token: true,
     }, "battlefield");
-    if (spec.tapped) state.objects[id].tapped = true;
+    /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
+    if (spec.tapped || params.tapped) state.objects[id].tapped = true;
     events.push(event("GameEventCardChangeZone", state, {
       card: cardRef(state, id),
       from: {zoneType: null, player: {playerId: controller}},

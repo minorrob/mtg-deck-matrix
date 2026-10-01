@@ -232,10 +232,13 @@ export function characteristicsOf(state, id) {
        power and toughness, and after anything that modifies them. */
     for (const sublayer of SUBLAYERS) {
       if (sublayer === "d") {
-        const plus = current.counters["+1/+1"] ?? 0;
-        const minus = current.counters["-1/-1"] ?? 0;
-        if (current.power !== null) current.power += plus - minus;
-        if (current.toughness !== null) current.toughness += plus - minus;
+        /* +1/+1 and -1/-1, and every other "+X/+Y" counter (CR 122.1a): the -0/-1 counters on Wall of Roots. */
+        for (const [kind, n] of Object.entries(current.counters ?? {})) {
+          const pt = /^([+-]\d+)\/([+-]\d+)$/.exec(kind);
+          if (!pt || !(n > 0)) continue;
+          if (current.power !== null) current.power += Number(pt[1]) * n;
+          if (current.toughness !== null) current.toughness += Number(pt[2]) * n;
+        }
         continue;
       }
       const here = inLayer.filter((effect) => (effect.sublayer ?? "c") === sublayer);

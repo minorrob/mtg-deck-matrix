@@ -175,7 +175,7 @@ export function resolveTop(state, effect = null) {
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
-  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source})) return finishTop(state, entry, events, false);
+  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)});
   events.push(...outcome.events);

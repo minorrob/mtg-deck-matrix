@@ -52,7 +52,7 @@
  * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
-import {cardsIn, moveObject} from "../state/index.mjs";
+import {cardsIn, moveObject, usesThisTurn, recordUse} from "../state/index.mjs";
 import {pushSpell, pushAbility} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
@@ -129,7 +129,22 @@ function withTargets(state, base, ability, context) {
 const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
 export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object")))
   /* "Discard this card" (cycling, CR 702.29a): a card's ability activated from its owner's hand. */
-  || (atom?.atom === "discard" && atom.self === true);
+  || (atom?.atom === "discard" && atom.self === true)
+  /* "Return a Forest you control to its owner's hand" (Quirion Ranger): which one is chosen as it is activated, like a
+     sacrifice -- each its own offer. */
+  || (atom?.atom === "returnToHand" && Boolean(atom.selector) && typeof atom.selector === "object")
+  /* "Put a -0/-1 counter on this creature" (Wall of Roots), "remove five +1/+1 counters from Ramos": counters on the
+     source itself; a removal it cannot make, it cannot pay (CR 118.3). */
+  || (["addCounters", "removeCounters"].includes(atom?.atom) && atom.self === true && typeof atom.counter === "string");
+
+/* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b). */
+const withinLimit = (state, id, ability) => !ability.limit || usesThisTurn(state, id, ability.id) < ability.limit;
+/* Whether a mana ability's counters can be paid: every removal has the counters to remove. */
+const countersPayable = (state, id, costs) => (costs ?? []).every((c) => c.put || (state.objects[id].counters?.[c.counter] ?? 0) >= c.count);
+function payCounters(state, id, costs) {
+  const counters = state.objects[id].counters;
+  for (const c of costs ?? []) counters[c.counter] = Math.max(0, (counters[c.counter] ?? 0) + (c.put ? c.count : -c.count));
+}
 
 /* "Sacrifice a creature: ..." (Viscera Seer, Ashnod's Altar, Phyrexian Tower): a cost the player chooses as they activate
    (CR 602.2b, 601.2h), so each permanent they could sacrifice is its own offer, as with a spell's additional cost. Only
@@ -140,6 +155,7 @@ function sacrificeChoices(state, player, sourceId, selector) {
   return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})));
 }
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
+const returnAtom = (cost) => (cost ?? []).find((a) => a?.atom === "returnToHand" && a.selector);
 
 function costPayment(state, player, id, cost, x = 0, less = 0) {
   const object = state.objects[id];
@@ -163,6 +179,7 @@ function costPayment(state, player, id, cost, x = 0, less = 0) {
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
     if (atom.atom === "payLife") life += atom.amount ?? 0;
+    if (atom.atom === "removeCounters" && (object.counters?.[atom.counter] ?? 0) < (atom.count ?? 1)) return null;
   }
   if (life + (mana?.life ?? 0) > state.players[player].life) return null;
   return {mana, life};
@@ -278,6 +295,8 @@ export function legalActions(state, player) {
       /* "Activate only if you control a Swamp" (CR 602.5b): asked as it would be offered. */
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!manaAbilityPayment(state, player, ability)) continue;
+      /* "Activate only once each turn" (Wall of Roots), and counters it cannot remove (Ramos). */
+      if (!withinLimit(state, id, ability) || !countersPayable(state, id, ability.counterCost)) continue;
       const alternatives = manaAlternatives(state, player, ability, id);
       const fodder = ability.sacrifice ? sacrificeChoices(state, player, id, ability.sacrifice).map((x) => ({sacrifice: x})) : [null];
       for (const costChoice of fodder) alternatives.forEach((mana, produce) => actions.push({
@@ -329,14 +348,17 @@ export function legalActions(state, player) {
       if (ability.kind !== "activated") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
+      if (!withinLimit(state, id, ability)) continue;
       for (const X of abilityXValues(state, player, ability)) {
         const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
         if (!payment) continue;
-        const atom = sacrificeAtom(ability.cost);
-        const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s})) : [null];
+        const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost);
+        /* A permanent you control to sacrifice, or to return to its owner's hand: one offer each (CR 602.2b). */
+        const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
+          : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
-            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {})}, ability, {controller: player, source: id}));
+            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice ?? costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id}));
       }
     }
   }
@@ -473,11 +495,14 @@ function perform(state, player, action) {
     /* Recomputed rather than trusted, like a cast's payment: which alternative, and what it costs, now. */
     const produced = manaAlternatives(state, player, ability, action.objectId)[action.produce ?? 0];
     const payment = manaAbilityPayment(state, player, ability);
-    if (!produced || !payment) throw new Error(`${object.card} cannot add that mana now`);
+    if (!produced || !payment || !withinLimit(state, action.objectId, ability) || !countersPayable(state, action.objectId, ability.counterCost))
+      throw new Error(`${object.card} cannot add that mana now`);
     const pool = state.players[player].manaPool;
     spend(pool, payment.mana);
     const life = (ability.payLife ?? 0) + payment.life;
     if (life > 0) state.players[player].life -= life;
+    payCounters(state, action.objectId, ability.counterCost);
+    if (ability.limit) recordUse(state, action.objectId, ability.id);
     if (ability.tapSelf) {
       object.tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
@@ -554,7 +579,7 @@ function perform(state, player, action) {
     const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
-    if (!payment) throw new Error(`${object.card}'s ability cannot be paid for now`);
+    if (!payment || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);
     /* A source the cost sacrifices is read as it last was ("a 2/2 Spider for each counter on this creature"). */
     const sacrificesSelf = (ability.cost ?? []).some((a) => a.atom === "sacrifice" && a.self === true);
     const card = cardRef(state, action.objectId);
@@ -579,6 +604,10 @@ function perform(state, player, action) {
         if (payment.mana.life > 0) state.players[player].life -= payment.mana.life;
       }
       if (atom.atom === "payLife") state.players[player].life -= atom.amount ?? 0;
+      if (atom.atom === "addCounters" || atom.atom === "removeCounters")
+        payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
+      /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
+      if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) moveOne(state, action.objectId, "graveyard", events);
@@ -586,6 +615,7 @@ function perform(state, player, action) {
       if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined) moveOne(state, action.costChoice.sacrifice, "graveyard", events);
     }
+    if (ability.limit) recordUse(state, action.objectId, ability.id);
     return events;
   }
 

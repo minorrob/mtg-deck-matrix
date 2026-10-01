@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tataru Taru",
+    "oracleId": "70dd5013-f18f-4501-882f-70590c424e20",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Advisor"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "When Tataru Taru enters, you draw a card and target opponent may draw a card.\nScions' Secretary — Whenever an opponent draws a card, if it isn't that player's turn, create a tapped Treasure token. This ability triggers only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Tataru Taru enters, you draw a card and target opponent may draw a card.",
+      "trigger": {
+        "on": "enters"
+      },
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "modal",
+          "chooser": {
+            "target": 0
+          },
+          "title": "Draw a card?",
+          "modes": [
+            {
+              "text": "Draw a card",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1,
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Don't draw",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Scions' Secretary — Whenever an opponent draws a card, if it isn't that player's turn, create a tapped Treasure token. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "condition": {
+        "notTheirTurn": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          },
+          "tapped": true
+        }
+      ],
+      "limit": 1
+    }
+  ]
+}

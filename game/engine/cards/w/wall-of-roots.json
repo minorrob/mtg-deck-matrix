@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Roots",
+    "oracleId": "3a21a6ae-b2f2-4f0c-acfd-5f3e8d63fd2f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Wall"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Defender\nPut a -0/-1 counter on this creature: Add {G}. Activate only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "text": "Put a -0/-1 counter on this creature: Add {G}. Activate only once each turn.",
+      "cost": [
+        {
+          "atom": "addCounters",
+          "self": true,
+          "counter": "-0/-1",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "limit": 1
+    }
+  ]
+}

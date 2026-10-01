@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elvish Warmaster",
+    "oracleId": "bda83ef4-e345-495d-878c-4da171f997ba",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever one or more other Elves you control enter, create a 1/1 green Elf Warrior creature token. This ability triggers only once each turn.\n{5}{G}{G}: Elves you control get +2/+2 and gain deathtouch until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more other Elves you control enter, create a 1/1 green Elf Warrior creature token. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Elf"
+          ],
+          "controller": "you"
+        },
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Elf Warrior",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf",
+              "Warrior"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{G}{G}: Elves you control get +2/+2 and gain deathtouch until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "power": 2,
+          "toughness": 2,
+          "keywords": [
+            "Deathtouch"
+          ],
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}
