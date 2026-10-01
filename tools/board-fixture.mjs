@@ -46,7 +46,9 @@ function cards(name) {
   const types = PERMANENT.filter((t) => (r.typeLine || "").includes(t));
   if (!types.length) return null;
   const cost = `{${Math.min(4, Math.max(1, Math.round(r.manaValue || 1)))}}`;
-  return types.includes("Creature") ? {types: ["Creature"], power: num(r.power, 2), toughness: num(r.toughness, 2), manaCost: cost} : {types: [types[0]], manaCost: cost};
+  /* Legendary as printed, so a commander is one the table seats (CR 903.3). */
+  const legendary = /\bLegendary\b/.test(r.typeLine || "") ? {supertypes: ["Legendary"]} : {};
+  return types.includes("Creature") ? {types: ["Creature"], ...legendary, power: num(r.power, 2), toughness: num(r.toughness, 2), manaCost: cost} : {types: [types[0]], ...legendary, manaCost: cost};
 }
 const BASIC = {W: "Plains", U: "Island", B: "Swamp", R: "Mountain", G: "Forest"};
 function deckFor(d) {

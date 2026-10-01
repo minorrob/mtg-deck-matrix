@@ -2767,6 +2767,8 @@ button.cm-building { pointer-events: none; }
    never part of its content. Here it goes back into flow and is capped against the viewport, so
    the dialog grows to fit it and stops scrolling. */
 #cm-dialog.cm-picker-dialog{width:min(980px,calc(100vw - 24px))}
+/* Table rules, from Play's Edit: two fields and a sentence, so 40% narrower than the 900px dialog (Rob, 2026-10-01). */
+#cm-dialog.cm-table-rules-dialog{width:min(540px,calc(100vw - 24px))}
 #cm-dialog.cm-picker-dialog .cm-commander-results{position:static;width:auto;max-height:calc(100dvh - 360px);overflow:auto}
 /* The same leak on the Build page (R3.11): its Matching commanders list is a section of the form, not a dropdown, and
    the lobby's rule hung it over the actions and the chosen commander below it. Back into flow. */
@@ -3376,6 +3378,12 @@ button.cm-vitals{cursor:pointer}
 .cm-board-ask{position:absolute;left:50%;top:8px;z-index:7;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;max-width:min(720px,calc(100% - 32px))}
 .cm-board-stack,.cm-board-decision{padding:10px 14px;border-radius:var(--v-radius-card);background:color-mix(in srgb,var(--v-panel) 94%,transparent);backdrop-filter:blur(4px);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .6)}
 .cm-board-decision{border-color:var(--v-accent)}
+/* The turns that went by (crankmagic-board.js, went()): a turn a line, its name first. */
+.cm-board-went{border-color:var(--v-line-strong)}
+.cm-board-went-list{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px;line-height:1.4}
+.cm-board-went-list li{display:flex;flex-wrap:wrap;gap:2px 8px}
+.cm-board-went-list strong{font-weight:700}
+.cm-board-went .cm-board-decision-foot{margin-top:8px}
 .cm-board-decision h3,.cm-board-stack h3{margin:0 0 8px;font-size:14px}
 #cm-board .cm-board-decision h3.is-sentence{text-transform:none;font-family:var(--v-body);font-weight:600;letter-spacing:0;line-height:1.4;font-size:15px}
 .cm-board-decision.is-also{display:flex;align-items:center;gap:10px;padding:6px 10px}
@@ -3568,6 +3576,11 @@ button.cm-vitals{cursor:pointer}
 .cm-board-peek .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc((100vh - 80px) * 5 / 7),calc(100vw - 48px))}
 .cm-board-zoom .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc(100vw - 80px))}
 .cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
+/* A card used more than one way: its ways to choose from, wrapping, scrolling past a third of the window. */
+.cm-board-zoom.is-choosing .cm-bcard{--bc:min(calc(240px * var(--card-scale,1)),calc(100vw - 80px),calc((100vh - 360px) * 5 / 7))}
+.cm-board-choose-say{margin:0 0 6px;font-weight:600}
+.cm-board-choices{display:flex;flex-wrap:wrap;gap:8px;max-height:34vh;overflow:auto;padding:2px 2px 10px}
+.cm-board-choices .v-button{white-space:normal;text-align:left}
 /* THE COACH (M5, the handoff's play-coach): a 400px panel over the right edge, above the board in every view,
    never narrowing the mat. The Coach speaks on a pale aether tint beside the logo; you speak in ink. */
 .cm-board-menu-row{margin-bottom:12px}
