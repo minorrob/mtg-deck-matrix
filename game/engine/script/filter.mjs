@@ -193,6 +193,8 @@ export function compileSelector(selector) {
       const holder = controllerOf(state, id);
       if (selector.controller === "you" && holder !== chooser) return false;
       if (selector.controller === "opponent" && holder === chooser) return false;
+      /* "Each creature that player controls": the player a trigger is about (Balefire Dragon). */
+      if (selector.controller === "that player" && holder !== context.about?.player) return false;
     }
 
     /* "Equipped creature": the permanent the source is attached to (CR 301.5, 701.3). */

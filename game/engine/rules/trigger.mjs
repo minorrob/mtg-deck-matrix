@@ -106,10 +106,22 @@ function subjects(state, event, condition, sourceId, controller) {
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
   if (condition.on === "GameEventPlayerDamaged") {
     if (condition.combat && fields.combat !== true) return [];
+    /* "Whenever a source you control deals noncombat damage to an opponent" (Niv-Mizzet, Visionary). */
+    if (condition.noncombat && fields.combat === true) return [];
+    /* "A source you control" -- a permanent or a spell: its controller as the damage was dealt. */
+    if (condition.sourceYours && fields.source?.controller !== controller) return [];
     const to = fields.target?.playerId, source = fields.source?.cardId;
     if (condition.to === "opponent" && to === controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
-    return [{card: source, player: to}];
+    /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
+    return [{card: source, player: to, amount: fields.amount ?? 0}];
+  }
+  /* "Whenever a source deals damage to this creature" (Phyrexian Obliterator): about the source, its controller -- "that
+     source's controller" -- and how much. */
+  if (condition.on === "GameEventCardDamaged") {
+    if (condition.to === "self" && fields.card?.cardId !== sourceId) return [];
+    if (condition.combat && fields.combat !== true) return [];
+    return [{card: fields.source?.cardId, player: fields.source?.controller, amount: fields.amount ?? 0}];
   }
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {

@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Super State",
+    "oracleId": "ab2dfe99-bd77-44d7-92be-81643ea901f0",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature you control\nEnchanted creature has base power and toughness 9/9 and has flying, first strike, trample, and haste.\nWhenever enchanted creature deals combat damage to an opponent, it deals that much damage to each other opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature you control",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature has base power and toughness 9/9 and has flying, first strike, trample, and haste.",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "setPower": 9,
+        "setToughness": 9
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature has base power and toughness 9/9 and has flying, first strike, trample, and haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "First Strike",
+          "Trample",
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever enchanted creature deals combat damage to an opponent, it deals that much damage to each other opponent.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "opponent",
+        "combat": true,
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "damageDealt": true
+          },
+          "who": "opponent",
+          "exceptThatPlayer": true,
+          "from": "that card"
+        }
+      ]
+    }
+  ]
+}

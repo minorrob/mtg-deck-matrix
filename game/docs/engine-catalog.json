@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 537,
-  "everyRule": 1687
+  "defined": 542,
+  "everyRule": 1692
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9352,8 +9352,8 @@
      "forge": "DamageAmount",
      "top": 56,
      "all": 373,
-     "blocks": 56,
-     "alone": 11
+     "blocks": 51,
+     "alone": 6
     },
     {
      "kind": "count",
