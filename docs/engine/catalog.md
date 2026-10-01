@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 482 defined and playable today; 1,629 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 496 defined and playable today; 1,644 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,8 +19,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
-| Keyword actions (CR 701) | 70 | 13 | 3 | 10 | 44 |
-| Effects | 192 | 34 | 1 | 29 | 128 |
+| Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
+| Effects | 192 | 35 | 1 | 28 | 128 |
 | Triggers | 138 | 3 | 4 | 15 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -36,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| effect | Surveil | surveil | named | 15 | 21 |
 | keyword construct | etbCounter | — | missing | 14 | 35 |
 | replacement | Counter | — | missing | 13 | 21 |
 | trigger | AttackersDeclared | attackers declared | named | 12 | 33 |
+| option | You may play or cast a card from another zone | — | missing | 11 | 90 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | effect | DamageAll | damageAll | named | 11 | 27 |
-| option | You may play or cast a card from another zone | — | missing | 10 | 90 |
+| keyword ability | Flashback | — | named | 11 | 14 |
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | trigger | Discarded | discarded | named | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
-| keyword ability | Flashback | — | named | 10 | 14 |
 | effect | Regenerate | — | missing | 10 | 12 |
 | count | Damage dealt | — | missing | 9 | 56 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
+| trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 
 ## Keyword abilities (CR 702)
 
@@ -73,7 +73,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.21 | Ward | — | named | 26 | 212 | 26 | 10 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
-| 702.34 | Flashback | — | named | 14 | 214 | 14 | 10 |
+| 702.34 | Flashback | — | named | 14 | 214 | 14 | 11 |
 | 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 6 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
@@ -267,7 +267,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.34 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
 | 701.18 | Play | play | named | 35 | 315 | 35 | 5 |
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
-| 701.25 | Surveil | surveil | named | 21 | 226 | 21 | 15 |
+| 701.25 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | 701.27 | Transform | setState | named | 19 | 280 | 19 | 3 |
 | 701.14 | Fight | fight | named | 15 | 148 | 15 | 5 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
@@ -371,7 +371,7 @@ The things that alone hold back the most of the most-played cards.
 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | AddPhase | — | missing | 24 | 58 | 24 | 10 |
 | GainControl | gainControl | named | 22 | 316 | 22 | 9 |
-| Surveil | surveil | named | 21 | 226 | 21 | 15 |
+| Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 6 |
 | SetState | setState | named | 19 | 280 | 19 | 3 |
 | SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 5 |
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 90 | 10 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 90 | 11 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -843,7 +843,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
 | As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
 | A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 8 |
-| Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 4 |
+| Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 5 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |

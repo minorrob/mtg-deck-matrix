@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 482,
-  "everyRule": 1629
+  "defined": 496,
+  "everyRule": 1644
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -235,7 +235,7 @@
      "top": 14,
      "all": 214,
      "blocks": 14,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "keyword ability",
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 13,
+    "built": 14,
     "partial": 3,
-    "named": 10,
+    "named": 9,
     "missing": 44
    },
    "entries": [
@@ -2509,12 +2509,12 @@
      "rule": "701.25",
      "name": "Surveil",
      "engine": "surveil",
-     "status": "named",
+     "status": "built",
      "forge": "Surveil",
      "top": 21,
      "all": 226,
-     "blocks": 21,
-     "alone": 15
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 34,
+    "built": 35,
     "partial": 1,
-    "named": 29,
+    "named": 28,
     "missing": 128
    },
    "entries": [
@@ -3708,12 +3708,12 @@
      "rule": null,
      "name": "Surveil",
      "engine": "surveil",
-     "status": "named",
+     "status": "built",
      "forge": "Surveil",
      "top": 21,
      "all": 226,
-     "blocks": 21,
-     "alone": 15
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 90,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "option",
@@ -9127,7 +9127,7 @@
      "top": 29,
      "all": 289,
      "blocks": 18,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "option",
