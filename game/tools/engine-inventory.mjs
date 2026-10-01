@@ -46,6 +46,12 @@ function parseScript(text){
   }
   return out;
 }
+/* THE OPTIONS AND CONDITIONS a card's abilities carry -- "unless a player pays", an amount the game counts, a condition,
+   "only once each turn", "up to N targets" -- which Forge writes as parameters rather than as effects or triggers. Kept
+   per card, by name only, so coverage and the catalog can count them (engine-constructs.mjs FORGE_OPTIONS). */
+const OPTION_PARAMS=new Set(['UnlessCost','Count','ConditionPresent','ConditionCompare','ConditionCheckSVar','ConditionSVarCompare','ConditionDefined','Condition',
+  'CheckSVar','IsPresent','SVarCompare','PresentCompare','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
+  'RememberObjects','RememberChanged','Imprint']);
 function tally(pool){
   const dims=['apis','triggers','statics','replacements','keywords','costs','params'];
   const counts=Object.fromEntries(dims.map(d=>[d,{}]));
@@ -54,7 +60,7 @@ function tally(pool){
     if(!script){missing.push(name);continue;}
     const p=parseScript(readFileSync(join(F,script),'utf8'));
     if(!p.apis.size&&!p.triggers.size&&!p.statics.size&&!p.replacements.size) vanilla++;
-    perCard[name]={apis:[...p.apis],triggers:[...p.triggers],statics:[...p.statics],replacements:[...p.replacements],keywords:[...p.keywords]};
+    perCard[name]={apis:[...p.apis],triggers:[...p.triggers],statics:[...p.statics],replacements:[...p.replacements],keywords:[...p.keywords],options:[...p.params].filter(k=>OPTION_PARAMS.has(k)).sort()};
     for(const d of dims) for(const v of p[d]) counts[d][v]=(counts[d][v]||0)+1;
   }
   const sorted=Object.fromEntries(dims.map(d=>[d,Object.entries(counts[d]).sort((a,b)=>b[1]-a[1])]));

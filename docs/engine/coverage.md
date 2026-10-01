@@ -12,82 +12,82 @@ what makes a flier unblockable by the ground.
 
 | Scope | Cards | Defined | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 117 | 360 | 75.5% |
-| the card library | 2365 | 208 | 1398 | 59.1% |
-| the most-played 80% of Commander cards | 3238 | 320 | 1870 | 57.8% |
+| Rob's seven decks | 477 | 117 | 259 | 54.3% |
+| the card library | 2365 | 208 | 954 | 40.3% |
+| the most-played 80% of Commander cards | 3238 | 320 | 1238 | 38.2% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `Count` | option | 51 | not built |
+| `ConditionPresent` | option | 30 | not built |
+| `RememberChanged` | option | 25 | not built |
+| `TargetMax` | option | 22 | not built |
+| `TargetMin` | option | 22 | not built |
+| `ConditionCompare` | option | 21 | not built |
+| `RememberObjects` | option | 20 | not built |
+| `MayPlay` | option | 16 | not built |
+| `ConditionDefined` | option | 13 | not built |
+| `CheckSVar` | option | 10 | not built |
+| `IsPresent` | option | 8 | not built |
+| `UnlessCost` | option | 7 | not built |
+| `SVarCompare` | option | 6 | not built |
+| `ActivationLimit` | option | 6 | not built |
+| `PresentCompare` | option | 5 | not built |
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
 | `discarded` | trigger | 4 | declared, not built |
 | `surveil` | api | 4 | declared, not built |
 | `copyPermanent` | api | 4 | declared, not built |
-| `Overload` | keyword | 4 | declared, no behavior |
-| `repeatFor` | api | 4 | declared, not built |
-| `Enchant` | keyword | 4 | declared, no behavior |
-| `ETBReplacement` | keyword | 4 | not declared |
-| `AlternateAdditionalCost` | keyword | 3 | not declared |
-| `addManaReflected` | api | 3 | declared, not built |
-| `attackers declared` | trigger | 3 | declared, not built |
-| `Changeling` | keyword | 3 | declared, no behavior |
-| `sacrificeAll` | api | 3 | declared, not built |
-| `CantAttack` | static | 3 | no engine support yet |
-| `chooseType` | api | 3 | declared, not built |
-| `Class` | keyword | 2 | not declared |
-| `peekAndReveal` | api | 2 | declared, not built |
-| `Echo` | keyword | 2 | declared, no behavior |
-| `alterAttribute` | api | 2 | declared, not built |
 
 ## What blocks the rest — the card library
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `Count` | option | 341 | not built |
+| `TargetMin` | option | 124 | not built |
+| `TargetMax` | option | 123 | not built |
+| `RememberObjects` | option | 117 | not built |
+| `RememberChanged` | option | 117 | not built |
+| `ConditionPresent` | option | 102 | not built |
+| `IsPresent` | option | 72 | not built |
+| `UnlessCost` | option | 70 | not built |
+| `MayPlay` | option | 67 | not built |
+| `ConditionDefined` | option | 66 | not built |
+| `ConditionCompare` | option | 54 | not built |
+| `CheckSVar` | option | 53 | not built |
 | `copySpell` | api | 46 | declared, not built |
+| `ConditionCheckSVar` | option | 44 | not built |
 | `ETBReplacement` | keyword | 43 | not declared |
 | `damageAll` | api | 43 | declared, not built |
 | `play` | api | 43 | declared, not built |
+| `ConditionSVarCompare` | option | 37 | not built |
+| `SVarCompare` | option | 33 | not built |
 | `etbCounter` | keyword | 33 | not declared |
-| `chooseType` | api | 31 | declared, not built |
-| `Enchant` | keyword | 31 | declared, no behavior |
-| `surveil` | api | 26 | declared, not built |
-| `immediateTrigger` | api | 25 | declared, not built |
-| `copyPermanent` | api | 25 | declared, not built |
-| `Chapter` | keyword | 24 | not declared |
-| `repeatFor` | api | 21 | declared, not built |
-| `Flashback` | keyword | 21 | declared, no behavior |
-| `CantBlockBy` | static | 19 | no engine support yet |
-| `alterAttribute` | api | 16 | declared, not built |
-| `attackers declared` | trigger | 15 | declared, not built |
-| `Crew` | keyword | 15 | declared, no behavior |
-| `Counter` | replacement | 13 | no engine support yet |
-| `Convoke` | keyword | 13 | declared, no behavior |
-| `damage dealt once` | trigger | 13 | declared, not built |
 
 ## What blocks the rest — the most-played 80% of Commander cards
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `Count` | option | 586 | not built |
+| `ConditionPresent` | option | 142 | not built |
+| `TargetMin` | option | 126 | not built |
+| `RememberChanged` | option | 124 | not built |
+| `RememberObjects` | option | 123 | not built |
+| `TargetMax` | option | 123 | not built |
+| `IsPresent` | option | 114 | not built |
+| `ConditionCompare` | option | 104 | not built |
+| `MayPlay` | option | 99 | not built |
+| `CheckSVar` | option | 79 | not built |
+| `ConditionCheckSVar` | option | 75 | not built |
 | `ETBReplacement` | keyword | 68 | not declared |
+| `UnlessCost` | option | 66 | not built |
+| `ConditionSVarCompare` | option | 65 | not built |
 | `copyPermanent` | api | 64 | declared, not built |
 | `Enchant` | keyword | 60 | declared, no behavior |
+| `SVarCompare` | option | 59 | not built |
+| `ConditionDefined` | option | 57 | not built |
 | `repeatFor` | api | 41 | declared, not built |
-| `chooseType` | api | 35 | declared, not built |
-| `play` | api | 35 | declared, not built |
-| `etbCounter` | keyword | 35 | not declared |
-| `copySpell` | api | 35 | declared, not built |
-| `damage dealt once` | trigger | 34 | declared, not built |
-| `attackers declared` | trigger | 33 | declared, not built |
-| `Clone` | api | 29 | unmapped |
-| `damageAll` | api | 27 | declared, not built |
-| `Ward` | keyword | 26 | declared, no behavior |
-| `CantBlockBy` | static | 26 | no engine support yet |
-| `AlternativeCost` | static | 24 | no engine support yet |
-| `AddPhase` | api | 24 | unmapped |
-| `gainControl` | api | 22 | declared, not built |
-| `DamageDone` | replacement | 22 | no engine support yet |
-| `Counter` | replacement | 21 | no engine support yet |
-| `genericChoice` | api | 21 | declared, not built |
+| `Condition` | option | 41 | not built |
 

@@ -10,7 +10,7 @@
  "top": {
   "cards": 3238,
   "defined": 320,
-  "everyRule": 1870
+  "everyRule": 1238
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -79,7 +79,7 @@
      "top": 60,
      "all": 1264,
      "blocks": 60,
-     "alone": 39
+     "alone": 29
     },
     {
      "kind": "keyword ability",
@@ -199,7 +199,7 @@
      "top": 26,
      "all": 212,
      "blocks": 26,
-     "alone": 11
+     "alone": 7
     },
     {
      "kind": "keyword ability",
@@ -223,7 +223,7 @@
      "top": 15,
      "all": 192,
      "blocks": 15,
-     "alone": 10
+     "alone": 7
     },
     {
      "kind": "keyword ability",
@@ -247,7 +247,7 @@
      "top": 14,
      "all": 45,
      "blocks": 14,
-     "alone": 9
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -259,7 +259,7 @@
      "top": 11,
      "all": 106,
      "blocks": 11,
-     "alone": 5
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -271,7 +271,7 @@
      "top": 11,
      "all": 35,
      "blocks": 11,
-     "alone": 9
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -295,7 +295,7 @@
      "top": 10,
      "all": 63,
      "blocks": 10,
-     "alone": 6
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -307,7 +307,7 @@
      "top": 8,
      "all": 132,
      "blocks": 8,
-     "alone": 6
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -319,7 +319,7 @@
      "top": 8,
      "all": 93,
      "blocks": 8,
-     "alone": 5
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -343,7 +343,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -355,7 +355,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 4
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -403,7 +403,7 @@
      "top": 6,
      "all": 58,
      "blocks": 6,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -415,7 +415,7 @@
      "top": 6,
      "all": 36,
      "blocks": 6,
-     "alone": 4
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -427,7 +427,7 @@
      "top": 6,
      "all": 30,
      "blocks": 6,
-     "alone": 4
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -439,7 +439,7 @@
      "top": 6,
      "all": 27,
      "blocks": 6,
-     "alone": 5
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -463,7 +463,7 @@
      "top": 5,
      "all": 239,
      "blocks": 5,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -499,7 +499,7 @@
      "top": 5,
      "all": 77,
      "blocks": 5,
-     "alone": 5
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -523,7 +523,7 @@
      "top": 5,
      "all": 23,
      "blocks": 5,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -535,7 +535,7 @@
      "top": 4,
      "all": 55,
      "blocks": 4,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -559,7 +559,7 @@
      "top": 4,
      "all": 24,
      "blocks": 4,
-     "alone": 4
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -571,7 +571,7 @@
      "top": 4,
      "all": 23,
      "blocks": 4,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -583,7 +583,7 @@
      "top": 4,
      "all": 22,
      "blocks": 4,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -631,7 +631,7 @@
      "top": 3,
      "all": 62,
      "blocks": 3,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -643,7 +643,7 @@
      "top": 3,
      "all": 58,
      "blocks": 3,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -655,7 +655,7 @@
      "top": 3,
      "all": 35,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -679,7 +679,7 @@
      "top": 3,
      "all": 24,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -691,7 +691,7 @@
      "top": 3,
      "all": 21,
      "blocks": 3,
-     "alone": 3
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -703,7 +703,7 @@
      "top": 3,
      "all": 19,
      "blocks": 3,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -715,7 +715,7 @@
      "top": 3,
      "all": 17,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -751,7 +751,7 @@
      "top": 3,
      "all": 14,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -787,7 +787,7 @@
      "top": 2,
      "all": 43,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -799,7 +799,7 @@
      "top": 2,
      "all": 39,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -847,7 +847,7 @@
      "top": 2,
      "all": 25,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -859,7 +859,7 @@
      "top": 2,
      "all": 23,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -883,7 +883,7 @@
      "top": 2,
      "all": 19,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -907,7 +907,7 @@
      "top": 2,
      "all": 16,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -931,7 +931,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -943,7 +943,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -967,7 +967,7 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -979,7 +979,7 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1015,7 +1015,7 @@
      "top": 1,
      "all": 80,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1075,7 +1075,7 @@
      "top": 1,
      "all": 27,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1123,7 +1123,7 @@
      "top": 1,
      "all": 24,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1159,7 +1159,7 @@
      "top": 1,
      "all": 22,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1171,7 +1171,7 @@
      "top": 1,
      "all": 22,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1315,7 +1315,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1327,7 +1327,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1339,7 +1339,7 @@
      "top": 1,
      "all": 11,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -2490,7 +2490,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 15
+     "alone": 4
     },
     {
      "kind": "keyword action",
@@ -2514,7 +2514,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 17
+     "alone": 14
     },
     {
      "kind": "keyword action",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 7
+     "alone": 3
     },
     {
      "kind": "keyword action",
@@ -2538,7 +2538,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 8
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -2574,7 +2574,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 5
+     "alone": 3
     },
     {
      "kind": "keyword action",
@@ -2610,7 +2610,7 @@
      "top": 7,
      "all": 72,
      "blocks": 7,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -2622,7 +2622,7 @@
      "top": 6,
      "all": 66,
      "blocks": 6,
-     "alone": 4
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -2634,7 +2634,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "keyword action",
@@ -2671,7 +2671,7 @@
      "top": 3,
      "all": 51,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "keyword action",
@@ -3449,7 +3449,7 @@
      "top": 64,
      "all": 353,
      "blocks": 64,
-     "alone": 39
+     "alone": 29
     },
     {
      "kind": "effect",
@@ -3533,7 +3533,7 @@
      "top": 41,
      "all": 326,
      "blocks": 41,
-     "alone": 16
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3581,7 +3581,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 15
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3593,7 +3593,7 @@
      "top": 35,
      "all": 241,
      "blocks": 35,
-     "alone": 16
+     "alone": 11
     },
     {
      "kind": "effect",
@@ -3605,7 +3605,7 @@
      "top": 35,
      "all": 176,
      "blocks": 35,
-     "alone": 6
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3629,7 +3629,7 @@
      "top": 29,
      "all": 167,
      "blocks": 29,
-     "alone": 10
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3653,7 +3653,7 @@
      "top": 27,
      "all": 402,
      "blocks": 27,
-     "alone": 17
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3689,7 +3689,7 @@
      "top": 24,
      "all": 58,
      "blocks": 24,
-     "alone": 11
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3701,7 +3701,7 @@
      "top": 22,
      "all": 316,
      "blocks": 22,
-     "alone": 11
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3713,7 +3713,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 17
+     "alone": 14
     },
     {
      "kind": "effect",
@@ -3725,7 +3725,7 @@
      "top": 21,
      "all": 153,
      "blocks": 21,
-     "alone": 5
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 7
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3749,7 +3749,7 @@
      "top": 19,
      "all": 130,
      "blocks": 19,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 8
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3773,7 +3773,7 @@
      "top": 18,
      "all": 167,
      "blocks": 18,
-     "alone": 6
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3809,7 +3809,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 8
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3821,7 +3821,7 @@
      "top": 15,
      "all": 43,
      "blocks": 15,
-     "alone": 7
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3833,7 +3833,7 @@
      "top": 14,
      "all": 132,
      "blocks": 14,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3845,7 +3845,7 @@
      "top": 14,
      "all": 113,
      "blocks": 14,
-     "alone": 5
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -3881,7 +3881,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 5
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3893,7 +3893,7 @@
      "top": 12,
      "all": 47,
      "blocks": 12,
-     "alone": 8
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3905,7 +3905,7 @@
      "top": 11,
      "all": 158,
      "blocks": 11,
-     "alone": 4
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3917,7 +3917,7 @@
      "top": 11,
      "all": 67,
      "blocks": 11,
-     "alone": 7
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3965,7 +3965,7 @@
      "top": 10,
      "all": 62,
      "blocks": 10,
-     "alone": 6
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -3977,7 +3977,7 @@
      "top": 10,
      "all": 43,
      "blocks": 10,
-     "alone": 5
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 5
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4001,7 +4001,7 @@
      "top": 9,
      "all": 56,
      "blocks": 9,
-     "alone": 5
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4025,7 +4025,7 @@
      "top": 8,
      "all": 120,
      "blocks": 8,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4037,7 +4037,7 @@
      "top": 8,
      "all": 58,
      "blocks": 8,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4049,7 +4049,7 @@
      "top": 7,
      "all": 131,
      "blocks": 7,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4061,7 +4061,7 @@
      "top": 7,
      "all": 72,
      "blocks": 7,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4085,7 +4085,7 @@
      "top": 6,
      "all": 66,
      "blocks": 6,
-     "alone": 4
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4097,7 +4097,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 3
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4109,7 +4109,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4121,7 +4121,7 @@
      "top": 5,
      "all": 115,
      "blocks": 5,
-     "alone": 3
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4133,7 +4133,7 @@
      "top": 5,
      "all": 57,
      "blocks": 5,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4157,7 +4157,7 @@
      "top": 5,
      "all": 32,
      "blocks": 5,
-     "alone": 4
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4181,7 +4181,7 @@
      "top": 4,
      "all": 22,
      "blocks": 4,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4193,7 +4193,7 @@
      "top": 4,
      "all": 13,
      "blocks": 4,
-     "alone": 3
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4217,7 +4217,7 @@
      "top": 3,
      "all": 51,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4241,7 +4241,7 @@
      "top": 3,
      "all": 32,
      "blocks": 3,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4385,7 +4385,7 @@
      "top": 1,
      "all": 67,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4397,7 +4397,7 @@
      "top": 1,
      "all": 64,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4409,7 +4409,7 @@
      "top": 1,
      "all": 42,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4469,7 +4469,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4493,7 +4493,7 @@
      "top": 1,
      "all": 10,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5595,7 +5595,7 @@
      "top": 34,
      "all": 204,
      "blocks": 34,
-     "alone": 17
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 33,
-     "alone": 20
+     "alone": 11
     },
     {
      "kind": "trigger",
@@ -5643,7 +5643,7 @@
      "top": 18,
      "all": 94,
      "blocks": 18,
-     "alone": 14
+     "alone": 13
     },
     {
      "kind": "trigger",
@@ -5655,7 +5655,7 @@
      "top": 18,
      "all": 64,
      "blocks": 18,
-     "alone": 6
+     "alone": 4
     },
     {
      "kind": "trigger",
@@ -5667,7 +5667,7 @@
      "top": 17,
      "all": 114,
      "blocks": 17,
-     "alone": 12
+     "alone": 9
     },
     {
      "kind": "trigger",
@@ -5679,7 +5679,7 @@
      "top": 17,
      "all": 76,
      "blocks": 19,
-     "alone": 12
+     "alone": 8
     },
     {
      "kind": "trigger",
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 33,
-     "alone": 20
+     "alone": 11
     },
     {
      "kind": "trigger",
@@ -5715,7 +5715,7 @@
      "top": 6,
      "all": 31,
      "blocks": 6,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5739,7 +5739,7 @@
      "top": 5,
      "all": 116,
      "blocks": 5,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5751,7 +5751,7 @@
      "top": 5,
      "all": 42,
      "blocks": 5,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5763,7 +5763,7 @@
      "top": 4,
      "all": 77,
      "blocks": 4,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5775,7 +5775,7 @@
      "top": 4,
      "all": 40,
      "blocks": 4,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5787,7 +5787,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5823,7 +5823,7 @@
      "top": 3,
      "all": 30,
      "blocks": 3,
-     "alone": 3
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5835,7 +5835,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5895,7 +5895,7 @@
      "top": 2,
      "all": 62,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5907,7 +5907,7 @@
      "top": 2,
      "all": 48,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5919,7 +5919,7 @@
      "top": 2,
      "all": 22,
      "blocks": 19,
-     "alone": 12
+     "alone": 8
     },
     {
      "kind": "trigger",
@@ -5955,7 +5955,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -6063,7 +6063,7 @@
      "top": 1,
      "all": 3,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 26,
-     "alone": 15
+     "alone": 12
     },
     {
      "kind": "static",
@@ -7237,7 +7237,7 @@
      "top": 24,
      "all": 148,
      "blocks": 24,
-     "alone": 17
+     "alone": 5
     },
     {
      "kind": "static",
@@ -7249,7 +7249,7 @@
      "top": 19,
      "all": 37,
      "blocks": 19,
-     "alone": 10
+     "alone": 8
     },
     {
      "kind": "static",
@@ -7261,7 +7261,7 @@
      "top": 14,
      "all": 97,
      "blocks": 14,
-     "alone": 7
+     "alone": 4
     },
     {
      "kind": "static",
@@ -7273,7 +7273,7 @@
      "top": 12,
      "all": 56,
      "blocks": 12,
-     "alone": 7
+     "alone": 6
     },
     {
      "kind": "static",
@@ -7285,7 +7285,7 @@
      "top": 10,
      "all": 204,
      "blocks": 10,
-     "alone": 4
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 10,
-     "alone": 8
+     "alone": 7
     },
     {
      "kind": "static",
@@ -7309,7 +7309,7 @@
      "top": 8,
      "all": 139,
      "blocks": 8,
-     "alone": 3
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7321,7 +7321,7 @@
      "top": 7,
      "all": 26,
      "blocks": 7,
-     "alone": 6
+     "alone": 5
     },
     {
      "kind": "static",
@@ -7345,7 +7345,7 @@
      "top": 5,
      "all": 34,
      "blocks": 5,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7381,7 +7381,7 @@
      "top": 4,
      "all": 8,
      "blocks": 4,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7405,7 +7405,7 @@
      "top": 3,
      "all": 14,
      "blocks": 3,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7417,7 +7417,7 @@
      "top": 3,
      "all": 11,
      "blocks": 3,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7489,7 +7489,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7525,7 +7525,7 @@
      "top": 1,
      "all": 14,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7585,7 +7585,7 @@
      "top": 1,
      "all": 3,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7597,7 +7597,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8147,7 +8147,7 @@
      "top": 22,
      "all": 209,
      "blocks": 22,
-     "alone": 13
+     "alone": 11
     },
     {
      "kind": "replacement",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 21,
-     "alone": 15
+     "alone": 11
     },
     {
      "kind": "replacement",
@@ -8207,7 +8207,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "replacement",
@@ -8219,7 +8219,7 @@
      "top": 5,
      "all": 157,
      "blocks": 5,
-     "alone": 5
+     "alone": 3
     },
     {
      "kind": "replacement",
@@ -8243,7 +8243,7 @@
      "top": 2,
      "all": 2,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "replacement",
@@ -8857,6 +8857,292 @@
     }
    ]
   },
+  "Options and conditions": {
+   "tally": {
+    "built": 1,
+    "partial": 2,
+    "named": 0,
+    "missing": 20
+   },
+   "entries": [
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An amount the game counts (X, for each, devotion, greatest power)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Count",
+     "top": 586,
+     "all": 5550,
+     "blocks": 586,
+     "alone": 210
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "You may, decided by a named player",
+     "engine": "modal (Yes / No)",
+     "status": "partial",
+     "forge": "OptionalDecider",
+     "top": 176,
+     "all": 1499,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition: if a permanent is present",
+     "engine": null,
+     "status": "missing",
+     "forge": "ConditionPresent",
+     "top": 142,
+     "all": 1292,
+     "blocks": 142,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Fewer targets than the most (\"up to\", \"any number of\")",
+     "engine": null,
+     "status": "missing",
+     "forge": "TargetMin",
+     "top": 126,
+     "all": 1672,
+     "blocks": 126,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Remembering what an effect moved",
+     "engine": null,
+     "status": "missing",
+     "forge": "RememberChanged",
+     "top": 124,
+     "all": 1168,
+     "blocks": 124,
+     "alone": 10
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "More than one target of a kind (\"up to N\")",
+     "engine": null,
+     "status": "missing",
+     "forge": "TargetMax",
+     "top": 123,
+     "all": 1664,
+     "blocks": 123,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Remembering an object (\"the exiled card\", \"that creature\" later)",
+     "engine": null,
+     "status": "missing",
+     "forge": "RememberObjects",
+     "top": 123,
+     "all": 1460,
+     "blocks": 123,
+     "alone": 21
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An intervening \"if\" or \"activate only if\": a permanent present",
+     "engine": null,
+     "status": "missing",
+     "forge": "IsPresent",
+     "top": 114,
+     "all": 1200,
+     "blocks": 114,
+     "alone": 40
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "How long an effect lasts (until end of turn is built; others not)",
+     "engine": null,
+     "status": "partial",
+     "forge": "Duration",
+     "top": 111,
+     "all": 1658,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition: a comparison",
+     "engine": null,
+     "status": "missing",
+     "forge": "ConditionCompare",
+     "top": 104,
+     "all": 684,
+     "blocks": 104,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "You may (an optional effect, CR 603.5)",
+     "engine": "modal (Yes / No)",
+     "status": "built",
+     "forge": "Optional",
+     "top": 101,
+     "all": 1094,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "You may play or cast a card from another zone",
+     "engine": null,
+     "status": "missing",
+     "forge": "MayPlay",
+     "top": 99,
+     "all": 625,
+     "blocks": 99,
+     "alone": 18
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An intervening \"if\" or \"activate only if\": a counted value",
+     "engine": null,
+     "status": "missing",
+     "forge": "CheckSVar",
+     "top": 79,
+     "all": 974,
+     "blocks": 79,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition: a counted value",
+     "engine": null,
+     "status": "missing",
+     "forge": "ConditionCheckSVar",
+     "top": 75,
+     "all": 603,
+     "blocks": 75,
+     "alone": 2
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Unless a player pays",
+     "engine": null,
+     "status": "missing",
+     "forge": "UnlessCost",
+     "top": 66,
+     "all": 677,
+     "blocks": 66,
+     "alone": 38
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition: a counted comparison",
+     "engine": null,
+     "status": "missing",
+     "forge": "ConditionSVarCompare",
+     "top": 65,
+     "all": 455,
+     "blocks": 65,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "A counted comparison for a condition",
+     "engine": null,
+     "status": "missing",
+     "forge": "SVarCompare",
+     "top": 59,
+     "all": 524,
+     "blocks": 59,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition: about a named object",
+     "engine": null,
+     "status": "missing",
+     "forge": "ConditionDefined",
+     "top": 57,
+     "all": 973,
+     "blocks": 57,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "An effect's condition (threshold, metalcraft, kicked, ...)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Condition",
+     "top": 41,
+     "all": 461,
+     "blocks": 41,
+     "alone": 6
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "A comparison of permanents present for a condition",
+     "engine": null,
+     "status": "missing",
+     "forge": "PresentCompare",
+     "top": 35,
+     "all": 385,
+     "blocks": 35,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Only once (or N times) each turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "ActivationLimit",
+     "top": 29,
+     "all": 289,
+     "blocks": 29,
+     "alone": 12
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Imprint (a card exiled with this)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Imprint",
+     "top": 10,
+     "all": 97,
+     "blocks": 10,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Activate only during a step or phase",
+     "engine": null,
+     "status": "missing",
+     "forge": "ActivationPhases",
+     "top": 1,
+     "all": 150,
+     "blocks": 1,
+     "alone": 0
+    }
+   ]
+  },
   "Choices": {
    "tally": {
     "built": 9,
@@ -9065,7 +9351,7 @@
      "top": 68,
      "all": 408,
      "blocks": 68,
-     "alone": 4
+     "alone": 1
     },
     {
      "kind": "keyword construct",
@@ -9077,7 +9363,7 @@
      "top": 35,
      "all": 475,
      "blocks": 35,
-     "alone": 17
+     "alone": 1
     },
     {
      "kind": "keyword construct",
@@ -9089,7 +9375,7 @@
      "top": 19,
      "all": 236,
      "blocks": 19,
-     "alone": 11
+     "alone": 5
     },
     {
      "kind": "keyword construct",
@@ -9101,7 +9387,7 @@
      "top": 9,
      "all": 38,
      "blocks": 9,
-     "alone": 4
+     "alone": 3
     },
     {
      "kind": "keyword construct",
@@ -9125,7 +9411,7 @@
      "top": 5,
      "all": 30,
      "blocks": 5,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword construct",
@@ -9149,7 +9435,7 @@
      "top": 3,
      "all": 46,
      "blocks": 3,
-     "alone": 2
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -9185,7 +9471,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -9197,7 +9483,7 @@
      "top": 2,
      "all": 20,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -9209,7 +9495,7 @@
      "top": 2,
      "all": 19,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -9221,7 +9507,7 @@
      "top": 1,
      "all": 52,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword construct",
