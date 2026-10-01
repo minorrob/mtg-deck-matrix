@@ -143,24 +143,43 @@
     const total = rows.reduce((n, row) => n + Number(row.quantity || 1), 0);
     const unreadable = rows.filter((row) => {
       const card = row.card || {};
-      return !card.typeLine || (!card.oracleText && !/\bLand\b/.test(card.typeLine));
+      return !card.typeLine || (!card.oracleText && !/\bLand\b/.test(card.typeLine)) || (row.isCommander && !card.manaCost);
     });
+    /* THE COMMANDER IS NEVER A BLANK (Rob, 2026-10-01: "Impossible to play the commander in the first round that costs
+       4 mana"). A commander the engine cannot read, or one with no mana cost, was played as a blank with no cost: cast
+       on turn one in every game and never on the board, and the report filled in "a 4-drop" for the cost it did not
+       have. A blank among the ninety-nine is a weaker deck; a blank commander is a different game. */
+    const commanders = unreadable.filter((row) => row.isCommander).map((row) => row.name);
     const known = total - unreadable.reduce((n, row) => n + Number(row.quantity || 1), 0);
     return {
       total,
       known,
       ratio: total ? Number((known / total).toFixed(4)) : 0,
       unreadable: unreadable.map((row) => row.name).sort(),
+      commanders,
       blind: true
     };
   }
 
   const PUBLISHABLE_COVERAGE = 0.95;
 
+  /* WHEN TO ASK SCRYFALL, AND WHEN ITS SILENCE IS FATAL (Rob, 2026-10-01). Every card the engine cannot read is fetched,
+     not only below the floor: one blank in a hundred is still a blank, and when it is the commander the measure is a
+     different game. A Scryfall that cannot be reached stops the measure only below the floor or for the commander; past
+     the floor the report names what was played as a blank. */
+  const fetchPlan = (cover) => ({
+    fetch: (cover.unreadable || []).length > 0,
+    fatalIfUnreachable: cover.ratio < PUBLISHABLE_COVERAGE || (cover.commanders || []).length > 0
+  });
+
   /* Refuse rather than print. A score built on cards the engine could not read is not a
      worse score, it is a different deck's score. */
   function assertMeasurable(cover, protocolName) {
     if (!cover.total) throw new Error("This deck has no cards to measure.");
+    if ((cover.commanders || []).length) throw new Error(
+      "The engine cannot read the commander, " + cover.commanders.join(" and ") + ": no rules text or mana cost to play it by, " +
+      "so it would be measured as a blank cast for nothing on turn one. Reconnect so its card text can be fetched, and measure again."
+    );
     if (cover.ratio >= PUBLISHABLE_COVERAGE) return cover;
     if (protocolName === "preview" && cover.ratio >= 0.5) return cover;
     throw new Error(
@@ -419,6 +438,7 @@
     ENGINE_SCRIPTS,
     PROTOCOLS,
     PUBLISHABLE_COVERAGE,
+    fetchPlan,
     protocolFor,
     lineupFor,
     coverage,
