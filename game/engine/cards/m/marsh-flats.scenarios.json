@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Marsh Flats",
+  "scenarios": [
+    {
+      "name": "One life and itself for an Plains or a Swamp from the library, untapped, then a shuffle (CR 701.23)",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Marsh Flats"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Marsh Flats"
+        },
+        {
+          "activate": "Marsh Flats"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "life": 39
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Marsh Flats"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains",
+                  "Swamp"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "Swamp",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    }
+  ]
+}

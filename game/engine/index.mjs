@@ -55,6 +55,8 @@ export const ENGINE_STATUS = Object.freeze({
     "trigger-targets",
     /* AI-3's loader: the four checks a model-written script must pass (cards/compile.mjs), and its offline run. */
     "compile",
+    /* Phase 3, batch 4: a search (chooseCard), facts about a target, supertypes, and the most-played lands. */
+    "search",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });

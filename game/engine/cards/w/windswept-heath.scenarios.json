@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Windswept Heath",
+  "scenarios": [
+    {
+      "name": "One life and itself for an Forest or a Plains from the library, untapped, then a shuffle (CR 701.23)",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windswept Heath"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Windswept Heath"
+        },
+        {
+          "activate": "Windswept Heath"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "life": 39
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Windswept Heath"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Plains"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {}
+        }
+      ]
+    }
+  ]
+}

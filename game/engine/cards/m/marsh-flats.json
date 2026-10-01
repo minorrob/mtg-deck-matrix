@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marsh Flats",
+    "oracleId": "dab520d0-20b4-4273-ba6b-eb07f85ea433",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Swamp card, put it onto the battlefield, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Swamp card, put it onto the battlefield, then shuffle.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "payLife",
+          "amount": 1
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Plains"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              }
+            ]
+          },
+          "shuffle": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

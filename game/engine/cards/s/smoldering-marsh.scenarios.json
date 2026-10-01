@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Smoldering Marsh",
+  "scenarios": [
+    {
+      "name": "Two basic lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoldering Marsh"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Smoldering Marsh"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Smoldering Marsh",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Smoldering Marsh"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoldering Marsh"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Smoldering Marsh"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Smoldering Marsh"
+        }
+      ]
+    }
+  ]
+}

@@ -95,8 +95,12 @@ export const playersFor = (state, who, controller) => {
 /** `moveZone` — put the named objects somewhere. */
 export function moveZone(state, params, context) {
   const events = [];
-  for (const id of params.targets ?? []) moveOne(state, id, params.to ?? "graveyard", events);
-  void context;
+  for (const id of params.targets ?? []) {
+    const moved = moveOne(state, id, params.to ?? "graveyard", events);
+    /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
+    if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
+      state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
+  }
   return events;
 }
 

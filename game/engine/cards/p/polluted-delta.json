@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Polluted Delta",
+    "oracleId": "ef86989d-ce80-4e55-aece-7d11710eeffa",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Pay 1 life, Sacrifice this land: Search your library for an Island or Swamp card, put it onto the battlefield, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for an Island or Swamp card, put it onto the battlefield, then shuffle.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "payLife",
+          "amount": 1
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Island"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              }
+            ]
+          },
+          "shuffle": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

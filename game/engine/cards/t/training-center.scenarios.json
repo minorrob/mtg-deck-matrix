@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Training Center",
+  "scenarios": [
+    {
+      "name": "One opponent: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Training Center"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Training Center"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Training Center"
+        }
+      ]
+    },
+    {
+      "name": "Two opponents: untapped, either color",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Training Center"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Training Center"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Training Center",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Training Center"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

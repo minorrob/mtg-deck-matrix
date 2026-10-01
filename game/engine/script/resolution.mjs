@@ -36,7 +36,7 @@ export function beginResolution(state, effects, context = {}) {
   state.resolving = {
     queue: structuredClone(effects ?? []),
     /* `targets` are the ones still legal as the resolution began (bind.mjs, CR 608.2b), null where one is not. */
-    context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? []},
+    context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? [], facts: context.facts ?? []},
     events: [],
   };
   return runResolution(state);
@@ -85,14 +85,16 @@ export function runResolution(state) {
  * `extra` carries what the generic `indices` cannot: scry's `toBottom`, for instance. The choice
  * record says which fields it expects, and `controller.mjs` validates them.
  */
-export function answerResolution(state, indices, extra = {}) {
+export function answerResolution(state, indices, extra = {}, rng = null) {
   const awaiting = state.awaiting;
   if (!awaiting || awaiting.kind !== "effect-choice")
     throw new Error("The resolution is not waiting on an effect choice");
   const asking = ASKING[awaiting.effect];
   if (!asking) throw new Error(`No asking primitive named ${awaiting.effect}`);
 
-  const outcome = asking.apply(state, awaiting, indices, extra);
+  /* The game's random stream, for an answer that shuffles a library (a search); a generator is not state, so it is
+     handed in, as the mulligan's is. */
+  const outcome = asking.apply(state, awaiting, indices, extra, rng);
   const events = Array.isArray(outcome) ? outcome : outcome.events ?? [];
   state.resolving?.events.push(...events);
 

@@ -37,7 +37,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
-  "what", "types", "subtypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
+  "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
 ]);
 
 /** What a selector can be about. */
@@ -60,7 +60,7 @@ function assertGrammar(selector) {
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
   if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
-  for (const key of ["nonTypes", "nonSubtypes"])
+  for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
 }
 
@@ -127,6 +127,9 @@ export function compileSelector(selector) {
       const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
       if (!selector.subtypes.every((subtype) => current.includes(subtype))) return false;
     }
+
+    /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
+    if (selector.supertypes && !selector.supertypes.every((st) => (object.supertypes ?? []).includes(st))) return false;
 
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */

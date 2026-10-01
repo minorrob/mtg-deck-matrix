@@ -13,15 +13,15 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 46 (35 JSON, 11 workbooks and documents) · 78.5 MB |
+| Artifacts | 47 (36 JSON, 11 workbooks and documents) · 78.9 MB |
 | Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
-| Tool inputs | 7 |
+| Tool inputs | 8 |
 | Source workbooks and documents | 11 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
-| JSON with no timestamp | 5: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `sim/config.json`, `sim/opponents.json` |
-| Served or tool-input JSON with no producer found | 2: `data/engine/support.json`, `data/engine/tokens.json` |
+| JSON with no timestamp | 6: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/engine/top-cards.json`, `sim/config.json`, `sim/opponents.json` |
+| Served or tool-input JSON with no producer found | 3: `data/engine/support.json`, `data/engine/tokens.json`, `data/engine/top-cards.json` |
 
 ## The table
 
@@ -38,7 +38,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/archive/rung-lists.json` | 1.1 MB | {schemaVersion, generatedAt, note, variants} · variants 50 | schemaVersion 1 | 2026-09-04 | tools/reshell-basic-swap.mjs | — |  | claude-api-cost.mjs, generate-guides.mjs, reprice-variants.mjs +8 | data-integrity.mjs, generators.mjs, lineup-compliance.mjs +2 | — | **archive** | already under data/archive; tools and tests read it there |
 | `data/archive/variants.json` | 1.2 MB | {decks, variants} · variants 50, decks 10 | — | — | (frozen copy) | — |  | build-my-load.mjs, extract_data.py, reprice-variants.mjs +5 | data-integrity.mjs | — | **archive** | already under data/archive; tools and tests read it there |
 | `data/card-facts.json` | 478 KB | {schema, generatedAt, generator, count, cards} · cards 669 | schema card-facts@1 | 2026-09-28 | tools/build-card-records.mjs (declared) | crankmagic-assets.js | yes | build-card-records.mjs, build_guide_shapes.py, generate-guides.mjs +5 | card-images.mjs, card-records.mjs, combat.mjs +7 | — | **serve** |  |
-| `data/cards.json` | 4.6 MB | {schema, generatedAt, generator, count, source, cards, …} · cards 2,367 | schema cards@2 | 2026-09-28 | tools/build-card-records.mjs (declared) | crankmagic-assets.js, card-catalog.js | yes | add-salvage-cards.mjs, apply-actual-prices.mjs, apply-app-handoff.mjs +25 | advise-brief.mjs, run.mjs, assignment-model.mjs +25 | — | **serve** |  |
+| `data/cards.json` | 4.6 MB | {schema, generatedAt, generator, count, source, cards, …} · cards 2,367 | schema cards@2 | 2026-09-28 | tools/build-card-records.mjs (declared) | crankmagic-assets.js, card-catalog.js | yes | add-salvage-cards.mjs, apply-actual-prices.mjs, apply-app-handoff.mjs +25 | advise-brief.mjs, run.mjs, assignment-model.mjs +26 | — | **serve** |  |
 | `data/commander-glossary.json` | 134 KB | {schema, generator, count, schemaVersion, revision, purpose, …} · entries 335 | schemaVersion 1, schema commander-glossary@1 | 2026-09-07 | (hand-maintained; tools/check-glossary.mjs checks it) | crankmagic-assets.js, crankmagic-app.js | yes | check-glossary.mjs | generators.mjs | — | **serve** | hand-maintained editorial file: no generator by design; tools/check-glossary.mjs is its check |
 | `data/commander-ranks.json` | 159 KB | {schema, generatedAt, generator, count, source, period, …} · cards 1,000, pages 10 | schema commander-ranks@1 | 2026-09-28 | tools/commander-ranks.mjs (declared) | crankmagic-assets.js | yes | commander-ranks.mjs, refresh.mjs | schemas.mjs | — | **serve** |  |
 | `data/commander-strategies.json` | 614 KB | {schema, generatedAt, generator, count, source, vocabulary, …} · commanders 2,746, vocabulary 16 | schema commander-strategies@1 | 2026-09-28 | tools/commander-strategies.mjs | crankmagic-assets.js, crankmagic-build.js, crankmagic-strategies.js | on demand | commander-strategies.mjs, refresh.mjs | build-wizard.mjs, commander-strategies.mjs | — | **serve** |  |
@@ -48,6 +48,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/engine/oracle.json` | 13.5 MB | {schema, generatedAt, generator, source, count, cards} · cards 31,830 | schema engine-oracle@1 | 2026-09-23 | tools/build-engine-cards.mjs | — |  | build-engine-cards.mjs | engine-cards.mjs, engine-compile.mjs | — | **tool input** |  |
 | `data/engine/support.json` | 3.2 MB | {schema, generatedAt, generator, count, legend, cards} · cards 31,830 | schema engine-support@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | engine-runtime.mjs | — | **tool input** |  |
 | `data/engine/tokens.json` | 413 KB | {schema, generatedAt, generator, count, tokens} · tokens 1,091 | schema engine-tokens@1 | 2026-09-23 | — | — |  | build-engine-cards.mjs | — | — | **tool input** |  |
+| `data/engine/top-cards.json` | 409 KB | {schema, generator, source, sourceGeneratedAt, share, appearances, …} · cards 3,239 | schema CrankTopCards@1 | — | — | — |  | — | engine-cards.mjs | — | **tool input** |  |
 | `data/flavor-names.json` | 35 KB | {schema, generatedAt, generator, count, source, fields, …} · cards 513 | schema flavor-names@1 | 2026-09-28 | tools/flavor-names.mjs | crankmagic-assets.js | yes | build-live-state.mjs, flavor-names.mjs, refresh.mjs | crankmagic-core.mjs | — | **serve** |  |
 | `data/game-history.json` | 335 B | {schema, generator, count, schemaVersion, compiledAt, sourceFiles, …} | schemaVersion 1, schema game-history@1 | 2026-09-14 | tools/compile-game-logs.mjs | — |  | compile-game-logs.mjs | — | compile-game-logs.yml | **tool input** | the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state |
 | `data/graph-played.json` | 20.6 MB | {schema, generator, count, format, generatedAt, cards, …} · played 701,916 | format 2, schema graph-played@2 | 2026-09-19 | tools/graph-amplifiers.mjs | crankmagic-assets.js, graph-payload.js, card-catalog.js | on demand | graph-amplifiers.mjs, refresh.mjs | graph-payload.mjs, refresh.mjs, service-worker.mjs | — | **serve** |  |

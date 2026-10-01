@@ -26,6 +26,7 @@
  */
 
 import {cardsIn, moveObject} from "../../state/index.mjs";
+import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
@@ -237,4 +238,83 @@ export const modal = {
 };
 
 /** The four, by the name a card script uses. */
-export const ASKING = Object.freeze({scry, dig, discard, modal});
+/* ---- chooseCard: a search (CR 701.23) ---- */
+
+/* What the search may find: the selector's cards, in the zone it searches, the searcher's own. */
+const ZONE_WORD = {library: "library", graveyard: "graveyard", hand: "hand"};
+const hasQuality = (selector) => Object.keys(selector ?? {}).some((k) => !["what", "zone"].includes(k));
+/* CR 701.23: what the search was for. */
+
+/**
+ * "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle." The searcher looks
+ * at the whole zone and chooses up to `count` cards the selector matches. CR 701.23b: searching for a card with a
+ * stated quality ("a basic land card") may find none even when there is one; CR 701.23d: searching for just "a card"
+ * must find that many if the zone has them. Each card chosen goes to the next of `destinations`, in the order chosen
+ * -- Cultivate's "one onto the battlefield tapped and the other into your hand" is two -- the last repeating for the
+ * rest. `shuffle` shuffles the library after (CR 701.24), before a card put "on top" is put there. The question is
+ * always asked, even of a library with nothing to find: the player still searches, and the shuffle still happens.
+ */
+export const chooseCard = {
+  open(state, params, context) {
+    const zone = params.zone ?? "library";
+    const [player] = playersFor(state, params.who, context.controller);
+    if (player === undefined) return false;
+    /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
+    const alternatives = Array.isArray(params.selector?.anyOf) ? params.selector.anyOf : [params.selector ?? {}];
+    const matchers = alternatives.map((one) => compileSelector({...one, what: "card", zone}));
+    const cards = cardsIn(state, zone, player).filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    const count = params.count ?? 1;
+    const min = params.upTo || hasQuality(params.selector) ? 0 : Math.min(count, cards.length);
+    state.awaiting = {
+      kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
+      destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
+      shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller ?? null,
+    };
+    return true;
+  },
+
+  choice(state, awaiting) {
+    return {
+      id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
+      title: awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
+      mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
+      min: awaiting.min,
+      max: awaiting.max,
+      options: cardOptions(state, awaiting.cards),
+    };
+  },
+
+  apply(state, awaiting, indices, extra = {}, rng = null) {
+    const events = [];
+    const chosen = (indices ?? []).map((index) => awaiting.cards[index]);
+    if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
+      throw new Error("Invalid selection");
+    const player = awaiting.player;
+    const tops = [];
+    chosen.forEach((id, i) => {
+      const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+      if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+      if (where.to === "top") { tops.push(id); return; }
+      const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner});
+      if (moved !== null && state.objects[moved] && where.to === "battlefield") {
+        if (where.tapped) state.objects[moved].tapped = true;
+        /* "Under your control": the searcher's, when the card is another player's own (it never is from a library). */
+        if (awaiting.controller !== null && awaiting.controller !== undefined) state.objects[moved].controller = awaiting.controller;
+      }
+    });
+    if (awaiting.shuffle) {
+      if (!rng) throw new Error("A search that shuffles needs the game's random stream");
+      const library = state.zones.library[player].filter((id) => !tops.includes(id));
+      state.zones.library[player] = rng.shuffle(library);
+      events.push(event("GameEventShuffle", state, {player: {playerId: player, name: state.players[player].name}}));
+    }
+    /* "Then shuffle and put that card on top" (CR 701.24): after the shuffle, on top, in the order chosen. */
+    if (tops.length) {
+      const library = state.zones.library[player].filter((id) => !tops.includes(id));
+      state.zones.library[player] = [...tops, ...library];
+    }
+    return events;
+  },
+};
+
+export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard});

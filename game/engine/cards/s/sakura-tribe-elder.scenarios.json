@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sakura-Tribe Elder",
+  "scenarios": [
+    {
+      "name": "Sacrificed, even summoning sick, for a basic land tapped",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sakura-Tribe Elder"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Sakura-Tribe Elder"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            3
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sakura-Tribe Elder"
+          ]
+        }
+      ]
+    }
+  ]
+}

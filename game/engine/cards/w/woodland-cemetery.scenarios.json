@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Woodland Cemetery",
+  "scenarios": [
+    {
+      "name": "With a Forest it enters untapped; without, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Woodland Cemetery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Woodland Cemetery"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Woodland Cemetery",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Woodland Cemetery"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Woodland Cemetery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Woodland Cemetery"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Woodland Cemetery"
+        }
+      ]
+    }
+  ]
+}

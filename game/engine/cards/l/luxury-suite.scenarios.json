@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Luxury Suite",
+  "scenarios": [
+    {
+      "name": "One opponent: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Luxury Suite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Luxury Suite"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Luxury Suite"
+        }
+      ]
+    },
+    {
+      "name": "Two opponents: untapped, either color",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Luxury Suite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Luxury Suite"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Luxury Suite",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Luxury Suite"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yavimaya Coast",
+  "scenarios": [
+    {
+      "name": "Colorless free; a color for 1 damage, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya Coast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Yavimaya Coast"
+              },
+              "count": 3,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "G": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Yavimaya Coast",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

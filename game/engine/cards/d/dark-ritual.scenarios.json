@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dark Ritual",
+  "scenarios": [
+    {
+      "name": "Three black mana from one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dark Ritual"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Dark Ritual"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 3
+          }
+        }
+      ]
+    }
+  ]
+}

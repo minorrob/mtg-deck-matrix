@@ -37,7 +37,7 @@
 import {moveObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
-import {recheckTargets} from "../script/bind.mjs";
+import {recheckTargets, factsOf} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -154,7 +154,8 @@ export function resolveTop(state, effect = null) {
   const context = {controller: entry.playerId, source};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
-  const outcome = beginResolution(state, script.effects, {...context, targets});
+  /* What its effects need to know about their targets, read once, now (CR 608.2h). */
+  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)});
   events.push(...outcome.events);
   if (outcome.status === "waiting") {
     entry.stage = "resolving";

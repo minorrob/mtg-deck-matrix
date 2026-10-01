@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sea of Clouds",
+  "scenarios": [
+    {
+      "name": "One opponent: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sea of Clouds"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sea of Clouds"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sea of Clouds"
+        }
+      ]
+    },
+    {
+      "name": "Two opponents: untapped, either color",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sea of Clouds"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sea of Clouds"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sea of Clouds",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sea of Clouds"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

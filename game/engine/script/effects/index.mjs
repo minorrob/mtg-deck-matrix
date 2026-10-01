@@ -73,7 +73,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal", "chooseCard"]);
 
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
