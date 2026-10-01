@@ -49,6 +49,8 @@ export const ENGINE_STATUS = Object.freeze({
     /* Phase 2.4: targets chosen on casting and checked on resolution, a card's script run at resolution, activated
        abilities; and the card directory with its scenarios. */
     "targets", "cards",
+    /* 2.4b: mana abilities that choose and that cost, lands that enter tapped, and the checks after every action. */
+    "mana-abilities",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });

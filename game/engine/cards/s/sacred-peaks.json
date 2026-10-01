@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sacred Peaks",
+    "oracleId": "fb69bc57-f05a-41c2-9b7b-9a9761ef0cd3",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain",
+      "Plains"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R} or {W}.)\nThis land enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R} or {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    }
+  ]
+}

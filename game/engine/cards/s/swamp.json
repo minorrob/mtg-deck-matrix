@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Swamp",
+    "oracleId": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+    "supertypes": [
+      "Basic"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Swamp"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {B}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

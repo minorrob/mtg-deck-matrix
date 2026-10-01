@@ -112,10 +112,11 @@ const files = loadCardScenarios();
   problem(base([{kind: "triggered", text: "When this enters, destroy target creature.", trigger: {on: "enters", who: "self"},
     targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "destroy", targets: {target: 0}}]}], ["Creature"]), /2\.4b/,
     "a trigger with targets, which are chosen as it goes on the stack");
-  problem(base([{kind: "activated", text: "{1}, {T}: Add {W}{B}.", cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}], effects: [{effect: "addMana", mana: {W: 1, B: 1}}]}], ["Artifact"]),
-    /mana ability beyond/, "a mana ability with a cost beyond {T} (a Signet)");
-  problem(base([{kind: "activated", text: "{T}: Add one mana of any color.", cost: [{atom: "{T}"}], effects: [{effect: "addMana", mana: "any"}]}], ["Artifact"]),
-    /mana ability beyond/, "a mana ability that chooses its color");
+  problem(base([{kind: "activated", text: "Sacrifice a Goblin: Add {R}.", cost: [{atom: "sacrifice", selector: {subtypes: ["Goblin"]}}], effects: [{effect: "addMana", mana: {R: 1}}]}], ["Creature"]),
+    /mana ability the engine cannot run yet/, "a mana ability whose cost is a sacrifice of another permanent (Skirk Prospector)");
+  problem(base([{kind: "activated", text: "{T}: Add one mana of any color that a land an opponent controls could produce.", cost: [{atom: "{T}"}],
+    effects: [{effect: "addMana", anyColor: "opponents-lands"}]}], ["Artifact"]), /mana ability the engine cannot run yet/,
+    "a mana ability whose colors depend on another player's lands (Fellwar Stone)");
   problem(base([{kind: "spell", text: "Counter target spell.", targets: [{what: "spell"}], effects: [{effect: "counterSpell", targets: {target: 0}}]}]),
     /counterSpell/, "countering a target spell, whose binding is 2.4b's");
   problem(base([]), /no spell ability/, "an instant that does nothing");

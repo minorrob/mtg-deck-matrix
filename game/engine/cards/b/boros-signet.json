@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boros Signet",
+    "oracleId": "41c84665-1f99-40ab-aaca-1188649eb263",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add {R}{W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add {R}{W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

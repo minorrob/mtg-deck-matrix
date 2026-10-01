@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Simic Signet",
+    "oracleId": "44503105-3e13-408d-a44f-37d503c61d72",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add {G}{U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add {G}{U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

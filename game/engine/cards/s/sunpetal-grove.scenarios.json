@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sunpetal Grove",
+  "scenarios": [
+    {
+      "name": "With a Plains out, it enters untapped and taps for either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunpetal Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sunpetal Grove"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sunpetal Grove",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sunpetal Grove"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without a Forest or a Plains, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunpetal Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sunpetal Grove"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sunpetal Grove"
+        }
+      ]
+    },
+    {
+      "name": "An opponent's Forest does not count: \"you control\"",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sunpetal Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sunpetal Grove"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sunpetal Grove"
+        }
+      ]
+    }
+  ]
+}

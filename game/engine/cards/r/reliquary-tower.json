@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reliquary Tower",
+    "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You have no maximum hand size.\n{T}: Add {C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You have no maximum hand size.",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

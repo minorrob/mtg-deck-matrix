@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Azorius Guildgate",
+    "oracleId": "ad1712d8-809f-410c-8b91-ffe6fb8a69a1",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Gate"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {W} or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W} or {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

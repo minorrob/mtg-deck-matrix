@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sylvan Caryatid",
+  "scenarios": [
+    {
+      "name": "Any color; and hexproof, so an opponent cannot aim at it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Caryatid"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sylvan Caryatid"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lightning Bolt"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Maya"
+                ],
+                [
+                  "Rob"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Caryatid"
+          ]
+        }
+      ]
+    }
+  ]
+}

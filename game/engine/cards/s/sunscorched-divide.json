@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunscorched Divide",
+    "oracleId": "8d2b2675-19df-4f40-9e8e-196ec097b91c",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add {R}{W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add {R}{W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

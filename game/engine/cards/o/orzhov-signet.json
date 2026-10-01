@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Orzhov Signet",
+    "oracleId": "de3dcb5d-775a-479f-99f5-d1883ed9b1b5",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add {W}{B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add {W}{B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1,
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

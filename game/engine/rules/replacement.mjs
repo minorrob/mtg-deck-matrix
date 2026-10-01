@@ -32,6 +32,20 @@
  * 1.8 for one that lasts "this turn" and then goes away.
  */
 
+import {compileSelector} from "../script/filter.mjs";
+
+/* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
+   fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
+   not yet there, is never one of the permanents counted. `controls` is a selector or `{anyOf: [...]}`; at least `min`
+   (default 1) and at most `max` of them, controlled by the player whose permanent is entering. */
+function unlessHolds(state, unless, player) {
+  if (!unless) return false;
+  const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
+  const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
+  const count = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).length;
+  return count >= (unless.min ?? 1) && (unless.max === undefined || count <= unless.max);
+}
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -46,7 +60,7 @@ function applies(state, ability, holder, proposal) {
   if (proposal.event === "enters") {
     /* `who: "self"` is the permanent's own arrival ability. `holder` is null for it, because at
        this moment the permanent is NOT on the battlefield to be a holder — see `applicable`. */
-    if (watches.who === "self") return holder === null;
+    if (watches.who === "self") return holder === null && !unlessHolds(state, watches.unless, proposal.player);
     if (holder === null) return false;
     if (watches.types && !watches.types.every((type) => (proposal.types ?? []).includes(type))) return false;
     if (watches.controller === "controller" && proposal.player !== holder.controller) return false;

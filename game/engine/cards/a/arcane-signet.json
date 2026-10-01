@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arcane Signet",
+    "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color in your commander's color identity.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color in your commander's color identity.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": "identity"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Great Forest Druid",
+    "oracleId": "5cb6ebf7-6a75-4464-9e39-e171fcb52de3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "{T}: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    }
+  ]
+}

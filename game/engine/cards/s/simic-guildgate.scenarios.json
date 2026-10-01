@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Simic Guildgate",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simic Guildgate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Simic Guildgate"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Simic Guildgate"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simic Guildgate"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simic Guildgate"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Simic Guildgate",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

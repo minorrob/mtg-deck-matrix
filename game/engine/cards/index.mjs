@@ -27,7 +27,7 @@
  */
 
 import {validateScript} from "../script/schema.mjs";
-import {isBuilt} from "../script/effects/index.mjs";
+import {isBuilt, NEEDS_A_DECISION} from "../script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
@@ -66,17 +66,29 @@ function effectsIn(list, out = []) {
   return out;
 }
 
-/* "{T}: Add {G}." -- CR 605.1a: an activated ability without a target that could add mana is a mana ability. The
-   engine's mana abilities tap their source and add a fixed amount; anything else that adds mana is a problem until
-   the payment choice exists (a color chosen on activation, a cost beyond {T}). */
+/* "{T}: Add {G}." -- CR 605.1a: an activated ability without a target that could add mana is a mana ability, and the
+   engine runs it off the stack. What it adds is the script's `addMana`, the first effect: a fixed `mana`, a `choice`
+   ("{W} or {U}"), or `anyColor` (true, or "identity" for your commander's color identity), `count` of it. Its cost
+   may be {T}, mana and life; anything after the mana (a pain land's damage to you) happens with it, at once. Anything
+   else that adds mana -- a sacrifice, a target, a question -- is a problem until it is built. */
+const MANA = (m) => m && typeof m === "object" && !Array.isArray(m) && Object.keys(m).length > 0
+  && Object.entries(m).every(([color, n]) => /^[WUBRGC]$/.test(color) && Number.isInteger(n) && n > 0);
 function manaAbility(ability, id) {
   if (ability.kind !== "activated") return null;
-  const adds = (ability.effects ?? []).some((e) => e?.effect === "addMana");
-  if (!adds) return null;
-  const fixed = (ability.cost ?? []).length === 1 && ability.cost[0]?.atom === "{T}" && !(ability.targets ?? []).length
-    && ability.effects.length === 1 && ability.effects[0].mana && typeof ability.effects[0].mana === "object"
-    && Object.entries(ability.effects[0].mana).every(([color, n]) => /^[WUBRGC]$/.test(color) && Number.isInteger(n) && n > 0);
-  return fixed ? {id, kind: "mana", tapSelf: true, produces: {...ability.effects[0].mana}, text: ability.text} : "unbuilt";
+  const [first, ...then] = ability.effects ?? [];
+  if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
+  const cost = ability.cost ?? [];
+  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom))) return "unbuilt";
+  if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
+  const adds = MANA(first.mana) ? {produces: {...first.mana}}
+    : Array.isArray(first.choice) && first.choice.length > 1 && first.choice.every(MANA) ? {produces: first.choice.map((m) => ({...m}))}
+    : first.anyColor === true || first.anyColor === "identity" ? {anyColor: first.anyColor, ...(first.count ? {count: first.count} : {})}
+    : null;
+  if (!adds) return "unbuilt";
+  const mana = cost.find((a) => a.atom === "mana");
+  const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
+  return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
+    ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {})};
 }
 
 /**
@@ -115,7 +127,7 @@ export function compileScript(script) {
     }
     if (ability.kind === "activated") {
       const mana = manaAbility(ability, id);
-      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability beyond "{T}: Add" a fixed amount`); return; }
+      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it)`); return; }
       if (mana) { abilities.push(mana); return; }
       for (const atom of ability.cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],

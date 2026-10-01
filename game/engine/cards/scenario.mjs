@@ -17,8 +17,8 @@
  *
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
- *     setup: [{seat, zone, cards, sick?}],
- *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}], ability?}
+ *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
+ *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}], ability?, mana?}
  *            | {resolve: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
  *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
@@ -34,7 +34,7 @@ import {targetName} from "../script/bind.mjs";
 
 export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 
-/* The basic lands, which need no definition: a land with its mana ability. */
+/* The basic lands, for a directory that has no definition of them: a land with its mana ability. */
 const BASIC = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G", Wastes: "C"};
 const basic = (name) => (BASIC[name]
   ? {types: ["Land"], abilities: [{id: `t-${BASIC[name].toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[BASIC[name]]: 1}}]}
@@ -72,13 +72,14 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const record = (list) => { events.push(...(list ?? [])); return list; };
 
   const define = (name) => {
-    const object = fixtures[name] ? structuredClone(fixtures[name]) : basic(name) ?? cards(name);
+    const object = fixtures[name] ? structuredClone(fixtures[name]) : cards(name) ?? basic(name);
     if (!object) fail(`no definition of ${name}: the engine cannot play it, and it is not a fixture`);
     return object;
   };
   const put = (seat, zone, name) => {
     const object = define(name);
-    return addObject(state, {...object, card: name, owner: seat, controller: seat}, zone, ["battlefield", "exile"].includes(zone) ? null : seat);
+    return addObject(state, {...object, card: name, owner: seat, controller: seat, ...(zone === "command" ? {commander: true} : {})},
+      zone, ["battlefield", "exile"].includes(zone) ? null : seat);
   };
 
   /* Every library starts with twenty of the same filler, so a draw is visible and never the game's end. */
@@ -127,6 +128,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
       : step.cast ? ["cast", step.cast] : ["activate", step.activate];
     let found = offered({kind, card, seat}, kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
+    /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
+    if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
   }
@@ -168,6 +171,11 @@ export function runScenario(scenario, cards, fixtures = {}) {
           const got = found.map((a) => (a.targetNames ?? []).join(" + ")).sort();
           const want = e.targets.map((t) => t.join(" + ")).sort();
           if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+        }
+        if (e.mana !== undefined) {
+          const got = found.map((a) => JSON.stringify(a.mana)).sort();
+          const want = e.mana.map((m) => JSON.stringify(m)).sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`);
         }
         passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
       } else if (e.event !== undefined) {

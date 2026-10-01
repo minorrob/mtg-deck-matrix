@@ -126,9 +126,12 @@ export const dealsRegular = (state, id) =>
 export function combatNeedsFirstStrike(state) {
   const combat = state.combat;
   if (!combat) return false;
+  /* A creature that has left the battlefield has left combat (CR 506.4) -- its controller conceded, say -- and a
+     first striker that is gone makes no first-strike step happen. */
+  const present = (id) => state.objects[id]?.zone === "battlefield";
   for (const attack of combat.attacks) {
-    if (dealsFirstStrike(state, attack.attacker)) return true;
-    for (const blocker of attack.blockers) if (dealsFirstStrike(state, blocker)) return true;
+    if (present(attack.attacker) && dealsFirstStrike(state, attack.attacker)) return true;
+    for (const blocker of attack.blockers) if (present(blocker) && dealsFirstStrike(state, blocker)) return true;
   }
   return false;
 }
