@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vampire Nighthawk",
+  "scenarios": [
+    {
+      "name": "Flying, deathtouch and lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vampire Nighthawk"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Vampire Nighthawk",
+            "has": [
+              "Flying",
+              "Deathtouch",
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

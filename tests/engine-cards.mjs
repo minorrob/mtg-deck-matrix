@@ -111,12 +111,23 @@ const files = loadCardScenarios();
     /discard: a cost atom nothing pays/, "a cost atom nothing pays yet");
   problem(base([{kind: "triggered", text: "Whenever this attacks, draw.", trigger: {on: "attacks"}, effects: [{effect: "draw"}]}], ["Creature"]),
     /attacks: a trigger the engine does not watch/, "a trigger the engine does not watch for");
-  problem(base([{kind: "triggered", text: "Whenever another creature dies, gain 1.", trigger: {on: "dies", who: "another"}, effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]),
-    /dies \(another\)/, "a death some other permanent's, which the engine cannot yet watch for");
+  /* Batch 7 built "whenever another creature dies" (CR 603.10a): it compiles now, and a death watched for some other
+     way is still refused by name. */
+  const another = compileScript(base([{kind: "triggered", text: "Whenever another creature dies, gain 1.", trigger: {on: "dies", who: "another", filter: {types: ["Creature"]}},
+    effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]));
+  eq([another.problems, another.definition?.abilities[0].trigger], [[], {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: "another", filter: {types: ["Creature"]}}],
+    "a death some other permanent's compiles to the departure the engine watches, its filter read as the thing last existed");
+  problem(base([{kind: "triggered", text: "Whenever a creature an opponent controls dies, gain 1.", trigger: {on: "dies", who: "opponent"}, effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]),
+    /dies \(opponent\)/, "a death named some other way than this, another or any is refused by name");
   problem(base([{kind: "triggered", text: "Whenever another creature enters, gain 1.", trigger: {on: "enters", who: "another", filter: {kind: "creature"}},
     effects: [{effect: "gainLife", amount: 1}]}], ["Creature"]), /no key "kind"/, "an arrival filter the selector grammar refuses");
-  problem(base([{kind: "activated", text: "Sacrifice a Goblin: Add {R}.", cost: [{atom: "sacrifice", selector: {subtypes: ["Goblin"]}}], effects: [{effect: "addMana", mana: {R: 1}}]}], ["Creature"]),
-    /mana ability the engine cannot run yet/, "a mana ability whose cost is a sacrifice of another permanent (Skirk Prospector)");
+  /* Batch 7 built a mana ability that sacrifices another permanent (Skirk Prospector, Ashnod's Altar): it compiles, the
+     sacrifice its own choice; one whose cost is a discard is still refused. */
+  const goblin = compileScript(base([{kind: "activated", text: "Sacrifice a Goblin: Add {R}.", cost: [{atom: "sacrifice", selector: {subtypes: ["Goblin"]}}], effects: [{effect: "addMana", mana: {R: 1}}]}], ["Creature"]));
+  eq([goblin.problems, goblin.definition?.abilities[0].kind, goblin.definition?.abilities[0].sacrifice], [[], "mana", {subtypes: ["Goblin"]}],
+    "a mana ability whose cost is a sacrifice of another permanent compiles, what to sacrifice chosen as it is activated");
+  problem(base([{kind: "activated", text: "Discard a card: Add {R}.", cost: [{atom: "discard"}], effects: [{effect: "addMana", mana: {R: 1}}]}], ["Creature"]),
+    /mana ability the engine cannot run yet/, "a mana ability whose cost is a discard is refused");
   problem(base([{kind: "activated", text: "{T}: Add one mana of any color that a land an opponent controls could produce.", cost: [{atom: "{T}"}],
     effects: [{effect: "addMana", anyColor: "opponents-lands"}]}], ["Artifact"]), /mana ability the engine cannot run yet/,
     "a mana ability whose colors depend on another player's lands (Fellwar Stone)");
