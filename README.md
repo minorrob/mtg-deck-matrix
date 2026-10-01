@@ -683,6 +683,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
 - `room-beats` — `tests/room-beats.mjs`
+- `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advise-brief` — `tests/advise-brief.mjs`
 - `import-flow` — `tests/import-flow.mjs`

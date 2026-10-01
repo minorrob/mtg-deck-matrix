@@ -39,6 +39,7 @@ import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
+import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
@@ -101,10 +102,60 @@ function readPod(pod, cards) {
   return read;
 }
 
+/* WHAT TELLS ONE OFFER FROM ANOTHER OF THE SAME CARD (Rob, 2026-10-01: a choice is a pop-up where the player selects).
+   The engine offers a spell once per way to aim it, an ability once per permanent that could pay its sacrifice, a mana
+   ability once per color it can add (rules/actions.mjs); each option's `label` is still the card's name, and `detail`
+   says which way this one is -- "→ Maya", "→ Llanowar Elves (Maya's)", "sacrificing Bear", "{G}" -- so the board can
+   ask which. Without it, a spell with five legal targets was five buttons reading the same, and a press aimed it at
+   the first. Everything named is the deciding seat's to see: what is on the battlefield or the stack, the players,
+   and the seat's own hand for a discard. Two things that would read the same are told apart by power and toughness
+   and whether they are tapped, then numbered. */
+export function offerDetails(state, seat, actions) {
+  const player = (id) => (id === seat ? `${state.players[id]?.name ?? "you"} (you)` : state.players[id]?.name ?? `Seat ${id + 1}`);
+  const object = (id, plain) => {
+    const o = state.objects[id];
+    if (!o) return "";
+    let holder = o.controller;
+    try { if (o.zone === "battlefield") holder = controllerOf(state, id); } catch { /* the base controller */ }
+    const whose = holder === seat || holder === undefined || holder === null ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
+    if (plain) return `${o.card}${whose}`;
+    let shape = "";
+    try { const c = characteristicsOf(state, id); if (c.power !== null && c.power !== undefined) shape = ` ${c.power}/${c.toughness}`; } catch { /* no shape */ }
+    return `${o.card}${whose}${shape}${o.tapped ? ", tapped" : ""}`;
+  };
+  const MANA = ["W", "U", "B", "R", "G", "C"];
+  const manaText = (mana) => MANA.flatMap((k) => Array.from({length: mana?.[k] ?? 0}, () => `{${k}}`)).join("");
+  const abilities = new Map();
+  for (const a of actions) if (a.kind === "activate") abilities.set(a.objectId, new Set([...(abilities.get(a.objectId) ?? []), a.abilityId]));
+  const say = (a, plain) => {
+    const parts = [];
+    if (a.kind === "activate" && (abilities.get(a.objectId)?.size ?? 0) > 1 && a.text) parts.push(`“${a.text}”`);
+    if (a.x !== undefined) parts.push(`X = ${a.x}`);
+    if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map((t) => (!t ? "" : t.kind === "player" ? player(t.id) : object(t.id, plain))).join(", ")}`);
+    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : "sacrificing"} ${object(id, plain)}`);
+    if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
+    return parts.join(" · ");
+  };
+  const details = actions.map((a) => (a.kind === "pass" ? "" : say(a, true)));
+  /* Same card, same words: say more, then number what is still alike. */
+  const key = (a, i) => `${a.kind}|${a.objectId}|${details[i]}`;
+  const clash = (i) => details[i] && actions.some((b, j) => j !== i && key(b, j) === key(actions[i], i));
+  const fuller = details.map((d, i) => (clash(i) ? say(actions[i], false) : d));
+  const seen = new Map();
+  return fuller.map((d, i) => {
+    if (!d || !actions.some((b, j) => j !== i && b.kind === actions[i].kind && b.objectId === actions[i].objectId && fuller[j] === d)) return d;
+    const k = `${actions[i].kind}|${actions[i].objectId}|${d}`, n = (seen.get(k) ?? 0) + 1;
+    seen.set(k, n);
+    return `${d} · ${n}`;
+  });
+}
+
 /* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included. */
-function priorityChoice(id, actions) {
+function priorityChoice(id, actions, state = null, seat = null) {
+  const details = state ? offerDetails(state, seat, actions) : [];
   return {id, title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority",
-    options: actions.map((a, index) => ({index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {})}))};
+    options: actions.map((a, index) => ({index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {}),
+      ...(details[index] ? {detail: details[index]} : {})}))};
 }
 
 /**
@@ -183,7 +234,7 @@ function roomOn(storage, matchId, cards) {
       const seat = state.priorityPlayer, actions = legalActions(state, seat);
       if (seats[seat].pilot === "house") {apply(seat, pilots[seat].choose(projectFor(state, seat), actions), "pilot"); continue;}
       if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
-      controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions));
+      controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
       pendingSeat = seat; pendingActions = actions; return;
     }
     throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
