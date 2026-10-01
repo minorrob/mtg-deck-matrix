@@ -32,6 +32,9 @@ export const STATIC_RULES = Object.freeze({
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
       is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). */
   "this-costs-less": "rules/actions.mjs",
+  /** CR 509.1b: "Target creature can't be blocked this turn" (Rogue's Passage), "creatures with power 2 or less can't be
+      blocked". keywords/combat.mjs, as each blocker is checked. */
+  "cant-be-blocked": "keywords/combat.mjs",
 });
 
 /**
@@ -76,14 +79,19 @@ export function playerRuleChanged(state, rule, player) {
   return false;
 }
 
-/** Whether any static ability on the battlefield changes `rule` for this object. */
+/** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */
 export function ruleChanged(state, rule, id) {
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;
-      if (staticAffects(state, ability, id, holder.controller)) return true;
+      /* The whole selector grammar ("creatures you control with power 2 or less"): a rule changes nothing a layer
+         derives, so reading it through the layers cannot loop, as the layers' own narrower matcher has to avoid. */
+      if (matchesSelector(ability.affects, state, id, {controller: holder.controller, source: holderId})) return true;
     }
+  }
+  for (const effect of state.effects ?? []) {
+    if (effect.rule === rule && staticAffects(state, effect, id, effect.sourceController)) return true;
   }
   return false;
 }
