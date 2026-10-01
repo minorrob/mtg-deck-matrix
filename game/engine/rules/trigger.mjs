@@ -43,6 +43,7 @@
  * effect. Both need the effect system in phase 2 before they have anything to be created by.
  */
 
+import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility} from "./stack.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
@@ -104,7 +105,10 @@ function subjects(state, event, condition, sourceId, controller) {
     const drawer = fields.to?.player?.playerId;
     return whoseIs(condition.drawer ?? "you", drawer, controller) ? [{player: drawer}] : [];
   }
-  return matches(state, event, condition, sourceId, controller) ? [{}] : [];
+  if (!matches(state, event, condition, sourceId, controller)) return [];
+  /* A step's beginning is about the player whose turn it is: "that player draws an additional card" (Howling Mine). */
+  if (event.kind === "GameEventTurnPhase" && fields.playerTurn?.playerId !== undefined) return [{player: fields.playerTurn.playerId}];
+  return [{}];
 }
 
 /** Whether an event matches a trigger condition. */
@@ -145,12 +149,8 @@ function matches(state, event, condition, sourceId, controller) {
 /* CR 603.4, the intervening "if": checked when the ability WOULD trigger, and again on resolution.
    An ability whose condition is false when the event happens does not trigger at all — it is not
    put on the stack and then removed, it never goes on. */
-function conditionHolds(state, condition, controller) {
-  if (!condition) return true;
-  if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
-  if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
-  return true;
-}
+/* An intervening "if" (CR 603.4) is asked as the event happens -- here -- and again as the ability resolves (stack.mjs).
+   The grammar is script/condition.mjs's. */
 
 /**
  * Find every ability that triggers on these events and queue it (CR 603.2).
@@ -174,7 +174,7 @@ export function collectTriggers(state, events) {
         for (const ability of object.abilities ?? []) {
           if (ability.kind !== "triggered" || !ability.trigger) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
-          if (!conditionHolds(state, ability.condition, object.controller)) continue;
+          if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id})) continue;
           state.pendingTriggers.push({
             abilityId: ability.id,
             text: ability.text ?? ability.id,
@@ -203,7 +203,7 @@ export function collectTriggers(state, events) {
       for (const ability of gone?.abilities ?? []) {
         if (ability.kind !== "triggered" || !ability.trigger) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
-        if (!conditionHolds(state, ability.condition, gone.controller)) continue;
+        if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;
         state.pendingTriggers.push({
           abilityId: ability.id,
           text: ability.text ?? ability.id,
@@ -220,7 +220,7 @@ export function collectTriggers(state, events) {
 }
 
 /* A scripted trigger's effects, for the stack entry; nothing for a kernel trigger that has none. */
-const scriptOf = (ability) => ((ability.effects ?? []).length ? {script: {targets: ability.targets ?? [], effects: ability.effects}} : {});
+const scriptOf = (ability) => ((ability.effects ?? []).length ? {script: {targets: ability.targets ?? [], effects: ability.effects, ...(ability.condition ? {condition: ability.condition} : {})}} : {});
 
 /** How many triggers are waiting to go on the stack. */
 export const pendingCount = (state) => (state.pendingTriggers ?? []).length;

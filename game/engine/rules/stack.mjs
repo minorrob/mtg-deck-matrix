@@ -34,6 +34,7 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
+import {conditionHolds} from "../script/condition.mjs";
 import {moveObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
@@ -115,7 +116,7 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
     playerId: controller, kind, abilityId, targets,
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
-  if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects});
+  if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects, ...(script.condition ? {condition: script.condition} : {})});
   /* What a trigger is about -- the spell cast, the attacker, the player dealt damage -- for "that player" (trigger.mjs). */
   if (about) entry.about = structuredClone(about);
   /* X chosen as it was activated (CR 602.2b); and its source as it last was, for a source the cost sacrificed. */
@@ -163,6 +164,9 @@ export function resolveTop(state, effect = null) {
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
+  /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
+     ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
+  if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source})) return finishTop(state, entry, events, false);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
   const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)});
   events.push(...outcome.events);
