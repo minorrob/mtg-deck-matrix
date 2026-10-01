@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Irenicus's Vile Duplication",
+    "oracleId": "a3faf698-1dac-45ef-9c43-c8cead489ffc",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a token that's a copy of target creature you control, except the token has flying and it isn't legendary.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a token that's a copy of target creature you control, except the token has flying and it isn't legendary.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          },
+          "except": {
+            "addKeywords": [
+              "Flying"
+            ],
+            "nonLegendary": true
+          }
+        }
+      ]
+    }
+  ]
+}

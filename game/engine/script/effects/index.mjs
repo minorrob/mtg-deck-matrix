@@ -30,7 +30,7 @@ import {
   putCounter, putCounterAll, removeCounter, proliferate,
 } from "./resources.mjs";
 import {
-  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach,
+  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent,
 } from "./permanents.mjs";
 
 /**
@@ -73,7 +73,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal", "chooseCard", "proliferate", "sacrifice"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate"]);
 
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
@@ -83,8 +83,8 @@ export const EFFECTS = Object.freeze({
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
-  /* Phase 3, batch 6: Equip. */
-  attach,
+  /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
+  attach, copyPermanent,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

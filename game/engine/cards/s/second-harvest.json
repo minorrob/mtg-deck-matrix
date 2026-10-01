@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Second Harvest",
+    "oracleId": "61a6341e-0d36-44b6-8026-9c87c8ef61cb",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "For each token you control, create a token that's a copy of that permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "For each token you control, create a token that's a copy of that permanent.",
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "selector": {
+            "token": true,
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Giant Adephage",
+  "scenarios": [
+    {
+      "name": "Combat damage to a player: a copy of itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Adephage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Giant Adephage"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant Adephage",
+            "Giant Adephage"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 33
+        }
+      ]
+    }
+  ]
+}

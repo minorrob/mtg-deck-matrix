@@ -68,6 +68,67 @@ export function attach(state, params, context) {
   return events;
 }
 
+/* COPIABLE VALUES (CR 707.2): what a copy of a permanent copies -- its name, mana cost, colors, types, subtypes,
+   supertypes, rules text and printed power and toughness, which is what the state holds (the layers derive the rest),
+   and never its counters, damage, tapped state or the effects on it. A copy of a token that is itself a copy copies the
+   copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
+   toughness, colors. */
+function copiable(object, except = {}) {
+  const supertypes = (object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary"));
+  return {
+    card: object.card, manaCost: object.manaCost ?? null,
+    types: [...new Set([...(object.types ?? []), ...(except.addTypes ?? [])])],
+    subtypes: [...(except.setSubtypes ?? object.subtypes ?? [])],
+    ...(supertypes.length ? {supertypes} : {}),
+    colors: [...(except.setColors ?? object.colors ?? [])],
+    keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
+    abilities: structuredClone(object.abilities ?? []),
+    power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
+    ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
+    ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
+  };
+}
+
+/**
+ * Make token copies of permanents (CR 707.2, 111.4): `count` of each, under `controller` (the effect's, unless said);
+ * "it gains haste until end of turn" (`gainsUntilEndOfTurn`), "that token gains haste" (`gains`, for as long as it
+ * lasts), and "sacrifice it at the beginning of the next end step"
+ * (`atEndStep`), a delayed trigger that remembers the tokens made. Shared by copyPermanent and populate.
+ */
+export function makeCopies(state, ids, params, context, events) {
+  const controller = params.controller ?? context.controller;
+  const made = [];
+  for (const id of ids) {
+    const original = state.objects[id];
+    if (!original) continue;
+    for (let i = 0; i < (params.count ?? 1); i += 1) {
+      const copy = addObject(state, {...copiable(original, params.except), owner: controller, controller, token: true}, "battlefield");
+      if (params.tapped) state.objects[copy].tapped = true;
+      made.push(copy);
+      events.push(event("GameEventCardChangeZone", state, {
+        card: cardRef(state, copy), enteredAs: copy,
+        from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
+      }));
+    }
+  }
+  if (made.length && params.gainsUntilEndOfTurn) pushEffect(state, {id: `copy-gains:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
+    apply: {addKeywords: params.gainsUntilEndOfTurn}, until: "end-of-turn", sourceController: controller});
+  /* "That token gains haste": an effect on the token, with no end -- it lasts while the token does. */
+  if (made.length && params.gains) pushEffect(state, {id: `copy-gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
+    apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
+  if (made.length && params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
+    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard"}]}, context);
+  return made;
+}
+
+/** `copyPermanent` — "create a token that's a copy of target creature you control" (CR 707.2), or one of each a selector matches ("for each token you control"). */
+export function copyPermanent(state, params, context) {
+  const events = [];
+  const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
+  makeCopies(state, originals, params, context, events);
+  return events;
+}
+
 /** `createToken` — CR 111. */
 export function createToken(state, params, context) {
   const events = [];
