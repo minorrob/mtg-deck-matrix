@@ -40,6 +40,11 @@ import {compileSelector} from "../script/filter.mjs";
    (default 1) and at most `max` of them, controlled by the player whose permanent is entering. */
 function unlessHolds(state, unless, player) {
   if (!unless) return false;
+  /* "Unless you have two or more opponents": the players still in the game besides this one. */
+  if (unless.opponents) {
+    const opponents = state.players.filter((p) => p.id !== player && !p.lost).length;
+    return opponents >= (unless.opponents.min ?? 1) && (unless.opponents.max === undefined || opponents <= unless.opponents.max);
+  }
   const alternatives = Array.isArray(unless.controls?.anyOf) ? unless.controls.anyOf : [unless.controls ?? {}];
   const matchers = alternatives.map((selector) => compileSelector({...selector, controller: "you"}));
   const count = state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player}))).length;

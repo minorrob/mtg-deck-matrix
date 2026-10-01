@@ -31,11 +31,19 @@
  * So "deal 3 damage to any target" is `{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}`:
  * whichever kind was chosen, the other binds to nothing.
  *
+ * FACTS ABOUT A TARGET (CR 608.2h): `{powerOf: {target: n}}`, `{manaValueOf: {target: n}}` and `{controllerOf: {target: n}}`
+ * name what an effect needs to know about its target -- Swords to Plowshares' "its controller gains life equal to its
+ * power". They are read once, as the resolution begins (`factsOf`), so an effect after the exile still knows the power
+ * of what it exiled: the last known information, as the rule asks. `controllerOf` binds where a player goes: `who`,
+ * `toPlayer`, `controller` (whose token, under whose control).
+ *
  * A CHOSEN TARGET IS PLAIN DATA, `{kind: "object"|"player", id}`, so a game saved with a spell on the stack resumes
  * with the same targets, and an action survives a round trip through JSON to a pilot across a network.
  */
 
 import {compileSelector, selectMatching} from "./filter.mjs";
+import {powerOf, controllerOf} from "../rules/layers.mjs";
+import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
@@ -98,6 +106,25 @@ export function recheckTargets(state, specs, chosen, context) {
 }
 
 const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
+const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
+const factRef = (value) => value && typeof value === "object" && !Array.isArray(value) && FACT_KEYS.find((k) => isRef(value[k])) || null;
+
+/** What effects may need to know about each object target, read now (CR 608.2h): power, mana value, controller. */
+export function factsOf(state, targets) {
+  return (targets ?? []).map((t) => {
+    if (!t || t.kind !== "object" || !state.objects[t.id]) return null;
+    const o = state.objects[t.id];
+    return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
+      manaValueOf: o.manaCost ? manaValue(parseManaCost(o.manaCost)) : 0,
+      controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller};
+  });
+}
+/* A fact's value, or undefined when its target became illegal. */
+function factValue(value, context) {
+  const key = factRef(value);
+  if (!key) return undefined;
+  return (context.facts ?? [])[value[key].target]?.[key];
+}
 
 function objectsOf(value, context) {
   if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
@@ -119,6 +146,14 @@ function playersOf(value, context) {
 export function bindEffect(effect, context) {
   if (!effect || typeof effect !== "object") return effect;
   const bound = {...effect};
+  /* Facts first: a number for an amount, a player where a player goes. */
+  for (const [key, value] of Object.entries(bound)) {
+    if (!factRef(value)) continue;
+    const fact = factValue(value, context);
+    if (key === "who") bound.who = fact === undefined ? [] : [fact];
+    else if (fact === undefined) delete bound[key];
+    else bound[key] = fact;
+  }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
   if ("who" in bound) bound.who = playersOf(bound.who, context);
@@ -136,6 +171,8 @@ export function targetRefs(effects) {
     if (Array.isArray(value)) { value.forEach(walk); return; }
     if (!value || typeof value !== "object") return;
     if (isRef(value)) { found.push(value.target); return; }
+    const fact = factRef(value);
+    if (fact) { found.push(value[fact].target); return; }
     Object.values(value).forEach(walk);
   };
   walk(effects);

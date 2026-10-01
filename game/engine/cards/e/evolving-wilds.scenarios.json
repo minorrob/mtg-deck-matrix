@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Evolving Wilds",
+  "scenarios": [
+    {
+      "name": "Itself for a basic land, tapped",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Evolving Wilds"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Evolving Wilds"
+        },
+        {
+          "activate": "Evolving Wilds"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "options": [
+                  "Forest",
+                  "Island",
+                  "Swamp",
+                  "Mountain",
+                  "Plains",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Island"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Evolving Wilds"
+          ]
+        }
+      ]
+    }
+  ]
+}

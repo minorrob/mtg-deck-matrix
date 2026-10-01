@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sulfur Falls",
+  "scenarios": [
+    {
+      "name": "With a Mountain it enters untapped; without, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sulfur Falls"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sulfur Falls"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sulfur Falls",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sulfur Falls"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sulfur Falls"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sulfur Falls"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sulfur Falls"
+        }
+      ]
+    }
+  ]
+}

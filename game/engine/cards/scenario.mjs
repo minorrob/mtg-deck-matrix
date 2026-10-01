@@ -39,7 +39,8 @@ export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 /* The basic lands, for a directory that has no definition of them: a land with its mana ability. */
 const BASIC = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G", Wastes: "C"};
 const basic = (name) => (BASIC[name]
-  ? {types: ["Land"], abilities: [{id: `t-${BASIC[name].toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[BASIC[name]]: 1}}]}
+  ? {types: ["Land"], supertypes: ["Basic"], ...(name !== "Wastes" ? {subtypes: [name]} : {}),
+    abilities: [{id: `t-${BASIC[name].toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[BASIC[name]]: 1}}]}
   : null);
 
 const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
@@ -182,6 +183,24 @@ export function runScenario(scenario, cards, fixtures = {}) {
           if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`);
         }
         passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
+      } else if (e.asks !== undefined) {
+        /* The question the game is waiting on: whom it asks, and the options it offers them. */
+        if (!state.awaiting) fail(`nothing is being asked (expected ${JSON.stringify(e.asks)})`);
+        const choice = awaitingChoice(state);
+        if (e.asks.seat !== undefined && state.awaiting.player !== e.asks.seat) fail(`${names[state.awaiting.player]} is asked, not ${names[e.asks.seat]}`);
+        if (e.asks.options !== undefined) {
+          const got = choice.options.map((o) => o.label).sort();
+          if (JSON.stringify(got) !== JSON.stringify([...e.asks.options].sort())) fail(`the question offers ${JSON.stringify(got)}, not ${JSON.stringify(e.asks.options)}`);
+        }
+        if (e.asks.min !== undefined && choice.min !== e.asks.min) fail(`the question takes at least ${choice.min}, not ${e.asks.min}`);
+        passed.push(`asks ${names[state.awaiting.player]}: ${(e.asks.options ?? []).join(", ")}`);
+      } else if (e.keywords !== undefined) {
+        /* A permanent's current keywords, as its controller's view shows them. */
+        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.keywords.card);
+        if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
+        for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
+        for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
+        passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
       } else if (e.event !== undefined) {
         const hit = events.some((ev) => ev.kind === e.event && Object.entries(e.where ?? {}).every(([k, v]) => JSON.stringify(ev.data?.fields?.[k]) === JSON.stringify(v)));
         if (!hit) fail(`no ${e.event} with ${JSON.stringify(e.where ?? {})}`);

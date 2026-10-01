@@ -164,6 +164,7 @@ export function compileScript(script) {
     oracleId: identity.oracleId,
     types: [...types],
     subtypes: [...(identity.subtypes ?? [])],
+    ...((identity.supertypes ?? []).length ? {supertypes: [...identity.supertypes]} : {}),
     manaCost: identity.manaCost ?? null,
     colors: [...(identity.colors ?? [])],
     colorIdentity: [...(identity.colorIdentity ?? [])],

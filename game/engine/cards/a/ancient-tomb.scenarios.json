@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ancient Tomb",
+  "scenarios": [
+    {
+      "name": "Two colorless for two damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ancient Tomb"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ancient Tomb"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

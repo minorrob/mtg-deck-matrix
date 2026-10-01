@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Birds of Paradise",
+  "scenarios": [
+    {
+      "name": "A flier that taps for any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Birds of Paradise"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Birds of Paradise"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "Birds of Paradise",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Birds of Paradise",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

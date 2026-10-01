@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dark Ritual",
+    "oracleId": "53f7c868-b03e-4fc2-8dcf-a75bbfa3272b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {B}{B}{B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {B}{B}{B}.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 3
+          }
+        }
+      ]
+    }
+  ]
+}

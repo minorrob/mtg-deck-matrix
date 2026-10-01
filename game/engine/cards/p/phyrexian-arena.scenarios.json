@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Phyrexian Arena",
+  "scenarios": [
+    {
+      "name": "A card and a life each upkeep",
+      "at": {
+        "turn": 1,
+        "phase": "UPKEEP"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Phyrexian Arena"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

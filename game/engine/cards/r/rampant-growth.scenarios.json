@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rampant Growth",
+  "scenarios": [
+    {
+      "name": "Forest onto the battlefield tapped",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rampant Growth"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elvish Mystic",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Elvish Mystic"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rampant Growth"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "options": [
+                  "Forest",
+                  "Island",
+                  "Swamp",
+                  "Mountain",
+                  "Plains",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elvish Mystic",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    }
+  ]
+}
