@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Idyllic Beachfront",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Idyllic Beachfront"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Idyllic Beachfront"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Idyllic Beachfront"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Idyllic Beachfront"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Idyllic Beachfront"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

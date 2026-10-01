@@ -68,6 +68,8 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
   if (entering) {
     if (entering.tapped) state.objects[moved].tapped = true;
+    /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
+    for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     for (const [counter, count] of Object.entries(entering.counters)) {
       state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
     }

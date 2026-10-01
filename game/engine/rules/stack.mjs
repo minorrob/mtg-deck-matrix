@@ -198,6 +198,7 @@ function finishTop(state, entry, events, fizzled) {
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
+      for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       for (const [counter, count] of Object.entries(entering.counters)) {
         state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + count;
       }

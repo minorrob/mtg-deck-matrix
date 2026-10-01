@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mystic Monastery",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mystic Monastery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Mystic Monastery"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Mystic Monastery"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Mystic Monastery"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Mystic Monastery"
+          },
+          "count": 3,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

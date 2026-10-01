@@ -27,6 +27,7 @@ import {peekStack, resolveTop} from "./stack.mjs";
 import {resolutionPending} from "../script/resolution.mjs";
 import {checkStateBasedActions} from "./sba.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
+import {askEntering} from "./entering.mjs";
 
 /**
  * The seats that will act this round, in APNAP order: the active player, then each other player in
@@ -114,8 +115,13 @@ export function passPriority(state, effect = null) {
  * @returns {Array} the events, with whatever the checks added
  */
 export function afterResolving(state, events = []) {
-  events.push(...checkStateBasedActions(state));
+  /* What the resolution did triggers now (CR 603.2); then what entered asking (a shock land fetched by a search) is
+     answered, before state-based actions and before any trigger goes on the stack. */
   collectTriggers(state, events);
+  if (askEntering(state)) { state.priorityPlayer = null; return events; }
+  const sba = checkStateBasedActions(state);
+  events.push(...sba);
+  collectTriggers(state, sba);
   if (!state.awaiting) openTriggers(state);
   if (state.awaiting) {state.priorityPlayer = null; return events;}
   /* CR 117.3b. The ACTIVE player, whoever happened to pass last -- or, when the active player has left the

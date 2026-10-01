@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Haunted Mire",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Haunted Mire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Haunted Mire"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Haunted Mire"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Haunted Mire"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Haunted Mire"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
