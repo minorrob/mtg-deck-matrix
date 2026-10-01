@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 458 defined and playable today; 1,605 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 469 defined and playable today; 1,616 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Only once (or N times) each turn | — | missing | 15 | 29 |
 | static | CantBlockBy | — | missing | 15 | 26 |
 | effect | Surveil | surveil | named | 15 | 21 |
 | keyword construct | etbCounter | — | missing | 14 | 35 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | keyword ability | Flashback | — | named | 10 | 14 |
 | effect | Regenerate | — | missing | 10 | 12 |
+| count | Damage dealt | — | missing | 9 | 56 |
 
 ## Keyword abilities (CR 702)
 
@@ -843,7 +843,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
 | As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
 | A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 8 |
-| Only once (or N times) each turn | — | missing | 29 | 289 | 29 | 15 |
+| Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 4 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
