@@ -138,6 +138,40 @@ export function destroy(state, params, context) {
 }
 
 /**
+ * `destroyAll` — CR 701.8 for everything a selector matches, AT ONCE (a board wipe).
+ *
+ * Which permanents die is decided before any of them moves. Done one at a time, a wipe that killed a lord first
+ * would strip the indestructible it was granting and then kill what it had protected; at once, whatever was
+ * indestructible when the wipe resolved survives it (CR 702.12b), whatever else it took with it.
+ */
+export function destroyAll(state, params, context) {
+  const events = [];
+  const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)];
+  const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
+  for (const id of doomed) moveOne(state, id, "graveyard", events);
+  return events;
+}
+
+/**
+ * `mill` — CR 701.13: the top N cards of each named player's library into their graveyard, from the top down.
+ *
+ * MILLING IS NOT DRAWING. A player told to mill more than they have mills what there is (CR 701.13b), and an empty
+ * library here is not the empty-library draw that loses the game (CR 704.5b): nothing is marked.
+ */
+export function mill(state, params, context) {
+  const events = [];
+  const count = params.count ?? 1;
+  for (const player of playersFor(state, params.who, context.controller)) {
+    for (let i = 0; i < count; i += 1) {
+      const library = cardsIn(state, "library", player);
+      if (library.length === 0) break;
+      moveOne(state, library[0], "graveyard", events, {owner: player});
+    }
+  }
+  return events;
+}
+
+/**
  * `counterSpell` — CR 701.6a. The spell leaves the stack and goes to its owner's graveyard.
  *
  * `targets` are stack ids, not object ids: a spell on the stack is identified by where it is in the
