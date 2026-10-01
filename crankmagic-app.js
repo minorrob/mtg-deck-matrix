@@ -15,7 +15,24 @@ function colors(ci){const list=ci||[];return `<span class="cm-colors" aria-label
 /* The printed cost only: a card with a second face shows the cost in its top-right corner, not
    the adventure's or the back's too (CrankCatalog.frontCost). Pass the type line so a split card
    or a Room keeps both of its halves. */
-function mana(raw,typeLine=''){const cost=globalThis.CrankCatalog&&CrankCatalog.frontCost?CrankCatalog.frontCost(raw,typeLine):raw;return `<span class="cm-mana" aria-label="Mana cost ${esc(cost||'unknown')}">${(String(cost||'').match(/\{[^}]+\}/g)||[]).map(x=>/^[WUBRG23]$/.test(x.slice(1,-1))?`<img src="assets/mana/${x.slice(1,-1)}.svg?v=1" alt="${esc(x)}" width="19" height="19">`:`<span class="cm-mana-symbol" title="${esc(x)}">${esc(x.slice(1,-1))}</span>`).join('')}</span>`;}
+/* EVERY SYMBOL IS THE SAME CIRCLE (Rob, 2026-10-01: "The colorless mana symbol should be the same circle as the
+   colored mana symbols"). The five colors and {2} and {3} are the drawn symbols in assets/mana; every other one is
+   drawn here in the same circle, the same size and the same fills -- a number or X on the generic gray, {C} its
+   diamond, a hybrid split between its two halves, a Phyrexian symbol its color with the Phyrexian mark -- so a cost
+   reads as one row of like symbols wherever it is shown, and none can be squeezed thinner than the rest. */
+const MANA_FILL={W:'#F8F6D8',U:'#C1D7E9',B:'#CAC5C0',R:'#E49977',G:'#A3C095',C:'#CAC5C0'},MANA_INK='#0D0F0F';
+function manaSymbol(x){
+  const s=x.slice(1,-1).toUpperCase();
+  if(/^[WUBRG23]$/.test(s))return `<img src="assets/mana/${s}.svg?v=1" alt="${esc(x)}" width="19" height="19">`;
+  const fill=k=>MANA_FILL[k]||MANA_FILL.C,glyph=(t,size=58)=>`<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-weight="700" font-family="Satoshi,system-ui,sans-serif" fill="${MANA_INK}">${esc(t)}</text>`;
+  const [a,b]=s.split('/');let body;
+  if(s==='C')body=`<circle cx="50" cy="50" r="50" fill="${fill('C')}"/><path d="M50 16 78 50 50 84 22 50Z" fill="none" stroke="${MANA_INK}" stroke-width="8" stroke-linejoin="round"/>`;
+  else if(b==='P')body=`<circle cx="50" cy="50" r="50" fill="${fill(a)}"/>${glyph('\u03A6',60)}`;
+  else if(b)body=`<path d="M85.4 14.6A50 50 0 0 0 14.6 85.4Z" fill="${fill(/^\d+$/.test(a)?'C':a)}"/><path d="M14.6 85.4A50 50 0 0 0 85.4 14.6Z" fill="${fill(b)}"/>${glyph(/^\d+$/.test(a)?a:'',40)}`;
+  else body=`<circle cx="50" cy="50" r="50" fill="${fill('C')}"/>${glyph(s==='S'?'\u2744':s,s.length>1?46:60)}`;
+  return `<svg class="cm-mana-sym" viewBox="0 0 100 100" width="19" height="19" role="img" aria-label="${esc(x)}"><title>${esc(x)}</title>${body}</svg>`;
+}
+function mana(raw,typeLine=''){const cost=globalThis.CrankCatalog&&CrankCatalog.frontCost?CrankCatalog.frontCost(raw,typeLine):raw;return `<span class="cm-mana" aria-label="Mana cost ${esc(cost||'unknown')}">${(String(cost||'').match(/\{[^}]+\}/g)||[]).map(manaSymbol).join('')}</span>`;}
 /* THE CARET IS DRAWN, NOT TYPED. A ▾ from one font and a ⌄ from another sat at different
    baselines and decided the height of the button carrying them; the SVG is 10px whatever the
    label's font does, and aria-hidden so the accessible name stays the words alone. `left`
@@ -113,7 +130,7 @@ function notice(message,error=false,{action=null,stay=false,undo=true}={}){const
   el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);if(!stay)noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
 /* A NEW VERSION, OFFERED (M-18): the service worker installs a new version and waits; this says so, and stays until
    answered. Reload asks the waiting worker to take over, and the page reloads once it has -- never before the click. */
-function offerUpdate(reg){let asked=false;const offer=()=>{if(!reg.waiting||!navigator.serviceWorker.controller)return;notice('A new version of CrankMagic is ready.',false,{stay:true,action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});};
+function offerUpdate(reg){if(!reg)return;/* a browser that answers the registration with nothing (service workers blocked) has no update to offer, and is told nothing */let asked=false;const offer=()=>{if(!reg.waiting||!navigator.serviceWorker.controller)return;notice('A new version of CrankMagic is ready.',false,{stay:true,action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});};
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(asked)location.reload();});
   offer();reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed')offer();});});}
 /* CLOSING A SUB-DIALOG GOES BACK, IT DOES NOT THROW THE WHOLE THING AWAY.
@@ -157,9 +174,10 @@ function form(title,body,submit,label='Save changes',back=null){const d=modal(ti
 /* THE BARE ADDRESS (R3.8; Rob, M1·3). `/` with no route is the landing page for a visitor with nothing in this browser, and
    Decks for everyone else; the account module sends a signed-in person on to Decks as soon as it knows. Any #route is
    the app, always, so a link into it never meets the landing page. */
-const firstVisit=()=>!!views.welcome&&!!state&&!state.decks.length&&!state.lots.length&&!state.groups.some(g=>g.entries.length);
+/* THE FRONT DOOR (Rob, 2026-09-29: "when I go to crankmagic.com that should go to the landing page"): an address with
+   no route opens the landing page, whatever the library holds and whoever is signed in. It was a first visit's only. */
 /* A table's invitation link, #table/<id>/<code> (M5): the table view, with the id and the code as its params. */
-function route(){const raw=location.hash.slice(1)||({'graph.html':'discover'}[location.pathname.split('/').pop()]||(firstVisit()?'welcome':'decks'));const link=/^table\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(raw);if(link&&views.table)return {view:'table',params:new URLSearchParams({id:link[1],code:link[2]})};const [view,q='']=raw.split('?');return {view:views[view]?view:'decks',params:new URLSearchParams(q)};}
+function route(){const raw=location.hash.slice(1)||({'graph.html':'discover'}[location.pathname.split('/').pop()]||(views.welcome?'welcome':'decks'));const link=/^table\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(raw);if(link&&views.table)return {view:'table',params:new URLSearchParams({id:link[1],code:link[2]})};const [view,q='']=raw.split('?');return {view:views[view]?view:'decks',params:new URLSearchParams(q)};}
 function go(view,params={}){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==''&&v!==null&&v!==undefined));const hash='#'+view+(q.size?'?'+q:'');if(location.hash===hash)render();else location.hash=hash;}
 /* HOW OLD THESE FACTS ARE. Every data file stamps itself with the moment it was baked, and
    none of that ever reached the reader: a price from three days ago and one from three
@@ -490,7 +508,17 @@ actions['open-glossary']=el=>{const key=el&&el.dataset.help,back=key&&HELP[key]?
 /* The Menu's Help opens the help of the page underneath, which is what "help" means from there;
    a page with no help opens the glossary. */
 actions['menu-help']=()=>{const b=$('#cm-main [data-action="page-help"]');if(b&&HELP[b.dataset.help])actions['page-help'](b);else actions['open-glossary']();};
-actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});if(el.dataset.card)await inspector(el.dataset.card);};
+actions['toggle-terms']=async el=>{await commit({type:'preferences',values:{terms:!termsOn()}});syncTermsItem();if(el.dataset.card)await inspector(el.dataset.card);};
+/* THE GLOSSARY SWITCH IN THE MENU'S HELP (Rob, 2026-09-29: "a toggle to turn on the glossary function ... hover over
+   game terms to see what they mean in an info box that disappears after moving the cursor off it"). The same
+   preference the deck page's switch sets; the menu item says whether it is on each time the menu opens. */
+function syncTermsItem(){const item=$('#cm-menu-terms');if(!item)return;item.setAttribute('aria-pressed',String(termsOn()));const word=item.querySelector('.cm-menu-state');if(word)word.textContent=termsOn()?'On':'Off';}
+$('#cm-user-menu')?.addEventListener('beforetoggle',syncTermsItem);
+/* REFRESH (Rob, 2026-09-29: a hard refresh in the Menu, under Sync now). The app's files come back from the site,
+   not this browser's copies: the service worker is asked to look for a new version, its caches of the app's files
+   are emptied, a new version waiting is let in, and the page reloads. The library lives in IndexedDB and is not
+   touched. */
+actions['app-refresh']=async()=>{try{const regs=navigator.serviceWorker?await navigator.serviceWorker.getRegistrations():[];await Promise.all(regs.map(r=>r.update().catch(()=>{})));const keys=globalThis.caches?await caches.keys():[];await Promise.all(keys.filter(k=>k.startsWith('crankmagic-public:')).map(k=>caches.delete(k)));const reg=regs.find(r=>r.waiting);if(reg)await new Promise(done=>{navigator.serviceWorker.addEventListener('controllerchange',done,{once:true});reg.waiting.postMessage({type:'skip-waiting'});setTimeout(done,3000);});}catch{}location.reload();};
 actions.close=()=>{if(modalGuard&&!confirm(modalGuard.message))return;const guard=modalGuard;modalGuard=null;guard?.onLeave?.();const back=modalBack;modalBack=null;if(back)back();else dialog.close();};
 /* Clicking the backdrop is the same gesture as the corner control: it goes back if there is
    somewhere to go, and closes otherwise. A <dialog> reports a backdrop click as a click on the
@@ -554,15 +582,11 @@ document.addEventListener('click',async e=>{const el=e.target.closest('[data-act
 /* Retry is offered only for a failure that trying again could fix -- the network, a save that was
    busy -- never for a rule the reader has not met yet, which would fail the same way twice. */
 function mayPass(error){return Boolean(error.retryable)||!navigator.onLine||(error.name==='TypeError'&&/fetch|network|load failed/i.test(error.message));}
-/* SHARE. Two ways to hand the app to someone, neither needing a server: sharing is a
-   pre-written draft with the To line left for them, and the QR code is drawn in the page
-   (crankmagic-qr.js) so it works offline and at a table. The link is the public one, not
-   whatever address this copy happens to be open on: the page's canonical link, which
-   tools/release-pages.mjs sets to the address a release is published at. */
+/* SHARE. The QR code hands the app to someone with no server: it is drawn in the page (crankmagic-qr.js), so it
+   works offline and at a table. (Share by email left the Menu, Rob, 2026-09-29.) The link is the public one, not
+   whatever address this copy happens to be open on: the page's canonical link, which tools/release-pages.mjs sets
+   to the address a release is published at. */
 const APP_URL=canonicalBase();
-function shareLinks(){const mail=$('#cm-share-mail');if(!mail)return;
-  mail.href='mailto:?subject='+encodeURIComponent('CrankMagic: an intelligent Commander deck creator and card library')+'&body='+encodeURIComponent('Have a look at CrankMagic: '+APP_URL+'\n\nIt builds and measures Commander decks, keeps your card library, and works on a phone at the table.');}
-shareLinks();
 $('#cm-share-menu')?.addEventListener('beforetoggle',e=>{if(e.newState==='open'){const r=$('#cm-share-button').getBoundingClientRect(),m=$('#cm-share-menu');m.style.right='auto';m.style.left=Math.max(8,Math.min(r.left,innerWidth-248))+'px';m.style.top=(r.bottom+8)+'px';}});
 $('#cm-share-menu')?.addEventListener('click',e=>{if(e.target.closest('a,button'))$('#cm-share-menu').hidePopover();});
 actions['share-qr']=()=>{if(typeof CrankQR==='undefined')throw Error('The QR code module has not loaded yet. Try again in a moment.');
@@ -572,7 +596,12 @@ actions['share-copy']=async()=>{try{await navigator.clipboard.writeText(APP_URL)
    than dropping from a header that is no longer there: left-aligned to the button, its bottom
    just above it, and never taller than the space above, which is what stops it running off the
    top of a phone. Anchored in viewport coordinates because .cm-menu is position:fixed. */
-$('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const r=$('#cm-user-functions').getBoundingClientRect(),m=$('#cm-user-menu');
+/* THE MENU HAS TWO CHIPS (Rob, 2026-09-30): the rail's, and the landing page's, which stands alone with the rail hidden. So
+   the menu lives beside the rail rather than inside it (a hidden rail would hide it too), and opens under whichever
+   chip was pressed. */
+{const m=$('#cm-user-menu');if(m&&m.closest('.cm-sidebar'))$('#matrix-v2').append(m);}
+let menuChip=null;document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)menuChip=b;},true);
+$('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
   m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-226))+'px';m.style.right='auto';
   if(below>=320){m.style.top=(r.bottom+8)+'px';m.style.bottom='auto';m.style.maxHeight=(below-24)+'px';}
@@ -601,6 +630,12 @@ function openNewDeckIfAsked(){if(location.hash!=='#new'){newDeckOpened=false;ret
 /* A DEEP LINK TO A DECK shows a hero-shaped skeleton while the library opens, not "Deck not
    found": the deck cannot be found before there is a library to find it in. */
 if(/^#decks\?.*deck=/.test(location.hash))main.innerHTML='<section class="cm-deck-hero cm-skeleton" aria-busy="true"><div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>Opening your library…</h1><p class="cm-muted">The deck page follows once the local records are read.</p></div></section>';
+/* A START THAT NEVER ENDS SAYS SO (Rob, 2026-09-29, on a work computer with a VPN: "stays stuck on Opening your
+   library ... it never stops"). A network that refuses a download gets an error below; one that holds it -- a VPN
+   or a work filter scanning a file of several megabytes -- left this placeholder up forever, saying nothing. After
+   SLOW_START ms it says what is happening and offers Reload, and keeps waiting, since a slow download may still land. */
+const SLOW_START=globalThis.CRANK_SLOW_START_MS||15000;
+setTimeout(()=>{const starting=main.querySelector('.cm-starting');if(!starting||starting.querySelector('.cm-starting-slow'))return;starting.insertAdjacentHTML('beforeend','<div class="cm-note cm-warning cm-starting-slow" role="alert"><p><strong>This is taking longer than it should.</strong> CrankMagic downloads its card catalog, a few megabytes, as it starts. A VPN or a work network can hold that download back or block it. It is still trying.</p><p>If it stays stuck, turn the VPN off or try another network, then reload.</p><div class="cm-actions"><button type="button" class="v-button" id="cm-starting-reload">Reload</button></div></div>');starting.querySelector('#cm-starting-reload').addEventListener('click',()=>location.reload());},SLOW_START);
 try{repo=await CrankRepository.open();state=await repo.getState();await seedStarterGroups();await ensureDeckGroups();catalog=await CrankCatalog.create({repository:repo,client:CrankCardClient.create(),link:MtgCardLink,urls:CrankAssets,savedCards:state.cards});let terms=[];try{terms=CrankAssets.expect(await catalog.load(CrankAssets.glossary),'glossary').entries;}catch(e){notice(e.message,true);}glossary=CrankGlossary.create(terms.concat(COLLECTION_TERMS));M.setRecordSource(id=>catalog.get(id)||null);
 /* WIRE LOBBY DRAFT HELPERS. Hosted Play calls C.ensureLobbyDraft and C.attachDeckReport;
    the wrappers inject catalogExact, commit and state dependencies so Hosted Play only passes
@@ -610,12 +645,14 @@ for(const module of globalThis.CrankFeatures||[])module(C);
 /* PLAY, COMING SOON. The production release is the workshop without Play -- Rob, 2026-09-24: "on
    that tab it should say 'Coming Soon'". tools/release-pages.mjs leaves the Play modules out of the
    release and marks its pages <meta name="crankmagic-play" content="coming-soon">; the tab stays and
-   says so. Registered after the features, so it wins over any Play a feature registered. */
-if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soon')views.game=views.online=()=>{main.innerHTML=head('Play','Coming Soon','Playing your decks against friends and AI opponents is on its way. Building, testing, exploring and collecting are all here now.',button('Go to your decks','home',{},true));};/* THE SITTING COMES BACK WITH THE PAGE (plan §2.7), re-validated against the library as it is
+   says so. Registered after the features, so it wins over any Play a feature registered. A release with PLAY IN
+   THE CLOUD (content="cloud", staging since 2026-09-29) has no local game host: its Play tab is the table's page. */
+if(document.querySelector('meta[name="crankmagic-play"]')?.content==='coming-soon')views.game=views.online=()=>{main.innerHTML=head('Play','Coming Soon','Playing your decks against friends and AI opponents is on its way. Building, testing, exploring and collecting are all here now.',button('Go to your decks','home',{},true));};
+else if(document.querySelector('meta[name="crankmagic-play"]')?.content==='cloud'&&views.table)views.game=views.online=()=>views.table(new URLSearchParams());/* THE SITTING COMES BACK WITH THE PAGE (plan §2.7), re-validated against the library as it is
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=391',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=426',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

@@ -180,11 +180,15 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
     const d=M.deck(C.state,deckId);
     let lineup=CrankSim.lineupFor(C.state,d,C.card),cover=CrankSim.coverage(lineup);
     if(!cover.total)throw Error('This deck has no cards to measure yet. Add cards with Edit card list first.');
-    if(cover.ratio<.95){
+    /* EVERY CARD THE ENGINE CANNOT READ IS FETCHED, not only below the 95% floor (Rob, 2026-10-01): a deck at 99% used
+       to be measured as it stood, and when the one blank was the commander the whole measure was wrong. Past the floor, a
+       Scryfall that cannot be reached is not fatal -- the report names what was played as a blank -- unless the blank is
+       the commander, which assertMeasurable refuses. */
+    if(CrankSim.fetchPlan(cover).fetch){
       say(`Fetching card text for ${cover.unreadable.length} cards…`);
       const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});let missing=[];
       try{const got=await C.catalog.hydrate(need,{onProgress:m=>say(`Fetching card text · ${m.done} of ${m.total}`)});missing=got.missing;if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});}
-      catch(err){throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
+      catch(err){if(CrankSim.fetchPlan(cover).fatalIfUnreachable)throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
       lineup=CrankSim.lineupFor(C.state,d,C.card);cover=CrankSim.coverage(lineup);
       if(cover.ratio<.95)throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}: ${cover.unreadable.slice(0,6).join(', ')}${cover.unreadable.length>6?' and '+(cover.unreadable.length-6)+' more':''}.${missing.length?' Scryfall did not know: '+missing.slice(0,4).join(', ')+'.':''}`);
     }
@@ -225,13 +229,13 @@ async function measurePublished(opts){
     let deckLineup=CrankSim.lineupFor(C.state,d,C.card);
     let cover=CrankSim.coverage(deckLineup);
     
-    if(cover.ratio<.95){
+    if(CrankSim.fetchPlan(cover).fetch){   /* every unreadable card fetched, as measureDeck does */
       const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});
       try{
         const got=await C.catalog.hydrate(need,{onProgress:m=>onProgress?.({done:m.done,total:m.total,status:'fetching'})});
         if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});
       }catch(err){
-        throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached ('+err.message+').');
+        if(CrankSim.fetchPlan(cover).fatalIfUnreachable)throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached ('+err.message+').');
       }
       deckLineup=CrankSim.lineupFor(C.state,d,C.card);
       cover=CrankSim.coverage(deckLineup);
@@ -947,12 +951,12 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       const why=saved&&last&&last.deckId===saved.id&&(last.issues||[]).length?' The builder reported: '+last.issues.join(' '):'';
       throw Error('This deck has no cards to measure yet.'+why+' Add cards with Edit card list, or run the draft again with looser limits.');
     }
-    if(cover.ratio<.95){
+    if(CrankSim.fetchPlan(cover).fetch){   /* every unreadable card fetched, as measureDeck does */
       status.textContent=`Fetching card text for ${cover.unreadable.length} cards…`;
       const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});
       let missing=[];
       try{const got=await C.catalog.hydrate(need,{onProgress:m=>{status.textContent=`Fetching card text · ${m.done} of ${m.total}`;}});missing=got.missing;if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});}
-      catch(err){status.textContent='';throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
+      catch(err){if(CrankSim.fetchPlan(cover).fatalIfUnreachable){status.textContent='';throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}}
       lineup=CrankSim.lineupFor(C.state,subject,C.card);cover=CrankSim.coverage(lineup);
       if(cover.ratio<.95){status.textContent='';throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}: ${cover.unreadable.slice(0,6).join(', ')}${cover.unreadable.length>6?' and '+(cover.unreadable.length-6)+' more':''}.${missing.length?' Scryfall did not know: '+missing.slice(0,4).join(', ')+'.':''} Check those names in Collection, or replace them with Edit card list.`);}
     }

@@ -132,10 +132,12 @@
     if (!menu) return;
     let box = C.$("#cm-account");
     if (!box) {box = document.createElement("div"); box.id = "cm-account"; box.className = "cm-account"; menu.prepend(box);}
+    /* Refresh (Rob, 2026-09-29) sits under Sync now: the app's newest files, the library untouched (crankmagic-app.js). */
+    const refresh = `<button type="button" data-action="app-refresh" title="Reload CrankMagic with its newest files from the site. Your library is not touched.">Refresh</button>`;
     box.innerHTML = who.email
       ? `<p>Account</p><p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
-        + `<button type="button" data-action="account-sync">Sync now</button><hr>`
-      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign in to keep your library in the cloud</button><hr>`;
+        + `<button type="button" data-action="account-sync">Sync now</button>${refresh}<hr>`
+      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign In (Save to Cloud)</button>${refresh}<hr>`;
     let out = C.$("#cm-account-out");
     if (who.email && !out) {out = document.createElement("div"); out.id = "cm-account-out"; out.innerHTML = `<hr><button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`; menu.append(out);}
     if (!who.email && out) out.remove();
@@ -154,6 +156,10 @@
       : `<p>Signed out. Sign in and the library saves itself to the cloud and follows you to any device you sign in on.</p><div class="cm-settings-row">${button("Sign in", "account-sign-in", {}, true)}</div>`;
   }
   C.drawAccount = () => {settings(); danger();};
+  /** Whether someone is signed in (false until the Worker has said). The landing page reads it for its header. */
+  C.signedIn = () => !!who.email;
+  /** Who is signed in, or null: the landing page's chip shows it, as the rail's does. */
+  C.signedInAs = () => who.email || null;
 
   /* DELETE ACCOUNT (R3.3b; r3, 74-confirm-delete). The person types the address they are signed in as, the
      Worker checks it again, and everything the cloud holds for them goes in one step. This device's library
@@ -197,8 +203,8 @@
     try {const me = await api("GET", "/api/me"); who = {checked: true, email: me.email};}
     catch {who = {checked: true, email: null};}
     draw();
-    /* Signed-in people skip the landing page (R3.8, M1·3): their library is on its way from the cloud. */
-    if (who.email && C.route().view === "welcome") C.go("decks");
+    /* The landing page is everyone's front door now (Rob, 2026-09-29); signed in, it says so, so it is drawn again. */
+    if (C.route().view === "welcome") C.render();
     if (!who.email) return;
     setInterval(chip, 30000);
     C.repo.subscribe((message) => {if (message && message.revision && !running) soon();});

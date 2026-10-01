@@ -17,7 +17,9 @@
  * themes because a lit hearth is a lit hearth on cream as on slate. tests/design-tokens.mjs
  * exempts this file by name for that reason.
  *
- * Honors prefers-reduced-motion: the field is painted once and never animated.
+ * Honors prefers-reduced-motion: the field is painted once and never animated. `still: true` asks for the same
+ * whatever the setting (the game board's tabletop, for now: Rob, 2026-09-30, "make it static"), and paints the
+ * field at its first moment, so the same element at the same size is the same picture every time it is drawn.
  */
 (function (root) {
   "use strict";
@@ -53,9 +55,14 @@
     const names = o.element ? [o.element] : (o.order || Object.keys(ELEMENTS));
     let idx = names.length === 1 ? 0 : Math.floor(Math.random() * names.length);
     let next = names.length === 1 ? 0 : (idx + 1 + Math.floor(Math.random() * (names.length - 1))) % names.length;
-    let time = 0, last = 0, frame = 0, elapsed = 0;
+    /* THE PAGE'S CLOCK, not the canvas's own (Rob, 2026-09-29: the background "playing ... for about a second then
+       jumping back to the beginning"): the lobby redrew every two seconds and each new canvas began at zero. Read from
+       the page's clock, a canvas that replaces another carries on from the same moment, so a redraw never shows. */
+    const clock = () => (root.performance && root.performance.now ? root.performance.now() : Date.now()) / 1000;
+    let time = clock(), last = 0, frame = 0, elapsed = 0;
     let reduced = false;
-    const still = () => { try { return root.CrankMotion ? root.CrankMotion.reduced() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+    const fixed = !!o.still;
+    const still = () => { if (fixed) return true; try { return root.CrankMotion ? root.CrankMotion.reduced() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
     reduced = still();
 
     /* Layered sines with a warp term: cheap, smooth, and it looks like a fluid seen from above. */
@@ -89,12 +96,13 @@
       g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.35)");
       ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, width, height);
       canvas.dataset.element = names[idx];
+      canvas.dataset.t = t.toFixed(2);
     }
 
     const tick = (now) => {
       if (!last) last = now;
       const dt = Math.min(now - last, 100) / 1000; last = now;
-      time += dt; elapsed += dt;
+      time = clock(); elapsed += dt;
       if (names.length > 1 && elapsed >= cycleSeconds) {
         idx = next; next = (idx + 1 + Math.floor(Math.random() * (names.length - 1))) % names.length; elapsed = 0;
       }
@@ -102,7 +110,7 @@
       /* Reduce motion turned on mid-cycle stops here, on the frame just painted. */
       frame = still() ? 0 : requestAnimationFrame(tick);
     };
-    paint(0);
+    paint(fixed ? 0 : time);
     if (!reduced) frame = requestAnimationFrame(tick);
     const wake = () => { if (!frame && !still()) { last = 0; frame = requestAnimationFrame(tick); } };
     const unhear = root.CrankMotion ? root.CrankMotion.onChange(wake) : function () {};

@@ -1,16 +1,18 @@
 /* THE LANDING PAGE (R3.8; docs/design/2026-09-25-redesign-r3, "Landing Page.dc.html").
  *
- * WHO SEES IT (Rob, M1·3): `/` with no route, for a visitor who is signed out and has nothing in this browser.
- * Anyone with a library, and anyone signed in, goes to Decks (crankmagic-app.js route(); crankmagic-account.js
- * sends a signed-in person on as soon as it knows). #welcome shows it on purpose.
+ * WHO SEES IT (Rob, 2026-09-29: "when I go to crankmagic.com that should go to the landing page", and the CrankMagic
+ * name and logo "should take me back to the landing page"): everyone, at `/` with no route and at #welcome, which the
+ * rail's name and logo link to. It was a signed-out first visit's only (M1·3). For someone with a library, or signed
+ * in, its header says Open your decks instead of Start without an account.
  *
  * WHAT IT PROMISES (M1·2): accounts are invite-only, so the page says Sign in and "Start without an account",
  * never "Start free" or "Free account". Step one takes a commander's name or a pasted list, or a CSV (M1·4);
  * an Archidekt link comes through the app's own importer (R3.10a), and a precon is one of Wizards' (R3.10b). Play is Coming soon, with no
  * mailing list (M1·5).
  *
- * WHAT IT LOADS: nothing of its own. The commander art is three small images already in assets/, and the
- * graph (16 MB) is only ever fetched by Explore.
+ * WHAT IT LOADS: its hero art (Rob's, 2026-09-30: three leather card backs in a ring of light, lifted off the checkerboard
+ * its generator painted in; design/art-source/landing/) and the small commander images already in assets/; the graph
+ * (16 MB) is only ever fetched by Explore.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {views, actions, esc: e} = C;
@@ -46,12 +48,22 @@
   };
 
   views.welcome = () => {
-    const signIn = accounts() ? `<button type="button" class="cm-landing-link" data-action="account-sign-in">Sign in</button>` : "";
+    const signedIn = !!(C.signedIn && C.signedIn()), s = C.state || {};
+    const known = signedIn || !!((s.decks || []).length || (s.lots || []).length);
+    /* THE ACCOUNT CHIP (Rob, 2026-09-30): the app's own menu, left of the way in. Signed in it shows who; signed out,
+       where accounts are on, it says Sign in; either way it opens the menu the rail's chip opens -- Account at its
+       head (Sign in, or Sync now), then Settings and the rest -- not a second one. */
+    const email = signedIn && C.signedInAs ? C.signedInAs() : "";
+    const chipLabel = email || (accounts() ? "Sign in" : "Menu");
+    const avatar = email ? e(email.charAt(0).toUpperCase()) : `<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="5.5" r="2.75" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.75 13.5c.6-2.6 2.7-4 5.25-4s4.65 1.4 5.25 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    const signIn = `<button type="button" class="cm-landing-chip${email ? " is-signed-in" : ""}" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="${e(email ? `Account: ${email}` : accounts() ? "Sign in, settings and backup" : "Menu, settings and backup")}"><span class="cm-chip-avatar" aria-hidden="true">${avatar}</span><span class="cm-landing-chip-name">${e(chipLabel)}</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button>`;
+    const go = known ? `<a class="v-button primary" href="#decks">Open your decks</a>` : `<button type="button" class="v-button primary" data-action="landing-start">Start without an account</button>`;
+    const playSoon = document.querySelector('meta[name="crankmagic-play"]')?.content !== "cloud";
     C.main.innerHTML = `<div class="cm-landing">
 <header class="cm-landing-head">
-  <a class="cm-landing-brand" href="#welcome"><img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" width="36" height="36"><span>CrankMagic</span></a>
-  <nav class="cm-landing-nav" aria-label="Main pages"><a href="#decks">Decks</a><a href="#cards">Library</a><a href="#discover">Explore</a><a href="#game">Play <span class="cm-landing-soon">Soon</span></a></nav>
-  <div class="cm-landing-account">${signIn}<button type="button" class="v-button primary" data-action="landing-start">Start without an account</button></div>
+  <span class="cm-landing-brand"><img src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp" alt="" width="36" height="36"><span>CrankMagic</span></span>
+  <nav class="cm-landing-nav" aria-label="Main pages"><a href="#decks">Decks</a><a href="#cards">Library</a><a href="#discover">Explore</a><a href="#game">Play${playSoon ? ` <span class="cm-landing-soon">Soon</span>` : ""}</a></nav>
+  <div class="cm-landing-account">${signIn}${go}</div>
 </header>
 <section class="cm-landing-hero">
   <div class="cm-landing-copy">
@@ -59,22 +71,22 @@
     <h1>Build the deck. Own the cards. Bring it to the table.</h1>
     <p class="cm-landing-lede">Plan a hundred, track what’s really in the box, find the cards that fit, and play it. On any device.</p>
     <form class="cm-landing-start" id="cm-landing-start">
-      <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>Step one: start your first deck</strong></div>
+      <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>${known ? "Start a new deck" : "Step one: start your first deck"}</strong></div>
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
       <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
     </form>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>
   <div class="cm-landing-art" aria-hidden="true">
-    <img class="cm-landing-card cm-landing-card-1" src="${ART}commander-chulane.webp?v=1" alt="">
-    <img class="cm-landing-card cm-landing-card-2" src="${ART}commander-atraxa.webp?v=1" alt="">
-    <img class="cm-landing-card cm-landing-card-3" src="${ART}commander-krenko.webp?v=1" alt="">
+    <img class="cm-landing-hero-art" src="${ART}landing-cards.webp?v=1" alt="" width="1120" height="995" decoding="async" fetchpriority="high">
+    <video class="cm-landing-hero-video" muted loop playsinline disablepictureinpicture preload="none" poster="assets/crankmagic/landing-cards-poster.webp?v=1" width="808" height="656" hidden></video>
     <div class="cm-landing-sample"><div><strong>Krenko Goblins</strong><span>Bracket 3</span></div>${bar(85, 2, 13)}<p><span><b>85</b> in the box</span><span><b class="cm-landing-buy">13</b> to buy</span><span><b>$22</b> to finish</span></p></div>
   </div>
 </section>
 <section class="cm-landing-section">
   <div class="cm-landing-section-head"><h2>Where do you want to start?</h2><p>Four ways in. Each one starts with a single step, and they all share the same library.</p></div>
-  <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
+  <ul class="cm-landing-doors">${DOORS.map(([page, href, title, body, cta, tint, badge]) => [page, href, title, body, cta, tint, page === "Play" && !playSoon ? "" : badge]).map(([page, href, title, body, cta, tint, badge]) => `<li><a class="cm-landing-door" href="${href}" style="--tint:var(--mana-${tint})"><span class="cm-landing-door-top"><span>${e(page)}</span>${badge ? `<span>${e(badge)}</span>` : ""}</span><h3>${e(title)}</h3><p>${e(body)}</p><span class="cm-landing-cta">${e(cta)} <span aria-hidden="true">→</span></span></a></li>`).join("")}</ul>
+  <section class="cm-precon-latest is-landing" id="cm-landing-precons" aria-label="New from Wizards" hidden></section>
 </section>
 <section class="cm-landing-band"><div class="cm-landing-section">
   <h2>From an idea to a deck you can shuffle</h2>
@@ -92,6 +104,21 @@
     const run = (fn) => Promise.resolve().then(fn).catch((err) => C.notice(err.message, true));
     const onSubmit = (ev) => {ev.preventDefault(); run(() => start(input.value));};
     const onPaste = (ev) => {const text = ev.clipboardData?.getData("text") || ""; if (lines(text) < 2) return; ev.preventDefault(); run(() => C.startDeck.list(text));};
+    /* THE ART, ANIMATED (Rob, 2026-09-30), where it can be done seamlessly: his clip, lifted off its painted checkerboard
+       onto black (tools/lift-checkerboard-video.mjs), drawn with mix-blend-mode: screen, under which black is exactly the
+       page. So only on a dark theme, only where the reader has not asked for less motion, and only in a browser that
+       plays VP9; the still stays otherwise, and until the video is really playing, then cross-fades out. Nothing is
+       downloaded where it will not play. */
+    const video = C.main.querySelector(".cm-landing-hero-video"), artBox = C.main.querySelector(".cm-landing-art");
+    const dark = document.getElementById("matrix-v2")?.dataset.theme !== "light";
+    if (video && dark && !matchMedia("(prefers-reduced-motion: reduce)").matches && video.canPlayType('video/webm; codecs="vp9"')) {
+      video.hidden = false;
+      video.addEventListener("playing", () => artBox.classList.add("is-animated"), {once: true});
+      video.src = "assets/crankmagic/landing-cards.webm?v=1";
+      video.play().catch(() => {video.hidden = true;});
+    }
+    /* New from Wizards: the newest release's precons, filled in once their few kilobytes arrive (crankmagic-decks.js). */
+    if (C.preconLatest) C.preconLatest("cm-landing-precons");
     form.addEventListener("submit", onSubmit);
     input.addEventListener("paste", onPaste);
     return () => {form.removeEventListener("submit", onSubmit); input.removeEventListener("paste", onPaste);};
