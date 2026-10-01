@@ -9,6 +9,11 @@
  *            empty; a step that passes by itself says so in the history, a turn's quiet steps in a row sharing one
  *            line ("Upkeep, Draw step: nothing to do"). Without the flag the room asks as before.
  *   Replay   a game with both beats replays from its seed and tape to the same game.
+ *   Went by  one person and three AI seats, lands only (Rob, 2026-10-01: "I was just able to continuously draw cards
+ *            and play a land after every draw"): the person is asked Draw a card once in each of their turns, four
+ *            turns apart, and after one land in a turn no other is offered (CR 504.1, 305.2); the three AI turns
+ *            between pass with no click of theirs, so the board's CrankBoard.turnsWentBy names them from the
+ *            history -- each turn's line, its draw and its land -- and says nothing when no whole turn went by.
  */
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
@@ -19,6 +24,8 @@ import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {startRoom, basicCards} from "../game/room/room.mjs";
 import {replayMatch} from "../game/room/replay.mjs";
+import vm from "node:vm";
+import {readFileSync} from "node:fs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -145,6 +152,50 @@ async function walk(room, {turns, hook, pick} = {}) {
   /* Rob's turns are three apart, and the AI has exactly one turn between two of them. */
   const robTurns = [...turnOf].filter(([t, p]) => p === 0 && lib.has(t + 3) && turnOf.get(t + 3) === 0).map(([t]) => t);
   ok(robTurns.length >= 2 && robTurns.every((t) => lib.get(t) - lib.get(t + 3) === 1), `the AI drew for itself, one card in each of its turns (${robTurns.map((t) => `turn ${t} → ${t + 3}: ${lib.get(t)} → ${lib.get(t + 3)}`).join(", ")})`);
+}
+
+/* 7. TURNS THAT WENT BY: Rob with three AI seats, every deck lands, both beats -- the playtest table as staging runs it. */
+{
+  const box = {};
+  box.globalThis = box;
+  vm.runInNewContext(readFileSync(new URL("../crankmagic-board.js", import.meta.url), "utf8"), box);
+  /* Through JSON: the script runs in its own realm, whose arrays are not this one's to deepEqual. */
+  const turnsWentBy = (was, next) => JSON.parse(JSON.stringify(box.CrankBoard.turnsWentBy(was, next)));
+  /* The Basic lands test deck's shape (crankmagic-table.js, TEST_DECK): Wastes as its commander, the one exception to
+     "a commander is a legendary creature" (CR 903.3), offered only on a playtest table while the engine plays basics. */
+  const lands = () => ({commander: ["Wastes"], cards: Array.from({length: 99}, (_, i) => ["Forest", "Island", "Swamp"][i % 3])});
+  const pod = {seats: [{seatId: "rob", name: "Rob", pilot: "human", ...lands()}, ...["Ada", "Bo", "Cy"].map((name) => ({seatId: name.toLowerCase(), name, pilot: "house", ...lands()}))],
+    drawBeat: true, passEmpty: true};
+  const room = await startRoom({storage: memoryStorage(), matchId: "went", cards, seed: "went-seed", pod});
+  const draws = [], seen = [], askedIn = new Map();
+  let landTurn = null;
+  await walk(room, {turns: 13, hook: (view) => {
+    seen.push(view);
+    if (view.decision.kind === "draw") draws.push({turn: view.state.turn, hand: hand(view, 0)});
+    const kinds = askedIn.get(view.state.turn) || [];
+    askedIn.set(view.state.turn, [...kinds, view.decision.kind === "priority" ? `priority${view.decision.options.some((o) => o.act === "play-land") ? "+land" : ""}` : view.decision.kind]);
+  }, pick: (d, view) => {
+    if (d.kind !== "priority") return 0;
+    const land = d.options.find((o) => o.act === "play-land");
+    if (land && landTurn !== view.state.turn) {landTurn = view.state.turn; return land.index;}
+    return d.options.find((o) => o.act === "pass").index;
+  }});
+  eq(draws.map((x) => x.turn), [1, 5, 9, 13], "Rob is asked Draw a card once in each of his turns, four turns apart: in a four-player game the first player draws too (CR 103.8c)");
+  eq([5, 9].map((t) => askedIn.get(t)), [["draw", "priority+land"], ["draw", "priority+land"]],
+    "in each of his turns he is asked twice: Draw a card, then priority with his lands; after one land nothing more is offered (CR 305.2), so the rest of the turn passes by itself");
+  const playedIn = (t) => room.history.filter((l) => l.turn === t && /^Rob played /.test(l.text)).length;
+  eq([1, 5, 9].map(playedIn), [1, 1, 1], "the history has one land played by Rob in each of his turns");
+  const asked = seen.filter((v) => v.seat === 0);
+  const before = asked.filter((v) => v.state.turn === 5 && v.decision.kind === "priority").pop(), after = asked.find((v) => v.state.turn === 9);
+  const went = turnsWentBy(before, after);
+  eq([went.from, went.to, went.now, went.turns.map((t) => t.head)], [6, 8, 9, ["Turn 6 · Ada", "Turn 7 · Bo", "Turn 8 · Cy"]],
+    "from his land in turn 5 to his draw in turn 9, the board is told turns 6 to 8 went by, each by its player's name");
+  ok(went.turns.every((t, i) => t.lines.length === 2 && t.lines[0] === `${["Ada", "Bo", "Cy"][i]} drew a card` && /^(Ada|Bo|Cy) played (Forest|Island|Swamp)$/.test(t.lines[1])),
+    `and what each held: a draw and a land, the steps that passed by themselves left out (${went.turns.map((t) => t.lines.join(", ")).join(" / ")})`);
+  const next = asked.filter((v) => v.state.turn === 9);
+  eq([turnsWentBy(next[0], next[1]), turnsWentBy(null, after), turnsWentBy(before, {...after, matchId: "another"})], [null, null, null],
+    "nothing when no whole turn went by, when there was no earlier view, or across two games");
+  eq(turnsWentBy({matchId: "m", state: {turn: 3}}, {matchId: "m", state: {turn: 5}, history: []}).turns, [{turn: 4, head: "Turn 4", lines: []}], "a turn the history no longer holds is still named");
 }
 
 console.log(`room-beats: ${checks} checks passed — the draw waits for its click and priority follows, a step with nothing to do passes itself and says so, and a game with both replays to the same.`);

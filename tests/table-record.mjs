@@ -32,7 +32,7 @@ const FOREST = {types: ["Land"], abilities: [{id: "t-g", kind: "mana", tapSelf: 
 const DEFS = new Map();
 const def = (name, d) => {DEFS.set(name, d); return name;};
 const cards = (name) => DEFS.get(name) ?? basicCards(name);
-const deck = (tag) => ({name: `${tag} deck`, commander: [def(`General ${tag}`, {types: ["Creature"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
+const deck = (tag) => ({name: `${tag} deck`, commander: [def(`General ${tag}`, {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
   cards: [...Array.from({length: 38}, () => def(`Grove ${tag}`, FOREST)), ...Array.from({length: 61}, (_, i) => def(`Bear ${tag}-${i}`, {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}{G}"}))]});
 const answerer = (seed) => {const p = randomLegalPilot(createRng(seed)); return (d) => {const a = p.answer(d); return {kind: "answer", choiceId: d.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {}), ...(a.value !== undefined ? {value: a.value} : {})};};};
 
