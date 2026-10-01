@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Necroblossom Snarl",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Forest from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Necroblossom Snarl",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Necroblossom Snarl"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Forest: Necroblossom Snarl enters untapped",
+                  "Don't reveal: Necroblossom Snarl enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Forest: Necroblossom Snarl enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Necroblossom Snarl",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Swamp or Forest in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Necroblossom Snarl",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Necroblossom Snarl"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Necroblossom Snarl"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Necroblossom Snarl",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Necroblossom Snarl"
+        },
+        {
+          "choose": [
+            "Don't reveal: Necroblossom Snarl enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Necroblossom Snarl"
+        }
+      ]
+    }
+  ]
+}

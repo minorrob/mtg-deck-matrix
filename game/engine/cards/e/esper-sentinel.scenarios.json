@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Esper Sentinel",
+  "fixtures": {
+    "Gift": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{C}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Only Maya's first noncreature spell each turn: a creature spell doesn't count, the second noncreature doesn't trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Esper Sentinel"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Gift",
+            "Gift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Gift",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Gift",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

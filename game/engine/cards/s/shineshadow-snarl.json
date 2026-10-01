@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shineshadow Snarl",
+    "oracleId": "c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.\n{T}: Add {W} or {B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this land enters, you may reveal a Plains or Swamp card from your hand. If you don't, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true,
+        "unlessReveal": {
+          "types": [
+            "Land"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Plains"
+              ]
+            },
+            {
+              "subtypes": [
+                "Swamp"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W} or {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "B": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

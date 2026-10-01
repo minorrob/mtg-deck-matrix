@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 414 defined and playable today; 1,550 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 429 defined and playable today; 1,576 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -25,7 +25,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 31 | 6 | 3 | 0 | 22 |
+| Options and conditions | 37 | 9 | 4 | 0 | 24 |
 | Amounts the game counts | 188 | 7 | 1 | 0 | 180 |
 | Choices | 15 | 10 | 0 | 2 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Unless a player pays | — | missing | 31 | 56 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 21 | 123 |
 | option | You may play or cast a card from another zone | — | missing | 19 | 99 |
 | option | Only once (or N times) each turn | — | missing | 15 | 29 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | trigger | Discarded | discarded | named | 10 | 19 |
+| count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 
 ## Keyword abilities (CR 702)
 
@@ -80,9 +80,9 @@ The things that alone hold back the most of the most-played cards.
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 4 |
-| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 2 |
+| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 3 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 4 |
-| 702.40 | Storm | — | named | 7 | 37 | 7 | 6 |
+| 702.40 | Storm | — | named | 7 | 37 | 7 | 7 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 2 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 3 |
@@ -138,7 +138,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.139 | Companion | — | missing | 2 | 10 | 2 | 1 |
 | 702.105 | Dethrone | — | missing | 2 | 9 | 2 | 1 |
 | 702.120 | Escalate | — | named | 2 | 9 | 2 | 2 |
-| 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 1 | 0 |
+| 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 1 | 1 |
 | 702.27 | Buyback | — | missing | 1 | 40 | 1 | 0 |
 | 702.36 | Fear | — | missing | 1 | 40 | 1 | 0 |
 | 702.170 | Plot | — | missing | 1 | 33 | 1 | 1 |
@@ -356,7 +356,7 @@ The things that alone hold back the most of the most-played cards.
 | Animate | animate | built | 46 | 955 | 0 | 0 |
 | PutCounterAll | putCounterAll | built | 43 | 295 | 0 | 0 |
 | Scry | scry | built | 42 | 445 | 0 | 0 |
-| RepeatEach | repeatFor | named | 41 | 326 | 41 | 8 |
+| RepeatEach | repeatFor | named | 41 | 326 | 41 | 9 |
 | DestroyAll | destroyAll | built | 40 | 338 | 0 | 0 |
 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
 | DelayedTrigger | delayedTrigger | partial | 37 | 447 | 0 | 0 |
@@ -393,7 +393,7 @@ The things that alone hold back the most of the most-played cards.
 | Poison | — | missing | 11 | 36 | 11 | 5 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
-| ChangeTargets | — | missing | 10 | 43 | 10 | 2 |
+| ChangeTargets | — | missing | 10 | 43 | 10 | 3 |
 | Earthbend | — | missing | 10 | 36 | 10 | 3 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
@@ -403,7 +403,7 @@ The things that alone hold back the most of the most-played cards.
 | Amass | amass | named | 7 | 72 | 7 | 5 |
 | StoreSVar | — | missing | 6 | 68 | 6 | 0 |
 | Shuffle | shuffle | named | 6 | 66 | 6 | 1 |
-| LosesGame | — | missing | 6 | 45 | 6 | 1 |
+| LosesGame | — | missing | 6 | 45 | 6 | 2 |
 | Discover | discover | named | 6 | 35 | 6 | 3 |
 | AlterAttribute | alterAttribute | named | 5 | 115 | 5 | 1 |
 | ChooseNumber | — | missing | 5 | 57 | 5 | 0 |
@@ -544,7 +544,7 @@ The things that alone hold back the most of the most-played cards.
 | AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 33 | 12 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
 | LifeLost | — | missing | 6 | 20 | 6 | 0 |
-| BecomesTarget | becomes target | named | 5 | 116 | 5 | 2 |
+| BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 2 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
@@ -836,7 +836,7 @@ The things that alone hold back the most of the most-played cards.
 | You may play or cast a card from another zone | — | missing | 99 | 625 | 99 | 19 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
-| Unless a player pays | — | missing | 66 | 677 | 56 | 31 |
+| Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
@@ -844,13 +844,19 @@ The things that alone hold back the most of the most-played cards.
 | As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
 | A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 8 |
 | Only once (or N times) each turn | — | missing | 29 | 289 | 29 | 15 |
+| Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
+| Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 3 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 1 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
+| Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 1 |
+| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 2 |
+| Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
+| Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 1 |
 | Grants a triggered ability ("has 'whenever ...'") | — | missing | 3 | 15 | 3 | 0 |
 | Activate only during a step or phase | — | missing | 1 | 150 | 1 | 0 |
 

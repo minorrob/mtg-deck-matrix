@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Game Trail",
+    "oracleId": "00de57d2-7cb6-4337-9bc6-f6711e4dfabf",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped.\n{T}: Add {R} or {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true,
+        "unlessReveal": {
+          "types": [
+            "Land"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Mountain"
+              ]
+            },
+            {
+              "subtypes": [
+                "Forest"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R} or {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frostboil Snarl",
+    "oracleId": "7137aae6-260d-41de-8b4e-42a8cf752697",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped.\n{T}: Add {U} or {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this land enters, you may reveal an Island or Mountain card from your hand. If you don't, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true,
+        "unlessReveal": {
+          "types": [
+            "Land"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Island"
+              ]
+            },
+            {
+              "subtypes": [
+                "Mountain"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Foreboding Ruins",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Mountain from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Foreboding Ruins",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Foreboding Ruins"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Mountain: Foreboding Ruins enters untapped",
+                  "Don't reveal: Foreboding Ruins enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Mountain: Foreboding Ruins enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Foreboding Ruins",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Swamp or Mountain in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Foreboding Ruins",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Foreboding Ruins"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Foreboding Ruins"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Foreboding Ruins",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Foreboding Ruins"
+        },
+        {
+          "choose": [
+            "Don't reveal: Foreboding Ruins enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Foreboding Ruins"
+        }
+      ]
+    }
+  ]
+}

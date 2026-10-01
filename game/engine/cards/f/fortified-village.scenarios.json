@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fortified Village",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Plains from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fortified Village",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Fortified Village"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Plains: Fortified Village enters untapped",
+                  "Don't reveal: Fortified Village enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Plains: Fortified Village enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Fortified Village",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Forest or Plains in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fortified Village",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Fortified Village"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Fortified Village"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fortified Village",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Fortified Village"
+        },
+        {
+          "choose": [
+            "Don't reveal: Fortified Village enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Fortified Village"
+        }
+      ]
+    }
+  ]
+}

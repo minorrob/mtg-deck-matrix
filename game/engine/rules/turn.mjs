@@ -465,6 +465,8 @@ export function advance(state) {
        effect lets somebody play a land on another player's turn: resetting only the active
        player's would carry that use forward and deny them their own land drop. */
     for (const player of state.players) player.landsPlayed = 0;
+    /* And what each has cast this turn (rules/actions.mjs), counted afresh. */
+    for (const player of state.players) if (player.castThisTurn) player.castThisTurn = [];
     next = 0;
   }
 

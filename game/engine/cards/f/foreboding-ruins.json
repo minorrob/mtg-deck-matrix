@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Foreboding Ruins",
+    "oracleId": "5c87e2fa-77f1-4978-b25f-f14d227301d1",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.\n{T}: Add {B} or {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true,
+        "unlessReveal": {
+          "types": [
+            "Land"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            {
+              "subtypes": [
+                "Mountain"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B} or {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

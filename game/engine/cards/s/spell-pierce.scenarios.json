@@ -1,0 +1,202 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Spell Pierce",
+  "fixtures": {
+    "Gift": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's spell, countered unless she pays {2}: she can't",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spell Pierce"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Gift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Gift",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Spell Pierce",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Gift"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Gift"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "With the mana she pays, and her spell resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spell Pierce"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Gift"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Gift",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Spell Pierce",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Gift"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {2}"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

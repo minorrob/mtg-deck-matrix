@@ -46,6 +46,10 @@ function parseScript(text){
     /* A static ability's "as long as you control a Mountain" is a different rule from an intervening "if" or "activate
        only if" (CR 611.3a, not 603.4 or 602.5b): kept under its own name. */
     if(/^S:/.test(line) && /\bIsPresent\$/.test(line)) out.params.add('IsPresentStatic');
+    /* WHAT AN UNLESS-COST ASKS, by its kind: mana ("unless that player pays {1}"), life, a reveal, a discard, a sacrifice
+       (CR 118.12) -- the cost atom's name only. */
+    for(const u of line.matchAll(/UnlessCost\$\s*([^|]+)/g)){const v=u[1].trim(); const word=(v.match(/^([A-Za-z]+)/)||[])[1];
+      const kind=/^[0-9X]/.test(v)||/^[WUBRGC](\s|$)/.test(v)?'Mana':['PayLife','Reveal','Discard','Sac'].includes(word)?word:'Other'; out.params.add('UnlessCost'+kind);}
     /* WHAT AN AMOUNT COUNTS, by the kind's name alone -- Valid (things matching a description), xPaid, CardCounters,
        Devotion -- so coverage can say which counts a card needs (engine-constructs.mjs FORGE_COUNTS). */
     for(const a of line.matchAll(/Count\$([A-Za-z]+)/g)) out.amounts.add(a[1]);
@@ -56,7 +60,7 @@ function parseScript(text){
    "only once each turn", "up to N targets" -- which Forge writes as parameters rather than as effects or triggers. Kept
    per card, by name only, so coverage and the catalog can count them (engine-constructs.mjs FORGE_OPTIONS). */
 const OPTION_PARAMS=new Set(['UnlessCost','Count','ConditionPresent','ConditionCompare','ConditionCheckSVar','ConditionSVarCompare','ConditionDefined','Condition',
-  'CheckSVar','IsPresent','IsPresentStatic','PresentZone','SVarCompare','PresentCompare','AtEOT','PumpKeywords','NonLegendary','Populate','TokenAttacking','AddTriggers','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
+  'CheckSVar','IsPresent','IsPresentStatic','PresentZone','SVarCompare','PresentCompare','AtEOT','PumpKeywords','NonLegendary','Populate','TokenAttacking','AddTriggers','UnlessCostMana','UnlessCostPayLife','UnlessCostReveal','UnlessCostDiscard','UnlessCostSac','UnlessCostOther','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
   'RememberObjects','RememberChanged','Imprint']);
 function tally(pool){
   const dims=['apis','triggers','statics','replacements','keywords','costs','params','amounts'];

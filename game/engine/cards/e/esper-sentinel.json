@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Esper Sentinel",
+    "oracleId": "5def9f38-0a0b-4e8d-9f9d-29dcb46520b4",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature's power.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        },
+        "firstThisTurn": true
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that player",
+          "amount": {
+            "powerOf": "self"
+          },
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
