@@ -3575,6 +3575,11 @@ button.cm-vitals{cursor:pointer}
 .cm-board-peek .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc((100vh - 80px) * 5 / 7),calc(100vw - 48px))}
 .cm-board-zoom .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc(100vw - 80px))}
 .cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}
+/* A card used more than one way: its ways to choose from, wrapping, scrolling past a third of the window. */
+.cm-board-zoom.is-choosing .cm-bcard{--bc:min(calc(240px * var(--card-scale,1)),calc(100vw - 80px),calc((100vh - 360px) * 5 / 7))}
+.cm-board-choose-say{margin:0 0 6px;font-weight:600}
+.cm-board-choices{display:flex;flex-wrap:wrap;gap:8px;max-height:34vh;overflow:auto;padding:2px 2px 10px}
+.cm-board-choices .v-button{white-space:normal;text-align:left}
 /* THE COACH (M5, the handoff's play-coach): a 400px panel over the right edge, above the board in every view,
    never narrowing the mat. The Coach speaks on a pale aether tint beside the logo; you speak in ink. */
 .cm-board-menu-row{margin-bottom:12px}

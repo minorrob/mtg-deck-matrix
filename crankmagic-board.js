@@ -345,7 +345,9 @@ globalThis.CrankBoard = Object.freeze({
     /* Its name first, then its state as a person looking at it would say it: tapped, its power and toughness, damage
        marked, counters; then what it can do now (the accessibility pass). */
     const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`)].filter(Boolean);
-    const label = `${c.name}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
+    /* What it can do, each kind once ("Cast Zap, 4 ways"), not the card's name once per target. */
+    const can = [...new Set(opts.map((o) => verbFor(o)))];
+    const label = `${c.name}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
       <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
       <img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
@@ -588,7 +590,7 @@ globalThis.CrankBoard = Object.freeze({
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     if (!pick || !pick.name) return `<p class="cm-full-pick-empty cm-muted">Hover a card to read it here; click one to keep it.</p>`;
-    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></section>`;
+    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("")}</div></section>`;
   }
   function drawPick() {const el = document.getElementById("cm-full-pick"); if (el && view) el.innerHTML = pickPanel();}
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
@@ -643,7 +645,7 @@ globalThis.CrankBoard = Object.freeze({
     if (!panelOpen) return "";
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     return `<aside class="cm-board-panel" aria-label="Panel" style="--split:${Math.round(splitOf("panel") * 100)}%"><header><h2>Panel</h2>${ib("✕", "board-panel", "Close the panel")}</header>
-      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
+      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${splitBar("panel")}${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
   }
@@ -654,6 +656,9 @@ globalThis.CrankBoard = Object.freeze({
      only keeps Confirm off until they can be met, and the room says no if they are not. */
   const VERB = {"play-land": "Play", cast: "Cast", "activate-mana": "Tap for mana:"};
   const verbFor = (o) => `${VERB[o.act] || ""} ${o.label}`.trim();
+  /* The room's `detail` says which way an offer is -- what it is aimed at, what pays its cost, which mana -- where one
+     card can be used more than one way (game/room/room.mjs offerDetails). */
+  const sayFor = (o) => (o.detail ? `${verbFor(o)} ${o.detail}` : verbFor(o));
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -669,7 +674,12 @@ globalThis.CrankBoard = Object.freeze({
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
       if (!seen.size) return "";
-      body = [...seen.values()].map(({o, n}) => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+      /* A card that can be used more than one way -- a spell's targets, a cost's sacrifice, a land's colors -- asks which
+         in its pop-up rather than doing the first (Rob, 2026-10-01). */
+      const ways = (o) => new Set(d.options.filter((x) => x.act === o.act && x.label === o.label && x.detail).map((x) => x.detail)).size;
+      body = [...seen.values()].map(({o, n}) => ways(o) > 1
+        ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
+        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
@@ -758,7 +768,7 @@ globalThis.CrankBoard = Object.freeze({
       const c = cards.find((x) => x.cardId === held);
       if (!c) {showing = "fan"; return showHand();}
       const opts = optionsFor(c.cardId);
-      const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}${i === 0 ? " · Enter" : ""}</button>`).join("");
+      const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}${i === 0 ? " · Enter" : ""}</button>`).join("");
       return `<div class="cm-hand-show is-held" role="dialog" aria-modal="true" aria-label="${e(c.name)}, held">${close}
         <div class="cm-hand-held">${card(c, {where: "held", action: "board-hand-back"})}</div>
         <div class="cm-actions cm-hand-acts">${acts || `<span class="cm-muted">Nothing to do with it now.</span>`}${b("Back to hand", "board-hand-back")}</div>
@@ -779,7 +789,10 @@ globalThis.CrankBoard = Object.freeze({
   function zoom(cardId) {
     const c = findCard(cardId);
     if (!c || !c.name) return;
-    const acts = optionsFor(c.cardId).map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(verbFor(o))}</button>`).join("");
+    const opts = optionsFor(c.cardId);
+    const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${e(sayFor(o))}</button>`).join("");
+    /* More than one way to use it: the ways listed to choose from, as many as there are, above Close. */
+    if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
     C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
   }
   let peekTimer = null;
@@ -1174,8 +1187,10 @@ globalThis.CrankBoard = Object.freeze({
     if (!view.decision || sending) return;
     const opts = optionsFor(id);
     if (opts.length === 1) return option(opts[0].index);
-    if (opts.length > 1) {document.getElementById("cm-board-decision")?.scrollIntoView({block: "nearest"}); C.notice(`${opts.length} things can be done with this card; choose one.`);}
+    /* More than one way to use it -- aimed at this or that, paid with this or that -- is a pop-up to choose in. */
+    if (opts.length > 1) zoom(id);
   };
+  actions["board-choose"] = (el) => {alsoOpen = false; draw(); zoom(Number(el.dataset.card));};
   actions["board-zoom-open"] = (el) => zoom(Number(el.dataset.card));
   actions["board-pass"] = () => {
     const d = view && view.decision;
