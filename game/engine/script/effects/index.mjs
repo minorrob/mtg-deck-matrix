@@ -24,7 +24,7 @@
  */
 
 import {isPrimitive} from "../../vocabulary.mjs";
-import {moveZone, moveZoneAll, draw, destroy, counterSpell} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
@@ -78,6 +78,8 @@ export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal"
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
   moveZone, moveZoneAll, draw, destroy, counterSpell,
+  /* Past the twenty-five, by what blocks the seven decks next (docs/engine/coverage.md): a board wipe, and mill. */
+  destroyAll, mill,
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,

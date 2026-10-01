@@ -47,6 +47,8 @@
 import {cardsIn} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
+import {summoningSick} from "../keywords/timing.mjs";
+import {combatDamageOf} from "./statics.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -66,8 +68,8 @@ const has = (object, keyword) => (object.keywords ?? []).includes(keyword);
 const isCreatureNow = (state, id) => typesOf(state, id).includes("Creature");
 const hasNow = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 
-/** CR 302.6: controlled continuously since the controller's most recent turn began. */
-const summoningSick = (state, object) => object.controlledSinceTurn >= state.turn;
+/* CR 302.6, summoning sickness, and haste lifting it (CR 702.10b), are keywords/timing.mjs's: the same rule
+   decides a creature's {T} abilities, on anyone's turn. */
 
 /** CR 508.1a: untapped, not sick, no defender, and yours. */
 export function canAttack(state, id, player) {
@@ -75,7 +77,7 @@ export function canAttack(state, id, player) {
   return isCreatureNow(state, id)
     && controllerOf(state, id) === player
     && !object.tapped
-    && !summoningSick(state, object)
+    && !summoningSick(state, id)
     && !hasNow(state, id, "Defender");
 }
 
@@ -295,8 +297,9 @@ export const blockers = {
 
 /* CURRENT power and toughness, not printed. Combat that read the printed values would ignore every
    anthem, every counter and every "becomes 1/1" on the board -- layers that nothing reads are
-   layers that do not exist. */
-const power = (state, id) => powerOf(state, id);
+   layers that do not exist. And the amount a creature assigns is its power unless a static ability
+   says toughness (CR 510.1a, rules/statics.mjs). */
+const power = (state, id) => combatDamageOf(state, id);
 /** What it takes to kill it now: its current toughness less the damage already marked (CR 510.1a). */
 const lethalFor = (state, id) => Math.max(0, toughnessOf(state, id) - state.objects[id].damage);
 

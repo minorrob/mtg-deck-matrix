@@ -25,6 +25,9 @@ import {createState, addObject, cardsIn} from "../game/engine/state/index.mjs";
 import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {canBlockAttacker, blockersAreLegal, lethalNeededFrom, KEYWORD_FAMILIES} from "../game/engine/keywords/combat.mjs";
+import {KEYWORD_FAMILIES as TIMING, summoningSick, hasFlash} from "../game/engine/keywords/timing.mjs";
+import {legalActions, nothingToDo} from "../game/engine/rules/actions.mjs";
+import {canAttack} from "../game/engine/rules/combat.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -260,4 +263,209 @@ const step = (s, phase, limit = 40) => {
     "and granted flying is flying — evasion reads the creature as it currently is, not as it was printed");
 }
 
-console.log(`engine-keywords: ${checks} checks passed — flying finally does something, menace is a rule about the set, deathtouch changes what lethal means, trample puts the excess through, and first strike gets its own step.`);
+
+/* ==== A STATIC THAT CHANGES A RULE (rules/statics.mjs): combat damage by toughness, CR 510.1a's exception ==== */
+const BY_TOUGHNESS = (over) => ({id: "by-toughness", kind: "static", rule: "combat-damage-by-toughness", affects: {types: ["Creature"]}, ...over});
+const attackWith = (s, name) => {
+  const choice = awaitingChoice(s);
+  resolveAwaiting(s, [choice.options.findIndex((o) => o.label.startsWith(name) && o.defenderId === 1)]);
+  step(s, "COMBAT_DECLARE_BLOCKERS");
+};
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 36, "with \"each creature assigns combat damage equal to its toughness\" in play, an unblocked 1/4 deals four (CR 510.1a)");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 39, "and without it, one: the rule is changed only while the static ability is on the battlefield");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "graveyard", 0);
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 39, "nor from a graveyard: a permanent's static ability works only on the battlefield (CR 113.6)");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+    addObject(state, creature({card: "Glass", owner: 1, controller: 1, power: 3, toughness: 1}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Glass"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(named(s, "Glass").length, 0, "blocked, the 1/4 assigns four to a 3/1, which dies");
+  eq(s.objects[named(s, "Treefolk")[0]].damage, 1, "and \"each creature\" means the blocker too: the 3/1 assigns its toughness, one, not three");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, {card: "Formation", owner: 0, controller: 0, types: ["Enchantment"], abilities: [BY_TOUGHNESS({affects: {types: ["Creature"], controller: "you"}})]}, "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+    addObject(state, creature({card: "Glass", owner: 1, controller: 1, power: 3, toughness: 1}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Glass"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.objects[named(s, "Treefolk")[0]].damage, 3, "\"each creature YOU control\" leaves the other player's: their 3/1 still assigns its power");
+  eq(named(s, "Glass").length, 0, "while yours assigns its toughness");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Trampling Wall", owner: 0, controller: 0, power: 1, toughness: 6, keywords: ["Trample"]}), "battlefield");
+    addObject(state, creature({card: "Bear", owner: 1, controller: 1, power: 2, toughness: 2}), "battlefield");
+  });
+  attackWith(s, "Trampling Wall");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Bear"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 36, "trample's excess is counted from the same amount: a 1/6 trampler by toughness puts two on a 2/2 and four through");
+}
+
+/* ==== THE TIMING FAMILY (keywords/timing.mjs): flash, haste, and the summoning sickness they bend ==== */
+
+/* A table at seat 0's first main phase of turn 1, nothing placed yet, lands in every library. */
+function atMain(setup = () => {}) {
+  const s = createState(pod);
+  for (let seat = 0; seat < 4; seat += 1)
+    for (let i = 0; i < 60; i += 1)
+      addObject(s, {card: `L${seat}-${i}`, owner: seat, controller: seat, types: ["Land"]}, "library", seat);
+  beginGame(s);
+  setup(s);
+  step(s, "MAIN1");
+  return s;
+}
+/* Walk the table on, every seat passing, until `seat` holds priority in `phase` on someone's turn `turn`. */
+function until(s, {turn, phase, seat}) {
+  let n = 0;
+  while (!(s.turn === turn && currentPhase(s) === phase && s.priorityPlayer === seat) && n < 2000) {
+    if (s.awaiting) { const c = awaitingChoice(s); resolveAwaiting(s, c.mode === "many" ? [] : [0]); continue; }
+    if (s.priorityPlayer !== null) { if (passPriority(s).outcome === "step-ends") advance(s); } else advance(s);
+    n += 1;
+  }
+  assert.ok(n < 2000, `the table never reached turn ${turn}, ${phase}, seat ${seat}`);
+}
+const DORK = (over = {}) => creature({card: "Elf", owner: 0, controller: 0, power: 1, toughness: 1,
+  abilities: [{id: "t-g", kind: "mana", tapSelf: true, produces: {G: 1}}], ...over});
+const LAND = {card: "Forest", owner: 0, controller: 0, types: ["Land"], abilities: [{id: "t-g", kind: "mana", tapSelf: true, produces: {G: 1}}]};
+const taps = (s, seat, id) => legalActions(s, seat).some((a) => a.kind === "activate-mana" && a.objectId === id);
+const casts = (s, seat, id) => legalActions(s, seat).some((a) => a.kind === "cast" && a.objectId === id);
+
+/* ---- the family is declared ---- */
+{
+  eq([...TIMING.timing], ["Flash", "Haste"], "timing is a family, and flash and haste are in it");
+}
+
+/* ---- summoning sickness reaches a creature's {T} abilities (CR 302.6) ---- */
+{
+  const s = atMain();
+  const elf = addObject(s, DORK(), "battlefield");
+  const forest = addObject(s, {...LAND}, "battlefield");
+  eq(s.priorityPlayer, 0, "seat 0 holds priority in its first main phase");
+  eq(taps(s, 0, elf), false, "a creature that arrived this turn cannot use its {T} mana ability: summoning sickness is not only about attacking (CR 302.6)");
+  eq(taps(s, 0, forest), true, "a land that arrived this turn can: a land is not a creature, and is never sick");
+  ok(summoningSick(s, elf) && !summoningSick(s, forest), "summoningSick says so: the creature is, the land is not");
+}
+{
+  const s = atMain();
+  const elf = addObject(s, DORK({card: "Hasty Elf", keywords: ["Haste"]}), "battlefield");
+  eq(taps(s, 0, elf), true, "with haste it can use its {T} ability at once (CR 702.10b)");
+  eq(summoningSick(s, elf), false, "a hasty creature is never sick");
+}
+{
+  const s = atMain();
+  const animated = addObject(s, {...LAND, card: "Animated Land", types: ["Land", "Creature"], power: 2, toughness: 2}, "battlefield");
+  eq(taps(s, 0, animated), false, "a land that is a creature is a creature: it arrived this turn, so its {T} ability waits");
+}
+
+/* ---- it lasts until the controller's NEXT turn, not the game's next turn ---- */
+{
+  const s = atMain();
+  const elf = addObject(s, DORK(), "battlefield");
+  until(s, {turn: 2, phase: "UPKEEP", seat: 0});
+  eq(taps(s, 0, elf), false, "on seat 1's turn 2 it is still sick: seat 0's most recent turn began after it arrived, so it has not been controlled since then (CR 302.6)");
+  until(s, {turn: 4, phase: "UPKEEP", seat: 0});
+  eq(taps(s, 0, elf), false, "and still on seat 3's turn 4");
+  until(s, {turn: 5, phase: "UPKEEP", seat: 0});
+  eq(taps(s, 0, elf), true, "on seat 0's own next turn it has been controlled since that turn began, and taps");
+}
+{
+  /* Arrived on someone else's turn: the case the game's turn number gets wrong. */
+  const s = atMain();
+  until(s, {turn: 2, phase: "UPKEEP", seat: 0});
+  const elf = addObject(s, DORK(), "battlefield");
+  eq(taps(s, 0, elf), false, "a creature seat 0 gets on seat 1's turn 2 is sick at once");
+  until(s, {turn: 3, phase: "UPKEEP", seat: 0});
+  eq(taps(s, 0, elf), false, "and still on seat 2's turn 3, when the game's turn has moved past the one it arrived in: seat 0's turn has not begun since");
+  until(s, {turn: 5, phase: "MAIN1", seat: 0});
+  eq(taps(s, 0, elf), true, "and well again on seat 0's turn 5");
+  eq(canAttack(s, elf, 0), true, "where it may attack too");
+}
+
+/* ---- haste lets it attack the turn it arrives (CR 702.10b) ---- */
+{
+  const s = atMain();
+  const bear = addObject(s, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  const hasty = addObject(s, creature({card: "Hasty", owner: 0, controller: 0, keywords: ["Haste"]}), "battlefield");
+  eq(canAttack(s, bear, 0), false, "a creature that arrived this turn cannot attack");
+  eq(canAttack(s, hasty, 0), true, "one with haste can");
+  s.objects[hasty].tapped = true;
+  eq(canAttack(s, hasty, 0), false, "and haste does not untap it: a tapped hasty creature still cannot attack");
+}
+
+/* ---- flash: a permanent spell cast any time its controller could cast an instant (CR 702.8a) ---- */
+{
+  const s = atMain();
+  const flasher = addObject(s, creature({card: "Flasher", owner: 0, controller: 0, manaCost: "{1}", keywords: ["Flash"]}), "hand", 0);
+  const slow = addObject(s, creature({card: "Slow", owner: 0, controller: 0, manaCost: "{1}"}), "hand", 0);
+  until(s, {turn: 2, phase: "UPKEEP", seat: 0});
+  s.players[0].manaPool.C = 2;
+  ok(hasFlash(s, flasher) && !hasFlash(s, slow), "hasFlash reads the keyword on a card in hand");
+  eq(casts(s, 0, flasher), true, "on seat 1's upkeep, with mana and priority, seat 0 may cast a creature with flash");
+  eq(casts(s, 0, slow), false, "and not one without it: a creature is cast at sorcery speed (CR 307.1)");
+  eq(nothingToDo(s, 0), false, "so holding a flash creature and the mana is not nothing to do");
+}
+{
+  const s = atMain();
+  addObject(s, creature({card: "Slow", owner: 0, controller: 0, manaCost: "{1}"}), "hand", 0);
+  until(s, {turn: 2, phase: "UPKEEP", seat: 0});
+  s.players[0].manaPool.C = 2;
+  eq(nothingToDo(s, 0), true, "where without flash, on someone else's turn, there is nothing to do");
+}
+{
+  /* The count path: the mana is in an untapped land, not yet in the pool, so the cast is not offered yet and
+     nothing-to-do has to see that the land could pay for a flash creature now. */
+  const s = atMain();
+  addObject(s, {...LAND}, "battlefield");
+  addObject(s, creature({card: "Flasher", owner: 0, controller: 0, manaCost: "{1}", keywords: ["Flash"]}), "hand", 0);
+  until(s, {turn: 2, phase: "UPKEEP", seat: 0});
+  eq(nothingToDo(s, 0), false, "with a flash creature in hand and an untapped land to pay for it, someone else's upkeep is not nothing to do");
+}
+{
+  /* Out before the game began (a fixture, or a card that starts the game on the battlefield): controlled since the
+     starting player's first turn began, so not sick in it. */
+  const s = createState(pod);
+  for (let seat = 0; seat < 4; seat += 1)
+    for (let i = 0; i < 60; i += 1)
+      addObject(s, {card: `L${seat}-${i}`, owner: seat, controller: seat, types: ["Land"]}, "library", seat);
+  const early = addObject(s, DORK({card: "Early Elf"}), "battlefield");
+  beginGame(s);
+  step(s, "MAIN1");
+  eq(taps(s, 0, early), true, "a creature out before the game began is not sick in the starting player's first turn: it has been theirs since that turn began");
+}
+
+console.log(`engine-keywords: ${checks} checks passed — flying finally does something, menace is a rule about the set, deathtouch changes what lethal means, trample puts the excess through, first strike gets its own step, and flash and haste bend the timing rules, summoning sickness reaching {T} abilities until the controller's own next turn.`);

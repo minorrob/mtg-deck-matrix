@@ -31,6 +31,7 @@ import {fileURLToPath} from "node:url";
 import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engine/vocabulary.mjs";
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
+import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
@@ -73,16 +74,17 @@ const FORGE_TRIGGER = {
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
-   lord and goes through `layers.mjs`; `Moved` is a zone-change or entering replacement and goes
-   through `replacement.mjs`. Everything else is genuinely absent. */
-const FORGE_STATIC = {Continuous: "layers"};
+   lord and goes through `layers.mjs`; `CombatDamageToughness` changes a rule rather than a
+   characteristic and goes through `rules/statics.mjs`; `Moved` is a zone-change or entering
+   replacement and goes through `replacement.mjs`. Everything else is genuinely absent. */
+const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics"};
 const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
    a flier unblockable by the ground. Coverage has to mean the second — the whole reason this file
    exists is that the engine knew the word `Flying` for a week and did nothing with it. */
-const BEHAVIORAL_KEYWORDS = new Set(Object.values(KEYWORD_FAMILIES).flat());
+const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

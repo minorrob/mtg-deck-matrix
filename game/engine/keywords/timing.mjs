@@ -1,0 +1,49 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+
+/* THE KEYWORDS THAT CHANGE WHEN.
+ *
+ * `docs/engine/PLAN.md` §3.1 (`keywords/`, one module per family) and §6's phase 2.3. After evasion and combat
+ * (`combat.mjs`), the inventory's next most-used words across Rob's seven decks are FLASH (15 cards) and HASTE (6):
+ * the two keywords that bend a timing rule rather than a combat one.
+ *
+ * FLASH IS PERMISSION, NOT A TYPE (CR 702.8a). A creature with flash is still a creature: it is cast any time its
+ * controller could cast an instant, and it is still a permanent spell that resolves onto the battlefield. So the
+ * sorcery-speed test asks one more question rather than the card changing what it is.
+ *
+ * SUMMONING SICKNESS IS ABOUT THE CONTROLLER'S TURN, NOT THE GAME'S (CR 302.6). A creature's {T} abilities, and its
+ * attack, need it to have been under its controller's control continuously since THAT PLAYER'S most recent turn
+ * began. On your own turn that is the turn now; on anyone else's it is your last one. Comparing with the game's
+ * turn number instead is right for attacking (you only attack on your own turn) and wrong for every {T} ability used
+ * on someone else's turn: a mana creature that entered during an opponent's turn would tap at once. Until this file
+ * the engine offered a creature's {T} mana ability the turn it arrived, on any turn: a Llanowar Elves cast in main
+ * one tapped for mana in main one.
+ *
+ * HASTE LIFTS BOTH HALVES OF IT (CR 702.10b): the attack and the {T} abilities. It does not untap anything and it
+ * does nothing for a creature that is not sick.
+ *
+ * Both read the creature AS IT CURRENTLY IS (layers.mjs): a land animated this turn is a sick creature, and a
+ * creature granted haste is a hasty one.
+ */
+
+import {keywordsOf, typesOf, controllerOf} from "../rules/layers.mjs";
+
+/** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
+export const KEYWORD_FAMILIES = Object.freeze({
+  /** When a spell may be cast, and when a permanent may act. */
+  timing: Object.freeze(["Flash", "Haste"]),
+});
+
+/**
+ * CR 302.6: a creature that has not been under its controller's control continuously since their most recent turn
+ * began, and has no haste. Not a creature, never sick.
+ */
+export function summoningSick(state, id) {
+  const object = state.objects[id];
+  if (!object || !typesOf(state, id).includes("Creature")) return false;
+  if (keywordsOf(state, id).includes("Haste")) return false;
+  const turnBegan = state.players[controllerOf(state, id)]?.turnBegan ?? 0;
+  return object.controlledSinceTurn >= turnBegan;
+}
+
+/** CR 702.8a: this card may be cast any time its controller could cast an instant. */
+export const hasFlash = (state, id) => keywordsOf(state, id).includes("Flash");

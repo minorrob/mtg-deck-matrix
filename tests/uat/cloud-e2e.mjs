@@ -42,6 +42,12 @@ const {built} = build({source: worktreeSource(), profileName: "cloud-staging"});
 for (const [f, body] of built) {mkdirSync(path.dirname(path.join(site, f)), {recursive: true}); writeFileSync(path.join(site, f), body);}
 const config = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 config.vars = {ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD};
+/* THE LOCAL RUNTIME'S DATE. A tree built from the worktree is dated today in UTC, and wrangler's local runtime refuses
+   a compatibility date newer than its own build knows; an installed wrangler is days older than today, so every run
+   just after midnight UTC failed before the Worker started. The test tree runs at the runtime's own date when it is
+   older. The release itself is untouched: it is dated by its commit and runs on Cloudflare's current runtime. */
+const runtimeDate = createRequire(WRANGLER)("workerd").compatibilityDate;
+if (config.compatibility_date > runtimeDate) config.compatibility_date = runtimeDate;
 config.main = `site/${config.main}`;
 config.assets = {...config.assets, directory: "./site"};
 config.d1_databases = config.d1_databases.map((d) => ({...d, migrations_dir: `site/${d.migrations_dir}`}));
