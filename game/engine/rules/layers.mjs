@@ -262,6 +262,10 @@ export function lastKnown(state, id) {
     owner: object.owner,
     controller: current.controller,
     types: [...current.types],
+    /* What "another Vampire you control dies" and "equipped creature dies" ask of a thing that is gone. */
+    subtypes: [...(object.subtypes ?? [])],
+    supertypes: [...(object.supertypes ?? [])],
+    attachments: [...(object.attachments ?? [])],
     colors: [...current.colors],
     keywords: [...current.keywords],
     /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */

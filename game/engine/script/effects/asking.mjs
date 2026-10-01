@@ -207,6 +207,8 @@ export const modal = {
       kind: "effect-choice", effect: "modal", player: context.controller,
       modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? [])})),
       choose,
+      /* A "you may" asks in the card's own words (cards/index.mjs): its sentence, then Yes or No. */
+      ...(params.title ? {title: String(params.title)} : {}),
     };
     return true;
   },
@@ -214,7 +216,7 @@ export const modal = {
   choice(state, awaiting) {
     return {
       id: `modal:${state.turn}:${awaiting.modes.length}`,
-      title: awaiting.choose === 1 ? "Choose one" : `Choose ${awaiting.choose}`,
+      title: awaiting.title ?? (awaiting.choose === 1 ? "Choose one" : `Choose ${awaiting.choose}`),
       mode: awaiting.choose === 1 ? "one" : "many",
       min: awaiting.choose,
       max: awaiting.choose,
