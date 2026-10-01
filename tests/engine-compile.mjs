@@ -54,9 +54,12 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const four = checkFidelity({...bolt, abilities: [{...bolt.abilities[0], text: "Lightning Bolt deals 4 damage to any target."}]});
   eq([four.invented, four.unclaimed], [["Lightning Bolt deals 4 damage to any target."], ["Lightning Bolt deals 3 damage to any target."]],
     "an invented sentence is caught -- a model that changed the card cannot quote it");
+  const extra = checkFidelity({...bolt, abilities: [...bolt.abilities, {kind: "spell", text: "Draw a card.", effects: [{effect: "draw"}]}]});
+  eq([extra.ok, extra.invented, extra.unclaimed], [false, ["Draw a card."], []], "an extra ability the card does not have is refused on its own, everything else being right");
   const grasp = handOf("Infernal Grasp");
-  eq(checkFidelity({...grasp, abilities: [{...grasp.abilities[0], text: "Destroy target creature."}]}).unclaimed, ["You lose 2 life."],
-    "and a clause no ability claims: the card only partly understood");
+  const partial = checkFidelity({...grasp, abilities: [{...grasp.abilities[0], text: "Destroy target creature."}]});
+  eq([partial.ok, partial.invented, partial.unclaimed], [false, [], ["You lose 2 life."]],
+    "and a clause no ability claims is refused on its own: the card only partly understood");
   eq(oracleClauses("Defender (This creature can't attack.)\n{T}: Add {G}."), ["Defender", "{T}: Add {G}."], "reminder text in parentheses claims nothing");
   eq(oracleClauses("({T}: Add {W}.)"), ["{T}: Add {W}."], "unless it is the whole line, as a basic land's ability is");
   eq(oracleClauses("Flying, double strike, vigilance"), ["Flying", "double strike", "vigilance"], "a keyword line is a clause per keyword");
