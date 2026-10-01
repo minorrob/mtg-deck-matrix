@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mox Jasper",
+  "fixtures": {
+    "Whelp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "No Dragon: nothing to tap it for",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Jasper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Mox Jasper"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Dragon: any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Jasper",
+            "Whelp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mox Jasper",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

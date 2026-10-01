@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tainted Peak",
+    "oracleId": "b2bae7fc-0668-4b34-9cd6-0d80aea52275",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Add {B} or {R}. Activate only if you control a Swamp.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B} or {R}. Activate only if you control a Swamp.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ],
+      "condition": {
+        "present": {
+          "types": [
+            "Land"
+          ],
+          "subtypes": [
+            "Swamp"
+          ],
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

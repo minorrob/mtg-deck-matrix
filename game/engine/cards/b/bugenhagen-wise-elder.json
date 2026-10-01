@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bugenhagen, Wise Elder",
+    "oracleId": "4228dd75-1fdd-48dc-9259-b841b2e46c64",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nAt the beginning of your upkeep, if you control a creature with power 7 or greater, draw a card.\n{T}: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if you control a creature with power 7 or greater, draw a card.",
+      "trigger": {
+        "on": "upkeep",
+        "yours": true
+      },
+      "condition": {
+        "present": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 7
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    }
+  ]
+}

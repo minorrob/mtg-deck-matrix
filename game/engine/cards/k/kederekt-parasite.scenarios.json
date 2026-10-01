@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kederekt Parasite",
+  "fixtures": {
+    "Red Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An opponent draws while Rob controls a red permanent: may deal 1 to that player",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kederekt Parasite",
+            "Red Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "No red permanent (the Parasite is black): nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kederekt Parasite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

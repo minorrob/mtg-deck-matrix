@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Howling Mine",
+    "oracleId": "d26b27db-a567-4631-b4b6-7294222fbdd1",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card.",
+      "trigger": {
+        "on": "step",
+        "step": "DRAW",
+        "yours": false
+      },
+      "condition": {
+        "present": {
+          "self": true,
+          "tapped": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

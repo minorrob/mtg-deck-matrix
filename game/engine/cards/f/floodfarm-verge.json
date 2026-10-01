@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Floodfarm Verge",
+    "oracleId": "f1e9abfb-c3c8-483e-b446-5c2afc9f6394",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {W}.\n{T}: Add {U}. Activate only if you control a Plains or an Island.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}. Activate only if you control a Plains or an Island.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "condition": {
+        "present": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you",
+          "anyOf": [
+            {
+              "subtypes": [
+                "Plains"
+              ]
+            },
+            {
+              "subtypes": [
+                "Island"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

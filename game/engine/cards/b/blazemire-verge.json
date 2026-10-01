@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blazemire Verge",
+    "oracleId": "977c2f33-b622-4172-9efb-7f523becd32b",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {B}.\n{T}: Add {R}. Activate only if you control a Swamp or a Mountain.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R}. Activate only if you control a Swamp or a Mountain.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "condition": {
+        "present": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you",
+          "anyOf": [
+            {
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            {
+              "subtypes": [
+                "Mountain"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

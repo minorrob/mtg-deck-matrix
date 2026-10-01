@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Howling Mine",
+  "scenarios": [
+    {
+      "name": "Untapped: each player's draw step, that player draws one more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Howling Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1",
+            "settle": true
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Tapped, it does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Howling Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

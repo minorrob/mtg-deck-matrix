@@ -66,6 +66,7 @@ import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
+import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown} from "./layers.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
@@ -253,6 +254,8 @@ export function legalActions(state, player) {
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
          A land is never sick; a land animated this turn is a creature, and is. */
       if (ability.tapSelf && summoningSick(state, id)) continue;
+      /* "Activate only if you control a Swamp" (CR 602.5b): asked as it would be offered. */
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!manaAbilityPayment(state, player, ability)) continue;
       const alternatives = manaAlternatives(state, player, ability, id);
       const fodder = ability.sacrifice ? sacrificeChoices(state, player, id, ability.sacrifice).map((x) => ({sacrifice: x})) : [null];
@@ -303,6 +306,7 @@ export function legalActions(state, player) {
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       for (const X of abilityXValues(state, player, ability)) {
         const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
         if (!payment) continue;
@@ -322,6 +326,7 @@ export function legalActions(state, player) {
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "activated" || ability.zone !== "hand") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
       if (!payment) continue;
       actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},

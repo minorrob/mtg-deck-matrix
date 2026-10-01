@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blazemire Verge",
+  "scenarios": [
+    {
+      "name": "Without a Swamp or a Mountain: only its first color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blazemire Verge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Blazemire Verge"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Mountain: both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blazemire Verge",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Blazemire Verge"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "B": 1
+                },
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Blazemire Verge",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sunbillow Verge",
+  "scenarios": [
+    {
+      "name": "Without a Mountain or a Plains: only its first color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sunbillow Verge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sunbillow Verge"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Plains: both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sunbillow Verge",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sunbillow Verge"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "W": 1
+                },
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Sunbillow Verge",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

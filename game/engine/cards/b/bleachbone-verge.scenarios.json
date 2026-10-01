@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bleachbone Verge",
+  "scenarios": [
+    {
+      "name": "Without a Plains or a Swamp: only its first color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bleachbone Verge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Bleachbone Verge"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Swamp: both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bleachbone Verge",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Bleachbone Verge"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "B": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Bleachbone Verge",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

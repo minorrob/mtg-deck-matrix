@@ -21,7 +21,8 @@
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
  *                                        the life lost this way")
  *
- * and any of them may say `times` and `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
+ * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
+ * `plus`: "twice X", "1 plus the number of ...", and `times: -1` for "-X/-X" and
  * "-1/-1 for each Swamp you control" -- the only way an amount comes out below nothing; every other is at least 0.
  * A selector counted may be a choice, `{anyOf: [...]}` with what the alternatives share: "Squirrels, Bats, Lizards,
  * and Rats you control", each counted once.
@@ -40,7 +41,7 @@ import {parseManaCost} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus"];
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -56,7 +57,7 @@ export function amountProblems(value) {
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
-  for (const key of ["times", "plus"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
+  for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
   for (const key of ["count", "greatestPower", "totalPower"]) {
     if (!(key in value)) continue;
@@ -123,7 +124,8 @@ export function amountOf(state, value, context = {}) {
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
   } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
-  const total = n * (value.times ?? 1) + (value.plus ?? 0);
+  /* `atMost`: "{1} less if you control a creature with flying" is the count of them, at most 1. */
+  const total = Math.min(value.atMost ?? Infinity, n) * (value.times ?? 1) + (value.plus ?? 0);
   return (value.times ?? 1) < 0 ? total : Math.max(0, total);
 }
 

@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Garruk's Uprising",
+    "oracleId": "3127ae9b-a7a7-43ec-89d7-688f8445b33d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, if you control a creature with power 4 or greater, draw a card.\nCreatures you control have trample. (Each of those creatures can deal excess combat damage to the player or planeswalker it's attacking.)\nWhenever a creature you control with power 4 or greater enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, if you control a creature with power 4 or greater, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "condition": {
+        "present": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 4
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control have trample.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control with power 4 or greater enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 4
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

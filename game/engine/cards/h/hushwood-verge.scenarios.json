@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hushwood Verge",
+  "scenarios": [
+    {
+      "name": "Without a Forest or a Plains: only its first color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hushwood Verge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Hushwood Verge"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "G": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Plains: both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hushwood Verge",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Hushwood Verge"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Hushwood Verge",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

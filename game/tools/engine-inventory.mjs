@@ -43,6 +43,9 @@ function parseScript(text){
     if((m=line.match(/^K:([A-Za-z][A-Za-z ']*?)(?::|$| \d)/))) out.keywords.add(m[1].trim());
     for(const c of line.matchAll(/Cost\$\s*([^|]+)/g)) for(const tok of c[1].trim().split(/\s+/)){ const t=tok.replace(/<.*$/,'').replace(/^[0-9]+$/,'GENERIC').replace(/^[WUBRGCXPS]$/,'MANA').replace(/^[WUBRG]\/[WUBRGP]$/,'MANA'); if(t) out.costs.add(t);}
     for(const p of line.matchAll(/\b([A-Z][A-Za-z0-9]+)\$/g)) out.params.add(p[1]);
+    /* A static ability's "as long as you control a Mountain" is a different rule from an intervening "if" or "activate
+       only if" (CR 611.3a, not 603.4 or 602.5b): kept under its own name. */
+    if(/^S:/.test(line) && /\bIsPresent\$/.test(line)) out.params.add('IsPresentStatic');
     /* WHAT AN AMOUNT COUNTS, by the kind's name alone -- Valid (things matching a description), xPaid, CardCounters,
        Devotion -- so coverage can say which counts a card needs (engine-constructs.mjs FORGE_COUNTS). */
     for(const a of line.matchAll(/Count\$([A-Za-z]+)/g)) out.amounts.add(a[1]);
@@ -53,7 +56,7 @@ function parseScript(text){
    "only once each turn", "up to N targets" -- which Forge writes as parameters rather than as effects or triggers. Kept
    per card, by name only, so coverage and the catalog can count them (engine-constructs.mjs FORGE_OPTIONS). */
 const OPTION_PARAMS=new Set(['UnlessCost','Count','ConditionPresent','ConditionCompare','ConditionCheckSVar','ConditionSVarCompare','ConditionDefined','Condition',
-  'CheckSVar','IsPresent','SVarCompare','PresentCompare','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
+  'CheckSVar','IsPresent','IsPresentStatic','PresentZone','SVarCompare','PresentCompare','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
   'RememberObjects','RememberChanged','Imprint']);
 function tally(pool){
   const dims=['apis','triggers','statics','replacements','keywords','costs','params','amounts'];

@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Floodfarm Verge",
+  "scenarios": [
+    {
+      "name": "Without a Plains or a Island: only its first color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Floodfarm Verge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Floodfarm Verge"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Island: both",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Floodfarm Verge",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Floodfarm Verge"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "W": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Floodfarm Verge",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

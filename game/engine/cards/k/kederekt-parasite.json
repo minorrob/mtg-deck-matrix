@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kederekt Parasite",
+    "oracleId": "fc7b46af-6c07-455a-99c7-f1bccaa2a5f4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horror"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever an opponent draws a card, if you control a red permanent, you may have this creature deal 1 damage to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws a card, if you control a red permanent, you may have this creature deal 1 damage to that player.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "optional": true,
+      "condition": {
+        "present": {
+          "colors": [
+            "R"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

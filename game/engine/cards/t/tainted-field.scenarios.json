@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tainted Field",
+  "scenarios": [
+    {
+      "name": "Without a Swamp: only {C} is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tainted Field"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Tainted Field"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "With a Swamp: the colors too (CR 602.5b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tainted Field",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Tainted Field"
+              },
+              "count": 3,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "W": 1
+                },
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Tainted Field",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Black Market",
+    "oracleId": "21338b71-37f5-4121-9b84-565025ebcd17",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature dies, put a charge counter on this enchantment.\nAt the beginning of your first main phase, add {B} for each charge counter on this enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature dies, put a charge counter on this enchantment.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "charge",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, add {B} for each charge counter on this enchantment.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": {
+              "countersOn": "self",
+              "counter": "charge"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
