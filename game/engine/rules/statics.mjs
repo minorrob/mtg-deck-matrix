@@ -47,6 +47,12 @@ export const STATIC_RULES = Object.freeze({
   "extra-land-drop": "rules/actions.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
+  /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
+      Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
+  "attacks-despite-defender": "rules/combat.mjs",
+  /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
+      `apply` {to, by, combat}; rules/replacement.mjs. */
+  "prevent-damage": "rules/replacement.mjs",
 });
 
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */

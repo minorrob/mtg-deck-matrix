@@ -132,6 +132,8 @@ function objectsOf(value, context) {
   if (value === "that card") return context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : [];
   /* "Tap enchanted creature", "untap equipped creature": what the source is attached to as it resolves (stack.mjs). */
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
+  /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
+  if (value === "remembered") return (context.remembered ?? []).slice();
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "object" ? [chosen.id] : [];
@@ -167,7 +169,36 @@ export function bindEffect(effect, context) {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }
+  /* Who makes a choice that is not the controller's ("its controller may draw up to two cards"): one player. */
+  if (isRef(bound.chooser) || bound.chooser === "that player") {
+    const [player] = playersOf(bound.chooser, context);
+    if (player === undefined) delete bound.chooser; else bound.chooser = player;
+  }
   return bound;
+}
+
+/**
+ * A DELAYED TRIGGER REMEMBERS WHAT IT NAMES (CR 603.7c), AS IT IS MADE. "Return that card to its owner's hand at the
+ * beginning of the next end step" means the card the dies trigger was about; "its controller may draw up to two cards
+ * at the beginning of the next turn's upkeep", the player who controlled the countered spell. By the time the delayed
+ * trigger resolves there is no trigger and no spell to ask, so every reference in its effects -- a target, a fact
+ * about one, "self", "that card", "that player", nested modes included -- is bound now, to the object or player
+ * itself. An object that has since changed zones is a new object (CR 400.7) and the old one is simply not there, which
+ * is the rule's "it won't affect it". For a delayed trigger that waits for an event (`keepThat`), "that card" and "that
+ * player" mean what THAT event is about, and are left for it.
+ */
+export function rememberNow(effects, context, {keepThat = false} = {}) {
+  const walk = (effect) => {
+    if (!effect || typeof effect !== "object") return effect;
+    const kept = {};
+    if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
+      if (effect[key] === "that card" || effect[key] === "that player") kept[key] = effect[key];
+    const bound = {...bindEffect(effect, context), ...kept};
+    for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(bound[key])) bound[key] = bound[key].map(walk);
+    if (Array.isArray(bound.modes)) bound.modes = bound.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
+    return bound;
+  };
+  return (effects ?? []).map(walk);
 }
 
 /** Every `{target: n}` an ability's effects name, nested ones included, so the schema can check each is declared. */

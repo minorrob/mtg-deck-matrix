@@ -59,6 +59,7 @@ const COMPOSERS = {
   branch: (effect) => [...(effect.then ?? []), ...(effect.otherwise ?? [])],
   modal: (effect) => (effect.modes ?? []).flatMap((mode) => mode.effects ?? []),
   unlessPays: (effect) => effect.effects ?? [],
+  delayedTrigger: (effect) => effect.effects ?? [],
 };
 
 /** What an ability may say it exposes. Closed, like every other vocabulary here. */
