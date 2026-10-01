@@ -185,9 +185,13 @@ function emptyManaPools(state, events) {
  * cleanup or a state-based action is performed. There are no triggers until 1.6, so there is
  * nothing that could cause one; it is named so the omission is visible rather than forgotten. */
 function cleanup(state, events) {
+  /* CR 514.2, as one event: all damage is removed from permanents AND every "until end of turn" effect ends. Without
+     the second half, a Giant Growth's +3/+3, Heroic Intervention's indestructible and Craterhoof's +X/+X lasted the
+     rest of the game -- and the scenarios, which look within a turn, never saw it. */
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
+  if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
   const player = state.players[state.activePlayer];
   /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
   /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
