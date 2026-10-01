@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 414,
-  "everyRule": 1550
+  "defined": 429,
+  "everyRule": 1576
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -319,7 +319,7 @@
      "top": 8,
      "all": 93,
      "blocks": 8,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -343,7 +343,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword ability",
@@ -1015,7 +1015,7 @@
      "top": 1,
      "all": 80,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3533,7 +3533,7 @@
      "top": 41,
      "all": 326,
      "blocks": 41,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3977,7 +3977,7 @@
      "top": 10,
      "all": 43,
      "blocks": 10,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4097,7 +4097,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -5739,7 +5739,7 @@
      "top": 5,
      "all": 116,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 6,
-    "partial": 3,
+    "built": 9,
+    "partial": 4,
     "named": 0,
-    "missing": 22
+    "missing": 24
    },
    "entries": [
     {
@@ -9037,13 +9037,13 @@
      "kind": "option",
      "rule": null,
      "name": "Unless a player pays",
-     "engine": null,
-     "status": "missing",
+     "engine": "unlessPays, by kind",
+     "status": "partial",
      "forge": "UnlessCost",
      "top": 66,
      "all": 677,
-     "blocks": 56,
-     "alone": 31
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9132,12 +9132,36 @@
     {
      "kind": "option",
      "rule": null,
+     "name": "Unless a player pays life (a shock land's 2 life)",
+     "engine": "unlessPay life, as it enters",
+     "status": "built",
+     "forge": "UnlessCostPayLife",
+     "top": 27,
+     "all": 67,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
      "name": "Sacrifice or exile it at the beginning of the next end step",
      "engine": "a delayed trigger (CR 603.7)",
      "status": "built",
      "forge": "AtEOT",
      "top": 21,
      "all": 184,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Unless a player pays mana (\"unless that player pays {1}\")",
+     "engine": "unlessPays (generic mana)",
+     "status": "built",
+     "forge": "UnlessCostMana",
+     "top": 16,
+     "all": 287,
      "blocks": 0,
      "alone": 0
     },
@@ -9192,6 +9216,18 @@
     {
      "kind": "option",
      "rule": null,
+     "name": "Unless a player reveals a card (\"reveal an Island or Swamp card\")",
+     "engine": "unlessReveal, as it enters",
+     "status": "built",
+     "forge": "UnlessCostReveal",
+     "top": 10,
+     "all": 22,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
      "name": "Present in a zone other than the battlefield (\"as long as this card is in your graveyard\")",
      "engine": null,
      "status": "missing",
@@ -9204,6 +9240,30 @@
     {
      "kind": "option",
      "rule": null,
+     "name": "Unless a player sacrifices a permanent",
+     "engine": null,
+     "status": "missing",
+     "forge": "UnlessCostSac",
+     "top": 7,
+     "all": 89,
+     "blocks": 7,
+     "alone": 2
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Unless a player discards a card",
+     "engine": null,
+     "status": "missing",
+     "forge": "UnlessCostDiscard",
+     "top": 5,
+     "all": 83,
+     "blocks": 5,
+     "alone": 2
+    },
+    {
+     "kind": "option",
+     "rule": null,
      "name": "Populate (copy a creature token you control)",
      "engine": "populate",
      "status": "built",
@@ -9212,6 +9272,18 @@
      "all": 27,
      "blocks": 0,
      "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Unless a player pays some other cost (taps, exiles, ...)",
+     "engine": null,
+     "status": "missing",
+     "forge": "UnlessCostOther",
+     "top": 3,
+     "all": 162,
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "option",

@@ -82,6 +82,12 @@ function subjects(state, event, condition, sourceId, controller) {
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
+    /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. */
+    if (condition.firstThisTurn) {
+      const {what: _ignored, ...shape} = condition.filter ?? {};
+      const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
+      if (fitted.length !== 1) return [];
+    }
     return [{card: spell, player: caster}];
   }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the

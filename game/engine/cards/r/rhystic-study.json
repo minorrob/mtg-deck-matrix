@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhystic Study",
+    "oracleId": "53236dd7-845a-444c-96d5-f41ed7325d8f",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that player",
+          "amount": 1,
+          "effects": [
+            {
+              "effect": "modal",
+              "title": "Rhystic Study: draw a card?",
+              "modes": [
+                {
+                  "text": "Yes",
+                  "effects": [
+                    {
+                      "effect": "draw",
+                      "count": 1
+                    }
+                  ]
+                },
+                {
+                  "text": "No",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

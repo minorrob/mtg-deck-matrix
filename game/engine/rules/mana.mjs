@@ -29,6 +29,8 @@
  */
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
+import {summoningSick} from "../keywords/timing.mjs";
+
 /** The pool's keys: the five colors plus colorless. */
 export const MANA_KEYS = Object.freeze([...COLORS, "C"]);
 
@@ -246,4 +248,43 @@ export function automaticPayment(pool, cost, options = {}) {
 /** Every distinct way to pay, up to `limit`, for offering as a choice. */
 export function paymentOptions(pool, cost, options = {}, limit = 12) {
   return payments(pool, cost, options, limit);
+}
+
+/* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
+ *
+ * The payer answers a question in the middle of a resolution and has no priority in which to tap, so paying taps for
+ * them: the pool first, then their untapped mana sources that need nothing but {T} -- a land, a mana rock, a creature
+ * that has been theirs since their turn began -- each adding its first kind of mana. Generic mana only.
+ */
+const PAY_ORDER = ["C", "W", "U", "B", "R", "G"];
+function plainSources(state, player) {
+  const out = [];
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (object.controller !== player || object.tapped) continue;
+    /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
+    if (summoningSick(state, id)) continue;
+    const ability = (object.abilities ?? []).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition
+      && (a.produces || a.anyColor === true));
+    if (ability) out.push({id, ability});
+  }
+  return out;
+}
+/** Whether a player could pay this much generic mana now, from the pool and plain sources together. */
+export function canPayGeneric(state, player, amount) {
+  return poolSize(state.players[player].manaPool) + plainSources(state, player).length >= amount;
+}
+/** Pay it: the pool first, then tap sources as needed. @returns {Array} events */
+export function payGeneric(state, player, amount) {
+  const events = [];
+  const pool = state.players[player].manaPool;
+  let left = amount;
+  for (const key of PAY_ORDER) while (left > 0 && (pool[key] ?? 0) > 0) { pool[key] -= 1; left -= 1; }
+  for (const {id} of plainSources(state, player)) {
+    if (left <= 0) break;
+    state.objects[id].tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: id, name: state.objects[id].card, owner: state.objects[id].owner, controller: player, faceDown: false}, tapped: true}}});
+    left -= 1;
+  }
+  return events;
 }

@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vineglimmer Snarl",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Island from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vineglimmer Snarl",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vineglimmer Snarl"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Island: Vineglimmer Snarl enters untapped",
+                  "Don't reveal: Vineglimmer Snarl enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Island: Vineglimmer Snarl enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vineglimmer Snarl",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Forest or Island in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vineglimmer Snarl",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vineglimmer Snarl"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vineglimmer Snarl"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vineglimmer Snarl",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vineglimmer Snarl"
+        },
+        {
+          "choose": [
+            "Don't reveal: Vineglimmer Snarl enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vineglimmer Snarl"
+        }
+      ]
+    }
+  ]
+}

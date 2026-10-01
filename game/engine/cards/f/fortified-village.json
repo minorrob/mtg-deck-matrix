@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fortified Village",
+    "oracleId": "56f1a16a-9f41-41fb-b580-c200bca27cd6",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped.\n{T}: Add {G} or {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true,
+        "unlessReveal": {
+          "types": [
+            "Land"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Forest"
+              ]
+            },
+            {
+              "subtypes": [
+                "Plains"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} or {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

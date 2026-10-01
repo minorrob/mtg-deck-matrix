@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shineshadow Snarl",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Swamp from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shineshadow Snarl",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Shineshadow Snarl"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Swamp: Shineshadow Snarl enters untapped",
+                  "Don't reveal: Shineshadow Snarl enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Swamp: Shineshadow Snarl enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Shineshadow Snarl",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Plains or Swamp in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shineshadow Snarl",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Shineshadow Snarl"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Shineshadow Snarl"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shineshadow Snarl",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Shineshadow Snarl"
+        },
+        {
+          "choose": [
+            "Don't reveal: Shineshadow Snarl enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Shineshadow Snarl"
+        }
+      ]
+    }
+  ]
+}

@@ -75,7 +75,7 @@ export const PRIMITIVES = Object.freeze({
     "moveCounters", "replaceCounters", "amass",
   ]),
   permanents: Object.freeze([
-    "createToken", "copyPermanent", "populate", "animate", "animateAll", "attach", "gainControl", "setState",
+    "createToken", "copyPermanent", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut",
   ]),
   modifiers: Object.freeze([

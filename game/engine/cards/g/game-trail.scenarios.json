@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Game Trail",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Forest from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Game Trail",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Game Trail"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Forest: Game Trail enters untapped",
+                  "Don't reveal: Game Trail enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Forest: Game Trail enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Game Trail",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Mountain or Forest in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Game Trail",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Game Trail"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Game Trail"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Game Trail",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Game Trail"
+        },
+        {
+          "choose": [
+            "Don't reveal: Game Trail enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Game Trail"
+        }
+      ]
+    }
+  ]
+}

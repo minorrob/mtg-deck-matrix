@@ -79,7 +79,15 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
    engine has not built is held back like a card needing a missing effect -- before these were counted, "every rule
    built" took in Rhystic Study, which needs "unless that player pays {1}". `partial` ones are counted as there. */
 export const FORGE_OPTIONS = Object.freeze({
-  UnlessCost: {name: "Unless a player pays", status: "missing"},
+  /* Judged by what it asks (UnlessCost* below), not as one: mana, life and a reveal are built; a discard or a sacrifice
+     is not. */
+  UnlessCost: {name: "Unless a player pays", status: "partial", engine: "unlessPays, by kind"},
+  UnlessCostMana: {name: "Unless a player pays mana (\"unless that player pays {1}\")", status: "built", engine: "unlessPays (generic mana)"},
+  UnlessCostPayLife: {name: "Unless a player pays life (a shock land's 2 life)", status: "built", engine: "unlessPay life, as it enters"},
+  UnlessCostReveal: {name: "Unless a player reveals a card (\"reveal an Island or Swamp card\")", status: "built", engine: "unlessReveal, as it enters"},
+  UnlessCostDiscard: {name: "Unless a player discards a card", status: "missing"},
+  UnlessCostSac: {name: "Unless a player sacrifices a permanent", status: "missing"},
+  UnlessCostOther: {name: "Unless a player pays some other cost (taps, exiles, ...)", status: "missing"},
   /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell
      you've cast this turn" is not. */
   Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},

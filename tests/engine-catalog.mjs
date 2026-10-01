@@ -70,9 +70,12 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 /* ---- options and conditions: what Forge writes as an ability's parameters ---- */
 {
   eq(section("Options and conditions").map((e) => e.forge).sort(), Object.keys(FORGE_OPTIONS).sort(), "every option and condition the engine is measured against is an entry");
-  eq([missingFor({apis: ["Draw"], triggers: ["SpellCast"], options: ["OptionalDecider", "UnlessCost"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
-    [[{kind: "option", name: "UnlessCost", why: "not built"}], []],
-    "Rhystic Study's \"unless that player pays\" holds it back; a plain \"you may\" (built) does not");
+  /* Batch 14 built "unless that player pays {N}" and judges an unless-cost by what it asks: Rhystic Study's mana no
+     longer holds it back; an unless-discard (Painful Quandary) still does. */
+  eq([missingFor({apis: ["Draw"], triggers: ["SpellCast"], options: ["OptionalDecider", "UnlessCost", "UnlessCostMana"]}),
+    missingFor({apis: ["LoseLife"], triggers: ["SpellCast"], options: ["UnlessCost", "UnlessCostDiscard"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
+    [[], [{kind: "option", name: "UnlessCostDiscard", why: "not built"}], []],
+    "an unless-cost holds a card back by what it asks: Rhystic Study's mana is built, an unless-discard is not; a plain \"you may\" (built) does not");
   ok(inventory.top.perCard["Rhystic Study"].options.includes("UnlessCost"), "the measurement records the option on the card itself");
 }
 
@@ -111,6 +114,13 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   ok(inventory.top.perCard["Kiki-Jiki, Mirror Breaker"].options.includes("AtEOT"), "the measurement records the end-step sacrifice on Kiki-Jiki itself");
 }
 
+/* ---- unless a player pays, by what it asks (batch 14) ---- */
+{
+  eq([inventory.top.perCard["Rhystic Study"].options.includes("UnlessCostMana"), inventory.top.perCard["Choked Estuary"].options.includes("UnlessCostReveal"),
+    inventory.top.perCard["Watery Grave"].options.includes("UnlessCostPayLife")], [true, true, true], "the measurement names what each unless-cost asks: mana, a reveal, life");
+  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostDiscard" && e.status === "missing"), "and an unless-discard is missing");
+}
+
 /* ---- order ---- */
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every
@@ -124,8 +134,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   const playable = (name) => directory.resolve(name)?.playable === true;
   const every = Object.entries(inventory.top.perCard).filter(([name, card]) => playable(name) || missingFor(card).length === 0).length;
   eq(catalog.top.everyRule, every, `the most-played cards with every mechanic built are coverage's own count (${every}), a defined card among them`);
-  ok(playable("Watery Grave") && missingFor(inventory.top.perCard["Watery Grave"]).some((m) => m.name === "UnlessCost"),
-    "Watery Grave is defined though Forge names an unless-cost for it -- so it counts, and holds nothing back");
+  /* Watery Grave was the example until batch 14 judged its unless-cost by kind (life, built); Cultivate is one now: Forge
+     writes "put one onto the battlefield and the other into your hand" with a remembered object, and the engine plays it. */
+  ok(playable("Cultivate") && missingFor(inventory.top.perCard.Cultivate).some((m) => m.name === "RememberChanged"),
+    "Cultivate is defined though the measurement names something the engine has not built for it -- so it counts, and holds nothing back");
+  eq(missingFor(inventory.top.perCard["Watery Grave"]), [], "and Watery Grave's \"pay 2 life or it enters tapped\" is measured as the built kind it is");
   const next = md.split("## What to build next")[1].split("\n## ")[0].split("\n").filter((l) => /^\| [a-z]/.test(l) && !l.startsWith("| Kind")).map((l) => l.split("|").map((c) => c.trim()));
   const alone = next.map((c) => Number(c[5]));
   ok(next.length > 0 && alone.every((n, i) => i === 0 || n <= alone[i - 1]), `what to build next is ordered by what each alone holds back (${next.slice(0, 3).map((c) => `${c[2]} ${c[5]}`).join(", ")})`);

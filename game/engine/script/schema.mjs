@@ -58,6 +58,7 @@ const COMPOSERS = {
   repeatFor: (effect) => effect.effects ?? [],
   branch: (effect) => [...(effect.then ?? []), ...(effect.otherwise ?? [])],
   modal: (effect) => (effect.modes ?? []).flatMap((mode) => mode.effects ?? []),
+  unlessPays: (effect) => effect.effects ?? [],
 };
 
 /** What an ability may say it exposes. Closed, like every other vocabulary here. */
