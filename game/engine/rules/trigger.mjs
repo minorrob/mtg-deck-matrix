@@ -94,8 +94,13 @@ function subjects(state, event, condition, sourceId, controller) {
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
   if (condition.on === "GameEventAttackersDeclared") {
-    return (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
-      .map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
+    const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
+      /* "Attack one of your opponents" (Frontier Warmonger): the player attacked is not this ability's controller. */
+      .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller));
+    /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
+       declares every attacker (CR 508.1). */
+    if (condition.atLeast && matched.length < condition.atLeast) return [];
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
   }
   /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */

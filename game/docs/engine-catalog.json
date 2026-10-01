@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 515,
-  "everyRule": 1663
+  "defined": 522,
+  "everyRule": 1670
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5618,8 +5618,8 @@
      "forge": "AttackersDeclared",
      "top": 25,
      "all": 227,
-     "blocks": 33,
-     "alone": 12
+     "blocks": 26,
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -5702,8 +5702,8 @@
      "forge": "AttackersDeclaredOneTarget",
      "top": 8,
      "all": 32,
-     "blocks": 33,
-     "alone": 12
+     "blocks": 26,
+     "alone": 5
     },
     {
      "kind": "trigger",

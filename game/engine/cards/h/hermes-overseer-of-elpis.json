@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hermes, Overseer of Elpis",
+    "oracleId": "63e2cba7-ec1a-44bf-b915-d2ae75851430",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.\nWhenever you attack with one or more Birds, scry 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, create a 1/1 blue Bird creature token with flying and vigilance.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Bird",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Bird"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying",
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack with one or more Birds, scry 2.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true,
+        "filter": {
+          "subtypes": [
+            "Bird"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

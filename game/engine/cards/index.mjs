@@ -59,7 +59,9 @@ const TRIGGERS = {
      `filter` the spell (CR 601.2i). */
   "spell cast": (t) => ({on: "GameEventSpellAbilityCast", caster: t.caster ?? "you", ...(t.filter ? {filter: t.filter} : {}), ...(t.firstThisTurn ? {firstThisTurn: true} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
-  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
+    /* "Attack one of your opponents"; "attacks with three or more creatures" (rules/trigger.mjs). */
+    ...(t.defender ? {defender: t.defender} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {})} : null),
   /* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2). */
   "damage dealt": (t) => (ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
     ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),

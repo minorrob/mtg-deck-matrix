@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 515 defined and playable today; 1,663 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 522 defined and playable today; 1,670 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| trigger | AttackersDeclared | attackers declared | named | 12 | 33 |
 | option | You may play or cast a card from another zone | — | missing | 11 | 90 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | effect | DamageAll | damageAll | named | 11 | 27 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 | effect | GainControl | gainControl | named | 9 | 22 |
 | trigger | LifeGained | life gained | named | 9 | 18 |
+| trigger | Sacrificed | sacrificed | named | 9 | 17 |
 
 ## Keyword abilities (CR 702)
 
@@ -534,14 +534,14 @@ The things that alone hold back the most of the most-played cards.
 | DamageDone | damage dealt | partial | 110 | 863 | 0 | 0 |
 | DamageDoneOnce | damage dealt once | named | 34 | 204 | 34 | 9 |
 | Drawn | drawn | built | 31 | 145 | 0 | 0 |
-| AttackersDeclared | attackers declared | named | 25 | 227 | 33 | 12 |
+| AttackersDeclared | attackers declared | named | 25 | 227 | 26 | 5 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
 | LifeGained | life gained | named | 18 | 94 | 18 | 9 |
 | TapsForMana | — | missing | 18 | 64 | 18 | 6 |
 | Sacrificed | sacrificed | named | 17 | 114 | 17 | 9 |
 | Discarded | discarded | named | 17 | 76 | 19 | 10 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
-| AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 33 | 12 |
+| AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 26 | 5 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
 | LifeLost | — | missing | 6 | 20 | 6 | 0 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
