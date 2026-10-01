@@ -36,8 +36,10 @@ const files = loadCardScenarios();
 /* ---- 1. every definition: valid, playable, and the card it says it is ---- */
 {
   ok(scripts.length >= 16, `the directory holds the first batch of definitions (${scripts.length})`);
-  const unplayable = index.names.filter((n) => !index.resolve(n).playable).map((n) => `${n}: ${index.problems(n).join("; ")}`);
-  eq(unplayable, [], "every definition in the directory is one the engine can play");
+  const handNames = index.names.filter((n) => index.resolve(n).source === "hand");
+  eq(handNames.length, scripts.length, "every hand-authored definition is in the directory, as written by hand");
+  const unplayable = handNames.filter((n) => !index.resolve(n).playable).map((n) => `${n}: ${index.problems(n).join("; ")}`);
+  eq(unplayable, [], "every hand-authored definition is one the engine can play");
   const drift = [];
   for (const {script, path} of scripts) {
     const card = ORACLE.get(script.identity.name);
@@ -57,7 +59,7 @@ const files = loadCardScenarios();
 /* ---- 2. every card has scenarios, and every scenario passes ---- */
 {
   const covered = new Set(files.map((f) => f.scenarios.card));
-  eq(index.names.filter((n) => !covered.has(n)), [], "every definition has a scenarios file");
+  eq(index.names.filter((n) => index.resolve(n).source === "hand" && !covered.has(n)), [], "every hand-authored definition has a scenarios file (a compiled one has the loader's smoke game instead)");
   eq(files.filter((f) => !index.resolve(f.scenarios.card)).map((f) => f.path), [], "and every scenarios file names a card in the directory");
   eq(files.filter((f) => f.scenarios.schema !== SCENARIOS_SCHEMA || !(f.scenarios.scenarios ?? []).length).map((f) => f.path), [],
     `each is a ${SCENARIOS_SCHEMA} file with at least one scenario`);
