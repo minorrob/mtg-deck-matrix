@@ -120,9 +120,12 @@ export function pump(state, params, context) {
 
 /** `pumpAll` — the same over a selector, as one effect rather than one per creature. */
 export function pumpAll(state, params, context) {
+  /* CR 611.2c: the set of objects a resolving spell's continuous effect changes is fixed as it begins. "Permanents you
+     control gain indestructible until end of turn" protects the ones there now, not one that enters later. */
+  const ids = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   pushEffect(state, {
     id: `pumpAll:${context.source ?? "effect"}`,
-    layer: 7, sublayer: "c", affects: params.selector ?? {what: "permanent"},
+    layer: 7, sublayer: "c", affects: {ids},
     apply: {
       power: params.power ?? 0, toughness: params.toughness ?? 0,
       ...(params.keywords ? {addKeywords: params.keywords} : {}),

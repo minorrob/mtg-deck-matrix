@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shivan Reef",
+  "scenarios": [
+    {
+      "name": "Colorless free; a color for 1 damage, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shivan Reef"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Shivan Reef"
+              },
+              "count": 3,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "U": 1
+                },
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Shivan Reef",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

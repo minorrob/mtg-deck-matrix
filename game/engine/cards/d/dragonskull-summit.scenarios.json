@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dragonskull Summit",
+  "scenarios": [
+    {
+      "name": "With a Mountain it enters untapped; without, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dragonskull Summit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dragonskull Summit"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dragonskull Summit",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Dragonskull Summit"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dragonskull Summit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dragonskull Summit"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Dragonskull Summit"
+        }
+      ]
+    }
+  ]
+}

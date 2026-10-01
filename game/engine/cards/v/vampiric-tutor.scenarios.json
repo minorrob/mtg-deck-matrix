@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vampiric Tutor",
+  "scenarios": [
+    {
+      "name": "Any card to the top after the shuffle, and two life: it is the next card drawn",
+      "library": [
+        "Forest",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Plains",
+        "Sol Ring"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vampiric Tutor"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Vampiric Tutor"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            5
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sol Ring"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -248,7 +248,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* A card effect that stopped half way through. `extra` carries what generic indices cannot --
      scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
   if (awaiting.kind === "effect-choice") {
-    const outcome = answerResolution(state, indices, extra);
+    const outcome = answerResolution(state, indices, extra, rng);
     /* A spell that stopped to ask leaves the stack once its last effect has run (stack.mjs), and only then does
        anyone receive priority -- after state-based actions and triggers, as after any resolution (CR 117.5). */
     const events = outcome.status === "done" ? [...outcome.events, ...finishResolving(state)] : outcome.events;

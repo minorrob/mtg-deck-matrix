@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Heroic Intervention",
+    "oracleId": "24882fa2-3fe9-4c1b-aa3d-0e6488b9db27",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Permanents you control gain hexproof and indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Permanents you control gain hexproof and indestructible until end of turn.",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "controller": "you"
+          },
+          "keywords": [
+            "Hexproof",
+            "Indestructible"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}
