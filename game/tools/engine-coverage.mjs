@@ -155,6 +155,9 @@ const inventory = JSON.parse(readFileSync(path.join(REPO, "game", "docs", "engin
 const scopes = [
   report("Rob's seven decks", inventory.deck?.perCard),
   report("the card library", inventory.library?.perCard),
+  /* The cards that make up 80% of Commander decks (data/engine/top-cards.json): the ones to have loaded before any table
+     asks, so few cards are learned at Play time (Rob, 2026-10-01). */
+  report("the most-played 80% of Commander cards", inventory.top?.perCard),
 ];
 
 const lines = [];

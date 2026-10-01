@@ -14,6 +14,7 @@ what makes a flier unblockable by the ground.
 | --- | ---: | ---: | ---: | ---: |
 | Rob's seven decks | 477 | 73 | 356 | 74.6% |
 | the card library | 2365 | 74 | 1302 | 55.1% |
+| the most-played 80% of Commander cards | 3238 | 60 | 1758 | 54.3% |
 
 ## What blocks the rest — Rob's seven decks
 
@@ -64,4 +65,29 @@ what makes a flier unblockable by the ground.
 | `Flashback` | keyword | 21 | declared, no behavior |
 | `chooseCard` | api | 20 | declared, not built |
 | `CantBlockBy` | static | 19 | no engine support yet |
+
+## What blocks the rest — the most-played 80% of Commander cards
+
+| Construct | Kind | Cards blocked | Why |
+| --- | --- | ---: | --- |
+| `ReduceCost` | static | 100 | no engine support yet |
+| `Equip` | keyword | 72 | declared, no behavior |
+| `ETBReplacement` | keyword | 68 | not declared |
+| `copyPermanent` | api | 64 | declared, not built |
+| `Enchant` | keyword | 60 | declared, no behavior |
+| `sacrifice` | api | 56 | declared, not built |
+| `Cycling` | keyword | 42 | declared, no behavior |
+| `repeatFor` | api | 41 | declared, not built |
+| `chooseType` | api | 35 | declared, not built |
+| `play` | api | 35 | declared, not built |
+| `etbCounter` | keyword | 35 | not declared |
+| `copySpell` | api | 35 | declared, not built |
+| `Clone` | api | 29 | unmapped |
+| `chooseCard` | api | 28 | declared, not built |
+| `damageAll` | api | 27 | declared, not built |
+| `Ward` | keyword | 26 | declared, no behavior |
+| `CantBlockBy` | static | 26 | no engine support yet |
+| `AlternativeCost` | static | 24 | no engine support yet |
+| `attach` | api | 24 | declared, not built |
+| `AddPhase` | api | 24 | unmapped |
 
