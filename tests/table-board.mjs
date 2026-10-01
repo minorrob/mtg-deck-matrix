@@ -62,7 +62,7 @@ import assert from "node:assert/strict";
 import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
+import {openBrowser, loadLiveState, legendaryNames} from "./uat/browser-runner.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 
@@ -79,7 +79,9 @@ const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path
 const ROB_INSTANT = (name) => {const m = /^Rob Secret (\d+)$/.exec(name); return !!m && Number(m[1]) % 4 === 2;};
 /* Every other one of Rob's spells is an instant at two mana: once he has two lands, he may respond on another player's
    turn, and his button then reads Pass (B5, item 10). */
-const cards = (name) => basicCards(name) ?? (ROB_INSTANT(name) ? {types: ["Instant"], manaCost: "{2}"} : {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}"});
+/* A commander is a legendary creature (CR 903.3): the library's own commanders, and each seat's General here. */
+const legendary = (name) => (legendaryNames().has(name) || / General$/.test(name) ? {supertypes: ["Legendary"]} : {});
+const cards = (name) => basicCards(name) ?? (ROB_INSTANT(name) ? {types: ["Instant"], manaCost: "{2}"} : {types: ["Creature"], ...legendary(name), power: 2, toughness: 2, manaCost: "{1}"});
 const ROB = "rob@example.com", MAYA = "maya@example.com";
 let clock = Date.parse("2026-09-26T22:00:00Z");
 const map = new Map(), live = [];
