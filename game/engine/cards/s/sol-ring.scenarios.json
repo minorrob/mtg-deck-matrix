@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sol Ring",
+  "scenarios": [
+    {
+      "name": "Cast for one, it taps for two the turn it arrives: an artifact is never sick",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sol Ring"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sol Ring"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Sol Ring"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sol Ring",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

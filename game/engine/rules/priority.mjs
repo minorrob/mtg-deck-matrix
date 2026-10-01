@@ -24,6 +24,9 @@
  */
 
 import {peekStack, resolveTop} from "./stack.mjs";
+import {resolutionPending} from "../script/resolution.mjs";
+import {checkStateBasedActions} from "./sba.mjs";
+import {collectTriggers, openTriggers} from "./trigger.mjs";
 
 /**
  * The seats that will act this round, in APNAP order: the active player, then each other player in
@@ -64,10 +67,12 @@ export function takeAction(state, player = state.priorityPlayer) {
 /**
  * The player holding priority passes.
  *
- * @returns {{outcome: "passed"|"resolved"|"step-ends", events: Array}}
+ * @returns {{outcome: "passed"|"resolved"|"resolving"|"step-ends", events: Array}}
  *   `passed`     priority moved on; the round continues.
  *   `resolved`   everyone passed on a loaded stack, so the top object resolved (CR 608.1) and the
  *                active player now holds priority.
+ *   `resolving`  the top object began to resolve and stopped to ask somebody (`state.awaiting`); it
+ *                stays on the stack and nobody holds priority until the answer finishes it.
  *   `step-ends`  everyone passed on an empty stack; the caller advances the step (CR 117.4).
  */
 export function passPriority(state, effect = null) {
@@ -96,11 +101,28 @@ export function passPriority(state, effect = null) {
   }
 
   const events = resolveTop(state, effect);
+  if (resolutionPending(state)) {state.priorityPlayer = null; return {outcome: "resolving", events};}
+  return {outcome: "resolved", events: afterResolving(state, events)};
+}
+
+/**
+ * Priority after an object has resolved: CR 117.5 first -- state-based actions, then the triggers that waited go on
+ * the stack -- and then CR 117.3b. A creature a spell dealt lethal damage to is gone before anyone may act, and a
+ * permanent's "when this enters" goes on the stack above nothing the players could slip in first. Either may ask a
+ * question (a commander's owner, the order of a player's triggers), and then priority waits for it.
+ *
+ * @returns {Array} the events, with whatever the checks added
+ */
+export function afterResolving(state, events = []) {
+  events.push(...checkStateBasedActions(state));
+  collectTriggers(state, events);
+  if (!state.awaiting) openTriggers(state);
+  if (state.awaiting) {state.priorityPlayer = null; return events;}
   /* CR 117.3b. The ACTIVE player, whoever happened to pass last -- or, when the active player has left the
      game (conceded, CR 104.3a), the next player in turn order still in it (CR 800.4), since what is left on
      the stack still has to resolve. */
   const order2 = priorityOrder(state);
-  if (order2.length === 0) {state.priorityPlayer = null; return {outcome: "resolved", events};}
+  if (order2.length === 0) {state.priorityPlayer = null; return events;}
   grantPriority(state, state.players[state.activePlayer].lost ? order2[0] : state.activePlayer);
-  return {outcome: "resolved", events};
+  return events;
 }

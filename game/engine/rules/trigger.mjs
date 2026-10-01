@@ -51,8 +51,10 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not
-       the object, because for a death the object no longer exists. */
-    if (condition.who === "self" && fields.card?.cardId !== sourceId) return false;
+       the object, because for a death the object no longer exists. An arrival is the other way round:
+       the card that moved was the one on the stack or in hand, and the permanent that arrived is a new
+       object (CR 400.7), which the event names as `enteredAs`. */
+    if (condition.who === "self" && (fields.enteredAs ?? fields.card?.cardId) !== sourceId) return false;
     return true;
   }
 
@@ -104,6 +106,8 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
+            /* What it does, from the card script (phase 2.4), carried to the stack with it. */
+            ...scriptOf(ability),
           });
         }
       }
@@ -124,12 +128,16 @@ export function collectTriggers(state, events) {
           source: {cardId: gone.cardId, name: gone.name},
           cause: gone,
           optional: ability.optional === true,
+          ...scriptOf(ability),
         });
       }
     }
   }
   return state.pendingTriggers.length;
 }
+
+/* A scripted trigger's effects, for the stack entry; nothing for a kernel trigger that has none. */
+const scriptOf = (ability) => ((ability.effects ?? []).length ? {script: {targets: ability.targets ?? [], effects: ability.effects}} : {});
 
 /** How many triggers are waiting to go on the stack. */
 export const pendingCount = (state) => (state.pendingTriggers ?? []).length;
@@ -182,6 +190,7 @@ function putOnStack(state, triggers) {
       controller: trigger.controller,
       abilityId: trigger.abilityId,
       kind: "trigger",
+      script: trigger.script ?? null,
     });
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);

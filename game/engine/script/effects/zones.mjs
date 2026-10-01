@@ -75,6 +75,8 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
+    /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
+    ...(destination === "battlefield" ? {enteredAs: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
   }));
@@ -83,6 +85,8 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
 
 /** Which players an effect is aimed at. */
 export const playersFor = (state, who, controller) => {
+  /* A target bound to its player (script/bind.mjs): that player, while still in the game; none when it was not one. */
+  if (Array.isArray(who)) return who.filter((id) => state.players[id] && !state.players[id].lost);
   if (who === "opponent") return state.players.filter((p) => p.id !== controller && !p.lost).map((p) => p.id);
   if (who === "any" || who === "each") return state.players.filter((p) => !p.lost).map((p) => p.id);
   return [controller];
@@ -153,9 +157,9 @@ export function destroyAll(state, params, context) {
 }
 
 /**
- * `mill` — CR 701.13: the top N cards of each named player's library into their graveyard, from the top down.
+ * `mill` — CR 701.17: the top N cards of each named player's library into their graveyard, from the top down.
  *
- * MILLING IS NOT DRAWING. A player told to mill more than they have mills what there is (CR 701.13b), and an empty
+ * MILLING IS NOT DRAWING. A player told to mill more than they have mills what there is (CR 701.17b), and an empty
  * library here is not the empty-library draw that loses the game (CR 704.5b): nothing is marked.
  */
 export function mill(state, params, context) {
