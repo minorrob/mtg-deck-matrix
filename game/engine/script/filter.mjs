@@ -37,7 +37,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
-  "what", "types", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
+  "what", "types", "subtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
 ]);
 
 /** What a selector can be about. */
@@ -58,6 +58,8 @@ function assertGrammar(selector) {
     throw new Error(`A selector is about one of ${WHAT.join(", ")}, not ${JSON.stringify(selector.what)}`);
   if (selector.types !== undefined && !Array.isArray(selector.types))
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
+  if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
+    throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
 }
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
@@ -115,6 +117,13 @@ export function compileSelector(selector) {
     if (selector.types) {
       const current = typesOf(state, id);
       if (!selector.types.every((type) => current.includes(type))) return false;
+    }
+
+    /* Subtypes (CR 205.3): the printed ones, and any the layers added -- an animated land's "Elemental" arrives
+       with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
+    if (selector.subtypes) {
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
+      if (!selector.subtypes.every((subtype) => current.includes(subtype))) return false;
     }
 
     if (selector.named !== undefined && object.card !== selector.named) return false;

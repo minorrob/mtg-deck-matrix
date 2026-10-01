@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hinterland Harbor",
+  "scenarios": [
+    {
+      "name": "With a Island out, it enters untapped and taps for either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hinterland Harbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hinterland Harbor"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hinterland Harbor",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Hinterland Harbor"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without a Forest or a Island, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hinterland Harbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hinterland Harbor"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hinterland Harbor"
+        }
+      ]
+    },
+    {
+      "name": "An opponent's Forest does not count: \"you control\"",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hinterland Harbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hinterland Harbor"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hinterland Harbor"
+        }
+      ]
+    }
+  ]
+}

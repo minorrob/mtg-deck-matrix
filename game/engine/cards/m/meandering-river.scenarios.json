@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Meandering River",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Meandering River"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Meandering River"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Meandering River"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Meandering River"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Meandering River"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "W": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Meandering River",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

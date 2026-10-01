@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Azorius Guildgate",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Azorius Guildgate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Azorius Guildgate"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Azorius Guildgate"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Azorius Guildgate"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Azorius Guildgate"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "W": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Azorius Guildgate",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

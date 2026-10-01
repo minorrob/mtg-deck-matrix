@@ -42,6 +42,7 @@ import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
+import {playerRuleChanged} from "./statics.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -186,7 +187,9 @@ function cleanup(state, events) {
   }
   const player = state.players[state.activePlayer];
   /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
-  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - (player.maxHandSize ?? 7);
+  /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */
+  const limit = playerRuleChanged(state, "no-maximum-hand-size", state.activePlayer) ? Infinity : (player.maxHandSize ?? 7);
+  const over = player.lost ? 0 : cardsIn(state, "hand", state.activePlayer).length - limit;
   if (over > 0) state.awaiting = {kind: "discard-to-hand-size", player: state.activePlayer, count: over};
   void events;
 }

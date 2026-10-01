@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Glacial Fortress",
+  "scenarios": [
+    {
+      "name": "With a Island out, it enters untapped and taps for either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glacial Fortress"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Glacial Fortress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Glacial Fortress",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Glacial Fortress"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without a Plains or a Island, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glacial Fortress"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Glacial Fortress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Glacial Fortress"
+        }
+      ]
+    },
+    {
+      "name": "An opponent's Plains does not count: \"you control\"",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Glacial Fortress"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Glacial Fortress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Glacial Fortress"
+        }
+      ]
+    }
+  ]
+}

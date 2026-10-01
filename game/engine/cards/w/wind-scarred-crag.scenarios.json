@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wind-Scarred Crag",
+  "scenarios": [
+    {
+      "name": "It enters tapped, and its trigger gains a life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wind-Scarred Crag"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Wind-Scarred Crag"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Wind-Scarred Crag"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}
