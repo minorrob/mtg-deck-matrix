@@ -81,6 +81,8 @@ export function createToken(state, params, context) {
       types: spec.types ?? ["Creature"],
       /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
       subtypes: spec.subtypes ?? [],
+      /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
+      colors: spec.colors ?? [],
       power: spec.power ?? null,
       toughness: spec.toughness ?? null,
       keywords: spec.keywords ?? [],
