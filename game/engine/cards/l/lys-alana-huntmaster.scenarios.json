@@ -1,0 +1,114 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lys Alana Huntmaster",
+  "fixtures": {
+    "Elf Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{C}",
+      "subtypes": [
+        "Elf"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{C}",
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Casting Elf Fixture triggers it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lys Alana Huntmaster",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elf Fixture"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf Warrior",
+            "Lys Alana Huntmaster",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bear Fixture does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lys Alana Huntmaster",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear Fixture"
+        }
+      ],
+      "expect": [
+        {
+          "stack": 1
+        }
+      ]
+    }
+  ]
+}

@@ -150,6 +150,8 @@ export function draw(state, player, events) {
     card,
     from: {zoneType: ZONE_LABEL.library, player: {playerId: player}},
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
+    /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
+    drawn: true,
   }));
   return moved;
 }

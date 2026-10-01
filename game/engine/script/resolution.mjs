@@ -36,7 +36,8 @@ export function beginResolution(state, effects, context = {}) {
   state.resolving = {
     queue: structuredClone(effects ?? []),
     /* `targets` are the ones still legal as the resolution began (bind.mjs, CR 608.2b), null where one is not. */
-    context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? [], facts: context.facts ?? []},
+    context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? [], facts: context.facts ?? [],
+      ...(context.about ? {about: context.about} : {})},
     events: [],
   };
   return runResolution(state);

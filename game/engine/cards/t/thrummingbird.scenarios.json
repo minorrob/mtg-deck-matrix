@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thrummingbird",
+  "scenarios": [
+    {
+      "name": "Combat damage to a player: proliferate (nothing with counters: nothing asked)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thrummingbird"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Thrummingbird"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sanctum Seeker",
+    "oracleId": "afb71560-0fc9-4ea5-9d52-d93c17d72519",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Knight"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Whenever a Vampire you control attacks, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a Vampire you control attacks, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Vampire"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

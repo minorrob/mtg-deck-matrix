@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Enchantress's Presence",
+  "fixtures": {
+    "Charm Fixture": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{C}"
+    },
+    "Relic Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{C}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Casting Charm Fixture triggers it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Enchantress's Presence",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charm Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Charm Fixture"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Relic Fixture does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Enchantress's Presence",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Relic Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Relic Fixture"
+        }
+      ],
+      "expect": [
+        {
+          "stack": 1
+        }
+      ]
+    }
+  ]
+}

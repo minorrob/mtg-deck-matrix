@@ -123,7 +123,7 @@ export function draw(state, params, context) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) { state.players[player].drewFromEmpty = true; break; }
-      moveOne(state, library[0], "hand", events, {owner: player});
+      if (moveOne(state, library[0], "hand", events, {owner: player}) !== null) events[events.length - 1].data.fields.drawn = true;
     }
   }
   return events;

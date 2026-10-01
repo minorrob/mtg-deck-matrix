@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sram, Senior Edificer",
+  "fixtures": {
+    "Gear Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{C}",
+      "subtypes": [
+        "Equipment"
+      ]
+    },
+    "Relic Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{C}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An Equipment spell: a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sram, Senior Edificer",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gear Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gear Fixture"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "An artifact that is none of the three: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sram, Senior Edificer",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Relic Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Relic Fixture"
+        }
+      ],
+      "expect": [
+        {
+          "stack": 1
+        }
+      ]
+    }
+  ]
+}

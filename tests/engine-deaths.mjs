@@ -220,8 +220,12 @@ const zoneOf = (s, name) => Object.values(s.objects).filter((o) => o.card === na
 {
   const compiled = compileScript(script("Solemn Simulacrum")).definition.abilities;
   eq(compiled.map((a) => a.effects[0].effect), ["modal", "modal"], "the directory compiles each \"you may\" to a question with Yes and No");
-  const bad = compileScript({...script("Blood Artist"), abilities: [{kind: "triggered", text: "x", trigger: {on: "enters", who: "another", filter: {anyOf: [{types: ["Creature"]}]}}, effects: [{effect: "gainLife", amount: 1}]}]});
-  ok(bad.definition === null && bad.problems.some((p) => /anyOf/.test(p)), "a choice of types in an arrival's filter is refused: only a death's is read that way");
+  /* Batch 8 read every trigger's filter as a possible choice: an arrival's compiles now, and a choice naming a key the
+     grammar has not got is still refused. */
+  const arrival = compileScript({...script("Blood Artist"), abilities: [{kind: "triggered", text: "x", trigger: {on: "enters", who: "another", filter: {anyOf: [{types: ["Creature"]}, {types: ["Planeswalker"]}]}}, effects: [{effect: "gainLife", amount: 1}]}]});
+  eq(arrival.problems, [], "a choice of types in an arrival's filter compiles");
+  const bad = compileScript({...script("Blood Artist"), abilities: [{kind: "triggered", text: "x", trigger: {on: "enters", who: "another", filter: {anyOf: [{types: ["Creature"]}, {kind: "elf"}]}}, effects: [{effect: "gainLife", amount: 1}]}]});
+  ok(bad.definition === null && bad.problems.some((p) => /no key "kind"/.test(p)), "and an alternative with a key the grammar has not got is refused");
 }
 
 console.log(`engine-deaths: ${checks} checks passed — a death read as the thing last existed, a wipe seen whole, "equipped creature dies", a creature sacrificed as a cost chosen and a mana ability's off the stack, and "you may" asked.`);

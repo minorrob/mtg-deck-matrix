@@ -187,7 +187,7 @@ export function smokeScenario(script) {
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
     steps.push({cast: name, seat: 0, targets: "any", optional: true}, {settle: true});
   }
-  steps.push({to: {turn: 3, phase: "MAIN1"}});
+  steps.push({to: {turn: 3, phase: "MAIN1", settle: true}});
   for (const ability of script.abilities ?? []) {
     if (ability?.kind !== "activated") continue;
     if (ability.mana) steps.push({tap: name, seat: 0, optional: true});
@@ -265,7 +265,9 @@ export function scriptVocabulary() {
     abilityKinds: [...ABILITY_KINDS],
     effects: [...Object.keys(EFFECTS), ...NEEDS_A_DECISION].sort(),
     selectorKeys: [...SELECTOR_KEYS, "anyOf (a choice of selectors, for 'any target')"],
-    triggers: ["enters (who: self|another|any, filter?: selector)", "dies (who: self)", "upkeep (yours: true|false)", "end step (yours: true|false)"],
+    triggers: ["enters (who: self|another|any, filter?: selector)", "dies (who: self|another|any, filter?: selector)", "upkeep (yours: true|false)", "end step (yours: true|false)",
+      "spell cast (caster: you|opponent|any, filter?: selector of the spell)", "attacks (who: self|another|any, filter?)",
+      "damage dealt (who: self|another|any, combat?: true, to: player|opponent, filter?)", "drawn (drawer: you|opponent|any)"],
     costAtoms: ["{atom: \"{T}\"}", "{atom: \"mana\", cost: \"{1}{G}\"}", "{atom: \"payLife\", amount: n}", "{atom: \"sacrifice\", self: true}"],
     additionalCosts: ["{atom: \"discard\"}", "{atom: \"sacrifice\", selector: {types: [\"Creature\"]}} (or anyOf)"],
     predefinedTokens: Object.keys(PREDEFINED_TOKENS),

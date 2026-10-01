@@ -105,7 +105,7 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
@@ -114,6 +114,8 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
   if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects});
+  /* What a trigger is about -- the spell cast, the attacker, the player dealt damage -- for "that player" (trigger.mjs). */
+  if (about) entry.about = structuredClone(about);
   state.stack.push(entry);
   return entry;
 }
@@ -151,7 +153,7 @@ export function resolveTop(state, effect = null) {
   if (!script) return finishTop(state, entry, events, false);
 
   const source = entry.kind === "spell" ? entry.objectId : (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
-  const context = {controller: entry.playerId, source};
+  const context = {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */

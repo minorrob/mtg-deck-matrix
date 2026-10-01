@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sythis, Harvest's Hand",
+  "fixtures": {
+    "Charm Fixture": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{C}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Casting Charm Fixture triggers it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sythis, Harvest's Hand",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charm Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Charm Fixture"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

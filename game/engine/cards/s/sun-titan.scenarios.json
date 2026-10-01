@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sun Titan",
+  "fixtures": {
+    "Relic Two": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: may return a permanent card of mana value 3 or less",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sun Titan"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Relic Two"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Sun Titan"
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Relic Two",
+            "Sun Titan"
+          ]
+        }
+      ]
+    }
+  ]
+}

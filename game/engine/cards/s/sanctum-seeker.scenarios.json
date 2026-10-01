@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sanctum Seeker",
+  "fixtures": {
+    "Vampire Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Vampire"
+      ],
+      "manaCost": "{B}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two Vampires attack: two triggers, each a drain",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sanctum Seeker",
+            "Vampire Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Sanctum Seeker",
+            "Vampire Fixture"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    }
+  ]
+}

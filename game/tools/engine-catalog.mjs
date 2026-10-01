@@ -144,7 +144,9 @@ function main() {
 
   /* Triggers: the events a card watches. The compiler builds "enters", "dies", "upkeep" and "end step"; Forge's
      ChangesZone covers every zone change and Phase every step, so those two are partly built. */
-  const PARTIAL_TRIGGERS = new Set(BROAD_TRIGGERS);
+  /* Forge's broad zone-change and phase triggers stand for several events; DamageDone also covers damage to creatures and
+   planeswalkers, and the compiler builds damage to players only. */
+const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
   const triggers = [...ALL.triggers.keys()].map((mode) => {
     const event = FORGE_TRIGGER[mode] ?? null;
     const status = !event ? "missing" : PARTIAL_TRIGGERS.has(mode) ? "partial" : TRIGGER_KINDS.includes(event) ? "built" : isTriggerEvent(event) ? "named" : "missing";

@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Managorger Hydra",
+    "oracleId": "b3f2265b-dd65-4b74-8b74-35ee0b147617",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hydra"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Trample\nWhenever a player casts a spell, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a player casts a spell, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "any"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
