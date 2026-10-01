@@ -169,6 +169,7 @@ export function addObject(state, object, zone, player = null) {
        made from a bare kernel definition is the shape it always was. */
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(Array.isArray(object.subtypes) && object.subtypes.length ? {subtypes: [...object.subtypes]} : {}),
+    ...(Array.isArray(object.supertypes) && object.supertypes.length ? {supertypes: [...object.supertypes]} : {}),
     /* CR 903.4a: a card's color identity is established before the game and goes with it everywhere; "any color in
        your commander's color identity" reads it off the commander (rules/actions.mjs). */
     ...(Array.isArray(object.colorIdentity) ? {colorIdentity: [...object.colorIdentity]} : {}),
@@ -213,6 +214,6 @@ export function moveObject(state, id, zone, player = null) {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
-    spell: from.spell, subtypes: from.subtypes, colorIdentity: from.colorIdentity,
+    spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity,
   }, zone, player);
 }

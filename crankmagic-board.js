@@ -54,6 +54,28 @@
  * screen asking to turn the phone: held upright, the surface is turned a quarter itself. When the room asks you
  * something, the board snaps back to yours.
  */
+/* TURNS THAT WENT BY (Rob, 2026-10-01). With the AI seats playing at once and a step with nothing to do passing by
+   itself, a person's land drop can be followed, with no click of theirs, by the rest of their turn and every other
+   player's -- and the next thing on their board is Draw a card again. The game was right (one draw and one land a
+   turn, CR 504.1 and 305.2); the board did not say that three turns had gone by. When a view arrives whole turns
+   after the last one this seat saw, these are those turns, from the table's public history: each turn's own line
+   ("Turn 2 · Maya") and what happened in it, the steps that passed by themselves left out. Null when no whole turn
+   went by -- a game with other people in it is seen as it is played. */
+globalThis.CrankBoard = Object.freeze({
+  turnsWentBy(was, next) {
+    if (!was || !next || was.matchId !== next.matchId || !was.state || !next.state) return null;
+    const from = was.state.turn, to = next.state.turn;
+    if (!(to - from >= 2)) return null;
+    const turns = [];
+    for (let turn = from + 1; turn < to; turn += 1) {
+      const lines = (next.history || []).filter((l) => l.turn === turn);
+      const head = lines.find((l) => l.mark === "turn");
+      const said = lines.filter((l) => !l.mark && l.text).map((l) => l.text);
+      turns.push({turn, head: head ? head.text : `Turn ${turn}`, lines: said});
+    }
+    return {from: from + 1, to: to - 1, now: to, turns};
+  },
+});
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, actions} = C;
   /* The app's button, which can also be off: a choice the room would refuse is not offered. */
@@ -94,6 +116,7 @@
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
+  let wentBy = null;
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
@@ -163,6 +186,10 @@
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view;
     view = next;
+    /* Whole turns went by since this seat's last view: say which, until the turn moves on or it is put away. */
+    const went = globalThis.CrankBoard.turnsWentBy(was, next);
+    if (went) wentBy = went;
+    else if (wentBy && (next.matchId !== (was && was.matchId) || next.state.turn !== wentBy.now)) wentBy = null;
     listen(was, next);
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
@@ -556,7 +583,7 @@
         <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => `<div class="cm-full-other" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "opp", focusButton: true})}</div>`).join("")}</div>
         <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${viewing ? handBacks(big) : hand()}</div></div>
       <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
-        <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${decision()}${stack()}${historyBand(30)}</aside>`;
+        <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${went()}${decision()}${stack()}${historyBand(30)}</aside>`;
   }
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
@@ -664,8 +691,24 @@
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
      floated: its cards are bright, and the rest is under "You can also ▾" beside the pass. */
+  /* The turns that went by, over the board where the room's questions are: each turn's line and what it held, the
+     newest turn now yours or named. Seven lines a turn at most; the History has the rest. */
+  function went() {
+    if (!wentBy || view.status === "finished") return "";
+    const w = wentBy, span = w.from === w.to ? `Turn ${w.from} went by` : `Turns ${w.from}–${w.to} went by`;
+    const rows = w.turns.map((t) => {
+      /* The turn's line names its player, so a line that begins with that name says the rest: "drew a card". */
+      const who = t.head.split(" · ")[1] || "", own = (l) => (who && l.startsWith(`${who} `) ? l.slice(who.length + 1) : l);
+      const shown = t.lines.slice(0, 7).map(own), more = t.lines.length - shown.length;
+      const said = shown.length ? shown.map(e).join(" · ") : "Nothing happened";
+      return `<li><strong>${e(t.head)}</strong><span>${said}${more > 0 ? ` · and ${more} more in the History` : ""}</span></li>`;
+    }).join("");
+    const now = view.state.turnPlayerId === view.seat ? `Turn ${w.now} is yours.` : `Turn ${w.now} · ${e(nameOf(view.state.turnPlayerId))}`;
+    return `<section class="cm-board-decision cm-board-went" role="status" aria-label="${e(span)}"><h3>${e(span)}</h3>
+      <ol class="cm-board-went-list">${rows}</ol><div class="cm-board-decision-foot"><span class="cm-muted">${now}</span>${b("OK", "board-went-close", {}, false, {cls: "compact"})}</div></section>`;
+  }
   function ask() {
-    const d = view.decision, inner = `${stack()}${d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
+    const d = view.decision, inner = `${went()}${stack()}${d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
     return inner ? `<div class="cm-board-ask">${inner}</div>` : "";
   }
   function alsoButton() {
@@ -775,7 +818,7 @@
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
         <span>${e(x.playerId === view.seat ? "You" : x.name)}</span><b>${x.health.life}</b><small>${e(seatFlag(x))}</small></button>`).join("")}
       <div class="cm-phone-rotate">${b("‹", "board-rotate", {by: "-1"}, false, {cls: "compact"})}${b("›", "board-rotate", {by: "1"}, false, {cls: "compact"})}</div></aside>`;
-    return `${rail}<div class="cm-phone-center">${pill}${mat(p, {size: "phone", head: "none"})}<div class="cm-phone-ask">${decision()}${stack()}</div></div>${strip}`;
+    return `${rail}<div class="cm-phone-center">${pill}${mat(p, {size: "phone", head: "none"})}<div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>${strip}`;
   }
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
@@ -1140,6 +1183,7 @@
     const pass = d.options.find((o) => o.label === "Pass priority");
     if (pass) send({indices: [pass.index]});
   };
+  actions["board-went-close"] = () => {wentBy = null; draw();};
   actions["board-draw"] = () => {
     const d = view && view.decision;
     if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
