@@ -179,7 +179,9 @@ export function smokeScenario(script) {
   const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
   const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
-  const ownTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"controller":"you"')));
+  const ownTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"controller":"you"'))
+    /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
+    || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"controller":"you"')));
   const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
