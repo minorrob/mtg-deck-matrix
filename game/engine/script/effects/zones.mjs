@@ -19,7 +19,7 @@
 
 import {afterwards, delayedTrigger} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
@@ -31,9 +31,7 @@ const ZONE_LABEL = {
 };
 /* Which zones belong to a player, so a move knows whose to put it in. */
 const PER_PLAYER = ["library", "hand", "graveyard", "command"];
-/* The public zones (CR 400.2): what a card became in one of these can be found by an ability that triggered on the move
-   (CR 400.7e) -- "return that card to its owner's hand". In a hand or a library it cannot. */
-const PUBLIC = ["battlefield", "graveyard", "exile", "stack", "command"];
+
 
 export const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -85,7 +83,7 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
-    ...(PUBLIC.includes(destination) ? {becomes: moved} : {}),
+    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
   }));

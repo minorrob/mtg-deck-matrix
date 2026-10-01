@@ -19,6 +19,7 @@ import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {characteristicsOf, keywordsOf} from "../game/engine/rules/layers.mjs";
 import {collectTriggers} from "../game/engine/rules/trigger.mjs";
 import {applyReplacements} from "../game/engine/rules/replacement.mjs";
+import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
 import {canAttack} from "../game/engine/rules/combat.mjs";
 import {combatDamageOf} from "../game/engine/rules/statics.mjs";
 import {beginResolution} from "../game/engine/script/resolution.mjs";
@@ -71,6 +72,43 @@ const DIES = {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard
   eq(died.data.fields.becomes, named(s, "Bear", "graveyard")[0], "a creature dies: the event names what it became in the graveyard, a new object (CR 400.7e)");
   const bounced = beginResolution(s, [{effect: "moveZone", targets: [elf], to: "hand"}], ctx()).events.find((e) => e.kind === "GameEventCardChangeZone");
   eq(bounced.data.fields.becomes, undefined, "returned to a hand, a hidden zone: nothing names what it became there");
+}
+
+{
+  /* Deaths the rules make, not an effect: lethal damage (CR 704.5g), and a token arriving, and a permanent spell resolving. */
+  const s = table();
+  on(s, card("Liesa, Forgotten Archangel"), 0);
+  const bear = on(s, creature("Bear"), 0);
+  main(s);
+  s.objects[bear].damage = 2;
+  const sba = checkStateBasedActions(s);
+  const died = sba.find((e) => e.kind === "GameEventCardChangeZone");
+  eq(died?.data.fields.becomes, named(s, "Bear", "graveyard")[0], "a creature dead of lethal damage, a state-based action: the event names the card it became too");
+  collectTriggers(s, sba);
+  eq(s.pendingTriggers.map((t) => t.about?.card), [named(s, "Bear", "graveyard")[0]], "so Liesa's trigger is about that card, and will return it");
+  s.pendingTriggers = [];
+  const made = beginResolution(s, [{effect: "createToken", count: 1, token: {name: "Spirit", types: ["Creature"], power: 1, toughness: 1}}], ctx()).events.find((e) => e.kind === "GameEventCardChangeZone");
+  eq(made.data.fields.becomes, named(s, "Spirit")[0], "a token created: the event names the token");
+}
+{
+  /* A creature spell resolving: the permanent it became (CR 400.7e), which "whenever one or more creatures enter" reads. */
+  const s = table();
+  on(s, creature("Cub"), 0, "hand"); on(s, WASTES, 0);
+  main(s);
+  applyAction(s, 0, legalActions(s, 0).find((a) => a.kind === "activate-mana"));
+  cast(s, 0, "Cub");
+  passPriority(s);
+  const arrived = (passPriority(s).events ?? []).find((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.to?.zoneType === "Battlefield");
+  eq(arrived?.data.fields.becomes, named(s, "Cub")[0], "a creature spell resolving: the event names the permanent it became");
+}
+{
+  /* The Scarab God dies in combat-sized damage, not to a destroy effect: it still comes back. */
+  const s = table();
+  main(s);
+  const god = on(s, card("The Scarab God"), 0);
+  s.objects[god].damage = 5;
+  collectTriggers(s, checkStateBasedActions(s));
+  eq(s.pendingTriggers.map((t) => t.about?.card), [named(s, "The Scarab God", "graveyard")[0]], "dead of damage, its own \"when this dies\" is about the card in the graveyard");
 }
 
 /* ---- Liesa: that card, back at the end step; an opponent's creature exiled instead ---- */

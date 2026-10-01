@@ -124,7 +124,7 @@ export function makeCopies(state, ids, params, context, events) {
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
       events.push(event("GameEventCardChangeZone", state, {
-        card: cardRef(state, copy), enteredAs: copy,
+        card: cardRef(state, copy), enteredAs: copy, becomes: copy,
         from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
       }));
     }
@@ -167,6 +167,8 @@ export function createToken(state, params, context) {
     if (spec.tapped) state.objects[id].tapped = true;
     events.push(event("GameEventCardChangeZone", state, {
       card: cardRef(state, id),
+      /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
+      becomes: id,
       from: {zoneType: null, player: {playerId: controller}},
       to: {zoneType: "Battlefield", player: {playerId: controller}},
       createdAsToken: true,
