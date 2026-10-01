@@ -301,7 +301,7 @@ const work=(w=>M.isLobbyDeck(d)&&!d.archived?[b('Save to Decks','promote-lobby-d
   /* THE PRIMARY IS THE STATE'S, NOT A FIXED SLOT (UAT B-20). Copies waiting to go into the box
      make Ready to add the primary; failing that, an open shopping list makes it Buy list; a deck
      with neither is there to be played. The primary also goes first, where a thumb lands. */
-  :d.status==='final'?(()=>{const readyN=pullCount(ready)+ready.remove,primary=readyN>0?'pull':ready.toBuy>0?'buy':'log';
+  :d.status==='final'?(()=>{const readyN=pullCount(ready)+ready.remove+M.benchFree(C.state,d).copies,primary=readyN>0?'pull':ready.toBuy>0?'buy':'log';
     const row=[['pull',b(readyN>0?`Ready to add (${readyN})`:'Ready to add','deck-pull',{deck:d.id},primary==='pull')],['buy',precon?buyPrecon(precon,primary==='buy'):b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},primary==='buy')],['log',b('Log a game','log-game',{deck:d.id},primary==='log')]];
     return row.sort((x,y)=>(x[0]===primary?-1:0)-(y[0]===primary?-1:0)).map(x=>x[1]);})()
   :[b('Edit card list','edit-list',{deck:d.id},true),precon?b('Save','precon-save',{deck:d.id}):b('Finalize','finalize',{deck:d.id}),b('Log a game','log-game',{deck:d.id})]);

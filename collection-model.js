@@ -180,6 +180,13 @@
   function print(raw={}){return {id:text(raw.id,100),set:text(raw.set,30).toLowerCase(),collector:text(raw.collector,40),finish:text(raw.finish,30),language:text(raw.language,30),condition:text(raw.condition,50),signed:!!raw.signed,altered:!!raw.altered,...(raw.series?{series:text(raw.series,80)}:{}),...(raw.artist?{artist:text(raw.artist,120)}:{})};}
   function compatible(l,r){return l.cardId===r.cardId&&Object.entries(r.printing||{}).every(([k,v])=>!v||l.printing?.[k]===v);}
   function countFor(s,did,sid){return s.lots.filter(l=>l.allocation?.deckId===did&&l.allocation.slotId===sid).reduce((n,l)=>n+l.quantity,0);}
+  /* FREE ON THE BENCH, FOR THIS DECK: owned copies sitting on the Bench, reserved to nobody and not offered, that match a
+     committed seat the deck has not filled -- up to each seat's shortfall. A deck reserves these by itself when it is
+     made, finalized or its list changes; this says how many are still there for a deck made before that, so Ready to
+     add can offer to reserve them (the Reserve available copies command). */
+  function benchFree(s,d){let copies=0,kept=0;const rows=[];for(const r of d.slots.filter(r=>r.committed&&r.purpose==='main')){let need=Math.max(0,r.quantity-countFor(s,d.id,r.id));if(!need)continue;
+      for(const l of s.lots.filter(l=>l.source==='owned'&&!l.allocation&&l.offer==='none'&&l.location?.kind==='bench'&&compatible(l,r)).sort((a,b)=>(a.keepBench?1:0)-(b.keepBench?1:0))){if(!need)break;const n=Math.min(need,l.quantity);need-=n;copies+=n;if(l.keepBench)kept+=n;rows.push({lotId:l.id,cardId:l.cardId,quantity:n,keepBench:!!l.keepBench,box:l.location.box||''});}}
+    return {copies,kept,rows};}
   const shortfall=(s,d,r)=>Math.max(0,r.quantity-countFor(s,d.id,r.id));
   /* WHAT A DRAFT STILL WANTS (G3). A draft's committed seat is covered first by copies reserved to it -- a draft holds
      copies since G3 -- then by free copies filed in the deck's group, each such copy covering one seat of its card.
@@ -353,7 +360,7 @@
          and then takes copies reserved to other decks or sitting in other boxes -- they stay
          where they physically are until pulled, and those decks' Ready to add lists say so. */
       if(value>t&&d.status==='final'){
-        const free=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck'&&!l.keepBench).reduce((n,l)=>n+l.quantity,0);
+        const free=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck').reduce((n,l)=>n+l.quantity,0);
         const elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));
         let need=Math.max(0,value-a-free);
         if(need&&elsewhere.length){for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until it is moved)':''}.`);need-=take;}
@@ -497,7 +504,11 @@
        deck's group is reserved first. Owned still beats unreceived -- the group only breaks
        a tie, so attaching a group can never reserve a copy that was not eligible anyway. */
     const filedFor=(l,d)=>d.groupId&&l.groupIds.includes(d.groupId)?0:1;
-    function satisfy(d,only){const here=l=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const r of d.slots.filter(r=>r.committed&&(!only||r.id===only))){for(const l of [...s.lots].sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1)||here(b)-here(a)||filedFor(a,d)-filedFor(b,d))){if(!shortfall(s,d,r))break;if(PLANNED.includes(l.source)||l.allocation||l.offer!=='none'||(l.location?.kind==='deck'&&l.location.deckId!==d.id)||!compatible(l,r)||l.keepBench)continue;allocate(l,d,r,Math.min(l.quantity,shortfall(s,d,r)));}}}
+    /* EVERY FREE COPY ON THE BENCH COUNTS (Rob, 2026-10-01: "It should be every available bench card that matches a
+       required card in the deck"). A copy marked Keep on bench -- which every release to the bench marked, silently --
+       used to be skipped here for good, so a new deck reserved none of the basics a person had taken out of their other
+       decks. It is used last now, after every other free copy, never not at all. */
+    function satisfy(d,only){const here=l=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const r of d.slots.filter(r=>r.committed&&(!only||r.id===only))){for(const l of [...s.lots].sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1)||here(b)-here(a)||(a.keepBench?1:0)-(b.keepBench?1:0)||filedFor(a,d)-filedFor(b,d))){if(!shortfall(s,d,r))break;if(PLANNED.includes(l.source)||l.allocation||l.offer!=='none'||(l.location?.kind==='deck'&&l.location.deckId!==d.id)||!compatible(l,r))continue;allocate(l,d,r,Math.min(l.quantity,shortfall(s,d,r)));}}}
     /* A LIST REPLACED IS RE-RESERVED (G3d, D4: automatic reservations). A copy reserved to a seat that is gone, is no
        longer committed or now names another card lets go of it, a seat holding more than it lists lets go of the rest,
        and the deck reserves again from what is free. Where a copy physically is does not change. */
@@ -780,5 +791,5 @@
     if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
     notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
   }
-  return {TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {benchFree,TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });
