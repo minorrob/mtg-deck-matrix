@@ -30,7 +30,7 @@ import {
   putCounter, putCounterAll, removeCounter, proliferate,
 } from "./resources.mjs";
 import {
-  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
+  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach,
 } from "./permanents.mjs";
 
 /**
@@ -83,6 +83,8 @@ export const EFFECTS = Object.freeze({
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate,
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
+  /* Phase 3, batch 6: Equip. */
+  attach,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

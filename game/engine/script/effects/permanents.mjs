@@ -32,10 +32,47 @@ function pushEffect(state, effect) {
   return timestamp;
 }
 
+/* Predefined tokens (CR 111.10): what "a Treasure token" is, so a card need only name it. */
+export const PREDEFINED_TOKENS = Object.freeze({
+  /* CR 111.10a */
+  Treasure: {name: "Treasure", types: ["Artifact"], subtypes: ["Treasure"],
+    abilities: [{id: "treasure", kind: "mana", tapSelf: true, anyColor: true, sacrificeSelf: true, text: "{T}, Sacrifice this artifact: Add one mana of any color."}]},
+  /* CR 111.10b */
+  Food: {name: "Food", types: ["Artifact"], subtypes: ["Food"],
+    abilities: [{id: "food", kind: "activated", text: "{2}, {T}, Sacrifice this artifact: You gain 3 life.", targets: [],
+      cost: [{atom: "mana", cost: "{2}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "gainLife", amount: 3}]}]},
+  /* CR 111.10f */
+  Clue: {name: "Clue", types: ["Artifact"], subtypes: ["Clue"],
+    abilities: [{id: "clue", kind: "activated", text: "{2}, Sacrifice this artifact: Draw a card.", targets: [],
+      cost: [{atom: "mana", cost: "{2}"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+});
+
+/**
+ * `attach` — CR 701.3: the source (an Equipment) taken from whatever it was attached to and put onto the target.
+ * Equip is "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery." (CR 702.6a).
+ */
+export function attach(state, params, context) {
+  const events = [];
+  const sourceId = params.source ?? context.source;
+  const source = sourceId === null || sourceId === undefined ? null : state.objects[sourceId];
+  const [hostId] = params.targets ?? [];
+  const host = hostId === undefined ? null : state.objects[hostId];
+  if (!source || !host || source.zone !== "battlefield" || host.zone !== "battlefield" || sourceId === hostId) return events;
+  /* CR 701.3b: attaching it to what it is already attached to does nothing. */
+  if (source.attachedTo === hostId) return events;
+  const before = source.attachedTo !== null && source.attachedTo !== undefined ? state.objects[source.attachedTo] : null;
+  if (before) before.attachments = (before.attachments ?? []).filter((id) => id !== sourceId);
+  source.attachedTo = hostId;
+  host.attachments = [...(host.attachments ?? []), sourceId];
+  events.push(event("GameEventCardAttachment", state, {card: cardRef(state, sourceId), attachedTo: cardRef(state, hostId)}));
+  return events;
+}
+
 /** `createToken` — CR 111. */
 export function createToken(state, params, context) {
   const events = [];
-  const spec = params.token ?? {};
+  const spec = params.token?.predefined ? PREDEFINED_TOKENS[params.token.predefined] : params.token ?? {};
+  if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
   for (let i = 0; i < count; i += 1) {

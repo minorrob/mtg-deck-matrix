@@ -78,6 +78,8 @@ function affects(state, effect, current, sourceController) {
   if (rule.controller === "opponent" && current.controller === sourceController) return false;
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
+  /* "Equipped creature has haste": the one its source is attached to (CR 301.5). */
+  if (rule.attachedBy === "self" && state.objects[effect.sourceId]?.attachedTo !== current.id) return false;
   return true;
 }
 
