@@ -11,6 +11,9 @@
  *   3. On an archived deck the menu offers Restore and a red Delete deck….
  *   4. On a phone the action bar is one row that scrolls sideways: every label whole, Make the change
  *      included, and the hero no longer repeats it.
+ *   0. (Rob, 2026-10-01) The Overview reads About the commander, then the Simulation history, then the Record; the
+ *      header's commander line shows the commander's printed cost; and every mana symbol is the same circle at the
+ *      same size, a generic {1} among them, in the header, in About the commander and in the card's dialog.
  *   5. (R3.5b, 30-measure-report) A filed Measure opens as a report: the fidelity notice ABOVE the score,
  *      computed from the report's own facts (unread cards: Medium; a changed list: Low), the score of 100,
  *      and the score's own breakdown as the checks. Export report downloads the report itself.
@@ -34,7 +37,41 @@ try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
   if (stub) await stub(page);
+  await page.addInitScript(() => (globalThis.CrankFeatures ||= []).push((C) => {globalThis.__cm = C;}));
   await loadLiveState(page, base);
+
+  /* 0. Rob's deck-page findings of 2026-10-01. */
+  {
+    await openDeck(page);
+    await page.locator("#cm-sec-commander").waitFor({timeout: 30000});
+    const order = await page.evaluate(() => ["#cm-sec-commander", "#cm-sec-history", "#cm-sec-record"].map((q) => {const el = document.querySelector(q); return el ? [...document.querySelectorAll("#cm-sec-commander, #cm-sec-history, #cm-sec-record")].indexOf(el) : -1;}));
+    eq(order, [0, 1, 2], "the Overview reads About the commander first, then the Simulation history, then the Record below it");
+    const records = new Map(JSON.parse(readFileSync(new URL("../data/cards.json", import.meta.url), "utf8")).cards.map((c) => [c.name, c]));
+    const hero = await page.evaluate(() => {const line = document.querySelector(".cm-deck-hero .cm-hero-commander"); const m = line && line.querySelector(".cm-mana"); return line ? {name: line.textContent.trim(), cost: m && m.getAttribute("aria-label"), symbols: m ? m.children.length : 0} : null;});
+    const krenko = records.get("Krenko, Mob Boss");
+    eq([hero && hero.name, hero && hero.cost, hero && hero.symbols], ["Krenko, Mob Boss", `Mana cost ${krenko.manaCost}`, krenko.manaCost.match(/\{[^}]+\}/g).length], `the header's commander line shows the commander's printed cost, as the card does (${krenko.manaCost}), not the color identity's pips`);
+    const boxes = (sel) => page.evaluate((q) => [...document.querySelectorAll(`${q} .cm-mana > *`)].map((el) => {const r = el.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)];}), sel);
+    for (const [where, sel] of [["the header", ".cm-deck-hero"], ["About the commander", "#cm-sec-commander"]]) {
+      const b = await boxes(sel);
+      ok(b.length >= 3 && b.every(([w, h]) => w === 19 && h === 19), `in ${where} every mana symbol is the same 19px circle (${b.map((x) => x.join("x")).join(", ")})`);
+    }
+    const drawn = await page.evaluate(() => {
+      const box = document.createElement("div"); box.id = "mana-probe"; box.innerHTML = globalThis.__cm.mana("{1}{W}{U}{B}{R}") + globalThis.__cm.mana("{X}{C}{W/U}{4}");
+      document.querySelector("#cm-sec-commander").append(box);
+      const sizes = [...box.querySelectorAll(".cm-mana > *")].map((el) => {const r = el.getBoundingClientRect(); return `${Math.round(r.width)}x${Math.round(r.height)}`;});
+      const one = box.querySelector(".cm-mana > :first-child");
+      const out = {sizes, one: one && one.tagName.toLowerCase(), circle: !!(one && one.querySelector("circle")), glyph: one && one.textContent.replace(/\{1\}/, "").trim(), label: one && one.getAttribute("aria-label")};
+      box.remove();
+      return out;
+    });
+    ok(drawn.sizes.length === 9 && drawn.sizes.every((x) => x === "19x19") && drawn.one === "svg" && drawn.circle && drawn.glyph === "1" && drawn.label === "{1}", `a generic {1} is drawn as the same circle as the colored symbols, and so are {X}, {C}, a hybrid and {4} (${drawn.sizes.join(", ")})`);
+    await page.locator("#cm-sec-commander").getByRole("button", {name: "Full card & rules"}).click();
+    await page.locator("#cm-dialog[open] .cm-mana").first().waitFor();
+    const inDialog = await boxes("#cm-dialog[open]");
+    ok(inDialog.length >= 3 && inDialog.every(([w, h]) => w === inDialog[0][0] && h === inDialog[0][1] && w >= 15), `and in the card's dialog the symbols are all one size, none squeezed (${inDialog.map((x) => x.join("x")).join(", ")})`);
+    await page.keyboard.press("Escape");
+    await page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
+  }
 
   /* 1. Guide & SWOT, in place. */
   await openDeck(page);
