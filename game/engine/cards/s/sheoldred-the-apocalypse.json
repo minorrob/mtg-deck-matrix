@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sheoldred, the Apocalypse",
+    "oracleId": "34f34409-326d-4994-a0ea-1a69aa278f03",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Praetor"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Deathtouch\nWhenever you draw a card, you gain 2 life.\nWhenever an opponent draws a card, they lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, you gain 2 life.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws a card, they lose 2 life.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

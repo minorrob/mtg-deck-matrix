@@ -45,13 +45,67 @@
 
 import {pushAbility} from "./stack.mjs";
 import {cardsIn} from "../state/index.mjs";
-import {compileSelector, matchesLastKnown} from "../script/filter.mjs";
+import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
    not watching anything — which is why a dead creature's "whenever a creature enters" stays quiet. */
 const WATCHING_ZONES = ["battlefield"];
+
+/* Whether a player is the one a trigger asks about: "you" its controller, "opponent" anyone else, "any" anyone. */
+const whoseIs = (rule, player, controller) => (rule === "you" ? player === controller : rule === "opponent" ? player !== controller : true);
+/* Whether an object fits a "this" / "another" / "any" rule and a filter, read where it is now. */
+function fits(state, id, condition, sourceId, controller) {
+  if (id === null || id === undefined) return false;
+  if (condition.who === "self" && id !== sourceId) return false;
+  if (condition.who === "another" && id === sourceId) return false;
+  if (condition.filter && !(state.objects[id] && matchesSelector(condition.filter, state, id, {controller, source: sourceId}))) return false;
+  return true;
+}
+
+/**
+ * WHAT A TRIGGER IS ABOUT, ONE ENTRY PER TRIGGERING (CR 603.2c). "Whenever a creature you control attacks" triggers once
+ * for each creature that attacks, so an event can answer more than once; each answer says what it was about -- the spell
+ * cast and its caster, the attacking creature and the player it attacks, the creature that dealt damage and the player
+ * it was dealt to, the player who drew -- for "that player" and "that card" in what the ability does.
+ */
+function subjects(state, event, condition, sourceId, controller) {
+  if (event.kind !== condition.on) return [];
+  const fields = event.data?.fields ?? {};
+  /* "Whenever you cast a noncreature spell" (CR 601.2i): the spell on the stack, and who cast it. */
+  if (condition.on === "GameEventSpellAbilityCast") {
+    if (!fields.sa?.isSpell) return [];
+    /* The spell is the stack entry's object: the card in hand became a new object as it moved to the stack (CR 400.7). */
+    const caster = fields.si?.actor?.playerId;
+    const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
+    if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
+    if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
+    return [{card: spell, player: caster}];
+  }
+  /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
+     player it attacks. */
+  if (condition.on === "GameEventAttackersDeclared") {
+    return (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
+      .map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
+  }
+  /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
+     opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
+  if (condition.on === "GameEventPlayerDamaged") {
+    if (condition.combat && fields.combat !== true) return [];
+    const to = fields.target?.playerId, source = fields.source?.cardId;
+    if (condition.to === "opponent" && to === controller) return [];
+    if (!fits(state, source, condition, sourceId, controller)) return [];
+    return [{card: source, player: to}];
+  }
+  /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
+  if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
+    if (fields.drawn !== true) return [];
+    const drawer = fields.to?.player?.playerId;
+    return whoseIs(condition.drawer ?? "you", drawer, controller) ? [{player: drawer}] : [];
+  }
+  return matches(state, event, condition, sourceId, controller) ? [{}] : [];
+}
 
 /** Whether an event matches a trigger condition. */
 function matches(state, event, condition, sourceId, controller) {
@@ -73,7 +127,7 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.filter) {
       const departed = fields.from?.zoneType === "Battlefield" ? fields.leftBehind : null;
       const fits = departed ? matchesLastKnown(condition.filter, departed, {controller, source: sourceId})
-        : state.objects[moved] && compileSelector(condition.filter)(state, moved, {controller, source: sourceId});
+        : state.objects[moved] && matchesSelector(condition.filter, state, moved, {controller, source: sourceId});
       if (!fits) return false;
     }
     return true;
@@ -119,7 +173,7 @@ export function collectTriggers(state, events) {
         const object = state.objects[id];
         for (const ability of object.abilities ?? []) {
           if (ability.kind !== "triggered" || !ability.trigger) continue;
-          if (!matches(state, event, ability.trigger, id, object.controller)) continue;
+          for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           if (!conditionHolds(state, ability.condition, object.controller)) continue;
           state.pendingTriggers.push({
             abilityId: ability.id,
@@ -133,9 +187,12 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
+            /* What it is about ("that player", "that card"), when the event says. */
+            ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });
+          }
         }
       }
     }
@@ -276,6 +333,7 @@ function putOnStack(state, triggers) {
       abilityId: trigger.abilityId,
       kind: "trigger",
       script: trigger.script ?? null,
+      about: trigger.about ?? null,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets). */
     if ((entry.script?.targets ?? []).length) entry.stage = "targeting";

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grave Titan",
+  "scenarios": [
+    {
+      "name": "It attacks: two 2/2 Zombies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Grave Titan"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Titan",
+            "Zombie",
+            "Zombie"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grave Titan",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

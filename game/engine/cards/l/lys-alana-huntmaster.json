@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lys Alana Huntmaster",
+    "oracleId": "3f3439e1-75ce-482d-881f-836492dca6e9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast an Elf spell, you may create a 1/1 green Elf Warrior creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an Elf spell, you may create a 1/1 green Elf Warrior creature token.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "subtypes": [
+            "Elf"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Elf Warrior",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf",
+              "Warrior"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

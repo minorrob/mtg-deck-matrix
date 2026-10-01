@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Consecrated Sphinx",
+    "oracleId": "311a449d-dc74-46e6-9a47-6a597931f736",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nWhenever an opponent draws a card, you may draw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws a card, you may draw two cards.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

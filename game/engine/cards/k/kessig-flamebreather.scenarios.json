@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kessig Flamebreather",
+  "fixtures": {
+    "Relic Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{C}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Casting Relic Fixture triggers it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kessig Flamebreather",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Relic Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Relic Fixture"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

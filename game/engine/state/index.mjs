@@ -173,6 +173,9 @@ export function addObject(state, object, zone, player = null) {
     /* CR 903.4a: a card's color identity is established before the game and goes with it everywhere; "any color in
        your commander's color identity" reads it off the commander (rules/actions.mjs). */
     ...(Array.isArray(object.colorIdentity) ? {colorIdentity: [...object.colorIdentity]} : {}),
+    /* The card's printed colors (CR 105.2), the base the layers start from: "a red spell", "white creatures you
+       control" and a token's own color read them. Present only on a card that has one, as with subtypes. */
+    ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -214,6 +217,6 @@ export function moveObject(state, id, zone, player = null) {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
-    spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity,
+    spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
   }, zone, player);
 }

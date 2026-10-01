@@ -32,13 +32,13 @@
  * everything, schema-valid and silently wrong — the same reason the primitive catalog is declared.
  */
 
-import {typesOf, keywordsOf, controllerOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy",
+  "attachedBy", "colors",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -64,6 +64,17 @@ export function matchesLastKnown(selector, lki, context = {}) {
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
   return true;
+}
+
+/**
+ * A selector that may be a choice ("an instant or sorcery spell", "an Aura, Equipment, or Vehicle spell"): `anyOf` its
+ * alternatives, each with the keys they share. A trigger's filter is read this way; a target's choice is targetChoices'.
+ */
+export function matchesSelector(selector, state, id, context = {}) {
+  if (!selector) return true;
+  const {anyOf, ...shared} = selector;
+  if (!Array.isArray(anyOf)) return compileSelector(selector)(state, id, context);
+  return anyOf.some((one) => compileSelector({...shared, ...one})(state, id, context));
 }
 
 /** What a selector can be about. */
@@ -139,6 +150,12 @@ export function compileSelector(selector) {
 
     const zone = selector.zone ?? DEFAULT_ZONE[what];
     if (zone && object.zone !== zone) return false;
+
+    /* Colors through the layers (CR 105.2): "a blue spell" is one with blue among its colors; listing two asks for both. */
+    if (selector.colors) {
+      const current = characteristicsOf(state, id).colors ?? [];
+      if (!selector.colors.every((color) => current.includes(color))) return false;
+    }
 
     /* Types through the layers: a land animated this turn IS a creature, and a selector that read
        the printed type line would not find it. */

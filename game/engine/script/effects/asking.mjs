@@ -28,6 +28,7 @@
 import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
+import {proliferate as giveEachAnother} from "./resources.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -239,6 +240,44 @@ export const modal = {
   },
 };
 
+/* ---- proliferate (CR 701.34a) ---- */
+
+/* "Choose any number of permanents and/or players, then give each another counter of each kind already there." Asked
+   of the ability's controller: one option per permanent and per player that has a counter, any number of them. */
+const hasCounters = (counters) => Object.values(counters ?? {}).some((n) => n > 0);
+export const proliferate = {
+  open(state, params, context) {
+    const candidates = [
+      ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
+      ...state.players.filter((p) => !p.lost && hasCounters(p.counters)).map((p) => ({player: p.id})),
+    ];
+    if (candidates.length === 0) return false;
+    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
+    return true;
+  },
+
+  choice(state, awaiting) {
+    const live = awaiting.candidates;
+    const countersOf = (c) => Object.entries((c.player !== undefined ? state.players[c.player] : state.objects[c.id])?.counters ?? {})
+      .filter(([, n]) => n > 0).map(([kind, n]) => `${n} ${kind}`).join(", ");
+    return {
+      id: `proliferate:${state.turn}:${live.length}`,
+      title: "Proliferate: choose any number of permanents and players with counters",
+      mode: "many",
+      min: 0,
+      max: live.length,
+      options: live.map((c, index) => (c.player !== undefined
+        ? {index, label: `${state.players[c.player].name} (${countersOf(c)})`, playerId: c.player}
+        : {index, label: `${state.objects[c.id].card} (${countersOf(c)})`, cardId: c.id})),
+    };
+  },
+
+  apply(state, awaiting, indices) {
+    const chosen = (indices ?? []).map((i) => awaiting.candidates[i]).filter(Boolean).map((c) => (c.player !== undefined ? {player: c.player} : c.id));
+    return giveEachAnother(state, {chosen}, {controller: awaiting.player});
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -319,4 +358,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard});
+export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate});

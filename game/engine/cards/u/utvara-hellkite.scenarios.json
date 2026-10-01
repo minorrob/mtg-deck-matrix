@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Utvara Hellkite",
+  "fixtures": {
+    "Dragon Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{R}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Dragon attacks: a 6/6 Dragon",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Utvara Hellkite",
+            "Dragon Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Dragon Fixture"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dragon",
+            "Dragon Fixture",
+            "Utvara Hellkite"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -128,12 +128,16 @@ function factValue(value, context) {
 
 function objectsOf(value, context) {
   if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
+  /* "That spell", "that creature": what the trigger is about (trigger.mjs), while it is still there. */
+  if (value === "that card") return context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : [];
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "object" ? [chosen.id] : [];
 }
 
 function playersOf(value, context) {
+  /* "That player": the one who cast, was dealt the damage, or drew (trigger.mjs). */
+  if (value === "that player") return context.about?.player !== undefined && context.about.player !== null ? [context.about.player] : [];
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "player" ? [chosen.id] : [];
