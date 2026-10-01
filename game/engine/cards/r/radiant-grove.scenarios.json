@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Radiant Grove",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Radiant Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Radiant Grove"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Radiant Grove"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Radiant Grove"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Radiant Grove"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

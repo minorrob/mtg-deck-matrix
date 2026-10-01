@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vernal Fen",
+  "scenarios": [
+    {
+      "name": "Two basic lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vernal Fen"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vernal Fen"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vernal Fen",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Vernal Fen"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vernal Fen"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vernal Fen"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vernal Fen"
+        }
+      ]
+    }
+  ]
+}

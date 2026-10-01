@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scoured Barrens",
+  "scenarios": [
+    {
+      "name": "It enters tapped, and gains a life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scoured Barrens"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scoured Barrens"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Scoured Barrens"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

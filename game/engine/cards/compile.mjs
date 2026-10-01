@@ -173,7 +173,8 @@ export function smokeScenario(script) {
   const instantSpeed = !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
   const steps = [];
-  if (isLand) steps.push({play: name, seat: 0});
+  /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
+  if (isLand) steps.push({play: name, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
     if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1}, {pass: 1});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});

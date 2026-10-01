@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Talisman of Unity",
+  "scenarios": [
+    {
+      "name": "Colorless free; a color for 1 damage, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Talisman of Unity"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Talisman of Unity"
+              },
+              "count": 3,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "G": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Talisman of Unity",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

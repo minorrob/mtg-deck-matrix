@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jungle Hollow",
+  "scenarios": [
+    {
+      "name": "It enters tapped, and gains a life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jungle Hollow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Jungle Hollow"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Jungle Hollow"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

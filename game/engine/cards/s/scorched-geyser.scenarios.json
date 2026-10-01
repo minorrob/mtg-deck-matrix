@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scorched Geyser",
+  "scenarios": [
+    {
+      "name": "Two basic lands: untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scorched Geyser"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scorched Geyser"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Scorched Geyser",
+          "is": false
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Scorched Geyser"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scorched Geyser"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scorched Geyser"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Scorched Geyser"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Izzet Guildgate",
+  "scenarios": [
+    {
+      "name": "It enters tapped; untapped on its controller's next turn, it taps for each of its colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Izzet Guildgate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Izzet Guildgate"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Izzet Guildgate"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Izzet Guildgate"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Izzet Guildgate"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

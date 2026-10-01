@@ -9,7 +9,7 @@ dissolved on 30 September 2024 and handed the format to Wizards of the Coast.
 
 Checked against `MagicCompRules-20260925.txt`, effective September 25, 2026.
 
-- 751 citations across 77 engine files
+- 760 citations across 79 engine files
 - 215 distinct rules cited
 - 0 naming a rule that does not exist
 

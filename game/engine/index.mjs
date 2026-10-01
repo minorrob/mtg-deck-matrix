@@ -57,6 +57,8 @@ export const ENGINE_STATUS = Object.freeze({
     "compile",
     /* Phase 3, batch 4: a search (chooseCard), facts about a target, supertypes, and the most-played lands. */
     "search",
+    /* Batch 5: a question asked as a permanent enters (the shock lands), and the most-played lands of every family. */
+    "entering",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });
