@@ -33,7 +33,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 import {loadCardIndex} from "./engine-cards.mjs";
-import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, missingFor} from "./engine-constructs.mjs";
+import {FORGE_API, FORGE_TRIGGER, FORGE_STATIC, FORGE_REPLACEMENT, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, BROAD_TRIGGERS, missingFor} from "./engine-constructs.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CR_INDEX = path.join(REPO, "game", "docs", "cr-index.json");
@@ -144,7 +144,7 @@ function main() {
 
   /* Triggers: the events a card watches. The compiler builds "enters", "dies", "upkeep" and "end step"; Forge's
      ChangesZone covers every zone change and Phase every step, so those two are partly built. */
-  const PARTIAL_TRIGGERS = new Set(["ChangesZone", "ChangesZoneAll", "Phase"]);
+  const PARTIAL_TRIGGERS = new Set(BROAD_TRIGGERS);
   const triggers = [...ALL.triggers.keys()].map((mode) => {
     const event = FORGE_TRIGGER[mode] ?? null;
     const status = !event ? "missing" : PARTIAL_TRIGGERS.has(mode) ? "partial" : TRIGGER_KINDS.includes(event) ? "built" : isTriggerEvent(event) ? "named" : "missing";

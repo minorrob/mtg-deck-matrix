@@ -13,6 +13,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
+import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 
 /* Forge's API names to the engine's primitives — §12.2's parenthesised pairs, as data. A name that
    is not here is reported as unmapped rather than silently counted as missing, because "the engine
@@ -72,6 +73,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
+/* Forge's trigger modes that stand for many events, some of which the compiler builds. */
+export const BROAD_TRIGGERS = Object.freeze(["ChangesZone", "ChangesZoneAll", "Phase"]);
+
 export function missingFor(card) {
   const missing = [];
   for (const api of card.apis ?? []) {
@@ -80,10 +84,16 @@ export function missingFor(card) {
     if (!isBuilt(primitive) && !isPrimitive(primitive)) missing.push({kind: "api", name: primitive, why: "undeclared"});
     else if (!isBuilt(primitive)) missing.push({kind: "api", name: primitive, why: "declared, not built"});
   }
+  /* A TRIGGER COUNTS ONLY WHEN THE CARD COMPILER BUILDS IT (cards/index.mjs, TRIGGER_KINDS). Counting every event the
+     vocabulary merely names overstated coverage: "whenever you cast a spell", "whenever this attacks" and "whenever
+     this deals damage" were reported as rules the engine had (the catalog showed it, 2026-10-01). Forge's ChangesZone
+     and Phase stand for many events, some built ("enters", "dies", "upkeep", "end step"), and the inventory does not
+     say which, so those two still count. */
   for (const trigger of card.triggers ?? []) {
     const event = FORGE_TRIGGER[trigger];
     if (!event) { missing.push({kind: "trigger", name: trigger, why: "unmapped"}); continue; }
-    if (!isTriggerEvent(event)) missing.push({kind: "trigger", name: event, why: "undeclared"});
+    if (!isTriggerEvent(event)) { missing.push({kind: "trigger", name: event, why: "undeclared"}); continue; }
+    if (!BROAD_TRIGGERS.includes(trigger) && !TRIGGER_KINDS.includes(event)) missing.push({kind: "trigger", name: event, why: "declared, not built"});
   }
   /* WHICH STATICS AND REPLACEMENTS THE ENGINE CAN ACTUALLY EXECUTE. These were marked missing
      unconditionally at first, which was wrong and overstated the gap badly: `Continuous` is an

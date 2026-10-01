@@ -12,16 +12,20 @@ what makes a flier unblockable by the ground.
 
 | Scope | Cards | Defined | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 110 | 363 | 76.1% |
-| the card library | 2365 | 180 | 1369 | 57.9% |
-| the most-played 80% of Commander cards | 3238 | 254 | 1820 | 56.2% |
+| Rob's seven decks | 477 | 110 | 330 | 69.2% |
+| the card library | 2365 | 180 | 1159 | 49.0% |
+| the most-played 80% of Commander cards | 3238 | 254 | 1518 | 46.9% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `attacks` | trigger | 16 | declared, not built |
+| `spell cast` | trigger | 14 | declared, not built |
 | `Flashback` | keyword | 5 | declared, no behavior |
+| `damage dealt` | trigger | 5 | declared, not built |
 | `etbCounter` | keyword | 5 | not declared |
+| `discarded` | trigger | 4 | declared, not built |
 | `surveil` | api | 4 | declared, not built |
 | `copyPermanent` | api | 4 | declared, not built |
 | `sacrifice` | api | 4 | declared, not built |
@@ -31,20 +35,19 @@ what makes a flier unblockable by the ground.
 | `ETBReplacement` | keyword | 4 | not declared |
 | `AlternateAdditionalCost` | keyword | 3 | not declared |
 | `addManaReflected` | api | 3 | declared, not built |
+| `attackers declared` | trigger | 3 | declared, not built |
 | `Changeling` | keyword | 3 | declared, no behavior |
 | `sacrificeAll` | api | 3 | declared, not built |
 | `CantAttack` | static | 3 | no engine support yet |
 | `chooseType` | api | 3 | declared, not built |
-| `Class` | keyword | 2 | not declared |
-| `peekAndReveal` | api | 2 | declared, not built |
-| `Cycling` | keyword | 2 | declared, no behavior |
-| `Echo` | keyword | 2 | declared, no behavior |
-| `alterAttribute` | api | 2 | declared, not built |
 
 ## What blocks the rest — the card library
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `spell cast` | trigger | 135 | declared, not built |
+| `attacks` | trigger | 133 | declared, not built |
+| `damage dealt` | trigger | 71 | declared, not built |
 | `ReduceCost` | static | 61 | no engine support yet |
 | `copySpell` | api | 46 | declared, not built |
 | `ETBReplacement` | keyword | 43 | not declared |
@@ -62,14 +65,14 @@ what makes a flier unblockable by the ground.
 | `repeatFor` | api | 21 | declared, not built |
 | `Flashback` | keyword | 21 | declared, no behavior |
 | `CantBlockBy` | static | 19 | no engine support yet |
-| `alterAttribute` | api | 16 | declared, not built |
-| `Crew` | keyword | 15 | declared, no behavior |
-| `Counter` | replacement | 13 | no engine support yet |
 
 ## What blocks the rest — the most-played 80% of Commander cards
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
+| `spell cast` | trigger | 200 | declared, not built |
+| `attacks` | trigger | 122 | declared, not built |
+| `damage dealt` | trigger | 110 | declared, not built |
 | `ReduceCost` | static | 100 | no engine support yet |
 | `ETBReplacement` | keyword | 68 | not declared |
 | `copyPermanent` | api | 64 | declared, not built |
@@ -81,13 +84,10 @@ what makes a flier unblockable by the ground.
 | `play` | api | 35 | declared, not built |
 | `etbCounter` | keyword | 35 | not declared |
 | `copySpell` | api | 35 | declared, not built |
+| `damage dealt once` | trigger | 34 | declared, not built |
+| `attackers declared` | trigger | 33 | declared, not built |
+| `drawn` | trigger | 31 | declared, not built |
 | `Clone` | api | 29 | unmapped |
 | `damageAll` | api | 27 | declared, not built |
 | `Ward` | keyword | 26 | declared, no behavior |
-| `CantBlockBy` | static | 26 | no engine support yet |
-| `AlternativeCost` | static | 24 | no engine support yet |
-| `AddPhase` | api | 24 | unmapped |
-| `gainControl` | api | 22 | declared, not built |
-| `DamageDone` | replacement | 22 | no engine support yet |
-| `Counter` | replacement | 21 | no engine support yet |
 

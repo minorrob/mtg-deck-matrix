@@ -68,6 +68,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 
 /* ---- order ---- */
 {
+  /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every
+     rule for just because the vocabulary names the event (the catalog showed coverage counting it, 2026-10-01). */
+  eq([missingFor({triggers: ["SpellCast"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]})],
+    [[{kind: "trigger", name: "spell cast", why: "declared, not built"}], [], []],
+    "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not");
   const every = Object.values(inventory.top.perCard).filter((card) => missingFor(card).length === 0).length;
   eq(catalog.top.everyRule, every, `the most-played cards with every mechanic built are coverage's own count (${every})`);
   const next = md.split("## What to build next")[1].split("\n## ")[0].split("\n").filter((l) => /^\| [a-z]/.test(l) && !l.startsWith("| Kind")).map((l) => l.split("|").map((c) => c.trim()));
