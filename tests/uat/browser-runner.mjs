@@ -10,7 +10,7 @@
 import {createServer} from "node:http";
 import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
-import {existsSync} from "node:fs";
+import {existsSync, readFileSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 
@@ -100,6 +100,14 @@ export async function openBrowser({name, flag}) {
     skip(`Chromium would not launch (${String(error.message).split("\n")[0]})`);
   }
   return {browser, base, stub, close: async () => {await browser.close(); server.close();}};
+}
+
+/* THE LEGENDARY CARDS, by name, from the shipped card records (data/cards.json): a suite that stands every other card
+   in as a vanilla creature makes these legendary, so a commander from the library is one the table seats (CR 903.3). */
+let legends = null;
+export function legendaryNames() {
+  if (!legends) legends = new Set(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.filter((c) => /\bLegendary\b/.test(c.typeLine || "")).map((c) => c.name));
+  return legends;
 }
 
 /* Load the committed live library the way a reader does: Menu → Restore from a

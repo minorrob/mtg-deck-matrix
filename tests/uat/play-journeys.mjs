@@ -59,7 +59,8 @@ function cards(name) {
   const r = records.get(name) || records.get(String(name).split(" // ")[0]);
   const line = (r && r.typeLine) || "";
   if (/\bLand\b/.test(line)) return {types: ["Land"], abilities: COLORLESS};
-  if (/\bCreature\b/.test(line)) return {types: ["Creature"], power: num(r.power, 2), toughness: num(r.toughness, 2), manaCost: cost(r)};
+  /* Legendary as printed, so a commander is one the table seats (CR 903.3). */
+  if (/\bCreature\b/.test(line)) return {types: ["Creature"], ...(/\bLegendary\b/.test(line) ? {supertypes: ["Legendary"]} : {}), power: num(r.power, 2), toughness: num(r.toughness, 2), manaCost: cost(r)};
   for (const type of ["Artifact", "Enchantment", "Planeswalker", "Battle"]) if (line.includes(type)) return {types: [type], manaCost: cost(r)};
   for (const type of ["Instant", "Sorcery"]) if (line.includes(type)) return {types: [type], manaCost: cost(r)};
   return {types: ["Creature"], power: 2, toughness: 2, manaCost: "{2}"};
