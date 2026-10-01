@@ -105,7 +105,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
     const choice = awaitingChoice(state);
     const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
     if (amounts && choice.total) amounts[0] = choice.total;
-    record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+    record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
   };
   const goTo = ({turn, phase, settle = false}) => {
     for (let n = 0; n < STEP_LIMIT; n += 1) {
@@ -248,7 +248,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
           const choice = awaitingChoice(state);
           const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
           if (amounts && choice.total) amounts[0] = choice.total;
-          record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+          record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
         } else stepOnce();
       }
     } else if (step.pass) {

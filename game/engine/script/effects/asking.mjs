@@ -11,10 +11,11 @@
  * answer and does the thing. `resolution.mjs` drives the two halves and is what makes what follows
  * still happen afterwards.
  *
- * SCRY IS ONE CHOICE, NOT TWO (CR 701.22a): put any number on the bottom and the rest on top IN ANY
- * ORDER. That is exactly the `manipulate` shape §12.1 already pins, with `toTop` and `toBottom` —
- * so the board can already draw it, `controller.mjs` already validates the ordering, and there is
- * no new dialogue for anybody to build.
+ * SCRY IS ASKED IN THE SHAPES THE BOARD DRAWS (CR 701.22a): put any number on the bottom IN ANY
+ * ORDER and the rest on top IN ANY ORDER. It was once one `manipulate` ordering whose answer had to
+ * carry `toBottom` beside the indices, and the board never sent it, so from the table "on the
+ * bottom" could not be chosen at all. Now it is a pick-several (which go under) and then an order
+ * for each end that holds two or more: every question one the board already draws as a pop-up.
  *
  * DISCARD IS THE DISCARDING PLAYER'S CHOICE. "Each opponent discards a card" asks each of them, one
  * at a time, about their own hand. A card reading that does not let its controller pick.
@@ -36,61 +37,97 @@ const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state
 
 /* ---- scry ---- */
 
+/* SCRY N (CR 701.22a): look at the top N cards of your library, put any number of them on the bottom in any order and the
+   rest on top in any order. Up to three questions, each one the board already draws as a pop-up: first which of them go
+   on the bottom (pick any, none included); then -- only when two or more go under -- the order they go under in; then --
+   only when two or more stay -- the order they go back on top in. Nothing moves until the last answer, and then every
+   card looked at is put back together, as the one action the rule describes. A library with nothing in it scries
+   nothing; a library with fewer than N cards shows what it has. */
+const scryList = (awaiting) => (awaiting.step === "bottom-order" ? awaiting.bottom : awaiting.step === "top-order" ? awaiting.top : awaiting.cards);
+
+/* The cards an order answer names, in the order named, and any it leaves out after them as they were: an answer that
+   skips a card never takes it out of the library. */
+function inOrder(list, indices) {
+  const named = [];
+  for (const index of indices ?? []) { const id = list[index]; if (id !== undefined && !named.includes(id)) named.push(id); }
+  return [...named, ...list.filter((id) => !named.includes(id))];
+}
+
+/* The looked-at cards lifted out and put back: `top` first on top, `bottom` under everything, the last at the very
+   bottom. A card no longer in the library is left where it is. */
+function finishScry(state, awaiting, top, bottom) {
+  const events = [];
+  const player = awaiting.player;
+  const library = state.zones.library[player];
+  const here = (id) => library.includes(id);
+  const [onTop, under] = [top.filter(here), bottom.filter(here)];
+  for (const id of awaiting.cards) { const at = library.indexOf(id); if (at >= 0) library.splice(at, 1); }
+  library.unshift(...onTop);
+  library.push(...under);
+  if (under.length > 0) {
+    events.push(event("GameEventShuffle", state, {
+      player: {playerId: player, name: state.players[player].name}, scryedToBottom: under.length,
+    }));
+  }
+  return events;
+}
+
 export const scry = {
   open(state, params, context) {
-    const count = params.count ?? 1;
-    const looked = cardsIn(state, "library", context.controller).slice(0, count);
+    const looked = cardsIn(state, "library", context.controller).slice(0, params.count ?? 1);
     if (looked.length === 0) return false;
-    state.awaiting = {
-      kind: "effect-choice", effect: "scry", player: context.controller, cards: looked,
-    };
+    state.awaiting = {kind: "effect-choice", effect: "scry", player: context.controller, cards: looked, step: "bottom", count: looked.length};
     return true;
   },
 
   choice(state, awaiting) {
+    const list = scryList(awaiting);
+    if (awaiting.step === "bottom-order") return {
+      id: `scry-bottom-order:${list.join(",")}`,
+      title: "Put those on the bottom of your library, the last you choose at the very bottom",
+      mode: "order", min: list.length, max: list.length,
+      options: cardOptions(state, list),
+    };
+    if (awaiting.step === "top-order") return {
+      id: `scry-order:${list.join(",")}`,
+      title: "Put the rest back on top of your library, the first you choose on top",
+      mode: "order", min: list.length, max: list.length,
+      options: cardOptions(state, list),
+    };
     return {
-      id: `scry:${awaiting.cards.join(",")}`,
-      title: `Scry ${awaiting.cards.length}`,
-      mode: "order",
-      min: awaiting.cards.length,
-      max: awaiting.cards.length,
-      /* The shape the board already draws and `controller.mjs` already validates. */
-      choiceKind: "manipulate",
-      toTop: true,
-      toBottom: true,
-      toAnywhere: false,
-      options: cardOptions(state, awaiting.cards).map((option) => ({...option, movable: true})),
+      id: `scry:${list.join(",")}`,
+      title: `Scry ${awaiting.count ?? list.length}: choose any to put on the bottom`,
+      mode: "many", min: 0, max: list.length,
+      options: cardOptions(state, list),
     };
   },
 
   /**
-   * `indices` is the order the player put them in; `toBottom` names which of those go under.
-   * Everything else stays on top, in the order given.
+   * The first answer names the cards that go on the bottom; an order answer names its cards in order. An answer that
+   * carries `extra.toBottom` is the one question scry used to ask -- `indices` every card in order, `toBottom` which of
+   * them go under -- and is still read that way, so a caller written for it means what it meant.
    */
   apply(state, awaiting, indices, extra = {}) {
-    const events = [];
-    const player = awaiting.player;
-    const chosen = (indices ?? []).map((index) => awaiting.cards[index]).filter((id) => id !== undefined);
-    const bottomSet = new Set((extra.toBottom ?? []).map((index) => awaiting.cards[index]));
-    const library = state.zones.library[player];
-
-    /* Lift the looked-at cards out, then put them back in the order the player asked for. Removing
-       them first is what lets "on top" and "on the bottom" both be written as an insertion. */
-    for (const id of awaiting.cards) {
-      const at = library.indexOf(id);
-      if (at >= 0) library.splice(at, 1);
+    const step = awaiting.step ?? "bottom";
+    if (step === "bottom" && Array.isArray(extra?.toBottom)) {
+      const order = inOrder(awaiting.cards, indices);
+      const under = new Set(extra.toBottom.map((index) => awaiting.cards[index]));
+      return finishScry(state, awaiting, order.filter((id) => !under.has(id)), order.filter((id) => under.has(id)));
     }
-    const top = chosen.filter((id) => !bottomSet.has(id));
-    const bottom = chosen.filter((id) => bottomSet.has(id));
-    library.unshift(...top);
-    library.push(...bottom);
+    let top = awaiting.top, bottom = awaiting.bottom;
+    if (step === "bottom") {
+      const chosen = new Set((indices ?? []).map((index) => awaiting.cards[index]));
+      bottom = awaiting.cards.filter((id) => chosen.has(id));
+      top = awaiting.cards.filter((id) => !chosen.has(id));
+    } else if (step === "bottom-order") bottom = inOrder(awaiting.bottom, indices);
+    else top = inOrder(awaiting.top, indices);
 
-    if (bottom.length > 0) {
-      events.push(event("GameEventShuffle", state, {
-        player: {playerId: player, name: state.players[player].name}, scryedToBottom: bottom.length,
-      }));
+    const next = step === "bottom" && bottom.length >= 2 ? "bottom-order" : step !== "top-order" && top.length >= 2 ? "top-order" : null;
+    if (next) {
+      state.awaiting = {...awaiting, step: next, top, bottom};
+      return {events: [], again: true};
     }
-    return events;
+    return finishScry(state, awaiting, top, bottom);
   },
 };
 
