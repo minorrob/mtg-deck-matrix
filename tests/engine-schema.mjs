@@ -142,6 +142,16 @@ const BOLT = {
     /layer/i, "there is no layer nine");
 }
 {
+  /* A static that changes a rule rather than a characteristic names the rule (rules/statics.mjs) instead of a layer. */
+  ok(validateScript({...ELVES, abilities: [{kind: "static", text: "Each creature assigns combat damage equal to its toughness rather than its power.",
+    rule: "combat-damage-by-toughness", affects: {what: "permanent", types: ["Creature"]}}]}).valid,
+    "a static that changes a rule names it, and needs no layer");
+  bad({...ELVES, abilities: [{kind: "static", text: "x", rule: "creatures-fly-sometimes", affects: {what: "permanent"}}]},
+    /creatures-fly-sometimes|rule/i, "a rule nothing in the engine reads is refused by name: the list is closed");
+  bad({...ELVES, abilities: [{kind: "static", text: "x", rule: "combat-damage-by-toughness"}]},
+    /affects/i, "and it still says what it affects");
+}
+{
   bad({...ELVES, abilities: [{kind: "replacement", text: "If a creature would die, exile it instead.",
     change: {to: "exile"}}]},
     /watches/i, "a replacement effect says what event it is watching for");

@@ -31,7 +31,8 @@
  */
 
 import {keywordsOf} from "../rules/layers.mjs";
-import {toughnessOf, powerOf} from "../rules/layers.mjs";
+import {toughnessOf} from "../rules/layers.mjs";
+import {combatDamageOf} from "../rules/statics.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
@@ -135,7 +136,7 @@ export function combatNeedsFirstStrike(state) {
 /** CR 702.19b: what an attacker with trample may push past its blockers. */
 export function trampleOver(state, attackerId, assignedToBlockers) {
   if (!has(state, attackerId, "Trample")) return 0;
-  return Math.max(0, powerOf(state, attackerId) - assignedToBlockers);
+  return Math.max(0, combatDamageOf(state, attackerId) - assignedToBlockers);
 }
 
 /**

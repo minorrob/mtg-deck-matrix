@@ -74,9 +74,10 @@ const FORGE_TRIGGER = {
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
-   lord and goes through `layers.mjs`; `Moved` is a zone-change or entering replacement and goes
-   through `replacement.mjs`. Everything else is genuinely absent. */
-const FORGE_STATIC = {Continuous: "layers"};
+   lord and goes through `layers.mjs`; `CombatDamageToughness` changes a rule rather than a
+   characteristic and goes through `rules/statics.mjs`; `Moved` is a zone-change or entering
+   replacement and goes through `replacement.mjs`. Everything else is genuinely absent. */
+const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics"};
 const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring

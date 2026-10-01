@@ -264,6 +264,78 @@ const step = (s, phase, limit = 40) => {
 }
 
 
+/* ==== A STATIC THAT CHANGES A RULE (rules/statics.mjs): combat damage by toughness, CR 510.1a's exception ==== */
+const BY_TOUGHNESS = (over) => ({id: "by-toughness", kind: "static", rule: "combat-damage-by-toughness", affects: {types: ["Creature"]}, ...over});
+const attackWith = (s, name) => {
+  const choice = awaitingChoice(s);
+  resolveAwaiting(s, [choice.options.findIndex((o) => o.label.startsWith(name) && o.defenderId === 1)]);
+  step(s, "COMBAT_DECLARE_BLOCKERS");
+};
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 36, "with \"each creature assigns combat damage equal to its toughness\" in play, an unblocked 1/4 deals four (CR 510.1a)");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 39, "and without it, one: the rule is changed only while the static ability is on the battlefield");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "graveyard", 0);
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, []);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 39, "nor from a graveyard: a permanent's static ability works only on the battlefield (CR 113.6)");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+    addObject(state, creature({card: "Glass", owner: 1, controller: 1, power: 3, toughness: 1}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Glass"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(named(s, "Glass").length, 0, "blocked, the 1/4 assigns four to a 3/1, which dies");
+  eq(s.objects[named(s, "Treefolk")[0]].damage, 1, "and \"each creature\" means the blocker too: the 3/1 assigns its toughness, one, not three");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, {card: "Formation", owner: 0, controller: 0, types: ["Enchantment"], abilities: [BY_TOUGHNESS({affects: {types: ["Creature"], controller: "you"}})]}, "battlefield");
+    addObject(state, creature({card: "Treefolk", owner: 0, controller: 0, power: 1, toughness: 4}), "battlefield");
+    addObject(state, creature({card: "Glass", owner: 1, controller: 1, power: 3, toughness: 1}), "battlefield");
+  });
+  attackWith(s, "Treefolk");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Glass"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.objects[named(s, "Treefolk")[0]].damage, 3, "\"each creature YOU control\" leaves the other player's: their 3/1 still assigns its power");
+  eq(named(s, "Glass").length, 0, "while yours assigns its toughness");
+}
+{
+  const s = atCombat((state) => {
+    addObject(state, creature({card: "Doran", owner: 0, controller: 0, power: 0, toughness: 5, abilities: [BY_TOUGHNESS()]}), "battlefield");
+    addObject(state, creature({card: "Trampling Wall", owner: 0, controller: 0, power: 1, toughness: 6, keywords: ["Trample"]}), "battlefield");
+    addObject(state, creature({card: "Bear", owner: 1, controller: 1, power: 2, toughness: 2}), "battlefield");
+  });
+  attackWith(s, "Trampling Wall");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Bear"))]);
+  step(s, "COMBAT_DAMAGE");
+  eq(s.players[1].life, 36, "trample's excess is counted from the same amount: a 1/6 trampler by toughness puts two on a 2/2 and four through");
+}
+
 /* ==== THE TIMING FAMILY (keywords/timing.mjs): flash, haste, and the summoning sickness they bend ==== */
 
 /* A table at seat 0's first main phase of turn 1, nothing placed yet, lands in every library. */
