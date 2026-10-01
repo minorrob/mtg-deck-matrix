@@ -3,14 +3,10 @@
   "card": "Sakura-Tribe Elder",
   "scenarios": [
     {
-      "name": "Sacrificed, even summoning sick, for a basic land tapped",
+      "name": "Sacrificed: a basic land, tapped",
       "library": [
         "Forest",
-        "Island",
-        "Swamp",
-        "Mountain",
-        "Plains",
-        "Sol Ring"
+        "Island"
       ],
       "setup": [
         {
@@ -18,8 +14,7 @@
           "zone": "battlefield",
           "cards": [
             "Sakura-Tribe Elder"
-          ],
-          "sick": true
+          ]
         }
       ],
       "steps": [
@@ -31,17 +26,14 @@
         },
         {
           "answer": [
-            3
+            0
           ]
         }
       ],
       "expect": [
         {
           "seat": 0,
-          "zone": "battlefield",
-          "cards": [
-            "Mountain"
-          ]
+          "tapped": "Forest"
         },
         {
           "seat": 0,

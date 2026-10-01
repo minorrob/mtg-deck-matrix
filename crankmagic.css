@@ -3377,6 +3377,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-stack,.cm-board-decision{padding:10px 14px;border-radius:var(--v-radius-card);background:color-mix(in srgb,var(--v-panel) 94%,transparent);backdrop-filter:blur(4px);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .6)}
 .cm-board-decision{border-color:var(--v-accent)}
 .cm-board-decision h3,.cm-board-stack h3{margin:0 0 8px;font-size:14px}
+#cm-board .cm-board-decision h3.is-sentence{text-transform:none;font-family:var(--v-body);font-weight:600;letter-spacing:0;line-height:1.4;font-size:15px}
 .cm-board-decision.is-also{display:flex;align-items:center;gap:10px;padding:6px 10px}
 .cm-board-decision.is-also h3{margin:0;font-size:12px;color:var(--v-muted);white-space:nowrap}
 .cm-board-options{display:flex;flex-wrap:wrap;gap:6px}

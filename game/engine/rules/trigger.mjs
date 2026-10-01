@@ -45,7 +45,7 @@
 
 import {pushAbility} from "./stack.mjs";
 import {cardsIn} from "../state/index.mjs";
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesLastKnown} from "../script/filter.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
@@ -68,8 +68,14 @@ function matches(state, event, condition, sourceId, controller) {
     const moved = fields.enteredAs ?? fields.card?.cardId;
     if (condition.who === "self" && moved !== sourceId) return false;
     if (condition.who === "another" && moved === sourceId) return false;
-    /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. */
-    if (condition.filter && !(state.objects[moved] && compileSelector(condition.filter)(state, moved, {controller, source: sourceId}))) return false;
+    /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. What LEFT the
+       battlefield ("another creature you control dies") is read as it last existed (CR 603.10a). */
+    if (condition.filter) {
+      const departed = fields.from?.zoneType === "Battlefield" ? fields.leftBehind : null;
+      const fits = departed ? matchesLastKnown(condition.filter, departed, {controller, source: sourceId})
+        : state.objects[moved] && compileSelector(condition.filter)(state, moved, {controller, source: sourceId});
+      if (!fits) return false;
+    }
     return true;
   }
 
@@ -101,6 +107,12 @@ function conditionHolds(state, condition, controller) {
  */
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
+  /* EVERYTHING THAT LEFT THE BATTLEFIELD IN THIS ONE ACTION, looking back (CR 603.10a): a board wipe kills Blood Artist
+     with the rest, and it sees every one of them die, its own death included. One action's events are read as one
+     moment -- a wipe, a round of state-based actions; an effect that destroys one thing and then another in a single
+     resolution is read the same way. */
+  const departed = (events ?? []).filter((e) => e.kind === "GameEventCardChangeZone" && e.data?.fields?.from?.zoneType === "Battlefield" && e.data.fields.leftBehind)
+    .map((e) => e.data.fields.leftBehind);
   for (const event of events ?? []) {
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
@@ -130,8 +142,7 @@ export function collectTriggers(state, events) {
     /* A trigger that watches a permanent LEAVING has to also fire for the permanent that left,
        whose object is already gone from the battlefield by the time this runs. The event's snapshot
        is the look-back (CR 603.10a), and `cause` carries the ability it belonged to. */
-    if (event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield") {
-      const gone = event.data.fields.leftBehind;
+    if (event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield") for (const gone of departed) {
       for (const ability of gone?.abilities ?? []) {
         if (ability.kind !== "triggered" || !ability.trigger) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;

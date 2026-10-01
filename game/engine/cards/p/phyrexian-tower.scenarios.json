@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Phyrexian Tower",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: {C}; or {T} and a creature: {B}{B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Phyrexian Tower",
+            "Grizzly Bears"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Phyrexian Tower"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "B": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Phyrexian Tower",
+          "sacrifice": "Grizzly Bears"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Phyrexian Tower"
+        }
+      ]
+    }
+  ]
+}

@@ -44,9 +44,9 @@
               "Basic"
             ]
           },
-          "shuffle": true,
           "to": "battlefield",
-          "tapped": true
+          "tapped": true,
+          "shuffle": true
         }
       ]
     }

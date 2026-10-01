@@ -134,6 +134,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
     /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
+    /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
+    for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
@@ -176,6 +178,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
           const got = found.map((a) => (a.targetNames ?? []).join(" + ")).sort();
           const want = e.targets.map((t) => t.join(" + ")).sort();
           if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+        }
+        /* What each offer's cost takes ("Sacrifice a creature": one offer per creature). */
+        if (e.costs !== undefined) {
+          const got = found.map((a) => (a.costNames ?? []).join(" + ")).sort();
+          const want = e.costs.map((c) => c.join(" + ")).sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered paying ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
         }
         if (e.mana !== undefined) {
           const got = found.map((a) => JSON.stringify(a.mana)).sort();

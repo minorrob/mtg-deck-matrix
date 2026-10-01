@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Skullclamp",
+  "fixtures": {
+    "Elf Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{G}",
+      "power": 1,
+      "toughness": 1
+    },
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Clamped to a 1/1, it dies at once, and two cards",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skullclamp",
+            "Elf Fixture",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Skullclamp",
+          "targets": [
+            {
+              "card": "Elf Fixture"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skullclamp",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On a 2/2 it is +1/-1: a 3/1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skullclamp",
+            "Grizzly Bears",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Skullclamp",
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grizzly Bears",
+            "power": 3,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}
