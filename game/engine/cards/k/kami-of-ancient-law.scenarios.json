@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kami of Ancient Law",
+  "scenarios": [
+    {
+      "name": "Sacrificed, it destroys an enchantment -- from the stack, after it has gone (CR 113.7a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kami of Ancient Law"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Nyx-Fleece Ram",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Kami of Ancient Law"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Nyx-Fleece Ram"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Kami of Ancient Law",
+          "targets": [
+            {
+              "card": "Nyx-Fleece Ram"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Kami of Ancient Law"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Nyx-Fleece Ram"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With no enchantment to aim at, it is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Kami of Ancient Law"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Kami of Ancient Law"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

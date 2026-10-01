@@ -129,7 +129,7 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
   eq(cardsIn(s, "graveyard", 0).length, 1, "and the lord is gone");
 }
 
-/* ---- mill: the top of a library into the graveyard (CR 701.13) ---- */
+/* ---- mill: the top of a library into the graveyard (CR 701.17) ---- */
 {
   const {s, ctx} = board();
   const top = cardsIn(s, "library", 0).slice(0, 3).map((id) => s.objects[id].card);
@@ -149,7 +149,7 @@ const run = (s, effect, ctx) => runEffect(s, effect, ctx);
 {
   const {s, ctx} = board();
   run(s, {effect: "mill", count: 30, who: "you"}, ctx);
-  eq([cardsIn(s, "library", 0).length, cardsIn(s, "graveyard", 0).length], [0, 20], "told to mill more than the library holds, a player mills what there is (CR 701.13b)");
+  eq([cardsIn(s, "library", 0).length, cardsIn(s, "graveyard", 0).length], [0, 20], "told to mill more than the library holds, a player mills what there is (CR 701.17b)");
   ok(!s.players[0].drewFromEmpty, "and is not marked for an empty-library draw: milling out is not drawing from an empty library");
 }
 

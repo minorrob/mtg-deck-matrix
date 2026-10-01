@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elvish Mystic",
+  "scenarios": [
+    {
+      "name": "{T}: Add {G}, and nothing goes on the stack (CR 605.3a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elvish Mystic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Elvish Mystic"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Summoning sick, it does not tap",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elvish Mystic"
+          ],
+          "sick": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Elvish Mystic"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

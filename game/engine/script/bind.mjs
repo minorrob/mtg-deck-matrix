@@ -1,0 +1,167 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+
+/* TARGETS: CHOSEN AS THE SPELL IS CAST, CHECKED AGAIN AS IT RESOLVES.
+ *
+ * `docs/engine/PLAN.md` §6, phase 2.4 -- the glue between a card script and a game. A script is written once, long
+ * before any game, so it cannot name the creature it will destroy. It names a TARGET instead -- "target 0" -- and
+ * this file is what turns that into an object at the moment the rules say it is chosen, and checks it again at the
+ * moment the rules say it is checked.
+ *
+ * CHOSEN ON CASTING (CR 601.2c), NOT ON RESOLUTION. Every opponent sees what a spell is aimed at while it is on the
+ * stack, and answers it knowing. So a cast is OFFERED once per legal way to choose its targets (`targetChoices`),
+ * the same contract as every other action here: the engine lists what may be done and refuses anything it did not
+ * list. A spell with no legal target is never offered (CR 601.2c: it cannot be cast), rather than offered and fizzled.
+ *
+ * CHECKED AGAIN ON RESOLUTION (CR 608.2b). A target that has left the battlefield is a new object (CR 400.7) and no
+ * longer the one chosen; one that gained hexproof is no longer a legal choice. Each illegal target is dropped and the
+ * spell does as much as it still can; if EVERY target is illegal the spell does not resolve at all -- it does nothing
+ * and goes to the graveyard. An engine that skipped the check would let a removal spell hit whatever now stands where
+ * its target stood.
+ *
+ * A TARGET IS A SELECTOR, OR A CHOICE OF THEM. `{what: "permanent", types: ["Creature"]}` is "target creature";
+ * `{anyOf: [creature, player, planeswalker]}` is "any target" (CR 115.4). Every one is marked `target: true` here, so
+ * hexproof and shroud (filter.mjs) apply to every targeting card without its script having to remember them.
+ *
+ * WHAT AN EFFECT SAYS, AND WHAT IT GETS. An effect names its target by `{target: n}` where it would name objects or
+ * players, and `"self"` for the card the ability is on:
+ *   `targets`   the objects among target n (an effect's object list: destroy, moveZone, pump, dealDamage ...);
+ *   `who`       the players among target n (draw, gainLife, loseLife, dealDamage to a player ...);
+ *   `toPlayer`  the one player of target n.
+ * So "deal 3 damage to any target" is `{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}`:
+ * whichever kind was chosen, the other binds to nothing.
+ *
+ * A CHOSEN TARGET IS PLAIN DATA, `{kind: "object"|"player", id}`, so a game saved with a spell on the stack resumes
+ * with the same targets, and an action survives a round trip through JSON to a pilot across a network.
+ */
+
+import {compileSelector, selectMatching} from "./filter.mjs";
+
+/** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
+export const TARGET_CHOICES_MAX = 4096;
+
+/** A target spec's alternatives, each a targeting selector (CR 115.2). */
+export function targetAlternatives(spec) {
+  const list = spec && typeof spec === "object" && Array.isArray(spec.anyOf) ? spec.anyOf : [spec];
+  return list.map((selector) => ({...selector, target: true}));
+}
+
+const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "player" : "object");
+
+/** Every legal choice for one target, as `{kind, id}`: in the selectors' order, each in its stable order. */
+export function targetCandidates(state, spec, context) {
+  const found = [];
+  for (const selector of targetAlternatives(spec)) {
+    const kind = kindOf(selector);
+    for (const id of selectMatching(state, selector, context)) {
+      if (!found.some((c) => c.kind === kind && c.id === id)) found.push({kind, id});
+    }
+  }
+  return found;
+}
+
+/**
+ * Every way to choose an ability's targets: one list per way, one entry per instance of the word "target".
+ *
+ * CR 601.2c lets the same object be chosen for different instances of "target", so this is the plain product.
+ * An ability with no targets has exactly one way: choose nothing. An ability with a target and no legal choice has
+ * none, which is what keeps it off the list of things that may be done.
+ */
+export function targetChoices(state, specs, context) {
+  let choices = [[]];
+  for (const spec of specs ?? []) {
+    const candidates = targetCandidates(state, spec, context);
+    const next = [];
+    for (const chosen of choices) for (const candidate of candidates) next.push([...chosen, candidate]);
+    choices = next;
+    if (choices.length > TARGET_CHOICES_MAX)
+      throw new Error(`More than ${TARGET_CHOICES_MAX} ways to choose these targets; a card that needs this many is refused at prepare`);
+  }
+  return choices;
+}
+
+/** Whether a chosen target is still legal (CR 608.2b): still there, and still what its spec asks for. */
+export function stillLegal(state, spec, chosen, context) {
+  if (!chosen) return false;
+  return targetAlternatives(spec).some((selector) => kindOf(selector) === chosen.kind
+    && compileSelector(selector)(state, chosen.id, context));
+}
+
+/**
+ * The targets as the resolution sees them: each still-legal one, and null where one has become illegal.
+ *
+ * @returns {{targets: Array<?{kind, id}>, fizzles: boolean}} `fizzles` when there were targets and none is legal
+ */
+export function recheckTargets(state, specs, chosen, context) {
+  const targets = (specs ?? []).map((spec, index) => (stillLegal(state, spec, (chosen ?? [])[index], context) ? chosen[index] : null));
+  return {targets, fizzles: targets.length > 0 && targets.every((t) => t === null)};
+}
+
+const isRef = (value) => value && typeof value === "object" && !Array.isArray(value) && Number.isInteger(value.target);
+
+function objectsOf(value, context) {
+  if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
+  if (!isRef(value)) return value;
+  const chosen = (context.targets ?? [])[value.target];
+  return chosen && chosen.kind === "object" ? [chosen.id] : [];
+}
+
+function playersOf(value, context) {
+  if (!isRef(value)) return value;
+  const chosen = (context.targets ?? [])[value.target];
+  return chosen && chosen.kind === "player" ? [chosen.id] : [];
+}
+
+/**
+ * An effect with its references bound to this resolution's targets and source. Only the effect's own parameters:
+ * a modal's chosen effects are bound when they reach the head of the queue, against the same targets.
+ */
+export function bindEffect(effect, context) {
+  if (!effect || typeof effect !== "object") return effect;
+  const bound = {...effect};
+  if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
+  if ("who" in bound) bound.who = playersOf(bound.who, context);
+  if (isRef(bound.toPlayer)) {
+    const [player] = playersOf(bound.toPlayer, context);
+    if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
+  }
+  return bound;
+}
+
+/** Every `{target: n}` an ability's effects name, nested ones included, so the schema can check each is declared. */
+export function targetRefs(effects) {
+  const found = [];
+  const walk = (value) => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== "object") return;
+    if (isRef(value)) { found.push(value.target); return; }
+    Object.values(value).forEach(walk);
+  };
+  walk(effects);
+  return found;
+}
+
+/* The primitives that do something TO what they are aimed at. Read by a pilot choosing among an offer's targets --
+   aim these at an opponent's things, the rest at your own -- and by nothing in the rules. */
+const HOSTILE = new Set(["destroy", "dealDamage", "moveZone", "tap", "counterSpell", "loseLife", "discard", "mill", "removeCounter"]);
+
+/** Whether an ability's effects are aimed against what they target: a removal spell, not a pump. */
+export function isHostile(effects) {
+  let hostile = false;
+  const walk = (list) => {
+    for (const effect of list ?? []) {
+      if (!effect || typeof effect !== "object") continue;
+      if (HOSTILE.has(effect.effect)) hostile = true;
+      for (const mode of effect.modes ?? []) walk(mode.effects);
+      walk(effect.effects);
+    }
+  };
+  walk(effects);
+  return hostile;
+}
+
+/** How a chosen target reads in a label and a log: the card's name, or the player's. */
+export function targetName(state, chosen) {
+  if (!chosen) return "";
+  if (chosen.kind === "player") return state.players[chosen.id]?.name ?? `Seat ${chosen.id + 1}`;
+  return state.objects[chosen.id]?.card ?? "";
+}

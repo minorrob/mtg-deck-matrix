@@ -33,15 +33,25 @@
  * for it, not when the battlefield could, so the engine never offers a cast it cannot complete.
  * Automatic land-tapping belongs with the payment choice (§12.1 `payment.automaticEligible`).
  *
- * Attacking needs combat (1.4); non-mana activated abilities need the card script (phase 2). Both
- * are absent rather than stubbed.
+ * TARGETS ARE PART OF THE OFFER (phase 2.4, script/bind.mjs). A spell or ability with targets is offered once per
+ * legal way to choose them (CR 601.2c, 602.2b), and `targets` is part of what identifies the action, so a pilot that
+ * names one it was not offered is refused. With no legal choice it is not offered at all. `label` stays the card's
+ * name; `targetNames` says what each choice is aimed at.
+ *
+ * NON-MANA ACTIVATED ABILITIES (CR 602) come from the card script: offered whenever their controller has priority
+ * (or, for one marked `timing: "sorcery"`, when a sorcery could be cast), and only when every cost can be paid now.
+ * The ability goes on the stack first and its costs are paid after (CR 602.2a, then 602.2b and 601.2h), so an ability that
+ * sacrifices its own source still knows where it came from. The cost atoms built are `{T}`, `mana`, `payLife` and
+ * `sacrifice` of the source itself; a card with any other is refused at prepare (cards/index.mjs).
  */
 
 import {cardsIn, moveObject} from "../state/index.mjs";
-import {pushSpell} from "./stack.mjs";
+import {pushSpell, pushAbility} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast} from "./commander.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
+import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
+import {moveOne} from "../script/effects/zones.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
@@ -55,6 +65,42 @@ const cardRef = (state, id) => {
 };
 
 const isLand = (object) => (object.types ?? []).includes("Land");
+
+/* One offer per way to choose the targets (script/bind.mjs); a single offer, unchanged, when there are none. */
+function withTargets(state, base, ability, context) {
+  const specs = ability?.targets ?? [];
+  if (!specs.length) return [base];
+  const hostile = isHostile(ability.effects);
+  return targetChoices(state, specs, context).map((targets) => ({
+    ...base, targets, targetNames: targets.map((t) => targetName(state, t)), hostile,
+  }));
+}
+
+/* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
+const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
+export const costAtomBuilt = (atom) => COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true);
+
+function costPayment(state, player, id, cost) {
+  const object = state.objects[id];
+  let mana = null, life = 0;
+  for (const atom of cost ?? []) {
+    if (!costAtomBuilt(atom)) return null;
+    if (atom.atom === "{T}") {
+      if (object.tapped) return null;
+      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began. */
+      if (summoningSick(state, id)) return null;
+    }
+    if (atom.atom === "mana") {
+      if (mana) return null;
+      mana = automaticPayment(state.players[player].manaPool, parseManaCost(atom.cost), {life: state.players[player].life});
+      if (!mana) return null;
+    }
+    /* CR 119.4: a player can pay life only if their life total is at least the amount. */
+    if (atom.atom === "payLife") life += atom.amount ?? 0;
+  }
+  if (life + (mana?.life ?? 0) > state.players[player].life) return null;
+  return {mana, life};
+}
 
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) - state.players[player].landsPlayed;
@@ -115,7 +161,23 @@ export function legalActions(state, player) {
     const cost = parseManaCost(object.manaCost);
     const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
     if (!payment) continue;
-    actions.push({kind: "cast", objectId: id, label: object.card, payment, from, tax});
+    actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax}, object.spell, {controller: player, source: id}));
+  }
+
+  /* CR 602.2: a permanent's activated abilities, whenever its controller has priority; a sorcery-speed one only
+     when a sorcery could be cast. */
+  const sorceryTime = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0;
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (object.controller !== player) continue;
+    for (const ability of object.abilities ?? []) {
+      if (ability.kind !== "activated") continue;
+      if (ability.timing === "sorcery" && !sorceryTime) continue;
+      const payment = costPayment(state, player, id, ability.cost);
+      if (!payment) continue;
+      actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},
+        ability, {controller: player, source: id}));
+    }
   }
 
   return actions;
@@ -148,9 +210,11 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
    across a network boundary submits a copy, not the object it was handed. */
+const targetKey = (action) => (action.targets ?? []).map((t) => `${t?.kind}:${t?.id}`).join(",");
 const sameAction = (a, b) => a.kind === b.kind
   && (a.objectId ?? null) === (b.objectId ?? null)
-  && (a.abilityId ?? null) === (b.abilityId ?? null);
+  && (a.abilityId ?? null) === (b.abilityId ?? null)
+  && targetKey(a) === targetKey(b);
 
 /**
  * Perform an action, after checking the engine actually offered it.
@@ -173,13 +237,14 @@ export function applyAction(state, player, action) {
   if (action.kind === "play-land") {
     const events = [];
     const card = cardRef(state, action.objectId);
-    moveObject(state, action.objectId, "battlefield");
+    const arrived = moveObject(state, action.objectId, "battlefield");
     state.players[player].landsPlayed += 1;
     /* The order matters to a reader: the land is announced as a land, then as the zone change it
        also is, which is what `match-telemetry.mjs` counts and what the audio rules listen for. */
     events.push(event("GameEventLandPlayed", state, {land: card, player: {playerId: player, name: state.players[player].name}}));
     events.push(event("GameEventCardChangeZone", state, {
       card,
+      enteredAs: arrived,
       from: {zoneType: "Hand", player: {playerId: player}},
       to: {zoneType: "Battlefield", player: {playerId: player}},
     }));
@@ -221,18 +286,55 @@ export function applyAction(state, player, action) {
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
-    const entry = pushSpell(state, action.objectId, {controller: player, permanent});
+    const targets = structuredClone(action.targets ?? []);
+    const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
+    const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
-      targetDescription: "",
+      targetDescription,
     }));
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: fromCommand ? "Command" : "Hand", player: {playerId: player}},
       to: {zoneType: "Stack", player: {playerId: player}},
     }));
+    return events;
+  }
+
+  if (action.kind === "activate") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
+    const payment = costPayment(state, player, action.objectId, ability.cost);
+    if (!payment) throw new Error(`${object.card}'s ability cannot be paid for now`);
+    const card = cardRef(state, action.objectId);
+    const targets = structuredClone(action.targets ?? []);
+    const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
+    /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
+    const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability});
+    events.push(event("GameEventSpellAbilityCast", state, {
+      card,
+      sa: {isSpell: false, abilityId: entry.abilityId, stackId: entry.stackId, description: ability.text},
+      si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
+      targetDescription,
+    }));
+    for (const atom of ability.cost ?? []) {
+      if (atom.atom === "{T}") {
+        object.tapped = true;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+      }
+      if (atom.atom === "mana") {
+        spend(state.players[player].manaPool, payment.mana.mana);
+        if (payment.mana.life > 0) state.players[player].life -= payment.mana.life;
+      }
+      if (atom.atom === "payLife") state.players[player].life -= atom.amount ?? 0;
+      /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
+         replacements and with its last known information, like any death, so "when this dies" still sees it. */
+      if (atom.atom === "sacrifice" && atom.self === true) moveOne(state, action.objectId, "graveyard", events);
+    }
     return events;
   }
 

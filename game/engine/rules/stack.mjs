@@ -19,14 +19,25 @@
  * an ability has no card. They are appended and popped together and `engine-stack` pins that they
  * never drift.
  *
- * WHAT RESOLVES IS SUPPLIED, NOT DECIDED HERE. `resolveTop` takes the effect as an argument. This
- * module owns the order of resolution and where a card ends up; what a spell DOES belongs to the
- * card script (phase 2). The effect runs while the card is still on the stack, because a spell that
- * refers to itself must be able to find itself.
+ * WHAT RESOLVES IS THE CARD'S SCRIPT (phase 2.4). This module owns the order of resolution and where a card ends
+ * up; what a spell DOES is its card script: a spell's own spell ability, read off its card, or an ability's effects,
+ * carried on its entry because the ability outlives its source (CR 113.7a). A caller may still pass an effect of its
+ * own, which runs instead -- the kernel's tests and the gate's vanilla games do. The effect runs while the card is
+ * still on the stack, because a spell that refers to itself must be able to find itself.
+ *
+ * A RESOLUTION CAN STOP TO ASK (script/resolution.mjs): "scry 2, then draw" asks between the two. The spell stays
+ * on top of the stack, marked `resolving`, until the question is answered and its last effect has run; only then
+ * does it leave the stack (`finishResolving`). Nobody holds priority meanwhile (CR 608.2: nothing happens between
+ * the steps of a resolution).
+ *
+ * TARGETS ARE CHECKED AGAIN FIRST (CR 608.2b, script/bind.mjs): an illegal one is dropped, and a spell or ability
+ * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
 import {moveObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
+import {beginResolution, resolutionPending} from "../script/resolution.mjs";
+import {recheckTargets} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -94,15 +105,26 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = []} = {}) {
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
     objectId: null, cardId: source ? source.id : null, name: source ? source.card : null,
     playerId: controller, kind, abilityId, targets,
   });
+  /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
+  if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects});
   state.stack.push(entry);
   return entry;
+}
+
+/* What an entry does: a spell's spell ability off its card, or the script its ability carried onto the stack. */
+function scriptOf(state, entry) {
+  if (entry.kind === "spell") {
+    const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
+    return spell && (spell.effects ?? []).length ? spell : null;
+  }
+  return entry.script ?? null;
 }
 
 /**
@@ -116,12 +138,45 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
 export function resolveTop(state, effect = null) {
   const entry = peekStack(state);
   if (!entry) throw new Error("There is nothing on the stack to resolve");
+  if (entry.stage === "resolving") throw new Error("The top of the stack is already resolving; answer what it asked");
   const events = [];
 
   /* The effect happens first, while the spell is still on the stack: a spell that refers to itself
      ("exile it", "this creature") has to be able to find itself. */
-  if (typeof effect === "function") effect(state, entry, events);
+  if (typeof effect === "function") {
+    effect(state, entry, events);
+    return finishTop(state, entry, events, false);
+  }
+  const script = scriptOf(state, entry);
+  if (!script) return finishTop(state, entry, events, false);
 
+  const source = entry.kind === "spell" ? entry.objectId : (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
+  const context = {controller: entry.playerId, source};
+  const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
+  if (fizzles) return finishTop(state, entry, events, true);
+  const outcome = beginResolution(state, script.effects, {...context, targets});
+  events.push(...outcome.events);
+  if (outcome.status === "waiting") {
+    entry.stage = "resolving";
+    return events;
+  }
+  return finishTop(state, entry, events, false);
+}
+
+/**
+ * The top entry's resolution has run its last effect, after stopping to ask: it leaves the stack now.
+ *
+ * @returns {Array} events, or none when the top was not waiting on its own resolution
+ */
+export function finishResolving(state) {
+  const entry = peekStack(state);
+  if (!entry || entry.stage !== "resolving" || resolutionPending(state)) return [];
+  return finishTop(state, entry, [], false);
+}
+
+/* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
+   resolve) to its owner's graveyard, and an ability to nowhere. */
+function finishTop(state, entry, events, fizzled) {
   state.stack.pop();
 
   if (entry.objectId !== null) {
@@ -130,7 +185,7 @@ export function resolveTop(state, effect = null) {
     /* CR 608.3: a permanent spell becomes a permanent. CR 608.2m: an instant or sorcery is put into
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
-    const to = entry.permanent ? "battlefield" : "graveyard";
+    const to = entry.permanent && !fizzled ? "battlefield" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -148,6 +203,7 @@ export function resolveTop(state, effect = null) {
     }
     events.push(event("GameEventCardChangeZone", state, {
       card,
+      ...(to === "battlefield" ? {enteredAs: arrived} : {}),
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
       to: {zoneType: ZONE_LABEL[to], player: {playerId: to === "graveyard" ? owner : entry.playerId}},
     }));
@@ -155,7 +211,7 @@ export function resolveTop(state, effect = null) {
 
   events.push(event("GameEventSpellResolved", state, {
     stackId: entry.stackId, abilityId: entry.abilityId, card: entry.cardId === null ? null : {cardId: entry.cardId, name: entry.name},
-    playerId: entry.playerId, kind: entry.kind, hasFizzled: false,
+    playerId: entry.playerId, kind: entry.kind, hasFizzled: fizzled,
   }));
   return events;
 }
@@ -167,5 +223,5 @@ export function resolveTop(state, effect = null) {
  * into the state; everything the board draws is here.
  */
 export function stackProjection(state) {
-  return state.stack.map(({objectId, permanent, ...shown}) => ({...shown}));
+  return state.stack.map(({objectId, permanent, script, ...shown}) => ({...shown}));
 }

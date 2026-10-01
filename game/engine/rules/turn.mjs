@@ -41,6 +41,7 @@ import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sb
 import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
+import {finishResolving} from "./stack.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -244,8 +245,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
      scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
   if (awaiting.kind === "effect-choice") {
     const outcome = answerResolution(state, indices, extra);
-    grantStepPriority(state, outcome.events);
-    return outcome.events;
+    /* A spell that stopped to ask leaves the stack once its last effect has run (stack.mjs), and only then does
+       anyone receive priority -- after state-based actions and triggers, as after any resolution (CR 117.5). */
+    const events = outcome.status === "done" ? [...outcome.events, ...finishResolving(state)] : outcome.events;
+    grantStepPriority(state, events);
+    return events;
   }
 
   if (awaiting.kind === "commander-replacement") {

@@ -1,0 +1,198 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+
+/* A CARD'S SCENARIOS: A STARTING POSITION, THE MOVES, AND WHAT EACH SEAT THEN SEES.
+ *
+ * `docs/engine/PLAN.md` §3.4 and §6's phase 2.4 -- "each [card] with a scenario test (`<slug>.scenarios.json`: a
+ * starting position, a sequence of decisions, and assertions on the resulting projection)". This is the runner, kept
+ * in the engine rather than in a test because two things need it: `tests/engine-cards.mjs`, which runs every card's
+ * scenarios, and the card loader (AI-3), whose smoke test casts a newly learned card in a scratch game.
+ *
+ * IT PLAYS BY THE RULES, NOT AROUND THEM. A move is one of the actions `legalActions` offered, found by what it
+ * names -- the card, and for a spell its targets -- so a scenario cannot do what the rules would not let a player do,
+ * and "this is not offered" is a check like any other. Passing goes through `passPriority`, moving on through
+ * `advance`, a question through `resolveAwaiting`: the same calls the room makes.
+ *
+ * WHAT IT CHECKS IS WHAT A SEAT SEES. Zones are read from `projectFor(state, seat)`, the view the seat's player is
+ * sent, so a scenario that passes has also shown its card leaks nothing (a library is a count, even to its owner).
+ *
+ *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
+ *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
+ *     setup: [{seat, zone, cards, sick?}],
+ *     steps: [ {play|tap|cast|activate: name, seat?, targets?: [{card, seat?} | {player}], ability?}
+ *            | {resolve: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
+ *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {stack} | {seat, tapped, is}
+ *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
+ */
+
+import {createState, addObject} from "../state/index.mjs";
+import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
+import {legalActions, applyAction} from "../rules/actions.mjs";
+import {passPriority} from "../rules/priority.mjs";
+import {projectFor} from "../projection.mjs";
+import {createRng} from "../rng.mjs";
+import {targetName} from "../script/bind.mjs";
+
+export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
+
+/* The basic lands, which need no definition: a land with its mana ability. */
+const BASIC = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G", Wastes: "C"};
+const basic = (name) => (BASIC[name]
+  ? {types: ["Land"], abilities: [{id: `t-${BASIC[name].toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[BASIC[name]]: 1}}]}
+  : null);
+
+const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
+const STEP_LIMIT = 2000;
+
+/* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so,
+   and a player's triggers go on in the order offered. Anything else stops the scenario, by name. */
+function routine(state) {
+  const kind = state.awaiting?.kind;
+  if (kind === "declare-attackers" || kind === "declare-blockers") return resolveAwaiting(state, []);
+  if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
+  return null;
+}
+
+/**
+ * Run one scenario.
+ *
+ * @param {object} scenario  one entry of a scenarios file
+ * @param {(name: string) => ?object} cards  a card's definition (cards/index.mjs `definition`), for any name not a basic
+ *   land or one of the file's `fixtures`
+ * @param {object} [fixtures]  objects for the file's supporting cast: the vanilla creature a removal spell is aimed at
+ * @returns {{passed: string[], state: object, events: Array}} each check's description; throws on the first failure
+ */
+export function runScenario(scenario, cards, fixtures = {}) {
+  const passed = [];
+  const events = [];
+  const fail = (message) => { throw new Error(`${scenario.name}: ${message}`); };
+  const seats = scenario.seats ?? 2;
+  const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
+  const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name}))});
+  const rng = createRng(scenario.name);
+  const record = (list) => { events.push(...(list ?? [])); return list; };
+
+  const define = (name) => {
+    const object = fixtures[name] ? structuredClone(fixtures[name]) : basic(name) ?? cards(name);
+    if (!object) fail(`no definition of ${name}: the engine cannot play it, and it is not a fixture`);
+    return object;
+  };
+  const put = (seat, zone, name) => {
+    const object = define(name);
+    return addObject(state, {...object, card: name, owner: seat, controller: seat}, zone, ["battlefield", "exile"].includes(zone) ? null : seat);
+  };
+
+  /* Every library starts with twenty of the same filler, so a draw is visible and never the game's end. */
+  for (let seat = 0; seat < seats; seat += 1)
+    for (let i = 0; i < 20; i += 1) put(seat, "library", (scenario.library ?? [])[i] ?? "Wastes");
+  for (const entry of scenario.setup ?? []) if (!entry.sick) for (const name of entry.cards) put(entry.seat, entry.zone, name);
+  record(beginGame(state));
+
+  /* The rules loop the room runs, without the people: pass, advance, and the routine questions. */
+  const stepOnce = () => {
+    if (state.awaiting) { if (!routine(state)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`); return; }
+    if (state.priorityPlayer === null) { record(advance(state)); return; }
+    const outcome = passPriority(state);
+    record(outcome.events);
+    if (outcome.outcome === "step-ends") record(advance(state));
+  };
+  const goTo = ({turn, phase}) => {
+    for (let n = 0; n < STEP_LIMIT; n += 1) {
+      /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
+         stack, which is what a scenario about that trigger wants to see. */
+      if (state.turn === turn && state.phase === phase && state.priorityPlayer !== null && !state.awaiting) return;
+      if (state.turn > turn) break;
+      stepOnce();
+    }
+    fail(`never reached turn ${turn}, ${phase}`);
+  };
+  goTo(scenario.at ?? {turn: 1, phase: "MAIN1"});
+  for (const entry of scenario.setup ?? []) if (entry.sick) for (const name of entry.cards) put(entry.seat, entry.zone, name);
+
+  const seatOf = (step) => step.seat ?? state.priorityPlayer;
+  const sameTargets = (action, wanted) => {
+    const got = action.targets ?? [];
+    if (got.length !== (wanted ?? []).length) return false;
+    return got.every((t, i) => {
+      const w = wanted[i];
+      if (w.player !== undefined) return t.kind === "player" && t.id === w.player;
+      return t.kind === "object" && targetName(state, t) === w.card && (w.seat === undefined || state.objects[t.id].controller === w.seat);
+    });
+  };
+  const offered = ({kind, card, seat}, targets) => legalActions(state, seat ?? state.priorityPlayer)
+    .filter((a) => a.kind === kind && (card === undefined || a.label === card) && (targets === undefined || sameTargets(a, targets)));
+
+  function act(step) {
+    const seat = seatOf(step);
+    const [kind, card] = step.play ? ["play-land", step.play] : step.tap ? ["activate-mana", step.tap]
+      : step.cast ? ["cast", step.cast] : ["activate", step.activate];
+    let found = offered({kind, card, seat}, kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
+    if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
+    if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
+    record(applyAction(state, seat, found[0]));
+  }
+
+  function check(expect) {
+    for (const e of expect ?? []) {
+      if (e.zone !== undefined) {
+        const zone = projectFor(state, e.seat).players[e.seat].zones[ZONES[e.zone]];
+        if (e.cards !== undefined) {
+          const got = zone.cards.map((c) => c.name).sort();
+          const want = [...e.cards].sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${names[e.seat]}'s ${e.zone} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          passed.push(`${names[e.seat]}'s ${e.zone}: ${want.join(", ") || "empty"}`);
+        }
+        if (e.count !== undefined) {
+          if (zone.count !== e.count) fail(`${names[e.seat]}'s ${e.zone} holds ${zone.count}, not ${e.count}`);
+          passed.push(`${names[e.seat]}'s ${e.zone} holds ${e.count}`);
+        }
+      } else if (e.life !== undefined) {
+        const life = projectFor(state, e.seat).players[e.seat].life;
+        if (life !== e.life) fail(`${names[e.seat]} is at ${life} life, not ${e.life}`);
+        passed.push(`${names[e.seat]} at ${e.life} life`);
+      } else if (e.stack !== undefined) {
+        const size = projectFor(state, 0).stackSize;
+        if (size !== e.stack) fail(`the stack holds ${size}, not ${e.stack}`);
+        passed.push(`the stack holds ${e.stack}`);
+      } else if (e.tapped !== undefined) {
+        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.tapped);
+        if (!card || card.tapped !== (e.is !== false)) fail(`${e.tapped} is ${card ? (card.tapped ? "tapped" : "untapped") : "not on the battlefield"}`);
+        passed.push(`${e.tapped} ${e.is === false ? "untapped" : "tapped"}`);
+      } else if (e.pool !== undefined) {
+        const pool = state.players[e.seat].manaPool;
+        for (const [color, n] of Object.entries(e.pool)) if ((pool[color] ?? 0) !== n) fail(`${names[e.seat]}'s pool has ${pool[color] ?? 0} ${color}, not ${n}`);
+        passed.push(`${names[e.seat]}'s pool: ${JSON.stringify(e.pool)}`);
+      } else if (e.offers !== undefined) {
+        const found = offered(e.offers);
+        if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`);
+        if (e.targets !== undefined) {
+          const got = found.map((a) => (a.targetNames ?? []).join(" + ")).sort();
+          const want = e.targets.map((t) => t.join(" + ")).sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+        }
+        passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
+      } else if (e.event !== undefined) {
+        const hit = events.some((ev) => ev.kind === e.event && Object.entries(e.where ?? {}).every(([k, v]) => JSON.stringify(ev.data?.fields?.[k]) === JSON.stringify(v)));
+        if (!hit) fail(`no ${e.event} with ${JSON.stringify(e.where ?? {})}`);
+        passed.push(`${e.event} ${JSON.stringify(e.where ?? {})}`);
+      } else fail(`an expectation the runner does not know: ${JSON.stringify(e)}`);
+    }
+  }
+
+  for (const step of scenario.steps ?? []) {
+    if (step.play || step.tap || step.cast || step.activate) act(step);
+    else if (step.resolve) {
+      if (!state.stack.length) fail("there is nothing on the stack to resolve");
+      /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its
+         resolution put on the stack -- a permanent's "when this enters" -- waits for its own step. */
+      const top = state.stack[state.stack.length - 1].stackId;
+      for (let n = 0; n < STEP_LIMIT && state.stack.some((e) => e.stackId === top) && !state.awaiting; n += 1) stepOnce();
+    } else if (step.pass) {
+      for (let n = 0; n < step.pass; n += 1) record(passPriority(state).events);
+    } else if (step.to) goTo(step.to);
+    else if (step.answer) record(resolveAwaiting(state, step.answer, null, rng, step.extra ?? {}));
+    else if (step.expect) check(step.expect);
+    else fail(`a step the runner does not know: ${JSON.stringify(step)}`);
+  }
+  check(scenario.expect);
+  return {passed, state, events};
+}
