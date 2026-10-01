@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scattered Groves",
+  "scenarios": [
+    {
+      "name": "Cycling: 2 and the card itself, for a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scattered Groves"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Scattered Groves"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Scattered Groves"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Scattered Groves"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scattered Groves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scattered Groves"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Scattered Groves"
+        }
+      ]
+    }
+  ]
+}

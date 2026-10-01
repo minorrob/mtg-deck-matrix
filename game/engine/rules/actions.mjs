@@ -63,6 +63,7 @@ import {moveOne} from "../script/effects/zones.mjs";
 import {compileSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
+import {costReduction} from "./statics.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 
@@ -78,6 +79,18 @@ const cardRef = (state, id) => {
 };
 
 const isLand = (object) => (object.types ?? []).includes("Land");
+
+/* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
+   takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
+   payment read it here, so they cannot disagree. */
+function castCost(state, player, id, tax) {
+  const cost = parseManaCost(state.objects[id].manaCost);
+  let reduction = costReduction(state, player, id);
+  const fromPrinted = Math.min(cost.generic, reduction);
+  cost.generic -= fromPrinted;
+  reduction -= fromPrinted;
+  return {cost, x: Math.max(0, tax - reduction)};
+}
 
 /* A spell's additional cost (CR 601.2b, 601.2h): "As an additional cost to cast this spell, discard a card" or
    "sacrifice a creature". The player chooses what as they cast, so each choice is its own offer, as targets are --
@@ -110,7 +123,9 @@ function withTargets(state, base, ability, context) {
 
 /* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
 const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
-export const costAtomBuilt = (atom) => COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object"));
+export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object")))
+  /* "Discard this card" (cycling, CR 702.29a): a card's ability activated from its owner's hand. */
+  || (atom?.atom === "discard" && atom.self === true);
 
 /* "Sacrifice a creature: ..." (Viscera Seer, Ashnod's Altar, Phyrexian Tower): a cost the player chooses as they activate
    (CR 602.2b, 601.2h), so each permanent they could sacrifice is its own offer, as with a spell's additional cost. Only
@@ -127,6 +142,7 @@ function costPayment(state, player, id, cost) {
   let mana = null, life = 0;
   for (const atom of cost ?? []) {
     if (!costAtomBuilt(atom)) return null;
+    if (atom.atom === "discard" && atom.self === true && object.zone !== "hand") return null;
     if (atom.atom === "{T}") {
       if (object.tapped) return null;
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began. */
@@ -243,8 +259,8 @@ export function legalActions(state, player) {
     if (sorcerySpeed(object) && !hasFlash(state, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
       continue;
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
-    const cost = parseManaCost(object.manaCost);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
+    const {cost, x} = castCost(state, player, id, tax);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x});
     if (!payment) continue;
     const extra = object.spell?.additionalCost ?? [];
     const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
@@ -269,6 +285,20 @@ export function legalActions(state, player) {
       for (const costChoice of fodder)
         actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
           ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {})}, ability, {controller: player, source: id}));
+    }
+  }
+
+  /* CR 702.29a and its kin: an ability a card has in its owner's hand -- cycling, "{2}, discard this card: draw a card"
+     -- whenever that player has priority, unless it says sorcery speed. */
+  for (const id of cardsIn(state, "hand", player)) {
+    const object = state.objects[id];
+    for (const ability of object.abilities ?? []) {
+      if (ability.kind !== "activated" || ability.zone !== "hand") continue;
+      if (ability.timing === "sorcery" && !sorceryTime) continue;
+      const payment = costPayment(state, player, id, ability.cost);
+      if (!payment) continue;
+      actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},
+        ability, {controller: player, source: id}));
     }
   }
 
@@ -302,7 +332,11 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
     const object = state.objects[id];
     if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !mainNow)) return false;
     const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
-    return manaValue(parseManaCost(object.manaCost)) + tax <= mana;
+    /* What it costs now, reductions included: a spell made castable by a Medallion is something to do. */
+    const {cost, x} = castCost(state, player, id, tax);
+    /* manaValue reads the printed symbols; the reduction lowered the generic count, so take off what it took. */
+    const printed = parseManaCost(object.manaCost);
+    return manaValue(printed) - (printed.generic - cost.generic) + x <= mana;
   });
 }
 
@@ -415,8 +449,8 @@ function perform(state, player, action) {
        is still on the list, and this proves the payment still balances. */
     const fromCommand = object.zone === "command";
     const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
-    const cost = parseManaCost(object.manaCost);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: tax});
+    const {cost, x} = castCost(state, player, action.objectId, tax);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x});
     if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     spend(state.players[player].manaPool, payment.mana);
@@ -483,6 +517,8 @@ function perform(state, player, action) {
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) moveOne(state, action.objectId, "graveyard", events);
+      /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. */
+      if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined) moveOne(state, action.costChoice.sacrifice, "graveyard", events);
     }
     return events;

@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ziatora's Proving Ground",
+  "scenarios": [
+    {
+      "name": "Cycling: 3 and the card itself, for a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ziatora's Proving Ground"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Ziatora's Proving Ground"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Ziatora's Proving Ground"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ziatora's Proving Ground"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ziatora's Proving Ground"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Ziatora's Proving Ground"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Ziatora's Proving Ground"
+        }
+      ]
+    }
+  ]
+}

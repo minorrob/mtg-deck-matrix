@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sheltered Thicket",
+  "scenarios": [
+    {
+      "name": "Cycling: 2 and the card itself, for a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sheltered Thicket"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Sheltered Thicket"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Sheltered Thicket"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sheltered Thicket"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sheltered Thicket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sheltered Thicket"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sheltered Thicket"
+        }
+      ]
+    }
+  ]
+}

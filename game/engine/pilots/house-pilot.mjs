@@ -142,6 +142,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[b]) - rank(options[a]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      if (id.startsWith("sacrifice:")) {
+        const rank = (o) => (o.token ? -1 : manaValue(o.label));
+        const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
       if (id.startsWith("declare-attackers:")) {
         const opponents = view.players.filter((p) => p.playerId !== seat && p.health.status === "active");
         const blockersOf = (pid) => creaturesOf(view.players[pid]).filter((c) => !c.tapped);

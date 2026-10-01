@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Irrigated Farmland",
+  "scenarios": [
+    {
+      "name": "Cycling: 2 and the card itself, for a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Irrigated Farmland"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Irrigated Farmland"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Irrigated Farmland"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Irrigated Farmland"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Irrigated Farmland"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Irrigated Farmland"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Irrigated Farmland"
+        }
+      ]
+    }
+  ]
+}

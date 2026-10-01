@@ -56,7 +56,7 @@ export const FORGE_TRIGGER = {
    lord and goes through `layers.mjs`; `CombatDamageToughness` changes a rule rather than a
    characteristic and goes through `rules/statics.mjs`; `Moved` is a zone-change or entering
    replacement and goes through `replacement.mjs`. Everything else is genuinely absent. */
-export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics"};
+export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics", ReduceCost: "rules/statics"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
@@ -68,8 +68,9 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
 /* Keywords that stand for an ability rather than a behavior, built once the primitive the ability uses is. Equip is
    "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery" (CR 702.6a): an
    activated ability with the `attach` effect, and what the Equipment grants a static ability on the creature it is
-   attached to (`attachedBy`). */
-export const ABILITY_KEYWORDS = {Equip: "attach"};
+   attached to (`attachedBy`). Cycling is "{cost}, discard this card: draw a card" activated from the hand (CR 702.29a),
+   and typecycling the same searching for a card of the type (702.29e): built with activation from the hand (batch 9). */
+export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
