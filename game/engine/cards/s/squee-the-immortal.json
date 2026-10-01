@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squee, the Immortal",
+    "oracleId": "481fb71a-11b9-462e-a4da-ca35ffd1bd22",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "You may cast this card from your graveyard or from exile.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may cast this card from your graveyard or from exile.",
+      "rule": "cast-self-from",
+      "affects": {
+        "self": true
+      },
+      "zones": [
+        "graveyard",
+        "exile"
+      ]
+    }
+  ]
+}

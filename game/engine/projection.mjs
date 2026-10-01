@@ -81,13 +81,31 @@ function cardFor(state, id, canSeeFace) {
   };
 }
 
+/* THE TOP OF A LIBRARY, when a permanent its owner controls says so (rules/statics.mjs): "play with the top card of
+   your library revealed" shows it to everyone (CR 401.4), "you may look at the top card of your library any time" to
+   its owner alone. Never more than that one card, and never without such a permanent. */
+function topSeenBy(state, owner, viewer) {
+  let revealed = false, looked = false;
+  for (const id of state.zones.battlefield) {
+    const holder = state.objects[id];
+    if (holder.controller !== owner) continue;
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static") continue;
+      if (ability.rule === "top-revealed") revealed = true;
+      if (ability.rule === "look-at-top") looked = true;
+    }
+  }
+  return revealed || (looked && viewer === owner);
+}
+
 function zoneFor(state, zone, owner, viewer) {
   const ids = zone === "battlefield" || zone === "exile"
     ? state.zones[zone].filter((id) => state.objects[id].owner === owner)
     : state.zones[zone][owner];
   const rule = VISIBILITY[zone];
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
-  const cards = visible ? ids.map((id) => cardFor(state, id, true)).filter(Boolean) : [];
+  const cards = visible ? ids.map((id) => cardFor(state, id, true)).filter(Boolean)
+    : zone === "library" && ids.length && topSeenBy(state, owner, viewer) ? [cardFor(state, ids[0], true)].filter(Boolean) : [];
   return {
     count: ids.length,
     /* Said outright rather than left to be inferred from count minus cards.length, because a
