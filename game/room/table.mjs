@@ -53,14 +53,32 @@ const sha256 = async (text) => hex(await crypto.subtle.digest("SHA-256", new Tex
 const seatName = (n) => `s${n}`;
 const clean = (v, n = 60) => String(v ?? "").trim().slice(0, n);
 
-/* The deck a seat brings: a name, its commander(s) and its cards, bounded, and every card playable. */
-function readDeck(deck, cards) {
+/* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3): a legendary creature, or a card that says it "can be your
+   commander" (its definition's `canBeCommander`, game/engine/cards/index.mjs). The library already offers only
+   verified commanders; the table holds every deck to the rule itself, since a deck reaches it from a page. The one
+   exception is the Basic lands test deck (crankmagic-table.js, TEST_DECK; Rob, 2026-09-29), a basic land at the head
+   of basic lands, and only on a playtest table, while the engine plays basic lands only (Rob, 2026-10-01: "confirming
+   a basic land being the commander in the test deck is an exception"). Partner pairs (CR 702.124) are not checked yet. */
+const BASIC_LANDS = new Set(["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"]);
+export function commanderLegal(definition) {
+  if (!definition) return false;
+  if (definition.canBeCommander === true) return true;
+  return (definition.types || []).includes("Creature") && (definition.supertypes || []).includes("Legendary");
+}
+export const isBasicLandsTestDeck = (commander, list) => commander.length === 1 && BASIC_LANDS.has(commander[0]) && list.every((n) => BASIC_LANDS.has(n));
+
+/* The deck a seat brings: a name, its commander(s) and its cards, bounded, every card playable, and every commander
+   one that can be. */
+function readDeck(deck, cards, {playtest = false} = {}) {
   if (!deck || typeof deck !== "object") throw new TableError(400, "Choose a deck for this seat.");
   const commander = (Array.isArray(deck.commander) ? deck.commander : []).map((c) => clean(c, 200)).filter(Boolean);
   const list = (Array.isArray(deck.cards) ? deck.cards : []).map((c) => clean(c, 200)).filter(Boolean);
   if (commander.length > 2 || commander.length + list.length === 0 || commander.length + list.length > 250) throw new TableError(400, "That is not a deck a table can hold.");
   const missing = [...new Set([...commander, ...list].filter((n) => !cards(n)))].sort();
   if (missing.length) throw new TableError(422, `The table cannot play ${missing.length === 1 ? "this card" : `these ${missing.length} cards`} yet: ${missing.join(", ")}.`, {unsupported: missing});
+  const notCommanders = commander.filter((n) => !commanderLegal(cards(n)));
+  if (notCommanders.length && !(playtest && isBasicLandsTestDeck(commander, list)))
+    throw new TableError(422, `${notCommanders.join(" and ")} ${notCommanders.length === 1 ? "can't be a commander" : "can't be commanders"}: a commander is a legendary creature, or a card that says it can be your commander.`, {notCommanders});
   /* The deck's bracket as its library measures it (the Decks page's B1-B5), which a table's limit is held to. */
   const bracket = Number.isInteger(deck.bracket) && deck.bracket >= 1 && deck.bracket <= 5 ? deck.bracket : null;
   return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list, bracket, source: readSource(deck.source)};
@@ -184,7 +202,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const seat = record.lifecycle.seats[seatId];
       if (!seat) throw new TableError(400, "There is no such seat.");
       if (seat.kind === "ai" ? !isHost(email) : seatOf(email) !== seatId) throw new TableError(403, "That is not your seat to choose for.");
-      const read = readDeck(deck, cards), limit = rulesOf().bracketLimit;
+      const read = readDeck(deck, cards, {playtest: record.playtest === true}), limit = rulesOf().bracketLimit;
       if (limit !== null && read.bracket !== null && read.bracket > limit)
         throw new TableError(409, `${read.name} is bracket ${read.bracket}, above this table's limit of ${limit}. Choose a deck at bracket ${limit} or lower, or ask the host to raise the limit.`);
       const version = (await sha256(JSON.stringify(read))).slice(0, 16);

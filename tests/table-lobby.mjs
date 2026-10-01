@@ -25,7 +25,7 @@ import assert from "node:assert/strict";
 import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
+import {openBrowser, loadLiveState, legendaryNames} from "./uat/browser-runner.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 import {MATS} from "../game/room/table.mjs";
@@ -87,7 +87,8 @@ const panelReading = (page) => page.evaluate(() => {
 /* THE SERVER, HERE: one GameTable object per table. Every card is playable except one, so a refusal by name
    can be seen; the engine's own cards stand in for the rest (a vanilla creature). */
 const REFUSED = "Sol Ring";
-const cards = (name) => basicCards(name) ?? (name === REFUSED ? null : {types: ["Creature"], power: 2, toughness: 2, manaCost: "{2}"});
+/* A commander is a legendary creature (CR 903.3): a legendary card of the library stands in as one. */
+const cards = (name) => basicCards(name) ?? (name === REFUSED ? null : {types: ["Creature"], ...(legendaryNames().has(name) ? {supertypes: ["Legendary"]} : {}), power: 2, toughness: 2, manaCost: "{2}"});
 let clock = Date.parse("2026-09-26T22:00:00Z");
 const objects = new Map(), writes = [], deckBodies = [];
 let nextId = 0;
