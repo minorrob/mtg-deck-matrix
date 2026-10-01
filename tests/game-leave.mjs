@@ -93,7 +93,7 @@ assert.throws(() => {const s = engineGame("x"); concede(s, 1); concede(s, 1);}, 
   /* A departed active player declares no attack, even with a creature under their control (CR 800.4). */
   const s = engineGame("attack");
   const id = addObject(s, {card: "Loaned Bear", types: ["Creature"], power: 2, toughness: 2, owner: 1, controller: 0}, "battlefield");
-  s.turn = 3; s.activePlayer = 0; s.objects[id].controlledSinceTurn = 1;
+  s.turn = 3; s.activePlayer = 0; s.players[0].turnBegan = 3; s.objects[id].controlledSinceTurn = 1;   /* player 0's turn 3 (CR 302.6 reads their turn) */
   eq(attackers.open(s), true, "an active player with a creature that can attack is asked to declare attackers");
   s.awaiting = null; s.players[0].lost = true;
   eq(attackers.open(s), false, "the same player, having left the game, is asked nothing");

@@ -41,6 +41,7 @@ import {cardsIn, moveObject} from "../state/index.mjs";
 import {pushSpell} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast} from "./commander.mjs";
+import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
@@ -88,6 +89,9 @@ export function legalActions(state, player) {
     for (const ability of object.abilities ?? []) {
       if (ability.kind !== "mana") continue;
       if (ability.tapSelf && object.tapped) continue;
+      /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
+         A land is never sick; a land animated this turn is a creature, and is. */
+      if (ability.tapSelf && summoningSick(state, id)) continue;
       actions.push({kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card});
     }
   }
@@ -105,7 +109,7 @@ export function legalActions(state, player) {
   for (const {id, from} of castable) {
     const object = state.objects[id];
     if (!object.manaCost) continue;
-    if (sorcerySpeed(object) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
       continue;
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
     const cost = parseManaCost(object.manaCost);
@@ -135,7 +139,7 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
   const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)];
   return !spells.some((id) => {
     const object = state.objects[id];
-    if (!object.manaCost || (sorcerySpeed(object) && !mainNow)) return false;
+    if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !mainNow)) return false;
     const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
     return manaValue(parseManaCost(object.manaCost)) + tax <= mana;
   });

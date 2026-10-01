@@ -10,16 +10,14 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 
 | Scope | Cards | Playable now | Share |
 | --- | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 330 | 69.2% |
-| the card library | 2365 | 1213 | 51.3% |
+| Rob's seven decks | 477 | 347 | 72.7% |
+| the card library | 2365 | 1261 | 53.3% |
 
 ## What blocks the rest — Rob's seven decks
 
 | Construct | Kind | Cards blocked | Why |
 | --- | --- | ---: | --- |
-| `Flash` | keyword | 15 | declared, no behavior |
 | `Equip` | keyword | 8 | declared, no behavior |
-| `Haste` | keyword | 6 | declared, no behavior |
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
 | `CombatDamageToughness` | static | 5 | no engine support yet |
@@ -37,6 +35,8 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `addManaReflected` | api | 3 | declared, not built |
 | `Changeling` | keyword | 3 | declared, no behavior |
 | `sacrificeAll` | api | 3 | declared, not built |
+| `CantAttack` | static | 3 | no engine support yet |
+| `chooseType` | api | 3 | declared, not built |
 
 ## What blocks the rest — the card library
 
@@ -44,12 +44,10 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | --- | --- | ---: | --- |
 | `Equip` | keyword | 79 | declared, no behavior |
 | `ReduceCost` | static | 61 | no engine support yet |
-| `Flash` | keyword | 50 | declared, no behavior |
 | `copySpell` | api | 46 | declared, not built |
 | `ETBReplacement` | keyword | 43 | not declared |
 | `damageAll` | api | 43 | declared, not built |
 | `play` | api | 43 | declared, not built |
-| `Haste` | keyword | 42 | declared, no behavior |
 | `sacrifice` | api | 41 | declared, not built |
 | `destroyAll` | api | 40 | declared, not built |
 | `etbCounter` | keyword | 33 | not declared |
@@ -62,4 +60,6 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `Cycling` | keyword | 24 | declared, no behavior |
 | `attach` | api | 24 | declared, not built |
 | `Chapter` | keyword | 24 | not declared |
+| `repeatFor` | api | 21 | declared, not built |
+| `Flashback` | keyword | 21 | declared, no behavior |
 

@@ -84,6 +84,9 @@ export function createState(pod) {
       /* CR 402.2. Seven unless an effect says otherwise; the cleanup step reads it. */
       maxHandSize: 7,
       landsPlayed: 0,
+      /* CR 302.6 reads "since their most recent turn began": the turn number at which this player's latest turn
+         started, 0 before their first. Summoning sickness compares with it (keywords/timing.mjs). */
+      turnBegan: 0,
       lost: false,
       lostTo: null,
     })),
