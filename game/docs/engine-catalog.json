@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 254,
-  "everyRule": 1518
+  "defined": 285,
+  "everyRule": 1730
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -79,7 +79,7 @@
      "top": 60,
      "all": 1264,
      "blocks": 60,
-     "alone": 31
+     "alone": 38
     },
     {
      "kind": "keyword ability",
@@ -115,7 +115,7 @@
      "top": 42,
      "all": 306,
      "blocks": 42,
-     "alone": 34
+     "alone": 36
     },
     {
      "kind": "keyword ability",
@@ -199,7 +199,7 @@
      "top": 26,
      "all": 212,
      "blocks": 26,
-     "alone": 8
+     "alone": 11
     },
     {
      "kind": "keyword ability",
@@ -223,7 +223,7 @@
      "top": 15,
      "all": 192,
      "blocks": 15,
-     "alone": 2
+     "alone": 10
     },
     {
      "kind": "keyword ability",
@@ -247,7 +247,7 @@
      "top": 14,
      "all": 45,
      "blocks": 14,
-     "alone": 0
+     "alone": 8
     },
     {
      "kind": "keyword ability",
@@ -295,7 +295,7 @@
      "top": 10,
      "all": 63,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -307,7 +307,7 @@
      "top": 8,
      "all": 132,
      "blocks": 8,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -319,7 +319,7 @@
      "top": 8,
      "all": 93,
      "blocks": 8,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -331,7 +331,7 @@
      "top": 7,
      "all": 44,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -355,7 +355,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -379,7 +379,7 @@
      "top": 7,
      "all": 14,
      "blocks": 7,
-     "alone": 0
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -391,7 +391,7 @@
      "top": 6,
      "all": 78,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -475,7 +475,7 @@
      "top": 5,
      "all": 131,
      "blocks": 5,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -523,7 +523,7 @@
      "top": 5,
      "all": 23,
      "blocks": 5,
-     "alone": 0
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -559,7 +559,7 @@
      "top": 4,
      "all": 24,
      "blocks": 4,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -571,7 +571,7 @@
      "top": 4,
      "all": 23,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -595,7 +595,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -643,7 +643,7 @@
      "top": 3,
      "all": 58,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -703,7 +703,7 @@
      "top": 3,
      "all": 19,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -859,7 +859,7 @@
      "top": 2,
      "all": 23,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -871,7 +871,7 @@
      "top": 2,
      "all": 21,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -1015,7 +1015,7 @@
      "top": 1,
      "all": 80,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1159,7 +1159,7 @@
      "top": 1,
      "all": 22,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1171,7 +1171,7 @@
      "top": 1,
      "all": 22,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1279,7 +1279,7 @@
      "top": 1,
      "all": 13,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1327,7 +1327,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1387,7 +1387,7 @@
      "top": 1,
      "all": 6,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2417,7 +2417,7 @@
      "top": 75,
      "all": 969,
      "blocks": 56,
-     "alone": 28,
+     "alone": 32,
      "note": "as a cost, built; as an effect, not yet"
     },
     {
@@ -2490,7 +2490,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 6
+     "alone": 15
     },
     {
      "kind": "keyword action",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword action",
@@ -2538,7 +2538,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "keyword action",
@@ -2610,7 +2610,7 @@
      "top": 7,
      "all": 72,
      "blocks": 7,
-     "alone": 3
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -2634,7 +2634,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword action",
@@ -2671,7 +2671,7 @@
      "top": 3,
      "all": 51,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword action",
@@ -3449,7 +3449,7 @@
      "top": 64,
      "all": 353,
      "blocks": 64,
-     "alone": 33
+     "alone": 38
     },
     {
      "kind": "effect",
@@ -3473,7 +3473,7 @@
      "top": 56,
      "all": 839,
      "blocks": 56,
-     "alone": 28
+     "alone": 32
     },
     {
      "kind": "effect",
@@ -3533,7 +3533,7 @@
      "top": 41,
      "all": 326,
      "blocks": 41,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "effect",
@@ -3581,7 +3581,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 6
+     "alone": 15
     },
     {
      "kind": "effect",
@@ -3593,7 +3593,7 @@
      "top": 35,
      "all": 241,
      "blocks": 35,
-     "alone": 9
+     "alone": 14
     },
     {
      "kind": "effect",
@@ -3629,7 +3629,7 @@
      "top": 29,
      "all": 167,
      "blocks": 29,
-     "alone": 7
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3653,7 +3653,7 @@
      "top": 27,
      "all": 402,
      "blocks": 27,
-     "alone": 11
+     "alone": 15
     },
     {
      "kind": "effect",
@@ -3689,7 +3689,7 @@
      "top": 24,
      "all": 58,
      "blocks": 24,
-     "alone": 7
+     "alone": 11
     },
     {
      "kind": "effect",
@@ -3701,7 +3701,7 @@
      "top": 22,
      "all": 316,
      "blocks": 22,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "effect",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3773,7 +3773,7 @@
      "top": 18,
      "all": 167,
      "blocks": 18,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3809,7 +3809,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3917,7 +3917,7 @@
      "top": 11,
      "all": 67,
      "blocks": 11,
-     "alone": 4
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -3929,7 +3929,7 @@
      "top": 11,
      "all": 49,
      "blocks": 11,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3941,7 +3941,7 @@
      "top": 11,
      "all": 36,
      "blocks": 11,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3953,7 +3953,7 @@
      "top": 10,
      "all": 65,
      "blocks": 10,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3965,7 +3965,7 @@
      "top": 10,
      "all": 62,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4049,7 +4049,7 @@
      "top": 7,
      "all": 131,
      "blocks": 7,
-     "alone": 1
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4061,7 +4061,7 @@
      "top": 7,
      "all": 72,
      "blocks": 7,
-     "alone": 3
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4097,7 +4097,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4109,7 +4109,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4157,7 +4157,7 @@
      "top": 5,
      "all": 32,
      "blocks": 5,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4193,7 +4193,7 @@
      "top": 4,
      "all": 13,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4217,7 +4217,7 @@
      "top": 3,
      "all": 51,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4229,7 +4229,7 @@
      "top": 3,
      "all": 48,
      "blocks": 3,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4241,7 +4241,7 @@
      "top": 3,
      "all": 32,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4397,7 +4397,7 @@
      "top": 1,
      "all": 64,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4409,7 +4409,7 @@
      "top": 1,
      "all": 42,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 0,
-    "partial": 3,
-    "named": 19,
+    "built": 3,
+    "partial": 4,
+    "named": 15,
     "missing": 116
    },
    "entries": [
@@ -5554,36 +5554,36 @@
      "rule": null,
      "name": "SpellCast",
      "engine": "spell cast",
-     "status": "named",
+     "status": "built",
      "forge": "SpellCast",
      "top": 200,
      "all": 1360,
-     "blocks": 200,
-     "alone": 92
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
      "rule": null,
      "name": "Attacks",
      "engine": "attacks",
-     "status": "named",
+     "status": "built",
      "forge": "Attacks",
      "top": 122,
      "all": 1582,
-     "blocks": 122,
-     "alone": 52
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
      "rule": null,
      "name": "DamageDone",
      "engine": "damage dealt",
-     "status": "named",
+     "status": "partial",
      "forge": "DamageDone",
      "top": 110,
      "all": 863,
-     "blocks": 110,
-     "alone": 38
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5602,12 +5602,12 @@
      "rule": null,
      "name": "Drawn",
      "engine": "drawn",
-     "status": "named",
+     "status": "built",
      "forge": "Drawn",
      "top": 31,
      "all": 145,
-     "blocks": 31,
-     "alone": 23
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 33,
-     "alone": 17
+     "alone": 19
     },
     {
      "kind": "trigger",
@@ -5655,7 +5655,7 @@
      "top": 18,
      "all": 64,
      "blocks": 18,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "trigger",
@@ -5667,7 +5667,7 @@
      "top": 17,
      "all": 114,
      "blocks": 17,
-     "alone": 9
+     "alone": 11
     },
     {
      "kind": "trigger",
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 33,
-     "alone": 17
+     "alone": 19
     },
     {
      "kind": "trigger",
@@ -5739,7 +5739,7 @@
      "top": 5,
      "all": 116,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5775,7 +5775,7 @@
      "top": 4,
      "all": 40,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5799,7 +5799,7 @@
      "top": 3,
      "all": 126,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5823,7 +5823,7 @@
      "top": 3,
      "all": 30,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5883,7 +5883,7 @@
      "top": 2,
      "all": 127,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -7213,7 +7213,7 @@
      "top": 100,
      "all": 516,
      "blocks": 100,
-     "alone": 55
+     "alone": 69
     },
     {
      "kind": "static",
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 26,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "static",
@@ -7273,7 +7273,7 @@
      "top": 12,
      "all": 56,
      "blocks": 12,
-     "alone": 4
+     "alone": 7
     },
     {
      "kind": "static",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 10,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "static",
@@ -7369,7 +7369,7 @@
      "top": 4,
      "all": 20,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7381,7 +7381,7 @@
      "top": 4,
      "all": 8,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7453,7 +7453,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7501,7 +7501,7 @@
      "top": 1,
      "all": 40,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7585,7 +7585,7 @@
      "top": 1,
      "all": 3,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 21,
-     "alone": 11
+     "alone": 14
     },
     {
      "kind": "replacement",
@@ -9077,7 +9077,7 @@
      "top": 35,
      "all": 475,
      "blocks": 35,
-     "alone": 13
+     "alone": 17
     },
     {
      "kind": "keyword construct",
@@ -9101,7 +9101,7 @@
      "top": 9,
      "all": 38,
      "blocks": 9,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword construct",

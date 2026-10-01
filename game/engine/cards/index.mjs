@@ -52,6 +52,16 @@ const TRIGGERS = {
   dies: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
+  /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
+     `filter` the spell (CR 601.2i). */
+  "spell cast": (t) => ({on: "GameEventSpellAbilityCast", caster: t.caster ?? "you", ...(t.filter ? {filter: t.filter} : {})}),
+  /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
+  attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2). */
+  "damage dealt": (t) => (ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
+    ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
+  drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
 };
 
@@ -156,10 +166,11 @@ export function compileScript(script) {
       const trigger = compile ? compile(ability.trigger) : null;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
       if (ability.trigger.filter) {
-        /* A death's filter may be a choice ("another creature or planeswalker you control dies"): each alternative, with
-           what they share, is a selector of its own (read against last known information, script/filter.mjs). */
+        /* A filter may be a choice ("an instant or sorcery spell", "another creature or planeswalker you control dies"):
+           each alternative, with what they share, is a selector of its own (script/filter.mjs, matchesSelector). */
         const {anyOf, ...shared} = ability.trigger.filter;
-        const each = ability.trigger.on === "dies" && Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [ability.trigger.filter];
+        const each = Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}))
+          : [{...ability.trigger.filter, ...(ability.trigger.on === "spell cast" ? {what: "spell"} : {})}];
         try { for (const one of each) compileSelector(one); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
 

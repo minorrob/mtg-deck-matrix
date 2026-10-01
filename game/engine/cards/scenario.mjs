@@ -99,8 +99,17 @@ export function runScenario(scenario, cards, fixtures = {}) {
     record(outcome.events);
     if (outcome.outcome === "step-ends") record(advance(state));
   };
-  const goTo = ({turn, phase}) => {
+  /* Every question with its first legal answer, as settle answers -- for a smoke game moving through turns, where a draw
+     trigger's "you may" or an opponent's spell asks something nobody scripted. A scenario never sets it. */
+  const settleOne = () => {
+    const choice = awaitingChoice(state);
+    const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
+    if (amounts && choice.total) amounts[0] = choice.total;
+    record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng, {toBottom: []}));
+  };
+  const goTo = ({turn, phase, settle = false}) => {
     for (let n = 0; n < STEP_LIMIT; n += 1) {
+      if (settle && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) { settleOne(); continue; }
       /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
          stack, which is what a scenario about that trigger wants to see. */
       if (state.turn === turn && state.phase === phase && state.priorityPlayer !== null && !state.awaiting) return;
@@ -243,6 +252,24 @@ export function runScenario(scenario, cards, fixtures = {}) {
     } else if (step.pass) {
       for (let n = 0; n < step.pass; n += 1) record(passPriority(state).events);
     } else if (step.to) goTo(step.to);
+    else if (step.attack) {
+      /* On to the declare-attackers step of this turn, the named creatures attacking (each its first defender). */
+      for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-attackers"; n += 1) stepOnce();
+      if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks");
+      const choice = awaitingChoice(state), picked = [];
+      for (const name of step.attack) {
+        const option = choice.options.find((o) => o.label.startsWith(`${name} → `) && !picked.some((i) => choice.options[i].cardId === o.cardId));
+        if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        picked.push(option.index);
+      }
+      record(resolveAwaiting(state, picked));
+    } else if (step.choose) {
+      /* An answer by the options' words: ["Maya"] picks the option labeled Maya. */
+      const choice = awaitingChoice(state);
+      if (!choice) fail("nothing is being asked");
+      const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`); return o.index; });
+      record(resolveAwaiting(state, indices, null, rng, step.extra ?? {}));
+    }
     else if (step.answer) record(resolveAwaiting(state, step.answer, null, rng, step.extra ?? {}));
     else if (step.expect) check(step.expect);
     else fail(`a step the runner does not know: ${JSON.stringify(step)}`);

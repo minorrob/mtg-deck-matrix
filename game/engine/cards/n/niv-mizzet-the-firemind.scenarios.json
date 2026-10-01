@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Niv-Mizzet, the Firemind",
+  "scenarios": [
+    {
+      "name": "{T}: draw, and each draw is 1 damage to any target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Niv-Mizzet, the Firemind"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Niv-Mizzet, the Firemind"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
