@@ -264,7 +264,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
       }
       record(resolveAwaiting(state, picked));
     } else if (step.choose) {
-      /* An answer by the options' words: ["Maya"] picks the option labelled Maya. */
+      /* An answer by the options' words: ["Maya"] picks the option labeled Maya. */
       const choice = awaitingChoice(state);
       if (!choice) fail("nothing is being asked");
       const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`); return o.index; });
