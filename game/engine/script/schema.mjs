@@ -38,6 +38,7 @@ import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
+import {conditionProblems} from "./condition.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -138,6 +139,9 @@ function checkAbility(ability, path, errors) {
     if (!REVEAL_TO.includes(reveal?.to))
       errors.push({path: `${path}.reveals[${index}].to`, message: "A reveal says TO WHOM, or there is nothing for the projection to be checked against"});
   }
+
+  /* A condition (script/condition.mjs): closed, like the rest. */
+  for (const message of conditionProblems(ability.condition)) errors.push({path: `${path}.condition`, message});
 
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {

@@ -89,6 +89,15 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   eq(section("Choices").find((e) => e.name === "A value for X").status, "built", "and a value for X is a built choice: one offer per value the pool can pay");
 }
 
+/* ---- a permanent present, as a condition (batch 11) ---- */
+{
+  eq([missingFor({apis: ["Mana"], options: ["IsPresent"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "IsPresentStatic"]})],
+    [[], [{kind: "option", name: "IsPresentStatic", why: "not built"}]],
+    "\"activate only if you control a Swamp\" and an intervening \"if\" are built; a static's \"as long as you control a Mountain\" is not, and holds Anger back");
+  eq([inventory.top.perCard["Tainted Wood"].options, inventory.top.perCard.Anger.options], [["IsPresent"], ["IsPresent", "IsPresentStatic"]],
+    "the measurement tells the two apart, on the card itself");
+}
+
 /* ---- order ---- */
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every

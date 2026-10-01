@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -215,6 +215,8 @@ export function compileSelector(selector) {
       if (selector.power.max !== undefined && power > selector.power.max) return false;
     }
     if (selector.self === true && id !== context.source) return false;
+    /* "A creature with flying": its keywords now, through the layers (CR 702). */
+    if (selector.keywords && !selector.keywords.every((word) => keywordsOf(state, id).includes(word))) return false;
     if (selector.target === true && !canBeTargetedBy(state, id, chooser)) return false;
 
     return true;

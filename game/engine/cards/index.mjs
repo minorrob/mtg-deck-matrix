@@ -43,6 +43,8 @@ const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpp
 /* A script's trigger, in the engine's events. The script names the event in the vocabulary's words; `who: "self"` is
    "when THIS enters", `yours: true` is "at the beginning of YOUR upkeep". */
 const ARRIVALS = ["self", "another", "any"];
+/* The steps whose beginning a card may name (rules/turn.mjs announces each as it arrives). */
+const STEPS = ["UPKEEP", "DRAW", "MAIN1", "COMBAT_BEGIN", "MAIN2", "END_OF_TURN"];
 const TRIGGERS = {
   /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the
      selector the arrival must match. */
@@ -64,6 +66,9 @@ const TRIGGERS = {
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
   drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
+  /* "At the beginning of each player's draw step", "of your first main phase", "of combat on your turn": the beginning of
+     a step (CR 503-513), yours unless `yours: false`. */
+  step: (t) => (STEPS.includes(t.step) ? {on: "GameEventTurnPhase", phase: t.step, ...(t.yours === false ? {} : {yourTurn: true})} : null),
 };
 
 /** The trigger kinds a card script may name, each compiled to the event trigger.mjs watches (the catalog reads it). */
@@ -113,7 +118,9 @@ function manaAbility(ability, id) {
     ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
     /* "Sacrifice a creature: Add {C}{C}" (Ashnod's Altar): which creature is the player's choice, one offer each. */
-    ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {})};
+    ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {}),
+    /* "Activate only if you control a Swamp" (CR 602.5b; script/condition.mjs). */
+    ...(ability.condition ? {condition: ability.condition} : {})};
 }
 
 /**
@@ -161,7 +168,7 @@ export function compileScript(script) {
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],
         effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
-        ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {})});
+        ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {})});
       return;
     }
     if (ability.kind === "triggered") {

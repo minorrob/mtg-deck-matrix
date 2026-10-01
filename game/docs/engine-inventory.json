@@ -41,7 +41,7 @@
     "replacements": 5,
     "keywords": 53,
     "costs": 39,
-    "params": 285,
+    "params": 286,
     "amounts": 22
    }
   },
@@ -60,7 +60,7 @@
     "replacements": 15,
     "keywords": 124,
     "costs": 106,
-    "params": 572,
+    "params": 573,
     "amounts": 63
    }
   },
@@ -74,7 +74,7 @@
     "replacements": 34,
     "keywords": 216,
     "costs": 436,
-    "params": 1330,
+    "params": 1331,
     "amounts": 188
    }
   },
@@ -92,7 +92,7 @@
     "replacements": 22,
     "keywords": 131,
     "costs": 129,
-    "params": 641,
+    "params": 642,
     "amounts": 69
    }
   },
@@ -202,7 +202,7 @@
    "replacements": 5,
    "keywords": 53,
    "costs": 39,
-   "params": 285,
+   "params": 286,
    "amounts": 22
   },
   "counts": {
@@ -1652,6 +1652,10 @@
      2
     ],
     [
+     "IsPresentStatic",
+     2
+    ],
+    [
      "RememberTokens",
      2
     ],
@@ -2781,7 +2785,8 @@
     ],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -4724,6 +4729,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -8379,6 +8385,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "OptionalDecider"
     ],
     "counts": []
@@ -9484,7 +9491,7 @@
    "replacements": 15,
    "keywords": 124,
    "costs": 106,
-   "params": 572,
+   "params": 573,
    "amounts": 63
   },
   "counts": {
@@ -11656,6 +11663,10 @@
     [
      "Triggers",
      27
+    ],
+    [
+     "IsPresentStatic",
+     26
     ],
     [
      "SetPower",
@@ -14689,7 +14700,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -14716,7 +14728,8 @@
      "Haste"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -15860,7 +15873,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -16495,6 +16509,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "OptionalDecider"
     ],
     "counts": []
@@ -17491,7 +17506,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -17843,6 +17859,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -19623,7 +19640,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -20526,7 +20544,8 @@
     ],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -21111,7 +21130,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -22452,7 +22472,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -25040,7 +25061,9 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -26209,7 +26232,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -26372,7 +26396,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -27559,7 +27584,9 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "IsPresentStatic",
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -30163,7 +30190,8 @@
      "Level up"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -31271,7 +31299,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -31988,6 +32017,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "UnlessCost"
     ],
     "counts": []
@@ -32053,7 +32083,8 @@
     ],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -33702,7 +33733,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -34291,6 +34323,7 @@
      "CheckSVar",
      "Count",
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare",
      "SVarCompare"
     ],
@@ -35482,7 +35515,9 @@
     ],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "IsPresentStatic",
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -35680,7 +35715,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -36819,7 +36855,9 @@
      "Defender"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -37698,6 +37736,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "OptionalDecider"
     ],
     "counts": []
@@ -38206,6 +38245,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare",
      "RememberObjects"
     ],
@@ -38833,7 +38873,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -41938,7 +41979,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -44531,7 +44573,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -45148,7 +45191,8 @@
     ],
     "options": [
      "Condition",
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -46500,7 +46544,8 @@
      "Trample"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -46832,6 +46877,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -47328,7 +47374,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -50247,7 +50294,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -50279,7 +50327,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -50900,7 +50949,7 @@
    "replacements": 22,
    "keywords": 131,
    "costs": 129,
-   "params": 641,
+   "params": 642,
    "amounts": 69
   },
   "counts": {
@@ -53308,6 +53357,10 @@
     [
      "SetToughness",
      37
+    ],
+    [
+     "IsPresentStatic",
+     36
     ],
     [
      "RestrictValid",
@@ -56698,6 +56751,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "Optional"
     ],
     "counts": []
@@ -56825,7 +56879,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -57117,7 +57172,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -58329,7 +58385,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -60726,7 +60783,8 @@
      "Haste"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -62676,6 +62734,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "OptionalDecider"
     ],
     "counts": []
@@ -63644,6 +63703,7 @@
     "options": [
      "Count",
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": [
@@ -63803,7 +63863,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -64204,7 +64265,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -64313,6 +64375,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "MayPlay"
     ],
     "counts": []
@@ -66595,7 +66658,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -67218,7 +67282,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -67360,6 +67425,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -71060,6 +71126,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "MayPlay"
     ],
     "counts": []
@@ -71171,7 +71238,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -72588,6 +72656,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -73077,7 +73146,8 @@
     ],
     "options": [
      "Condition",
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -73765,7 +73835,8 @@
      "ConditionSVarCompare",
      "Count",
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": [
      "ValidLibrary"
@@ -77113,7 +77184,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -78576,6 +78648,7 @@
      "CheckSVar",
      "Count",
      "IsPresent",
+     "IsPresentStatic",
      "MayPlay",
      "SVarCompare"
     ],
@@ -78845,7 +78918,8 @@
      "Equip"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -79301,7 +79375,8 @@
     "options": [
      "Condition",
      "Count",
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": [
      "Valid"
@@ -80184,6 +80259,7 @@
     "options": [
      "Count",
      "IsPresent",
+     "IsPresentStatic",
      "OptionalDecider",
      "PresentCompare"
     ],
@@ -81284,6 +81360,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -86654,7 +86731,8 @@
      "Haste"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -87315,7 +87393,8 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -88484,7 +88563,9 @@
     "keywords": [],
     "options": [
      "IsPresent",
-     "PresentCompare"
+     "IsPresentStatic",
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -90302,7 +90383,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -90389,7 +90471,8 @@
     ],
     "options": [
      "Duration",
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -91579,6 +91662,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "MayPlay",
      "PresentCompare"
     ],
@@ -92394,7 +92478,8 @@
      "Trample"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -94194,6 +94279,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -96914,7 +97000,8 @@
      "Trample"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -97996,7 +98083,8 @@
      "Melee"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -98052,7 +98140,8 @@
     "options": [
      "IsPresent",
      "OptionalDecider",
-     "PresentCompare"
+     "PresentCompare",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -98072,6 +98161,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "Optional",
      "PresentCompare"
     ],
@@ -98903,6 +98993,7 @@
     "keywords": [],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -99579,7 +99670,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -100326,6 +100418,7 @@
     "options": [
      "IsPresent",
      "MayPlay",
+     "PresentZone",
      "RememberChanged",
      "RememberObjects"
     ],
@@ -101231,7 +101324,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -102219,6 +102313,7 @@
     ],
     "options": [
      "IsPresent",
+     "IsPresentStatic",
      "PresentCompare"
     ],
     "counts": []
@@ -104184,7 +104279,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -104926,7 +105022,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "IsPresentStatic"
     ],
     "counts": []
    },
@@ -105700,7 +105797,8 @@
      "Flying"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PresentZone"
     ],
     "counts": []
    },
@@ -106686,7 +106784,7 @@
    "replacements": 34,
    "keywords": 216,
    "costs": 436,
-   "params": 1330,
+   "params": 1331,
    "amounts": 188
   },
   "counts": {
@@ -111450,6 +111548,10 @@
     [
      "Condition",
      461
+    ],
+    [
+     "IsPresentStatic",
+     458
     ],
     [
      "ConditionSVarCompare",

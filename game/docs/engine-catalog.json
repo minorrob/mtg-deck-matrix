@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 366,
-  "everyRule": 1452
+  "defined": 391,
+  "everyRule": 1484
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -931,7 +931,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -4121,7 +4121,7 @@
      "top": 5,
      "all": 115,
      "blocks": 5,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4157,7 +4157,7 @@
      "top": 5,
      "all": 32,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -5595,7 +5595,7 @@
      "top": 34,
      "all": 204,
      "blocks": 34,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "trigger",
@@ -5679,7 +5679,7 @@
      "top": 17,
      "all": 76,
      "blocks": 19,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "trigger",
@@ -5919,7 +5919,7 @@
      "top": 2,
      "all": 22,
      "blocks": 19,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "trigger",
@@ -8219,7 +8219,7 @@
      "top": 5,
      "all": 157,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "replacement",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 1,
+    "built": 2,
     "partial": 3,
     "named": 0,
-    "missing": 19
+    "missing": 20
    },
    "entries": [
     {
@@ -8953,13 +8953,13 @@
      "kind": "option",
      "rule": null,
      "name": "An intervening \"if\" or \"activate only if\": a permanent present",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {present: selector}",
+     "status": "built",
      "forge": "IsPresent",
      "top": 114,
      "all": 1200,
-     "blocks": 114,
-     "alone": 40
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9096,6 +9096,18 @@
     {
      "kind": "option",
      "rule": null,
+     "name": "As long as a permanent is present (a static ability's condition)",
+     "engine": null,
+     "status": "missing",
+     "forge": "IsPresentStatic",
+     "top": 36,
+     "all": 458,
+     "blocks": 35,
+     "alone": 7
+    },
+    {
+     "kind": "option",
+     "rule": null,
      "name": "A comparison of permanents present for a condition",
      "engine": null,
      "status": "missing",
@@ -9103,7 +9115,7 @@
      "top": 35,
      "all": 385,
      "blocks": 35,
-     "alone": 0
+     "alone": 8
     },
     {
      "kind": "option",
@@ -9127,6 +9139,18 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
+     "alone": 1
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Present in a zone other than the battlefield (\"as long as this card is in your graveyard\")",
+     "engine": null,
+     "status": "missing",
+     "forge": "PresentZone",
+     "top": 9,
+     "all": 160,
+     "blocks": 9,
      "alone": 1
     },
     {

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Winged Words",
+    "oracleId": "c623aeb1-e6d4-48fe-bd2a-a7a6729aa4df",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {1} less to cast if you control a creature with flying.\nDraw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast if you control a creature with flying.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "count": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "keywords": [
+            "Flying"
+          ]
+        },
+        "atMost": 1
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Draw two cards.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}
