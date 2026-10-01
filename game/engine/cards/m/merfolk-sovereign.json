@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Merfolk Sovereign",
+    "oracleId": "16aba9af-7a12-4c3d-87eb-06278921cb7c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Noble"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Other Merfolk creatures you control get +1/+1.\n{T}: Target Merfolk creature can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other Merfolk creatures you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Merfolk"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Target Merfolk creature can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Merfolk"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

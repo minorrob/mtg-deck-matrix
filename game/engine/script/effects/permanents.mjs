@@ -90,6 +90,23 @@ function copiable(object, except = {}) {
 }
 
 /**
+ * What permanents just put onto the battlefield gain -- "it gains haste until end of turn", "that creature gains haste"
+ * -- and "sacrifice it at the beginning of the next end step", a delayed trigger that remembers them. Shared by token
+ * copies, a card put onto the battlefield from a hand or a library (zones.mjs, asking.mjs) and a mass return.
+ */
+export function afterwards(state, ids, params, context) {
+  const made = ids.filter((id) => state.objects[id]?.zone === "battlefield");
+  if (!made.length) return;
+  const controller = params.controller === undefined || params.controller === "you" ? context.controller : params.controller;
+  if (params.gainsUntilEndOfTurn) pushEffect(state, {id: `gains:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
+    apply: {addKeywords: params.gainsUntilEndOfTurn}, until: "end-of-turn", sourceController: controller});
+  if (params.gains) pushEffect(state, {id: `gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
+    apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
+  if (params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
+    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard"}]}, context);
+}
+
+/**
  * Make token copies of permanents (CR 707.2, 111.4): `count` of each, under `controller` (the effect's, unless said);
  * "it gains haste until end of turn" (`gainsUntilEndOfTurn`), "that token gains haste" (`gains`, for as long as it
  * lasts), and "sacrifice it at the beginning of the next end step"
@@ -111,13 +128,7 @@ export function makeCopies(state, ids, params, context, events) {
       }));
     }
   }
-  if (made.length && params.gainsUntilEndOfTurn) pushEffect(state, {id: `copy-gains:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
-    apply: {addKeywords: params.gainsUntilEndOfTurn}, until: "end-of-turn", sourceController: controller});
-  /* "That token gains haste": an effect on the token, with no end -- it lasts while the token does. */
-  if (made.length && params.gains) pushEffect(state, {id: `copy-gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
-    apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
-  if (made.length && params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
-    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard"}]}, context);
+  afterwards(state, made, {...params, controller}, context);
   return made;
 }
 
@@ -246,9 +257,9 @@ export function pumpAll(state, params, context) {
 export function effectUntil(state, params, context) {
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
-    layer: params.layer ?? 6,
-    sublayer: params.sublayer,
-    affects: params.affects ?? {what: "permanent"},
+    /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
+    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
+    affects: params.targets ? {ids: params.targets} : params.affects ?? {what: "permanent"},
     apply: params.apply ?? {},
     until: params.until ?? "end-of-turn",
     sourceController: context.controller,

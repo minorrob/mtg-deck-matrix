@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Escape Tunnel",
+    "oracleId": "0056fc91-4398-471c-b561-7ff99750ac8a",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\n{T}, Sacrifice this land: Target creature with power 2 or less can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this land: Target creature with power 2 or less can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "power": {
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

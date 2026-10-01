@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rogue's Passage",
+    "oracleId": "f29dc596-2121-4421-8463-15f6c2e8b9b3",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{4}, {T}: Target creature can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}, {T}: Target creature can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

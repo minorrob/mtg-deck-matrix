@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wake the Past",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    },
+    "Sculpture": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "manaCost": "{2}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Every artifact card back, hasty this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wake the Past"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock",
+            "Sculpture"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Wake the Past"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Sculpture"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wake the Past"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Conjurer's Closet",
+    "oracleId": "cd1eda60-53e4-44d0-9b2c-7a57395e291f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control.",
+      "trigger": {
+        "on": "end step",
+        "yours": true
+      },
+      "optional": true,
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "now",
+          "under": "you"
+        }
+      ]
+    }
+  ]
+}

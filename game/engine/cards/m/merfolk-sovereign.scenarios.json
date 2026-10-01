@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Merfolk Sovereign",
+  "fixtures": {
+    "Merfolk Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Their Wall": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "power": 0,
+      "toughness": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Other Merfolk +1/+1; {T}: a Merfolk unblockable",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Merfolk Sovereign",
+            "Merfolk Pal",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Merfolk Pal",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Merfolk Sovereign"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Merfolk Pal"
+                ],
+                [
+                  "Merfolk Sovereign"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Merfolk Sovereign",
+          "targets": [
+            {
+              "card": "Merfolk Pal"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Merfolk Pal"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

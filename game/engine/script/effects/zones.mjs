@@ -17,6 +17,8 @@
  * behave differently later.
  */
 
+import {afterwards, delayedTrigger} from "./permanents.mjs";
+import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
@@ -97,24 +99,42 @@ export const playersFor = (state, who, controller) => {
 /** `moveZone` — put the named objects somewhere. */
 export function moveZone(state, params, context) {
   const events = [];
+  const arrived = [];
   for (const id of params.targets ?? []) {
     const moved = moveOne(state, id, params.to ?? "graveyard", events);
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
       state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
+    if (moved !== null && state.objects[moved]?.zone === "battlefield") arrived.push(moved);
+    /* "Exile it, then return that card to the battlefield" (a flicker): the card in exile is a new object (CR 400.7),
+       found by what the move returned, and comes back now or at the beginning of the next end step -- under its
+       owner's control unless the card says yours, with a +1/+1 counter if the card says so and it is a creature. */
+    if (moved !== null && params.andReturn && state.objects[moved]) {
+      const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
+        ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {})};
+      if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
+      else events.push(...moveZone(state, back, context));
+    }
   }
+  /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
+  if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;
+  afterwards(state, arrived, params, context);
   return events;
 }
 
 /** `moveZoneAll` — every object a selector matches (a board wipe, a mass bounce). */
 export function moveZoneAll(state, params, context) {
   const events = [];
+  const arrivedAll = [];
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   for (const id of [...matched]) {
     const moved = moveOne(state, id, params.to ?? "graveyard", events);
     if (params.tapped === true && moved !== null && state.objects[moved]?.zone === "battlefield") state.objects[moved].tapped = true;
+    if (moved !== null) arrivedAll.push(moved);
   }
+  /* "They gain haste until end of turn" (Wake the Past). */
+  afterwards(state, arrivedAll, params, context);
   return events;
 }
 
