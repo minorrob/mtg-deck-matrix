@@ -158,7 +158,7 @@ export function compileScript(script) {
       if (mana) { abilities.push(mana); return; }
       for (const atom of ability.cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],
-        effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {})});
+        effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {})});
       return;
     }
     if (ability.kind === "triggered") {

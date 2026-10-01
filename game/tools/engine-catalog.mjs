@@ -156,7 +156,9 @@ const PARTIAL_TRIGGERS = new Set([...BROAD_TRIGGERS, "DamageDone"]);
 
   /* Static abilities and replacement effects. */
   const statics = [...ALL.statics.keys()].map((mode) => entry({kind: "static", rule: null, name: mode, engine: FORGE_STATIC[mode] ?? null,
-    status: FORGE_STATIC[mode] ? (mode === "Continuous" ? "partial" : "built") : "missing", forge: mode, top: TOP.statics.get(mode) ?? 0, all: ALL.statics.get(mode) ?? 0, ...byKey(`static:${mode}`)}));
+    /* Continuous is every layer effect, some built; ReduceCost is "spells cost {N} less" (built) and "this spell costs
+     {X} less" (not yet). */
+  status: FORGE_STATIC[mode] ? (["Continuous", "ReduceCost"].includes(mode) ? "partial" : "built") : "missing", forge: mode, top: TOP.statics.get(mode) ?? 0, all: ALL.statics.get(mode) ?? 0, ...byKey(`static:${mode}`)}));
   const replacements = [...ALL.replacements.keys()].map((mode) => entry({kind: "replacement", rule: null, name: mode, engine: FORGE_REPLACEMENT[mode] ?? null,
     status: FORGE_REPLACEMENT[mode] ? "partial" : "missing", forge: mode, top: TOP.replacements.get(mode) ?? 0, all: ALL.replacements.get(mode) ?? 0, ...byKey(`replacement:${mode}`)}));
 

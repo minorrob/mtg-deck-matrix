@@ -1,0 +1,30 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Helm of Awakening",
+    "oracleId": "f2fcef65-4873-4b1f-a257-b8648097c990",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spells cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spells cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell"
+      },
+      "amount": 1,
+      "caster": "any"
+    }
+  ]
+}

@@ -82,9 +82,13 @@ function checkEffect(effect, path, errors) {
   nested.forEach((child, index) => checkEffect(child, `${path}.effects[${index}]`, errors));
 }
 
-function checkSelector(selector, path, errors) {
+function checkSelector(selector, path, errors, {choice = false} = {}) {
   try {
-    compileSelector(selector);
+    /* A choice of alternatives ("instant and sorcery spells") where the reader takes one (statics.mjs costReduction):
+       each alternative, with the keys they share, is a selector of its own. */
+    const {anyOf, ...shared} = selector ?? {};
+    if (choice && Array.isArray(anyOf)) for (const one of anyOf) compileSelector({...shared, ...one});
+    else compileSelector(selector);
   } catch (error) {
     errors.push({path, message: error.message});
   }
@@ -162,7 +166,7 @@ function checkAbility(ability, path, errors) {
       if (!ability.apply) errors.push({path: `${path}.apply`, message: "A static ability says what it does"});
     }
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
-    else checkSelector(ability.affects, `${path}.affects`, errors);
+    else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule === "spells-cost-less"});
   }
 
   if (ability.kind === "replacement") {

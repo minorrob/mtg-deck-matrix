@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 285,
-  "everyRule": 1730
+  "defined": 320,
+  "everyRule": 1870
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 16,
+    "built": 17,
     "partial": 0,
-    "named": 31,
+    "named": 30,
     "missing": 147
    },
    "entries": [
@@ -79,7 +79,7 @@
      "top": 60,
      "all": 1264,
      "blocks": 60,
-     "alone": 38
+     "alone": 39
     },
     {
      "kind": "keyword ability",
@@ -109,13 +109,13 @@
      "kind": "keyword ability",
      "rule": "702.29",
      "name": "Cycling",
-     "engine": null,
-     "status": "named",
+     "engine": "Cycling",
+     "status": "built",
      "forge": "Cycling",
      "top": 42,
      "all": 306,
-     "blocks": 42,
-     "alone": 36
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -247,7 +247,7 @@
      "top": 14,
      "all": 45,
      "blocks": 14,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "keyword ability",
@@ -319,7 +319,7 @@
      "top": 8,
      "all": 93,
      "blocks": 8,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -475,7 +475,7 @@
      "top": 5,
      "all": 131,
      "blocks": 5,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -823,7 +823,7 @@
      "top": 2,
      "all": 33,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2354,8 +2354,8 @@
   "Keyword actions (CR 701)": {
    "tally": {
     "built": 13,
-    "partial": 2,
-    "named": 11,
+    "partial": 3,
+    "named": 10,
     "missing": 44
    },
    "entries": [
@@ -2412,12 +2412,12 @@
      "rule": "701.21",
      "name": "Sacrifice",
      "engine": "sacrifice",
-     "status": "named",
+     "status": "partial",
      "forge": "Sacrifice, SacrificeAll",
      "top": 75,
      "all": 969,
-     "blocks": 56,
-     "alone": 32,
+     "blocks": 0,
+     "alone": 0,
      "note": "as a cost, built; as an effect, not yet"
     },
     {
@@ -2514,7 +2514,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 16
+     "alone": 17
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 33,
+    "built": 34,
     "partial": 0,
-    "named": 31,
+    "named": 30,
     "missing": 128
    },
    "entries": [
@@ -3449,7 +3449,7 @@
      "top": 64,
      "all": 353,
      "blocks": 64,
-     "alone": 38
+     "alone": 39
     },
     {
      "kind": "effect",
@@ -3468,12 +3468,12 @@
      "rule": null,
      "name": "Sacrifice",
      "engine": "sacrifice",
-     "status": "named",
+     "status": "built",
      "forge": "Sacrifice",
      "top": 56,
      "all": 839,
-     "blocks": 56,
-     "alone": 32
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3533,7 +3533,7 @@
      "top": 41,
      "all": 326,
      "blocks": 41,
-     "alone": 15
+     "alone": 16
     },
     {
      "kind": "effect",
@@ -3593,7 +3593,7 @@
      "top": 35,
      "all": 241,
      "blocks": 35,
-     "alone": 14
+     "alone": 16
     },
     {
      "kind": "effect",
@@ -3629,7 +3629,7 @@
      "top": 29,
      "all": 167,
      "blocks": 29,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "effect",
@@ -3653,7 +3653,7 @@
      "top": 27,
      "all": 402,
      "blocks": 27,
-     "alone": 15
+     "alone": 17
     },
     {
      "kind": "effect",
@@ -3713,7 +3713,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 16
+     "alone": 17
     },
     {
      "kind": "effect",
@@ -3749,7 +3749,7 @@
      "top": 19,
      "all": 130,
      "blocks": 19,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 2
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3857,7 +3857,7 @@
      "top": 12,
      "all": 269,
      "blocks": 12,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "effect",
@@ -3941,7 +3941,7 @@
      "top": 11,
      "all": 36,
      "blocks": 11,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3977,7 +3977,7 @@
      "top": 10,
      "all": 43,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4121,7 +4121,7 @@
      "top": 5,
      "all": 115,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4205,7 +4205,7 @@
      "top": 3,
      "all": 142,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 33,
-     "alone": 19
+     "alone": 20
     },
     {
      "kind": "trigger",
@@ -5667,7 +5667,7 @@
      "top": 17,
      "all": 114,
      "blocks": 17,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -5679,7 +5679,7 @@
      "top": 17,
      "all": 76,
      "blocks": 19,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 33,
-     "alone": 19
+     "alone": 20
     },
     {
      "kind": "trigger",
@@ -5763,7 +5763,7 @@
      "top": 4,
      "all": 77,
      "blocks": 4,
-     "alone": 0
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5775,7 +5775,7 @@
      "top": 4,
      "all": 40,
      "blocks": 4,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "trigger",
@@ -5895,7 +5895,7 @@
      "top": 2,
      "all": 62,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5919,7 +5919,7 @@
      "top": 2,
      "all": 22,
      "blocks": 19,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -6051,7 +6051,7 @@
      "top": 1,
      "all": 4,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -7186,9 +7186,9 @@
   "Static abilities": {
    "tally": {
     "built": 1,
-    "partial": 1,
+    "partial": 2,
     "named": 0,
-    "missing": 75
+    "missing": 74
    },
    "entries": [
     {
@@ -7207,13 +7207,13 @@
      "kind": "static",
      "rule": null,
      "name": "ReduceCost",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "partial",
      "forge": "ReduceCost",
      "top": 100,
      "all": 516,
-     "blocks": 100,
-     "alone": 69
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7237,7 +7237,7 @@
      "top": 24,
      "all": 148,
      "blocks": 24,
-     "alone": 16
+     "alone": 17
     },
     {
      "kind": "static",
@@ -7261,7 +7261,7 @@
      "top": 14,
      "all": 97,
      "blocks": 14,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "static",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 10,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "static",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 21,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "replacement",
@@ -8207,7 +8207,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "replacement",
@@ -8243,7 +8243,7 @@
      "top": 2,
      "all": 2,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "replacement",
@@ -9049,10 +9049,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 0,
+    "built": 1,
     "partial": 0,
     "named": 1,
-    "missing": 15
+    "missing": 14
    },
    "entries": [
     {
@@ -9089,7 +9089,7 @@
      "top": 19,
      "all": 236,
      "blocks": 19,
-     "alone": 9
+     "alone": 11
     },
     {
      "kind": "keyword construct",
@@ -9131,13 +9131,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "TypeCycling",
-     "engine": null,
-     "status": "missing",
+     "engine": "TypeCycling",
+     "status": "built",
      "forge": "TypeCycling",
      "top": 3,
      "all": 96,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -9221,7 +9221,7 @@
      "top": 1,
      "all": 52,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword construct",
