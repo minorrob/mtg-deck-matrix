@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Bombardment",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrifice a creature: 1 damage to any target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Bombardment",
+            "Grizzly Bears"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Goblin Bombardment",
+          "sacrifice": "Grizzly Bears",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        }
+      ]
+    }
+  ]
+}

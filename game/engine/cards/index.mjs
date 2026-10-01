@@ -47,7 +47,10 @@ const TRIGGERS = {
      selector the arrival must match. */
   enters: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
-  dies: (t) => (t.who ?? "self") === "self" ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: "self"} : null,
+  /* "When this dies", "whenever another creature you control dies", "whenever this or another creature dies": `filter`
+     read as the thing last existed (CR 603.10a). */
+  dies: (t) => (ARRIVALS.includes(t.who ?? "self")
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
 };
@@ -83,7 +86,7 @@ function manaAbility(ability, id) {
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
-  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && a.self === true))) return "unbuilt";
+  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector)))) return "unbuilt";
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
   const adds = MANA(first.mana) ? {produces: {...first.mana}}
     : Array.isArray(first.choice) && first.choice.length > 1 && first.choice.every(MANA) ? {produces: first.choice.map((m) => ({...m}))}
@@ -94,7 +97,9 @@ function manaAbility(ability, id) {
   const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
     ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
-    ...(cost.some((a) => a.atom === "sacrifice") ? {sacrificeSelf: true} : {})};
+    ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
+    /* "Sacrifice a creature: Add {C}{C}" (Ashnod's Altar): which creature is the player's choice, one offer each. */
+    ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {})};
 }
 
 /**
@@ -148,10 +153,18 @@ export function compileScript(script) {
       const trigger = compile ? compile(ability.trigger) : null;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
       if (ability.trigger.filter) {
-        try { compileSelector(ability.trigger.filter); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
+        /* A death's filter may be a choice ("another creature or planeswalker you control dies"): each alternative, with
+           what they share, is a selector of its own (read against last known information, script/filter.mjs). */
+        const {anyOf, ...shared} = ability.trigger.filter;
+        const each = ability.trigger.on === "dies" && Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [ability.trigger.filter];
+        try { for (const one of each) compileSelector(one); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }
       }
 
-      abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects: ability.effects,
+      /* "YOU MAY" (CR 603.5): an optional triggered ability goes on the stack like any other, and as it resolves its
+         controller chooses whether to do it -- the card's sentence, Yes or No. Declining does nothing at all, a search
+         and its shuffle included. */
+      const effects = ability.optional ? [{effect: "modal", title: ability.text, modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects,
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {})});
       return;

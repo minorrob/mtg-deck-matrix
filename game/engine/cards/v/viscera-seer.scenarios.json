@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Viscera Seer",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrifice a creature -- any of its controller's, itself included: scry 1",
+      "library": [
+        "Forest",
+        "Grizzly Bears",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Viscera Seer",
+            "Grizzly Bears"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Viscera Seer"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Grizzly Bears"
+                ],
+                [
+                  "Viscera Seer"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Viscera Seer",
+          "sacrifice": "Grizzly Bears"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Grizzly Bears"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ],
+          "extra": {
+            "toBottom": [
+              0
+            ]
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Viscera Seer"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -110,7 +110,17 @@ function withTargets(state, base, ability, context) {
 
 /* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
 const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
-export const costAtomBuilt = (atom) => COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true);
+export const costAtomBuilt = (atom) => COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object"));
+
+/* "Sacrifice a creature: ..." (Viscera Seer, Ashnod's Altar, Phyrexian Tower): a cost the player chooses as they activate
+   (CR 602.2b, 601.2h), so each permanent they could sacrifice is its own offer, as with a spell's additional cost. Only
+   their own (CR 701.21a); "another" leaves out the source itself. */
+function sacrificeChoices(state, player, sourceId, selector) {
+  const matches = (Array.isArray(selector?.anyOf) ? selector.anyOf : [selector ?? {}])
+    .map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+  return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})));
+}
+const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 
 function costPayment(state, player, id, cost) {
   const object = state.objects[id];
@@ -207,10 +217,12 @@ export function legalActions(state, player) {
       if (ability.tapSelf && summoningSick(state, id)) continue;
       if (!manaAbilityPayment(state, player, ability)) continue;
       const alternatives = manaAlternatives(state, player, ability);
-      alternatives.forEach((mana, produce) => actions.push({
+      const fodder = ability.sacrifice ? sacrificeChoices(state, player, id, ability.sacrifice).map((x) => ({sacrifice: x})) : [null];
+      for (const costChoice of fodder) alternatives.forEach((mana, produce) => actions.push({
         kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card, mana,
         /* A fixed ability is one offer and looks as it always has; a choice says which it is. */
         ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor ? {produce} : {}),
+        ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {}),
       }));
     }
   }
@@ -252,8 +264,11 @@ export function legalActions(state, player) {
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       const payment = costPayment(state, player, id, ability.cost);
       if (!payment) continue;
-      actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},
-        ability, {controller: player, source: id}));
+      const atom = sacrificeAtom(ability.cost);
+      const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((x) => ({sacrifice: x})) : [null];
+      for (const costChoice of fodder)
+        actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
+          ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {})}, ability, {controller: player, source: id}));
     }
   }
 
@@ -387,6 +402,7 @@ function perform(state, player, action) {
     /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
        cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
     if (ability.sacrificeSelf && state.objects[action.objectId]) moveOne(state, action.objectId, "graveyard", events);
+    if (ability.sacrifice && action.costChoice?.sacrifice !== undefined) moveOne(state, action.costChoice.sacrifice, "graveyard", events);
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
   }
@@ -467,6 +483,7 @@ function perform(state, player, action) {
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) moveOne(state, action.objectId, "graveyard", events);
+      if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined) moveOne(state, action.costChoice.sacrifice, "graveyard", events);
     }
     return events;
   }

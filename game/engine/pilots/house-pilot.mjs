@@ -92,7 +92,8 @@ export function housePilot({seat, cards = () => null} = {}) {
         || (manaValue(a.label) === manaValue(best.label) && aim(view, a) > aim(view, best)) ? a : best));
       /* Tap for mana only for a spell that would then fit: in its own main phase with the stack empty,
          a nonland card it holds (or its commander) costing no more than the mana it could have. */
-      const sources = actions.filter((a) => a.kind === "activate-mana");
+      /* Never a source whose cost is a creature (Ashnod's Altar): the pilot does not trade its board for mana. */
+      const sources = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (sources.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) {
         const could = new Set(sources.map((a) => a.objectId)).size + poolTotal(self);
         const wanted = [...zone(self, "Hand"), ...zone(self, "Command").filter((c) => c.commander)]

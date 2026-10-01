@@ -696,7 +696,10 @@ globalThis.CrankBoard = Object.freeze({
       body = d.options.map((o, i) => `<label class="cm-board-amount">${e(o.label)}${o.lethal ? ` <span class="cm-muted">lethal ${o.lethal}</span>` : ""}<input type="number" min="0" max="${o.max ?? d.total}" step="1" value="${amounts[i] ?? 0}" data-board-amount="${i}"></label>`).join("");
       foot = `<span class="cm-muted">${total} of ${d.total}</span>${b("Confirm", "board-confirm", {}, true, {disabled: total !== d.total || sending})}`;
     } else body = `<p class="cm-muted">This board cannot answer a "${e(d.mode)}" choice yet.</p>`;
-    return `<section class="cm-board-decision" id="cm-board-decision" aria-label="${e(d.title)}"><h3>${e(d.title)}</h3>
+    /* A question in the card's own words ("When this creature enters, you may search ...") is a sentence to read, not a
+       heading: it is set as one (Rob, 2026-10-01: a choice is a pop-up where the player selects). */
+    const sentence = String(d.title || "").length > 48;
+    return `<section class="cm-board-decision" id="cm-board-decision" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not

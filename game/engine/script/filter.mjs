@@ -41,6 +41,31 @@ export const SELECTOR_KEYS = Object.freeze([
   "attachedBy",
 ]);
 
+/* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
+   asks what the thing was and whose, and by then it is a new object in a graveyard (CR 400.7): only the snapshot taken
+   as it left (rules/layers.mjs, lastKnown) still knows. These are the keys a departure's filter may use. */
+const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf"];
+export function matchesLastKnown(selector, lki, context = {}) {
+  if (!lki) return false;
+  const s = selector ?? {};
+  for (const key of Object.keys(s)) if (!LAST_KNOWN_KEYS.includes(key)) throw new Error(`A filter on something that has left the battlefield cannot use \`${key}\``);
+  if (Array.isArray(s.anyOf)) return s.anyOf.some((one) => matchesLastKnown({...one, ...(s.controller ? {controller: s.controller} : {})}, lki, context));
+  if (s.what && s.what !== "permanent" && s.what !== "card") return false;
+  const types = lki.types ?? [], subtypes = [...types, ...(lki.subtypes ?? [])];
+  if (s.types && !s.types.every((t) => types.includes(t))) return false;
+  if (s.nonTypes && s.nonTypes.some((t) => types.includes(t))) return false;
+  if (s.subtypes && !s.subtypes.every((t) => subtypes.includes(t))) return false;
+  if (s.nonSubtypes && s.nonSubtypes.some((t) => subtypes.includes(t))) return false;
+  if (s.supertypes && !s.supertypes.every((t) => (lki.supertypes ?? []).includes(t))) return false;
+  if (s.controller === "you" && lki.controller !== context.controller) return false;
+  if (s.controller === "opponent" && lki.controller === context.controller) return false;
+  if (s.token !== undefined && (lki.token === true) !== s.token) return false;
+  if (s.another === true && lki.cardId === context.source) return false;
+  /* "Equipped creature dies": the Equipment was attached to it as it died. */
+  if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
+  return true;
+}
+
 /** What a selector can be about. */
 const WHAT = ["permanent", "card", "player", "spell"];
 
