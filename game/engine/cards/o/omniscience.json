@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Omniscience",
+    "oracleId": "730e39e6-c61d-48b5-8827-bfd952bf1be7",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{7}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may cast spells from your hand without paying their mana costs.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may cast spells from your hand without paying their mana costs.",
+      "rule": "cast-without-paying",
+      "affects": {},
+      "zones": [
+        "hand"
+      ]
+    }
+  ]
+}

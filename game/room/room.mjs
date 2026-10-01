@@ -132,7 +132,9 @@ export function offerDetails(state, seat, actions) {
     if (a.kind === "activate" && (abilities.get(a.objectId)?.size ?? 0) > 1 && a.text) parts.push(`“${a.text}”`);
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map((t) => (!t ? "" : t.kind === "player" ? player(t.id) : object(t.id, plain))).join(", ")}`);
-    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : "sacrificing"} ${object(id, plain)}`);
+    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : "sacrificing"} ${object(id, plain)}`);
+    /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
+    if (a.free) parts.push("without paying its mana cost");
     if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
     return parts.join(" · ");
   };

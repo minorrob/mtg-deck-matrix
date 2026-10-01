@@ -225,6 +225,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     /* "When this enters, each creature gets -X/-X": the X paid stays with the permanent (CR 107.3m). */
     if (to === "battlefield" && entry.x !== undefined) state.objects[arrived].xPaid = entry.x;
+    /* "If you cast a creature spell this way, it gains haste until end of turn" (rules/actions.mjs, castGains). */
+    if (to === "battlefield" && (object.castGains ?? []).length)
+      (state.effects ??= []).push({id: `cast-gains:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: [...object.castGains]}, until: "end-of-turn", sourceController: entry.playerId});
     if (entering) {
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
