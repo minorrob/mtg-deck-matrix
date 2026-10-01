@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Frostboil Snarl",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Mountain from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frostboil Snarl",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Frostboil Snarl"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Mountain: Frostboil Snarl enters untapped",
+                  "Don't reveal: Frostboil Snarl enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Mountain: Frostboil Snarl enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Frostboil Snarl",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Island or Mountain in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frostboil Snarl",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Frostboil Snarl"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Frostboil Snarl"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frostboil Snarl",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Frostboil Snarl"
+        },
+        {
+          "choose": [
+            "Don't reveal: Frostboil Snarl enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Frostboil Snarl"
+        }
+      ]
+    }
+  ]
+}

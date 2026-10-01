@@ -504,6 +504,8 @@ function perform(state, player, action) {
       if (!state.objects[id]) throw new Error("That additional cost can no longer be paid");
       extraPaid.push([kind, id]);
     }
+    /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
+    (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {})});
     for (const [kind, id] of extraPaid) {
       const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});

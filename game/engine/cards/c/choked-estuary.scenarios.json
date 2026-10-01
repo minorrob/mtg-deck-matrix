@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Choked Estuary",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Swamp from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Choked Estuary",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Choked Estuary"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Swamp: Choked Estuary enters untapped",
+                  "Don't reveal: Choked Estuary enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Swamp: Choked Estuary enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Choked Estuary",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Island or Swamp in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Choked Estuary",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Choked Estuary"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Choked Estuary"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Choked Estuary",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Choked Estuary"
+        },
+        {
+          "choose": [
+            "Don't reveal: Choked Estuary enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Choked Estuary"
+        }
+      ]
+    }
+  ]
+}

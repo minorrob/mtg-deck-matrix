@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Port Town",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Island from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Port Town",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Port Town"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Island: Port Town enters untapped",
+                  "Don't reveal: Port Town enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Island: Port Town enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Port Town",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Plains or Island in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Port Town",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Port Town"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Port Town"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Port Town",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Port Town"
+        },
+        {
+          "choose": [
+            "Don't reveal: Port Town enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Port Town"
+        }
+      ]
+    }
+  ]
+}

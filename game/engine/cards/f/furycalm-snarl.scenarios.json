@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Furycalm Snarl",
+  "scenarios": [
+    {
+      "name": "Rob reveals a Plains from his hand: it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Furycalm Snarl",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Furycalm Snarl"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Reveal Plains: Furycalm Snarl enters untapped",
+                  "Don't reveal: Furycalm Snarl enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Plains: Furycalm Snarl enters untapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Furycalm Snarl",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        }
+      ]
+    },
+    {
+      "name": "No Mountain or Plains in hand: nobody is asked, and it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Furycalm Snarl",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Furycalm Snarl"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Furycalm Snarl"
+        }
+      ]
+    },
+    {
+      "name": "He may choose not to reveal",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Furycalm Snarl",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Furycalm Snarl"
+        },
+        {
+          "choose": [
+            "Don't reveal: Furycalm Snarl enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Furycalm Snarl"
+        }
+      ]
+    }
+  ]
+}

@@ -198,6 +198,7 @@ export function isHostile(effects) {
       if (HOSTILE.has(effect.effect)) hostile = true;
       for (const mode of effect.modes ?? []) walk(mode.effects);
       walk(effect.effects);
+      walk(effect.effects);
     }
   };
   walk(effects);

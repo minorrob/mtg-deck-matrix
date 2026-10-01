@@ -41,7 +41,7 @@
     "replacements": 5,
     "keywords": 53,
     "costs": 39,
-    "params": 286,
+    "params": 291,
     "amounts": 22
    }
   },
@@ -60,7 +60,7 @@
     "replacements": 15,
     "keywords": 124,
     "costs": 106,
-    "params": 573,
+    "params": 579,
     "amounts": 63
    }
   },
@@ -74,7 +74,7 @@
     "replacements": 34,
     "keywords": 216,
     "costs": 436,
-    "params": 1331,
+    "params": 1337,
     "amounts": 188
    }
   },
@@ -92,7 +92,7 @@
     "replacements": 22,
     "keywords": 131,
     "costs": 129,
-    "params": 642,
+    "params": 648,
     "amounts": 69
    }
   },
@@ -202,7 +202,7 @@
    "replacements": 5,
    "keywords": 53,
    "costs": 39,
-   "params": 286,
+   "params": 291,
    "amounts": 22
   },
   "counts": {
@@ -1572,6 +1572,10 @@
      2
     ],
     [
+     "UnlessCostReveal",
+     2
+    ],
+    [
      "PeekAmount",
      2
     ],
@@ -1661,6 +1665,10 @@
     ],
     [
      "AddSVar",
+     2
+    ],
+    [
+     "UnlessCostMana",
      2
     ],
     [
@@ -1777,6 +1785,10 @@
     ],
     [
      "UnlessSwitched",
+     1
+    ],
+    [
+     "UnlessCostDiscard",
      1
     ],
     [
@@ -2004,6 +2016,10 @@
      1
     ],
     [
+     "UnlessCostPayLife",
+     1
+    ],
+    [
      "Revolt",
      1
     ],
@@ -2121,6 +2137,10 @@
     ],
     [
      "UnchosenPile",
+     1
+    ],
+    [
+     "UnlessCostOther",
      1
     ],
     [
@@ -2578,7 +2598,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -3023,7 +3044,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -5557,7 +5579,8 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -6163,7 +6186,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -7083,7 +7107,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -8737,7 +8762,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -8856,7 +8882,8 @@
      "Flying"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": []
    },
@@ -9503,7 +9530,7 @@
    "replacements": 15,
    "keywords": 124,
    "costs": 106,
-   "params": 573,
+   "params": 579,
    "amounts": 63
   },
   "counts": {
@@ -11581,6 +11608,10 @@
      41
     ],
     [
+     "UnlessCostMana",
+     41
+    ],
+    [
      "ConditionSVarCompare",
      37
     ],
@@ -12069,6 +12100,10 @@
      8
     ],
     [
+     "UnlessCostOther",
+     8
+    ],
+    [
      "PlayerCountPlayers",
      8
     ],
@@ -12105,6 +12140,10 @@
      7
     ],
     [
+     "UnlessCostDiscard",
+     7
+    ],
+    [
      "ValidSpell",
      7
     ],
@@ -12114,6 +12153,10 @@
     ],
     [
      "ValidCounterType",
+     7
+    ],
+    [
+     "UnlessCostPayLife",
      7
     ],
     [
@@ -12222,6 +12265,10 @@
     ],
     [
      "RememberDestroyed",
+     5
+    ],
+    [
+     "UnlessCostSac",
      5
     ],
     [
@@ -12346,6 +12393,10 @@
     ],
     [
      "TriggersWhenSpent",
+     4
+    ],
+    [
+     "UnlessCostReveal",
      4
     ],
     [
@@ -15402,7 +15453,8 @@
      "ConditionDefined",
      "ConditionPresent",
      "RememberObjects",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -17927,7 +17979,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -17989,7 +18042,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -18773,7 +18827,9 @@
      "Duration",
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -18873,7 +18929,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -19139,7 +19196,8 @@
     ],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "ValidGraveyard"
@@ -19828,7 +19886,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "xPaid"
@@ -19902,7 +19961,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -20040,7 +20100,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -20163,7 +20224,8 @@
     ],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "ValidGraveyard"
@@ -21021,7 +21083,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -21035,7 +21098,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "Compare",
@@ -21819,7 +21883,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "OptionalGenericCostPaid"
@@ -21892,7 +21957,8 @@
      "Flying"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -21906,7 +21972,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -21996,7 +22063,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -24350,7 +24418,8 @@
      "Flying"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": []
    },
@@ -24823,7 +24892,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -25335,7 +25405,8 @@
      "Storm"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -25609,7 +25680,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -25722,7 +25794,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -25800,7 +25873,8 @@
     "options": [
      "IsPresent",
      "PresentCompare",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -25895,7 +25969,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -27326,7 +27401,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -28097,7 +28173,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -29914,7 +29991,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -29931,7 +30009,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -30474,7 +30553,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -31825,7 +31905,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -31975,7 +32056,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "Compare",
@@ -32059,7 +32141,8 @@
     "options": [
      "IsPresent",
      "IsPresentStatic",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -32204,7 +32287,8 @@
      "Replicate"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -32663,7 +32747,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -32706,7 +32791,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -33030,7 +33116,8 @@
      "Flying"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -33346,7 +33433,8 @@
      "Improvise"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -33680,7 +33768,8 @@
      "Ward"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -33710,7 +33799,8 @@
      "Cycling"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -33723,7 +33813,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -34568,7 +34659,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -34586,7 +34678,8 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -34649,7 +34742,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -35275,7 +35369,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -36260,7 +36355,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "Valid"
@@ -36514,7 +36610,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -37039,7 +37136,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -37098,7 +37196,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "xPaid"
@@ -37859,7 +37958,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -39119,7 +39219,8 @@
     "keywords": [],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -39695,7 +39796,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -41057,7 +41159,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -41965,7 +42068,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -42434,7 +42538,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "Valid",
@@ -42490,7 +42595,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "Valid"
@@ -43053,7 +43159,8 @@
     "options": [
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -43149,7 +43256,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -44174,7 +44282,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -44587,7 +44696,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "xPaid"
@@ -45294,7 +45404,9 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -45481,7 +45593,8 @@
     "options": [
      "Count",
      "Optional",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "xPaid"
@@ -45549,7 +45662,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": []
    },
@@ -45710,7 +45824,8 @@
      "Deathtouch"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -45981,7 +46096,8 @@
     ],
     "options": [
      "RememberChanged",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -46518,7 +46634,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -47677,7 +47794,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -48945,7 +49063,8 @@
     "options": [
      "ConditionDefined",
      "ConditionPresent",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": []
    },
@@ -49491,7 +49610,8 @@
     "keywords": [],
     "options": [
      "Optional",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -49671,7 +49791,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -49836,7 +49957,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "ChosenNumber",
@@ -49881,7 +50003,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -51017,7 +51140,7 @@
    "replacements": 22,
    "keywords": 131,
    "costs": 129,
-   "params": 642,
+   "params": 648,
    "amounts": 69
   },
   "counts": {
@@ -53507,6 +53630,10 @@
      28
     ],
     [
+     "UnlessCostPayLife",
+     27
+    ],
+    [
      "VarName",
      27
     ],
@@ -53656,6 +53783,10 @@
     ],
     [
      "AITgts",
+     16
+    ],
+    [
+     "UnlessCostMana",
      16
     ],
     [
@@ -53820,6 +53951,10 @@
     ],
     [
      "RememberRevealed",
+     10
+    ],
+    [
+     "UnlessCostReveal",
      10
     ],
     [
@@ -53995,6 +54130,10 @@
      7
     ],
     [
+     "UnlessCostSac",
+     7
+    ],
+    [
      "SetChosenMode",
      7
     ],
@@ -54104,6 +54243,10 @@
     ],
     [
      "Max",
+     5
+    ],
+    [
+     "UnlessCostDiscard",
      5
     ],
     [
@@ -54388,6 +54531,10 @@
     ],
     [
      "ClearChosenPlayer",
+     3
+    ],
+    [
+     "UnlessCostOther",
      3
     ],
     [
@@ -56278,7 +56425,8 @@
     "keywords": [],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -56310,7 +56458,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56405,7 +56554,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56420,7 +56570,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56435,7 +56586,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56473,7 +56625,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56510,7 +56663,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56525,7 +56679,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56551,7 +56706,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56592,7 +56748,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -56618,7 +56775,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56672,7 +56830,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -56964,7 +57123,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "CardPower"
@@ -57358,7 +57518,8 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -58348,7 +58509,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -58894,7 +59056,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -59384,7 +59547,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -59662,7 +59826,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60089,7 +60254,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60141,7 +60307,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60254,7 +60421,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -60313,7 +60481,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60329,7 +60498,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60558,7 +60728,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -60888,7 +61059,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -61532,7 +61704,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -61869,7 +62042,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -62476,7 +62650,8 @@
      "Storm"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -62840,7 +63015,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -63005,7 +63181,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostReveal"
     ],
     "counts": []
    },
@@ -63371,7 +63548,8 @@
      "Prowess"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -63661,7 +63839,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -64899,7 +65078,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "Valid"
@@ -65216,7 +65396,8 @@
      "Deathtouch"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -65276,7 +65457,9 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard",
+     "UnlessCostSac"
     ],
     "counts": [
      "xPaid"
@@ -66292,7 +66475,8 @@
     "options": [
      "ConditionCompare",
      "ConditionPresent",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -68539,7 +68723,8 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -68794,7 +68979,8 @@
      "Vigilance"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": []
    },
@@ -68901,7 +69087,8 @@
     "options": [
      "Count",
      "Duration",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": [
      "ValidHand"
@@ -69835,7 +70022,8 @@
     "options": [
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -70354,7 +70542,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": [
      "ChosenNumber",
@@ -71414,7 +71603,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -72102,7 +72292,8 @@
     ],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -75058,7 +75249,8 @@
     "keywords": [],
     "options": [
      "RememberObjects",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -75724,7 +75916,9 @@
     ],
     "options": [
      "OptionalDecider",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -76422,7 +76616,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -76827,7 +77022,8 @@
     "keywords": [],
     "options": [
      "Optional",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -78869,7 +79065,8 @@
      "ConditionDefined",
      "ConditionPresent",
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": [
      "ValidGraveyard"
@@ -80343,7 +80540,8 @@
     "keywords": [],
     "options": [
      "Optional",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -82632,7 +82830,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -84088,7 +84287,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -84591,7 +84791,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -85847,7 +86048,8 @@
      "CheckSVar",
      "Count",
      "SVarCompare",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": [
      "DevotionDual"
@@ -86028,7 +86230,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -89092,7 +89295,8 @@
      "Count",
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": [
      "ValidGraveyard",
@@ -91544,7 +91748,8 @@
      "Trample"
     ],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostSac"
     ],
     "counts": []
    },
@@ -93046,7 +93251,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": [
      "Monarch"
@@ -94081,7 +94287,8 @@
     "options": [
      "ConditionCompare",
      "ConditionPresent",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -96330,7 +96537,8 @@
      "Count",
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": [
      "Compare",
@@ -97563,7 +97771,8 @@
      "Optional",
      "OptionalDecider",
      "RememberChanged",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": [
      "xPaid"
@@ -99086,7 +99295,8 @@
     "keywords": [],
     "options": [
      "Count",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "Valid"
@@ -99259,7 +99469,8 @@
      "Count",
      "TargetMax",
      "TargetMin",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostOther"
     ],
     "counts": [
      "Valid",
@@ -101230,7 +101441,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostMana"
     ],
     "counts": []
    },
@@ -101578,7 +101790,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": []
    },
@@ -102272,7 +102485,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostDiscard"
     ],
     "counts": []
    },
@@ -103145,7 +103359,8 @@
      "CheckSVar",
      "Count",
      "SVarCompare",
-     "UnlessCost"
+     "UnlessCost",
+     "UnlessCostPayLife"
     ],
     "counts": [
      "DevotionDual"
@@ -106958,7 +107173,7 @@
    "replacements": 34,
    "keywords": 216,
    "costs": 436,
-   "params": 1331,
+   "params": 1337,
    "amounts": 188
   },
   "counts": {
@@ -111852,6 +112067,10 @@
      289
     ],
     [
+     "UnlessCostMana",
+     287
+    ],
+    [
      "Ultimate",
      286
     ],
@@ -112034,6 +112253,10 @@
     [
      "Conjure",
      166
+    ],
+    [
+     "UnlessCostOther",
+     162
     ],
     [
      "UnlessSwitched",
@@ -112240,6 +112463,10 @@
      92
     ],
     [
+     "UnlessCostSac",
+     89
+    ],
+    [
      "TokenAttacking",
      88
     ],
@@ -112266,6 +112493,10 @@
     [
      "BranchConditionSVarCompare",
      84
+    ],
+    [
+     "UnlessCostDiscard",
+     83
     ],
     [
      "LibraryPosition2",
@@ -112353,6 +112584,10 @@
     ],
     [
      "Max",
+     67
+    ],
+    [
+     "UnlessCostPayLife",
      67
     ],
     [
@@ -113013,6 +113248,10 @@
     ],
     [
      "AddAllCreatureTypes",
+     22
+    ],
+    [
+     "UnlessCostReveal",
      22
     ],
     [

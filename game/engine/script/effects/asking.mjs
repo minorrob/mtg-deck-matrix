@@ -30,6 +30,7 @@ import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies} from "./permanents.mjs";
+import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
@@ -351,6 +352,32 @@ export const populate = {
   },
 };
 
+/* ---- unlessPays (CR 118.12): "counter target spell unless its controller pays {3}", "you may draw a card unless that
+   player pays {1}". The player named is asked; paying is offered only to a player who can (pool and untapped mana
+   sources together) and taps for them; not paying, the effects that follow `unless` happen, in order, with the same
+   targets. Generic mana only; the amount may be counted ("{X}, where X is this creature's power"). ---- */
+export const unlessPays = {
+  open(state, params, context) {
+    const [payer] = playersFor(state, params.who, context.controller);
+    if (payer === undefined) return false;
+    state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+      effects: structuredClone(params.effects ?? []), source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    const can = canPayGeneric(state, awaiting.player, awaiting.amount);
+    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}pay {${awaiting.amount}}?`, mode: "one", min: 1, max: 1,
+      options: [...(can ? [{index: 0, label: `Pay {${awaiting.amount}}`, pay: true}] : []), {index: can ? 1 : 0, label: "Don't pay", pay: false}]};
+  },
+  apply(state, awaiting, indices) {
+    const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    if (option.pay) return payGeneric(state, awaiting.player, awaiting.amount);
+    return {events: [], splice: structuredClone(awaiting.effects)};
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -431,4 +458,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice, populate});
+export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays});
