@@ -35,6 +35,7 @@
 import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
 import {LAYERS} from "../rules/layers.mjs";
+import {STATIC_RULES} from "../rules/statics.mjs";
 
 export const SCRIPT_SCHEMA = "CrankCardScript@1";
 
@@ -139,11 +140,18 @@ function checkAbility(ability, path, errors) {
   }
 
   if (ability.kind === "static") {
-    if (!LAYERS.includes(ability.layer))
-      errors.push({path: `${path}.layer`, message: `A static ability says which layer it applies in (CR 613); layers are ${LAYERS.join(", ")}`});
+    /* A static changes a characteristic, in a layer (CR 613), or a rule, by name (rules/statics.mjs): one or the
+       other, never neither -- something nothing orders and nothing reads would validate and do nothing. */
+    if (ability.rule !== undefined) {
+      if (!Object.hasOwn(STATIC_RULES, ability.rule))
+        errors.push({path: `${path}.rule`, message: `${JSON.stringify(ability.rule)} is not a rule a static ability can change; they are ${Object.keys(STATIC_RULES).join(", ")}`});
+    } else {
+      if (!LAYERS.includes(ability.layer))
+        errors.push({path: `${path}.layer`, message: `A static ability says which layer it applies in (CR 613); layers are ${LAYERS.join(", ")}`});
+      if (!ability.apply) errors.push({path: `${path}.apply`, message: "A static ability says what it does"});
+    }
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
     else checkSelector(ability.affects, `${path}.affects`, errors);
-    if (!ability.apply) errors.push({path: `${path}.apply`, message: "A static ability says what it does"});
   }
 
   if (ability.kind === "replacement") {

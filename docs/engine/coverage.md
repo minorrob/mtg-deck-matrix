@@ -10,8 +10,8 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 
 | Scope | Cards | Playable now | Share |
 | --- | ---: | ---: | ---: |
-| Rob's seven decks | 477 | 353 | 74.0% |
-| the card library | 2365 | 1297 | 54.8% |
+| Rob's seven decks | 477 | 356 | 74.6% |
+| the card library | 2365 | 1302 | 55.1% |
 
 ## What blocks the rest — Rob's seven decks
 
@@ -20,7 +20,6 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `Equip` | keyword | 8 | declared, no behavior |
 | `Flashback` | keyword | 5 | declared, no behavior |
 | `etbCounter` | keyword | 5 | not declared |
-| `CombatDamageToughness` | static | 5 | no engine support yet |
 | `surveil` | api | 4 | declared, not built |
 | `chooseCard` | api | 4 | declared, not built |
 | `copyPermanent` | api | 4 | declared, not built |
@@ -37,6 +36,7 @@ say it, and `keywords/combat.mjs` is what makes a flier unblockable by the groun
 | `chooseType` | api | 3 | declared, not built |
 | `Class` | keyword | 2 | not declared |
 | `peekAndReveal` | api | 2 | declared, not built |
+| `Cycling` | keyword | 2 | declared, no behavior |
 
 ## What blocks the rest — the card library
 

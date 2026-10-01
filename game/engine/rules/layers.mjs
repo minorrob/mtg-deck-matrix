@@ -81,6 +81,9 @@ function affects(state, effect, current, sourceController) {
   return true;
 }
 
+/** Whether a static ability's `affects` takes in this object as it currently is (rules/statics.mjs reads it). */
+export const staticAffects = (state, effect, id, sourceController) => affects(state, effect, characteristicsOf(state, id), sourceController);
+
 function applyEffect(current, effect) {
   const change = effect.apply ?? {};
   if (Number.isInteger(change.controller)) current.controller = change.controller;

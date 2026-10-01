@@ -48,6 +48,7 @@ import {cardsIn} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
+import {combatDamageOf} from "./statics.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -296,8 +297,9 @@ export const blockers = {
 
 /* CURRENT power and toughness, not printed. Combat that read the printed values would ignore every
    anthem, every counter and every "becomes 1/1" on the board -- layers that nothing reads are
-   layers that do not exist. */
-const power = (state, id) => powerOf(state, id);
+   layers that do not exist. And the amount a creature assigns is its power unless a static ability
+   says toughness (CR 510.1a, rules/statics.mjs). */
+const power = (state, id) => combatDamageOf(state, id);
 /** What it takes to kill it now: its current toughness less the damage already marked (CR 510.1a). */
 const lethalFor = (state, id) => Math.max(0, toughnessOf(state, id) - state.objects[id].damage);
 
