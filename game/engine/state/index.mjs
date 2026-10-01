@@ -164,6 +164,14 @@ export function addObject(state, object, zone, player = null) {
        command-zone replacement and the 21-damage tally — and for a while none of them could,
        because it was read everywhere and written nowhere. */
     commander: object.commander === true,
+    /* From the card script (cards/index.mjs, phase 2.4): what the card does as a spell, which stack.mjs resolves,
+       and its printed subtypes, which a selector may ask about. Present only on a card that has them, so an object
+       made from a bare kernel definition is the shape it always was. */
+    ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
+    ...(Array.isArray(object.subtypes) && object.subtypes.length ? {subtypes: [...object.subtypes]} : {}),
+    /* CR 903.4a: a card's color identity is established before the game and goes with it everywhere; "any color in
+       your commander's color identity" reads it off the commander (rules/actions.mjs). */
+    ...(Array.isArray(object.colorIdentity) ? {colorIdentity: [...object.colorIdentity]} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -205,5 +213,6 @@ export function moveObject(state, id, zone, player = null) {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
+    spell: from.spell, subtypes: from.subtypes, colorIdentity: from.colorIdentity,
   }, zone, player);
 }

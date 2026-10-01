@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Golgari Guildgate",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Golgari Guildgate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Golgari Guildgate"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Golgari Guildgate"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Golgari Guildgate"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Golgari Guildgate"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "B": 1
+                },
+                {
+                  "G": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Golgari Guildgate",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

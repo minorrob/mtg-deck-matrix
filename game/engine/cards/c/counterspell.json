@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Counterspell",
+    "oracleId": "cc187110-1148-4090-bbb8-e205694a39f5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

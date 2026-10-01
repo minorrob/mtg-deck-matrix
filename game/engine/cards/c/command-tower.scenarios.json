@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Command Tower",
+  "fixtures": {
+    "Lorehold Commander": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{3}{R}{W}",
+      "colorIdentity": [
+        "R",
+        "W"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Any color in its controller's commander's identity: Red or white for a Boros commander (CR 903.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Lorehold Commander"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Command Tower"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "R": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Command Tower",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "R": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Command Tower"
+        }
+      ]
+    },
+    {
+      "name": "With no commander it adds nothing at all (CR 903.4f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Command Tower"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Command Tower"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

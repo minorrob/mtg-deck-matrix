@@ -42,6 +42,8 @@ export function createToken(state, params, context) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
       types: spec.types ?? ["Creature"],
+      /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
+      subtypes: spec.subtypes ?? [],
       power: spec.power ?? null,
       toughness: spec.toughness ?? null,
       keywords: spec.keywords ?? [],

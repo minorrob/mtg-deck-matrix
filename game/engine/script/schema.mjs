@@ -34,6 +34,7 @@
 
 import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
+import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES} from "../rules/statics.mjs";
 
@@ -102,8 +103,18 @@ function checkAbility(ability, path, errors) {
   if (!isText(ability.text))
     errors.push({path: `${path}.text`, message: "An ability carries the oracle sentence it implements, so it can be re-checked when the card is errata'd"});
 
-  for (const [index, selector] of (ability.targets ?? []).entries())
-    checkSelector(selector, `${path}.targets[${index}]`, errors);
+  /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs). */
+  for (const [index, selector] of (ability.targets ?? []).entries()) {
+    if (selector && typeof selector === "object" && "anyOf" in selector) {
+      if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
+        errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else"});
+      else selector.anyOf.forEach((one, at) => checkSelector(one, `${path}.targets[${index}].anyOf[${at}]`, errors));
+    } else checkSelector(selector, `${path}.targets[${index}]`, errors);
+  }
+  /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. */
+  for (const n of targetRefs(ability.effects ?? []))
+    if (n < 0 || n >= (ability.targets ?? []).length)
+      errors.push({path: `${path}.effects`, message: `An effect names target ${n}, and the ability declares ${(ability.targets ?? []).length}`});
   for (const [index, reveal] of (ability.reveals ?? []).entries()) {
     if (!REVEAL_WHAT.includes(reveal?.what))
       errors.push({path: `${path}.reveals[${index}].what`, message: `A reveal exposes one of ${REVEAL_WHAT.join(", ")}`});

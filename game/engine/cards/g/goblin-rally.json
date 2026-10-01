@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Rally",
+    "oracleId": "9ccb6ce8-ccb6-4809-a1cc-cebd38744815",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create four 1/1 red Goblin creature tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create four 1/1 red Goblin creature tokens.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 4,
+          "token": {
+            "name": "Goblin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

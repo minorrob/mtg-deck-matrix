@@ -16,7 +16,9 @@
  *    give the same decision, so a game of house pilots replays from its seed like any other.
  *
  * HOW IT PLAYS, for now. A land every turn. Mana is tapped only when a spell it holds fits the mana it could
- * make, and then the most expensive castable spell is cast, commander included. It attacks the opponent with
+ * make, and then the most expensive castable spell is cast, commander included. A spell with targets is offered
+ * once per way to aim it (engine 2.4): one marked `hostile` -- removal, damage -- goes at an opponent's things, any
+ * other at its own, and a spell whose every legal aim is the wrong side is not cast at all. It attacks the opponent with
  * the lowest life: with everything when it has more attackers than that player has untapped creatures, and
  * otherwise with each creature no untapped enemy creature can kill for free, and blocks when a blocker
  * kills the attacker and survives, or when the damage coming in would be lethal. It keeps a hand of two to
@@ -50,6 +52,16 @@ export function housePilot({seat, cards = () => null} = {}) {
   const zone = (player, name) => player?.zones?.[name]?.cards ?? [];
   const creaturesOf = (player) => zone(player, "Battlefield").filter((c) => isCreature(c));
   const poolTotal = (player) => (player.mana ?? []).reduce((n, m) => n + m.amount, 0);
+  /* Whose a target is, read off the view: a permanent's controller, or the player. */
+  const controllerIn = (view, id) => {
+    for (const player of view.players ?? []) for (const card of zone(player, "Battlefield")) if (card.cardId === id) return card.controller;
+    return null;
+  };
+  /* How many of an offer's targets are on the side its effect is meant for. */
+  const aim = (view, action) => (action.targets ?? []).reduce((n, t) => {
+    const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
+    return n + (theirs === (action.hostile === true) ? 1 : 0);
+  }, 0);
 
   /* The first `count` options, honoring `exclusiveBy` the way the controller does. */
   function firstOf(choice, preferred, count) {
@@ -75,8 +87,9 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (!Array.isArray(actions) || actions.length === 0) throw new Error("There are no legal actions to choose from");
       const land = actions.find((a) => a.kind === "play-land");
       if (land) return land;
-      const casts = actions.filter((a) => a.kind === "cast");
-      if (casts.length) return casts.reduce((best, a) => (manaValue(a.label) > manaValue(best.label) ? a : best));
+      const casts = actions.filter((a) => a.kind === "cast" && (!(a.targets ?? []).length || aim(view, a) > 0));
+      if (casts.length) return casts.reduce((best, a) => (manaValue(a.label) > manaValue(best.label)
+        || (manaValue(a.label) === manaValue(best.label) && aim(view, a) > aim(view, best)) ? a : best));
       /* Tap for mana only for a spell that would then fit: in its own main phase with the stack empty,
          a nonland card it holds (or its commander) costing no more than the mana it could have. */
       const sources = actions.filter((a) => a.kind === "activate-mana");
@@ -172,6 +185,11 @@ export function housePilot({seat, cards = () => null} = {}) {
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
         return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};
+      }
+      /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
+      if (id.startsWith("trigger-targets:") && options.length) {
+        const best = options.reduce((b, o) => (aim(view, o) > aim(view, b) ? o : b));
+        return {indices: [best.index]};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */

@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Anguished Unmaking",
+  "fixtures": {
+    "Rock Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Exiles a nonland permanent, and its caster loses 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Anguished Unmaking"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock Fixture",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Anguished Unmaking"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Rock Fixture"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Anguished Unmaking",
+          "targets": [
+            {
+              "card": "Rock Fixture"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Rock Fixture"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

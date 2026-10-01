@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plains",
+    "oracleId": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+    "supertypes": [
+      "Basic"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Plains"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {W}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

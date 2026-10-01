@@ -50,12 +50,19 @@ for (let n = 0; n < 240; n += 1) {
   while (!mulligansDone(state)) {const a = pilot.answer(awaitingChoice(state)); resolveAwaiting(state, a.indices, a.amounts, rng);}
   beginGame(state);
   const plan = [20 + when.int(400), 450 + when.int(700), 1200 + when.int(900)];  /* up to three concessions, at random decisions */
+  /* The second waits, if it must, for a question to be pending, and is the asked player's: leaving while being asked
+     is a case of its own, and is made to happen rather than left to the seeds. */
+  let waitingToAsk = false;
   let steps = 0;
   while (state.turn <= 25 && !gameOver(state)) {
     steps += 1;
-    if (plan.includes(steps)) {
+    if (steps === plan[1] && !state.awaiting) waitingToAsk = true;
+    if (plan.includes(steps) || (waitingToAsk && state.awaiting)) {
       const living = state.players.filter((p) => !p.lost).map((p) => p.id);
-      const who = living[when.int(living.length)];
+      const asked = waitingToAsk && state.awaiting && !state.players[state.awaiting.player].lost;
+      if (steps === plan[1] && !state.awaiting) continue;
+      waitingToAsk = false;
+      const who = asked ? state.awaiting.player : living[when.int(living.length)];
       if (state.priorityPlayer === who) whilePriority += 1;
       if (state.awaiting && state.awaiting.player === who) whileAsked += 1;
       concede(state, who);

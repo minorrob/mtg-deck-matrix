@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Llanowar Elves",
+    "oracleId": "68954295-54e3-4303-a6bc-fc4547a4e3a3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

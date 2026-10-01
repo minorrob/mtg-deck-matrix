@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Azorius Signet",
+    "oracleId": "e018773f-95b3-49a3-9674-6f04ddef2092",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add {W}{U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add {W}{U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1,
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

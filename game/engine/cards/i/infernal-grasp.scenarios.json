@@ -1,0 +1,215 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Infernal Grasp",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Darksteel Myr": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "manaCost": "{3}",
+      "power": 0,
+      "toughness": 1,
+      "keywords": [
+        "Indestructible"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Destroys the creature, and its caster loses 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Infernal Grasp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Infernal Grasp",
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Indestructible survives it, and the life is still lost (CR 702.12b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Infernal Grasp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Darksteel Myr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Infernal Grasp",
+          "targets": [
+            {
+              "card": "Darksteel Myr"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Darksteel Myr"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "An instant: cast in the opponent's upkeep (CR 304.1)",
+      "at": {
+        "turn": 2,
+        "phase": "UPKEEP"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Infernal Grasp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "cast": "Infernal Grasp",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sacred Peaks",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sacred Peaks"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sacred Peaks"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Sacred Peaks"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sacred Peaks"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sacred Peaks"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "R": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Sacred Peaks",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Mountain and a Plains by type: a check land counts it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sacred Peaks"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Clifftop Retreat"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Clifftop Retreat"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Clifftop Retreat",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

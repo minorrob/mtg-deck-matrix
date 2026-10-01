@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mountain",
+    "oracleId": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+    "supertypes": [
+      "Basic"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

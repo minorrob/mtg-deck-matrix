@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Llanowar Visionary",
+  "scenarios": [
+    {
+      "name": "It draws as it enters, and taps for {G} from the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Llanowar Visionary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Llanowar Visionary"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Wastes"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Llanowar Visionary"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Llanowar Visionary"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

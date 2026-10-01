@@ -1,0 +1,188 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mystic Snake",
+  "scenarios": [
+    {
+      "name": "Flashed in on Maya's spell, its enters trigger asks for a target and counters it (CR 603.3d)",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Dragon Fodder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mystic Snake"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Dragon Fodder"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Mystic Snake",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Forest",
+                "Island",
+                "Island",
+                "Mystic Snake",
+                "Wastes"
+              ]
+            },
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Dragon Fodder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "With no spell to aim at, its trigger is removed from the stack (CR 603.3d)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mystic Snake"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Mystic Snake"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Island",
+            "Mystic Snake",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Llanowar Elves",
+  "scenarios": [
+    {
+      "name": "Not the turn it arrives (CR 302.6); from its controller's next turn, {G} without the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Llanowar Elves"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Llanowar Elves"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Llanowar Elves"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Llanowar Elves"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Llanowar Elves"
+        }
+      ]
+    }
+  ]
+}

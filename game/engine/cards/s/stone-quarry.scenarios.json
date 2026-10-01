@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stone Quarry",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped (CR 614.12); untapped next turn, it taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stone Quarry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Stone Quarry"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Stone Quarry"
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Stone Quarry"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Stone Quarry"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "R": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Stone Quarry",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

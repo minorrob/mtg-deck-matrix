@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thornwood Falls",
+  "scenarios": [
+    {
+      "name": "It enters tapped, and its trigger gains a life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thornwood Falls"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Thornwood Falls"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Thornwood Falls"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

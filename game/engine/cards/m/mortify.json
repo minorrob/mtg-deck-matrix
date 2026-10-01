@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mortify",
+    "oracleId": "faa01ed1-ccfa-4e58-951f-cd81f9068027",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature or enchantment.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

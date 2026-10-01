@@ -1,0 +1,119 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mind Stone",
+  "scenarios": [
+    {
+      "name": "{T}: Add {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mind Stone"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mind Stone"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Paid for, tapped and sacrificed, it draws a card from the stack (CR 601.2h, 113.7a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mind Stone",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Mind Stone"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Mind Stone"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Mind Stone"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Mind Stone"
+              ]
+            },
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "pool": {
+                "C": 0
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

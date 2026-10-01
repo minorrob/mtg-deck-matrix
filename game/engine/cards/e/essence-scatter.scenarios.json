@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Essence Scatter",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature spell only: a sorcery on the stack is not a target",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Grizzly Bears",
+            "Dragon Fodder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Essence Scatter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Dragon Fodder"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Essence Scatter",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 1
+        }
+      ]
+    }
+  ]
+}

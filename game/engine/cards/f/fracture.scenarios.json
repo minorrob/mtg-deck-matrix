@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fracture",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock Fixture": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An artifact, enchantment or planeswalker; not a creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fracture"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears",
+            "Rock Fixture",
+            "Nyx-Fleece Ram"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fracture"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Nyx-Fleece Ram"
+                ],
+                [
+                  "Rock Fixture"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Fracture",
+          "targets": [
+            {
+              "card": "Rock Fixture"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock Fixture"
+          ]
+        }
+      ]
+    }
+  ]
+}

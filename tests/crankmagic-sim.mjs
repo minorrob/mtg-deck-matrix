@@ -121,6 +121,50 @@ check("99 of 100 readable is publishable; 80 of 100 is not", () => {
   assert.throws(() => Sim.assertMeasurable(thin, "published"));
 });
 
+/* THE COMMANDER IS NEVER A BLANK (Rob, 2026-10-01: a precon's five-mana commander "cast on turn 1.0 in 100.0% of
+   games", because the engine could not read it and the 95% floor let the measure run anyway). */
+check("a blank commander is refused by name, though 99 of 100 cards are readable", () => {
+  const rows = [{name: "Jace, Multiverse Architect", quantity: 1, isCommander: true, card: {typeLine: "", oracleText: ""}},
+    ...Array.from({length: 99}, (_, i) => ({name: "Bear " + i, quantity: 1, card: {typeLine: "Creature — Bear", oracleText: "Vanilla.", manaCost: "{1}{G}"}}))];
+  const cover = Sim.coverage(rows);
+  assert.equal(cover.ratio, 0.99);
+  assert.deepEqual(cover.commanders, ["Jace, Multiverse Architect"]);
+  assert.throws(() => Sim.assertMeasurable(cover, "published"), /cannot read the commander, Jace, Multiverse Architect/);
+  assert.throws(() => Sim.assertMeasurable(cover, "preview"), /cannot read the commander/);
+});
+
+check("a commander with rules text but no mana cost is unreadable: it would be cast for nothing", () => {
+  const cover = Sim.coverage([
+    {name: "Costless Leader", quantity: 1, isCommander: true, card: {typeLine: "Legendary Creature — Human", oracleText: "Lifelink."}},
+    {name: "Bear", quantity: 99, card: {typeLine: "Creature — Bear", oracleText: "Vanilla."}}
+  ]);
+  assert.deepEqual([cover.unreadable, cover.commanders], [["Costless Leader"], ["Costless Leader"]]);
+  assert.throws(() => Sim.assertMeasurable(cover, "published"), /no rules text or mana cost/);
+});
+
+check("a blank among the ninety-nine is still publishable past the floor, and is fetched first", () => {
+  const rows = [{name: "Leader", quantity: 1, isCommander: true, card: {typeLine: "Legendary Creature — Elf", oracleText: "Vigilance.", manaCost: "{2}{G}"}},
+    {name: "Unknown Card", quantity: 1, card: {typeLine: "", oracleText: ""}},
+    {name: "Bear", quantity: 98, card: {typeLine: "Creature — Bear", oracleText: "Vanilla.", manaCost: "{1}{G}"}}];
+  const cover = Sim.coverage(rows);
+  assert.deepEqual([cover.commanders, cover.unreadable], [[], ["Unknown Card"]]);
+  assert.doesNotThrow(() => Sim.assertMeasurable(cover, "published"));
+  assert.deepEqual(Sim.fetchPlan(cover), {fetch: true, fatalIfUnreachable: false}, "one blank in a hundred is fetched; an unreachable Scryfall does not stop the measure");
+  assert.deepEqual(Sim.fetchPlan(Sim.coverage(rows.filter((r) => r.name !== "Unknown Card"))), {fetch: false, fatalIfUnreachable: false}, "a deck the engine reads whole fetches nothing");
+});
+
+check("the Lab's three measure paths fetch by fetchPlan, none only below the floor", () => {
+  const lab = readFileSync(new URL("../crankmagic-lab.js", import.meta.url), "utf8");
+  assert.equal((lab.match(/if\(CrankSim\.fetchPlan\(cover\)\.fetch\)\{/g) || []).length, 3, "Measure, the hosted measure and the Lab's run each ask fetchPlan whether to fetch");
+  assert.equal((lab.match(/CrankSim\.fetchPlan\(cover\)\.fatalIfUnreachable/g) || []).length, 3, "and whether an unreachable Scryfall stops them");
+  assert.equal((lab.match(/if\(cover\.ratio<\.95\)\{\s*(say\(|status\.textContent=`Fetching|const need)/g) || []).length, 0, "no path fetches only below the floor any more");
+});
+
+check("an unreachable Scryfall is fatal below the floor or for the commander", () => {
+  assert.equal(Sim.fetchPlan({ratio: 0.9, unreadable: ["a"], commanders: []}).fatalIfUnreachable, true);
+  assert.equal(Sim.fetchPlan({ratio: 0.99, unreadable: ["Leader"], commanders: ["Leader"]}).fatalIfUnreachable, true);
+});
+
 /* --------------------------------------------------------------- the report pack */
 
 const fakeResult = {

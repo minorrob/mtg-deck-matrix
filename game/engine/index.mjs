@@ -46,6 +46,13 @@ export const ENGINE_STATUS = Object.freeze({
   implemented: Object.freeze([
     "rng", "journal", "state", "turn", "stack", "priority", "controller", "actions", "mana", "cast",
     "combat", "sba", "trigger", "projection", "replacement", "layers", "commander", "mulligan", "gate", "vocabulary", "filter", "schema", "effects", "resolution", "keywords", "enters", "runtime", "storage", "house-pilot",
+    /* Phase 2.4: targets chosen on casting and checked on resolution, a card's script run at resolution, activated
+       abilities; and the card directory with its scenarios. */
+    "targets", "cards",
+    /* 2.4b: mana abilities that choose and that cost, lands that enter tapped, and the checks after every action. */
+    "mana-abilities",
+    /* 2.4c: a trigger's targets, countering a target spell, another creature entering, and "non-" selectors. */
+    "trigger-targets",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });

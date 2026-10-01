@@ -134,8 +134,8 @@
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 53,
-      "sha": "bd0b161a6b1783f1"
+      "version": 55,
+      "sha": "4274f410cb88349c"
     },
     "collection-repository.js": {
       "version": 4,
@@ -154,8 +154,8 @@
       "sha": "7416b6a23fc3baac"
     },
     "crankmagic-app.js": {
-      "version": 435,
-      "sha": "6e3df0680ce93d04"
+      "version": 439,
+      "sha": "8bf1791f8aec7572"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -190,12 +190,12 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 98,
-      "sha": "802e53eb35cbd412"
+      "version": 99,
+      "sha": "a06f23df3020a682"
     },
     "crankmagic-decks.js": {
-      "version": 96,
-      "sha": "94095a087097591c"
+      "version": 99,
+      "sha": "9c095432654f6b58"
     },
     "crankmagic-design.css": {
       "version": 23,
@@ -242,8 +242,8 @@
       "sha": "ce7ec5eef0cd9a29"
     },
     "crankmagic-lab.js": {
-      "version": 57,
-      "sha": "7107decfb233f4dc"
+      "version": 58,
+      "sha": "027dd42c5ceef3e9"
     },
     "crankmagic-landing.js": {
       "version": 8,
@@ -282,8 +282,8 @@
       "sha": "4eb23f2843c5410f"
     },
     "crankmagic-pull.js": {
-      "version": 13,
-      "sha": "65001e83727cd8a3"
+      "version": 14,
+      "sha": "f595317c6130b4c6"
     },
     "crankmagic-qr.js": {
       "version": 1,
@@ -314,16 +314,16 @@
       "sha": "a9afeea4db1ef27f"
     },
     "crankmagic-sim.js": {
-      "version": 23,
-      "sha": "e25c589859b1d709"
+      "version": 24,
+      "sha": "cf2673a40327b2ef"
     },
     "crankmagic-strategies.js": {
       "version": 4,
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 419,
-      "sha": "83dd7d713c896625"
+      "version": 423,
+      "sha": "3a2dcf49b80d6927"
     },
     "crankmagic-table.js": {
       "version": 16,
@@ -346,8 +346,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 266,
-      "sha": "9bbeb7f0e8f41830"
+      "version": 267,
+      "sha": "74ae115b39d93d8b"
     },
     "custom-model.js": {
       "version": 3,

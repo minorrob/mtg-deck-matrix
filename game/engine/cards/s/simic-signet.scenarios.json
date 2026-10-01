@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Simic Signet",
+  "scenarios": [
+    {
+      "name": "{1} and {T} for two colors: offered only once the {1} is in the pool",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Simic Signet",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simic Signet"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simic Signet"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "G": 1,
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Simic Signet"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1,
+            "C": 0
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Simic Signet"
+        }
+      ]
+    }
+  ]
+}

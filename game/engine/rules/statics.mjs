@@ -17,12 +17,30 @@
  */
 
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
+import {compileSelector} from "../script/filter.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
   /** CR 510.1a's exception: assigns combat damage equal to its toughness rather than its power. combat.mjs. */
   "combat-damage-by-toughness": "rules/combat.mjs",
+  /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
+  "no-maximum-hand-size": "rules/turn.mjs",
 });
+
+/**
+ * Whether any static ability on the battlefield changes `rule` for this PLAYER: one whose `affects` is a player
+ * selector, "you" being the ability's controller.
+ */
+export function playerRuleChanged(state, rule, player) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== rule || ability.affects?.what !== "player") continue;
+      if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
+    }
+  }
+  return false;
+}
 
 /** Whether any static ability on the battlefield changes `rule` for this object. */
 export function ruleChanged(state, rule, id) {

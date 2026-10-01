@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Infernal Grasp",
+    "oracleId": "94f0a572-e91c-4b56-a5d1-6cbbeabd210d",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature. You lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature. You lose 2 life.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

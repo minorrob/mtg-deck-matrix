@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elvish Visionary",
+    "oracleId": "c6a3a882-a127-4590-93d7-679ef4313efe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Shaman"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

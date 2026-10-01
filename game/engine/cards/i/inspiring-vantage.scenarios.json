@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Inspiring Vantage",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Inspiring Vantage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Inspiring Vantage"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Inspiring Vantage",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Inspiring Vantage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Inspiring Vantage"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Inspiring Vantage"
+        }
+      ]
+    }
+  ]
+}

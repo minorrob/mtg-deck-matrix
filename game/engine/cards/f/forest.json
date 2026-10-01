@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Forest",
+    "oracleId": "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+    "supertypes": [
+      "Basic"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Forest"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {G}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

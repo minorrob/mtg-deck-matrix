@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Night's Whisper",
+    "oracleId": "7ffae8f8-3006-4969-a339-6d30678f87ea",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You draw two cards and lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You draw two cards and lose 2 life.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thornwood Falls",
+    "oracleId": "ec96cde2-f1e6-495c-94e2-3e8ae79e556c",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\nWhen this land enters, you gain 1 life.\n{T}: Add {G} or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this land enters, you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} or {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

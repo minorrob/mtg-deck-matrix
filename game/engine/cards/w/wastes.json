@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wastes",
+    "oracleId": "05d24b0c-904a-46b6-b42a-96a4d91a0dd4",
+    "supertypes": [
+      "Basic"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

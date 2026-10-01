@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Essence Scatter",
+    "oracleId": "46665089-aa3d-44c3-964d-6638dfbb5782",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target creature spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target creature spell.",
+      "targets": [
+        {
+          "what": "spell",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

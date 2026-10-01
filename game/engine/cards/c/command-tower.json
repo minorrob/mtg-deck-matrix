@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Command Tower",
+    "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color in your commander's color identity.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color in your commander's color identity.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": "identity"
+        }
+      ]
+    }
+  ]
+}

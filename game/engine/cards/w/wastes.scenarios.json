@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wastes",
+  "scenarios": [
+    {
+      "name": "Played as the land drop, it taps for {C} off the stack (CR 305.1, 605.3a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Wastes",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wastes"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

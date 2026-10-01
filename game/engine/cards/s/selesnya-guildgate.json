@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Selesnya Guildgate",
+    "oracleId": "75b235d3-595a-4859-be45-9559d8445db5",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Gate"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {G} or {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} or {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

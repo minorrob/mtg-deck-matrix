@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Despark",
+    "oracleId": "bd16434d-55ea-4c5a-a9ef-752971a4af16",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target permanent with mana value 4 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target permanent with mana value 4 or greater.",
+      "targets": [
+        {
+          "what": "permanent",
+          "manaValue": {
+            "min": 4
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

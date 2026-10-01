@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Llanowar Wastes",
+    "oracleId": "32116127-cf96-4a1b-8896-a1ebc087b597",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Add {B} or {G}. This land deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B} or {G}. This land deals 1 damage to you.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        },
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ]
+    }
+  ]
+}

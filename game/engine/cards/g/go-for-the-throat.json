@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Go for the Throat",
+    "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target nonartifact creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target nonartifact creature.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "nonTypes": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

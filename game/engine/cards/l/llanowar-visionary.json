@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Llanowar Visionary",
+    "oracleId": "f75ed312-3a23-4624-80c5-03980aa22d0b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, draw a card.\n{T}: Add {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

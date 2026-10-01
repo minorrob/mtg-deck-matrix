@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vine Trellis",
+  "scenarios": [
+    {
+      "name": "{T}: Add {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vine Trellis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Vine Trellis"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

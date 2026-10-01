@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vindicate",
+    "oracleId": "63c1ac21-e3d8-40c2-8c09-3f31c52992ef",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target permanent.",
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
