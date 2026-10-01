@@ -3,16 +3,17 @@
 /* THE CARD DIRECTORY, READ FROM DISK.
  *
  * `game/engine/cards/<letter>/<slug>.json` is a definition (`CrankCardScript@1`) and `<slug>.scenarios.json` beside it
- * is its scenarios. This is the only part of the directory that touches a file system; `cards/index.mjs` takes what
- * this reads, so a Worker can be handed the same definitions some other way.
+ * is its scenarios. Reading them is the only part of the directory that touches a file system, so it lives here and
+ * not under `game/engine/`, which a Durable Object runs and which imports no Node module (tests/engine-storage.mjs);
+ * `game/engine/cards/index.mjs` takes what this reads, and a Worker can be handed the same definitions another way.
  */
 
 import {readdirSync, readFileSync, statSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {createCardIndex} from "./index.mjs";
+import {createCardIndex} from "../engine/cards/index.mjs";
 
-export const CARDS_DIR = path.dirname(fileURLToPath(import.meta.url));
+export const CARDS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "engine", "cards");
 
 /* Each letter's folder, in order, and its files in order: the same list on every machine. */
 function files(root, suffix) {

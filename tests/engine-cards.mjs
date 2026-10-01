@@ -18,7 +18,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {execFileSync} from "node:child_process";
-import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/engine/cards/load.mjs";
+import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {createCardIndex, compileScript, foldName} from "../game/engine/cards/index.mjs";
 import {runScenario, SCENARIOS_SCHEMA} from "../game/engine/cards/scenario.mjs";
 import {SCRIPT_SCHEMA} from "../game/engine/script/schema.mjs";

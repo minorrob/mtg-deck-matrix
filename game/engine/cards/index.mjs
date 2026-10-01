@@ -5,7 +5,8 @@
  * `docs/engine/PLAN.md` §3.1 and §6's phase 2.4 -- "`cards/index.mjs` with `resolve` and `suggest`", the same shape
  * as `forge-card-index.mjs`, reading CrankMagic's own definitions instead of Forge's scripts. Definitions live beside
  * it as `game/engine/cards/<letter>/<slug>.json` (`CrankCardScript@1`), each with its `<slug>.scenarios.json`;
- * `cards/load.mjs` reads them from disk and this file, which touches no file system, is what a Worker can import.
+ * `game/tools/engine-cards.mjs` reads them from disk, and this file, which touches no file system, is what a Worker
+ * can import.
  *
  * A SCRIPT IS NOT YET AN OBJECT. The script says what the card says, in the vocabulary a model can be held to
  * ("enters", "upkeep", `{atom: "{T}"}`); the rules modules act on objects in their own terms (a trigger watching
@@ -173,7 +174,7 @@ function distance(a, b, limit) {
 /**
  * The directory over a list of scripts.
  *
- * @param {Array<{script: object, path?: string}>|Array<object>} entries  scripts, or `{script, path}` as load.mjs reads them
+ * @param {Array<{script: object, path?: string}>|Array<object>} entries  scripts, or `{script, path}` as game/tools/engine-cards.mjs reads them
  * @returns {{size: number, names: string[], resolve: Function, suggest: Function, definition: Function, problems: Function}}
  */
 export function createCardIndex(entries) {

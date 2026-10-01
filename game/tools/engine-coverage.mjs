@@ -32,7 +32,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
-import {loadCardIndex} from "../engine/cards/load.mjs";
+import {loadCardIndex} from "./engine-cards.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
