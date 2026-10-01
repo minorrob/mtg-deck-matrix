@@ -35,7 +35,30 @@ export const STATIC_RULES = Object.freeze({
   /** CR 509.1b: "Target creature can't be blocked this turn" (Rogue's Passage), "creatures with power 2 or less can't be
       blocked". keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked": "keywords/combat.mjs",
+  /** "You may play lands from your graveyard" (Crucible of Worlds), "you may cast Dragon spells from the top of your
+      library" (Korlessa): `zone` "graveyard" or "library-top", `lands` and `spells` (a selector of the spells, or
+      true for any). For the static's controller; rules/actions.mjs offers them. */
+  "play-from": "rules/actions.mjs",
+  /** "You may look at the top card of your library any time": its owner sees it (projection.mjs). */
+  "look-at-top": "projection.mjs",
+  /** "Play with the top card of your library revealed": everyone sees it (projection.mjs). */
+  "top-revealed": "projection.mjs",
+  /** "You may play an additional land on each of your turns" (CR 305.2): one more land drop. rules/actions.mjs. */
+  "extra-land-drop": "rules/actions.mjs",
+  /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
+  "cast-self-from": "rules/actions.mjs",
 });
+
+/** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
+export function playerStatics(state, rule, player) {
+  const found = [];
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    if (holder.controller !== player) continue;
+    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === rule) found.push({ability, source: holderId});
+  }
+  return found;
+}
 
 /**
  * HOW MUCH LESS A SPELL COSTS (CR 601.2f). Every "spells cost {N} less" static ability on the battlefield whose spell

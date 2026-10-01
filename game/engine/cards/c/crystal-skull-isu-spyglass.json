@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crystal Skull, Isu Spyglass",
+    "oracleId": "b1f8eb7b-7e01-4bf8-a557-64e16a6052af",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may look at the top card of your library any time.\nYou may play historic lands and cast historic spells from the top of your library. (Artifacts, legendaries, and Sagas are historic.)\n{T}: Add {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may play historic lands and cast historic spells from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": {
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "supertypes": [
+              "Legendary"
+            ]
+          },
+          {
+            "subtypes": [
+              "Saga"
+            ]
+          }
+        ]
+      },
+      "spells": {
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "supertypes": [
+              "Legendary"
+            ]
+          },
+          {
+            "subtypes": [
+              "Saga"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

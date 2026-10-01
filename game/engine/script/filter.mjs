@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -152,6 +152,8 @@ export function compileSelector(selector) {
     if (zone && object.zone !== zone) return false;
 
     /* Colors through the layers (CR 105.2): "a blue spell" is one with blue among its colors; listing two asks for both. */
+    /* "Colorless spells" (CR 105.2c): no color at all, through the layers. */
+    if (selector.colorless === true && (characteristicsOf(state, id).colors ?? []).length > 0) return false;
     if (selector.colors) {
       const current = characteristicsOf(state, id).colors ?? [];
       if (!selector.colors.every((color) => current.includes(color))) return false;

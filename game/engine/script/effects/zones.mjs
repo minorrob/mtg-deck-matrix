@@ -198,7 +198,8 @@ export function mill(state, params, context) {
     for (let i = 0; i < count; i += 1) {
       const library = cardsIn(state, "library", player);
       if (library.length === 0) break;
-      moveOne(state, library[0], "graveyard", events, {owner: player});
+      /* "Exile the top card of your library" is the same motion to another zone. */
+      moveOne(state, library[0], params.to ?? "graveyard", events, {owner: player});
     }
   }
   return events;
