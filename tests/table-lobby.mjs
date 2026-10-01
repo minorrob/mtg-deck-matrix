@@ -41,6 +41,33 @@ const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path
 /* The rules panel as read: the contrast of its text on its own ground (WCAG, alpha flattened), and whether its
    heading, rules and launch row each sit inside it without overlapping (they did not, with the app's panel
    ground under the table's ink: dark on dark, and the heading cut off at 390). */
+/* THE ACCESSIBILITY PASS (docs/plan-to-done-2026-09-30.md Part 6): every word over a seat's sea, read against the worst
+   sea there could be -- plain white under everything the word sits on, its opacity counted -- lowest first. */
+const overSea = (page) => page.evaluate(() => {
+  const cv = document.createElement("canvas"); cv.width = cv.height = 1;
+  const cx = cv.getContext("2d", {willReadFrequently: true});
+  const rgba = (css) => {cx.clearRect(0, 0, 1, 1); cx.fillStyle = "rgb(1, 2, 3)"; cx.fillStyle = css; cx.fillRect(0, 0, 1, 1); const [r, g, b, a] = cx.getImageData(0, 0, 1, 1).data; return [r, g, b, a / 255];};
+  const over = ([r, g, b, a], [R, G, B]) => [r * a + R * (1 - a), g * a + G * (1 - a), b * a + B * (1 - a)];
+  const lum = (c) => {const [r, g, b] = c.map((v) => {v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;}); return 0.2126 * r + 0.7152 * g + 0.0722 * b;};
+  const seen = [];
+  for (const sea of document.querySelectorAll(".cm-cloud-table .cm-seat-sea")) {
+    const art = sea.parentElement;
+    for (const el of art.querySelectorAll("*")) {
+      if (el.closest(".cm-sr-only, svg, canvas") || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+      const r = el.getBoundingClientRect(), st = getComputedStyle(el);
+      if (!r.width || !r.height || st.visibility === "hidden") continue;
+      const chain = [];
+      for (let n = el; n && n !== art; n = n.parentElement) chain.push(n);
+      const opacity = (i) => chain.slice(i).reduce((p, n) => p * Number(getComputedStyle(n).opacity), 1);
+      let base = [255, 255, 255];
+      for (let i = chain.length - 1; i >= 0; i -= 1) {const [r0, g0, b0, a0] = rgba(getComputedStyle(chain[i]).backgroundColor); base = over([r0, g0, b0, a0 * opacity(i)], base);}
+      const [r1, g1, b1, a1] = rgba(st.color), ink = over([r1, g1, b1, a1 * opacity(0)], base);
+      const L = [lum(ink), lum(base)].sort((x, y) => y - x);
+      seen.push({text: el.textContent.trim().slice(0, 24), cls: String(el.className || el.tagName).slice(0, 30), ratio: Math.round((L[0] + 0.05) / (L[1] + 0.05) * 100) / 100});
+    }
+  }
+  return seen.sort((x, y) => x.ratio - y.ratio);
+});
 const panelReading = (page) => page.evaluate(() => {
   const panel = document.querySelector(".cm-table-center");
   const rgb = (c) => (c.match(/[\d.]+/g) || []).map(Number);
@@ -138,6 +165,12 @@ try {
   /* HOST: a new table. */
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+  /* The accessibility pass: the page's "?" opens the table's help, the board's keys among it. */
+  await rob.page.click('#cm-main [data-action="page-help"][data-help="table"]');
+  await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
+  ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && /Space/.test(await pageText(rob.page, "#cm-dialog .cm-help-keys")), "New table's ? opens Play's help, the board's keys among it");
+  await rob.page.click("#cm-dialog [data-action=close]");
+  await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
   await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
   await rob.page.fill("#cm-table-new [name=name2]", "Maya");
   await rob.page.selectOption("#cm-table-new [name=kind3]", "ai");
@@ -146,6 +179,9 @@ try {
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
   eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  eq(await rob.page.locator('#cm-main .cm-page-head [data-action="page-help"]').getAttribute("data-help"), "table", "and its head carries the same ?, to the table's help");
+  const seaWords = await overSea(rob.page), seaLow = seaWords.filter((w) => w.ratio < 4.5);
+  ok(seaWords.length >= 6 && !seaLow.length, `every word over a seat's sea reads at 4.5:1 or better over a white sea (${seaWords.length} read; ${(seaLow.length ? seaLow : seaWords.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
   /* THE SEAS DO NOT JUMP (Rob, 2026-09-29: the background played "for about a second then jumping back to the
      beginning"). The lobby reads the table every two seconds; a read that changed nothing leaves the seats' seas
      running, and a redraw that did change something picks up where the last one was, on the page's clock. */
@@ -322,6 +358,8 @@ try {
   await waitText(maya.page, "#cm-table-launch", /Starting in/);
   ok(!(await maya.page.locator("[data-action=table-cancel]").count()), "Maya sees the countdown; only the host has Cancel");
   await shot(rob.page, "countdown-1400");
+  const seatsReady = await overSea(rob.page), readyLow = seatsReady.filter((w) => w.ratio < 4.5);
+  ok(seatsReady.length >= 6 && !readyLow.length, `and with the decks chosen and the seats ready, still 4.5:1 or better over a white sea (${seatsReady.length} read; ${(readyLow.length ? readyLow : seatsReady.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
   await rob.page.click("[data-action=table-cancel]");
   await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
   ok(true, "Cancel stops it");
