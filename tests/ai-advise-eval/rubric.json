@@ -1,0 +1,537 @@
+{
+  "schema": "CrankAdviseRubric@1",
+  "source": "data/live-state.json (MtG - Master - 9.30 through the sync)",
+  "note": "sound: each substitute in a box, out, for the card whose seat it holds, in -- Rob's own intent. refuse: the swaps he would not make; his to add.",
+  "decks": {
+    "deck:live:D1": {
+      "deck": "D1 Quintorius Spirits",
+      "sound": [
+        {
+          "out": "Big Score",
+          "in": "Thrill of Possibility"
+        },
+        {
+          "out": "Borrowed Knowledge",
+          "in": "Boros Signet"
+        },
+        {
+          "out": "Burning Curiosity",
+          "in": "Reckless Impulse"
+        },
+        {
+          "out": "Deflecting Palm",
+          "in": "Boros Charm"
+        },
+        {
+          "out": "Monastery Raid",
+          "in": "Weathered Wayfarer"
+        },
+        {
+          "out": "Ragged Short Spear",
+          "in": "Demand Answers"
+        },
+        {
+          "out": "Seize the Spoils",
+          "in": "Smuggler's Copter"
+        },
+        {
+          "out": "Thrilling Discovery",
+          "in": "Mizzix's Mastery"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D2": {
+      "deck": "D2 Chulane Value Loop",
+      "sound": [
+        {
+          "out": "Arcades, the Strategist",
+          "in": "Guardian Project"
+        },
+        {
+          "out": "Bant Panorama",
+          "in": "Canopy Vista"
+        },
+        {
+          "out": "Bilbo Baggins, Burglar // Take a Glance",
+          "in": "Whitemane Lion"
+        },
+        {
+          "out": "Changeling Wayfinder",
+          "in": "Springbloom Druid"
+        },
+        {
+          "out": "Cloudblazer",
+          "in": "Mulldrifter"
+        },
+        {
+          "out": "Elvish Visionary",
+          "in": "Wall of Blossoms"
+        },
+        {
+          "out": "Evolving Wilds",
+          "in": "Fabled Passage"
+        },
+        {
+          "out": "Foraging Wickermaw",
+          "in": "Paradise Druid"
+        },
+        {
+          "out": "Gandalf, Wandering Wizard",
+          "in": "Beast Whisperer"
+        },
+        {
+          "out": "Kor Cartographer",
+          "in": "Yavimaya Dryad"
+        },
+        {
+          "out": "Lake-town Mariners // Gone Fishing",
+          "in": "Intruder Alarm"
+        },
+        {
+          "out": "Llanowar Elves",
+          "in": "Ilysian Caryatid"
+        },
+        {
+          "out": "Long Lake Nuisance",
+          "in": "Blade Splicer"
+        },
+        {
+          "out": "Lys Alana Informant",
+          "in": "Watcher for Tomorrow"
+        },
+        {
+          "out": "Negate",
+          "in": "Mystic Snake"
+        },
+        {
+          "out": "Peregrine Drake",
+          "in": "Sakura-Tribe Elder"
+        },
+        {
+          "out": "Pilgrim's Eye",
+          "in": "Solemn Simulacrum"
+        },
+        {
+          "out": "Satyr Wayfinder",
+          "in": "Elvish Rejuvenator"
+        },
+        {
+          "out": "Shinestriker",
+          "in": "Selfless Savior"
+        },
+        {
+          "out": "Sylvan Ranger",
+          "in": "Topiary Stomper"
+        },
+        {
+          "out": "Tatyova, Benthic Druid",
+          "in": "Tireless Tracker"
+        },
+        {
+          "out": "Terramorphic Expanse",
+          "in": "Prairie Stream"
+        },
+        {
+          "out": "Wavesifter",
+          "in": "Kor Skyfisher"
+        },
+        {
+          "out": "Woodland Weavemaster",
+          "in": "Rampant Growth"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D3": {
+      "deck": "D3 Atraxa Proliferate",
+      "sound": [
+        {
+          "out": "Aetheric Amplifier",
+          "in": "Coalition Relic"
+        },
+        {
+          "out": "Evolving Wilds",
+          "in": "Underground River"
+        },
+        {
+          "out": "Exotic Orchard",
+          "in": "Command Tower"
+        },
+        {
+          "out": "Grand Coliseum",
+          "in": "Llanowar Wastes"
+        },
+        {
+          "out": "Guardian of the Halls",
+          "in": "Contentious Plan"
+        },
+        {
+          "out": "Mulldrifter",
+          "in": "Pollenbright Druid"
+        },
+        {
+          "out": "Ordeal of Nylea",
+          "in": "Evolution Sage"
+        },
+        {
+          "out": "Painful Truths",
+          "in": "Garruk's Uprising"
+        },
+        {
+          "out": "Plunder the Trollshaws",
+          "in": "Brainstorm"
+        },
+        {
+          "out": "Strixhaven Stadium",
+          "in": "Arcane Signet"
+        },
+        {
+          "out": "Tome of Legends",
+          "in": "Mystic Remora"
+        },
+        {
+          "out": "Unwelcome Sprite",
+          "in": "Frantic Search"
+        },
+        {
+          "out": "Voracious Tome-Skimmer",
+          "in": "Fathom Mage"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D4": {
+      "deck": "D4 Felothar Walls",
+      "sound": [
+        {
+          "out": "Arboreal Grazer",
+          "in": "Saruli Caretaker"
+        },
+        {
+          "out": "Ash Barrens",
+          "in": "Command Tower"
+        },
+        {
+          "out": "Belligerent Brontodon",
+          "in": "Tower Defense"
+        },
+        {
+          "out": "Canopy Gargantuan",
+          "in": "Doran, the Siege Tower"
+        },
+        {
+          "out": "Destroy Evil",
+          "in": "Beast Within"
+        },
+        {
+          "out": "Drumbellower",
+          "in": "Wall of Blossoms"
+        },
+        {
+          "out": "Feed the Swarm",
+          "in": "Austere Command"
+        },
+        {
+          "out": "Follow the Lumarets",
+          "in": "Guardian Project"
+        },
+        {
+          "out": "Lys Alana Dignitary",
+          "in": "Rampant Growth"
+        },
+        {
+          "out": "Myriad Landscape",
+          "in": "Llanowar Wastes"
+        },
+        {
+          "out": "Old Thrush",
+          "in": "Vine Trellis"
+        },
+        {
+          "out": "Prophetic Prism",
+          "in": "Wall of Roots"
+        },
+        {
+          "out": "Yavimaya Elder",
+          "in": "Wall of Omens"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D5": {
+      "deck": "D5 Shadrix Aristocrats",
+      "sound": [
+        {
+          "out": "Anointer Priest",
+          "in": "Suture Priest"
+        },
+        {
+          "out": "Blight Rot",
+          "in": "Austere Command"
+        },
+        {
+          "out": "Deadly Dispute",
+          "in": "Priest of Forgotten Gods"
+        },
+        {
+          "out": "Dreadhorde Invasion",
+          "in": "Grave Titan"
+        },
+        {
+          "out": "Frontline Medic",
+          "in": "Unbreakable Formation"
+        },
+        {
+          "out": "Genesis Chamber",
+          "in": "Adeline, Resplendent Cathar"
+        },
+        {
+          "out": "Impassioned Orator",
+          "in": "Soul Warden"
+        },
+        {
+          "out": "Kithkeeper",
+          "in": "Exsanguinate"
+        },
+        {
+          "out": "Old Thrush",
+          "in": "Spirited Companion"
+        },
+        {
+          "out": "Pilgrim's Eye",
+          "in": "Thought Vessel"
+        },
+        {
+          "out": "Promise of Loyalty",
+          "in": "Infernal Grasp"
+        },
+        {
+          "out": "Rootborn Defenses",
+          "in": "Make a Stand"
+        },
+        {
+          "out": "Secret Rendezvous",
+          "in": "Psychosis Crawler"
+        },
+        {
+          "out": "Spectacular Tactics",
+          "in": "Morbid Opportunist"
+        },
+        {
+          "out": "Spectral Procession",
+          "in": "Battle Screech"
+        },
+        {
+          "out": "Terror",
+          "in": "Fell the Profane // Fell Mire"
+        },
+        {
+          "out": "Ultima, Origin of Oblivion",
+          "in": "Idol of Oblivion"
+        },
+        {
+          "out": "Viscera Seer",
+          "in": "Woe Strider"
+        },
+        {
+          "out": "Zack Fair",
+          "in": "Night's Whisper"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D6": {
+      "deck": "D6 Krenko Goblins",
+      "sound": [
+        {
+          "out": "Anger",
+          "in": "Goblin Motivator"
+        },
+        {
+          "out": "Barrage of Expendables",
+          "in": "Mogg Raider"
+        },
+        {
+          "out": "Burn, Burn, Tree and Fern",
+          "in": "Mizzium Mortars"
+        },
+        {
+          "out": "Cinder Strike",
+          "in": "Lightning Bolt"
+        },
+        {
+          "out": "Dwarven Mattock",
+          "in": "Vanquisher's Banner"
+        },
+        {
+          "out": "Giant's Boulder",
+          "in": "Sol Ring"
+        },
+        {
+          "out": "Impact Tremors",
+          "in": "Warstorm Surge"
+        },
+        {
+          "out": "Kher Keep",
+          "in": "Den of the Bugbear"
+        },
+        {
+          "out": "Light Up the Stage",
+          "in": "Idol of Oblivion"
+        },
+        {
+          "out": "Massive Raid",
+          "in": "Burn at the Stake"
+        },
+        {
+          "out": "Naktamun Lorespinner // Wheel of Fortune",
+          "in": "Lightning Greaves"
+        },
+        {
+          "out": "Ogre Battledriver",
+          "in": "Hammer of Purphoros"
+        },
+        {
+          "out": "Outpost Siege",
+          "in": "Rundvelt Hordemaster"
+        },
+        {
+          "out": "Siege Smash",
+          "in": "Goblin Cratermaker"
+        },
+        {
+          "out": "Thrill of Possibility",
+          "in": "Demand Answers"
+        }
+      ],
+      "refuse": []
+    },
+    "deck:live:D7": {
+      "deck": "D7 Maralen Exile Cast",
+      "sound": [
+        {
+          "out": "Aetherize",
+          "in": "Assassin's Trophy"
+        },
+        {
+          "out": "Argentum Masticore",
+          "in": "Ravenous Chupacabra"
+        },
+        {
+          "out": "Blight Rot",
+          "in": "Feed the Swarm"
+        },
+        {
+          "out": "Boughside Wanderers",
+          "in": "Brainstorm"
+        },
+        {
+          "out": "Chain Assassination",
+          "in": "Eyeblight's Ending"
+        },
+        {
+          "out": "Crude Bent Blade",
+          "in": "Halo Forager"
+        },
+        {
+          "out": "Enchanted River's Grasp",
+          "in": "Hypnotic Sprite // Mesmeric Glare"
+        },
+        {
+          "out": "Explorer's Scope",
+          "in": "Elvish Mystic"
+        },
+        {
+          "out": "Farseek",
+          "in": "Jaspera Sentinel"
+        },
+        {
+          "out": "Gloom Ripper",
+          "in": "Faerie Mastermind"
+        },
+        {
+          "out": "Great Fierce Bee",
+          "in": "Elvish Visionary"
+        },
+        {
+          "out": "Kyoshi Island Plaza",
+          "in": "Rampant Growth"
+        },
+        {
+          "out": "Mistmeadow Council",
+          "in": "Realmwalker"
+        },
+        {
+          "out": "Moonglove Extractor",
+          "in": "Llanowar Visionary"
+        },
+        {
+          "out": "Moonshadow",
+          "in": "Spellstutter Sprite"
+        },
+        {
+          "out": "Noxious Newt",
+          "in": "Fyndhorn Elves"
+        },
+        {
+          "out": "Overgrown Battlement",
+          "in": "Llanowar Elves"
+        },
+        {
+          "out": "Pawn of Ulamog",
+          "in": "Lys Alana Huntmaster"
+        },
+        {
+          "out": "Plunder the Trollshaws",
+          "in": "Tegwyll, Duke of Splendor"
+        },
+        {
+          "out": "Pox Plague",
+          "in": "Faerie Formation"
+        },
+        {
+          "out": "Pterafractyl",
+          "in": "Faerie Impostor"
+        },
+        {
+          "out": "Ritual of Soot",
+          "in": "Scion of Oona"
+        },
+        {
+          "out": "Stratosoarer",
+          "in": "Changeling Wayfinder"
+        },
+        {
+          "out": "Summit Sentinel",
+          "in": "Obyra, Dreaming Duelist"
+        },
+        {
+          "out": "Sundering Archaic",
+          "in": "Sower of Temptation"
+        },
+        {
+          "out": "Swampsnare Trap",
+          "in": "Preordain"
+        },
+        {
+          "out": "Tom, Bert, and William",
+          "in": "Imperious Perfect"
+        },
+        {
+          "out": "Unexpected Assistance",
+          "in": "Fact or Fiction"
+        },
+        {
+          "out": "Vampire Hexmage",
+          "in": "Gilt-Leaf Winnower"
+        },
+        {
+          "out": "Zimone's Experiment",
+          "in": "Sylvan Ranger"
+        }
+      ],
+      "refuse": []
+    }
+  }
+}

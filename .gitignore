@@ -42,3 +42,6 @@ MagicCompRules*.txt
 
 # Worktrees Claude Code agents work in (local only, never part of the repository).
 .claude/worktrees/
+
+# The advisor eval writes its runs here (it spends; results are Rob's, not the repository's)
+tests/ai-advise-eval/results/
