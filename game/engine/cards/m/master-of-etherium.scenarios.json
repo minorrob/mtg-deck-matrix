@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Master of Etherium",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    },
+    "Thopter": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "power": 0,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "As big as the artifacts Rob controls, itself among them; other artifact creatures +1/+1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Master of Etherium",
+            "Rock",
+            "Thopter"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Master of Etherium",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thopter",
+            "power": 1,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blackblade Reforged",
+  "fixtures": {
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{2}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Equip legendary creature {3}: +1/+1 for each land; a creature not legendary is not offered it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blackblade Reforged",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Hero",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Blackblade Reforged"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Hero"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Blackblade Reforged",
+          "targets": [
+            {
+              "card": "Hero"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hero",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Twitching Doll",
+  "scenarios": [
+    {
+      "name": "Each tap for mana puts a nest counter on it; sacrificed, a Spider for each counter it had",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Twitching Doll"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Twitching Doll",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Twitching Doll",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Twitching Doll"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spider",
+            "Spider"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Spider",
+            "has": [
+              "Reach"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Twitching Doll"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Avenger of Zendikar",
+  "scenarios": [
+    {
+      "name": "A Plant for each land; landfall, yes: +1/+1 counter on each Plant",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Avenger of Zendikar",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Avenger of Zendikar"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "count": 15
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Plant",
+                "power": 0,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Plant",
+            "power": 1,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

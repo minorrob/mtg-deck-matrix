@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Defile",
+    "oracleId": "49dddec0-d958-4810-8c6e-225fc8118c8f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -1/-1 until end of turn for each Swamp you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets -1/-1 until end of turn for each Swamp you control.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            "times": -1
+          },
+          "toughness": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            "times": -1
+          }
+        }
+      ]
+    }
+  ]
+}

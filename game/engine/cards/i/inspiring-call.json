@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inspiring Call",
+    "oracleId": "9b9a10ff-5a5d-4df8-88aa-18d84ff9117c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy them.)",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "counters": "+1/+1"
+            }
+          }
+        },
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "counters": "+1/+1"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Indestructible"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

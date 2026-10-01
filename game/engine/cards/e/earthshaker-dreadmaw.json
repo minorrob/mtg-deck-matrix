@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Earthshaker Dreadmaw",
+    "oracleId": "454cbc6a-b7f0-445e-842c-5db267917a18",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nWhen this creature enters, draw a card for each other Dinosaur you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card for each other Dinosaur you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "controller": "you",
+              "subtypes": [
+                "Dinosaur"
+              ],
+              "another": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

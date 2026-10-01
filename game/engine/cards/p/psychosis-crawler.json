@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Psychosis Crawler",
+    "oracleId": "2876e74f-a242-4995-9702-0b737a1ab67a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Horror"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Psychosis Crawler's power and toughness are each equal to the number of cards in your hand.\nWhenever you draw a card, each opponent loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Psychosis Crawler's power and toughness are each equal to the number of cards in your hand.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, each opponent loses 1 life.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

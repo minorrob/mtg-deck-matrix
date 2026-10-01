@@ -45,7 +45,10 @@ function report(label, perCard) {
   const covered = [];
   const blocked = new Map();
   for (const [name, card] of entries) {
-    const missing = missingFor(card);
+    /* A card the engine already plays has every rule it needs, whatever Forge's script for it names: Forge writes a shock
+       land's "pay 2 life or it enters tapped" as an unless-cost, and the shock lands are defined. Nor does it hold
+       anything back. */
+    const missing = definedHere(name) ? [] : missingFor(card);
     if (missing.length === 0) { covered.push(name); continue; }
     for (const gap of missing) {
       const key = `${gap.kind}:${gap.name}`;

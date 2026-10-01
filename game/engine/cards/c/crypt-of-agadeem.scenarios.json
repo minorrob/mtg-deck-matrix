@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crypt of Agadeem",
+  "fixtures": {
+    "Zombie Card": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2}, {T}: {B} for each black creature card in Rob's graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Zombie Card",
+            "Zombie Card",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt of Agadeem",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Crypt of Agadeem",
+          "mana": {
+            "B": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "It enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crypt of Agadeem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Crypt of Agadeem"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Crypt of Agadeem"
+        }
+      ]
+    }
+  ]
+}

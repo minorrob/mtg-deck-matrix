@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cabal Coffers",
+  "scenarios": [
+    {
+      "name": "{2}, {T}: {B} for each Swamp Rob controls, tapped ones too, not Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cabal Coffers",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Cabal Coffers"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 3
+          }
+        }
+      ]
+    }
+  ]
+}

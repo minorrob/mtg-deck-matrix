@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Battle Hymn",
+    "oracleId": "4b977117-741c-4157-8fcf-719e475a8a4c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {R} for each creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {R} for each creature you control.",
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": {
+              "count": {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Awaken the Woods",
+  "scenarios": [
+    {
+      "name": "X Forest Dryads: land creatures, sick, so their Forest cannot tap yet",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Awaken the Woods"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Awaken the Woods",
+          "x": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest Dryad",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Forest Dryad",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Forest Dryad"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

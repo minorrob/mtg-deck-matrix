@@ -38,6 +38,8 @@
  * depend on each other — falls back to timestamp order here, which is what the rule says to do.
  */
 
+import {isCounted, amountOf} from "../script/amount.mjs";
+
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
 
@@ -78,6 +80,11 @@ function affects(state, effect, current, sourceController) {
   if (rule.controller === "opponent" && current.controller === sourceController) return false;
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
+  /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
+  if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || (state.objects[current.id]?.subtypes ?? []).includes(t))) return false;
+  if (rule.another === true && current.id === effect.sourceId) return false;
+  /* "This creature's power and toughness are each equal to ...": the source itself. */
+  if (rule.self === true && current.id !== effect.sourceId) return false;
   /* "Equipped creature has haste": the one its source is attached to (CR 301.5). */
   if (rule.attachedBy === "self" && state.objects[effect.sourceId]?.attachedTo !== current.id) return false;
   return true;
@@ -128,6 +135,25 @@ function allEffects(state) {
     found.push({...effect, sourceController: effect.sourceController ?? null});
   }
   return found;
+}
+
+/* A COUNTED CHANGE (script/amount.mjs): "power and toughness each equal to the number of cards in your hand" (CR 604.3,
+   a characteristic-defining ability, 7a) and "+1/+1 for each land you control" (7c) are counted each time the layer is
+   applied, not once. Counting asks other objects' types and controllers, and a count made while another count is
+   being made skips the counted changes it meets: they change power and toughness only, never what is counted, and
+   without the skip two Masters of Etherium would each ask the other forever. */
+let counting = 0;
+function counted(state, effect) {
+  const change = effect.apply ?? {};
+  if (!Object.values(change).some(isCounted)) return effect;
+  if (counting > 0) return null;
+  counting += 1;
+  try {
+    const context = {controller: effect.sourceController, source: effect.sourceId ?? null, x: state.objects[effect.sourceId]?.xPaid ?? 0};
+    return {...effect, apply: Object.fromEntries(Object.entries(change).map(([k, v]) => [k, isCounted(v) ? amountOf(state, v, context) : v]))};
+  } finally {
+    counting -= 1;
+  }
 }
 
 /* Two derived objects compared by VALUE, not by the order things happen to sit in their lists.
@@ -214,7 +240,9 @@ export function characteristicsOf(state, id) {
       }
       const here = inLayer.filter((effect) => (effect.sublayer ?? "c") === sublayer);
       for (const effect of orderWithin(state, here, current, sourceOf)) {
-        if (affects(state, effect, current, sourceOf(effect))) current = applyEffect(current, effect);
+        if (!affects(state, effect, current, sourceOf(effect))) continue;
+        const now = counted(state, effect);
+        if (now) current = applyEffect(current, now);
       }
     }
   }

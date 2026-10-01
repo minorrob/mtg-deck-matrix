@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Awaken the Woods",
+    "oracleId": "3cc79d36-1a24-4395-8ad1-915a65db8a60",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create X 1/1 green Forest Dryad land creature tokens. (They're affected by summoning sickness.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create X 1/1 green Forest Dryad land creature tokens. (They're affected by summoning sickness.)",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Forest Dryad",
+            "types": [
+              "Land",
+              "Creature"
+            ],
+            "subtypes": [
+              "Forest",
+              "Dryad"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "t-g",
+                "kind": "mana",
+                "tapSelf": true,
+                "produces": {
+                  "G": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

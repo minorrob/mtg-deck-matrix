@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cabal Coffers",
+    "oracleId": "7358e164-5704-4e78-9b21-6a9bf2a968ce",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}, {T}: Add {B} for each Swamp you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Add {B} for each Swamp you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": {
+              "count": {
+                "controller": "you",
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

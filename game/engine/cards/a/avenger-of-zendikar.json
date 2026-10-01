@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Avenger of Zendikar",
+    "oracleId": "4ba5b3f6-503b-43e6-b66e-4f8c55cffed7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "When this creature enters, create a 0/1 green Plant creature token for each land you control.\nLandfall — Whenever a land you control enters, you may put a +1/+1 counter on each Plant creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, create a 0/1 green Plant creature token for each land you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ]
+            }
+          },
+          "token": {
+            "name": "Plant",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Plant"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, you may put a +1/+1 counter on each Plant creature you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "optional": true,
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Plant"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

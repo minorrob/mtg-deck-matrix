@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vanquish the Horde",
+    "oracleId": "a332e80a-dc51-4dc6-bc85-e114a1c6fdb8",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {1} less to cast for each creature on the battlefield.\nDestroy all creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast for each creature on the battlefield.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "count": {
+          "types": [
+            "Creature"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures.",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -178,7 +178,9 @@ export function smokeScenario(script) {
   /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
   const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
   const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
-  const fodderField = extra.some((a) => a?.atom === "sacrifice") ? ["Smoke Bear", "Smoke Relic"] : [];
+  /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
+  const ownTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"controller":"you"')));
+  const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   if (isLand) steps.push({play: name, seat: 0}, {settle: true});

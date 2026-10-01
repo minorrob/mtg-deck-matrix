@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Twitching Doll",
+    "oracleId": "fd6e1967-237a-41f6-bbf4-2c869f9447c8",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider",
+      "Toy"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add one mana of any color. Put a nest counter on this creature.\n{T}, Sacrifice this creature: Create a 2/2 green Spider creature token with reach for each counter on this creature. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color. Put a nest counter on this creature.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "nest",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this creature: Create a 2/2 green Spider creature token with reach for each counter on this creature. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "countersOn": "self",
+            "counter": "any"
+          },
+          "token": {
+            "name": "Spider",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spider"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

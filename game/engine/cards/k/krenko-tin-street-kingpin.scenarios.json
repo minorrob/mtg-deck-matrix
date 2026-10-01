@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Krenko, Tin Street Kingpin",
+  "scenarios": [
+    {
+      "name": "It attacks: a +1/+1 counter, then Goblins equal to its power now",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Krenko, Tin Street Kingpin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Krenko, Tin Street Kingpin"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Krenko, Tin Street Kingpin",
+            "power": 2,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin",
+            "Goblin",
+            "Krenko, Tin Street Kingpin"
+          ]
+        }
+      ]
+    }
+  ]
+}

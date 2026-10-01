@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Return of the Wildspeaker",
+    "oracleId": "2b76f9e9-cd28-4eaf-8674-215c34263f96",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Draw cards equal to the greatest power among non-Human creatures you control.\n• Non-Human creatures you control get +3/+3 until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "modes": [
+            {
+              "text": "Draw cards equal to the greatest power among non-Human creatures you control.",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": {
+                    "greatestPower": {
+                      "types": [
+                        "Creature"
+                      ],
+                      "controller": "you",
+                      "nonSubtypes": [
+                        "Human"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Non-Human creatures you control get +3/+3 until end of turn.",
+              "effects": [
+                {
+                  "effect": "pumpAll",
+                  "selector": {
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you",
+                    "nonSubtypes": [
+                      "Human"
+                    ]
+                  },
+                  "power": 3,
+                  "toughness": 3,
+                  "until": "end-of-turn"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

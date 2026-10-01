@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Overwhelming Stampede",
+    "oracleId": "e1e96802-fd0c-41f1-aa21-3287d75a0e88",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control.",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": {
+            "greatestPower": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          },
+          "toughness": {
+            "greatestPower": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          },
+          "keywords": [
+            "Trample"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

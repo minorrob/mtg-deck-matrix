@@ -75,7 +75,8 @@ export function basicCards(name) {
 const manaValueOf = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).reduce((n, s) => {const x = s.slice(1, -1); return n + (/^\d+$/.test(x) ? Number(x) : x === "X" ? 0 : 1);}, 0);
 const factsFrom = (cards) => (name) => {
   const c = cards(name);
-  return c ? {manaValue: manaValueOf(c.manaCost), types: c.types || [], power: c.power ?? null, toughness: c.toughness ?? null} : null;
+  /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. */
+  return c ? {manaValue: manaValueOf(c.manaCost), types: c.types || [], power: c.power ?? null, toughness: c.toughness ?? null, ...(/\{X\}/.test(c.manaCost || "") ? {x: true} : {})} : null;
 };
 
 /* A pod, checked before anything is created: its seats, and every card named by name. */

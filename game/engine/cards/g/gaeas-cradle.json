@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gaea's Cradle",
+    "oracleId": "7c427c3d-ecd8-45ef-bebd-8f10f4a311db",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {G} for each creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} for each creature you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": {
+              "count": {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

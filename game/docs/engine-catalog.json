@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 320,
-  "everyRule": 1238
+  "defined": 366,
+  "everyRule": 1452
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -79,7 +79,7 @@
      "top": 60,
      "all": 1264,
      "blocks": 60,
-     "alone": 29
+     "alone": 36
     },
     {
      "kind": "keyword ability",
@@ -199,7 +199,7 @@
      "top": 26,
      "all": 212,
      "blocks": 26,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "keyword ability",
@@ -259,7 +259,7 @@
      "top": 11,
      "all": 106,
      "blocks": 11,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -271,7 +271,7 @@
      "top": 11,
      "all": 35,
      "blocks": 11,
-     "alone": 3
+     "alone": 7
     },
     {
      "kind": "keyword ability",
@@ -295,7 +295,7 @@
      "top": 10,
      "all": 63,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -403,7 +403,7 @@
      "top": 6,
      "all": 58,
      "blocks": 6,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -475,7 +475,7 @@
      "top": 5,
      "all": 131,
      "blocks": 5,
-     "alone": 3
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -571,7 +571,7 @@
      "top": 4,
      "all": 23,
      "blocks": 4,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -631,7 +631,7 @@
      "top": 3,
      "all": 62,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -679,7 +679,7 @@
      "top": 3,
      "all": 24,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -703,7 +703,7 @@
      "top": 3,
      "all": 19,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -715,7 +715,7 @@
      "top": 3,
      "all": 17,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -787,7 +787,7 @@
      "top": 2,
      "all": 43,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -907,7 +907,7 @@
      "top": 2,
      "all": 16,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -1075,7 +1075,7 @@
      "top": 1,
      "all": 27,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1123,7 +1123,7 @@
      "top": 1,
      "all": 24,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1171,7 +1171,7 @@
      "top": 1,
      "all": 22,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1327,7 +1327,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2490,7 +2490,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -2514,7 +2514,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "keyword action",
@@ -2622,7 +2622,7 @@
      "top": 6,
      "all": 66,
      "blocks": 6,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword action",
@@ -3449,7 +3449,7 @@
      "top": 64,
      "all": 353,
      "blocks": 64,
-     "alone": 29
+     "alone": 33
     },
     {
      "kind": "effect",
@@ -3533,7 +3533,7 @@
      "top": 41,
      "all": 326,
      "blocks": 41,
-     "alone": 5
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3581,7 +3581,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3605,7 +3605,7 @@
      "top": 35,
      "all": 176,
      "blocks": 35,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3629,7 +3629,7 @@
      "top": 29,
      "all": 167,
      "blocks": 29,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3653,7 +3653,7 @@
      "top": 27,
      "all": 402,
      "blocks": 27,
-     "alone": 8
+     "alone": 11
     },
     {
      "kind": "effect",
@@ -3713,7 +3713,7 @@
      "top": 21,
      "all": 226,
      "blocks": 21,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "effect",
@@ -3725,7 +3725,7 @@
      "top": 21,
      "all": 153,
      "blocks": 21,
-     "alone": 2
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -3773,7 +3773,7 @@
      "top": 18,
      "all": 167,
      "blocks": 18,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3833,7 +3833,7 @@
      "top": 14,
      "all": 132,
      "blocks": 14,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3845,7 +3845,7 @@
      "top": 14,
      "all": 113,
      "blocks": 14,
-     "alone": 1
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -3965,7 +3965,7 @@
      "top": 10,
      "all": 62,
      "blocks": 10,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4085,7 +4085,7 @@
      "top": 6,
      "all": 66,
      "blocks": 6,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4181,7 +4181,7 @@
      "top": 4,
      "all": 22,
      "blocks": 4,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4469,7 +4469,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4493,7 +4493,7 @@
      "top": 1,
      "all": 10,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5595,7 +5595,7 @@
      "top": 34,
      "all": 204,
      "blocks": 34,
-     "alone": 12
+     "alone": 7
     },
     {
      "kind": "trigger",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 33,
-     "alone": 11
+     "alone": 15
     },
     {
      "kind": "trigger",
@@ -5643,7 +5643,7 @@
      "top": 18,
      "all": 94,
      "blocks": 18,
-     "alone": 13
+     "alone": 9
     },
     {
      "kind": "trigger",
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 5
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 33,
-     "alone": 11
+     "alone": 15
     },
     {
      "kind": "trigger",
@@ -5715,7 +5715,7 @@
      "top": 6,
      "all": 31,
      "blocks": 6,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -5727,7 +5727,7 @@
      "top": 6,
      "all": 20,
      "blocks": 6,
-     "alone": 4
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5763,7 +5763,7 @@
      "top": 4,
      "all": 77,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5943,7 +5943,7 @@
      "top": 2,
      "all": 8,
      "blocks": 2,
-     "alone": 2
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -5955,7 +5955,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -6123,7 +6123,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 26,
-     "alone": 12
+     "alone": 13
     },
     {
      "kind": "static",
@@ -7273,7 +7273,7 @@
      "top": 12,
      "all": 56,
      "blocks": 12,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "static",
@@ -7285,7 +7285,7 @@
      "top": 10,
      "all": 204,
      "blocks": 10,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7297,7 +7297,7 @@
      "top": 10,
      "all": 91,
      "blocks": 10,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "static",
@@ -7321,7 +7321,7 @@
      "top": 7,
      "all": 26,
      "blocks": 7,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "static",
@@ -7405,7 +7405,7 @@
      "top": 3,
      "all": 14,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7417,7 +7417,7 @@
      "top": 3,
      "all": 11,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -7525,7 +7525,7 @@
      "top": 1,
      "all": 14,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8147,7 +8147,7 @@
      "top": 22,
      "all": 209,
      "blocks": 22,
-     "alone": 11
+     "alone": 2
     },
     {
      "kind": "replacement",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 21,
-     "alone": 11
+     "alone": 13
     },
     {
      "kind": "replacement",
@@ -8207,7 +8207,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 3
+     "alone": 1
     },
     {
      "kind": "replacement",
@@ -8219,7 +8219,7 @@
      "top": 5,
      "all": 157,
      "blocks": 5,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "replacement",
@@ -8243,7 +8243,7 @@
      "top": 2,
      "all": 2,
      "blocks": 2,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8279,7 +8279,7 @@
      "top": 1,
      "all": 8,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8387,7 +8387,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8860,22 +8860,22 @@
   "Options and conditions": {
    "tally": {
     "built": 1,
-    "partial": 2,
+    "partial": 3,
     "named": 0,
-    "missing": 20
+    "missing": 19
    },
    "entries": [
     {
      "kind": "option",
      "rule": null,
      "name": "An amount the game counts (X, for each, devotion, greatest power)",
-     "engine": null,
-     "status": "missing",
+     "engine": "script/amount.mjs, by kind",
+     "status": "partial",
      "forge": "Count",
      "top": 586,
      "all": 5550,
-     "blocks": 586,
-     "alone": 210
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -8898,7 +8898,7 @@
      "forge": "ConditionPresent",
      "top": 142,
      "all": 1292,
-     "blocks": 142,
+     "blocks": 112,
      "alone": 0
     },
     {
@@ -8922,7 +8922,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 124,
+     "blocks": 122,
      "alone": 10
     },
     {
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 123,
-     "alone": 21
+     "alone": 20
     },
     {
      "kind": "option",
@@ -8982,7 +8982,7 @@
      "forge": "ConditionCompare",
      "top": 104,
      "all": 684,
-     "blocks": 104,
+     "blocks": 74,
      "alone": 0
     },
     {
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 99,
-     "alone": 18
+     "alone": 19
     },
     {
      "kind": "option",
@@ -9019,7 +9019,7 @@
      "top": 79,
      "all": 974,
      "blocks": 79,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9030,7 +9030,7 @@
      "forge": "ConditionCheckSVar",
      "top": 75,
      "all": 603,
-     "blocks": 75,
+     "blocks": 65,
      "alone": 2
     },
     {
@@ -9042,8 +9042,8 @@
      "forge": "UnlessCost",
      "top": 66,
      "all": 677,
-     "blocks": 66,
-     "alone": 38
+     "blocks": 56,
+     "alone": 31
     },
     {
      "kind": "option",
@@ -9054,7 +9054,7 @@
      "forge": "ConditionSVarCompare",
      "top": 65,
      "all": 455,
-     "blocks": 65,
+     "blocks": 55,
      "alone": 0
     },
     {
@@ -9091,7 +9091,7 @@
      "top": 41,
      "all": 461,
      "blocks": 41,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "option",
@@ -9115,7 +9115,7 @@
      "top": 29,
      "all": 289,
      "blocks": 29,
-     "alone": 12
+     "alone": 14
     },
     {
      "kind": "option",
@@ -9127,7 +9127,7 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9143,12 +9143,2278 @@
     }
    ]
   },
+  "Amounts the game counts": {
+   "tally": {
+    "built": 7,
+    "partial": 1,
+    "named": 0,
+    "missing": 180
+   },
+   "entries": [
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "For each permanent of a kind (\"for each creature you control\")",
+     "engine": "{count: selector}",
+     "status": "partial",
+     "forge": "Valid",
+     "top": 244,
+     "all": 1813,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": "107.3",
+     "name": "X, chosen as it is cast or activated (CR 107.3)",
+     "engine": "\"X\", one offer per value",
+     "status": "built",
+     "forge": "xPaid",
+     "top": 103,
+     "all": 923,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Damage dealt",
+     "engine": null,
+     "status": "missing",
+     "forge": "DamageAmount",
+     "top": 56,
+     "all": 373,
+     "blocks": 56,
+     "alone": 9
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Counters on this card",
+     "engine": "{countersOn, counter}",
+     "status": "built",
+     "forge": "CardCounters",
+     "top": 33,
+     "all": 288,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Cards in a graveyard",
+     "engine": "{count: {what: \"card\", zone: \"graveyard\"}}",
+     "status": "built",
+     "forge": "ValidGraveyard",
+     "top": 30,
+     "all": 460,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Cards in a hand",
+     "engine": "{count: {what: \"card\", zone: \"hand\"}}",
+     "status": "built",
+     "forge": "ValidHand",
+     "top": 26,
+     "all": 242,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "This card's power",
+     "engine": "{powerOf: \"self\"}",
+     "status": "built",
+     "forge": "CardPower",
+     "top": 25,
+     "all": 251,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "A comparison (\"if you control ...\")",
+     "engine": null,
+     "status": "missing",
+     "forge": "Compare",
+     "top": 17,
+     "all": 146,
+     "blocks": 17,
+     "alone": 10
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CounterNum",
+     "engine": null,
+     "status": "missing",
+     "forge": "CounterNum",
+     "top": 16,
+     "all": 32,
+     "blocks": 16,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Cards in a library",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidLibrary",
+     "top": 13,
+     "all": 63,
+     "blocks": 13,
+     "alone": 3
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Spells cast this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "ThisTurnCast",
+     "top": 12,
+     "all": 139,
+     "blocks": 12,
+     "alone": 2
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Life you gained this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeYouGainedThisTurn",
+     "top": 12,
+     "all": 84,
+     "blocks": 12,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "What entered or died this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "ThisTurnEntered",
+     "top": 11,
+     "all": 174,
+     "blocks": 11,
+     "alone": 3
+    },
+    {
+     "kind": "count",
+     "rule": "700.5",
+     "name": "Devotion to a color (CR 700.5)",
+     "engine": "{devotion: [color]}",
+     "status": "built",
+     "forge": "Devotion",
+     "top": 11,
+     "all": 49,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LifeAmount",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeAmount",
+     "top": 11,
+     "all": 38,
+     "blocks": 11,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Your life total",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourLifeTotal",
+     "top": 10,
+     "all": 92,
+     "blocks": 10,
+     "alone": 2
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Amount",
+     "engine": null,
+     "status": "missing",
+     "forge": "Amount",
+     "top": 10,
+     "all": 43,
+     "blocks": 10,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "How many things an effect remembered",
+     "engine": null,
+     "status": "missing",
+     "forge": "RememberedSize",
+     "top": 8,
+     "all": 71,
+     "blocks": 8,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Times this resolved this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "ResolvedThisTurn",
+     "top": 7,
+     "all": 31,
+     "blocks": 7,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "The monarch",
+     "engine": null,
+     "status": "missing",
+     "forge": "Monarch",
+     "top": 7,
+     "all": 15,
+     "blocks": 7,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": "700.5",
+     "name": "Devotion to two colors (CR 700.5)",
+     "engine": "{devotion: [color, color]}",
+     "status": "built",
+     "forge": "DevotionDual",
+     "top": 6,
+     "all": 13,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "A number a player chose",
+     "engine": null,
+     "status": "missing",
+     "forge": "ChosenNumber",
+     "top": 5,
+     "all": 77,
+     "blocks": 5,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Attackers declared",
+     "engine": null,
+     "status": "missing",
+     "forge": "AttackersDeclared",
+     "top": 5,
+     "all": 62,
+     "blocks": 5,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Cards in exile",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidExile",
+     "top": 5,
+     "all": 42,
+     "blocks": 5,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Your starting life total",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourStartingLife",
+     "top": 5,
+     "all": 23,
+     "blocks": 5,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LifeGained",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeGained",
+     "top": 5,
+     "all": 20,
+     "blocks": 5,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Whether it was kicked",
+     "engine": null,
+     "status": "missing",
+     "forge": "Kicked",
+     "top": 3,
+     "all": 92,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Times kicked",
+     "engine": null,
+     "status": "missing",
+     "forge": "TimesKicked",
+     "top": 3,
+     "all": 30,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Life your opponents lost this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeOppsLostThisTurn",
+     "top": 3,
+     "all": 26,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "An amount the trigger carries",
+     "engine": null,
+     "status": "missing",
+     "forge": "TriggerRememberAmount",
+     "top": 3,
+     "all": 21,
+     "blocks": 3,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Your experience counters",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourCountersExperience",
+     "top": 3,
+     "all": 15,
+     "blocks": 3,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Abilities activated this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "ThisTurnActivated",
+     "top": 3,
+     "all": 13,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "A gift promised",
+     "engine": null,
+     "status": "missing",
+     "forge": "PromisedGift",
+     "top": 3,
+     "all": 11,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Number",
+     "engine": null,
+     "status": "missing",
+     "forge": "Number",
+     "top": 3,
+     "all": 8,
+     "blocks": 3,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "The Urza lands",
+     "engine": null,
+     "status": "missing",
+     "forge": "UrzaLands",
+     "top": 3,
+     "all": 3,
+     "blocks": 3,
+     "alone": 3
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Morbid (a creature died this turn)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Morbid",
+     "top": 2,
+     "all": 41,
+     "blocks": 2,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "A number an effect remembered",
+     "engine": null,
+     "status": "missing",
+     "forge": "RememberedNumber",
+     "top": 2,
+     "all": 38,
+     "blocks": 2,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Cards you drew this turn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouDrewThisTurn",
+     "top": 2,
+     "all": 30,
+     "blocks": 2,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "This card's mana value",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardManaCost",
+     "top": 2,
+     "all": 12,
+     "blocks": 2,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MostCardName",
+     "engine": null,
+     "status": "missing",
+     "forge": "MostCardName",
+     "top": 2,
+     "all": 4,
+     "blocks": 2,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidStack",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidStack",
+     "top": 2,
+     "all": 4,
+     "blocks": 2,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "wasCastFromExile",
+     "engine": null,
+     "status": "missing",
+     "forge": "wasCastFromExile",
+     "top": 2,
+     "all": 4,
+     "blocks": 2,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CastTotalManaSpent",
+     "engine": null,
+     "status": "missing",
+     "forge": "CastTotalManaSpent",
+     "top": 1,
+     "all": 32,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Colors of mana spent (converge)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Converge",
+     "top": 1,
+     "all": 31,
+     "blocks": 1,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardToughness",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardToughness",
+     "top": 1,
+     "all": 20,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Adamant",
+     "engine": null,
+     "status": "missing",
+     "forge": "Adamant",
+     "top": 1,
+     "all": 19,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalCommanderCastFromCommandZone",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalCommanderCastFromCommandZone",
+     "top": 1,
+     "all": 16,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YourTurns",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourTurns",
+     "top": 1,
+     "all": 11,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Blessing",
+     "engine": null,
+     "status": "missing",
+     "forge": "Blessing",
+     "top": 1,
+     "all": 10,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Delirium",
+     "engine": null,
+     "status": "missing",
+     "forge": "Delirium",
+     "top": 1,
+     "all": 9,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "AltCost",
+     "engine": null,
+     "status": "missing",
+     "forge": "AltCost",
+     "top": 1,
+     "all": 8,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CreaturesAttackedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CreaturesAttackedThisTurn",
+     "top": 1,
+     "all": 7,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MostProminentCreatureType",
+     "engine": null,
+     "status": "missing",
+     "forge": "MostProminentCreatureType",
+     "top": 1,
+     "all": 7,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Threshold (seven cards in your graveyard)",
+     "engine": null,
+     "status": "missing",
+     "forge": "Threshold",
+     "top": 1,
+     "all": 7,
+     "blocks": 1,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "IfCastInOwnMainPhase",
+     "engine": null,
+     "status": "missing",
+     "forge": "IfCastInOwnMainPhase",
+     "top": 1,
+     "all": 6,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidAll",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidAll",
+     "top": 1,
+     "all": 6,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Ignore",
+     "engine": null,
+     "status": "missing",
+     "forge": "Ignore",
+     "top": 1,
+     "all": 4,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ManaPool",
+     "engine": null,
+     "status": "missing",
+     "forge": "ManaPool",
+     "top": 1,
+     "all": 3,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Num",
+     "engine": null,
+     "status": "missing",
+     "forge": "Num",
+     "top": 1,
+     "all": 3,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Times your commander was cast from the command zone",
+     "engine": null,
+     "status": "missing",
+     "forge": "CommanderCastFromCommandZone",
+     "top": 1,
+     "all": 3,
+     "blocks": 1,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidCommand",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidCommand",
+     "top": 1,
+     "all": 3,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardBasePower",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardBasePower",
+     "top": 1,
+     "all": 2,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "HasPropertyHasCardsInHand",
+     "engine": null,
+     "status": "missing",
+     "forge": "HasPropertyHasCardsInHand",
+     "top": 1,
+     "all": 2,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MaxOppDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "MaxOppDamageThisTurn",
+     "top": 1,
+     "all": 2,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "BloodthirstAmount",
+     "engine": null,
+     "status": "missing",
+     "forge": "BloodthirstAmount",
+     "top": 1,
+     "all": 1,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardNumAttacksThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardNumAttacksThisTurn",
+     "top": 1,
+     "all": 1,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Colors in your commanders' identity",
+     "engine": null,
+     "status": "missing",
+     "forge": "ColorsColorIdentity",
+     "top": 1,
+     "all": 1,
+     "blocks": 1,
+     "alone": 1
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "FinishedEndOfTurnsThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "FinishedEndOfTurnsThisTurn",
+     "top": 1,
+     "all": 1,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NonCombatDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "NonCombatDamageThisTurn",
+     "top": 1,
+     "all": 1,
+     "blocks": 1,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Domain",
+     "engine": null,
+     "status": "missing",
+     "forge": "Domain",
+     "top": 0,
+     "all": 66,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Party",
+     "engine": null,
+     "status": "missing",
+     "forge": "Party",
+     "top": 0,
+     "all": 39,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardsInYourHand",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardsInYourHand",
+     "top": 0,
+     "all": 30,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Intensity",
+     "engine": null,
+     "status": "missing",
+     "forge": "Intensity",
+     "top": 0,
+     "all": 20,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidBattlefield",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidBattlefield",
+     "top": 0,
+     "all": 17,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Random",
+     "engine": null,
+     "status": "missing",
+     "forge": "Random",
+     "top": 0,
+     "all": 16,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "UniqueManaColorsProduced",
+     "engine": null,
+     "status": "missing",
+     "forge": "UniqueManaColorsProduced",
+     "top": 0,
+     "all": 15,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Void",
+     "engine": null,
+     "status": "missing",
+     "forge": "Void",
+     "top": 0,
+     "all": 15,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YourCountersEnergy",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourCountersEnergy",
+     "top": 0,
+     "all": 15,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "StartingPlayer",
+     "engine": null,
+     "status": "missing",
+     "forge": "StartingPlayer",
+     "top": 0,
+     "all": 13,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "wasCastFromYourHandByYou",
+     "engine": null,
+     "status": "missing",
+     "forge": "wasCastFromYourHandByYou",
+     "top": 0,
+     "all": 12,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CountersAddedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CountersAddedThisTurn",
+     "top": 0,
+     "all": 11,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "OptionalGenericCostPaid",
+     "engine": null,
+     "status": "missing",
+     "forge": "OptionalGenericCostPaid",
+     "top": 0,
+     "all": 11,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Teamwork",
+     "engine": null,
+     "status": "missing",
+     "forge": "Teamwork",
+     "top": 0,
+     "all": 11,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "wasCastFromGraveyard",
+     "engine": null,
+     "status": "missing",
+     "forge": "wasCastFromGraveyard",
+     "top": 0,
+     "all": 11,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LastStateBattlefieldWithFallback",
+     "engine": null,
+     "status": "missing",
+     "forge": "LastStateBattlefieldWithFallback",
+     "top": 0,
+     "all": 8,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LeftGraveyardThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LeftGraveyardThisTurn",
+     "top": 0,
+     "all": 8,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LifeYouLostThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeYouLostThisTurn",
+     "top": 0,
+     "all": 8,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Result",
+     "engine": null,
+     "status": "missing",
+     "forge": "Result",
+     "top": 0,
+     "all": 8,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalDamageDoneByThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalDamageDoneByThisTurn",
+     "top": 0,
+     "all": 8,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CommittedCrimeThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CommittedCrimeThisTurn",
+     "top": 0,
+     "all": 6,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Presence",
+     "engine": null,
+     "status": "missing",
+     "forge": "Presence",
+     "top": 0,
+     "all": 6,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TopOfLibraryCMC",
+     "engine": null,
+     "status": "missing",
+     "forge": "TopOfLibraryCMC",
+     "top": 0,
+     "all": 6,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidSelf",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidSelf",
+     "top": 0,
+     "all": 6,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Bargained",
+     "engine": null,
+     "status": "missing",
+     "forge": "Bargained",
+     "top": 0,
+     "all": 5,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardNumColors",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardNumColors",
+     "top": 0,
+     "all": 5,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Landfall",
+     "engine": null,
+     "status": "missing",
+     "forge": "Landfall",
+     "top": 0,
+     "all": 5,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TimesMutated",
+     "engine": null,
+     "status": "missing",
+     "forge": "TimesMutated",
+     "top": 0,
+     "all": 5,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YourSpeed",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourSpeed",
+     "top": 0,
+     "all": 5,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ChosenSize",
+     "engine": null,
+     "status": "missing",
+     "forge": "ChosenSize",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Chroma",
+     "engine": null,
+     "status": "missing",
+     "forge": "Chroma",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Devoured",
+     "engine": null,
+     "status": "missing",
+     "forge": "Devoured",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DifferentCounterKinds",
+     "engine": null,
+     "status": "missing",
+     "forge": "DifferentCounterKinds",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DraftNotesHighest",
+     "engine": null,
+     "status": "missing",
+     "forge": "DraftNotesHighest",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Metalcraft",
+     "engine": null,
+     "status": "missing",
+     "forge": "Metalcraft",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NumDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "NumDamageThisTurn",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ScryNum",
+     "engine": null,
+     "status": "missing",
+     "forge": "ScryNum",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalOppPoisonCounters",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalOppPoisonCounters",
+     "top": 0,
+     "all": 4,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CountersRemovedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CountersRemovedThisTurn",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "EachSpentToCast",
+     "engine": null,
+     "status": "missing",
+     "forge": "EachSpentToCast",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Foretold",
+     "engine": null,
+     "status": "missing",
+     "forge": "Foretold",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Hellbent",
+     "engine": null,
+     "status": "missing",
+     "forge": "Hellbent",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ImprintedSize",
+     "engine": null,
+     "status": "missing",
+     "forge": "ImprintedSize",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LastStateGraveyardWithFallback",
+     "engine": null,
+     "status": "missing",
+     "forge": "LastStateGraveyardWithFallback",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LeftBattlefieldThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LeftBattlefieldThisTurn",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Madness",
+     "engine": null,
+     "status": "missing",
+     "forge": "Madness",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "OppGreatestLifeTotal",
+     "engine": null,
+     "status": "missing",
+     "forge": "OppGreatestLifeTotal",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalDamageReceivedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalDamageReceivedThisTurn",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalManaSpent",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalManaSpent",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ValidSideboard",
+     "engine": null,
+     "status": "missing",
+     "forge": "ValidSideboard",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouSurveilThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouSurveilThisTurn",
+     "top": 0,
+     "all": 3,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DomainActivePlayer",
+     "engine": null,
+     "status": "missing",
+     "forge": "DomainActivePlayer",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "EnchantedControllerCreatures",
+     "engine": null,
+     "status": "missing",
+     "forge": "EnchantedControllerCreatures",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "HasNumChosenColors",
+     "engine": null,
+     "status": "missing",
+     "forge": "HasNumChosenColors",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LastStateBattlefield",
+     "engine": null,
+     "status": "missing",
+     "forge": "LastStateBattlefield",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ManaColorsPaid",
+     "engine": null,
+     "status": "missing",
+     "forge": "ManaColorsPaid",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Night",
+     "engine": null,
+     "status": "missing",
+     "forge": "Night",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NumInAllHands",
+     "engine": null,
+     "status": "missing",
+     "forge": "NumInAllHands",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Revolt",
+     "engine": null,
+     "status": "missing",
+     "forge": "Revolt",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "UnlockedDoors",
+     "engine": null,
+     "status": "missing",
+     "forge": "UnlockedDoors",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouCastThisGame",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouCastThisGame",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouDescendedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouDescendedThisTurn",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouScryThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouScryThisTurn",
+     "top": 0,
+     "all": 2,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "AbilityYouCtrl",
+     "engine": null,
+     "status": "missing",
+     "forge": "AbilityYouCtrl",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ActivatedThisGame",
+     "engine": null,
+     "status": "missing",
+     "forge": "ActivatedThisGame",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "AllFourBend",
+     "engine": null,
+     "status": "missing",
+     "forge": "AllFourBend",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Bargain",
+     "engine": null,
+     "status": "missing",
+     "forge": "Bargain",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CardNumAttacksThisGame",
+     "engine": null,
+     "status": "missing",
+     "forge": "CardNumAttacksThisGame",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CastSinceBeginningOfYourLastTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "CastSinceBeginningOfYourLastTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ChromaInGrave",
+     "engine": null,
+     "status": "missing",
+     "forge": "ChromaInGrave",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ChromaSource",
+     "engine": null,
+     "status": "missing",
+     "forge": "ChromaSource",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "CrewSize",
+     "engine": null,
+     "status": "missing",
+     "forge": "CrewSize",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "DamageThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DistinctUnlockedDoors",
+     "engine": null,
+     "status": "missing",
+     "forge": "DistinctUnlockedDoors",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "DraftNotesCount",
+     "engine": null,
+     "status": "missing",
+     "forge": "DraftNotesCount",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Emerged",
+     "engine": null,
+     "status": "missing",
+     "forge": "Emerged",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Escaped",
+     "engine": null,
+     "status": "missing",
+     "forge": "Escaped",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ExactManaCostGraveyard",
+     "engine": null,
+     "status": "missing",
+     "forge": "ExactManaCostGraveyard",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "FatefulHour",
+     "engine": null,
+     "status": "missing",
+     "forge": "FatefulHour",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "FinishedUpkeepsThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "FinishedUpkeepsThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Freerunning",
+     "engine": null,
+     "status": "missing",
+     "forge": "Freerunning",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "HighestSpeed",
+     "engine": null,
+     "status": "missing",
+     "forge": "HighestSpeed",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ImprintedCardManaCost",
+     "engine": null,
+     "status": "missing",
+     "forge": "ImprintedCardManaCost",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "Initiative",
+     "engine": null,
+     "status": "missing",
+     "forge": "Initiative",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "InOwnMainPhase",
+     "engine": null,
+     "status": "missing",
+     "forge": "InOwnMainPhase",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "IsPrime",
+     "engine": null,
+     "status": "missing",
+     "forge": "IsPrime",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LastStateGraveyard",
+     "engine": null,
+     "status": "missing",
+     "forge": "LastStateGraveyard",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LastTurnEntered",
+     "engine": null,
+     "status": "missing",
+     "forge": "LastTurnEntered",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "LifeYourTeamGainedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "LifeYourTeamGainedThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MaxCombatDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "MaxCombatDamageThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MaxDistinctOnStack",
+     "engine": null,
+     "status": "missing",
+     "forge": "MaxDistinctOnStack",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MaxSameStoredRolls",
+     "engine": null,
+     "status": "missing",
+     "forge": "MaxSameStoredRolls",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "MaxSpeed",
+     "engine": null,
+     "status": "missing",
+     "forge": "MaxSpeed",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NotedNumber",
+     "engine": null,
+     "status": "missing",
+     "forge": "NotedNumber",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NumCombatDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "NumCombatDamageThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "NumPiledGuessedSA",
+     "engine": null,
+     "status": "missing",
+     "forge": "NumPiledGuessedSA",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "RegeneratedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "RegeneratedThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "RememberedWithSharedCardType",
+     "engine": null,
+     "status": "missing",
+     "forge": "RememberedWithSharedCardType",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "SacrificedThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "SacrificedThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "ScryBottom",
+     "engine": null,
+     "status": "missing",
+     "forge": "ScryBottom",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "SearchedLibrary",
+     "engine": null,
+     "status": "missing",
+     "forge": "SearchedLibrary",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "SecondMostProminentColor",
+     "engine": null,
+     "status": "missing",
+     "forge": "SecondMostProminentColor",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "SingleMaxDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "SingleMaxDamageThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalDamageThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalDamageThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalTurns",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalTurns",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TotalValue",
+     "engine": null,
+     "status": "missing",
+     "forge": "TotalValue",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TriggeredCardManaCost",
+     "engine": null,
+     "status": "missing",
+     "forge": "TriggeredCardManaCost",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TriggeredManaCostDevotion",
+     "engine": null,
+     "status": "missing",
+     "forge": "TriggeredManaCostDevotion",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TriggeredPayingMana",
+     "engine": null,
+     "status": "missing",
+     "forge": "TriggeredPayingMana",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "TypesSharedWith",
+     "engine": null,
+     "status": "missing",
+     "forge": "TypesSharedWith",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "wasCastFromYourHand",
+     "engine": null,
+     "status": "missing",
+     "forge": "wasCastFromYourHand",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "wasCastFromYourLibrary",
+     "engine": null,
+     "status": "missing",
+     "forge": "wasCastFromYourLibrary",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "xColorPaid",
+     "engine": null,
+     "status": "missing",
+     "forge": "xColorPaid",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouDrewLastTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouDrewLastTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouFlipThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouFlipThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YourCountersRAD",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourCountersRAD",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouRolledThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouRolledThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YouRollThisTurn",
+     "engine": null,
+     "status": "missing",
+     "forge": "YouRollThisTurn",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "count",
+     "rule": null,
+     "name": "YourStartingLibrarySize",
+     "engine": null,
+     "status": "missing",
+     "forge": "YourStartingLibrarySize",
+     "top": 0,
+     "all": 1,
+     "blocks": 0,
+     "alone": 0
+    }
+   ]
+  },
   "Choices": {
    "tally": {
-    "built": 9,
+    "built": 10,
     "partial": 0,
     "named": 2,
-    "missing": 4
+    "missing": 3
    },
    "entries": [
     {
@@ -9156,8 +11422,8 @@
      "forge": null,
      "name": "A value for X",
      "rule": "107.3",
-     "engine": null,
-     "status": "missing",
+     "engine": "one offer per value the pool can pay",
+     "status": "built",
      "top": 0,
      "all": 0,
      "blocks": 0,
@@ -9351,7 +11617,7 @@
      "top": 68,
      "all": 408,
      "blocks": 68,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "keyword construct",
@@ -9363,7 +11629,7 @@
      "top": 35,
      "all": 475,
      "blocks": 35,
-     "alone": 1
+     "alone": 14
     },
     {
      "kind": "keyword construct",
@@ -9375,7 +11641,7 @@
      "top": 19,
      "all": 236,
      "blocks": 19,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword construct",
@@ -9471,7 +11737,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword construct",

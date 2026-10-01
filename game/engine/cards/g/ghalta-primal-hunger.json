@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghalta, Primal Hunger",
+    "oracleId": "b0b6be0c-41cf-4757-9f0e-87227b6ba6b3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dinosaur"
+    ],
+    "manaCost": "{10}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 12,
+    "toughness": 12
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the total power of creatures you control.\nTrample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {X} less to cast, where X is the total power of creatures you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "totalPower": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    }
+  ]
+}

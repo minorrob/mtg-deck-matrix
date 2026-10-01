@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gray Merchant of Asphodel",
+    "oracleId": "38f3b157-0df4-409b-89cc-086e1531cd5b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, each opponent loses X life, where X is your devotion to black. You gain life equal to the life lost this way. (Each {B} in the mana costs of permanents you control counts toward your devotion to black.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, each opponent loses X life, where X is your devotion to black. You gain life equal to the life lost this way.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": {
+            "devotion": [
+              "B"
+            ]
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "lifeLostThisWay": true
+          }
+        }
+      ]
+    }
+  ]
+}
