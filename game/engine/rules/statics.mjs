@@ -17,7 +17,7 @@
  */
 
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector} from "../script/filter.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
@@ -25,7 +25,34 @@ export const STATIC_RULES = Object.freeze({
   "combat-damage-by-toughness": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
+  "spells-cost-less": "rules/actions.mjs",
 });
+
+/**
+ * HOW MUCH LESS A SPELL COSTS (CR 601.2f). Every "spells cost {N} less" static ability on the battlefield whose spell
+ * selector (`affects`) fits this card, cast by whom it says (`caster`: you, the default, opponent, or any): the
+ * generic mana it takes off, summed. The selector is read against the card where it is being cast from, so "a red
+ * spell" finds the red card in a hand or a command zone.
+ */
+export function costReduction(state, player, cardId) {
+  const object = state.objects[cardId];
+  if (!object) return 0;
+  let total = 0;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "spells-cost-less") continue;
+      const caster = ability.caster ?? "you";
+      if (caster === "you" && player !== holder.controller) continue;
+      if (caster === "opponent" && player === holder.controller) continue;
+      const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
+      if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      total += ability.amount ?? 1;
+    }
+  }
+  return total;
+}
 
 /**
  * Whether any static ability on the battlefield changes `rule` for this PLAYER: one whose `affects` is a player

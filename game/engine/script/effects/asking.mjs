@@ -278,6 +278,52 @@ export const proliferate = {
   },
 };
 
+/* ---- sacrifice (CR 701.21a) ---- */
+
+/* "Each opponent sacrifices a creature", "target player sacrifices a creature": each player named, in turn, chooses
+   which of their OWN permanents that fit the selector go -- nobody can sacrifice what they do not control -- and
+   they go to their owners' graveyards, which is a death "dies" sees (CR 700.4). A player with none is not asked. */
+const sacrificeable = (state, player, selector, controller) => {
+  const matches = compileSelector({...(selector ?? {}), what: "permanent", controller: "you"});
+  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source: null}));
+};
+export const sacrifice = {
+  open(state, params, context) {
+    /* CR 101.4: the active player chooses first, then each other player in turn order. */
+    const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
+    const queue = playersFor(state, params.who, context.controller).filter((p) => sacrificeable(state, p, params.selector).length > 0).sort((a, b) => apnap(a) - apnap(b));
+    if (queue.length === 0) return false;
+    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, selector: params.selector ?? {}};
+    return true;
+  },
+
+  choice(state, awaiting) {
+    const mine = sacrificeable(state, awaiting.player, awaiting.selector);
+    const count = Math.min(awaiting.count, mine.length);
+    return {
+      id: `sacrifice:${awaiting.player}:${state.turn}`,
+      title: `Sacrifice ${count === 1 ? "a permanent" : `${count} permanents`}`,
+      mode: count === 1 ? "one" : "many",
+      min: count,
+      max: count,
+      /* A token said so: it is public (CR 111.1), and the cheapest thing to give up. */
+      options: mine.map((id, index) => ({index, label: state.objects[id].card, cardId: id, ...(state.objects[id].token ? {token: true} : {})})),
+    };
+  },
+
+  apply(state, awaiting, indices) {
+    const events = [];
+    const mine = sacrificeable(state, awaiting.player, awaiting.selector);
+    for (const id of (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined)) moveOne(state, id, "graveyard", events);
+    const next = (awaiting.remaining ?? []).filter((p) => sacrificeable(state, p, awaiting.selector).length > 0);
+    if (next.length > 0) {
+      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1)};
+      return {events, again: true};
+    }
+    return events;
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -358,4 +404,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate});
+export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice});
