@@ -29,6 +29,8 @@ import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
+import {makeCopies} from "./permanents.mjs";
+import {typesOf} from "../../rules/layers.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -324,6 +326,31 @@ export const sacrifice = {
   },
 };
 
+/* ---- populate (CR 701.30): create a token that's a copy of a creature token you control -- which one is the player's
+   choice; with none, nothing happens. What the copy then gains, or when it is sacrificed, rides along (makeCopies). ---- */
+const creatureTokens = (state, player) => state.zones.battlefield.filter((id) => state.objects[id].token === true && state.objects[id].controller === player && typesOf(state, id).includes("Creature"));
+export const populate = {
+  open(state, params, context) {
+    const tokens = creatureTokens(state, context.controller);
+    if (tokens.length === 0) return false;
+    state.awaiting = {kind: "effect-choice", effect: "populate", player: context.controller, tokens,
+      params: {...(params.gainsUntilEndOfTurn ? {gainsUntilEndOfTurn: params.gainsUntilEndOfTurn} : {}), ...(params.gains ? {gains: params.gains} : {}), ...(params.except ? {except: params.except} : {}),
+        ...(params.atEndStep ? {atEndStep: params.atEndStep} : {})}, source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `populate:${awaiting.player}:${state.turn}:${awaiting.tokens.length}`, title: "Populate: copy which creature token?", mode: "one", min: 1, max: 1,
+      options: awaiting.tokens.map((id, index) => ({index, label: state.objects[id]?.card ?? "Token", cardId: id}))};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = awaiting.tokens[(indices ?? [])[0]];
+    if (chosen === undefined || !state.objects[chosen]) throw new Error("Invalid selection");
+    const events = [];
+    makeCopies(state, [chosen], awaiting.params ?? {}, {controller: awaiting.player, source: awaiting.source}, events);
+    return events;
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -404,4 +431,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice});
+export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice, populate});

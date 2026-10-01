@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 400,
-  "everyRule": 1520
+  "defined": 414,
+  "everyRule": 1550
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -199,7 +199,7 @@
      "top": 26,
      "all": 212,
      "blocks": 26,
-     "alone": 8
+     "alone": 10
     },
     {
      "kind": "keyword ability",
@@ -235,7 +235,7 @@
      "top": 14,
      "all": 214,
      "blocks": 14,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "keyword ability",
@@ -271,7 +271,7 @@
      "top": 11,
      "all": 35,
      "blocks": 11,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "keyword ability",
@@ -451,7 +451,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -655,7 +655,7 @@
      "top": 3,
      "all": 35,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -1183,7 +1183,7 @@
      "top": 1,
      "all": 19,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1279,7 +1279,7 @@
      "top": 1,
      "all": 13,
      "blocks": 1,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -3206,8 +3206,8 @@
   "Effects": {
    "tally": {
     "built": 34,
-    "partial": 0,
-    "named": 30,
+    "partial": 1,
+    "named": 29,
     "missing": 128
    },
    "entries": [
@@ -3444,12 +3444,12 @@
      "rule": null,
      "name": "CopyPermanent",
      "engine": "copyPermanent",
-     "status": "named",
+     "status": "built",
      "forge": "CopyPermanent",
      "top": 64,
      "all": 353,
-     "blocks": 64,
-     "alone": 33
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3564,7 +3564,7 @@
      "rule": null,
      "name": "DelayedTrigger",
      "engine": "delayedTrigger",
-     "status": "built",
+     "status": "partial",
      "forge": "DelayedTrigger",
      "top": 37,
      "all": 447,
@@ -3845,7 +3845,7 @@
      "top": 14,
      "all": 113,
      "blocks": 14,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -5595,7 +5595,7 @@
      "top": 34,
      "all": 204,
      "blocks": 34,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "trigger",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 33,
-     "alone": 16
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -5679,7 +5679,7 @@
      "top": 17,
      "all": 76,
      "blocks": 19,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 33,
-     "alone": 16
+     "alone": 12
     },
     {
      "kind": "trigger",
@@ -5799,7 +5799,7 @@
      "top": 3,
      "all": 126,
      "blocks": 3,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5919,7 +5919,7 @@
      "top": 2,
      "all": 22,
      "blocks": 19,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "trigger",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 2,
+    "built": 6,
     "partial": 3,
     "named": 0,
-    "missing": 20
+    "missing": 22
    },
    "entries": [
     {
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 123,
-     "alone": 20
+     "alone": 21
     },
     {
      "kind": "option",
@@ -9031,7 +9031,7 @@
      "top": 75,
      "all": 603,
      "blocks": 65,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "option",
@@ -9127,7 +9127,43 @@
      "top": 29,
      "all": 289,
      "blocks": 29,
-     "alone": 14
+     "alone": 15
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Sacrifice or exile it at the beginning of the next end step",
+     "engine": "a delayed trigger (CR 603.7)",
+     "status": "built",
+     "forge": "AtEOT",
+     "top": 21,
+     "all": 184,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "A token that enters tapped and attacking",
+     "engine": null,
+     "status": "missing",
+     "forge": "TokenAttacking",
+     "top": 16,
+     "all": 88,
+     "blocks": 16,
+     "alone": 3
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "It gains a keyword until end of turn (a token made this way)",
+     "engine": "gainsUntilEndOfTurn",
+     "status": "built",
+     "forge": "PumpKeywords",
+     "top": 16,
+     "all": 67,
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9144,6 +9180,18 @@
     {
      "kind": "option",
      "rule": null,
+     "name": "Except it isn't legendary (a copy)",
+     "engine": "except.nonLegendary",
+     "status": "built",
+     "forge": "NonLegendary",
+     "top": 10,
+     "all": 43,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
      "name": "Present in a zone other than the battlefield (\"as long as this card is in your graveyard\")",
      "engine": null,
      "status": "missing",
@@ -9152,6 +9200,30 @@
      "all": 160,
      "blocks": 9,
      "alone": 1
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Populate (copy a creature token you control)",
+     "engine": "populate",
+     "status": "built",
+     "forge": "Populate",
+     "top": 5,
+     "all": 27,
+     "blocks": 0,
+     "alone": 0
+    },
+    {
+     "kind": "option",
+     "rule": null,
+     "name": "Grants a triggered ability (\"has 'whenever ...'\")",
+     "engine": null,
+     "status": "missing",
+     "forge": "AddTriggers",
+     "top": 3,
+     "all": 15,
+     "blocks": 3,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9305,7 +9377,7 @@
      "top": 12,
      "all": 139,
      "blocks": 12,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "count",
@@ -9545,7 +9617,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 1
+     "alone": 0
     },
     {
      "kind": "count",

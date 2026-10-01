@@ -56,7 +56,7 @@ function parseScript(text){
    "only once each turn", "up to N targets" -- which Forge writes as parameters rather than as effects or triggers. Kept
    per card, by name only, so coverage and the catalog can count them (engine-constructs.mjs FORGE_OPTIONS). */
 const OPTION_PARAMS=new Set(['UnlessCost','Count','ConditionPresent','ConditionCompare','ConditionCheckSVar','ConditionSVarCompare','ConditionDefined','Condition',
-  'CheckSVar','IsPresent','IsPresentStatic','PresentZone','SVarCompare','PresentCompare','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
+  'CheckSVar','IsPresent','IsPresentStatic','PresentZone','SVarCompare','PresentCompare','AtEOT','PumpKeywords','NonLegendary','Populate','TokenAttacking','AddTriggers','ActivationLimit','ActivationPhases','TargetMin','TargetMax','MayPlay','Duration','Optional','OptionalDecider',
   'RememberObjects','RememberChanged','Imprint']);
 function tally(pool){
   const dims=['apis','triggers','statics','replacements','keywords','costs','params','amounts'];

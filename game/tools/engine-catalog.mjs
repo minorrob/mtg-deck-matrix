@@ -136,7 +136,10 @@ function main() {
   });
 
   /* Effects: every Forge effect API any card uses. */
-  const effectStatus = (primitive) => (!primitive ? "missing" : isBuilt(primitive) ? "built" : isPrimitive(primitive) ? "named" : "missing");
+  /* Built, some forms: a delayed trigger fires "at the beginning of the next end step" (batch 13), not yet at the other
+     moments a card can name. */
+  const PARTIAL_EFFECTS = new Set(["delayedTrigger"]);
+  const effectStatus = (primitive) => (!primitive ? "missing" : isBuilt(primitive) ? (PARTIAL_EFFECTS.has(primitive) ? "partial" : "built") : isPrimitive(primitive) ? "named" : "missing");
   const effects = [...ALL.apis.keys()].map((api) => {
     const primitive = FORGE_API[api] ?? null;
     return entry({kind: "effect", rule: null, name: api, engine: primitive, status: effectStatus(primitive), forge: api, top: TOP.apis.get(api) ?? 0, all: ALL.apis.get(api) ?? 0,

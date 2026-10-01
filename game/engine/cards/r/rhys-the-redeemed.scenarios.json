@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rhys the Redeemed",
+  "scenarios": [
+    {
+      "name": "An Elf Warrior; then a copy of each creature token",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhys the Redeemed",
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Rhys the Redeemed",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf Warrior",
+            "Forest",
+            "Plains",
+            "Rhys the Redeemed",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

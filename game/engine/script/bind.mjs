@@ -131,7 +131,7 @@ function objectsOf(value, context) {
   /* "That spell", "that creature": what the trigger is about (trigger.mjs), while it is still there. */
   if (value === "that card") return context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : [];
   /* "Tap enchanted creature", "untap equipped creature": what the source is attached to as it resolves (stack.mjs). */
-  if (value === "enchanted") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
+  if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "object" ? [chosen.id] : [];

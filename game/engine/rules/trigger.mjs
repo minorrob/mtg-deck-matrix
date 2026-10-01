@@ -38,9 +38,9 @@
  * any at all, and `filter` the selector the arrival must match ("a creature you control"), "you" being the
  * trigger's controller.
  *
- * WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger while a condition holds
- * rather than on an event, and delayed triggers (CR 603.7), which are created by a resolving
- * effect. Both need the effect system in phase 2 before they have anything to be created by.
+ * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" is built (M4
+ * phase 3, batch 13); other moments are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
+ * while a condition holds rather than on an event.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
@@ -195,6 +195,18 @@ export function collectTriggers(state, events) {
           }
         }
       }
+    }
+    /* A DELAYED TRIGGER (CR 603.7) -- "sacrifice it at the beginning of the next end step" -- made by a resolving spell
+       or ability, triggers once, at the next end step's beginning, and then it is gone. One made during an end step was
+       made after that step began, so the next beginning this sees is the following turn's (CR 603.7c). */
+    if (event.kind === "GameEventTurnPhase" && event.data?.fields?.phase === "END_OF_TURN" && (state.delayedTriggers ?? []).length) {
+      const due = state.delayedTriggers.filter((d) => d.at === "end step");
+      state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
+      for (const d of due) state.pendingTriggers.push({
+        abilityId: "delayed", text: d.text ?? "At the beginning of the next end step", controller: d.controller,
+        source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
+        script: {targets: [], effects: d.effects},
+      });
     }
     /* A trigger that watches a permanent LEAVING has to also fire for the permanent that left,
        whose object is already gone from the battlefield by the time this runs. The event's snapshot

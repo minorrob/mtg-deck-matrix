@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -173,6 +173,8 @@ export function compileSelector(selector) {
 
     /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
     if (selector.supertypes && !selector.supertypes.every((st) => (object.supertypes ?? []).includes(st))) return false;
+    /* "Nonlegendary creature": none of these supertypes. */
+    if (selector.nonSupertypes && selector.nonSupertypes.some((st) => (object.supertypes ?? []).includes(st))) return false;
 
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */

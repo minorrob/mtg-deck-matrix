@@ -104,6 +104,13 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   eq(section("Keyword abilities (CR 702)").find((e) => e.name === "Enchant")?.status, "built", "and the catalog says so");
 }
 
+/* ---- copies, populate, and the delayed trigger (batch 13) ---- */
+{
+  eq([section("Effects").find((e) => e.forge === "CopyPermanent")?.status, section("Effects").find((e) => e.forge === "DelayedTrigger")?.status], ["built", "partial"],
+    "a copy of a permanent is built; a delayed trigger only partly -- \"at the beginning of the next end step\" fires, other moments do not yet");
+  ok(inventory.top.perCard["Kiki-Jiki, Mirror Breaker"].options.includes("AtEOT"), "the measurement records the end-step sacrifice on Kiki-Jiki itself");
+}
+
 /* ---- order ---- */
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every

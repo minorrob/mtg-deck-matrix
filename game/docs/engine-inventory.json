@@ -2668,6 +2668,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AddTriggers",
      "ConditionDefined",
      "ConditionPresent",
      "RememberChanged"
@@ -6853,7 +6854,8 @@
      "Vigilance"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "Valid"
@@ -6964,7 +6966,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Corpse Knight": {
@@ -7850,7 +7854,8 @@
     "keywords": [],
     "options": [
      "ConditionCompare",
-     "ConditionPresent"
+     "ConditionPresent",
+     "TokenAttacking"
     ],
     "counts": []
    },
@@ -7894,6 +7899,7 @@
      "Chapter"
     ],
     "options": [
+     "AtEOT",
      "Optional",
      "RememberChanged"
     ],
@@ -8145,7 +8151,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Hordeling Outburst": {
@@ -8232,6 +8240,7 @@
     ],
     "options": [
      "Duration",
+     "PumpKeywords",
      "RememberObjects"
     ],
     "counts": []
@@ -8365,6 +8374,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count"
     ],
     "counts": [
@@ -8483,7 +8493,9 @@
     "keywords": [
      "Haste"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Study Hall": {
@@ -13998,7 +14010,8 @@
      "Vigilance"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "Valid"
@@ -14757,7 +14770,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "CardCounters"
@@ -14862,6 +14876,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count",
      "Duration",
      "Imprint",
@@ -16241,7 +16256,8 @@
      "ConditionCompare",
      "ConditionDefined",
      "ConditionPresent",
-     "Optional"
+     "Optional",
+     "PumpKeywords"
     ],
     "counts": []
    },
@@ -18732,7 +18748,9 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Optional"
+     "AtEOT",
+     "Optional",
+     "PumpKeywords"
     ],
     "counts": []
    },
@@ -19625,7 +19643,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Combat Celebrant": {
@@ -19705,6 +19725,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "ConditionDefined",
      "ConditionPresent"
     ],
@@ -21388,7 +21409,8 @@
     "keywords": [],
     "options": [
      "ConditionCompare",
-     "ConditionPresent"
+     "ConditionPresent",
+     "TokenAttacking"
     ],
     "counts": []
    },
@@ -23503,7 +23525,9 @@
     "keywords": [
      "Squad"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Endurance Bobblehead": {
@@ -24228,6 +24252,7 @@
      "Chapter"
     ],
     "options": [
+     "AtEOT",
      "Optional",
      "RememberChanged"
     ],
@@ -24680,7 +24705,10 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Felidar Cub": {
@@ -26166,7 +26194,10 @@
     "keywords": [
      "Hexproof"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Gelectrode": {
@@ -28153,7 +28184,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Hapatra, Vizier of Poisons": {
@@ -28557,7 +28590,9 @@
     "keywords": [
      "Battle cry"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Hero's Downfall": {
@@ -28804,6 +28839,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AddTriggers",
      "ConditionDefined",
      "ConditionPresent",
      "RememberChanged"
@@ -29182,6 +29218,7 @@
      "Trample"
     ],
     "options": [
+     "AtEOT",
      "OptionalDecider"
     ],
     "counts": []
@@ -30046,7 +30083,10 @@
     "keywords": [
      "Blitz"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Jaya Ballard": {
@@ -31516,6 +31556,7 @@
     ],
     "options": [
      "Duration",
+     "PumpKeywords",
      "RememberObjects"
     ],
     "counts": []
@@ -33890,7 +33931,10 @@
     "keywords": [
      "ETBReplacement"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Molten Gatekeeper": {
@@ -36044,7 +36088,8 @@
      "Haste"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "YourCountersExperience"
@@ -37588,6 +37633,7 @@
      "Indestructible"
     ],
     "options": [
+     "AtEOT",
      "CheckSVar",
      "Count",
      "Optional",
@@ -37632,6 +37678,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count"
     ],
     "counts": [
@@ -38109,6 +38156,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count"
     ],
     "counts": [
@@ -38544,7 +38592,10 @@
     "keywords": [
      "First Strike"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Reflector Mage": {
@@ -39433,7 +39484,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Royal Assassin": {
@@ -41144,7 +41197,9 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "RememberObjects"
+     "NonLegendary",
+     "RememberObjects",
+     "TokenAttacking"
     ],
     "counts": []
    },
@@ -41643,7 +41698,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Skyscanner": {
@@ -42302,6 +42359,7 @@
     ],
     "options": [
      "Count",
+     "NonLegendary",
      "RememberObjects"
     ],
     "counts": [
@@ -42832,7 +42890,9 @@
     "keywords": [
      "Haste"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Squee, Goblin Nabob": {
@@ -43509,7 +43569,9 @@
     "keywords": [
      "Haste"
     ],
-    "options": [],
+    "options": [
+     "AtEOT"
+    ],
     "counts": []
    },
    "Stratosoarer": {
@@ -45664,7 +45726,8 @@
      "Sneak"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "ValidStack"
@@ -46256,7 +46319,9 @@
      "Ninjutsu",
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Thousand-Year Elixir": {
@@ -47469,7 +47534,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Trouble in Pairs": {
@@ -48208,6 +48275,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count"
     ],
     "counts": [
@@ -62010,7 +62078,8 @@
      "Vigilance"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "Valid"
@@ -62202,6 +62271,7 @@
     ],
     "options": [
      "Count",
+     "NonLegendary",
      "RememberObjects"
     ],
     "counts": [
@@ -63473,7 +63543,10 @@
     "keywords": [
      "Equip"
     ],
-    "options": [],
+    "options": [
+     "NonLegendary",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Gitaxian Probe": {
@@ -64942,7 +65015,8 @@
      "Haste"
     ],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PumpKeywords"
     ],
     "counts": []
    },
@@ -67824,7 +67898,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "CardCounters"
@@ -68214,6 +68289,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Duration",
      "RememberChanged"
     ],
@@ -68898,7 +68974,9 @@
     ],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT"
+    ],
     "counts": []
    },
    "Descent into Avernus": {
@@ -69565,7 +69643,9 @@
      "Flying",
      "Ward"
     ],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Opposition Agent": {
@@ -69828,7 +69908,9 @@
     "keywords": [
      "ETBReplacement"
     ],
-    "options": [],
+    "options": [
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Approach of the Second Sun": {
@@ -71717,7 +71799,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Rite of Replication": {
@@ -74373,7 +74457,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Tranquil Cove": {
@@ -75780,7 +75866,9 @@
     "keywords": [
      "Haste"
     ],
-    "options": [],
+    "options": [
+     "AtEOT"
+    ],
     "counts": []
    },
    "Talon Gates of Madara": {
@@ -75917,7 +76005,8 @@
      "Trample"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "Valid"
@@ -76069,6 +76158,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Duration",
      "RememberChanged"
     ],
@@ -76402,7 +76492,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Count"
+     "Count",
+     "PumpKeywords"
     ],
     "counts": [
      "Valid"
@@ -76783,7 +76874,10 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Elenda's Hierophant": {
@@ -77283,7 +77377,10 @@
     "keywords": [
      "Blitz"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Waterlogged Grove": {
@@ -77448,6 +77545,7 @@
     ],
     "options": [
      "Duration",
+     "PumpKeywords",
      "RememberObjects"
     ],
     "counts": []
@@ -78344,6 +78442,7 @@
      "Strive"
     ],
     "options": [
+     "AtEOT",
      "Count",
      "TargetMax",
      "TargetMin"
@@ -80085,7 +80184,11 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AddTriggers",
+     "NonLegendary",
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Ureni of the Unwritten": {
@@ -81066,7 +81169,9 @@
     "keywords": [
      "Battle cry"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Breena, the Demagogue": {
@@ -84929,7 +85034,9 @@
      "Ninjutsu",
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Wilhelt, the Rotcleaver": {
@@ -85160,7 +85267,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "Valid"
@@ -85667,7 +85775,10 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Demon's Disciple": {
@@ -86975,7 +87086,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Jacked Rabbit": {
@@ -87376,7 +87489,8 @@
     "keywords": [],
     "options": [
      "ConditionDefined",
-     "ConditionPresent"
+     "ConditionPresent",
+     "NonLegendary"
     ],
     "counts": []
    },
@@ -87820,7 +87934,10 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Homeward Path": {
@@ -88301,7 +88418,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Ingenious Infiltrator": {
@@ -89109,7 +89228,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Elvish Harbinger": {
@@ -90068,7 +90189,9 @@
     "keywords": [
      "Rebound"
     ],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Hazel's Brewmaster": {
@@ -91094,6 +91217,7 @@
      "ETBReplacement"
     ],
     "options": [
+     "AddTriggers",
      "IsPresent",
      "OptionalDecider"
     ],
@@ -91852,7 +91976,9 @@
     "keywords": [
      "Haste"
     ],
-    "options": [],
+    "options": [
+     "AtEOT"
+    ],
     "counts": []
    },
    "Empty the Warrens": {
@@ -92172,7 +92298,8 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "IsPresent"
+     "IsPresent",
+     "PumpKeywords"
     ],
     "counts": []
    },
@@ -92222,6 +92349,7 @@
      "Chapter"
     ],
     "options": [
+     "AtEOT",
      "Optional",
      "RememberChanged"
     ],
@@ -94400,6 +94528,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "Count"
     ],
     "counts": [
@@ -95021,7 +95150,9 @@
      "Vigilance",
      "Ward"
     ],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Snapcaster Mage": {
@@ -95237,7 +95368,10 @@
     "keywords": [
      "First Strike"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Crib Swap": {
@@ -95824,7 +95958,10 @@
     "keywords": [
      "ETBReplacement"
     ],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Vraska Joins Up": {
@@ -95898,7 +96035,9 @@
     "replacements": [],
     "keywords": [],
     "options": [
-     "Count"
+     "AtEOT",
+     "Count",
+     "PumpKeywords"
     ],
     "counts": [
      "ThisTurnCast"
@@ -96089,6 +96228,7 @@
      "Persist"
     ],
     "options": [
+     "AtEOT",
      "Duration",
      "RememberChanged"
     ],
@@ -97161,7 +97301,9 @@
     "keywords": [
      "ETBReplacement"
     ],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Treasonous Ogre": {
@@ -97307,6 +97449,7 @@
      "Trample"
     ],
     "options": [
+     "AtEOT",
      "OptionalDecider"
     ],
     "counts": []
@@ -97689,6 +97832,7 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "CheckSVar",
      "Count",
      "SVarCompare"
@@ -97952,7 +98096,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Price of Progress": {
@@ -98201,7 +98347,9 @@
     "keywords": [
      "Vigilance"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Benevolent Hydra": {
@@ -98838,7 +98986,9 @@
     "keywords": [
      "ETBReplacement"
     ],
-    "options": [],
+    "options": [
+     "AddTriggers"
+    ],
     "counts": []
    },
    "Harmonized Crescendo": {
@@ -99443,7 +99593,9 @@
      "Vigilance",
      "Crew"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "On Wings of Gold": {
@@ -100399,7 +100551,10 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Glimpse the Impossible": {
@@ -101113,11 +101268,13 @@
     "replacements": [],
     "keywords": [],
     "options": [
+     "AtEOT",
      "ConditionCompare",
      "ConditionDefined",
      "ConditionPresent",
      "Imprint",
-     "OptionalDecider"
+     "OptionalDecider",
+     "PumpKeywords"
     ],
     "counts": []
    },
@@ -102052,7 +102209,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Trinket Mage": {
@@ -103847,7 +104006,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "TokenAttacking"
+    ],
     "counts": []
    },
    "Indomitable Ancients": {
@@ -103981,7 +104142,8 @@
      "Haste"
     ],
     "options": [
-     "Count"
+     "Count",
+     "TokenAttacking"
     ],
     "counts": [
      "YourCountersExperience"
@@ -104068,7 +104230,9 @@
     "keywords": [
      "Flying"
     ],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Thundermane Dragon": {
@@ -104817,7 +104981,9 @@
      "Flying",
      "Ward"
     ],
-    "options": [],
+    "options": [
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Zada, Hedron Grinder": {
@@ -104930,7 +105096,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "NonLegendary"
+    ],
     "counts": []
    },
    "Yuna, Hope of Spira": {
@@ -105619,7 +105787,11 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "AtEOT",
+     "Populate",
+     "PumpKeywords"
+    ],
     "counts": []
    },
    "Mjölnir, Storm Hammer": {
@@ -106374,7 +106546,9 @@
     "statics": [],
     "replacements": [],
     "keywords": [],
-    "options": [],
+    "options": [
+     "Populate"
+    ],
     "counts": []
    },
    "Disallow": {
