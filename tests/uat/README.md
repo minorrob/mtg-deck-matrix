@@ -8,6 +8,14 @@ repo itself, so it needs no port, and it is required rather than skippable here)
 quota abort, backup/restore, construction, graph, offline and mobile) and `tour-walk.mjs`
 (every step of all seven guided tours, asserting each one points at something real).
 
+`play-journeys.mjs` is Play's journey through the real UI (Part 7's G-B, `docs/plan-to-done-2026-09-30.md`): two
+four-seat tables, Rob at a desk and Maya on a phone held sideways with two AIs, through New table, the invite link,
+decks from the library by name (all seven of Rob's decks take a seat), the countdown, the game played through the
+board's own buttons, every view at 1280, 1400, 1920 and 2560, the Coach, End game and the record, with the hidden
+information read from every frame. It serves itself (no port) and plays the cards as the engine's vanilla versions
+of themselves until M4 and G1; `UAT_SHOTS=<dir>` writes each view at each size, and `JOURNEY_TURNS` sets how far each
+table plays (6). It runs only when asked, like the release journeys.
+
 `crankmagic-recovery.mjs` and `legacy-journeys.mjs` were removed with the pages they
 walked. matrix.html, legacy-decks.html and legacy-graph.html are retired; a journey
 through a page nobody can open is not a release gate, and the flows they covered either
