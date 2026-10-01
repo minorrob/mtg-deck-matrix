@@ -119,7 +119,7 @@ function additionalChoices(state, player, spellId, costs) {
 function withTargets(state, base, ability, context) {
   const specs = ability?.targets ?? [];
   if (!specs.length) return [base];
-  const hostile = isHostile(ability.effects);
+  const hostile = ability.hostile === true || isHostile(ability.effects);
   return targetChoices(state, specs, context).map((targets) => ({
     ...base, targets, targetNames: targets.map((t) => targetName(state, t)), hostile,
   }));

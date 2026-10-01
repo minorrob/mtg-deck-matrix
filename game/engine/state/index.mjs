@@ -168,6 +168,8 @@ export function addObject(state, object, zone, player = null) {
        and its printed subtypes, which a selector may ask about. Present only on a card that has them, so an object
        made from a bare kernel definition is the shape it always was. */
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
+    /* An Aura's Enchant (CR 702.5): what it may be attached to, a selector the state-based actions read (CR 704.5m). */
+    ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
     ...(Array.isArray(object.subtypes) && object.subtypes.length ? {subtypes: [...object.subtypes]} : {}),
     ...(Array.isArray(object.supertypes) && object.supertypes.length ? {supertypes: [...object.supertypes]} : {}),
     /* CR 903.4a: a card's color identity is established before the game and goes with it everywhere; "any color in
@@ -218,5 +220,6 @@ export function moveObject(state, id, zone, player = null) {
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
+    enchant: from.enchant,
   }, zone, player);
 }
