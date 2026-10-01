@@ -1,0 +1,1064 @@
+{
+ "schema": "CrankCrIndex@1",
+ "source": "MagicCompRules-20260925.txt",
+ "keywordActions": [
+  {
+   "rule": "701.2",
+   "name": "Activate"
+  },
+  {
+   "rule": "701.3",
+   "name": "Attach"
+  },
+  {
+   "rule": "701.4",
+   "name": "Behold"
+  },
+  {
+   "rule": "701.5",
+   "name": "Cast"
+  },
+  {
+   "rule": "701.6",
+   "name": "Counter"
+  },
+  {
+   "rule": "701.7",
+   "name": "Create"
+  },
+  {
+   "rule": "701.8",
+   "name": "Destroy"
+  },
+  {
+   "rule": "701.9",
+   "name": "Discard"
+  },
+  {
+   "rule": "701.10",
+   "name": "Double"
+  },
+  {
+   "rule": "701.11",
+   "name": "Triple"
+  },
+  {
+   "rule": "701.12",
+   "name": "Exchange"
+  },
+  {
+   "rule": "701.13",
+   "name": "Exile"
+  },
+  {
+   "rule": "701.14",
+   "name": "Fight"
+  },
+  {
+   "rule": "701.15",
+   "name": "Goad"
+  },
+  {
+   "rule": "701.16",
+   "name": "Investigate"
+  },
+  {
+   "rule": "701.17",
+   "name": "Mill"
+  },
+  {
+   "rule": "701.18",
+   "name": "Play"
+  },
+  {
+   "rule": "701.19",
+   "name": "Regenerate"
+  },
+  {
+   "rule": "701.20",
+   "name": "Reveal"
+  },
+  {
+   "rule": "701.21",
+   "name": "Sacrifice"
+  },
+  {
+   "rule": "701.22",
+   "name": "Scry"
+  },
+  {
+   "rule": "701.23",
+   "name": "Search"
+  },
+  {
+   "rule": "701.24",
+   "name": "Shuffle"
+  },
+  {
+   "rule": "701.25",
+   "name": "Surveil"
+  },
+  {
+   "rule": "701.26",
+   "name": "Tap and Untap"
+  },
+  {
+   "rule": "701.27",
+   "name": "Transform"
+  },
+  {
+   "rule": "701.28",
+   "name": "Convert"
+  },
+  {
+   "rule": "701.29",
+   "name": "Fateseal"
+  },
+  {
+   "rule": "701.30",
+   "name": "Clash"
+  },
+  {
+   "rule": "701.31",
+   "name": "Planeswalk"
+  },
+  {
+   "rule": "701.32",
+   "name": "Set in Motion"
+  },
+  {
+   "rule": "701.33",
+   "name": "Abandon"
+  },
+  {
+   "rule": "701.34",
+   "name": "Proliferate"
+  },
+  {
+   "rule": "701.35",
+   "name": "Detain"
+  },
+  {
+   "rule": "701.36",
+   "name": "Populate"
+  },
+  {
+   "rule": "701.37",
+   "name": "Monstrosity"
+  },
+  {
+   "rule": "701.38",
+   "name": "Vote"
+  },
+  {
+   "rule": "701.39",
+   "name": "Bolster"
+  },
+  {
+   "rule": "701.40",
+   "name": "Manifest"
+  },
+  {
+   "rule": "701.41",
+   "name": "Support"
+  },
+  {
+   "rule": "701.42",
+   "name": "Meld"
+  },
+  {
+   "rule": "701.43",
+   "name": "Exert"
+  },
+  {
+   "rule": "701.44",
+   "name": "Explore"
+  },
+  {
+   "rule": "701.45",
+   "name": "Assemble"
+  },
+  {
+   "rule": "701.46",
+   "name": "Adapt"
+  },
+  {
+   "rule": "701.47",
+   "name": "Amass"
+  },
+  {
+   "rule": "701.48",
+   "name": "Learn"
+  },
+  {
+   "rule": "701.49",
+   "name": "Venture into the Dungeon"
+  },
+  {
+   "rule": "701.50",
+   "name": "Connive"
+  },
+  {
+   "rule": "701.51",
+   "name": "Open an Attraction"
+  },
+  {
+   "rule": "701.52",
+   "name": "Roll to Visit Your Attractions"
+  },
+  {
+   "rule": "701.53",
+   "name": "Incubate"
+  },
+  {
+   "rule": "701.54",
+   "name": "The Ring Tempts You"
+  },
+  {
+   "rule": "701.55",
+   "name": "Face a Villainous Choice"
+  },
+  {
+   "rule": "701.56",
+   "name": "Time Travel"
+  },
+  {
+   "rule": "701.57",
+   "name": "Discover"
+  },
+  {
+   "rule": "701.58",
+   "name": "Cloak"
+  },
+  {
+   "rule": "701.59",
+   "name": "Collect Evidence"
+  },
+  {
+   "rule": "701.60",
+   "name": "Suspect"
+  },
+  {
+   "rule": "701.61",
+   "name": "Forage"
+  },
+  {
+   "rule": "701.62",
+   "name": "Manifest Dread"
+  },
+  {
+   "rule": "701.63",
+   "name": "Endure"
+  },
+  {
+   "rule": "701.64",
+   "name": "Harness"
+  },
+  {
+   "rule": "701.65",
+   "name": "Airbend"
+  },
+  {
+   "rule": "701.66",
+   "name": "Earthbend"
+  },
+  {
+   "rule": "701.67",
+   "name": "Waterbend"
+  },
+  {
+   "rule": "701.68",
+   "name": "Blight"
+  },
+  {
+   "rule": "701.69",
+   "name": "Heal"
+  },
+  {
+   "rule": "701.70",
+   "name": "Recruit"
+  },
+  {
+   "rule": "701.71",
+   "name": "Empower Jace"
+  }
+ ],
+ "keywordAbilities": [
+  {
+   "rule": "702.2",
+   "name": "Deathtouch"
+  },
+  {
+   "rule": "702.3",
+   "name": "Defender"
+  },
+  {
+   "rule": "702.4",
+   "name": "Double Strike"
+  },
+  {
+   "rule": "702.5",
+   "name": "Enchant"
+  },
+  {
+   "rule": "702.6",
+   "name": "Equip"
+  },
+  {
+   "rule": "702.7",
+   "name": "First Strike"
+  },
+  {
+   "rule": "702.8",
+   "name": "Flash"
+  },
+  {
+   "rule": "702.9",
+   "name": "Flying"
+  },
+  {
+   "rule": "702.10",
+   "name": "Haste"
+  },
+  {
+   "rule": "702.11",
+   "name": "Hexproof"
+  },
+  {
+   "rule": "702.12",
+   "name": "Indestructible"
+  },
+  {
+   "rule": "702.13",
+   "name": "Intimidate"
+  },
+  {
+   "rule": "702.14",
+   "name": "Landwalk"
+  },
+  {
+   "rule": "702.15",
+   "name": "Lifelink"
+  },
+  {
+   "rule": "702.16",
+   "name": "Protection"
+  },
+  {
+   "rule": "702.17",
+   "name": "Reach"
+  },
+  {
+   "rule": "702.18",
+   "name": "Shroud"
+  },
+  {
+   "rule": "702.19",
+   "name": "Trample"
+  },
+  {
+   "rule": "702.20",
+   "name": "Vigilance"
+  },
+  {
+   "rule": "702.21",
+   "name": "Ward"
+  },
+  {
+   "rule": "702.22",
+   "name": "Banding"
+  },
+  {
+   "rule": "702.23",
+   "name": "Rampage"
+  },
+  {
+   "rule": "702.24",
+   "name": "Cumulative Upkeep"
+  },
+  {
+   "rule": "702.25",
+   "name": "Flanking"
+  },
+  {
+   "rule": "702.26",
+   "name": "Phasing"
+  },
+  {
+   "rule": "702.27",
+   "name": "Buyback"
+  },
+  {
+   "rule": "702.28",
+   "name": "Shadow"
+  },
+  {
+   "rule": "702.29",
+   "name": "Cycling"
+  },
+  {
+   "rule": "702.30",
+   "name": "Echo"
+  },
+  {
+   "rule": "702.31",
+   "name": "Horsemanship"
+  },
+  {
+   "rule": "702.32",
+   "name": "Fading"
+  },
+  {
+   "rule": "702.33",
+   "name": "Kicker"
+  },
+  {
+   "rule": "702.34",
+   "name": "Flashback"
+  },
+  {
+   "rule": "702.35",
+   "name": "Madness"
+  },
+  {
+   "rule": "702.36",
+   "name": "Fear"
+  },
+  {
+   "rule": "702.37",
+   "name": "Morph"
+  },
+  {
+   "rule": "702.38",
+   "name": "Amplify"
+  },
+  {
+   "rule": "702.39",
+   "name": "Provoke"
+  },
+  {
+   "rule": "702.40",
+   "name": "Storm"
+  },
+  {
+   "rule": "702.41",
+   "name": "Affinity"
+  },
+  {
+   "rule": "702.42",
+   "name": "Entwine"
+  },
+  {
+   "rule": "702.43",
+   "name": "Modular"
+  },
+  {
+   "rule": "702.44",
+   "name": "Sunburst"
+  },
+  {
+   "rule": "702.45",
+   "name": "Bushido"
+  },
+  {
+   "rule": "702.46",
+   "name": "Soulshift"
+  },
+  {
+   "rule": "702.47",
+   "name": "Splice"
+  },
+  {
+   "rule": "702.48",
+   "name": "Offering"
+  },
+  {
+   "rule": "702.49",
+   "name": "Ninjutsu"
+  },
+  {
+   "rule": "702.50",
+   "name": "Epic"
+  },
+  {
+   "rule": "702.51",
+   "name": "Convoke"
+  },
+  {
+   "rule": "702.52",
+   "name": "Dredge"
+  },
+  {
+   "rule": "702.53",
+   "name": "Transmute"
+  },
+  {
+   "rule": "702.54",
+   "name": "Bloodthirst"
+  },
+  {
+   "rule": "702.55",
+   "name": "Haunt"
+  },
+  {
+   "rule": "702.56",
+   "name": "Replicate"
+  },
+  {
+   "rule": "702.57",
+   "name": "Forecast"
+  },
+  {
+   "rule": "702.58",
+   "name": "Graft"
+  },
+  {
+   "rule": "702.59",
+   "name": "Recover"
+  },
+  {
+   "rule": "702.60",
+   "name": "Ripple"
+  },
+  {
+   "rule": "702.61",
+   "name": "Split Second"
+  },
+  {
+   "rule": "702.62",
+   "name": "Suspend"
+  },
+  {
+   "rule": "702.63",
+   "name": "Vanishing"
+  },
+  {
+   "rule": "702.64",
+   "name": "Absorb"
+  },
+  {
+   "rule": "702.65",
+   "name": "Aura Swap"
+  },
+  {
+   "rule": "702.66",
+   "name": "Delve"
+  },
+  {
+   "rule": "702.67",
+   "name": "Fortify"
+  },
+  {
+   "rule": "702.68",
+   "name": "Frenzy"
+  },
+  {
+   "rule": "702.69",
+   "name": "Gravestorm"
+  },
+  {
+   "rule": "702.70",
+   "name": "Poisonous"
+  },
+  {
+   "rule": "702.71",
+   "name": "Transfigure"
+  },
+  {
+   "rule": "702.72",
+   "name": "Champion"
+  },
+  {
+   "rule": "702.73",
+   "name": "Changeling"
+  },
+  {
+   "rule": "702.74",
+   "name": "Evoke"
+  },
+  {
+   "rule": "702.75",
+   "name": "Hideaway"
+  },
+  {
+   "rule": "702.76",
+   "name": "Prowl"
+  },
+  {
+   "rule": "702.77",
+   "name": "Reinforce"
+  },
+  {
+   "rule": "702.78",
+   "name": "Conspire"
+  },
+  {
+   "rule": "702.79",
+   "name": "Persist"
+  },
+  {
+   "rule": "702.80",
+   "name": "Wither"
+  },
+  {
+   "rule": "702.81",
+   "name": "Retrace"
+  },
+  {
+   "rule": "702.82",
+   "name": "Devour"
+  },
+  {
+   "rule": "702.83",
+   "name": "Exalted"
+  },
+  {
+   "rule": "702.84",
+   "name": "Unearth"
+  },
+  {
+   "rule": "702.85",
+   "name": "Cascade"
+  },
+  {
+   "rule": "702.86",
+   "name": "Annihilator"
+  },
+  {
+   "rule": "702.87",
+   "name": "Level Up"
+  },
+  {
+   "rule": "702.88",
+   "name": "Rebound"
+  },
+  {
+   "rule": "702.89",
+   "name": "Umbra Armor"
+  },
+  {
+   "rule": "702.90",
+   "name": "Infect"
+  },
+  {
+   "rule": "702.91",
+   "name": "Battle Cry"
+  },
+  {
+   "rule": "702.92",
+   "name": "Living Weapon"
+  },
+  {
+   "rule": "702.93",
+   "name": "Undying"
+  },
+  {
+   "rule": "702.94",
+   "name": "Miracle"
+  },
+  {
+   "rule": "702.95",
+   "name": "Soulbond"
+  },
+  {
+   "rule": "702.96",
+   "name": "Overload"
+  },
+  {
+   "rule": "702.97",
+   "name": "Scavenge"
+  },
+  {
+   "rule": "702.98",
+   "name": "Unleash"
+  },
+  {
+   "rule": "702.99",
+   "name": "Cipher"
+  },
+  {
+   "rule": "702.100",
+   "name": "Evolve"
+  },
+  {
+   "rule": "702.101",
+   "name": "Extort"
+  },
+  {
+   "rule": "702.102",
+   "name": "Fuse"
+  },
+  {
+   "rule": "702.103",
+   "name": "Bestow"
+  },
+  {
+   "rule": "702.104",
+   "name": "Tribute"
+  },
+  {
+   "rule": "702.105",
+   "name": "Dethrone"
+  },
+  {
+   "rule": "702.106",
+   "name": "Hidden Agenda"
+  },
+  {
+   "rule": "702.107",
+   "name": "Outlast"
+  },
+  {
+   "rule": "702.108",
+   "name": "Prowess"
+  },
+  {
+   "rule": "702.109",
+   "name": "Dash"
+  },
+  {
+   "rule": "702.110",
+   "name": "Exploit"
+  },
+  {
+   "rule": "702.111",
+   "name": "Menace"
+  },
+  {
+   "rule": "702.112",
+   "name": "Renown"
+  },
+  {
+   "rule": "702.113",
+   "name": "Awaken"
+  },
+  {
+   "rule": "702.114",
+   "name": "Devoid"
+  },
+  {
+   "rule": "702.115",
+   "name": "Ingest"
+  },
+  {
+   "rule": "702.116",
+   "name": "Myriad"
+  },
+  {
+   "rule": "702.117",
+   "name": "Surge"
+  },
+  {
+   "rule": "702.118",
+   "name": "Skulk"
+  },
+  {
+   "rule": "702.119",
+   "name": "Emerge"
+  },
+  {
+   "rule": "702.120",
+   "name": "Escalate"
+  },
+  {
+   "rule": "702.121",
+   "name": "Melee"
+  },
+  {
+   "rule": "702.122",
+   "name": "Crew"
+  },
+  {
+   "rule": "702.123",
+   "name": "Fabricate"
+  },
+  {
+   "rule": "702.124",
+   "name": "Partner"
+  },
+  {
+   "rule": "702.125",
+   "name": "Undaunted"
+  },
+  {
+   "rule": "702.126",
+   "name": "Improvise"
+  },
+  {
+   "rule": "702.127",
+   "name": "Aftermath"
+  },
+  {
+   "rule": "702.128",
+   "name": "Embalm"
+  },
+  {
+   "rule": "702.129",
+   "name": "Eternalize"
+  },
+  {
+   "rule": "702.130",
+   "name": "Afflict"
+  },
+  {
+   "rule": "702.131",
+   "name": "Ascend"
+  },
+  {
+   "rule": "702.132",
+   "name": "Assist"
+  },
+  {
+   "rule": "702.133",
+   "name": "Jump-Start"
+  },
+  {
+   "rule": "702.134",
+   "name": "Mentor"
+  },
+  {
+   "rule": "702.135",
+   "name": "Afterlife"
+  },
+  {
+   "rule": "702.136",
+   "name": "Riot"
+  },
+  {
+   "rule": "702.137",
+   "name": "Spectacle"
+  },
+  {
+   "rule": "702.138",
+   "name": "Escape"
+  },
+  {
+   "rule": "702.139",
+   "name": "Companion"
+  },
+  {
+   "rule": "702.140",
+   "name": "Mutate"
+  },
+  {
+   "rule": "702.141",
+   "name": "Encore"
+  },
+  {
+   "rule": "702.142",
+   "name": "Boast"
+  },
+  {
+   "rule": "702.143",
+   "name": "Foretell"
+  },
+  {
+   "rule": "702.144",
+   "name": "Demonstrate"
+  },
+  {
+   "rule": "702.145",
+   "name": "Daybound and Nightbound"
+  },
+  {
+   "rule": "702.146",
+   "name": "Disturb"
+  },
+  {
+   "rule": "702.147",
+   "name": "Decayed"
+  },
+  {
+   "rule": "702.148",
+   "name": "Cleave"
+  },
+  {
+   "rule": "702.149",
+   "name": "Training"
+  },
+  {
+   "rule": "702.150",
+   "name": "Compleated"
+  },
+  {
+   "rule": "702.151",
+   "name": "Reconfigure"
+  },
+  {
+   "rule": "702.152",
+   "name": "Blitz"
+  },
+  {
+   "rule": "702.153",
+   "name": "Casualty"
+  },
+  {
+   "rule": "702.154",
+   "name": "Enlist"
+  },
+  {
+   "rule": "702.155",
+   "name": "Read Ahead"
+  },
+  {
+   "rule": "702.156",
+   "name": "Ravenous"
+  },
+  {
+   "rule": "702.157",
+   "name": "Squad"
+  },
+  {
+   "rule": "702.158",
+   "name": "Space Sculptor"
+  },
+  {
+   "rule": "702.159",
+   "name": "Visit"
+  },
+  {
+   "rule": "702.160",
+   "name": "Prototype"
+  },
+  {
+   "rule": "702.161",
+   "name": "Living Metal"
+  },
+  {
+   "rule": "702.162",
+   "name": "More Than Meets the Eye"
+  },
+  {
+   "rule": "702.163",
+   "name": "For Mirrodin!"
+  },
+  {
+   "rule": "702.164",
+   "name": "Toxic"
+  },
+  {
+   "rule": "702.165",
+   "name": "Backup"
+  },
+  {
+   "rule": "702.166",
+   "name": "Bargain"
+  },
+  {
+   "rule": "702.167",
+   "name": "Craft"
+  },
+  {
+   "rule": "702.168",
+   "name": "Disguise"
+  },
+  {
+   "rule": "702.169",
+   "name": "Solved"
+  },
+  {
+   "rule": "702.170",
+   "name": "Plot"
+  },
+  {
+   "rule": "702.171",
+   "name": "Saddle"
+  },
+  {
+   "rule": "702.172",
+   "name": "Spree"
+  },
+  {
+   "rule": "702.173",
+   "name": "Freerunning"
+  },
+  {
+   "rule": "702.174",
+   "name": "Gift"
+  },
+  {
+   "rule": "702.175",
+   "name": "Offspring"
+  },
+  {
+   "rule": "702.176",
+   "name": "Impending"
+  },
+  {
+   "rule": "702.177",
+   "name": "Exhaust"
+  },
+  {
+   "rule": "702.178",
+   "name": "Max Speed"
+  },
+  {
+   "rule": "702.179",
+   "name": "Start Your Engines!"
+  },
+  {
+   "rule": "702.180",
+   "name": "Harmonize"
+  },
+  {
+   "rule": "702.181",
+   "name": "Mobilize"
+  },
+  {
+   "rule": "702.182",
+   "name": "Job Select"
+  },
+  {
+   "rule": "702.183",
+   "name": "Tiered"
+  },
+  {
+   "rule": "702.184",
+   "name": "Station"
+  },
+  {
+   "rule": "702.185",
+   "name": "Warp"
+  },
+  {
+   "rule": "702.186",
+   "name": "∞ (Infinity)"
+  },
+  {
+   "rule": "702.187",
+   "name": "Mayhem"
+  },
+  {
+   "rule": "702.188",
+   "name": "Web-slinging"
+  },
+  {
+   "rule": "702.189",
+   "name": "Firebending"
+  },
+  {
+   "rule": "702.190",
+   "name": "Sneak"
+  },
+  {
+   "rule": "702.191",
+   "name": "Increment"
+  },
+  {
+   "rule": "702.192",
+   "name": "Paradigm"
+  },
+  {
+   "rule": "702.193",
+   "name": "Power-up"
+  },
+  {
+   "rule": "702.194",
+   "name": "Teamwork"
+  },
+  {
+   "rule": "702.195",
+   "name": "Storied"
+  }
+ ]
+}

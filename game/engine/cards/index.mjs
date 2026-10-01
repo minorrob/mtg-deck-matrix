@@ -55,6 +55,9 @@ const TRIGGERS = {
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
 };
 
+/** The trigger kinds a card script may name, each compiled to the event trigger.mjs watches (the catalog reads it). */
+export const TRIGGER_KINDS = Object.freeze(Object.keys(TRIGGERS));
+
 /** Fold a name for matching: case, accents, punctuation and spacing do not make a different card. */
 export function foldName(name) {
   return String(name ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()

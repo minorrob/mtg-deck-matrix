@@ -118,6 +118,9 @@ const CHECKABLE = [
   ["tools/build-precons.mjs", ["--check"]],
   /* The most-played 80% of Commander cards, re-derived from the EDHREC co-play it was measured from. */
   ["game/tools/engine-top-cards.mjs", ["--check"]],
+  /* The engine catalog: every keyword action and ability of the rules and every construct the cards use, with where the
+     engine stands on each (Rob, 2026-10-01). */
+  ["game/tools/engine-catalog.mjs", ["--check"]],
   /* The refresh runner's --check runs every check above in turn (an hour with the fetching
      ones); here its --plan proves the runner loads and its plan resolves every tool it names.
      tests/refresh.mjs holds the plan to the registry. */
