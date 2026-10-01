@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lifeblood Hydra",
+    "oracleId": "b14d05c0-fe10-4079-a90e-0aea1a8fd375",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hydra"
+    ],
+    "manaCost": "{X}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Trample\nThis creature enters with X +1/+1 counters on it.\nWhen this creature dies, you gain life and draw cards equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with X +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, you gain life and draw cards equal to its power.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "powerOf": "self"
+          }
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "powerOf": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

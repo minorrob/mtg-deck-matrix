@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Steelbane Hydra",
+    "oracleId": "e38e3723-05f5-4a51-8364-1cda19f9cc49",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle",
+      "Hydra"
+    ],
+    "manaCost": "{X}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "This creature enters with X +1/+1 counters on it.\n{2}{G}, Remove a +1/+1 counter from this creature: Destroy target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with X +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}, Remove a +1/+1 counter from this creature: Destroy target artifact or enchantment.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        },
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

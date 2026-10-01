@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Astral Cornucopia",
+    "oracleId": "1bc42024-52da-4d93-8b47-544f0a4a72a1",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{X}{X}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This artifact enters with X charge counters on it.\n{T}: Choose a color. Add one mana of that color for each charge counter on this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This artifact enters with X charge counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "charge",
+          "count": "X"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Choose a color. Add one mana of that color for each charge counter on this artifact.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "countersOn": "self",
+            "counter": "charge"
+          }
+        }
+      ]
+    }
+  ]
+}
