@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thran Dynamo",
+  "scenarios": [
+    {
+      "name": "Three colorless",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thran Dynamo"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Thran Dynamo"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 3
+          }
+        }
+      ]
+    }
+  ]
+}

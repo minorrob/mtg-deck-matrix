@@ -201,6 +201,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
         for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
         for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
+      } else if (e.stats !== undefined) {
+        /* A creature's current power and toughness, as its controller's view shows them (layer 7). */
+        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.stats.card);
+        if (!card) fail(`${e.stats.card} is not on ${names[e.seat]}'s battlefield`);
+        if (card.power !== e.stats.power || card.toughness !== e.stats.toughness) fail(`${e.stats.card} is ${card.power}/${card.toughness}, not ${e.stats.power}/${e.stats.toughness}`);
+        passed.push(`${e.stats.card}: ${e.stats.power}/${e.stats.toughness}`);
       } else if (e.event !== undefined) {
         const hit = events.some((ev) => ev.kind === e.event && Object.entries(e.where ?? {}).every(([k, v]) => JSON.stringify(ev.data?.fields?.[k]) === JSON.stringify(v)));
         if (!hit) fail(`no ${e.event} with ${JSON.stringify(e.where ?? {})}`);

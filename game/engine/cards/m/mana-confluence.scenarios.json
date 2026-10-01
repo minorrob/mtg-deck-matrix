@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mana Confluence",
+  "scenarios": [
+    {
+      "name": "Any color for a life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mana Confluence"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mana Confluence",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}
