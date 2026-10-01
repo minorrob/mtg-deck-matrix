@@ -315,7 +315,10 @@
     const creature = c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where);
     const cls = ["cm-bcard", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
     const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
-    const label = `${c.name}${c.tapped ? ", tapped" : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
+    /* Its name first, then its state as a person looking at it would say it: tapped, its power and toughness, damage
+       marked, counters; then what it can do now (the accessibility pass). */
+    const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`)].filter(Boolean);
+    const label = `${c.name}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${opts.map((o) => o.label).join(" or ")}` : ""}`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
       <span class="cm-bcard-name">${e(c.name)}</span>${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
       <img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
@@ -383,7 +386,8 @@
   function menu() {
     const links = [["Decks", "#decks"], ["Library", "#cards"], ["Explore", "#discover"], ["Play", "#game"], ["Settings", "#settings"]];
     return `<div class="cm-board-menu cm-board-nav" role="menu" id="cm-board-nav"><ul>${links.map(([l, h]) => `<li><a role="menuitem" href="${h}">${l}</a></li>`).join("")}</ul>
-      <p class="cm-muted">The game keeps going, and your seat with it: Play, or Game on in the rail, brings you back.</p></div>`;
+      <p class="cm-muted">The game keeps going, and your seat with it: Play, or Game on in the rail, brings you back.</p>
+      <button type="button" class="v-button compact" data-action="page-help" data-help="table">Keys and help</button></div>`;
   }
   function stepsMenu() {
     const at = stepAt(view.state.phase);
@@ -744,8 +748,10 @@
       const c = findCard(Number(el.dataset.card));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
       const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
-      div.setAttribute("aria-hidden", "true");
-      div.innerHTML = card(c, {where: "peek", action: "none"});
+      /* Said as well as shown: a polite status names the card, and the picture itself is not read twice. */
+      div.setAttribute("role", "status");
+      div.setAttribute("aria-live", "polite");
+      div.innerHTML = `<span class="cm-sr-only">Showing ${e(c.name)}</span><div aria-hidden="true">${card(c, {where: "peek", action: "none"})}</div>`;
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
@@ -1243,7 +1249,7 @@
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
-    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen)) {historyOpen = false; menuOpen = false; stepsOpen = false; draw(); return;}
+    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen || tools)) {historyOpen = false; menuOpen = false; stepsOpen = false; tools = false; confirmEnd = false; draw(); return;}
     if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); event.target.form.requestSubmit(); return;
     }
