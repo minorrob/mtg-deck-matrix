@@ -3,7 +3,8 @@
 /* WHAT THE ENGINE ACTUALLY HAS TO IMPLEMENT, COUNTED RATHER THAN GUESSED.
  *
  * docs/engine/PLAN.md section 12.4. This walks Forge card scripts and COUNTS THE CONSTRUCTS they
- * use across three pools -- Rob's seven decks, his whole library, and every card Forge ships --
+ * use across four pools -- Rob's seven decks, his whole library, the most-played 80% of Commander cards
+ * (data/engine/top-cards.json, the ones to have loaded before any table asks), and every card Forge ships --
  * so the engine plan is scoped from a measurement instead of an impression. It is what produced
  * the figure the pivot decision rested on: the seven decks need 64 distinct effect APIs, and the
  * top 30 of those cover 90% of their 477 cards.
@@ -68,11 +69,14 @@ const cj=JSON.parse(readFileSync(R+'/data/cards.json','utf8'));
 const arr=Array.isArray(cj)?cj:(cj.cards||cj.records||Object.values(cj).find(v=>Array.isArray(v))||Object.values(cj));
 const libPool=new Map();
 for(const c of arr){const n=c?.name; if(!n) continue; const r=index.resolve(n); libPool.set(n,r?r.script:null);}
+/* The most-played cards that make up 80% of Commander decks (game/tools/engine-top-cards.mjs). */
+const topPool=new Map();
+for(const c of JSON.parse(readFileSync(R+'/data/engine/top-cards.json','utf8')).cards){const r=index.resolve(c.name); topPool.set(c.name,r?r.script:null);}
 const allPool=new Map();
 (function walk(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name); if(e.isDirectory()) walk(p); else if(e.name.endsWith('.txt')) allPool.set(p,p.slice(F.length+1).split(BS).join('/'));}})(join(F,'forge-gui/res/cardsfolder'));
-const A=tally(deckPool), B=tally(libPool), C=tally(allPool);
+const A=tally(deckPool), B=tally(libPool), C=tally(allPool), D=tally(topPool);
 function coverage(perCard, ranked){const order=ranked.map(([k])=>k);const res=[];for(const n of [10,20,30,40,50,60,80,100,120]){const set=new Set(order.slice(0,n));let ok=0,tot=0;for(const c of Object.values(perCard)){tot++;if(c.apis.every(a=>set.has(a)))ok++;}res.push([n,ok,tot]);}return res;}
-const summary={decks:deckNames,deckPool:{cards:A.cards,missing:A.missing,vanilla:A.vanilla,distinct:A.distinct},libraryPool:{cards:B.cards,missing:B.missing.length,missingSample:B.missing.slice(0,20),vanilla:B.vanilla,distinct:B.distinct},forgeAll:{cards:C.cards,vanilla:C.vanilla,distinct:C.distinct},
+const summary={decks:deckNames,deckPool:{cards:A.cards,missing:A.missing,vanilla:A.vanilla,distinct:A.distinct},libraryPool:{cards:B.cards,missing:B.missing.length,missingSample:B.missing.slice(0,20),vanilla:B.vanilla,distinct:B.distinct},forgeAll:{cards:C.cards,vanilla:C.vanilla,distinct:C.distinct},topPool:{cards:D.cards,missing:D.missing.length,missingSample:D.missing.slice(0,20),vanilla:D.vanilla,distinct:D.distinct},
   libCoverageByTopApis:coverage(B.perCard,B.counts.apis),deckCoverageByTopApis:coverage(A.perCard,A.counts.apis)};
 console.log(JSON.stringify(summary,null,1));
 for(const [label,T] of [['DECK',A],['LIBRARY',B]]) for(const d of ['apis','triggers','statics','replacements','keywords','costs']) console.log(`\n=== ${label} ${d} (${T.counts[d].length}) ===\n`+T.counts[d].map(([k,v])=>k+':'+v).join(' '));
@@ -80,4 +84,4 @@ console.log('\n=== FORGE ALL apis top 80 ===\n'+C.counts.apis.slice(0,80).map(([
 console.log('\n=== FORGE ALL keywords top 60 ===\n'+C.counts.keywords.slice(0,60).map(([k,v])=>k+':'+v).join(' '));
 delete C.perCard;
 mkdirSync(dirname(OUT),{recursive:true});
-writeFileSync(OUT,JSON.stringify({summary,deck:A,library:B,forge:C},null,1));
+writeFileSync(OUT,JSON.stringify({summary,deck:A,library:B,top:D,forge:C},null,1));

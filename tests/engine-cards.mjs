@@ -14,6 +14,8 @@
  *      behavior, a cost nothing pays, a trigger nothing watches -- each deliberately written wrong here.
  *   5. The runner itself fails when a scenario is wrong: a bad expectation, a move the rules do not offer.
  *   6. docs/engine/coverage.md is what engine-coverage writes today.
+ *   7. The most-played list (data/engine/top-cards.json, Rob 2026-10-01): the cards that make up 80% of Commander
+ *      decks, most-played first, every one a card of the oracle data -- the order the directory is filled in.
  */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -149,6 +151,17 @@ const files = loadCardScenarios();
   const doc = readFileSync(new URL("../docs/engine/coverage.md", import.meta.url), "utf8");
   ok(text.startsWith(doc), "docs/engine/coverage.md is what `node game/tools/engine-coverage.mjs --write` writes today");
   ok(doc.includes(`(${index.size} definitions in all)`) && /\| Rob's seven decks \| 477 \| \d+ \|/.test(doc), "and it counts the directory's definitions");
+}
+
+/* ---- 7. the most-played list ---- */
+{
+  const top = JSON.parse(readFileSync(new URL("../data/engine/top-cards.json", import.meta.url), "utf8"));
+  const ids = new Set([...ORACLE.values()].map((c) => c.id));
+  eq([top.schema, top.share, top.count, top.cards.length], ["CrankTopCards@1", 0.8, top.cards.length, top.count], "the most-played list says what it is: the 80% share, and how many cards");
+  ok(top.cards.every((c, i) => i === 0 || top.cards[i - 1].appearances >= c.appearances), "most-played first");
+  ok(top.cards.at(-1).cumulative >= 0.8 && top.cards.at(-2).cumulative < 0.8, "and exactly as many as make up 80% of every card appearance in Commander decks");
+  eq(top.cards.filter((c) => !ids.has(c.oracleId)).map((c) => c.name), [], "every card on it is a card of the oracle data, by its oracle id: the card, never a print");
+  eq(top.cards.slice(0, 3).map((c) => c.name), ["Sol Ring", "Command Tower", "Arcane Signet"], "led by the cards every deck plays");
 }
 
 console.log(`engine-cards: ${checks} checks passed — ${index.size} definitions, each the card it claims to be, each played through the rules by its scenarios, and everything the engine cannot play refused by name.`);
