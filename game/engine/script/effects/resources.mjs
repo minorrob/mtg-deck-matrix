@@ -19,6 +19,7 @@ import {addMana as addToPool} from "../../rules/mana.mjs";
 import {applyReplacements} from "../../rules/replacement.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
+import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -136,9 +137,30 @@ export function dealDamage(state, params, context) {
         source: source === null ? null : cardRef(state, source),
         amount: proposal.amount,
       }));
+      /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
+      markDeathtouch(state, source, hit.toCard);
     }
+    /* CR 702.15b: so is lifelink -- its controller gains that much life as the damage is dealt. */
+    const linked = source === null ? 0 : lifelinkFrom(state, source, proposal.amount);
+    if (linked > 0 && state.objects[source]) changeLife(state, state.objects[source].controller, linked, events);
   }
   return events;
+}
+
+/**
+ * `damageAll` -- "deals 13 damage to each creature" (Blasphemous Act), "1 damage to each opponent and each creature they
+ * control" (Tectonic Hazard): `selector` the permanents (each creature, unless it says), `who` the players, `amount`
+ * counted as it resolves. The source is the spell, or `from` -- "target creature you control deals damage equal to its
+ * power to each other creature" (Chandra's Ignition), which `exceptSource` leaves out of "each other creature". One
+ * damage event for all of it; the dying is state-based, afterwards (CR 704.5g).
+ */
+export function damageAll(state, params, context) {
+  const from = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+  /* "Each creature and planeswalker they control": a choice of descriptions (`anyOf`), each one counted once. */
+  const {anyOf, ...shared} = params.selector ?? {what: "permanent", types: ["Creature"]};
+  const matched = Array.isArray(anyOf) ? [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, context)))] : selectMatching(state, shared, context);
+  const ids = matched.filter((id) => !(params.exceptSource === true && id === from));
+  return dealDamage(state, {amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {})}, {...context, source: from});
 }
 
 function addCounters(state, id, kind, count, events) {

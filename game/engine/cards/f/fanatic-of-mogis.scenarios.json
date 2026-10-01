@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fanatic of Mogis",
+  "fixtures": {
+    "Pyre": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{R}{R}",
+      "colors": [
+        "R"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: damage to each opponent equal to devotion to red -- its own {R} and the Pyre's two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fanatic of Mogis"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Pyre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fanatic of Mogis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

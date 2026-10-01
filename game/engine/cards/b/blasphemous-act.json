@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blasphemous Act",
+    "oracleId": "7a2484a9-04fd-41a0-8224-610c1c07ed10",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{8}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {1} less to cast for each creature on the battlefield.\nBlasphemous Act deals 13 damage to each creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {1} less to cast for each creature on the battlefield.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "count": {
+          "types": [
+            "Creature"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Blasphemous Act deals 13 damage to each creature.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 13,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
