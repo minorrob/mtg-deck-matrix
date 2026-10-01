@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fyndhorn Elves",
+  "scenarios": [
+    {
+      "name": "{T}: Add {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fyndhorn Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Fyndhorn Elves"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

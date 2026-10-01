@@ -43,7 +43,7 @@ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged} from "./statics.mjs";
-import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder} from "./trigger.mjs";
+import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -208,6 +208,7 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
+  if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
@@ -262,6 +263,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "order-triggers") {
     const events = resolveTriggerOrder(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  if (awaiting.kind === "trigger-targets") {
+    const events = resolveTriggerTargets(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }

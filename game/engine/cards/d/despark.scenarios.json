@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Despark",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Fixture": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{4}{G}",
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Mana value 4 or greater only, and exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Despark"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears",
+            "Big Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Despark"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Big Fixture"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Despark",
+          "targets": [
+            {
+              "card": "Big Fixture"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Big Fixture"
+          ]
+        }
+      ]
+    }
+  ]
+}

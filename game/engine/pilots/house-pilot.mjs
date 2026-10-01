@@ -186,6 +186,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         }
         return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};
       }
+      /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
+      if (id.startsWith("trigger-targets:") && options.length) {
+        const best = options.reduce((b, o) => (aim(view, o) > aim(view, b) ? o : b));
+        return {indices: [best.index]};
+      }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */
       if (choice.mode === "boolean") return {indices: [0]};

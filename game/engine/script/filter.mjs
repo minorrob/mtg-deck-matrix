@@ -37,7 +37,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
-  "what", "types", "subtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
+  "what", "types", "subtypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
 ]);
 
 /** What a selector can be about. */
@@ -60,6 +60,8 @@ function assertGrammar(selector) {
     throw new Error("A selector's types are a list, because 'artifact creature' is two of them");
   if (selector.subtypes !== undefined && !Array.isArray(selector.subtypes))
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
+  for (const key of ["nonTypes", "nonSubtypes"])
+    if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
 }
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
@@ -124,6 +126,14 @@ export function compileSelector(selector) {
     if (selector.subtypes) {
       const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
       if (!selector.subtypes.every((subtype) => current.includes(subtype))) return false;
+    }
+
+    /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
+       artifact (CR 205.2b), so "nonartifact" excludes it. */
+    if (selector.nonTypes || selector.nonSubtypes) {
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
+      if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
+      if ((selector.nonSubtypes ?? []).some((subtype) => current.includes(subtype))) return false;
     }
 
     if (selector.named !== undefined && object.card !== selector.named) return false;

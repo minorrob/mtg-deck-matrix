@@ -178,12 +178,16 @@ export function mill(state, params, context) {
 /**
  * `counterSpell` — CR 701.6a. The spell leaves the stack and goes to its owner's graveyard.
  *
+ * `spells` are the spells' own objects on the stack -- what a script's "counter target spell" binds to (script/bind.mjs)
+ * -- and `targets` are stack ids, for a caller that already holds the entry.
+ *
  * `targets` are stack ids, not object ids: a spell on the stack is identified by where it is in the
  * resolution order, and two copies of one card can both be there.
  */
 export function counterSpell(state, params, context) {
   const events = [];
-  for (const stackId of params.targets ?? []) {
+  const fromSpells = (params.spells ?? []).map((id) => state.stack.find((entry) => entry.objectId === id)?.stackId).filter((id) => id !== undefined);
+  for (const stackId of [...(params.targets ?? []), ...fromSpells]) {
     const at = state.stack.findIndex((entry) => entry.stackId === stackId);
     if (at < 0) continue;
     const [entry] = state.stack.splice(at, 1);

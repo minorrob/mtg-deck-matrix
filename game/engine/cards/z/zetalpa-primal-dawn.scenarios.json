@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Zetalpa, Primal Dawn",
+  "scenarios": [
+    {
+      "name": "Indestructible: Vindicate does nothing to it",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Zetalpa, Primal Dawn"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vindicate"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vindicate",
+          "targets": [
+            {
+              "card": "Zetalpa, Primal Dawn"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Zetalpa, Primal Dawn"
+          ]
+        }
+      ]
+    }
+  ]
+}

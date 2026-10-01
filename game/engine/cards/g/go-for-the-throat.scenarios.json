@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Go for the Throat",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Darksteel Myr": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "manaCost": "{3}",
+      "power": 0,
+      "toughness": 1,
+      "keywords": [
+        "Indestructible"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature, but never an artifact creature (CR 205.2b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Go for the Throat"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears",
+            "Darksteel Myr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Go for the Throat"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Grizzly Bears"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Go for the Throat",
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,15 @@
  * `CommanderProbeEvent@1` records the journal writes, so phase 2's card script compiles to this
  * rather than to a private vocabulary that would need translating.
  *
+ * A TRIGGER'S TARGETS ARE CHOSEN AS IT GOES ON THE STACK (CR 603.3d), by its controller, before anyone receives
+ * priority (engine 2.4c). One with no legal target is removed from the stack, never put there to fizzle later. The
+ * question is `trigger-targets`, one per trigger, lowest on the stack first, offering each legal way to aim it --
+ * the same enumeration a cast is offered by (script/bind.mjs).
+ *
+ * "WHENEVER ANOTHER CREATURE ENTERS" (2.4c): `who: "another"` is any arrival but this permanent's own, `who: "any"`
+ * any at all, and `filter` the selector the arrival must match ("a creature you control"), "you" being the
+ * trigger's controller.
+ *
  * WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger while a condition holds
  * rather than on an event, and delayed triggers (CR 603.7), which are created by a resolving
  * effect. Both need the effect system in phase 2 before they have anything to be created by.
@@ -36,6 +45,8 @@
 
 import {pushAbility} from "./stack.mjs";
 import {cardsIn} from "../state/index.mjs";
+import {compileSelector} from "../script/filter.mjs";
+import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -54,7 +65,11 @@ function matches(state, event, condition, sourceId, controller) {
        the object, because for a death the object no longer exists. An arrival is the other way round:
        the card that moved was the one on the stack or in hand, and the permanent that arrived is a new
        object (CR 400.7), which the event names as `enteredAs`. */
-    if (condition.who === "self" && (fields.enteredAs ?? fields.card?.cardId) !== sourceId) return false;
+    const moved = fields.enteredAs ?? fields.card?.cardId;
+    if (condition.who === "self" && moved !== sourceId) return false;
+    if (condition.who === "another" && moved === sourceId) return false;
+    /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. */
+    if (condition.filter && !(state.objects[moved] && compileSelector(condition.filter)(state, moved, {controller, source: sourceId}))) return false;
     return true;
   }
 
@@ -179,19 +194,80 @@ export function openTriggers(state) {
   }
   putOnStack(state, mine);
   /* The next player's, and the one after — each in turn, so one call settles the whole round
-     unless somebody has an ordering to make. */
-  return openTriggers(state);
+     unless somebody has an ordering to make. Then whatever went on the stack wanting targets asks for them. */
+  return openTriggers(state) || askTriggerTargets(state);
+}
+
+/* The stack entry a trigger-targets question is about, and the context its targets are chosen in. */
+function targeting(state, stackId) {
+  const entry = state.stack.find((e) => e.stackId === stackId);
+  if (!entry) return null;
+  const source = entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null;
+  return {entry, context: {controller: entry.playerId, source}};
+}
+
+/**
+ * Ask for the targets of the lowest trigger on the stack still waiting for them (CR 603.3d), or remove it if it has
+ * none left to choose.
+ *
+ * @returns {boolean} true when the engine is now waiting on that choice
+ */
+export function askTriggerTargets(state) {
+  if (state.awaiting) return true;
+  for (const entry of [...state.stack]) {
+    if (entry.stage !== "targeting") continue;
+    const {context} = targeting(state, entry.stackId);
+    if (!targetChoices(state, entry.script.targets, context).length) {
+      state.stack.splice(state.stack.indexOf(entry), 1);
+      continue;
+    }
+    state.awaiting = {kind: "trigger-targets", player: entry.playerId, stackId: entry.stackId};
+    return true;
+  }
+  return false;
+}
+
+/** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
+export function triggerTargetsChoice(state, awaiting) {
+  const {entry, context} = targeting(state, awaiting.stackId);
+  const hostile = isHostile(entry.script.effects);
+  return {
+    id: `trigger-targets:${entry.stackId}`,
+    title: `Choose targets for ${entry.name ?? "a triggered ability"}`,
+    mode: "one",
+    min: 1,
+    max: 1,
+    options: targetChoices(state, entry.script.targets, context).map((targets, index) => ({
+      index, label: targets.map((t) => targetName(state, t)).join(", "), targets, hostile,
+      ...(entry.cardId !== null ? {cardId: entry.cardId} : {}),
+    })),
+  };
+}
+
+/** Apply the chosen targets, then ask for the next trigger's, if any. */
+export function resolveTriggerTargets(state, awaiting, indices) {
+  const choice = triggerTargetsChoice(state, awaiting);
+  const option = choice.options[indices?.[0]];
+  if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
+  const {entry} = targeting(state, awaiting.stackId);
+  entry.targets = structuredClone(option.targets);
+  entry.stage = "waiting";
+  state.awaiting = null;
+  askTriggerTargets(state);
+  return [];
 }
 
 function putOnStack(state, triggers) {
   for (const trigger of triggers) {
-    pushAbility(state, {
+    const entry = pushAbility(state, {
       sourceId: state.objects[trigger.source.cardId] ? trigger.source.cardId : null,
       controller: trigger.controller,
       abilityId: trigger.abilityId,
       kind: "trigger",
       script: trigger.script ?? null,
     });
+    /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets). */
+    if ((entry.script?.targets ?? []).length) entry.stage = "targeting";
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);
   }
@@ -233,6 +309,6 @@ export function resolveTriggerOrder(state, awaiting, indices) {
   putOnStack(state, ordered);
   state.awaiting = null;
   /* Somebody else may still have triggers waiting, and may also have an ordering to make. */
-  openTriggers(state);
+  if (!openTriggers(state)) askTriggerTargets(state);
   return [];
 }

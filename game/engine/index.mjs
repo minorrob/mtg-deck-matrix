@@ -51,6 +51,8 @@ export const ENGINE_STATUS = Object.freeze({
     "targets", "cards",
     /* 2.4b: mana abilities that choose and that cost, lands that enter tapped, and the checks after every action. */
     "mana-abilities",
+    /* 2.4c: a trigger's targets, countering a target spell, another creature entering, and "non-" selectors. */
+    "trigger-targets",
   ]),
   next: "4.3 wiring serve-review to pick the runtime by the flag, then the compiler",
 });

@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Indomitable Ancients",
+  "scenarios": [
+    {
+      "name": "A 2/10 with nothing else: three damage leaves it standing",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Indomitable Ancients"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "card": "Indomitable Ancients"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Indomitable Ancients"
+          ]
+        }
+      ]
+    }
+  ]
+}

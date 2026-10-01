@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hordeling Outburst",
+  "scenarios": [
+    {
+      "name": "Three Goblins",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hordeling Outburst"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hordeling Outburst"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin",
+            "Goblin",
+            "Goblin",
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}
