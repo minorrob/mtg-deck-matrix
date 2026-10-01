@@ -17,7 +17,9 @@ import {existsSync} from "node:fs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {replayTape} from "../game/room/replay.mjs";
-import {tableOn, INVITE_TTL, MATS} from "../game/room/table.mjs";
+import {tableOn, INVITE_TTL, MATS, commanderLegal, isBasicLandsTestDeck} from "../game/room/table.mjs";
+import {compileScript} from "../game/engine/cards/index.mjs";
+import {loadCardScripts} from "../game/tools/engine-cards.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
@@ -31,7 +33,7 @@ const refuses = async (p, status, re, m) => {await assert.rejects(p, (e) => e.st
 const DEFS = new Map();
 const def = (name, d) => {DEFS.set(name, d); return name;};
 const cards = (name) => DEFS.get(name) ?? basicCards(name);
-const deckFor = (tag) => ({name: `${tag} deck`, commander: [def(`General ${tag}`, {types: ["Creature"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
+const deckFor = (tag) => ({name: `${tag} deck`, commander: [def(`General ${tag}`, {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{2}{G}"})],
   cards: [...Array.from({length: 38}, () => def(`Grove ${tag}`, {types: ["Land"], abilities: [{id: "t-g", kind: "mana", tapSelf: true, produces: {G: 1}}]})),
     ...Array.from({length: 61}, (_, i) => def(`Bear ${tag}-${i}`, {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}{G}"}))]});
 let seq = 0;
@@ -263,6 +265,43 @@ function objectCtx() {
   eq(record.pod.startingLife, 30, "the playtest record keeps the starting life with the pod");
   const replayed = await replayTape({matchId, pod: record.pod, seed: record.seed, tape: record.tape, cards});
   eq(replayed.view("s0").state.players.map((p) => p.health.life), [30, 30, 30], "and replays to the same 30 life");
+}
+
+/* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it
+   can be your commander. The Basic lands test deck is the one exception, and only on a playtest table. */
+{
+  const TEST_DECK = {name: "Basic lands test deck", commander: ["Wastes"],
+    cards: [["Plains", 20], ["Island", 20], ["Swamp", 20], ["Mountain", 20], ["Forest", 19]].flatMap(([land, n]) => Array(n).fill(land))};
+  const plain = {...deckFor("plain"), commander: [def("Plain Bear", {types: ["Creature"], power: 2, toughness: 2, manaCost: "{1}{G}"})]};
+  const walker = {...deckFor("walker"), commander: [def("Walker Who Leads", {types: ["Planeswalker"], supertypes: ["Legendary"], manaCost: "{3}", canBeCommander: true})]};
+  const relic = {...deckFor("relic"), commander: [def("Legendary Relic", {types: ["Artifact"], supertypes: ["Legendary"], manaCost: "{3}"})]};
+  for (const playtest of [false, true]) {
+    const t = tableOn(memoryStorage(), {cards, random});
+    await t.create({tableId: playtest ? "cmdlegal2" : "cmdlegal1", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}], playtest});
+    const refusal = async (deck) => t.deck(ROB, 1, deck, now).then(() => null, (e) => [e.status, e.message, e.notCommanders]);
+    eq(await refusal(plain), [422, "Plain Bear can't be a commander: a commander is a legendary creature, or a card that says it can be your commander.", ["Plain Bear"]],
+      `${playtest ? "on a playtest table too" : "at a table"}, a creature that is not legendary is refused as a commander, by name, saying what a commander is`);
+    eq(await refusal(relic), [422, "Legendary Relic can't be a commander: a commander is a legendary creature, or a card that says it can be your commander.", ["Legendary Relic"]],
+      "and so is a legendary card that is not a creature");
+    eq(await refusal(walker), null, "a card that says it can be your commander takes the seat");
+    eq(await refusal({...plain, commander: ["General ai", "Plain Bear"]}), [422, "Plain Bear can't be a commander: a commander is a legendary creature, or a card that says it can be your commander.", ["Plain Bear"]],
+      "of two commanders, the one that cannot be is named");
+    eq(await refusal(TEST_DECK), playtest ? null : [422, "Wastes can't be a commander: a commander is a legendary creature, or a card that says it can be your commander.", ["Wastes"]],
+      playtest ? "on a playtest table the Basic lands test deck is the one exception: Wastes at the head of basic lands takes the seat"
+        : "at any other table a basic land is no commander, the test deck's included");
+    if (playtest) eq(await refusal({...TEST_DECK, cards: [...TEST_DECK.cards.slice(1), def("Grove x", {types: ["Land"], abilities: []})]}),
+      [422, "Wastes can't be a commander: a commander is a legendary creature, or a card that says it can be your commander.", ["Wastes"]],
+      "and only that deck: basic lands with one other card in them are not it");
+  }
+  eq([commanderLegal({types: ["Creature"], supertypes: ["Legendary"]}), commanderLegal({types: ["Creature"]}), commanderLegal({types: ["Land"], supertypes: ["Basic"]}), commanderLegal(null)],
+    [true, false, false, false], "the rule itself: a legendary creature, nothing else unless it says so");
+  eq([isBasicLandsTestDeck(["Wastes"], TEST_DECK.cards), isBasicLandsTestDeck(["Wastes", "Forest"], []), isBasicLandsTestDeck(["Sol Ring"], [])], [true, false, false],
+    "the test deck is one basic land at the head of basic lands");
+  const script = structuredClone(loadCardScripts()[0].script);
+  const says = compileScript({...script, oracleText: `${script.oracleText}
+${script.identity.name} can be your commander.`});
+  eq([compileScript(script).definition.canBeCommander ?? false, says.definition.canBeCommander], [false, true],
+    "a definition says canBeCommander only when its card says it can be your commander");
 }
 
 console.log(`game-table: ${checks} checks passed — the approved journeys as rules: the host invites, the invited join as themselves, each brings a playable deck, the countdown waits for every person and the host can cancel it, and the door is shut until Play ships.`);
