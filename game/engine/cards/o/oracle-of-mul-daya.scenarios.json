@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Oracle of Mul Daya",
+  "scenarios": [
+    {
+      "name": "The top land played from the library, and a second land from the hand",
+      "library": [
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oracle of Mul Daya"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "play": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Oracle of Mul Daya",
+            "Swamp"
+          ]
+        }
+      ]
+    }
+  ]
+}

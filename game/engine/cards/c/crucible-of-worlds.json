@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crucible of Worlds",
+    "oracleId": "33c722cf-b4bf-431f-aefd-ee96241a7fbf",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may play lands from your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play lands from your graveyard.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "lands": true
+    }
+  ]
+}

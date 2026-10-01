@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 440 defined and playable today; 1,587 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 449 defined and playable today; 1,596 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | You may play or cast a card from another zone | — | missing | 19 | 99 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 15 | 115 |
 | option | Only once (or N times) each turn | — | missing | 15 | 29 |
 | static | CantBlockBy | — | missing | 15 | 26 |
@@ -46,6 +45,7 @@ The things that alone hold back the most of the most-played cards.
 | trigger | AttackersDeclared | attackers declared | named | 12 | 33 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | effect | DamageAll | damageAll | named | 11 | 27 |
+| option | You may play or cast a card from another zone | — | missing | 10 | 90 |
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | trigger | Discarded | discarded | named | 10 | 19 |
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 99 | 19 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 90 | 10 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |

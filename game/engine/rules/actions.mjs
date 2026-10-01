@@ -60,10 +60,10 @@ import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction} from "./statics.mjs";
+import {costReduction, playerStatics} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -219,7 +219,26 @@ function abilityXValues(state, player, ability) {
 }
 
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
-const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) - state.players[player].landsPlayed;
+const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) + playerStatics(state, "extra-land-drop", player).length - state.players[player].landsPlayed;
+
+/* WHAT A PLAYER MAY PLAY FROM ANOTHER ZONE (CR 601.2a, 305.1), by their permanents' static abilities: lands from the
+   graveyard, the top card of the library, a card that says it may be cast from its graveyard or exile. `lands` and
+   `spells` are each true or a selector the card must match. One list, read by the land offer and the cast offer. */
+function playableElsewhere(state, player, kind) {
+  const found = [];
+  const fits = (id, which) => which === true || (which && typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player}));
+  for (const {ability} of playerStatics(state, "play-from", player)) {
+    const which = kind === "land" ? ability.lands : ability.spells;
+    if (!which) continue;
+    const ids = ability.zone === "graveyard" ? cardsIn(state, "graveyard", player) : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : [];
+    for (const id of ids) if (isLand(state.objects[id]) === (kind === "land") && fits(id, which) && !found.includes(id)) found.push(id);
+  }
+  if (kind === "spell") for (const zone of ["graveyard", "exile"]) {
+    const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
+    for (const id of ids) if ((state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "cast-self-from" && (a.zones ?? []).includes(zone)) && !found.includes(id)) found.push(id);
+  }
+  return found;
+}
 
 /**
  * Every action the given player may legally take at this instant.
@@ -242,6 +261,8 @@ export function legalActions(state, player) {
       if (!isLand(state.objects[id])) continue;
       actions.push({kind: "play-land", objectId: id, label: state.objects[id].card});
     }
+    /* From the graveyard, or the top of the library, when a permanent says so: the same land drop (CR 305.2). */
+    for (const id of playableElsewhere(state, player, "land")) actions.push({kind: "play-land", objectId: id, label: state.objects[id].card, from: state.objects[id].zone});
   }
 
   /* CR 605.3a: any time you have priority, whatever the step. */
@@ -274,6 +295,7 @@ export function legalActions(state, player) {
      offered and refused at payment. */
   const castable = [
     ...cardsIn(state, "hand", player).map((id) => ({id, from: "hand"})),
+    ...playableElsewhere(state, player, "spell").map((id) => ({id, from: state.objects[id].zone})),
     ...cardsIn(state, "command", player)
       .filter((id) => state.objects[id].commander === true)
       .map((id) => ({id, from: "command"})),
@@ -359,7 +381,8 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
   if (!best.size) return true;
   const mana = poolSize(state.players[player].manaPool) + [...best.values()].reduce((n, v) => n + Math.max(0, v), 0);
   const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);
-  const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true)];
+  /* And what a permanent lets them cast from another zone (the top of the library, say). */
+  const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true), ...playableElsewhere(state, player, "spell")];
   return !spells.some((id) => {
     const object = state.objects[id];
     if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !mainNow)) return false;
@@ -519,7 +542,7 @@ function perform(state, player, action) {
     }));
     events.push(event("GameEventCardChangeZone", state, {
       card,
-      from: {zoneType: fromCommand ? "Command" : "Hand", player: {playerId: player}},
+      from: {zoneType: {command: "Command", hand: "Hand", graveyard: "Graveyard", exile: "Exile", library: "Library"}[action.from ?? object.zone] ?? "Hand", player: {playerId: player}},
       to: {zoneType: "Stack", player: {playerId: player}},
     }));
     return events;
