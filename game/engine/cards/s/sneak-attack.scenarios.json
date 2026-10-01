@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sneak Attack",
+  "fixtures": {
+    "Big Beast": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{R}: a creature from the hand, with haste, sacrificed at the end step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sneak Attack",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Sneak Attack"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Big Beast"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Big Beast",
+                "has": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Big Beast"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Big Beast"
+          ]
+        }
+      ]
+    }
+  ]
+}

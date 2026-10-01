@@ -29,7 +29,7 @@ import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
-import {makeCopies} from "./permanents.mjs";
+import {makeCopies, afterwards} from "./permanents.mjs";
 import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 
@@ -410,6 +410,9 @@ export const chooseCard = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller ?? null,
+      /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
+      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
+        source: context.source ?? null} : {}),
     };
     return true;
   },
@@ -431,7 +434,7 @@ export const chooseCard = {
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
       throw new Error("Invalid selection");
     const player = awaiting.player;
-    const tops = [];
+    const tops = [], arrivedHere = [];
     chosen.forEach((id, i) => {
       const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
@@ -441,8 +444,10 @@ export const chooseCard = {
         if (where.tapped) state.objects[moved].tapped = true;
         /* "Under your control": the searcher's, when the card is another player's own (it never is from a library). */
         if (awaiting.controller !== null && awaiting.controller !== undefined) state.objects[moved].controller = awaiting.controller;
+        arrivedHere.push(moved);
       }
     });
+    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null});
     if (awaiting.shuffle) {
       if (!rng) throw new Error("A search that shuffles needs the game's random stream");
       const library = state.zones.library[player].filter((id) => !tops.includes(id));

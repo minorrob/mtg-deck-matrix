@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wake the Past",
+    "oracleId": "34143cfa-aa48-481c-af42-1240af174b80",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return all artifact cards from your graveyard to the battlefield. They gain haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return all artifact cards from your graveyard to the battlefield. They gain haste until end of turn.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          },
+          "to": "battlefield",
+          "gainsUntilEndOfTurn": [
+            "Haste"
+          ]
+        }
+      ]
+    }
+  ]
+}

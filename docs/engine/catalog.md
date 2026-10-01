@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 429 defined and playable today; 1,576 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 440 defined and playable today; 1,587 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,8 +36,8 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 21 | 123 |
 | option | You may play or cast a card from another zone | — | missing | 19 | 99 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 15 | 115 |
 | option | Only once (or N times) each turn | — | missing | 15 | 29 |
 | static | CantBlockBy | — | missing | 15 | 26 |
 | effect | Surveil | surveil | named | 15 | 21 |
@@ -46,11 +46,11 @@ The things that alone hold back the most of the most-played cards.
 | trigger | AttackersDeclared | attackers declared | named | 12 | 33 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | effect | DamageAll | damageAll | named | 11 | 27 |
-| option | Remembering what an effect moved | — | missing | 10 | 122 |
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | trigger | Discarded | discarded | named | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
+| keyword ability | Flashback | — | named | 10 | 14 |
 
 ## Keyword abilities (CR 702)
 
@@ -826,9 +826,9 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | — | missing | 142 | 1292 | 112 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 122 | 10 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 117 | 7 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 123 | 21 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 115 | 15 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
