@@ -54,6 +54,17 @@ const cardRef = (state, id) => {
   return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
 };
 
+/**
+ * "Becomes the target of a spell or ability" (CR 115.1, 702.21a): one event for each object a stack entry is aimed at,
+ * once however many of its targets name it, as the targets are chosen -- a spell cast, an ability activated, a trigger's
+ * targets chosen, a copy's new target. `only` limits it to one object (a copy's changed target). Ward watches for it.
+ */
+export function becameTarget(state, entry, only = null) {
+  const seen = new Set();
+  return (entry?.targets ?? []).filter((t) => t && t.kind === "object" && state.objects[t.id] && (only === null || t.id === only) && !seen.has(t.id) && seen.add(t.id))
+    .map((t) => event("GameEventBecomesTarget", state, {card: cardRef(state, t.id), targetId: t.id, stackId: entry.stackId, kind: entry.kind, by: {playerId: entry.playerId}}));
+}
+
 /** How many objects are on the stack. */
 export const stackSize = (state) => state.stack.length;
 

@@ -48,8 +48,11 @@ export const KEYWORD_FAMILIES = Object.freeze({
    * shroud when a selector targets (CR 115.2). They were implemented before this file existed, and
    * leaving them off the list made `engine-coverage` report them as words with no behavior — which
    * is the very claim this module exists to stop being true by accident.
+   *
+   * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
+   * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
    */
-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud"]),
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
 });
 
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);

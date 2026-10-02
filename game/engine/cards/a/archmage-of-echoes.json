@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archmage of Echoes",
+    "oracleId": "f1ecb3d7-5ea0-45b2-b1b0-d7ae304db2a1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Wizard"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, ward {2}\nWhenever you cast a Faerie or Wizard permanent spell, copy it. (The copy becomes a token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a Faerie or Wizard permanent spell, copy it.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Instant",
+            "Sorcery"
+          ],
+          "anyOf": [
+            {
+              "subtypes": [
+                "Faerie"
+              ]
+            },
+            {
+              "subtypes": [
+                "Wizard"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": "that card"
+        }
+      ]
+    }
+  ]
+}

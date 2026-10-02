@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 580,
-  "everyRule": 1744
+  "defined": 588,
+  "everyRule": 1755
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 19,
+    "built": 20,
     "partial": 0,
-    "named": 28,
+    "named": 27,
     "missing": 147
    },
    "entries": [
@@ -193,13 +193,13 @@
      "kind": "keyword ability",
      "rule": "702.21",
      "name": "Ward",
-     "engine": null,
-     "status": "named",
+     "engine": "Ward",
+     "status": "built",
      "forge": "Ward",
      "top": 26,
      "all": 212,
-     "blocks": 26,
-     "alone": 11
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -4145,7 +4145,7 @@
      "top": 5,
      "all": 53,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -5715,7 +5715,7 @@
      "top": 6,
      "all": 31,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5727,7 +5727,7 @@
      "top": 6,
      "all": 20,
      "blocks": 6,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 12,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "replacement",
@@ -10061,7 +10061,7 @@
      "top": 1,
      "all": 2,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -11809,7 +11809,7 @@
      "top": 19,
      "all": 236,
      "blocks": 19,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword construct",

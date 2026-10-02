@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sire of Seven Deaths",
+    "oracleId": "a15547d0-bbcb-41ee-a9ae-8325a9e7fe1f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Reach, first strike\nVigilance, menace\nTrample, lifelink\nWard—Pay 7 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "first strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward—Pay 7 life.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 7
+        }
+      ]
+    }
+  ]
+}

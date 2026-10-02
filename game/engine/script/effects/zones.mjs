@@ -235,7 +235,8 @@ export function mill(state, params, context) {
 export function counterSpell(state, params, context) {
   const events = [];
   const fromSpells = (params.spells ?? []).map((id) => state.stack.find((entry) => entry.objectId === id)?.stackId).filter((id) => id !== undefined);
-  for (const stackId of [...(params.targets ?? []), ...fromSpells]) {
+  /* `stack`: the entries a trigger is about (ward's "counter it"), bound to their stack ids (script/bind.mjs). */
+  for (const stackId of [...(params.targets ?? []), ...(Array.isArray(params.stack) ? params.stack : []), ...fromSpells]) {
     const at = state.stack.findIndex((entry) => entry.stackId === stackId);
     if (at < 0) continue;
     /* "This spell can't be countered": the counter effect does nothing to it -- it was still a legal target (CR 101.2). */
