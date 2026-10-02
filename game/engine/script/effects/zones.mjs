@@ -47,7 +47,7 @@ export const cardRef = (state, id) => {
  * Shared by everything here, because "the destination an effect asked for" and "the zone the card
  * reached" are two different things the moment anything on the board says "instead" (CR 614).
  */
-export function moveOne(state, id, to, events, {owner = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, tapped = false} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   const from = object.zone;
@@ -75,7 +75,9 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   if (leaving >= 0) state.stack.splice(leaving, 1);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
   if (entering) {
-    if (entering.tapped) state.objects[moved].tapped = true;
+    /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
+       event, which says how it entered. */
+    if (entering.tapped || tapped) state.objects[moved].tapped = true;
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     for (const [counter, count] of Object.entries(entering.counters)) {
@@ -87,6 +89,8 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
     ...(leftBehind ? {leftBehind} : {}),
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
+    /* "When this land enters untapped" (rules/trigger.mjs) asks how it entered, not how it is later. */
+    ...(destination === "battlefield" && state.objects[moved]?.tapped ? {enteredTapped: true} : {}),
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
@@ -129,6 +133,12 @@ export function moveZone(state, params, context) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events);
     if (moved !== null) became.push(moved);
+    /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
+    if (moved !== null && params.to === "library" && params.top === true && state.objects[moved]) {
+      const library = state.zones.library[state.objects[moved].owner];
+      library.splice(library.indexOf(moved), 1);
+      library.unshift(moved);
+    }
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
       state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
@@ -159,8 +169,7 @@ export function moveZoneAll(state, params, context) {
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   for (const id of [...matched]) {
-    const moved = moveOne(state, id, params.to ?? "graveyard", events);
-    if (params.tapped === true && moved !== null && state.objects[moved]?.zone === "battlefield") state.objects[moved].tapped = true;
+    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
     if (moved !== null) arrivedAll.push(moved);
   }
   /* "They gain haste until end of turn" (Wake the Past). */

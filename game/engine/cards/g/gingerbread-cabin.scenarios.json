@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gingerbread Cabin",
+  "scenarios": [
+    {
+      "name": "Three other Forests: untapped, and a Food",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gingerbread Cabin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Gingerbread Cabin"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Gingerbread Cabin",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Gingerbread Cabin",
+            "Food"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With two other Forests, it enters tapped: nothing triggers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gingerbread Cabin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Gingerbread Cabin"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Gingerbread Cabin"
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

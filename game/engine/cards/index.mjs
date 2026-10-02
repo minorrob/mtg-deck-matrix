@@ -77,7 +77,9 @@ const TRIGGERS = {
   /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the
      selector the arrival must match. */
   enters: (t) => (ARRIVALS.includes(t.who ?? "self")
-    ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+    ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
+      /* "When this land enters untapped" (Mystic Sanctuary): not when it entered tapped (rules/trigger.mjs). */
+      ...(t.untapped ? {untapped: true} : {})} : null),
   /* "When this dies", "whenever another creature you control dies", "whenever this or another creature dies": `filter`
      read as the thing last existed (CR 603.10a). */
   dies: (t) => (ARRIVALS.includes(t.who ?? "self")

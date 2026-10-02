@@ -295,7 +295,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     }
     events.push(event("GameEventCardChangeZone", state, {
       card,
-      ...(to === "battlefield" ? {enteredAs: arrived} : {}),
+      ...(to === "battlefield" ? {enteredAs: arrived, ...(state.objects[arrived]?.tapped ? {enteredTapped: true} : {})} : {}),
       /* What it became, on the battlefield or in the graveyard -- both public (CR 400.7e). */
       becomes: arrived,
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},

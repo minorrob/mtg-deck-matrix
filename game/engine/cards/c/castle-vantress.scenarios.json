@@ -1,0 +1,125 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Castle Vantress",
+  "scenarios": [
+    {
+      "name": "With an Island, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Vantress"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Vantress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Vantress",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Vantress"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Vantress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Vantress"
+        }
+      ]
+    },
+    {
+      "name": "{2}{U}{U}, {T}: scry 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Castle Vantress",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Castle Vantress"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

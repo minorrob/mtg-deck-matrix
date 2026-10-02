@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Darkslick Shores",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darkslick Shores"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Darkslick Shores"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Darkslick Shores",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Darkslick Shores",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darkslick Shores"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Darkslick Shores"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Darkslick Shores"
+        }
+      ]
+    }
+  ]
+}

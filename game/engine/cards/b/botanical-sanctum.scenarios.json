@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Botanical Sanctum",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Botanical Sanctum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Botanical Sanctum"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Botanical Sanctum",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Botanical Sanctum",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Botanical Sanctum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Botanical Sanctum"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Botanical Sanctum"
+        }
+      ]
+    }
+  ]
+}

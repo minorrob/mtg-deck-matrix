@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Castle Ardenvale",
+  "scenarios": [
+    {
+      "name": "With a Plains, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Ardenvale"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Ardenvale"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Ardenvale",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Castle Ardenvale"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Castle Ardenvale"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Castle Ardenvale"
+        }
+      ]
+    },
+    {
+      "name": "{2}{W}{W}, {T}: a 1/1 Human",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Castle Ardenvale",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Castle Ardenvale"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Human",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Castle Ardenvale"
+        }
+      ]
+    }
+  ]
+}
