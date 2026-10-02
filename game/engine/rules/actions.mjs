@@ -201,7 +201,30 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   || (atom?.atom === "returnToHand" && Boolean(atom.selector) && typeof atom.selector === "object")
   /* "Put a -0/-1 counter on this creature" (Wall of Roots), "remove five +1/+1 counters from Ramos": counters on the
      source itself; a removal it cannot make, it cannot pay (CR 118.3). */
-  || (["addCounters", "removeCounters"].includes(atom?.atom) && atom.self === true && typeof atom.counter === "string");
+  || (["addCounters", "removeCounters"].includes(atom?.atom) && atom.self === true && typeof atom.counter === "string")
+  /* "Crew 3": other untapped creatures with total power 3 or more, the player's choice (crewChoices). */
+  || (atom?.atom === "crew" && Number.isInteger(atom.power) && atom.power >= 0);
+
+/* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
+   such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
+   summoning-sick creature may crew. "This token crews Vehicles as though its power were 2 greater" (`crews-with-more`). */
+const CREW_OFFERS_MAX = 64;
+const crewPower = (state, id) => Math.max(0, characteristicsOf(state, id).power ?? 0)
+  + (state.objects[id].abilities ?? []).filter((a) => a.kind === "static" && a.rule === "crews-with-more").reduce((n, a) => n + (a.amount ?? 0), 0);
+function crewChoices(state, player, vehicle, power) {
+  const crew = state.zones.battlefield.filter((id) => id !== vehicle && state.objects[id].controller === player && !state.objects[id].tapped
+    && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
+  const sets = [];
+  const walk = (from, chosen, total) => {
+    if (sets.length >= CREW_OFFERS_MAX) return;
+    if (total >= power) { sets.push(chosen); return; }
+    for (let i = from; i < crew.length; i += 1) walk(i + 1, [...chosen, crew[i]], total + crewPower(state, crew[i]));
+  };
+  walk(0, [], 0);
+  /* Smallest: no set that has another set in it -- a creature it could leave untapped. */
+  return sets.filter((set) => !sets.some((other) => other !== set && other.length < set.length && other.every((id) => set.includes(id))));
+}
+const crewAtom = (cost) => (cost ?? []).find((a) => a?.atom === "crew");
 
 /* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b). */
 const withinLimit = (state, id, ability) => !ability.limit || usesThisTurn(state, id, ability.id) < ability.limit;
@@ -485,12 +508,15 @@ export function legalActions(state, player) {
         const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
+        const crew = crewAtom(ability.cost);
         const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
-          : toss ? cardsIn(state, "hand", player).filter((c) => c !== id).map((d) => ({discard: d})) : [null];
+          : toss ? cardsIn(state, "hand", player).filter((c) => c !== id).map((d) => ({discard: d}))
+          : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
-            ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard].card]} : {})}, ability, {controller: player, source: id}));
+            ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
+              : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard].card]} : {})}, ability, {controller: player, source: id}));
       }
     }
   }
@@ -811,6 +837,12 @@ function perform(state, player, action) {
       /* Discarding it is the cost of cycling: paid after the ability is on the stack (CR 602.2b, 601.2h), a discard. */
       if (atom.atom === "discard" && atom.self === true && moveOne(state, action.objectId, "graveyard", events, {owner: object.owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       if (atom.atom === "sacrifice" && atom.selector && action.costChoice?.sacrifice !== undefined) sacrificeOne(state, action.costChoice.sacrifice, events);
+      /* Crew: the creatures chosen, tapped (CR 702.122a). */
+      if (atom.atom === "crew") for (const id of action.costChoice?.crew ?? []) {
+        if (!state.objects[id] || state.objects[id].tapped) throw new Error("That creature can no longer crew");
+        state.objects[id].tapped = true;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: true}));
+      }
     }
     if (ability.limit) recordUse(state, action.objectId, ability.id);
     return events;
