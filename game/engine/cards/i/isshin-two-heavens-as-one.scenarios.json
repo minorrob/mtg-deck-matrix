@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Isshin, Two Heavens as One",
+  "scenarios": [
+    {
+      "name": "Krenko attacks: its trigger twice -- two counters, then two Goblins and three more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Isshin, Two Heavens as One",
+            "Krenko, Tin Street Kingpin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Krenko, Tin Street Kingpin"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Krenko, Tin Street Kingpin",
+            "power": 3,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 7
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

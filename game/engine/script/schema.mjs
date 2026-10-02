@@ -188,6 +188,9 @@ function checkAbility(ability, path, errors) {
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

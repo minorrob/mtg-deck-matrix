@@ -53,6 +53,10 @@ export const STATIC_RULES = Object.freeze({
       (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
       the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */
   "flashback": "rules/actions.mjs",
+  /** "If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability
+      triggers an additional time" (Panharmonicon, CR 603.2d): `affects` whose abilities, `cause` {event: enters, dies or
+      attacks, filter} what caused it, if the card says. rules/trigger.mjs, as triggers are collected. */
+  "triggers-again": "rules/trigger.mjs",
   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
       Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
   "attacks-despite-defender": "rules/combat.mjs",

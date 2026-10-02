@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yarok, the Desecrated",
+  "scenarios": [
+    {
+      "name": "A land entering: its life-gain trigger twice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yarok, the Desecrated"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scoured Barrens"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scoured Barrens"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

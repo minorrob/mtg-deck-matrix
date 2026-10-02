@@ -56,7 +56,9 @@ export const FORGE_TRIGGER = {
    lord and goes through `layers.mjs`; `CombatDamageToughness` changes a rule rather than a
    characteristic and goes through `rules/statics.mjs`; `Moved` is a zone-change or entering
    replacement and goes through `replacement.mjs`. Everything else is genuinely absent. */
-export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics", ReduceCost: "rules/statics"};
+export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics", ReduceCost: "rules/statics",
+  /* "That ability triggers an additional time" (batch 34): the static `triggers-again`, read by rules/trigger.mjs. */
+  Panharmonicon: "rules/trigger"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
