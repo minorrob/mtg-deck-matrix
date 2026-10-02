@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 657 defined and playable today; 1,858 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 665 defined and playable today; 1,867 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 41 | 1 | 24 | 126 |
-| Triggers | 138 | 7 | 4 | 11 | 116 |
+| Triggers | 138 | 8 | 4 | 10 | 116 |
 | Static abilities | 77 | 3 | 2 | 0 | 72 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -40,7 +40,6 @@ The things that alone hold back the most of the most-played cards.
 | option | You may play or cast a card from another zone | — | missing | 15 | 84 |
 | count | Damage dealt | — | missing | 14 | 51 |
 | effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
-| trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | static | CastWithFlash | — | missing | 9 | 12 |
 | option | Remembering what an effect moved | — | missing | 8 | 117 |
 | effect | Clone | — | missing | 8 | 29 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | GenericChoice | genericChoice | named | 7 | 21 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 | trigger | TapsForMana | — | missing | 7 | 18 |
+| keyword ability | Crew | — | named | 7 | 15 |
 
 ## Keyword abilities (CR 702)
 
@@ -85,7 +85,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.40 | Storm | — | named | 7 | 37 | 7 | 7 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 3 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
-| 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 4 |
+| 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 5 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 3 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 1 |
 | 702.74 | Evoke | — | named | 6 | 36 | 6 | 2 |
@@ -412,7 +412,7 @@ The things that alone hold back the most of the most-played cards.
 | Fog | — | missing | 4 | 34 | 4 | 3 |
 | Radiation | — | missing | 4 | 22 | 4 | 1 |
 | Airbend | — | missing | 4 | 13 | 4 | 0 |
-| Investigate | investigate | named | 3 | 142 | 3 | 2 |
+| Investigate | investigate | named | 3 | 142 | 3 | 3 |
 | Connive | connive | named | 3 | 51 | 3 | 1 |
 | TapOrUntap | — | missing | 3 | 48 | 3 | 3 |
 | Manifest | — | missing | 3 | 32 | 3 | 2 |
@@ -538,7 +538,7 @@ The things that alone hold back the most of the most-played cards.
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
 | LifeGained | life gained | built | 18 | 94 | 0 | 0 |
 | TapsForMana | — | missing | 18 | 64 | 18 | 7 |
-| Sacrificed | sacrificed | named | 17 | 114 | 17 | 9 |
+| Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
 | AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 26 | 5 |
@@ -564,7 +564,7 @@ The things that alone hold back the most of the most-played cards.
 | CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 1 |
 | SearchedLibrary | — | missing | 2 | 4 | 2 | 2 |
 | MilledAll | — | missing | 2 | 3 | 2 | 0 |
-| TokenCreated | — | missing | 2 | 3 | 2 | 1 |
+| TokenCreated | — | missing | 2 | 3 | 2 | 2 |
 | AttackerUnblocked | — | missing | 1 | 37 | 1 | 0 |
 | Exploited | — | missing | 1 | 25 | 1 | 0 |
 | Proliferate | — | missing | 1 | 6 | 1 | 1 |

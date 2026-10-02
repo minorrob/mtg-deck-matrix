@@ -1,0 +1,142 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crime Novelist",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    },
+    "Altar": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "abilities": [
+        {
+          "id": "alt",
+          "kind": "activated",
+          "text": "Sacrifice a creature: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Scrapper": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "abilities": [
+        {
+          "id": "scr",
+          "kind": "activated",
+          "text": "Sacrifice an artifact: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Artifact"
+                ],
+                "another": true
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature sacrificed: nothing; an artifact sacrificed: a +1/+1 counter and {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crime Novelist",
+            "Relic",
+            "Altar",
+            "Scrapper",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar",
+          "sacrifice": "Bear"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Scrapper",
+          "sacrifice": "Relic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Crime Novelist",
+            "power": 2,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}
