@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archmage's Charm",
+    "oracleId": "85cbb035-25df-43bb-ae06-ab098f448b02",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target spell.\n• Target player draws two cards.\n• Gain control of target nonland permanent with mana value 1 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Counter target spell.\n• Target player draws two cards.\n• Gain control of target nonland permanent with mana value 1 or less.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target spell.",
+              "targets": [
+                {
+                  "what": "spell"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "counterSpell",
+                  "spells": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target player draws two cards.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 2,
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Gain control of target nonland permanent with mana value 1 or less.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "nonTypes": [
+                    "Land"
+                  ],
+                  "manaValue": {
+                    "max": 1
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "gainControl",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 637,
-  "everyRule": 1829
+  "defined": 644,
+  "everyRule": 1839
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -379,7 +379,7 @@
      "top": 7,
      "all": 14,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 40,
+    "built": 41,
     "partial": 1,
-    "named": 25,
+    "named": 24,
     "missing": 126
    },
    "entries": [
@@ -3696,12 +3696,12 @@
      "rule": null,
      "name": "GainControl",
      "engine": "gainControl",
-     "status": "named",
+     "status": "built",
      "forge": "GainControl",
      "top": 22,
      "all": 316,
-     "blocks": 22,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3725,7 +3725,7 @@
      "top": 21,
      "all": 153,
      "blocks": 21,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -3821,7 +3821,7 @@
      "top": 15,
      "all": 43,
      "blocks": 15,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4457,7 +4457,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5655,7 +5655,7 @@
      "top": 18,
      "all": 64,
      "blocks": 18,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "trigger",
@@ -6111,7 +6111,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",

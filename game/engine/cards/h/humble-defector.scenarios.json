@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Humble Defector",
+  "scenarios": [
+    {
+      "name": "{T} on his turn: Rob draws two, and Maya gains control of it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Humble Defector"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Humble Defector",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Humble Defector"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    }
+  ]
+}
