@@ -3,11 +3,18 @@
 #
 #   tools/local-ci.sh              the checked-out commit, run twice
 #   tools/local-ci.sh <ref> [runs] any commit, run <runs> times (default 2)
+#   tools/local-ci.sh <ref> 0      before a push: the scan and the clean merge with main, no suites
 #
 # WHY. The repository is private and on GitHub's free plan, so Actions has a monthly
 # allowance of minutes and a $0 budget: once the allowance is spent, every job refuses to
 # start until the next billing cycle. That happened on 2026-09-27. Rob chose not to wait:
 # while Actions is out, a PR merges on this gate instead (AGENTS.md, "Merging to main").
+#
+# WHEN ACTIONS CAN RUN, the Actions run is the gate and this full run is not repeated on
+# the builder's machine (Rob, 2026-10-01: "decrease the # of scans avoiding those that are
+# redundant ... Prefer to leave with github"). Before a push the builder runs the suites the
+# change touches, and `tools/local-ci.sh <ref> 0`: the scan below, which must happen before
+# anything reaches GitHub, and the merge with main, in seconds.
 #
 # WHAT MAKES IT THE SAME RUN, NOT "IT PASSED ON MY MACHINE".
 #   - A clean checkout of the exact commit (a throwaway git worktree), so an uncommitted
@@ -35,7 +42,10 @@ SHA=$(git rev-parse --verify "$REF^{commit}") || { echo "local-ci: no such commi
 
 fail() { echo "local-ci: FAIL -- $*"; exit 1; }
 
-# The toolchain the workflow installs.
+case "$RUNS" in ''|*[!0-9]*) echo "local-ci: runs must be a whole number, got: $RUNS"; exit 2 ;; esac
+
+# The toolchain the workflow installs (not needed for the scan alone).
+if [ "$RUNS" -gt 0 ]; then
 node_major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null)
 [ "$node_major" = "22" ] || fail "Node 22 is required (the workflow's), found $(node --version 2>/dev/null || echo none)"
 pw=$(node -p 'require("playwright/package.json").version' 2>/dev/null)
@@ -43,6 +53,7 @@ pw=$(node -p 'require("playwright/package.json").version' 2>/dev/null)
 node -e 'const {chromium}=require("playwright"); require("fs").accessSync(chromium.executablePath())' 2>/dev/null ||
   fail "Playwright's Chromium is not installed"
 python3 -c 'import openpyxl' 2>/dev/null || fail "Python's openpyxl is required (tests/generators.mjs reads the workbook with it)"
+fi
 
 git fetch -q origin main 2>/dev/null || echo "local-ci: could not fetch main; using the local origin/main"
 MAIN=$(git rev-parse --verify origin/main^{commit}) || fail "no origin/main"
@@ -60,7 +71,7 @@ if ! git merge-base --is-ancestor "$MAIN" "$SHA"; then
 fi
 
 # The workflow installs Playwright into its checkout; the worktree borrows this one's.
-[ -d "$ROOT/node_modules" ] && ln -s "$ROOT/node_modules" "$WORK/node_modules"
+[ "$RUNS" -gt 0 ] && [ -d "$ROOT/node_modules" ] && ln -s "$ROOT/node_modules" "$WORK/node_modules"
 
 # What the commit adds on top of main, scanned. Only added lines count: a line the commit
 # removes is the commit fixing something, not leaking it.
@@ -77,6 +88,16 @@ leaks=$(printf '%s\n' "$added" | grep -n -E -i \
   -e '[A-Za-z0-9._%+-]+@(gmail|googlemail|outlook|hotmail|yahoo|icloud|me|live|aol|proton|protonmail)\.[a-z]{2,}' |
   cut -c1-160)
 [ -z "$leaks" ] || { printf '%s\n' "$leaks"; fail "the commit adds what looks like a secret or a personal address (above)"; }
+
+# Before a push, when Actions will run the suites: the scan and the merge are the whole check.
+if [ "$RUNS" -eq 0 ]; then
+  echo "local-ci: SCAN PASS"
+  echo "  commit    $SHA"
+  echo "  merge     $TREE_NOTE: clean"
+  echo "  scan      no secrets or personal addresses added on top of main"
+  echo "  suites    none here: the Actions run is the gate"
+  exit 0
+fi
 
 started=$(date +%s)
 i=1
