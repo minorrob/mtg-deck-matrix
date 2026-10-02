@@ -37,6 +37,7 @@
 
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
+import {chosenFor} from "../script/chosen.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -77,6 +78,14 @@ function applies(state, ability, holder, proposal) {
     if (holder === null) return false;
     if (watches.types && !watches.types.every((type) => (proposal.types ?? []).includes(type))) return false;
     if (watches.controller === "controller" && proposal.player !== holder.controller) return false;
+    /* "Each other creature you control of the chosen type enters with an additional +1/+1 counter" (Metallic Mimic): what
+       is entering, as it is now (a spell, or a card elsewhere), "you" and "the chosen type" the holder's. */
+    if (watches.filter) {
+      const entering = state.objects[proposal.objectId];
+      if (!entering) return false;
+      const what = entering.zone === "stack" ? "spell" : "card";
+      if (!compileSelector({...chosenFor(watches.filter, holder), what, ...(what === "card" ? {zone: entering.zone} : {})})(state, proposal.objectId, {controller: holder.controller, source: holder.id})) return false;
+    }
     return true;
   }
 
@@ -244,6 +253,9 @@ function applyOne(state, {holderId, ability}, proposal) {
   if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
   /* "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, it enters tapped." */
   if (ability.change?.unlessReveal) next.asks = [...(next.asks ?? []), {reveal: structuredClone(ability.change.unlessReveal)}];
+  /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
+     there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
+  if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your

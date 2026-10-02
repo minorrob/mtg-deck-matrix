@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frostcliff Siege",
+    "oracleId": "e7af31ff-fa1b-4225-b3bc-fde80ac72d0a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose Jeskai or Temur.\n• Jeskai — Whenever one or more creatures you control deal combat damage to a player, draw a card.\n• Temur — Creatures you control get +1/+0 and have trample and haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this enchantment enters, choose Jeskai or Temur.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "Jeskai",
+          "Temur"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "• Jeskai — Whenever one or more creatures you control deal combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "chosen": "Jeskai"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "• Temur — Creatures you control get +1/+0 and have trample and haste.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "condition": {
+        "chosen": "Temur"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "• Temur — Creatures you control get +1/+0 and have trample and haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample",
+          "Haste"
+        ]
+      },
+      "condition": {
+        "chosen": "Temur"
+      }
+    }
+  ]
+}

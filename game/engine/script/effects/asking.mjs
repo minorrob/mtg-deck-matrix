@@ -500,7 +500,7 @@ export const unlessPays = {
 
 /* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
    every one that could matter; what is chosen, the effects after it name as "$chosen" (resolution.mjs, script/bind.mjs). ---- */
-const creatureTypesInGame = (state) => [...new Set(Object.values(state.objects)
+export const creatureTypesInGame = (state) => [...new Set(Object.values(state.objects)
   .filter((o) => (o.types ?? []).some((t) => t === "Creature" || t === "Kindred")).flatMap((o) => o.subtypes ?? []))].sort();
 export const chooseType = {
   open(state, params, context) {

@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Windcrag Siege",
+  "scenarios": [
+    {
+      "name": "Jeskai: his upkeep, a 1/1 Goblin with lifelink and haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Windcrag Siege"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Windcrag Siege"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Mardu",
+                  "Jeskai"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Jeskai"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Goblin",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Goblin",
+            "has": [
+              "Lifelink",
+              "Haste"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

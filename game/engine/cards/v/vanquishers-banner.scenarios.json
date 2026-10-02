@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vanquisher's Banner",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{2}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Elf: an Elf cast draws a card, a Goblin does not; the Elf 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vanquisher's Banner",
+            "Elf",
+            "Goblin Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vanquisher's Banner"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Goblin Brute"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Elf",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Etchings of the Chosen",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Elf: his Elf sacrificed, his Bear indestructible",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Etchings of the Chosen"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf",
+            "Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Etchings of the Chosen"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Etchings of the Chosen",
+          "sacrifice": "Elf",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -218,7 +218,9 @@ export function resolveTop(state, effect = null) {
   /* X (CR 107.3a): the spell's or ability's own; a permanent's ability uses the X paid to cast it (CR 107.3m). */
   const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
   const attached = source !== null ? state.objects[source]?.attachedTo ?? null : null;
-  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {})};
+  const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
+    /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
+    ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
   if (fizzles) return finishTop(state, entry, events, true);
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered

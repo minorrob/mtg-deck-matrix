@@ -49,6 +49,7 @@ import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
+import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
@@ -253,6 +254,8 @@ function triggersAgain(state, event, controller, sourceId, lastSeen = null, depa
     .flatMap((gone) => (gone.abilities ?? []).filter((a) => a.kind === "static" && a.rule === "triggers-again").map((ability) => ({ability, source: gone.cardId}))) : [];
   for (const {ability, source: holder} of [...playerStatics(state, "triggers-again", controller), ...lookBack]) {
     const context = {controller, source: holder};
+    /* "Mardu -- If a creature attacking causes a triggered ability ... to trigger" (Windcrag Siege): its condition. */
+    if (!conditionHolds(state, ability.condition, context)) continue;
     let theirs = false;
     /* A key last known information does not keep (filter.mjs) is not a match. */
     try { theirs = lastSeen ? matchesLastKnown(ability.affects, lastSeen, context) : matchesSelector(ability.affects, state, sourceId, context); } catch { theirs = false; }
@@ -342,7 +345,9 @@ export function collectTriggers(state, events) {
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
-        for (const ability of object.abilities ?? []) {
+        for (const own of object.abilities ?? []) {
+          /* "Whenever you cast a creature spell of the chosen type": read with its permanent's choice. */
+          const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
           if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
@@ -416,7 +421,8 @@ export function collectTriggers(state, events) {
        whose object is already gone from the battlefield by the time this runs. The event's snapshot
        is the look-back (CR 603.10a), and `cause` carries the ability it belonged to. */
     if (event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield") for (const gone of departed) {
-      for (const ability of gone?.abilities ?? []) {
+      for (const own of gone?.abilities ?? []) {
+        const ability = chosenFor(own, gone);
         if (ability.kind !== "triggered" || !ability.trigger) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
         if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;

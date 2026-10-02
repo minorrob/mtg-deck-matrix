@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Frontier Siege",
+  "scenarios": [
+    {
+      "name": "Khans: his second main phase, {G}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frontier Siege"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Frontier Siege"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Khans"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2
+          }
+        }
+      ]
+    }
+  ]
+}
