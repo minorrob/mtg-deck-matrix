@@ -213,6 +213,16 @@ export function poison(state, params, context) {
   return events;
 }
 
+/**
+ * `winGame` -- "you win the game" (CR 104.2b; Forge's WinsGame): the player it names wins, and the game is over at once
+ * (CR 104.1) -- with every opponent, a multiplayer game having no limited range of influence (CR 104.3h). The state-based
+ * actions report it (rules/sba.mjs, gameOver). A player no longer in the game wins nothing (playersFor names none).
+ */
+export function winGame(state, params, context) {
+  for (const id of playersFor(state, params.who ?? "you", context.controller)) state.players[id].won = true;
+  return [];
+}
+
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];

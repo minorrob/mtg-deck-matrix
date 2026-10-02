@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 894,
-  "everyRule": 2158
+  "defined": 904,
+  "everyRule": 2168
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 51,
+    "built": 52,
     "partial": 1,
     "named": 18,
-    "missing": 122
+    "missing": 121
    },
    "entries": [
     {
@@ -3815,13 +3815,13 @@
      "kind": "effect",
      "rule": null,
      "name": "WinsGame",
-     "engine": null,
-     "status": "missing",
+     "engine": "winGame",
+     "status": "built",
      "forge": "WinsGame",
      "top": 15,
      "all": 43,
-     "blocks": 15,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5727,7 +5727,7 @@
      "top": 6,
      "all": 20,
      "blocks": 6,
-     "alone": 1
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -9235,7 +9235,7 @@
      "top": 9,
      "all": 160,
      "blocks": 9,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "option",
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 9,
+    "built": 10,
     "partial": 1,
     "named": 0,
-    "missing": 178
+    "missing": 177
    },
    "entries": [
     {
@@ -9490,14 +9490,14 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LifeAmount",
-     "engine": null,
-     "status": "missing",
+     "name": "That much life (\"loses that much life\", the life gained)",
+     "engine": "{lifeGained: true}: the life the trigger is about (batch 68)",
+     "status": "built",
      "forge": "LifeAmount",
      "top": 11,
      "all": 38,
-     "blocks": 11,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

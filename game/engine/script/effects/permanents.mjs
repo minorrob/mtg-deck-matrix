@@ -156,6 +156,9 @@ export function afterwards(state, ids, params, context) {
     effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
   /* "Tapped and attacking" (Leonin Warleader's Cats, a ninja put onto the battlefield). */
   if (params.attacking) enterAttacking(state, made, params.attacking, context, controller);
+  /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
+     cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
+  if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
 }
 
 /**

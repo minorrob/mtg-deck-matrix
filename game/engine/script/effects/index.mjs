@@ -30,7 +30,7 @@ import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -132,6 +132,8 @@ export const EFFECTS = Object.freeze({
   poison,
   /* Batch 65: a land made a creature, its counters, and its return. */
   earthbend,
+  /* Batch 68: "you win the game". */
+  winGame,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

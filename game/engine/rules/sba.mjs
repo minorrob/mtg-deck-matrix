@@ -349,6 +349,10 @@ export function finishCommanderReplacement(state, awaiting, indices) {
  * crash and not an arbitrary winner.
  */
 export function gameOver(state) {
+  /* "You win the game" (CR 104.2b, effects/resources.mjs winGame): over at once, that player the winner -- before any
+     state-based action could take it from them (CR 104.1). */
+  const won = state.players.find((p) => p.won === true);
+  if (won) return {winner: won.id, reason: "won by an effect"};
   const alive = state.players.filter((p) => !p.lost);
   if (alive.length === 1) return {winner: alive[0].id, reason: "last player standing"};
   if (alive.length === 0) return {winner: null, reason: "all players lost"};
