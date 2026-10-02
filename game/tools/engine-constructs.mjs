@@ -38,7 +38,9 @@ export const FORGE_API = {
   Charm: "modal", RepeatEach: "repeatFor", Branch: "branch", DelayedTrigger: "delayedTrigger",
   ImmediateTrigger: "immediateTrigger", Counter: "counterSpell", CopySpellAbility: "copySpell",
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
-  GenericChoice: "genericChoice", TwoPiles: "twoPiles", Connive: "connive",
+  /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
+     question at resolution, its chooser any player (batch 52). */
+  GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
   Investigate: "investigate", Cleanup: "cleanup", ReplaceEffect: "effectUntil",
 };
 

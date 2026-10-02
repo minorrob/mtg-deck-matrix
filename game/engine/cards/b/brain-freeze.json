@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brain Freeze",
+    "oracleId": "464c0150-3dbc-403b-9ada-fef25ab1f29d",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player mills three cards.\nStorm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Storm",
+      "keyword": "storm"
+    },
+    {
+      "kind": "spell",
+      "text": "Target player mills three cards.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "mill",
+          "who": {
+            "target": 0
+          },
+          "count": 3
+        }
+      ]
+    }
+  ]
+}
