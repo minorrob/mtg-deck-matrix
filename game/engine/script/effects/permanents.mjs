@@ -155,6 +155,8 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
+  /* A target player who is no longer one creates nothing. */
+  if (!state.players[controller]) return events;
   const made = [];
   /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
      counted as it is made. */

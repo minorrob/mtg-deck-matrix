@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 736,
-  "everyRule": 1963
+  "defined": 742,
+  "everyRule": 1973
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -895,7 +895,7 @@
      "top": 2,
      "all": 18,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -3965,7 +3965,7 @@
      "top": 10,
      "all": 62,
      "blocks": 10,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -5519,10 +5519,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 8,
+    "built": 9,
     "partial": 4,
     "named": 10,
-    "missing": 116
+    "missing": 115
    },
    "entries": [
     {
@@ -5649,13 +5649,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "TapsForMana",
-     "engine": null,
-     "status": "missing",
+     "engine": "tapped for mana",
+     "status": "built",
      "forge": "TapsForMana",
      "top": 18,
      "all": 64,
-     "blocks": 18,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "option",
@@ -9199,7 +9199,7 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "option",
@@ -11845,7 +11845,7 @@
      "top": 5,
      "all": 30,
      "blocks": 5,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword construct",

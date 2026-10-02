@@ -179,6 +179,8 @@ export function bindEffect(effect, context) {
      Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
   if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context);
+  /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. */
+  if (isRef(bound.controller)) { const [player] = playersOf(bound.controller, context); bound.controller = player ?? -1; }
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;

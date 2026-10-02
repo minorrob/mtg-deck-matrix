@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 736 defined and playable today; 1,963 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 742 defined and playable today; 1,973 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 43 | 1 | 22 | 126 |
-| Triggers | 138 | 8 | 4 | 10 | 116 |
+| Triggers | 138 | 9 | 4 | 10 | 115 |
 | Static abilities | 77 | 4 | 2 | 0 | 71 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -36,9 +36,8 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 10 | 106 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 11 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
-| trigger | TapsForMana | — | missing | 10 | 18 |
 | effect | Clone | — | missing | 9 | 29 |
 | keyword ability | Ninjutsu | — | missing | 8 | 14 |
 | keyword ability | Station | — | missing | 8 | 11 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Crew | — | named | 7 | 15 |
 | keyword ability | Storm | — | named | 7 | 7 |
 | static | UntapOtherPlayer | — | missing | 7 | 7 |
+| option | An effect's condition: about a named object | — | missing | 6 | 53 |
 
 ## Keyword abilities (CR 702)
 
@@ -128,7 +128,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.13 | Intimidate | — | missing | 2 | 23 | 2 | 1 |
 | 702.63 | Vanishing | — | missing | 2 | 21 | 2 | 2 |
 | 702.134 | Mentor | — | named | 2 | 19 | 2 | 1 |
-| 702.101 | Extort | — | missing | 2 | 18 | 2 | 1 |
+| 702.101 | Extort | — | missing | 2 | 18 | 2 | 2 |
 | 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 1 |
 | 702.129 | Eternalize | — | missing | 2 | 12 | 2 | 2 |
@@ -392,9 +392,9 @@ The things that alone hold back the most of the most-played cards.
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 5 |
 | Poison | — | missing | 11 | 36 | 11 | 6 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
-| BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
+| BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
 | ChangeTargets | — | missing | 10 | 43 | 10 | 6 |
-| Earthbend | — | missing | 10 | 36 | 10 | 5 |
+| Earthbend | — | missing | 10 | 36 | 10 | 6 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 0 |
@@ -537,7 +537,7 @@ The things that alone hold back the most of the most-played cards.
 | AttackersDeclared | attackers declared | named | 25 | 227 | 26 | 6 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
 | LifeGained | life gained | built | 18 | 94 | 0 | 0 |
-| TapsForMana | — | missing | 18 | 64 | 18 | 10 |
+| TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 7 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 10 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 11 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
@@ -849,7 +849,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 3 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 2 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 3 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 4 |
@@ -1082,7 +1082,7 @@ The things that alone hold back the most of the most-played cards.
 | Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 4 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 2 |
-| MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 3 |
+| MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 4 |
 | TypeCycling | TypeCycling | built | 3 | 96 | 0 | 0 |
 | Start your engines | — | missing | 3 | 46 | 3 | 2 |
 | AlternateAdditionalCost | — | missing | 3 | 44 | 3 | 2 |

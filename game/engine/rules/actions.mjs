@@ -69,7 +69,7 @@ import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf} from "./layers.mjs";
 import {askEntering} from "./entering.mjs";
-import {collectTriggers, openTriggers} from "./trigger.mjs";
+import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
@@ -651,7 +651,14 @@ function perform(state, player, action) {
     events.push(event("GameEventManaPool", state, {
       player: {playerId: player, name: state.players[player].name},
       produced: {...produced}, source: cardRef(state, action.objectId),
+      /* "Tapped for mana" (CR 605.1b): what a "whenever ... is tapped for mana" ability watches. */
+      ...(ability.tapSelf ? {tapped: true} : {}),
     }));
+    /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
+    for (const extra of manaTriggered(state, events[events.length - 1])) {
+      addMana(state.players[extra.player].manaPool, extra.mana);
+      events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
+    }
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
     if ((ability.then ?? []).length) {
       /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). */

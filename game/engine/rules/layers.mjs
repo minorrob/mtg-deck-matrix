@@ -76,7 +76,7 @@ function printed(state, id) {
 /* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
-export const LAYER_AFFECTS_KEYS = Object.freeze(["what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "countersAtLeast"]);
+export const LAYER_AFFECTS_KEYS = Object.freeze(["what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -98,6 +98,8 @@ function affects(state, effect, current, sourceController) {
   /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
      time layers 6 and 7 ask. */
   if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
+  /* "Colorless creatures you control get +2/+2" (Forsaken Monument): no color, as layer 5 left it. */
+  if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
   if (rule.countersAtLeast && ((current.counters ?? {})[rule.countersAtLeast.counter] ?? 0) < rule.countersAtLeast.count) return false;
   return true;

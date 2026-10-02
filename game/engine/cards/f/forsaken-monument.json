@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Forsaken Monument",
+    "oracleId": "7777fab1-df3f-467f-b9e2-46dd2bd2166e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Colorless creatures you control get +2/+2.\nWhenever you tap a permanent for {C}, add an additional {C}.\nWhenever you cast a colorless spell, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Colorless creatures you control get +2/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "colorless": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you tap a permanent for {C}, add an additional {C}.",
+      "trigger": {
+        "on": "tapped for mana",
+        "produced": "C"
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a colorless spell, you gain 2 life.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "colorless": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

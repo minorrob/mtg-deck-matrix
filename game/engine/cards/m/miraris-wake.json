@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mirari's Wake",
+    "oracleId": "852657c0-18a4-4b28-b9ae-7728acdb5044",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +1/+1.\nWhenever you tap a land for mana, add one mana of any type that land produced.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you tap a land for mana, add one mana of any type that land produced.",
+      "trigger": {
+        "on": "tapped for mana",
+        "filter": {
+          "types": [
+            "Land"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "produced": true
+        }
+      ]
+    }
+  ]
+}

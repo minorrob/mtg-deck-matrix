@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Nirkana Revenant",
+  "scenarios": [
+    {
+      "name": "A Swamp: two {B}; an Island: one {U}; {B}: +1/+1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nirkana Revenant",
+            "Swamp",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "B": 2,
+                "U": 1
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Nirkana Revenant"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Nirkana Revenant",
+            "power": 5,
+            "toughness": 5
+          }
+        }
+      ]
+    }
+  ]
+}

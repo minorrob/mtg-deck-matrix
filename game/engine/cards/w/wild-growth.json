@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wild Growth",
+    "oracleId": "706ae742-1807-44b7-a4fa-f2e26f61519a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant land\nWhenever enchanted land is tapped for mana, its controller adds an additional {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant land",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever enchanted land is tapped for mana, its controller adds an additional {G}.",
+      "trigger": {
+        "on": "tapped for mana",
+        "tapper": "any",
+        "enchanted": true
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}
