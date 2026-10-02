@@ -251,6 +251,17 @@ export function compileScript(script) {
       keywords.push("Ward");
       return;
     }
+    /* CREW (CR 702.122a): "Crew N: Tap any number of other untapped creatures you control with total power N or more: This
+       Vehicle becomes an artifact creature until end of turn" -- an activated ability with the `crew` cost atom; the
+       Vehicle keeps its printed power and toughness (CR 301.7b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "crew") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 0)) problems.push(`${ability.text}: crew needs its number`);
+      if (!(identity.subtypes ?? []).includes("Vehicle")) problems.push(`${ability.text}: crew on a card that is not a Vehicle`);
+      abilities.push({id, kind: "activated", text: ability.text, cost: [{atom: "crew", power: ability.amount ?? 0}],
+        effects: [{effect: "animate", targets: "self", addTypes: ["Creature"], until: "end-of-turn"}]});
+      keywords.push("Crew");
+      return;
+    }
     /* NINJUTSU (CR 702.49a): "{cost}, Return an unblocked attacking creature you control to its owner's hand: Put this card
        onto the battlefield from your hand tapped and attacking" -- an ability of the card in its owner's hand, attacking
        whom the returned creature attacked (rules/actions.mjs remembers it as the ability goes on the stack). */

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 769 defined and playable today; 2,016 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 774 defined and playable today; 2,023 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 22 | 0 | 26 | 146 |
+| Keyword abilities (CR 702) | 194 | 23 | 0 | 25 | 146 |
 | Keyword actions (CR 701) | 70 | 15 | 3 | 8 | 44 |
 | Effects | 192 | 46 | 1 | 19 | 126 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
@@ -38,19 +38,19 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | keyword construct | ETBReplacement | — | missing | 27 | 68 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 12 | 106 |
-| option | You may play or cast a card from another zone | — | missing | 10 | 79 |
+| option | You may play or cast a card from another zone | — | missing | 11 | 79 |
+| option | Remembering what an effect moved | — | missing | 9 | 113 |
 | effect | Clone | — | missing | 9 | 29 |
-| option | Remembering what an effect moved | — | missing | 8 | 113 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | effect | Play | play | named | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
-| keyword ability | Crew | — | named | 7 | 15 |
+| effect | DigUntil | — | missing | 7 | 18 |
 | option | An effect's condition: about a named object | — | missing | 6 | 53 |
 | trigger | AttackersDeclared | attackers declared | named | 6 | 26 |
-| effect | DigUntil | — | missing | 6 | 18 |
 | option | Only once (or N times) each turn | — | missing | 6 | 18 |
 | static | CantBeCast | — | missing | 6 | 14 |
 | replacement | Counter | — | missing | 6 | 12 |
+| effect | Poison | — | missing | 6 | 11 |
 
 ## Keyword abilities (CR 702)
 
@@ -72,7 +72,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.111 | Menace | Menace | built | 26 | 411 | 0 | 0 |
 | 702.21 | Ward | Ward | built | 26 | 212 | 0 | 0 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
-| 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
+| 702.122 | Crew | Crew | built | 15 | 192 | 0 | 0 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
 | 702.49 | Ninjutsu | Ninjutsu | built | 14 | 45 | 0 | 0 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 4 |
@@ -87,7 +87,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 5 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 4 |
-| 702.16 | Protection | — | named | 6 | 58 | 6 | 1 |
+| 702.16 | Protection | — | named | 6 | 58 | 6 | 2 |
 | 702.74 | Evoke | — | named | 6 | 36 | 6 | 2 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 3 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
@@ -376,7 +376,7 @@ The things that alone hold back the most of the most-played cards.
 | SetState | setState | named | 19 | 280 | 19 | 5 |
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
-| DigUntil | — | missing | 18 | 167 | 18 | 6 |
+| DigUntil | — | missing | 18 | 167 | 18 | 7 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
@@ -556,7 +556,7 @@ The things that alone hold back the most of the most-played cards.
 | CounterAdded | counter added | named | 3 | 19 | 3 | 2 |
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
 | RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
-| Blocks | blocks | named | 2 | 127 | 2 | 1 |
+| Blocks | blocks | named | 2 | 127 | 2 | 2 |
 | Always | — | missing | 2 | 62 | 2 | 1 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 1 |
 | DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 8 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 9 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 12 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 79 | 10 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 79 | 11 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 2 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -847,7 +847,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
-| A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 4 |
+| A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 5 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 3 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |

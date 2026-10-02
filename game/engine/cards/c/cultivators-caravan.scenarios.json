@@ -1,0 +1,132 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cultivator's Caravan",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Crew 3: the Bear and the Elf together -- one offer, not a Bear alone; then a 5/5 creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cultivator's Caravan",
+            "Bear",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Cultivator's Caravan"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Cultivator's Caravan"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cultivator's Caravan",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 0,
+          "tapped": "Elf"
+        }
+      ]
+    },
+    {
+      "name": "A Bear alone has 2: not enough to crew",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cultivator's Caravan",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Cultivator's Caravan"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "And it taps for mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cultivator's Caravan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Cultivator's Caravan",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

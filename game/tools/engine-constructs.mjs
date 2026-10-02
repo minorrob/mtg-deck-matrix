@@ -84,7 +84,9 @@ export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
-  Ninjutsu: "moveZone"};
+  Ninjutsu: "moveZone",
+  /* Crew (batch 55): the `crew` cost and the Vehicle animated until end of turn (cards/index.mjs). */
+  Crew: "animate"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

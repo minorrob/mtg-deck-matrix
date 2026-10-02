@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skysovereign, Consul Flagship",
+    "oracleId": "50b14338-9318-4327-a1dd-c0ef38903cc4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhenever Skysovereign enters or attacks, it deals 3 damage to target creature or planeswalker an opponent controls.\nCrew 3 (Tap any number of creatures you control with total power 3 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Skysovereign enters or attacks, it deals 3 damage to target creature or planeswalker an opponent controls.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Skysovereign enters or attacks, it deals 3 damage to target creature or planeswalker an opponent controls.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 3",
+      "keyword": "crew",
+      "amount": 3
+    }
+  ]
+}
