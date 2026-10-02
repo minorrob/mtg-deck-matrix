@@ -47,8 +47,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
     if (!flat.startsWith("- ")) continue;
     for (const [, name] of flat.matchAll(/`([^`]+)`/g)) named.add(name);
   }
-  eq(named.size, 71,
-    "seventy-one names are written in backticks in §12.2 — sixty-nine effect primitives and the two symbolic cost atoms");
+  eq(named.size, 72,
+    "seventy-two names are written in backticks in §12.2 — seventy effect primitives (regenerate joined in batch 28) and the two symbolic cost atoms");
 
   const missing = [...named].filter((name) => !ALL_PRIMITIVES.includes(name) && !COST_ATOMS.includes(name));
   eq(missing, [],

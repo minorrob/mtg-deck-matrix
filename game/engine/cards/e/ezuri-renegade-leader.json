@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ezuri, Renegade Leader",
+    "oracleId": "6734497c-16f0-4c4b-ba24-337333511fc6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{G}: Regenerate another target Elf.\n{2}{G}{G}{G}: Elf creatures you control get +3/+3 and gain trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{G}: Regenerate another target Elf.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "subtypes": [
+            "Elf"
+          ],
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}{G}{G}: Elf creatures you control get +3/+3 and gain trample until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "power": 3,
+          "toughness": 3,
+          "keywords": [
+            "Trample"
+          ],
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Elf"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

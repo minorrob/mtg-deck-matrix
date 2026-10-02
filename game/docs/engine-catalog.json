@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 550,
-  "everyRule": 1702
+  "defined": 558,
+  "everyRule": 1712
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -247,7 +247,7 @@
      "top": 14,
      "all": 45,
      "blocks": 14,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword ability",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 36,
+    "built": 37,
     "partial": 1,
     "named": 27,
-    "missing": 128
+    "missing": 127
    },
    "entries": [
     {
@@ -3851,13 +3851,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Regenerate",
-     "engine": null,
-     "status": "missing",
+     "engine": "regenerate",
+     "status": "built",
      "forge": "Regenerate",
      "top": 12,
      "all": 269,
-     "blocks": 12,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",

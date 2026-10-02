@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 550 defined and playable today; 1,702 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 558 defined and playable today; 1,712 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 36 | 1 | 27 | 128 |
+| Effects | 192 | 37 | 1 | 27 | 127 |
 | Triggers | 138 | 5 | 4 | 13 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -41,7 +41,6 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
-| effect | Regenerate | — | missing | 10 | 12 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
 | option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
 | static | Panharmonicon | — | missing | 8 | 19 |
+| static | CastWithFlash | — | missing | 8 | 12 |
 
 ## Keyword abilities (CR 702)
 
@@ -74,7 +74,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
 | 702.34 | Flashback | — | named | 14 | 214 | 14 | 11 |
-| 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 6 |
+| 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 7 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
@@ -383,7 +383,7 @@ The things that alone hold back the most of the most-played cards.
 | WinsGame | — | missing | 15 | 43 | 15 | 2 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | named | 14 | 113 | 14 | 5 |
-| Regenerate | — | missing | 12 | 269 | 12 | 10 |
+| Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
 | ManaReflected | addManaReflected | named | 12 | 47 | 12 | 6 |

@@ -79,7 +79,7 @@ export const PRIMITIVES = Object.freeze({
     "phaseOut",
   ]),
   modifiers: Object.freeze([
-    "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword",
+    "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",

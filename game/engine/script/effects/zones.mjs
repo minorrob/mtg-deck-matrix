@@ -23,7 +23,7 @@ import {moveObject, cardsIn, PUBLIC_ZONES} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
-import {applyReplacements, enteringModifications} from "../../rules/replacement.mjs";
+import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered} from "../../rules/statics.mjs";
 
 const ZONE_LABEL = {
@@ -172,6 +172,8 @@ export function destroy(state, params, context) {
   for (const id of params.targets ?? []) {
     if (!state.objects[id]) continue;
     if (keywordsOf(state, id).includes("Indestructible")) continue;
+    /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`). */
+    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
     moveOne(state, id, "graveyard", events);
   }
   void context;
@@ -189,7 +191,11 @@ export function destroyAll(state, params, context) {
   const events = [];
   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)];
   const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
-  for (const id of doomed) moveOne(state, id, "graveyard", events);
+  /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
+  for (const id of doomed) {
+    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
+    moveOne(state, id, "graveyard", events);
+  }
   return events;
 }
 
