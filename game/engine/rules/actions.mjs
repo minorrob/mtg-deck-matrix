@@ -63,7 +63,7 @@ import {moveOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, playerStatics} from "./statics.mjs";
+import {costReduction, playerStatics, freeCast} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -87,8 +87,9 @@ const isLand = (object) => (object.types ?? []).includes("Land");
 /* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
    payment read it here, so they cannot disagree. */
-function castCost(state, player, id, tax) {
-  const cost = parseManaCost(state.objects[id].manaCost);
+function castCost(state, player, id, tax, free = false) {
+  /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts. */
+  const cost = parseManaCost(free ? "" : state.objects[id].manaCost);
   let reduction = costReduction(state, player, id);
   const fromPrinted = Math.min(cost.generic, reduction);
   cost.generic -= fromPrinted;
@@ -238,6 +239,17 @@ function abilityXValues(state, player, ability) {
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 const landDropsLeft = (state, player) => (state.players[player].landAllowance ?? 1) + playerStatics(state, "extra-land-drop", player).length - state.players[player].landsPlayed;
 
+/* What a spell cast from the top of a library by a permanent's permission gains as it resolves: the `gains` of the first
+   "play-from" ability whose spells it fits ("it gains haste until end of turn"). */
+function castFromTopGains(state, player, id) {
+  for (const {ability} of playerStatics(state, "play-from", player)) {
+    if (ability.zone !== "library-top" || !ability.spells || !ability.gains) continue;
+    const which = ability.spells;
+    if (which === true || matchesSelector({...which, what: "card", zone: "library"}, state, id, {controller: player})) return [...ability.gains];
+  }
+  return [];
+}
+
 /* WHAT A PLAYER MAY PLAY FROM ANOTHER ZONE (CR 601.2a, 305.1), by their permanents' static abilities: lands from the
    graveyard, the top card of the library, a card that says it may be cast from its graveyard or exile. `lands` and
    `spells` are each true or a selector the card must match. One list, read by the land offer and the cast offer. */
@@ -325,7 +337,11 @@ export function legalActions(state, player) {
     if (sorcerySpeed(object) && !hasFlash(state, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
       continue;
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
-    const {cost, x} = castCost(state, player, id, tax);
+    /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
+       each turn", so the player decides which spell spends it. */
+    const free = freeCast(state, player, id);
+    for (const freely of free ? (free.limited ? [false, true] : [true]) : [false]) {
+    const {cost, x} = castCost(state, player, id, tax, freely);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
     for (const X of xValues(state.players[player].manaPool, cost, x)) {
       const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (X ?? 0) * cost.variable});
@@ -333,8 +349,10 @@ export function legalActions(state, player) {
       const extra = object.spell?.additionalCost ?? [];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
       for (const costChoice of paysFor)
-        actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {})},
+        actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
+          ...(freely ? {free: true} : {})},
           object.spell, {controller: player, source: id}));
+    }
     }
   }
 
@@ -534,7 +552,9 @@ function perform(state, player, action) {
        is still on the list, and this proves the payment still balances. */
     const fromCommand = object.zone === "command";
     const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
-    const {cost, x} = castCost(state, player, action.objectId, tax);
+    const free = action.free ? freeCast(state, player, action.objectId) : null;
+    if (action.free && !free) throw new Error(`${object.card} cannot be cast without paying its mana cost now`);
+    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free));
     const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (action.x ?? 0) * cost.variable});
     if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
@@ -542,6 +562,11 @@ function perform(state, player, action) {
     if (payment.life > 0) state.players[player].life -= payment.life;
     /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
+    /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
+    if (free?.limited) recordUse(state, free.source, `free:${free.abilityId}`);
+    /* "If you cast a creature spell this way, it gains haste until end of turn" (Thundermane Dragon): remembered on the spell,
+       given to the permanent it becomes (rules/stack.mjs). */
+    const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
 
     const permanent = !(object.types ?? []).some((type) => ["Instant", "Sorcery"].includes(type));
     const targets = structuredClone(action.targets ?? []);
@@ -555,6 +580,8 @@ function perform(state, player, action) {
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {})});
+    /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
+    if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     for (const [kind, id] of extraPaid) {
       const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;

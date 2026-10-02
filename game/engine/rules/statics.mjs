@@ -19,6 +19,8 @@
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
+import {usesThisTurn} from "../state/index.mjs";
+import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
 export const STATIC_RULES = Object.freeze({
@@ -61,7 +63,39 @@ export const STATIC_RULES = Object.freeze({
       and "creature spells you control can't be countered" (a permanent's, over spells): a counter effect does nothing to
       such a spell (CR 101.2: "can't" beats "can"). script/effects/zones.mjs, counterSpell. */
   "cant-be-countered": "script/effects/zones.mjs",
+  /** "You may cast spells from your hand without paying their mana costs" (Omniscience), "Dragon spells" (Dracogenesis),
+      "once each turn, you may pay {0} rather than pay the mana cost for a colorless spell you cast from your hand"
+      (Darksteel Monolith): an alternative cost of nothing (CR 118.9; additional costs, the commander tax included, are
+      still paid). `affects` the spells, `zones` where they are cast from, `limit` how often each turn, and
+      `manaValueAtMost` a counted cap (As Foretold's time counters). rules/actions.mjs. */
+  "cast-without-paying": "rules/actions.mjs",
 });
+
+/**
+ * The static ability that lets this player cast this card without paying its mana cost now, if any: `{source,
+ * abilityId, limited}` -- `limited` when it may be used only so often each turn (its uses counted on its source,
+ * state/index.mjs). The first that applies; null when none does.
+ */
+export function freeCast(state, player, cardId) {
+  const object = state.objects[cardId];
+  if (!object) return null;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    if (holder.controller !== player) continue;
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cast-without-paying") continue;
+      if (ability.zones && !ability.zones.includes(object.zone)) continue;
+      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      if (ability.manaValueAtMost !== undefined) {
+        const cap = amountOf(state, ability.manaValueAtMost, {controller: holder.controller, source: holderId});
+        if (manaValue(parseManaCost(object.manaCost ?? "")) > cap) continue;
+      }
+      if (ability.limit && usesThisTurn(state, holderId, `free:${ability.id}`) >= ability.limit) continue;
+      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit)};
+    }
+  }
+  return null;
+}
 
 /** Whether this spell can't be countered: its own "this spell can't be countered", or a permanent's static ability over it. */
 export function cantBeCountered(state, spellId) {
