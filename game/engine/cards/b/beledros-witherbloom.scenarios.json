@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Beledros Witherbloom",
+  "scenarios": [
+    {
+      "name": "At the beginning of each upkeep -- Maya's too -- a Pest",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Beledros Witherbloom"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Beledros Witherbloom",
+            "Pest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pay 10 life: untap your lands -- once this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Beledros Witherbloom",
+            "Forest",
+            "Forest"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Beledros Witherbloom"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Forest",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Beledros Witherbloom"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 30
+        }
+      ]
+    }
+  ]
+}

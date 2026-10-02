@@ -17,6 +17,8 @@
  *                                      "a creature with power 4 or greater", "this artifact is untapped"
  *                                      ({self: true, tapped: false}); a choice of selectors with `anyOf`
  *   {handEmpty: true|false}            its controller's hand is empty, or is not
+ *   {notTheirTurn: true}               "if it isn't that player's turn": the player the trigger is about is not the
+ *                                      active player (Tataru Taru)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -24,11 +26,12 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "handEmpty"];
+const CONDITION_KEYS = ["present", "atLeast", "handEmpty", "notTheirTurn"];
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined} = {}) {
   if (!condition) return true;
+  if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
   if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
   if (condition.present) {
@@ -46,6 +49,7 @@ export function conditionProblems(condition) {
   for (const key of Object.keys(condition)) if (!CONDITION_KEYS.includes(key)) problems.push(`A condition has no key ${JSON.stringify(key)}; it has ${CONDITION_KEYS.join(", ")}`);
   if ("atLeast" in condition && !(Number.isInteger(condition.atLeast) && condition.atLeast >= 1)) problems.push("A condition's atLeast is a whole number, 1 or more");
   if ("handEmpty" in condition && typeof condition.handEmpty !== "boolean") problems.push("handEmpty is true or false");
+  if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
   if ("present" in condition) {
     const {anyOf, ...shared} = condition.present ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [condition.present]) compileSelector(one); }

@@ -244,7 +244,7 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
   main(s);
   throws(() => runEffects(s, [{effect: "createToken", token: {predefined: "Blood"}}], {controller: 0, source: null}), /No predefined token named Blood/,
     "a predefined token the engine does not know is refused, not made blank");
-  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Treasure"], "the three the most-played cards make");
+  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Pest", "Treasure"], "the three the most-played cards make, and the Pest (batch 18, Beledros Witherbloom)");
 }
 
 /* ---- a mana ability that sacrifices its source ---- */

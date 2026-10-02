@@ -40,7 +40,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -124,6 +124,11 @@ export function amountOf(state, value, context = {}) {
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
   } else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
+  /* "For each of that spell's colors" (Ramos, CR 105.2): how many colors it has, through the layers on the battlefield. */
+  else if ("colorsOf" in value) {
+    const id = objectOf(value.colorsOf, context);
+    n = id !== null && state.objects[id] ? (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors ?? []).length : 0;
+  }
   /* `atMost`: "{1} less if you control a creature with flying" is the count of them, at most 1. */
   const total = Math.min(value.atMost ?? Infinity, n) * (value.times ?? 1) + (value.plus ?? 0);
   return (value.times ?? 1) < 0 ? total : Math.max(0, total);

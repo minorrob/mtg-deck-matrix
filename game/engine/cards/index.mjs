@@ -105,7 +105,10 @@ function manaAbility(ability, id) {
   const [first, ...then] = ability.effects ?? [];
   if (first?.effect !== "addMana") return (ability.effects ?? []).some((e) => e?.effect === "addMana") ? "unbuilt" : null;
   const cost = ability.cost ?? [];
-  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector)))) return "unbuilt";
+  if ((ability.targets ?? []).length || !cost.every((a) => ["{T}", "mana", "payLife"].includes(a?.atom) || (a?.atom === "sacrifice" && (a.self === true || a.selector))
+    || (["addCounters", "removeCounters"].includes(a?.atom) && a.self === true && typeof a.counter === "string"))) return "unbuilt";
+  /* "Put a -0/-1 counter on this creature: Add {G}" (Wall of Roots), "Remove five +1/+1 counters from Ramos: Add ...". */
+  const counterCost = cost.filter((a) => ["addCounters", "removeCounters"].includes(a.atom)).map((a) => ({counter: a.counter, count: a.count ?? 1, put: a.atom === "addCounters"}));
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
   const adds = MANA(first.mana) ? {produces: {...first.mana}}
     : Array.isArray(first.choice) && first.choice.length > 1 && first.choice.every(MANA) ? {produces: first.choice.map((m) => ({...m}))}
@@ -120,7 +123,8 @@ function manaAbility(ability, id) {
     /* "Sacrifice a creature: Add {C}{C}" (Ashnod's Altar): which creature is the player's choice, one offer each. */
     ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {}),
     /* "Activate only if you control a Swamp" (CR 602.5b; script/condition.mjs). */
-    ...(ability.condition ? {condition: ability.condition} : {})};
+    ...(ability.condition ? {condition: ability.condition} : {}),
+    ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {})};
 }
 
 /* "WHEN THAT CREATURE DIES THIS TURN" (CR 603.7): a delayed trigger that waits for an event says so in a triggered
@@ -204,12 +208,16 @@ export function compileScript(script) {
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],
         effects: ability.effects, ...(ability.timing ? {timing: ability.timing} : {}), ...(ability.zone === "hand" ? {zone: "hand"} : {}),
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
-        ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {})});
+        ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
+        /* "Activate only once each turn" (CR 602.5b): how many times each turn. */
+        ...(ability.limit ? {limit: ability.limit} : {})});
       return;
     }
     if (ability.kind === "triggered") {
       const compile = TRIGGERS[ability.trigger.on];
-      const trigger = compile ? compile(ability.trigger) : null;
+      const compiled = compile ? compile(ability.trigger) : null;
+      /* "Whenever ONE OR MORE ...": once for everything that happened at once (rules/trigger.mjs). */
+      const trigger = compiled && ability.trigger.batch ? {...compiled, batch: true} : compiled;
       if (!trigger) problems.push(`${ability.trigger.on}${ability.trigger.who ? ` (${ability.trigger.who})` : ""}: a trigger the engine does not watch for yet`);
       if (ability.trigger.filter) {
         /* A filter may be a choice ("an instant or sorcery spell", "another creature or planeswalker you control dies"):
@@ -226,7 +234,9 @@ export function compileScript(script) {
       const effects = ability.optional ? [{effect: "modal", title: ability.text, modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;
       abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects,
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
-        ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {})});
+        ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {}),
+        /* "This ability triggers only once each turn". */
+        ...(ability.limit ? {limit: ability.limit} : {})});
       return;
     }
     /* static and replacement: their schema is the rules modules' own shape. */

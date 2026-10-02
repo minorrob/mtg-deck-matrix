@@ -134,6 +134,8 @@ function objectsOf(value, context) {
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
   if (value === "remembered") return (context.remembered ?? []).slice();
+  /* "For each of them": everything a "one or more" trigger is about (trigger.mjs, `batch`). */
+  if (value === "those cards") return (context.about?.cards ?? []).slice();
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   return chosen && chosen.kind === "object" ? [chosen.id] : [];
