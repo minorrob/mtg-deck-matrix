@@ -95,6 +95,57 @@ export const scry = {
   },
 };
 
+/* ---- surveil ---- */
+
+/* SURVEIL N (CR 701.25a): look at the top N cards of your library, put any number of them into your graveyard and the rest
+   on top in any order. Two questions, each one the board already draws as a pop-up: first which of them go to the
+   graveyard (pick any, none included), then -- only when two or more stay -- the order they go back in, top first. A
+   library with nothing in it surveils nothing (CR 701.25c); one that stays is simply put back. Each card moved is moved
+   through the replacement effects, so "if a card would be put into a graveyard, exile it instead" sees it. */
+export const surveil = {
+  open(state, params, context) {
+    const looked = cardsIn(state, "library", context.controller).slice(0, params.count ?? 1);
+    if (looked.length === 0) return false;
+    state.awaiting = {kind: "effect-choice", effect: "surveil", player: context.controller, cards: looked, step: "graveyard", count: looked.length};
+    return true;
+  },
+
+  choice(state, awaiting) {
+    if (awaiting.step === "order") return {
+      id: `surveil-order:${awaiting.cards.join(",")}`,
+      title: "Put the rest back on top of your library, the first you choose on top",
+      mode: "order", min: awaiting.cards.length, max: awaiting.cards.length,
+      options: cardOptions(state, awaiting.cards),
+    };
+    return {
+      id: `surveil:${awaiting.cards.join(",")}`,
+      title: `Surveil ${awaiting.count}: choose any to put into your graveyard`,
+      mode: "many", min: 0, max: awaiting.cards.length,
+      options: cardOptions(state, awaiting.cards),
+    };
+  },
+
+  apply(state, awaiting, indices) {
+    const events = [];
+    const player = awaiting.player;
+    const chosen = (indices ?? []).map((index) => awaiting.cards[index]).filter((id) => id !== undefined);
+    if (awaiting.step === "order") {
+      /* Lifted out and put back in the order given, the first on top. */
+      const library = state.zones.library[player];
+      for (const id of awaiting.cards) { const at = library.indexOf(id); if (at >= 0) library.splice(at, 1); }
+      library.unshift(...chosen);
+      return events;
+    }
+    for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+    const rest = awaiting.cards.filter((id) => !chosen.includes(id) && state.objects[id]?.zone === "library");
+    if (rest.length >= 2) {
+      state.awaiting = {...awaiting, step: "order", cards: rest};
+      return {events, again: true};
+    }
+    return events;
+  },
+};
+
 /* ---- dig ---- */
 
 export const dig = {
@@ -465,4 +516,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays});
