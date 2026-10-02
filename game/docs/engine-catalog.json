@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 602,
-  "everyRule": 1776
+  "defined": 608,
+  "everyRule": 1786
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3893,7 +3893,7 @@
      "top": 12,
      "all": 47,
      "blocks": 12,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 7,
+    "built": 8,
     "partial": 1,
     "named": 0,
-    "missing": 180
+    "missing": 179
    },
    "entries": [
     {
@@ -9407,13 +9407,13 @@
      "kind": "count",
      "rule": null,
      "name": "A comparison (\"if you control ...\")",
-     "engine": null,
-     "status": "missing",
+     "engine": "{if: condition, then, else}; a modal's chooseMore, as it is cast",
+     "status": "built",
      "forge": "Compare",
      "top": 17,
      "all": 146,
-     "blocks": 17,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9605,7 +9605,7 @@
      "top": 5,
      "all": 42,
      "blocks": 5,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",

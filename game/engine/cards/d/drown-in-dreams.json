@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drown in Dreams",
+    "oracleId": "d3cec4b5-bc93-44a2-a29d-3478f0a5dac6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one. If you control a commander as you cast this spell, you may choose both instead.\n• Target player draws X cards.\n• Target player mills twice X cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one. If you control a commander as you cast this spell, you may choose both instead.\n• Target player draws X cards.\n• Target player mills twice X cards.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseMore": {
+            "condition": {
+              "present": {
+                "what": "permanent",
+                "commander": true,
+                "controller": "you"
+              }
+            },
+            "choose": 2
+          },
+          "modes": [
+            {
+              "text": "Target player draws X cards.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": "X",
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target player mills twice X cards.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "mill",
+                  "count": {
+                    "x": true,
+                    "times": 2
+                  },
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

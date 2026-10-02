@@ -139,7 +139,7 @@ export const FORGE_COUNTS = Object.freeze({
   ValidExile: {name: "Cards in exile", status: "missing"},
   Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
   DevotionDual: {name: "Devotion to two colors (CR 700.5)", status: "built", engine: "{devotion: [color, color]}"},
-  Compare: {name: "A comparison (\"if you control ...\")", status: "missing"},
+  Compare: {name: "A comparison (\"if you control ...\")", status: "built", engine: "{if: condition, then, else}; a modal's chooseMore, as it is cast"},
   YourLifeTotal: {name: "Your life total", status: "missing"},
   LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "missing"},
   LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},

@@ -248,7 +248,14 @@ export function compileScript(script) {
       if (spell) problems.push("a second spell ability: one card, one spell");
       for (const atom of ability.additionalCost ?? [])
         if (!["discard", "sacrifice"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
-      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
+      /* MODES CHOSEN AS IT IS CAST (CR 700.2): a spell whose one effect is a modal with targets in its modes, or with "you
+         may choose two instead" -- its modes, and their targets, are chosen as it is cast (rules/actions.mjs), not as it
+         resolves; the spell's own targets are then its modes'. */
+      const only = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
+      const modal = only?.effect === "modal" && ((only.modes ?? []).some((m) => (m.targets ?? []).length) || only.chooseMore)
+        ? {choose: only.choose ?? 1, ...(only.chooseMore ? {more: structuredClone(only.chooseMore)} : {}), modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+      if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
+      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
       return;
     }
     if (ability.kind === "keyword") {

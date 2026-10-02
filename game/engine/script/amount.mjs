@@ -35,13 +35,14 @@
  * THE GRAMMAR IS CLOSED, like the selector's: a key this does not know is refused at the schema, not read as zero.
  */
 
+import {conditionHolds, conditionProblems} from "./condition.mjs";
 import {selectMatching, compileSelector} from "./filter.mjs";
 import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost"];
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -58,6 +59,10 @@ export function amountProblems(value) {
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
+  if ("if" in value) {
+    problems.push(...conditionProblems(value.if).map((p) => `An amount's condition: ${p}`));
+    for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
+  }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
   for (const key of ["count", "greatestPower", "totalPower"]) {
     if (!(key in value)) continue;
@@ -128,6 +133,9 @@ export function amountOf(state, value, context = {}) {
   else if ("thoseCards" in value) n = (context.about?.cards ?? []).length;
   /* "That many", after damage: how much the trigger's damage was (rules/trigger.mjs). */
   else if ("damageDealt" in value) n = context.about?.amount ?? 0;
+  /* "If you control a creature with power 4 or greater, instead search for three" (Forge's Count$Compare): one amount
+     or the other, by a condition asked now (script/condition.mjs). */
+  else if ("if" in value) n = amountOf(state, conditionHolds(state, value.if, {controller: context.controller, source: context.source}) ? value.then ?? 0 : value.else ?? 0, context);
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);

@@ -32,7 +32,7 @@ import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards} from "./permanents.mjs";
 import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {pushCopy, becameTarget} from "../../rules/stack.mjs";
+import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife} from "./resources.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 
@@ -481,8 +481,7 @@ export const unlessPays = {
 const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
 function retargetOptions(state, question) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
-  const object = entry ? state.objects[entry.objectId] : null;
-  const spec = object?.spell?.targets?.[question.index];
+  const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
   const current = entry.targets[question.index] ?? null;
   const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
@@ -511,7 +510,7 @@ export const copySpell = {
     const question = awaiting.questions[0];
     const found = retargetOptions(state, question);
     const {entry, current, others} = found ?? {entry: null, current: null, others: []};
-    const many = (state.objects[entry?.objectId]?.spell?.targets ?? []).length > 1;
+    const many = (entry ? specsOf(state, entry) : []).length > 1;
     return {
       id: `copySpell:${question.stackId}:${question.index}`,
       title: `Copy of ${entry?.name ?? "the spell"}: ${many ? `its ${ordinal(question.index)} target` : "a new target"}?`,

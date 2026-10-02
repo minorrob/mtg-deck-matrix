@@ -38,7 +38,7 @@ import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
-import {recheckTargets, factsOf} from "../script/bind.mjs";
+import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -97,7 +97,7 @@ function entryFor(state, {objectId, cardId, name, playerId, kind, abilityId, tar
  * `permanent` says where the card goes when it resolves. It is declared at cast time because the
  * card directory does not exist until phase 2; from then on the type line answers it.
  */
-export function pushSpell(state, objectId, {controller, targets = [], permanent = false, abilityId = null, x = null} = {}) {
+export function pushSpell(state, objectId, {controller, targets = [], permanent = false, abilityId = null, x = null, modes = null} = {}) {
   const object = state.objects[objectId];
   if (!object) throw new Error(`There is no object ${objectId} to cast`);
   const name = object.card;
@@ -109,6 +109,8 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
   entry.permanent = permanent === true;
   /* The value chosen for X (CR 601.2b), part of the spell until it leaves the stack (CR 107.3a). */
   if (x !== null) entry.x = x;
+  /* The modes chosen as it was cast (CR 700.2), in order. */
+  if (Array.isArray(modes)) entry.modes = [...modes];
   state.stack.push(entry);
   return entry;
 }
@@ -159,6 +161,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
   entry.permanent = original.permanent === true;
   entry.copy = true;
   if (original.x !== undefined) entry.x = original.x;
+  /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
+  if (Array.isArray(original.modes)) entry.modes = [...original.modes];
   state.stack.push(entry);
   return entry;
 }
@@ -167,9 +171,16 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
 function scriptOf(state, entry) {
   if (entry.kind === "spell") {
     const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
+    /* Its modes, chosen as it was cast (CR 700.2): their targets in order, their effects aimed at them. */
+    if (spell?.modal && Array.isArray(entry.modes)) return modalScript(spell.modal, entry.modes);
     return spell && (spell.effects ?? []).length ? spell : null;
   }
   return entry.script ?? null;
+}
+
+/** The target specs a stack entry's targets were chosen by: its spell's or its ability's, or its chosen modes'. */
+export function specsOf(state, entry) {
+  return scriptOf(state, entry)?.targets ?? [];
 }
 
 /**

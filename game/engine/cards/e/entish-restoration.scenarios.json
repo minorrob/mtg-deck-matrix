@@ -1,0 +1,163 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Entish Restoration",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{2}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrifice a land, then up to two basic lands onto the battlefield tapped",
+      "library": [
+        "Forest",
+        "Forest",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Entish Restoration"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Entish Restoration"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Entish Restoration",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With a creature of power 4: up to three instead",
+      "library": [
+        "Forest",
+        "Forest",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Entish Restoration"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Entish Restoration"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Ogre",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}
