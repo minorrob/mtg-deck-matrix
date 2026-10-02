@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Narset's Reversal",
+    "oracleId": "d55f6c70-321f-4fb4-bd33-0850ae1a7c36",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Copy target instant or sorcery spell, then return it to its owner's hand. You may choose new targets for the copy.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Copy target instant or sorcery spell, then return it to its owner's hand. You may choose new targets for the copy.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          },
+          "newTargets": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

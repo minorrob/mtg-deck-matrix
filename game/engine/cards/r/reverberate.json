@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reverberate",
+    "oracleId": "a1f55890-31c5-4ed4-a2cd-7a4a9f05f8ca",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Copy target instant or sorcery spell. You may choose new targets for the copy.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@
 
 import {afterwards, delayedTrigger} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
@@ -69,6 +69,11 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
     ? enteringModifications(state, {objectId: id, player: object.controller, types: object.types, abilities: object.abilities})
     : null;
 
+  /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too. */
+  if (from === "stack") {
+    const at = state.stack.findIndex((entry) => entry.objectId === id);
+    if (at >= 0) state.stack.splice(at, 1);
+  }
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
   if (entering) {
     if (entering.tapped) state.objects[moved].tapped = true;
@@ -237,7 +242,9 @@ export function counterSpell(state, params, context) {
     /* "This spell can't be countered": the counter effect does nothing to it -- it was still a legal target (CR 101.2). */
     if (state.stack[at].objectId !== null && cantBeCountered(state, state.stack[at].objectId)) continue;
     const [entry] = state.stack.splice(at, 1);
-    if (entry.objectId !== null && state.objects[entry.objectId]) {
+    /* A countered copy ceases to exist (CR 707.10a, 704.5e); it is no card to put into a graveyard. */
+    if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);
+    else if (entry.objectId !== null && state.objects[entry.objectId]) {
       moveOne(state, entry.objectId, "graveyard", events, {owner: state.objects[entry.objectId].owner});
     }
     events.push(event("GameEventSpellResolved", state, {
