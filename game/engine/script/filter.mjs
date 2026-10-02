@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -212,7 +212,11 @@ export function compileSelector(selector) {
     /* "Tapped land your opponents control" (CR 110.5), "creature with a +1/+1 counter on it" (CR 122.1), "power 4 or
        greater" (through the layers), "this creature" itself. */
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
-    if (selector.counters !== undefined && !((object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
+    if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
+      : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    /* "Target attacking creature" (Maze of Ith, CR 508.1k): declared as an attacker in this combat. */
+    if (selector.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id)) return false;
     if (selector.power) {
       const power = characteristicsOf(state, id).power ?? 0;
       if (selector.power.min !== undefined && power < selector.power.min) return false;

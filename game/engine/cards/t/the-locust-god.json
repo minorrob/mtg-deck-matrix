@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Locust God",
+    "oracleId": "e025a714-02da-4b0c-8021-cf3e8dc9b19e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{4}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever you draw a card, create a 1/1 blue and red Insect creature token with flying and haste.\n{2}{U}{R}: Draw a card, then discard a card.\nWhen The Locust God dies, return it to its owner's hand at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, create a 1/1 blue and red Insect creature token with flying and haste.",
+      "trigger": {
+        "on": "drawn"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Insect",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Insect"
+            ],
+            "colors": [
+              "U",
+              "R"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying",
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}{R}: Draw a card, then discard a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When The Locust God dies, return it to its owner's hand at the beginning of the next end step.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "text": "Return it to its owner's hand at the beginning of the next end step.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "that card",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

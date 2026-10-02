@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Scarab God",
+    "oracleId": "c75e55f2-fd6c-4816-9d96-21eeb8369aff",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "At the beginning of your upkeep, each opponent loses X life and you scry X, where X is the number of Zombies you control.\n{2}{U}{B}: Exile target creature card from a graveyard. Create a token that's a copy of it, except it's a 4/4 black Zombie.\nWhen The Scarab God dies, return it to its owner's hand at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, each opponent loses X life and you scry X, where X is the number of Zombies you control.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "scry",
+          "count": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}{B}: Exile target creature card from a graveyard. Create a token that's a copy of it, except it's a 4/4 black Zombie.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}{B}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "copyPermanent",
+          "targets": "remembered",
+          "except": {
+            "setPower": 4,
+            "setToughness": 4,
+            "setColors": [
+              "B"
+            ],
+            "setSubtypes": [
+              "Zombie"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When The Scarab God dies, return it to its owner's hand at the beginning of the next end step.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "text": "Return it to its owner's hand at the beginning of the next end step.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "that card",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -38,8 +38,9 @@
  * any at all, and `filter` the selector the arrival must match ("a creature you control"), "you" being the
  * trigger's controller.
  *
- * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" is built (M4
- * phase 3, batch 13); other moments are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
+ * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
+ * batch 13), "at the beginning of the next turn's upkeep", and on an event -- "when that creature dies this turn",
+ * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
  * while a condition holds rather than on an event.
  */
 
@@ -114,6 +115,9 @@ function subjects(state, event, condition, sourceId, controller) {
   if (!matches(state, event, condition, sourceId, controller)) return [];
   /* A step's beginning is about the player whose turn it is: "that player draws an additional card" (Howling Mine). */
   if (event.kind === "GameEventTurnPhase" && fields.playerTurn?.playerId !== undefined) return [{player: fields.playerTurn.playerId}];
+  /* A zone change is about what the card became, when it went somewhere public (CR 400.7e): "whenever another creature
+     you control dies, return that card to its owner's hand" returns the card in the graveyard. */
+  if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) return [{card: fields.becomes}];
   return [{}];
 }
 
@@ -205,14 +209,33 @@ export function collectTriggers(state, events) {
     /* A DELAYED TRIGGER (CR 603.7) -- "sacrifice it at the beginning of the next end step" -- made by a resolving spell
        or ability, triggers once, at the next end step's beginning, and then it is gone. One made during an end step was
        made after that step began, so the next beginning this sees is the following turn's (CR 603.7c). */
-    if (event.kind === "GameEventTurnPhase" && event.data?.fields?.phase === "END_OF_TURN" && (state.delayedTriggers ?? []).length) {
-      const due = state.delayedTriggers.filter((d) => d.at === "end step");
+    /* "At the beginning of the next turn's upkeep" (Arcane Denial) the same way: one made during an upkeep waits for the
+       next turn's. */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep"}[event.data?.fields?.phase] : undefined;
+    if (moment && (state.delayedTriggers ?? []).length) {
+      const due = state.delayedTriggers.filter((d) => d.at === moment);
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
       for (const d of due) state.pendingTriggers.push({
-        abilityId: "delayed", text: d.text ?? "At the beginning of the next end step", controller: d.controller,
+        abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,
         source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
         script: {targets: [], effects: d.effects},
       });
+    }
+    /* A DELAYED TRIGGER THAT WAITS FOR AN EVENT (CR 603.7b): "when that creature dies this turn" fires once, for that
+       creature (`watch`, the object it was as the trigger was made); "whenever a creature dies this turn" every time,
+       until the turn ends (turn.mjs, cleanup). Not on the action that made it (CR 603.7a): that one is `fresh`. */
+    for (const d of [...(state.delayedTriggers ?? [])]) {
+      if (!d.on || d.fresh) continue;
+      if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
+      for (const about of subjects(state, event, d.on, d.source, d.controller)) {
+        state.pendingTriggers.push({
+          abilityId: "delayed", text: d.text ?? "A delayed trigger", controller: d.controller,
+          source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
+          ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
+          script: {targets: [], effects: d.effects},
+        });
+        if (!d.thisTurn) { state.delayedTriggers = state.delayedTriggers.filter((other) => other !== d); break; }
+      }
     }
     /* A trigger that watches a permanent LEAVING has to also fire for the permanent that left,
        whose object is already gone from the battlefield by the time this runs. The event's snapshot
@@ -229,11 +252,15 @@ export function collectTriggers(state, events) {
           source: {cardId: gone.cardId, name: gone.name},
           cause: gone,
           optional: ability.optional === true,
+          /* "When this dies, return it to its owner's hand": the card it became (CR 400.7e). */
+          ...(event.data?.fields?.becomes !== undefined ? {about: {card: event.data.fields.becomes}} : {}),
           ...scriptOf(ability),
         });
       }
     }
   }
+  /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
+  for (const d of state.delayedTriggers ?? []) if (d.fresh) delete d.fresh;
   return state.pendingTriggers.length;
 }
 

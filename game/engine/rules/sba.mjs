@@ -33,7 +33,7 @@
  * missing one.
  */
 
-import {moveObject, PER_PLAYER} from "../state/index.mjs";
+import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -157,9 +157,11 @@ export function checkStateBasedActions(state) {
       const card = cardRef(state, id);
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
-      moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
       events.push(event("GameEventCardChangeZone", state, {
         card, leftBehind,
+        /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
+        ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
@@ -223,11 +225,13 @@ export function checkStateBasedActions(state) {
           return events;
         }
         const destination = proposal.to;
-        moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
+        const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
         events.push(event("GameEventCardChangeZone", state, {
           card,
           leftBehind,
+          /* What it became (CR 400.7e): a creature that died to damage is returned by "return that card" like any other. */
+          ...(PUBLIC_ZONES.includes(destination) ? {becomes: died} : {}),
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
@@ -309,10 +313,11 @@ export function finishCommanderReplacement(state, awaiting, indices) {
   const events = [];
   const card = cardRef(state, id);
   const leftBehind = lastKnown(state, id);
-  moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
+  const moved = moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     leftBehind,
+    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: "Battlefield", player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
   }));

@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arcane Denial",
+    "oracleId": "ab1cc360-b9de-48d9-9983-4dfe4a7d2a37",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.\nYou draw a card at the beginning of the next turn's upkeep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. Its controller may draw up to two cards at the beginning of the next turn's upkeep.\nYou draw a card at the beginning of the next turn's upkeep.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "Its controller may draw up to two cards at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "modal",
+              "chooser": {
+                "controllerOf": {
+                  "target": 0
+                }
+              },
+              "title": "Draw up to two cards",
+              "modes": [
+                {
+                  "text": "Draw two cards",
+                  "effects": [
+                    {
+                      "effect": "draw",
+                      "count": 2,
+                      "who": {
+                        "controllerOf": {
+                          "target": 0
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "text": "Draw one card",
+                  "effects": [
+                    {
+                      "effect": "draw",
+                      "count": 1,
+                      "who": {
+                        "controllerOf": {
+                          "target": 0
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "text": "Draw no cards",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "You draw a card at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 449,
-  "everyRule": 1596
+  "defined": 458,
+  "everyRule": 1605
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8946,8 +8946,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 115,
-     "alone": 15
+     "blocks": 106,
+     "alone": 6
     },
     {
      "kind": "option",

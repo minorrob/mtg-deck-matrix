@@ -123,6 +123,32 @@ function manaAbility(ability, id) {
     ...(ability.condition ? {condition: ability.condition} : {})};
 }
 
+/* "WHEN THAT CREATURE DIES THIS TURN" (CR 603.7): a delayed trigger that waits for an event says so in a triggered
+   ability's words (`when`, compiled by TRIGGERS), with `who` the object it waits on when that is a target, "that card"
+   or "self" -- remembered as the trigger is made (`watch`, effects/permanents.mjs) -- and `thisTurn` for one that lasts
+   the turn (CR 603.7b). One that waits for a moment says `at`: "end step" or "upkeep". */
+const DELAYED_MOMENTS = ["end step", "upkeep"];
+function withDelayedTriggers(abilities, problems) {
+  const walk = (effect) => {
+    if (!effect || typeof effect !== "object") return effect;
+    let out = {...effect};
+    if (out.effect === "delayedTrigger") {
+      if (out.when) {
+        const {when, ...rest} = out;
+        const named = when.who !== undefined && !ARRIVALS.includes(when.who);
+        const compile = TRIGGERS[when.on];
+        const on = compile ? compile({...when, who: named ? "any" : when.who}) : null;
+        if (!on) problems.push(`${when.on}: a delayed trigger the engine does not watch for yet`);
+        out = {...rest, on: on ?? {on: null}, ...(named ? {watch: when.who} : {})};
+      } else if (!DELAYED_MOMENTS.includes(out.at ?? "end step")) problems.push(`${out.at}: a moment no delayed trigger waits for yet`);
+    }
+    for (const key of ["effects", "then", "otherwise"]) if (Array.isArray(out[key])) out[key] = out[key].map(walk);
+    if (Array.isArray(out.modes)) out.modes = out.modes.map((mode) => ({...mode, effects: (mode.effects ?? []).map(walk)}));
+    return out;
+  };
+  return abilities.map((ability) => (Array.isArray(ability.effects) ? {...ability, effects: ability.effects.map(walk)} : ability));
+}
+
 /**
  * A script as the object the engine holds, or the reasons it cannot be one yet.
  *
@@ -142,7 +168,7 @@ export function compileScript(script) {
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
      curse (Pacifism), so a pilot aims it at an opponent's creature. */
   let enchant = null;
-  script.abilities.forEach((ability, index) => {
+  withDelayedTriggers(script.abilities, problems).forEach((ability, index) => {
     const id = ability.id ?? `a${index}`;
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "enchant") {
       if (!ability.target || typeof ability.target !== "object") { problems.push(`${ability.text}: Enchant says what it may enchant, as a selector in \`target\``); return; }

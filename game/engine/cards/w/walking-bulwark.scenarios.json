@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Walking Bulwark",
+  "scenarios": [
+    {
+      "name": "It gains haste, attacks despite defender, and deals damage equal to its toughness",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Walking Bulwark",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Walking Bulwark",
+          "targets": [
+            {
+              "card": "Walking Bulwark"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Walking Bulwark"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

@@ -181,9 +181,10 @@ export const discard = {
     for (const id of chosen) {
       const card = cardRef(state, id);
       const owner = state.objects[id].owner;
-      moveObject(state, id, "graveyard", owner);
+      const discarded = moveObject(state, id, "graveyard", owner);
       events.push(event("GameEventCardChangeZone", state, {
         card,
+        becomes: discarded,
         from: {zoneType: "Hand", player: {playerId: awaiting.player}},
         to: {zoneType: "Graveyard", player: {playerId: owner}},
         discarded: true,
@@ -208,7 +209,8 @@ export const modal = {
     if (modes.length === 0) return false;
     const choose = Math.min(params.choose ?? 1, modes.length);
     state.awaiting = {
-      kind: "effect-choice", effect: "modal", player: context.controller,
+      /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
+      kind: "effect-choice", effect: "modal", player: Number.isInteger(params.chooser) ? params.chooser : context.controller,
       modes: modes.map((mode) => ({text: mode.text ?? "", effects: structuredClone(mode.effects ?? [])})),
       choose,
       /* A "you may" asks in the card's own words (cards/index.mjs): its sentence, then Yes or No. */
