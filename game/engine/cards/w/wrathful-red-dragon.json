@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wrathful Red Dragon",
+    "oracleId": "17c2a962-994a-49f1-8c4e-ebcc43c3c92a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhenever a Dragon you control is dealt damage, it deals that much damage to any target that isn't a Dragon.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Dragon you control is dealt damage, it deals that much damage to any target that isn't a Dragon.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "creature",
+        "filter": {
+          "subtypes": [
+            "Dragon"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "damageDealt": true
+          },
+          "from": "that card",
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "nonSubtypes": [
+                "Dragon"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "nonSubtypes": [
+                "Dragon"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ],
+              "nonSubtypes": [
+                "Dragon"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

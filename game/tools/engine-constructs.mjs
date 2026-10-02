@@ -163,7 +163,7 @@ export const FORGE_COUNTS = Object.freeze({
   UrzaLands: {name: "The Urza lands", status: "missing"},
   Monarch: {name: "The monarch", status: "missing"},
   YourStartingLife: {name: "Your starting life total", status: "missing"},
-  DamageAmount: {name: "Damage dealt", status: "missing"},
+  DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
   AttackersDeclared: {name: "Attackers declared", status: "missing"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},

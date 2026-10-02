@@ -127,6 +127,17 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventCardDamaged") {
     if (condition.to === "self" && fields.card?.cardId !== sourceId) return [];
     if (condition.combat && fields.combat !== true) return [];
+    /* "Whenever a Dragon you control is dealt damage, it deals that much damage" (Wrathful Red Dragon), "this enchantment
+       deals that much damage to that creature's controller" (Repercussion): about the creature dealt the damage, read as
+       the damage is dealt (triggers are collected before state-based actions, so a creature dealt lethal damage is still
+       there). */
+    if (condition.to === "creature" || condition.to === "enchanted") {
+      const damaged = fields.card?.cardId;
+      if (!state.objects[damaged]) return [];
+      if (condition.to === "enchanted" && state.objects[sourceId]?.attachedTo !== damaged) return [];
+      if (condition.filter && !matchesSelector({what: "permanent", ...condition.filter}, state, damaged, {controller, source: sourceId})) return [];
+      return [{card: damaged, player: state.objects[damaged].controller, amount: fields.amount ?? 0}];
+    }
     return [{card: fields.source?.cardId, player: fields.source?.controller, amount: fields.amount ?? 0}];
   }
   /* "Whenever you sacrifice a permanent": the card it became, and who sacrificed it. */
@@ -280,7 +291,10 @@ export function collectTriggers(state, events) {
   const batched = new Map();
   const joined = (key, about) => {
     if (!batched.has(key)) return false;
-    if (about.card !== undefined) state.pendingTriggers[batched.get(key)].about.cards.push(about.card);
+    const entry = state.pendingTriggers[batched.get(key)];
+    if (about.card !== undefined) entry.about.cards.push(about.card);
+    /* "That much", "that many": everything this action dealt, together (two blockers' damage is one Enrage of 5). */
+    if (about.amount !== undefined) entry.about.amount = (entry.about.amount ?? 0) + about.amount;
     return true;
   };
   const opened = (key, about) => {
@@ -297,8 +311,10 @@ export function collectTriggers(state, events) {
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
-          /* Damage to players, "one or more" at once: once for each player dealt it. */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}` : ""}`;
+          /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
+             for each creature dealt it. */
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}`
+            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
@@ -315,8 +331,8 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
-            /* What it is about ("that player", "that card"), when the event says. */
-            ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
+            /* What it is about ("that player", "that card", "that much"), when the event says. */
+            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });

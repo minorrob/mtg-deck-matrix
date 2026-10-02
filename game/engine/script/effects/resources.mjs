@@ -110,8 +110,11 @@ export function dealDamage(state, params, context) {
   const events = [];
   const amount = params.amount ?? 0;
   if (amount <= 0) return events;
-  /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". */
-  const source = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+  /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
+     has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
+     (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
+  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+  const source = named !== null && state.objects[named] ? named : null;
 
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
