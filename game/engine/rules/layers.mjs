@@ -90,6 +90,8 @@ function affects(state, effect, current, sourceController) {
   /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
      time layers 6 and 7 ask. */
   if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
+  /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
+  if (rule.countersAtLeast && ((current.counters ?? {})[rule.countersAtLeast.counter] ?? 0) < rule.countersAtLeast.count) return false;
   return true;
 }
 

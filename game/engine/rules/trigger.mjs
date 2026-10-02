@@ -133,6 +133,13 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
+  /* "Whenever you gain life" (CR 119.9): each gain its own event -- lifelink from two creatures at once is two -- about the
+     player and how much. A loss, or no change, is not a gain. */
+  if (condition.on === "GameEventPlayerLivesChanged") {
+    const player = fields.player?.playerId, gained = (fields.newLives ?? 0) - (fields.oldLives ?? 0);
+    if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
+    return [{player, amount: gained}];
+  }
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
