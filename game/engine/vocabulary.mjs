@@ -103,7 +103,7 @@ export const TRIGGER_EVENTS = Object.freeze([
   "phase", "step", "upkeep", "end step",
   "attacks", "attackers declared", "blocks",
   "spell cast", "damage dealt", "damage dealt once",
-  "discarded", "drawn", "land played", "becomes target", "sacrificed",
+  "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana",
   "counter added", "counter added once", "life gained", "life lost", "token created",
   "becomes monstrous",
 ]);
