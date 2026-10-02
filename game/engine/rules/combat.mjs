@@ -44,7 +44,7 @@
  * file marks damage and destroys nothing.
  */
 
-import {cardsIn} from "../state/index.mjs";
+import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
@@ -170,6 +170,8 @@ export const attackers = {
     };
     /* An attacker with first strike is enough on its own; a blocker can add to it later. */
     state.combat.firstStrike = combatNeedsFirstStrike(state);
+    /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+    for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
 
     /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
     for (const attack of state.combat.attacks) {
