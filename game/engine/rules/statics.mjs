@@ -57,7 +57,28 @@ export const STATIC_RULES = Object.freeze({
       blockers it can't be blocked by), "creatures with power less than this creature's power can't block creatures you
       control" (`byPowerBelowSource`). keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked-by": "keywords/combat.mjs",
+  /** "This spell can't be countered" (the spell's own, read while it is on the stack, `affects: {what: "spell", self: true}`)
+      and "creature spells you control can't be countered" (a permanent's, over spells): a counter effect does nothing to
+      such a spell (CR 101.2: "can't" beats "can"). script/effects/zones.mjs, counterSpell. */
+  "cant-be-countered": "script/effects/zones.mjs",
 });
+
+/** Whether this spell can't be countered: its own "this spell can't be countered", or a permanent's static ability over it. */
+export function cantBeCountered(state, spellId) {
+  const spell = state.objects[spellId];
+  if (!spell) return false;
+  for (const ability of spell.abilities ?? []) {
+    if (ability.kind === "static" && ability.rule === "cant-be-countered" && ability.affects?.self === true) return true;
+  }
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-be-countered") continue;
+      if (matchesSelector(ability.affects, state, spellId, {controller: holder.controller, source: holderId})) return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Whether this blocker is one a static ability says can't block this attacker (CR 509.1b, "cant-be-blocked-by"): the
