@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Laughing Mad",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flashed back, discarding the Bear as it is cast: two cards drawn, and it is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Laughing Mad"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Laughing Mad",
+          "discard": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Laughing Mad"
+          ]
+        }
+      ]
+    }
+  ]
+}

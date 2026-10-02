@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bulk Up",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flashed back from the graveyard: the Bear is 4/2, and Bulk Up is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bulk Up"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Bulk Up",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bulk Up"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

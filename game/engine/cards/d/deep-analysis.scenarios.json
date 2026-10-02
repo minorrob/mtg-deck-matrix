@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Deep Analysis",
+  "scenarios": [
+    {
+      "name": "Flashed back for {1}{U} and 3 life: Rob draws two, at 37 life, and it is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Deep Analysis"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Deep Analysis",
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Deep Analysis"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Otherworldly Gaze",
+    "oracleId": "be668c2d-71ea-4346-8980-1fbf5e4cbed3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Surveil 3. (Look at the top three cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)\nFlashback {1}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Surveil 3.",
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {1}{U}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}"
+        }
+      ]
+    }
+  ]
+}

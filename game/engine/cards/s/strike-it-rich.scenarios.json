@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Strike It Rich",
+  "scenarios": [
+    {
+      "name": "A Treasure, then another by flashback, and it is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Strike It Rich"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Strike It Rich"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Strike It Rich"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Strike It Rich"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Treasure",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}
