@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 753,
-  "everyRule": 1994
+  "defined": 762,
+  "everyRule": 2008
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -259,7 +259,7 @@
      "top": 11,
      "all": 106,
      "blocks": 11,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 45,
+    "built": 46,
     "partial": 1,
-    "named": 20,
+    "named": 19,
     "missing": 126
    },
    "entries": [
@@ -3600,12 +3600,12 @@
      "rule": null,
      "name": "ChooseType",
      "engine": "chooseType",
-     "status": "named",
+     "status": "built",
      "forge": "ChooseType",
      "top": 35,
      "all": 176,
-     "blocks": 35,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 4,
+    "built": 5,
     "partial": 2,
     "named": 0,
-    "missing": 71
+    "missing": 70
    },
    "entries": [
     {
@@ -7327,13 +7327,13 @@
      "kind": "static",
      "rule": null,
      "name": "UntapOtherPlayer",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/turn",
+     "status": "built",
      "forge": "UntapOtherPlayer",
      "top": 7,
      "all": 15,
-     "blocks": 7,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -11579,9 +11579,9 @@
   },
   "Choices": {
    "tally": {
-    "built": 10,
+    "built": 11,
     "partial": 0,
-    "named": 2,
+    "named": 1,
     "missing": 3
    },
    "entries": [
@@ -11627,7 +11627,7 @@
      "name": "Choose a color, a card type or a creature type",
      "rule": "700.2",
      "engine": "chooseType",
-     "status": "named",
+     "status": "built",
      "top": 0,
      "all": 0,
      "blocks": 0,
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 68,
-     "alone": 6
+     "alone": 27
     },
     {
      "kind": "keyword construct",

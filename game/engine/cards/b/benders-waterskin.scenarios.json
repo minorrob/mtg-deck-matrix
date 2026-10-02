@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bender's Waterskin",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's untap step: it untaps; his Rock does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bender's Waterskin",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Bender's Waterskin"
+        },
+        {
+          "tap": "Rock"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bender's Waterskin",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Rock",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

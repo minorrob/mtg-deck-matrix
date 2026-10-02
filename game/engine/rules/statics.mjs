@@ -52,6 +52,9 @@ export const STATIC_RULES = Object.freeze({
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
       by permission). rules/actions.mjs, flashGranted. */
   "cast-as-though-flash": "rules/actions.mjs",
+  /** "Untap all permanents you control during each other player's untap step" (Seedborn Muse), "all artifacts" (Unwinding
+      Clock), "this artifact" (Bender's Waterskin): `affects` what it untaps, its controller's. rules/turn.mjs, untap. */
+  "untap-during-others": "rules/turn.mjs",
   /** "You may look at the top card of your library any time": its owner sees it (projection.mjs). */
   "look-at-top": "projection.mjs",
   /** "Play with the top card of your library revealed": everyone sees it (projection.mjs). */
@@ -154,6 +157,14 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
     }
   }
   return false;
+}
+
+/** Whether a permanent untaps in another player's untap step: a static of its controller's says so (`untap-during-others`). */
+export function untapsDuringOthers(state, id) {
+  const object = state.objects[id];
+  if (!object || object.controller === state.activePlayer) return false;
+  return playerStatics(state, "untap-during-others", object.controller)
+    .some(({ability, source}) => matchesSelector({what: "permanent", ...(ability.affects ?? {}), controller: "you"}, state, id, {controller: object.controller, source}));
 }
 
 /** Whether a permanent of this player's lets them cast this card as though it had flash (`cast-as-though-flash`). */

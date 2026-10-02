@@ -498,6 +498,28 @@ export const unlessPays = {
   },
 };
 
+/* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
+   every one that could matter; what is chosen, the effects after it name as "$chosen" (resolution.mjs, script/bind.mjs). ---- */
+const creatureTypesInGame = (state) => [...new Set(Object.values(state.objects)
+  .filter((o) => (o.types ?? []).some((t) => t === "Creature" || t === "Kindred")).flatMap((o) => o.subtypes ?? []))].sort();
+export const chooseType = {
+  open(state, params, context) {
+    const types = creatureTypesInGame(state);
+    if (!types.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "chooseType", player: context.controller, types};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `chooseType:${awaiting.player}:${state.turn}`, title: "Choose a creature type", mode: "one", min: 1, max: 1,
+      options: awaiting.types.map((label, index) => ({index, label}))};
+  },
+  apply(state, awaiting, indices) {
+    const type = awaiting.types[(indices ?? [])[0]];
+    if (type === undefined) throw new Error("Invalid selection");
+    return {events: [], chosen: type};
+  },
+};
+
 /* ---- copySpell (CR 707.10): "copy target instant or sorcery spell. You may choose new targets for the copy." ----
 
    `spells` are the spells copied, by their objects on the stack (a target, or "that card" -- the spell a trigger is
@@ -655,4 +677,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType});

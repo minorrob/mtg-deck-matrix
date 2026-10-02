@@ -1,0 +1,30 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unwinding Clock",
+    "oracleId": "153fac93-5d2b-4348-a468-a5eef6a12da3",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap all artifacts you control during each other player's untap step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Untap all artifacts you control during each other player's untap step.",
+      "rule": "untap-during-others",
+      "affects": {
+        "types": [
+          "Artifact"
+        ]
+      }
+    }
+  ]
+}

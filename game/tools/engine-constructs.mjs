@@ -65,7 +65,9 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "Rather than pay this spell's mana cost" (batch 39): the card's own `alternative-cost` static, rules/actions.mjs. */
   AlternativeCost: "rules/actions",
   /* "You may cast spells as though they had flash" (batch 49): `cast-as-though-flash`, rules/actions.mjs. */
-  CastWithFlash: "rules/actions"};
+  CastWithFlash: "rules/actions",
+  /* "Untap all permanents you control during each other player's untap step" (batch 53): rules/turn.mjs. */
+  UntapOtherPlayer: "rules/turn"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
