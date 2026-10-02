@@ -123,6 +123,16 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.combat && fields.combat !== true) return [];
     return [{card: fields.source?.cardId, player: fields.source?.controller, amount: fields.amount ?? 0}];
   }
+  /* "Whenever you discard a card", "whenever an opponent discards a creature card" (CR 701.9): the card it became in the
+     graveyard (a discard as a cost -- cycling, "discard a card:" -- is a discard too), and who discarded it. */
+  if (condition.on === "GameEventCardChangeZone" && condition.discarded) {
+    if (fields.discarded !== true) return [];
+    const discarder = fields.from?.player?.playerId;
+    if (!whoseIs(condition.discarder ?? "you", discarder, controller)) return [];
+    const card = fields.becomes;
+    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
+    return [{card, player: discarder}];
+  }
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];

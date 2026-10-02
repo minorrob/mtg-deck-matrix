@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Megrim",
+    "oracleId": "633ad9e2-9f55-4a1c-9248-661ad4b0e1dc",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent discards a card, this enchantment deals 2 damage to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent discards a card, this enchantment deals 2 damage to that player.",
+      "trigger": {
+        "on": "discarded",
+        "discarder": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}
