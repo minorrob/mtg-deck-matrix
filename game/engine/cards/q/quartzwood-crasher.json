@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quartzwood Crasher",
+    "oracleId": "178a79e2-64fd-4777-95fe-98b7834a642a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Beast"
+    ],
+    "manaCost": "{2}{R}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nWhenever one or more creatures you control with trample deal combat damage to a player, create an X/X green Dinosaur Beast creature token with trample, where X is the amount of damage those creatures dealt to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more creatures you control with trample deal combat damage to a player, create an X/X green Dinosaur Beast creature token with trample, where X is the amount of damage those creatures dealt to that player.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "keywords": [
+            "Trample"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Dinosaur Beast",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dinosaur",
+              "Beast"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": {
+              "damageDealt": true
+            },
+            "toughness": {
+              "damageDealt": true
+            },
+            "keywords": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

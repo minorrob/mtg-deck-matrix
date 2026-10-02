@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wrathful Raptors",
+    "oracleId": "1ba92b64-d821-4c24-aed6-fc90d0c63c10",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Trample\nWhenever a Dinosaur you control is dealt damage, it deals that much damage to any target that isn't a Dinosaur.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Dinosaur you control is dealt damage, it deals that much damage to any target that isn't a Dinosaur.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "creature",
+        "filter": {
+          "subtypes": [
+            "Dinosaur"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "damageDealt": true
+          },
+          "from": "that card",
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "nonSubtypes": [
+                "Dinosaur"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "nonSubtypes": [
+                "Dinosaur"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ],
+              "nonSubtypes": [
+                "Dinosaur"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

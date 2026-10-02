@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 694,
-  "everyRule": 1905
+  "defined": 700,
+  "everyRule": 1919
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -355,7 +355,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -391,7 +391,7 @@
      "top": 6,
      "all": 78,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -475,7 +475,7 @@
      "top": 5,
      "all": 131,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -2490,7 +2490,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword action",
@@ -2538,7 +2538,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword action",
@@ -3581,7 +3581,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -3809,7 +3809,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -5907,7 +5907,7 @@
      "top": 2,
      "all": 48,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -6123,7 +6123,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -8147,7 +8147,7 @@
      "top": 22,
      "all": 209,
      "blocks": 22,
-     "alone": 3
+     "alone": 12
     },
     {
      "kind": "replacement",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 7
+     "alone": 9
     },
     {
      "kind": "option",
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 8,
+    "built": 9,
     "partial": 1,
     "named": 0,
-    "missing": 179
+    "missing": 178
    },
    "entries": [
     {
@@ -9347,13 +9347,13 @@
      "kind": "count",
      "rule": null,
      "name": "Damage dealt",
-     "engine": null,
-     "status": "missing",
+     "engine": "{damageDealt: true}: the damage a damage trigger is about, all of an action's together",
+     "status": "built",
      "forge": "DamageAmount",
      "top": 56,
      "all": 373,
-     "blocks": 51,
-     "alone": 14
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -11821,7 +11821,7 @@
      "top": 9,
      "all": 38,
      "blocks": 9,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword construct",
