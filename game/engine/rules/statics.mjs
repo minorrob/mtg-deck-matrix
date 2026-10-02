@@ -53,7 +53,30 @@ export const STATIC_RULES = Object.freeze({
   /** "Prevent all damage that would be dealt to [them] this turn": an effect with a duration only (effectUntil), with
       `apply` {to, by, combat}; rules/replacement.mjs. */
   "prevent-damage": "rules/replacement.mjs",
+  /** CR 509.1b: "Slivers can't be blocked except by Slivers", "can't be blocked by creatures with power 2 or less" (`by`, the
+      blockers it can't be blocked by), "creatures with power less than this creature's power can't block creatures you
+      control" (`byPowerBelowSource`). keywords/combat.mjs, as each blocker is checked. */
+  "cant-be-blocked-by": "keywords/combat.mjs",
 });
+
+/**
+ * Whether this blocker is one a static ability says can't block this attacker (CR 509.1b, "cant-be-blocked-by"): the
+ * attacker is one the ability affects, and the blocker is one its `by` describes -- or, for `byPowerBelowSource`, has
+ * less power than the ability's source. "You" is the ability's controller throughout.
+ */
+export function cantBeBlockedBy(state, attackerId, blockerId) {
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-be-blocked-by") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector(ability.affects, state, attackerId, context)) continue;
+      if (ability.by && matchesSelector(ability.by, state, blockerId, context)) return true;
+      if (ability.byPowerBelowSource === true && powerOf(state, blockerId) < powerOf(state, holderId)) return true;
+    }
+  }
+  return false;
+}
 
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
 export function playerStatics(state, rule, player) {

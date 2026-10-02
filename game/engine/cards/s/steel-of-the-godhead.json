@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Steel of the Godhead",
+    "oracleId": "90d2e092-6eb8-4d13-bdad-19e7325a8b36",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W/U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nAs long as enchanted creature is white, it gets +1/+1 and has lifelink. (Damage dealt by the creature also causes its controller to gain that much life.)\nAs long as enchanted creature is blue, it gets +1/+1 and can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is white, it gets +1/+1 and has lifelink.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "W"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is white, it gets +1/+1 and has lifelink.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "W"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is blue, it gets +1/+1 and can't be blocked.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "U"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is blue, it gets +1/+1 and can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "U"
+        ]
+      }
+    }
+  ]
+}

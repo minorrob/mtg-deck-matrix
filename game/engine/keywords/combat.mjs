@@ -32,7 +32,7 @@
 
 import {keywordsOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
-import {combatDamageOf, ruleChanged} from "../rules/statics.mjs";
+import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
@@ -63,6 +63,8 @@ const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 export function canBlockAttacker(state, blockerId, attackerId) {
   /* "Can't be blocked" (CR 509.1b), this turn or as long as a static ability says. */
   if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
+  /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
+  if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")

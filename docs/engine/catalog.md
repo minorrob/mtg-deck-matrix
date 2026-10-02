@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 469 defined and playable today; 1,616 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 482 defined and playable today; 1,629 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| static | CantBlockBy | — | missing | 15 | 26 |
 | effect | Surveil | surveil | named | 15 | 21 |
 | keyword construct | etbCounter | — | missing | 14 | 35 |
 | replacement | Counter | — | missing | 13 | 21 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Flashback | — | named | 10 | 14 |
 | effect | Regenerate | — | missing | 10 | 12 |
 | count | Damage dealt | — | missing | 9 | 56 |
+| effect | RepeatEach | repeatFor | named | 9 | 41 |
 
 ## Keyword abilities (CR 702)
 
@@ -672,7 +672,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
-| CantBlockBy | — | missing | 26 | 353 | 26 | 15 |
+| CantBlockBy | — | missing | 26 | 353 | 13 | 2 |
 | AlternativeCost | — | missing | 24 | 148 | 24 | 5 |
 | Panharmonicon | — | missing | 19 | 37 | 19 | 8 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |

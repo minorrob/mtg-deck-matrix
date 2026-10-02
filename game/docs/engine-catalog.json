@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 469,
-  "everyRule": 1616
+  "defined": 482,
+  "everyRule": 1629
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7224,8 +7224,8 @@
      "forge": "CantBlockBy",
      "top": 26,
      "all": 353,
-     "blocks": 26,
-     "alone": 15
+     "blocks": 13,
+     "alone": 2
     },
     {
      "kind": "static",
