@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 774,
-  "everyRule": 2023
+  "defined": 792,
+  "everyRule": 2041
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -11784,8 +11784,8 @@
      "forge": "ETBReplacement",
      "top": 68,
      "all": 408,
-     "blocks": 68,
-     "alone": 27
+     "blocks": 50,
+     "alone": 9
     },
     {
      "kind": "keyword construct",

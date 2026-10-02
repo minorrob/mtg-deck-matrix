@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Adaptive Automaton",
+    "oracleId": "53c730c6-2f8c-4af8-b400-b9d573a71e60",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "As this creature enters, choose a creature type.\nThis creature is the chosen type in addition to its other types.\nOther creatures you control of the chosen type get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this creature enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature is the chosen type in addition to its other types.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addTypes": [
+          "$chosen"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control of the chosen type get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ],
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    }
+  ]
+}

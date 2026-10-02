@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Molten Echoes",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Elf: an Elf enters -- a token copy, exiled at the end step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Molten Echoes",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Molten Echoes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Elf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Mountain",
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "Forest",
+                "Molten Echoes",
+                "Elf",
+                "Elf"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Molten Echoes",
+            "Elf"
+          ]
+        }
+      ]
+    }
+  ]
+}
