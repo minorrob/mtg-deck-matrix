@@ -42,7 +42,7 @@ import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
-import {playerRuleChanged} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers} from "./statics.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
@@ -128,7 +128,8 @@ const cardRef = (state, id) => {
 function untap(state, events) {
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
-    if (o.controller !== state.activePlayer || !o.tapped) continue;
+    /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
+    if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
     o.tapped = false;
     events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
   }

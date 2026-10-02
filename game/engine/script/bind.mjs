@@ -153,9 +153,15 @@ function playersOf(value, context) {
  * An effect with its references bound to this resolution's targets and source. Only the effect's own parameters:
  * a modal's chosen effects are bound when they reach the head of the queue, against the same targets.
  */
+/* "THE CHOSEN TYPE" ("$chosen"): what a chooseType earlier in this resolution chose, wherever an effect names it -- a
+   selector's subtypes, a count's -- or a type no card has, before anything was chosen. */
+const withChosen = (value, chosen) => (Array.isArray(value) ? value.map((v) => withChosen(v, chosen))
+  : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([k, v]) => [k, withChosen(v, chosen)]))
+  : value === "$chosen" ? chosen : value);
+
 export function bindEffect(effect, context) {
   if (!effect || typeof effect !== "object") return effect;
-  const bound = {...effect};
+  const bound = JSON.stringify(effect).includes('"$chosen"') ? withChosen(effect, context.chosen ?? "(none chosen)") : {...effect};
   /* Facts first: a number for an amount, a player where a player goes. */
   for (const [key, value] of Object.entries(bound)) {
     if (!factRef(value)) continue;
