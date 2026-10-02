@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 651 defined and playable today; 1,849 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 657 defined and playable today; 1,858 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 41 | 1 | 24 | 126 |
-| Triggers | 138 | 6 | 4 | 12 | 116 |
+| Triggers | 138 | 7 | 4 | 11 | 116 |
 | Static abilities | 77 | 3 | 2 | 0 | 72 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -38,19 +38,19 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | An effect's condition: a comparison | — | missing | 33 | 74 |
 | option | You may play or cast a card from another zone | — | missing | 15 | 84 |
-| trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
+| count | Damage dealt | — | missing | 14 | 51 |
 | effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | static | CastWithFlash | — | missing | 9 | 12 |
 | option | Remembering what an effect moved | — | missing | 8 | 117 |
 | effect | Clone | — | missing | 8 | 29 |
+| keyword ability | Ninjutsu | — | missing | 8 | 14 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
 | effect | GenericChoice | genericChoice | named | 7 | 21 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 | trigger | TapsForMana | — | missing | 7 | 18 |
-| keyword ability | Crew | — | named | 7 | 15 |
 
 ## Keyword abilities (CR 702)
 
@@ -74,7 +74,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
-| 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 7 |
+| 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 8 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
@@ -132,7 +132,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 1 |
 | 702.129 | Eternalize | — | missing | 2 | 12 | 2 | 2 |
-| 702.121 | Melee | — | missing | 2 | 12 | 2 | 1 |
+| 702.121 | Melee | — | missing | 2 | 12 | 2 | 2 |
 | 702.107 | Outlast | — | missing | 2 | 12 | 2 | 2 |
 | 702.130 | Afflict | — | missing | 2 | 10 | 2 | 0 |
 | 702.139 | Companion | — | missing | 2 | 10 | 2 | 1 |
@@ -380,7 +380,7 @@ The things that alone hold back the most of the most-played cards.
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | named | 15 | 148 | 15 | 6 |
-| WinsGame | — | missing | 15 | 43 | 15 | 4 |
+| WinsGame | — | missing | 15 | 43 | 15 | 5 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | named | 14 | 113 | 14 | 5 |
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
@@ -388,8 +388,8 @@ The things that alone hold back the most of the most-played cards.
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
 | ManaReflected | addManaReflected | named | 12 | 47 | 12 | 7 |
 | PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 3 |
-| Goad | — | missing | 11 | 67 | 11 | 4 |
-| RingTemptsYou | — | missing | 11 | 49 | 11 | 4 |
+| Goad | — | missing | 11 | 67 | 11 | 5 |
+| RingTemptsYou | — | missing | 11 | 49 | 11 | 5 |
 | Poison | — | missing | 11 | 36 | 11 | 6 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
@@ -532,7 +532,7 @@ The things that alone hold back the most of the most-played cards.
 | SpellCast | spell cast | built | 200 | 1360 | 0 | 0 |
 | Attacks | attacks | built | 122 | 1582 | 0 | 0 |
 | DamageDone | damage dealt | partial | 110 | 863 | 0 | 0 |
-| DamageDoneOnce | damage dealt once | named | 34 | 204 | 34 | 9 |
+| DamageDoneOnce | damage dealt once | built | 34 | 204 | 0 | 0 |
 | Drawn | drawn | built | 31 | 145 | 0 | 0 |
 | AttackersDeclared | attackers declared | named | 25 | 227 | 26 | 5 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
@@ -549,7 +549,7 @@ The things that alone hold back the most of the most-played cards.
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 0 |
-| AttackerBlocked | — | missing | 3 | 126 | 3 | 1 |
+| AttackerBlocked | — | missing | 3 | 126 | 3 | 2 |
 | Taps | — | missing | 3 | 112 | 3 | 3 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
 | UnlockDoor | — | missing | 3 | 26 | 3 | 1 |
@@ -675,7 +675,7 @@ The things that alone hold back the most of the most-played cards.
 | CantBlockBy | — | missing | 26 | 353 | 13 | 3 |
 | AlternativeCost | rules/actions | built | 24 | 148 | 0 | 0 |
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
-| CantBeCast | — | missing | 14 | 97 | 14 | 5 |
+| CantBeCast | — | missing | 14 | 97 | 14 | 6 |
 | CastWithFlash | — | missing | 12 | 56 | 12 | 9 |
 | CantAttack | — | missing | 10 | 204 | 10 | 5 |
 | RaiseCost | — | missing | 10 | 91 | 10 | 8 |
@@ -866,7 +866,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
 | — | For each permanent of a kind ("for each creature you control") | {count: selector} | partial | 244 | 1813 | 0 | 0 |
 | 107.3 | X, chosen as it is cast or activated (CR 107.3) | "X", one offer per value | built | 103 | 923 | 0 | 0 |
-| — | Damage dealt | — | missing | 56 | 373 | 51 | 6 |
+| — | Damage dealt | — | missing | 56 | 373 | 51 | 14 |
 | — | Counters on this card | {countersOn, counter} | built | 33 | 288 | 0 | 0 |
 | — | Cards in a graveyard | {count: {what: "card", zone: "graveyard"}} | built | 30 | 460 | 0 | 0 |
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |

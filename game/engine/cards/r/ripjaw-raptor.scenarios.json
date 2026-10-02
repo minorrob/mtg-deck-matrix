@@ -1,0 +1,196 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ripjaw Raptor",
+  "fixtures": {
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Battle"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Twin Shot": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Twin Shot deals 1 damage to target creature, then 1 damage to it again.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "targets": {
+              "target": 0
+            }
+          },
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Dealt damage: draw a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ripjaw Raptor",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bolt",
+          "targets": [
+            {
+              "card": "Ripjaw Raptor"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Dealt damage twice in one resolution: one trigger, one card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ripjaw Raptor",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Twin Shot"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Twin Shot",
+          "targets": [
+            {
+              "card": "Ripjaw Raptor"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

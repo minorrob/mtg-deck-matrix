@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Keeper of Fables",
+    "oracleId": "c8ca3116-e0f0-4e27-aa0f-99ed85927040",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "nonSubtypes": [
+            "Human"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
