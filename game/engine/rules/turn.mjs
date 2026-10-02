@@ -191,6 +191,11 @@ function cleanup(state, events) {
   for (const id of state.zones.battlefield) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
+  /* Control gained "until end of turn" returns now (effects/permanents.mjs gainControl), latest first, so the first
+     controller is the last one set. It changed hands this very turn, which already makes it summoning sick for its old
+     controller until their next turn begins (CR 302.6). */
+  for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
+    for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
   if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);

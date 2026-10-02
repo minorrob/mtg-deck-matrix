@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Agent of Treachery",
+    "oracleId": "4cd82c7a-86df-4d29-b578-c009208c0d4b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, gain control of target permanent.\nAt the beginning of your end step, if you control three or more permanents you don't own, draw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, gain control of target permanent.",
+      "trigger": {
+        "on": "enters"
+      },
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainControl",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you control three or more permanents you don't own, draw three cards.",
+      "trigger": {
+        "on": "end step"
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "controller": "you",
+          "owner": "opponent"
+        },
+        "atLeast": 3
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

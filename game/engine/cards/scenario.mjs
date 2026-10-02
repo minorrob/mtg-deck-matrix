@@ -26,6 +26,7 @@
  *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
 
+import {controllerOf} from "../rules/layers.mjs";
 import {createState, addObject} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
@@ -177,6 +178,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
         const life = projectFor(state, e.seat).players[e.seat].life;
         if (life !== e.life) fail(`${names[e.seat]} is at ${life} life, not ${e.life}`);
         passed.push(`${names[e.seat]} at ${e.life} life`);
+      } else if (e.controls !== undefined) {
+        /* What a seat controls on the battlefield -- a stolen creature is its new controller's (the zones are by owner). */
+        const got = state.zones.battlefield.filter((id) => controllerOf(state, id) === e.seat).map((id) => state.objects[id].card).sort();
+        const want = [...e.controls].sort();
+        if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${names[e.seat]} controls ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+        passed.push(`${names[e.seat]} controls ${want.join(", ") || "nothing"}`);
       } else if (e.stack !== undefined) {
         const size = projectFor(state, 0).stackSize;
         if (size !== e.stack) fail(`the stack holds ${size}, not ${e.stack}`);
