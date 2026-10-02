@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 588,
-  "everyRule": 1755
+  "defined": 595,
+  "everyRule": 1766
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -1303,7 +1303,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 38,
+    "built": 39,
     "partial": 1,
     "named": 26,
-    "missing": 127
+    "missing": 126
    },
    "entries": [
     {
@@ -3683,13 +3683,13 @@
      "kind": "effect",
      "rule": null,
      "name": "AddPhase",
-     "engine": null,
-     "status": "missing",
+     "engine": "addPhase",
+     "status": "built",
      "forge": "AddPhase",
      "top": 24,
      "all": 58,
-     "blocks": 24,
-     "alone": 11
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -5799,7 +5799,7 @@
      "top": 3,
      "all": 126,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -7285,7 +7285,7 @@
      "top": 10,
      "all": 204,
      "blocks": 10,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "static",
@@ -10109,7 +10109,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",

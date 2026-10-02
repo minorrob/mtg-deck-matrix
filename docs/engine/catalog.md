@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 588 defined and playable today; 1,755 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 595 defined and playable today; 1,766 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 38 | 1 | 26 | 127 |
+| Effects | 192 | 39 | 1 | 26 | 126 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| effect | AddPhase | — | missing | 11 | 24 |
 | static | Panharmonicon | — | missing | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | static | RaiseCost | — | missing | 8 | 10 |
 | option | Remembering what an effect moved | — | missing | 7 | 117 |
 | option | As long as a permanent is present (a static ability's condition) | — | missing | 7 | 35 |
+| keyword construct | Chapter | — | missing | 7 | 19 |
 
 ## Keyword abilities (CR 702)
 
@@ -162,7 +162,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.53 | Transmute | — | missing | 1 | 14 | 1 | 1 |
 | 702.91 | Battle Cry | — | missing | 1 | 13 | 1 | 0 |
 | 702.58 | Graft | — | missing | 1 | 13 | 1 | 1 |
-| 702.173 | Freerunning | — | missing | 1 | 12 | 1 | 0 |
+| 702.173 | Freerunning | — | missing | 1 | 12 | 1 | 1 |
 | 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 0 |
 | 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 1 |
 | 702.137 | Spectacle | — | missing | 1 | 11 | 1 | 0 |
@@ -369,7 +369,7 @@ The things that alone hold back the most of the most-played cards.
 | DamageAll | damageAll | built | 27 | 402 | 0 | 0 |
 | ReplaceEffect | effectUntil | built | 27 | 156 | 0 | 0 |
 | Attach | attach | built | 24 | 243 | 0 | 0 |
-| AddPhase | — | missing | 24 | 58 | 24 | 11 |
+| AddPhase | addPhase | built | 24 | 58 | 0 | 0 |
 | GainControl | gainControl | named | 22 | 316 | 22 | 9 |
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 6 |
@@ -394,7 +394,7 @@ The things that alone hold back the most of the most-played cards.
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
 | ChangeTargets | — | missing | 10 | 43 | 10 | 3 |
-| Earthbend | — | missing | 10 | 36 | 10 | 3 |
+| Earthbend | — | missing | 10 | 36 | 10 | 4 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 0 |
@@ -549,7 +549,7 @@ The things that alone hold back the most of the most-played cards.
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 0 |
-| AttackerBlocked | — | missing | 3 | 126 | 3 | 0 |
+| AttackerBlocked | — | missing | 3 | 126 | 3 | 1 |
 | Taps | — | missing | 3 | 112 | 3 | 3 |
 | Untaps | — | missing | 3 | 30 | 3 | 1 |
 | UnlockDoor | — | missing | 3 | 26 | 3 | 1 |
@@ -677,7 +677,7 @@ The things that alone hold back the most of the most-played cards.
 | Panharmonicon | — | missing | 19 | 37 | 19 | 10 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
 | CastWithFlash | — | missing | 12 | 56 | 12 | 8 |
-| CantAttack | — | missing | 10 | 204 | 10 | 2 |
+| CantAttack | — | missing | 10 | 204 | 10 | 4 |
 | RaiseCost | — | missing | 10 | 91 | 10 | 8 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
 | CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
@@ -929,7 +929,7 @@ The things that alone hold back the most of the most-played cards.
 | — | HasPropertyHasCardsInHand | — | missing | 1 | 2 | 1 | 0 |
 | — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 0 |
 | — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 0 |
-| — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 0 |
+| — | CardNumAttacksThisTurn | — | missing | 1 | 1 | 1 | 1 |
 | — | Colors in your commanders' identity | — | missing | 1 | 1 | 1 | 1 |
 | — | FinishedEndOfTurnsThisTurn | — | missing | 1 | 1 | 1 | 0 |
 | — | NonCombatDamageThisTurn | — | missing | 1 | 1 | 1 | 0 |

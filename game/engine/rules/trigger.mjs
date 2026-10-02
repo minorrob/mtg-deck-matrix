@@ -98,6 +98,8 @@ function subjects(state, event, condition, sourceId, controller) {
      player it attacks. */
   if (condition.on === "GameEventAttackersDeclared") {
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
+      /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
+      .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
       /* "Attack one of your opponents" (Frontier Warmonger): the player attacked is not this ability's controller. */
       .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event

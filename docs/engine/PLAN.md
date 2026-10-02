@@ -645,7 +645,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `genericChoice`, `twoPiles`, `connive`,
-  `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive).
+  `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
+  combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, counter added (and once),
   life gained, life lost, token created (once), becomes monstrous.
