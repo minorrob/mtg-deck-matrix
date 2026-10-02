@@ -38,7 +38,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -221,6 +221,12 @@ export function compileSelector(selector) {
       const power = characteristicsOf(state, id).power ?? 0;
       if (selector.power.min !== undefined && power < selector.power.min) return false;
       if (selector.power.max !== undefined && power > selector.power.max) return false;
+    }
+    /* "Power or toughness 1 or less" (Tetsuko Umezawa): toughness the same way, through the layers. */
+    if (selector.toughness) {
+      const toughness = characteristicsOf(state, id).toughness ?? 0;
+      if (selector.toughness.min !== undefined && toughness < selector.toughness.min) return false;
+      if (selector.toughness.max !== undefined && toughness > selector.toughness.max) return false;
     }
     if (selector.self === true && id !== context.source) return false;
     /* "A creature with flying": its keywords now, through the layers (CR 702). */
