@@ -64,7 +64,10 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
   /* Cast "this way" by Kess: to exile only instead of a graveyard. */
-  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile" : proposal.to;
+  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile"
+    /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (Whip of Erebos): on the permanent
+       (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). */
+    : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
 
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
@@ -130,7 +133,12 @@ export function sacrificeOne(state, id, events) {
 export function moveZone(state, params, context) {
   const events = [];
   const arrived = [], became = [];
-  for (const id of params.targets ?? []) {
+  /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
+     it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). */
+  const [whose] = params.fromTop !== undefined ? playersFor(state, params.who, context.controller) : [];
+  const moving = params.fromTop !== undefined ? (whose === undefined ? [] : cardsIn(state, "library", whose).slice(0, params.fromTop)) : params.targets ?? [];
+  if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
+  for (const id of moving) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events);
     if (moved !== null) became.push(moved);

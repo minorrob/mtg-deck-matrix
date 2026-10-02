@@ -108,6 +108,8 @@ export function afterwards(state, ids, params, context) {
     apply: {addKeywords: params.gainsUntilEndOfTurn}, until: "end-of-turn", sourceController: controller});
   if (params.gains) pushEffect(state, {id: `gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
     apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
+  /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (effects/zones.mjs, moveOne). */
+  if (params.exileIfLeaves) for (const id of made) state.objects[id].exileIfLeaves = true;
   if (params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
     effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
 }
