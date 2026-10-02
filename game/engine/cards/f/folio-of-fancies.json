@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Folio of Fancies",
+    "oracleId": "9030d508-5cfe-46ed-954b-21d970bc3b5a",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Book"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Players have no maximum hand size.\n{X}{X}, {T}: Each player draws X cards.\n{2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Players have no maximum hand size.",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{X}{X}, {T}: Each player draws X cards.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{X}{X}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": "X",
+          "who": "each"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "opponent",
+          "effects": [
+            {
+              "effect": "mill",
+              "who": "that player",
+              "count": {
+                "count": {
+                  "what": "card",
+                  "zone": "hand",
+                  "controller": "that player"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

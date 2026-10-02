@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Price of Progress",
+    "oracleId": "e9da499c-fa43-4e94-8395-5c030ff39502",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Price of Progress deals damage to each player equal to twice the number of nonbasic lands that player controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Price of Progress deals damage to each player equal to twice the number of nonbasic lands that player controls.",
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "who": "that player",
+              "amount": {
+                "count": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "nonSupertypes": [
+                    "Basic"
+                  ],
+                  "controller": "that player"
+                },
+                "times": 2
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

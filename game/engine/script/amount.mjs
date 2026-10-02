@@ -41,8 +41,8 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else"];
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether a value is a counted amount rather than a plain number. */
@@ -80,6 +80,9 @@ function matching(state, selector, who) {
   return [...new Set(anyOf.flatMap((one) => selectMatching(state, {...shared, ...one}, who)))];
 }
 
+/* The player an amount refers to: you, or the player a trigger or repetition is about. */
+const playerOf = (ref, context) => (ref === "that player" ? context.about?.player ?? null : ref === "you" ? context.controller ?? null : null);
+
 /* The object an amount refers to: the source, or what the trigger is about. */
 function objectOf(ref, context) {
   if (ref === "self") return context.source ?? null;
@@ -112,7 +115,8 @@ export function amountOf(state, value, context = {}) {
   if (typeof value === "number") return value;
   if (value === "X") return Math.max(0, context.x ?? 0);
   if (!isCounted(value)) return 0;
-  const who = {controller: context.controller, source: context.source};
+  /* What a trigger or a repetition is about, too: "the number of nonbasic lands that player controls" (repeatFor). */
+  const who = {controller: context.controller, source: context.source, ...(context.about ? {about: context.about} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
   else if ("count" in value) n = matching(state, value.count, who).length;
@@ -136,6 +140,17 @@ export function amountOf(state, value, context = {}) {
   /* "If you control a creature with power 4 or greater, instead search for three" (Forge's Count$Compare): one amount
      or the other, by a condition asked now (script/condition.mjs). */
   else if ("if" in value) n = amountOf(state, conditionHolds(state, value.if, {controller: context.controller, source: context.source}) ? value.then ?? 0 : value.else ?? 0, context);
+  /* "Half that player's life total, rounded down" (Heartless Hidetsugu): a player's life now; `half` halves it, down. */
+  else if ("lifeTotal" in value) {
+    const player = playerOf(value.lifeTotal, context);
+    const life = player !== null ? state.players[player]?.life ?? 0 : 0;
+    n = value.half === true ? Math.floor(life / 2) : life;
+  }
+  /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */
+  else if ("lifeLostThisTurn" in value) {
+    const player = playerOf(value.lifeLostThisTurn, context);
+    n = player !== null ? state.players[player]?.lostThisTurn ?? 0 : 0;
+  }
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {
     const id = objectOf(value.manaValueOf, context);

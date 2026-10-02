@@ -190,12 +190,15 @@ export function compileSelector(selector) {
     if (selector.named !== undefined && object.card !== selector.named) return false;
     if (selector.token !== undefined && object.token !== selector.token) return false;
 
-    if (selector.controller) {
+    /* Seat 0 is a controller too: not falsy here. */
+    if (selector.controller !== undefined && selector.controller !== null) {
       const holder = controllerOf(state, id);
       if (selector.controller === "you" && holder !== chooser) return false;
       if (selector.controller === "opponent" && holder === chooser) return false;
       /* "Each creature that player controls": the player a trigger is about (Balefire Dragon). */
       if (selector.controller === "that player" && holder !== context.about?.player) return false;
+      /* A player itself, bound from a target ("exile target player's graveyard", script/bind.mjs). */
+      if (Number.isInteger(selector.controller) && holder !== selector.controller) return false;
     }
 
     /* "Equipped creature": the permanent the source is attached to (CR 301.5, 701.3). */
