@@ -218,6 +218,14 @@ function checkAbility(ability, path, errors) {
       errors.push({path: `${path}.watches`, message: "A replacement effect says which event it is watching for (CR 614)"});
     if (!ability.change && ability.prevent === undefined)
       errors.push({path: `${path}`, message: "A replacement effect either changes the event or prevents it"});
+    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention
+       only. A redirection (CR 614.9) goes to what its holder enchants. */
+    const then = ability.change?.then;
+    if (then !== undefined && (ability.change.prevent !== true || !Array.isArray(then) || then.length === 0))
+      errors.push({path: `${path}.change.then`, message: "What follows a prevention is a list of effects, beside prevent: true"});
+    if (Array.isArray(then)) then.forEach((effect, index) => checkEffect(effect, `${path}.change.then[${index}]`, errors));
+    if (ability.change?.redirect !== undefined && ability.change.redirect !== "enchanted")
+      errors.push({path: `${path}.change.redirect`, message: "Damage is redirected to \"enchanted\": what the holder enchants"});
   }
 }
 

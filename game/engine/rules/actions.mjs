@@ -260,6 +260,18 @@ function sacrificeChoices(state, player, sourceId, given) {
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 const returnAtom = (cost) => (cost ?? []).find((a) => a?.atom === "returnToHand" && a.selector);
 const discardAtom = (cost) => (cost ?? []).find((a) => a?.atom === "discard" && a.self !== true);
+/* "Discard two cards" (Solphim, batch 70's next): each set of `count` cards in the hand, never the source itself, one offer
+   each -- a single card as itself, as a one-card discard always was; none, and the ability can't be activated. */
+function discardSets(cards, count) {
+  if (count <= 1) return cards.map((c) => c);
+  const sets = [];
+  const walk = (from, chosen) => {
+    if (chosen.length === count) { sets.push([...chosen]); return; }
+    for (let i = from; i < cards.length; i += 1) walk(i + 1, [...chosen, cards[i]]);
+  };
+  walk(0, []);
+  return sets;
+}
 
 function costPayment(state, player, id, cost, x = 0, less = 0) {
   const object = state.objects[id];
@@ -541,12 +553,13 @@ export function legalActions(state, player) {
         const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost);
         const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
-          : toss ? cardsIn(state, "hand", player).filter((c) => c !== id).map((d) => ({discard: d}))
+          : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id), toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
           : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
+              : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
             {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
@@ -894,8 +907,10 @@ function perform(state, player, action, during = null) {
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
-      if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined
-        && moveOne(state, action.costChoice.discard, "graveyard", events, {owner: state.objects[action.costChoice.discard].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
+      /* Each card of "discard two cards" a discard of its own. */
+      if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined)
+        for (const card of [].concat(action.costChoice.discard))
+          if (moveOne(state, card, "graveyard", events, {owner: state.objects[card].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);

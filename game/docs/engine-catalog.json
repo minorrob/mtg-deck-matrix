@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 916,
-  "everyRule": 2188
+  "defined": 921,
+  "everyRule": 2195
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -259,7 +259,7 @@
      "top": 11,
      "all": 106,
      "blocks": 11,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword action",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -4325,7 +4325,7 @@
      "top": 2,
      "all": 38,
      "blocks": 2,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -8120,9 +8120,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 3,
+    "partial": 4,
     "named": 0,
-    "missing": 31
+    "missing": 30
    },
    "entries": [
     {
@@ -8141,13 +8141,13 @@
      "kind": "replacement",
      "rule": null,
      "name": "DamageDone",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/replacement",
+     "status": "partial",
      "forge": "DamageDone",
      "top": 22,
      "all": 209,
-     "blocks": 15,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -11797,7 +11797,7 @@
      "top": 35,
      "all": 475,
      "blocks": 25,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword construct",

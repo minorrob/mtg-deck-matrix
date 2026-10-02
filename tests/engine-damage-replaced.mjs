@@ -85,8 +85,9 @@ const dealt = (s, source, to, amount = 2, combat = false) => {
   eq(dealt(s, on(s, IMP, 0), {toPlayer: 1}), 8, "Dictate and Twinflame Tyrant: 2, doubled by each, 8");
 }
 {
-  eq(missingFor({replacements: ["DamageDone"]}), [{kind: "replacement", name: "DamageDone", why: "no engine support yet"}],
-    "the catalog keeps DamageDone unbuilt: redirecting damage (Pariah) and prevention with a consequence (Vigor) are not built");
+  /* Batch 71 built the two forms this held back for -- redirecting damage (Pariah) and prevention with a consequence (The
+     Mindskinner, Vigor) -- and credits it (tests/engine-damage-redirect.mjs). */
+  eq(missingFor({replacements: ["DamageDone"]}), [], "the catalog credits DamageDone: redirecting damage and prevention with a consequence are built");
 }
 
 console.log(`engine-damage-replaced: ${checks} checks passed — doubled, tripled, plus 2, prevented in combat; by whose source, to whom; the least of two orders; each effect once by holder.`);
