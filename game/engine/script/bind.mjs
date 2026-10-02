@@ -166,6 +166,8 @@ export function bindEffect(effect, context) {
   }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
+  if ("from" in bound) bound.from = objectsOf(bound.from, context);
   if ("who" in bound) bound.who = playersOf(bound.who, context);
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);

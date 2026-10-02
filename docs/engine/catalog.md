@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 522 defined and playable today; 1,670 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 531 defined and playable today; 1,681 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 35 | 1 | 28 | 128 |
+| Effects | 192 | 36 | 1 | 27 | 128 |
 | Triggers | 138 | 3 | 4 | 15 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -37,16 +37,16 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | You may play or cast a card from another zone | — | missing | 11 | 90 |
+| count | Damage dealt | — | missing | 11 | 56 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
-| effect | DamageAll | damageAll | named | 11 | 27 |
 | keyword ability | Flashback | — | named | 11 | 14 |
 | keyword ability | Ward | — | named | 10 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
 | trigger | Discarded | discarded | named | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | Regenerate | — | missing | 10 | 12 |
-| count | Damage dealt | — | missing | 9 | 56 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
+| option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 | effect | GainControl | gainControl | named | 9 | 22 |
 | trigger | LifeGained | life gained | named | 9 | 18 |
@@ -366,7 +366,7 @@ The things that alone hold back the most of the most-played cards.
 | UntapAll | untapAll | built | 30 | 126 | 0 | 0 |
 | Clone | — | missing | 29 | 167 | 29 | 8 |
 | ChooseCard | chooseCard | built | 28 | 381 | 0 | 0 |
-| DamageAll | damageAll | named | 27 | 402 | 27 | 11 |
+| DamageAll | damageAll | built | 27 | 402 | 0 | 0 |
 | ReplaceEffect | effectUntil | built | 27 | 156 | 0 | 0 |
 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | AddPhase | — | missing | 24 | 58 | 24 | 10 |
@@ -842,7 +842,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
 | As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
-| A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 8 |
+| A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 9 |
 | Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 5 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
@@ -866,7 +866,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
 | — | For each permanent of a kind ("for each creature you control") | {count: selector} | partial | 244 | 1813 | 0 | 0 |
 | 107.3 | X, chosen as it is cast or activated (CR 107.3) | "X", one offer per value | built | 103 | 923 | 0 | 0 |
-| — | Damage dealt | — | missing | 56 | 373 | 56 | 9 |
+| — | Damage dealt | — | missing | 56 | 373 | 56 | 11 |
 | — | Counters on this card | {countersOn, counter} | built | 33 | 288 | 0 | 0 |
 | — | Cards in a graveyard | {count: {what: "card", zone: "graveyard"}} | built | 30 | 460 | 0 | 0 |
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |

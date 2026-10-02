@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chain Reaction",
+    "oracleId": "086b2564-9114-4ba2-94fd-b490f98f38a7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Chain Reaction deals X damage to each creature, where X is the number of creatures on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Chain Reaction deals X damage to each creature, where X is the number of creatures on the battlefield.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": {
+            "count": {
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

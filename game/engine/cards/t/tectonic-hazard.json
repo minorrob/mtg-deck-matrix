@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tectonic Hazard",
+    "oracleId": "9097243a-39fa-4e18-8316-c0e57699c783",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Tectonic Hazard deals 1 damage to each opponent and each creature they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Tectonic Hazard deals 1 damage to each opponent and each creature they control.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 1,
+          "who": "opponent",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ]
+    }
+  ]
+}

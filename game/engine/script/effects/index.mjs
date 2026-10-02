@@ -27,7 +27,7 @@ import {isPrimitive} from "../../vocabulary.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent,
@@ -85,6 +85,8 @@ export const EFFECTS = Object.freeze({
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
   /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
   attach, copyPermanent,
+  /* Batch 24: damage to each creature and each opponent. */
+  damageAll,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

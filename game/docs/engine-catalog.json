@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 522,
-  "everyRule": 1670
+  "defined": 531,
+  "everyRule": 1681
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 35,
+    "built": 36,
     "partial": 1,
-    "named": 28,
+    "named": 27,
     "missing": 128
    },
    "entries": [
@@ -3648,12 +3648,12 @@
      "rule": null,
      "name": "DamageAll",
      "engine": "damageAll",
-     "status": "named",
+     "status": "built",
      "forge": "DamageAll",
      "top": 27,
      "all": 402,
-     "blocks": 27,
-     "alone": 11
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -9115,7 +9115,7 @@
      "top": 35,
      "all": 385,
      "blocks": 35,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "option",
@@ -9353,7 +9353,7 @@
      "top": 56,
      "all": 373,
      "blocks": 56,
-     "alone": 9
+     "alone": 11
     },
     {
      "kind": "count",
