@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Unclaimed Territory",
+  "fixtures": {
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Goblin chosen: its green casts the Goblin, not the Elf",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unclaimed Territory",
+            "Goblin",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Unclaimed Territory"
+        },
+        {
+          "choose": [
+            "Goblin"
+          ]
+        },
+        {
+          "tap": "Unclaimed Territory",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Goblin"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Goblin"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unclaimed Territory",
+            "Goblin"
+          ]
+        }
+      ]
+    }
+  ]
+}

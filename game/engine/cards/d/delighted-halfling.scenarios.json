@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Delighted Halfling",
+  "fixtures": {
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its green casts the legendary Hero, not the Elf",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Delighted Halfling"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hero",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Delighted Halfling",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Hero"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Hero"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Delighted Halfling",
+            "Hero"
+          ]
+        }
+      ]
+    }
+  ]
+}

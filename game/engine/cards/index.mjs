@@ -35,6 +35,7 @@ import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
 import {compileSelector} from "../script/filter.mjs";
 import {LAYER_AFFECTS_KEYS} from "../rules/layers.mjs";
+import {SPEND_ONLY_KEYS} from "../rules/restricted-mana.mjs";
 
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
@@ -172,8 +173,13 @@ function manaAbility(ability, id) {
        (rules/actions.mjs, manaAlternatives): read as it is activated. */
     : first.reflect && typeof first.reflect === "object" ? {reflect: first.reflect, ...(first.anyType ? {anyType: true} : {}), ...(first.count ? {count: first.count} : {})}
     : first.among && typeof first.among === "object" ? {among: first.among, ...(first.count ? {count: first.count} : {})}
+    /* "Two mana in any combination of colors" (Great Hall of the Citadel). */
+    : first.anyCombination === true ? {anyCombination: true, ...(first.count ? {count: first.count} : {})}
     : null;
   if (!adds) return "unbuilt";
+  /* "Spend this mana only to cast a creature spell of the chosen type" (CR 106.6; rules/restricted-mana.mjs): a spell or
+     an ability's source it may pay for, each a selector, and "that spell can't be countered". */
+  if (first.spendOnly !== undefined && !spendOnlyValid(first.spendOnly)) return "unbuilt";
   const mana = cost.find((a) => a.atom === "mana");
   const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
@@ -183,7 +189,15 @@ function manaAbility(ability, id) {
     ...(cost.find((a) => a.atom === "sacrifice" && a.selector) ? {sacrifice: cost.find((a) => a.atom === "sacrifice" && a.selector).selector} : {}),
     /* "Activate only if you control a Swamp" (CR 602.5b; script/condition.mjs). */
     ...(ability.condition ? {condition: ability.condition} : {}),
-    ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {})};
+    ...(counterCost.length ? {counterCost} : {}), ...(ability.limit ? {limit: ability.limit} : {}),
+    ...(first.spendOnly ? {spendOnly: first.spendOnly} : {})};
+}
+function spendOnlyValid(only) {
+  if (!only || typeof only !== "object" || Array.isArray(only) || !Object.keys(only).every((k) => SPEND_ONLY_KEYS.includes(k))) return false;
+  if (!only.spell && !only.ability) return false;
+  if ("uncounterable" in only && only.uncounterable !== true) return false;
+  try { if (only.spell) compileSelector({...only.spell, what: "card"}); if (only.ability) compileSelector({...only.ability, what: "permanent"}); } catch { return false; }
+  return true;
 }
 
 /* "WHEN THAT CREATURE DIES THIS TURN" (CR 603.7): a delayed trigger that waits for an event says so in a triggered
@@ -334,7 +348,7 @@ export function compileScript(script) {
     }
     if (ability.kind === "activated") {
       const mana = manaAbility(ability, id);
-      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it)`); return; }
+      if (mana === "unbuilt") { problems.push(`${ability.text}: a mana ability the engine cannot run yet (a sacrifice, a target, or a question in it, or a spending restriction it cannot read)`); return; }
       if (mana) { abilities.push(mana); return; }
       for (const atom of ability.cost) if (!costAtomBuilt(atom)) problems.push(`${atom?.atom ?? "a cost"}: a cost atom nothing pays yet`);
       abilities.push({id, kind: "activated", text: ability.text, cost: ability.cost, targets: ability.targets ?? [],

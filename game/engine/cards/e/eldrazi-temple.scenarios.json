@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eldrazi Temple",
+  "fixtures": {
+    "Spawn": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Eldrazi"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3
+    },
+    "Golem": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its {C}{C} casts the colorless Eldrazi, not the Golem",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eldrazi Temple",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spawn",
+            "Golem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Eldrazi Temple",
+          "mana": {
+            "C": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Spawn"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Golem"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Spawn"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eldrazi Temple",
+            "Wastes",
+            "Spawn"
+          ]
+        }
+      ]
+    }
+  ]
+}

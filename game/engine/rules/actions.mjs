@@ -68,7 +68,8 @@ import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf} from "./layers.mjs";
-import {namesChosen, withChosen} from "../script/chosen.mjs";
+import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
+import {poolFor, spendFor, addRestricted} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
@@ -267,7 +268,8 @@ function costPayment(state, player, id, cost, x = 0, less = 0) {
       /* Generic mana only, never below nothing (CR 601.2f). */
       printed.generic -= Math.min(printed.generic, Math.max(0, less));
       /* {X} in an ability's cost: X generic for each X symbol (CR 107.3, 602.2b). */
-      mana = automaticPayment(state.players[player].manaPool, printed, {life: state.players[player].life, x: x * printed.variable});
+      /* The pool, and mana that may be spent only on an ability of this source (rules/restricted-mana.mjs). */
+      mana = automaticPayment(poolFor(state, player, {ability: id}), printed, {life: state.players[player].life, x: x * printed.variable});
       if (!mana) return null;
     }
     /* CR 119.4: a player can pay life only if their life total is at least the amount. */
@@ -293,13 +295,18 @@ export function commanderIdentity(state, player) {
 }
 
 /** What a mana ability can add, one entry per alternative (2.4b); a counted amount counted now ("{G} for each creature you control"). */
-export function manaAlternatives(state, player, ability, source = null) {
+export function manaAlternatives(state, player, given, source = null) {
+  /* "An amount of mana of that color equal to the number of creatures you control of the chosen type" (Three Tree City):
+     its own choice. */
+  const ability = chosenFor(given, state.objects[source]);
   const context = {controller: player, source};
   const count = amountOf(state, ability.count ?? 1, context);
   if (Array.isArray(ability.produces)) return ability.produces.map((m) => countMana(state, {...m}, context));
   if (ability.produces) return [countMana(state, {...ability.produces}, context)];
   if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
+  /* "Two mana in any combination of colors" (Great Hall of the Citadel): each way to make it, an offer each. */
+  if (ability.anyCombination === true) return combinations(count);
   /* "Any color that a land an opponent controls could produce" (Exotic Orchard), "any type ... a land you control"
      (Reflecting Pool, `anyType`, colorless too): what those lands' own mana abilities could add, now -- never another
      such ability's (CR 106.7), so two Reflecting Pools do not feed each other. */
@@ -329,6 +336,9 @@ function manaAbilityPayment(state, player, ability) {
 }
 
 const total = (mana) => Object.values(mana ?? {}).reduce((n, v) => n + v, 0);
+/* Every way to make `n` mana of the five colors, each once: {W: 2}, {W: 1, U: 1}, ... -- 15 ways for two. */
+const combinations = (n, from = 0) => (n <= 0 ? [{}]
+  : COLORS.slice(from).flatMap((color, i) => combinations(n - 1, from + i).map((rest) => ({[color]: (rest[color] ?? 0) + 1, ...Object.fromEntries(Object.entries(rest).filter(([k]) => k !== color))}))));
 
 /* The values X may take for a cost with {X} (CR 107.3): nothing up to what the pool holds past the rest of the cost,
    each X symbol taking X (CR 107.3a). A cost without X: the one null. `extra` is generic already owed (the tax). */
@@ -339,9 +349,9 @@ function xValues(pool, cost, extra = 0) {
   return most < 0 ? [] : Array.from({length: most + 1}, (_, i) => i);
 }
 const abilityLess = (state, player, id, ability) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id}));
-function abilityXValues(state, player, ability) {
+function abilityXValues(state, player, ability, id) {
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
-  return atom ? xValues(state.players[player].manaPool, parseManaCost(atom.cost)) : [null];
+  return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
 
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
@@ -478,8 +488,10 @@ export function legalActions(state, player) {
     for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
     const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : way ? way.mana : null);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
-    for (const X of xValues(state.players[player].manaPool, cost, x)) {
-      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (X ?? 0) * cost.variable});
+    /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
+    const pool = poolFor(state, player, {spell: id});
+    for (const X of xValues(pool, cost, x)) {
+      const payment = automaticPayment(pool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (X ?? 0) * cost.variable});
       if (!payment) continue;
       const extra = [...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
@@ -505,7 +517,7 @@ export function legalActions(state, player) {
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
-      for (const X of abilityXValues(state, player, ability)) {
+      for (const X of abilityXValues(state, player, ability, id)) {
         const payment = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability));
         if (!payment) continue;
         const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
@@ -680,7 +692,9 @@ function perform(state, player, action) {
       object.tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
     }
-    addMana(pool, produced);
+    /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
+    if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
+    else addMana(pool, produced);
     events.push(event("GameEventManaPool", state, {
       player: {playerId: player, name: state.players[player].name},
       produced: {...produced}, source: cardRef(state, action.objectId),
@@ -723,10 +737,10 @@ function perform(state, player, action) {
     const way = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) : null;
     if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
     const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : way ? way.mana : null);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    const payment = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
-    spend(state.players[player].manaPool, payment.mana);
+    const paid = spendFor(state, player, {spell: action.objectId}, payment.mana);
     if (payment.life > 0) state.players[player].life -= payment.life;
     if (back?.life) state.players[player].life -= back.life;
     if (way?.life) state.players[player].life -= way.life;
@@ -756,6 +770,8 @@ function perform(state, player, action) {
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
+    /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
+    if (paid.uncounterable) entry.uncounterable = true;
     /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
     if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
@@ -823,7 +839,7 @@ function perform(state, player, action) {
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
       }
       if (atom.atom === "mana") {
-        spend(state.players[player].manaPool, payment.mana.mana);
+        spendFor(state, player, {ability: action.objectId}, payment.mana.mana);
         if (payment.mana.life > 0) state.players[player].life -= payment.mana.life;
       }
       if (atom.atom === "payLife") state.players[player].life -= atom.amount ?? 0;
