@@ -39,7 +39,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -223,6 +223,9 @@ export function compileSelector(selector) {
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    /* "Permanents you don't own" (Agent of Treachery): whose it is, not who controls it (CR 108.3). */
+    if (selector.owner === "you" && object.owner !== chooser) return false;
+    if (selector.owner === "opponent" && object.owner === chooser) return false;
     /* "If you control a commander" (CR 903.3): a card designated a commander. */
     if (selector.commander === true && object.commander !== true) return false;
     /* "Untap all creatures that attacked this turn" (Relentless Assault): declared as an attacker in a combat this turn. */

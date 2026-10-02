@@ -33,7 +33,7 @@ import {
   putCounter, putCounterAll, removeCounter, proliferate, damageAll,
 } from "./resources.mjs";
 import {
-  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase,
+  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
 } from "./permanents.mjs";
 
 /**
@@ -119,6 +119,8 @@ export const EFFECTS = Object.freeze({
   /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
      Batch 36: the same for each player, opponent or creature. */
   damageAll, regenerate, addPhase, repeatFor,
+  /* Batch 40: a change of control, for a turn or for good. */
+  gainControl,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

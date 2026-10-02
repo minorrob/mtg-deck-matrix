@@ -292,6 +292,27 @@ export function effectUntil(state, params, context) {
 }
 
 /**
+ * `gainControl` -- CR 613.1b: "gain control of target creature until end of turn", "untap all creatures and gain control
+ * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`). For good
+ * unless `until` says "end-of-turn". The permanent's controller itself changes -- the projection, its triggers, a choice
+ * of "a creature you control" all read it -- and for a turn a `control-returns` record gives it back as the turn ends
+ * (rules/turn.mjs). It has changed controller, so it is summoning sick for its new controller unless it has haste
+ * (CR 302.6), and again for its old one when it returns.
+ */
+export function gainControl(state, params, context) {
+  const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  for (const id of ids) {
+    const object = state.objects[id];
+    if (params.until === "end-of-turn" && object.controller !== to)
+      (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]}, apply: {controller: object.controller}, until: "end-of-turn", sourceController: context.controller});
+    if (object.controller !== to) object.controlledSinceTurn = state.turn;
+    object.controller = to;
+  }
+  return [];
+}
+
+/**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
  */
