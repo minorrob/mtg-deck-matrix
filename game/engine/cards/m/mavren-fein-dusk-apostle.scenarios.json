@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mavren Fein, Dusk Apostle",
+  "fixtures": {
+    "Thrall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Vampire"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A nontoken Vampire attacks: a 1/1 Vampire with lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mavren Fein, Dusk Apostle",
+            "Thrall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Thrall",
+            "Mavren Fein, Dusk Apostle"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mavren Fein, Dusk Apostle",
+            "Thrall",
+            "Vampire"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aurelia, the Law Above",
+    "oracleId": "2a800427-ff8c-4b3c-baee-85211b70656d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance, haste\nWhenever a player attacks with three or more creatures, you draw a card.\nWhenever a player attacks with five or more creatures, Aurelia deals 3 damage to each of your opponents and you gain 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a player attacks with three or more creatures, you draw a card.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true,
+        "atLeast": 3
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a player attacks with five or more creatures, Aurelia deals 3 damage to each of your opponents and you gain 3 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true,
+        "atLeast": 5
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Alibou, Ancient Witness",
+  "fixtures": {
+    "Construct": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two artifact creatures attack, tapped: 2 damage, scry 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Alibou, Ancient Witness",
+            "Construct",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Alibou, Ancient Witness",
+            "Construct"
+          ]
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0,
+            1
+          ],
+          "extra": {
+            "toBottom": []
+          }
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 33
+        }
+      ]
+    }
+  ]
+}

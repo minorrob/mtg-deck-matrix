@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Alibou, Ancient Witness",
+    "oracleId": "e5e8e116-10fe-48b0-b3d8-6edb39bd5f90",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Other artifact creatures you control have haste.\nWhenever one or more artifact creatures you control attack, Alibou deals X damage to any target and you scry X, where X is the number of tapped artifacts you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other artifact creatures you control have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more artifact creatures you control attack, Alibou deals X damage to any target and you scry X, where X is the number of tapped artifacts you control.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true,
+        "filter": {
+          "types": [
+            "Artifact",
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "count": {
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you",
+              "tapped": true
+            }
+          },
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "scry",
+          "count": {
+            "count": {
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you",
+              "tapped": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
