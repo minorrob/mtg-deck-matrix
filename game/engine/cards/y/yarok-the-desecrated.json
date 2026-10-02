@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yarok, the Desecrated",
+    "oracleId": "95b53836-18aa-451a-992d-2a111deeeab2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Horror"
+    ],
+    "manaCost": "{2}{B}{G}{U}",
+    "colors": [
+      "B",
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Deathtouch, lifelink\nIf a permanent entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "If a permanent entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "enters"
+      }
+    }
+  ]
+}

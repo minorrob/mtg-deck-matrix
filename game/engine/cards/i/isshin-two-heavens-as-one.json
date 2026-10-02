@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Isshin, Two Heavens as One",
+    "oracleId": "65114758-9a75-43a7-96e8-0aa68faa6b24",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Samurai"
+    ],
+    "manaCost": "{R}{W}{B}",
+    "colors": [
+      "B",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "attacks"
+      }
+    }
+  ]
+}

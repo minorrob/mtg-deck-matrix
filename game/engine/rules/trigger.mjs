@@ -47,6 +47,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
+import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
@@ -216,8 +217,48 @@ function matches(state, event, condition, sourceId, controller) {
  *
  * @param {Array} events  what just happened, as the rules modules returned it
  */
+/* "THAT ABILITY TRIGGERS AN ADDITIONAL TIME" (Panharmonicon, Teysa Karlov, Annie Joins Up; CR 603.2d): one more for
+   each `triggers-again` static of the trigger's controller whose `affects` names the ability's source -- a permanent, or
+   one that has just left the battlefield, read as it last was (Teysa's own "when this dies") -- and whose `cause`, when
+   it says one, is the event that triggered it. */
+function triggersAgain(state, event, controller, sourceId, lastSeen = null, departed = []) {
+  let times = 0;
+  /* And one that left the battlefield in this same action, looking back (CR 603.10a): Teysa dying with the others still
+     doubles what their deaths trigger (her ruling). Only for a departure; an arrival does not look back. */
+  const leaving = event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield";
+  const lookBack = leaving ? departed.filter((gone) => gone?.controller === controller)
+    .flatMap((gone) => (gone.abilities ?? []).filter((a) => a.kind === "static" && a.rule === "triggers-again").map((ability) => ({ability, source: gone.cardId}))) : [];
+  for (const {ability, source: holder} of [...playerStatics(state, "triggers-again", controller), ...lookBack]) {
+    const context = {controller, source: holder};
+    let theirs = false;
+    /* A key last known information does not keep (filter.mjs) is not a match. */
+    try { theirs = lastSeen ? matchesLastKnown(ability.affects, lastSeen, context) : matchesSelector(ability.affects, state, sourceId, context); } catch { theirs = false; }
+    if (!theirs) continue;
+    if (ability.cause && !causedBy(state, event, ability.cause, context)) continue;
+    times += 1;
+  }
+  return times;
+}
+/* The event a trigger triggered on, as a `triggers-again` names it: something entering (what arrived, where it is now),
+   dying (as it last was), or attacking. */
+function causedBy(state, event, cause, context) {
+  const fields = event.data?.fields ?? {};
+  if (cause.event === "enters") {
+    const arrived = fields.enteredAs ?? fields.card?.cardId;
+    return event.kind === "GameEventCardChangeZone" && fields.to?.zoneType === "Battlefield" && state.objects[arrived]?.zone === "battlefield"
+      && matchesSelector({what: "permanent", ...(cause.filter ?? {})}, state, arrived, context);
+  }
+  if (cause.event === "dies") return event.kind === "GameEventCardChangeZone" && fields.from?.zoneType === "Battlefield" && fields.to?.zoneType === "Graveyard"
+    && Boolean(fields.leftBehind) && matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
+  if (cause.event === "attacks") return event.kind === "GameEventAttackersDeclared" && (fields.attackers ?? []).length > 0;
+  return false;
+}
+
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
+  /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
+     with everything it came to be about. */
+  const again = [];
   /* EVERYTHING THAT LEFT THE BATTLEFIELD IN THIS ONE ACTION, looking back (CR 603.10a): a board wipe kills Blood Artist
      with the rest, and it sees every one of them die, its own death included. One action's events are read as one
      moment -- a wipe, a round of state-based actions; an effect that destroys one thing and then another in a single
@@ -267,6 +308,8 @@ export function collectTriggers(state, events) {
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });
+          const times = triggersAgain(state, event, object.controller, id, null, departed);
+          if (times) again.push({at: state.pendingTriggers.length - 1, times});
           if (ability.trigger.batch) opened(`${id}:${ability.id}`, about);
           }
         }
@@ -325,12 +368,15 @@ export function collectTriggers(state, events) {
           ...(event.data?.fields?.becomes !== undefined ? {about: {card: event.data.fields.becomes}} : {}),
           ...scriptOf(ability),
         });
+        const times = triggersAgain(state, event, gone.controller, gone.cardId, gone, departed);
+        if (times) again.push({at: state.pendingTriggers.length - 1, times});
         if (ability.trigger.batch) opened(`${gone.cardId}:${ability.id}`, about);
       }
     }
   }
   /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
   for (const d of state.delayedTriggers ?? []) if (d.fresh) delete d.fresh;
+  for (const {at, times} of again) for (let n = 0; n < times; n += 1) state.pendingTriggers.push(structuredClone(state.pendingTriggers[at]));
   return state.pendingTriggers.length;
 }
 

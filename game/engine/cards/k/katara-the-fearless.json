@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Katara, the Fearless",
+    "oracleId": "0972d46e-423b-454e-87c7-a2d40fb6fb6d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{G}{W}{U}",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "If a triggered ability of an Ally you control triggers, that ability triggers an additional time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If a triggered ability of an Ally you control triggers, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "subtypes": [
+          "Ally"
+        ]
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 595 defined and playable today; 1,766 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 602 defined and playable today; 1,776 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,7 +22,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 39 | 1 | 26 | 126 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
-| Static abilities | 77 | 1 | 2 | 0 | 74 |
+| Static abilities | 77 | 2 | 2 | 0 | 73 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 9 | 4 | 0 | 24 |
@@ -36,19 +36,19 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| static | Panharmonicon | — | missing | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
 | option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 | effect | GainControl | gainControl | named | 9 | 22 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
+| static | CastWithFlash | — | missing | 9 | 12 |
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
-| static | CastWithFlash | — | missing | 8 | 12 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
 | option | Remembering what an effect moved | — | missing | 7 | 117 |
+| option | You may play or cast a card from another zone | — | missing | 7 | 84 |
 | option | As long as a permanent is present (a static ability's condition) | — | missing | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 
@@ -80,10 +80,10 @@ The things that alone hold back the most of the most-played cards.
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
-| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 4 |
+| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 5 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 4 |
 | 702.40 | Storm | — | named | 7 | 37 | 7 | 7 |
-| 702.185 | Warp | — | missing | 7 | 37 | 7 | 2 |
+| 702.185 | Warp | — | missing | 7 | 37 | 7 | 3 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 3 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 3 |
@@ -542,7 +542,7 @@ The things that alone hold back the most of the most-played cards.
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
 | AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 26 | 5 |
-| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 3 |
+| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | — | missing | 6 | 20 | 6 | 1 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 4 |
@@ -672,11 +672,11 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
-| CantBlockBy | — | missing | 26 | 353 | 13 | 2 |
+| CantBlockBy | — | missing | 26 | 353 | 13 | 3 |
 | AlternativeCost | — | missing | 24 | 148 | 24 | 6 |
-| Panharmonicon | — | missing | 19 | 37 | 19 | 10 |
+| Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
-| CastWithFlash | — | missing | 12 | 56 | 12 | 8 |
+| CastWithFlash | — | missing | 12 | 56 | 12 | 9 |
 | CantAttack | — | missing | 10 | 204 | 10 | 4 |
 | RaiseCost | — | missing | 10 | 91 | 10 | 8 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
@@ -699,7 +699,7 @@ The things that alone hold back the most of the most-played cards.
 | OptionalAttackCost | — | missing | 1 | 28 | 1 | 0 |
 | AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
 | CantBlockUnless | — | missing | 1 | 9 | 1 | 0 |
-| DisableTriggers | — | missing | 1 | 8 | 1 | 0 |
+| DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
 | CantDraw | — | missing | 1 | 7 | 1 | 1 |
 | BlockRestrict | — | missing | 1 | 4 | 1 | 0 |
 | Activations | — | missing | 1 | 3 | 1 | 0 |
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 84 | 5 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 84 | 7 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 2 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
