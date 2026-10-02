@@ -108,13 +108,16 @@ export function dealDamage(state, params, context) {
   const events = [];
   const amount = params.amount ?? 0;
   if (amount <= 0) return events;
-  const source = context.source ?? null;
+  /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". */
+  const source = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
 
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
     ...(params.toPlayer === undefined ? [] : [{toPlayer: params.toPlayer}]),
     ...playersFor(state, params.who, context.controller)
       .filter(() => params.who !== undefined)
+      /* "Each other opponent": not the one the trigger is about. */
+      .filter((player) => !(params.exceptThatPlayer === true && player === context.about?.player))
       .map((player) => ({toPlayer: player})),
   ];
 
