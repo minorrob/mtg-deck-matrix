@@ -87,6 +87,8 @@ const playerOf = (ref, context) => (ref === "that player" ? context.about?.playe
 function objectOf(ref, context) {
   if (ref === "self") return context.source ?? null;
   if (ref === "that card") return context.about?.card ?? null;
+  /* "You lose life equal to its mana value" (Dark Confidant): what an earlier effect moved. */
+  if (ref === "remembered") return context.remembered?.[0] ?? null;
   return null;
 }
 

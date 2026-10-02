@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lord of the Void",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It hits Maya: her top seven exiled, and her Ogre among them comes in under Rob's control",
+      "library": [
+        "Wastes",
+        "Ogre"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lord of the Void"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Lord of the Void"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ogre"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Lord of the Void",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 6
+        },
+        {
+          "seat": 1,
+          "life": 33
+        }
+      ]
+    }
+  ]
+}

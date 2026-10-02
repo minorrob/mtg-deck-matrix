@@ -62,7 +62,8 @@ export function runResolution(state) {
     resolving.queue[0] = effect;
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
-    if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about})) {
+    if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
+      remembered: resolving.context.remembered, targets: resolving.context.targets})) {
       resolving.queue.shift();
       continue;
     }
@@ -118,6 +119,8 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
 
   state.awaiting = null;
   if (!state.resolving) return {status: "done", events};
+  /* What the answer moved, remembered for the effects after it ("untap that land"). */
+  if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.remembered;
 
   /* The effect that asked is finished. A modal hands back the chosen modes' effects, which go in
      front of whatever was already queued. */

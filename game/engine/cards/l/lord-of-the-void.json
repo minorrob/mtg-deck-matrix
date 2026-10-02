@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lord of the Void",
+    "oracleId": "626b85f8-8889-46e6-9659-460bac79ae9b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{4}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Flying\nWhenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the battlefield under your control.",
+      "trigger": {
+        "on": "damage dealt",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 7,
+          "who": "that player",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "exile",
+          "among": "remembered",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

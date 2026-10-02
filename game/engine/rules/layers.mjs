@@ -73,6 +73,11 @@ function printed(state, id) {
  * doing, so it would recurse. Two matchers over one shape is fine; two spellings of the same idea
  * is what produced a `pumpAll` that pumped the opponent's creatures as well, silently, because
  * "you" was not a word this understood. */
+/* THE KEYS A LAYER STATIC'S `affects` MAY CARRY -- this matcher's, narrower than the selector grammar because the layers
+   cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
+   the card compiler refuses it (cards/index.mjs). */
+export const LAYER_AFFECTS_KEYS = Object.freeze(["what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "countersAtLeast"]);
+
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
   if (rule.ids && !rule.ids.includes(current.id)) return false;
@@ -83,6 +88,8 @@ function affects(state, effect, current, sourceController) {
   if (rule.token !== undefined && (state.objects[current.id]?.token ?? false) !== rule.token) return false;
   /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
   if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || (state.objects[current.id]?.subtypes ?? []).includes(t))) return false;
+  /* "Legendary Humans you control have indestructible" (General's Enforcer): printed supertypes, which no layer changes. */
+  if (rule.supertypes && !rule.supertypes.every((t) => (state.objects[current.id]?.supertypes ?? []).includes(t))) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
   /* "This creature's power and toughness are each equal to ...": the source itself. */
   if (rule.self === true && current.id !== effect.sourceId) return false;

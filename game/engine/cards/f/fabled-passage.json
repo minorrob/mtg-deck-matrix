@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fabled Passage",
+    "oracleId": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "shuffle": true,
+          "to": "battlefield",
+          "tapped": true,
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "remembered",
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 4
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fabled Passage",
+  "scenarios": [
+    {
+      "name": "Three other lands: the Island makes four, and is untapped",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fabled Passage",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Fabled Passage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Fabled Passage"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two: three lands, and it stays tapped",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fabled Passage",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Fabled Passage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Fabled Passage"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "General's Enforcer",
+    "oracleId": "8e953251-aa5c-4aa3-8e69-1ff1f609f3ff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Legendary Humans you control have indestructible.\n{2}{W}{B}: Exile target card from a graveyard. If it was a creature card, create a 1/1 white Human Soldier creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Legendary Humans you control have indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Human"
+        ],
+        "supertypes": [
+          "Legendary"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{W}{B}: Exile target card from a graveyard. If it was a creature card, create a 1/1 white Human Soldier creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Human Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Human",
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ]
+    }
+  ]
+}

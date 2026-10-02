@@ -34,6 +34,7 @@ import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
 import {compileSelector} from "../script/filter.mjs";
+import {LAYER_AFFECTS_KEYS} from "../rules/layers.mjs";
 
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
@@ -336,6 +337,9 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.rule && ((ability.condition && !RULES_READING_A_CONDITION.includes(ability.rule)) || ability.worksFrom))
       problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
     if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
+    /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
+    if (ability.kind === "static" && ability.layer !== undefined)
+      for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
     /* static and replacement: their schema is the rules modules' own shape. */
     abilities.push({...ability, id});
   });

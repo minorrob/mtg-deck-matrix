@@ -565,13 +565,19 @@ export const chooseCard = {
     /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
     const alternatives = Array.isArray(params.selector?.anyOf) ? params.selector.anyOf : [params.selector ?? {}];
     const matchers = alternatives.map((one) => compileSelector({...one, what: "card", zone}));
-    const cards = cardsIn(state, zone, player).filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* "A creature card from among them" (Lord of the Void): from what an earlier effect of this resolution moved there,
+       face up -- so a card that fits must be chosen; only a search of a hidden zone may fail to find (CR 701.23b). */
+    const among = params.among === "remembered";
+    const pool = among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : cardsIn(state, zone, player);
+    const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
     const count = params.count ?? 1;
-    const min = params.upTo || hasQuality(params.selector) ? 0 : Math.min(count, cards.length);
+    const min = params.upTo || (!among && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     state.awaiting = {
       kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
-      shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller ?? null,
+      shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
+      /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). */
+      ...(params.remember ? {remember: true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
       ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
         source: context.source ?? null} : {}),
@@ -596,12 +602,13 @@ export const chooseCard = {
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
       throw new Error("Invalid selection");
     const player = awaiting.player;
-    const tops = [], arrivedHere = [];
+    const tops = [], arrivedHere = [], found = [];
     chosen.forEach((id, i) => {
       const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
       if (where.to === "top") { tops.push(id); return; }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, tapped: where.tapped === true});
+      if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
         /* "Under your control": the searcher's, when the card is another player's own (it never is from a library). */
         if (awaiting.controller !== null && awaiting.controller !== undefined) state.objects[moved].controller = awaiting.controller;
@@ -620,7 +627,7 @@ export const chooseCard = {
       const library = state.zones.library[player].filter((id) => !tops.includes(id));
       state.zones.library[player] = [...tops, ...library];
     }
-    return events;
+    return awaiting.remember ? {events, remembered: [...found, ...tops]} : events;
   },
 };
 
