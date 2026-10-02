@@ -63,7 +63,7 @@ import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, playerStatics, freeCast} from "./statics.mjs";
+import {costReduction, playerStatics, freeCast, flashGranted} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -416,7 +416,7 @@ export function legalActions(state, player) {
   for (const {id, from, flashback} of castable) {
     const object = state.objects[id];
     if (!object.manaCost) continue;
-    if (sorcerySpeed(object) && !hasFlash(state, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
       continue;
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
     /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
@@ -519,7 +519,7 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
   const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true), ...playableElsewhere(state, player, "spell")];
   return !spells.some((id) => {
     const object = state.objects[id];
-    if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !mainNow)) return false;
+    if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)) return false;
     const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
     /* What it costs now, reductions included: a spell made castable by a Medallion is something to do. */
     const {cost, x} = castCost(state, player, id, tax);

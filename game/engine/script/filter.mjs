@@ -131,6 +131,13 @@ function matchesManaValue(state, id, rule) {
  *   one compiled selector answers for every seat.
  */
 export function compileSelector(selector) {
+  /* "A creature or planeswalker", "Birds, Frogs, Otters, and Rats you control": any of these, each with the keys they
+     share -- read the same for every caller, as matchesSelector reads it. */
+  if (Array.isArray(selector?.anyOf)) {
+    const {anyOf, ...shared} = selector;
+    const each = anyOf.map((one) => compileSelector({...shared, ...one}));
+    return (state, id, context = {}) => each.some((match) => match(state, id, context));
+  }
   assertGrammar(selector);
   const what = selector.what ?? "permanent";
 
@@ -155,6 +162,8 @@ export function compileSelector(selector) {
     /* Colors through the layers (CR 105.2): "a blue spell" is one with blue among its colors; listing two asks for both. */
     /* "Colorless spells" (CR 105.2c): no color at all, through the layers. */
     if (selector.colorless === true && (characteristicsOf(state, id).colors ?? []).length > 0) return false;
+    /* "Permanents that are one or more colors" (All Is Dust). */
+    if (selector.colorless === false && (characteristicsOf(state, id).colors ?? []).length === 0) return false;
     if (selector.colors) {
       const current = characteristicsOf(state, id).colors ?? [];
       if (!selector.colors.every((color) => current.includes(color))) return false;

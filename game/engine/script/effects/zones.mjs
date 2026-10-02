@@ -22,7 +22,7 @@ import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
-import {selectMatching} from "../filter.mjs";
+import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered} from "../../rules/statics.mjs";
 
@@ -127,6 +127,18 @@ export function sacrificeOne(state, id, events) {
   const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});
   if (moved !== null && events.length > before) Object.assign(events[events.length - 1].data.fields, {sacrificed: true, sacrificer});
   return moved;
+}
+
+/** `sacrificeAll` — "each player sacrifices all permanents they control that are one or more colors" (All Is Dust): each
+ * player `who` names (each, unless it says), every permanent they control the selector fits, at once. No choice is made,
+ * so there is no order to ask. */
+export function sacrificeAll(state, params, context) {
+  const events = [];
+  const players = playersFor(state, params.who ?? "each", context.controller);
+  const matches = compileSelector({...(params.selector ?? {}), what: "permanent"});
+  const doomed = state.zones.battlefield.filter((id) => players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
+  for (const id of doomed) if (state.objects[id]) sacrificeOne(state, id, events);
+  return events;
 }
 
 /** `moveZone` — put the named objects somewhere. */

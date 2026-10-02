@@ -30,8 +30,8 @@ import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards} from "./permanents.mjs";
-import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
-import {typesOf} from "../../rules/layers.mjs";
+import {payGeneric, canPayGeneric, parseManaCost, manaValue} from "../../rules/mana.mjs";
+import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife} from "./resources.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
@@ -348,18 +348,39 @@ const sacrificeable = (state, player, selector, source = null) => {
   const matches = compileSelector({...(selector ?? {}), what: "permanent", controller: "you"});
   return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}));
 };
+/* "A creature with the greatest power among creatures that player controls" (Crackling Doom), "the greatest mana value"
+   (Soul Shatter): of what may be sacrificed, those with the most -- a tie is the player's choice among them. */
+const greatestBy = {
+  power: (state, id) => characteristicsOf(state, id).power ?? 0,
+  manaValue: (state, id) => (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0),
+};
+const offeredToSacrifice = (state, player, awaiting) => {
+  const mine = sacrificeable(state, player, awaiting.selector, awaiting.source ?? null);
+  if (!awaiting.greatest || !mine.length) return mine;
+  const value = greatestBy[awaiting.greatest], most = Math.max(...mine.map((id) => value(state, id)));
+  return mine.filter((id) => value(state, id) === most);
+};
+/* "Chooses up to two creatures they control, then sacrifices the rest" (Archfiend of Depravity, `keep`): asked only of a
+   player with more than that many. */
+const mustSacrifice = (state, player, awaiting) => offeredToSacrifice(state, player, awaiting).length > (awaiting.keep ?? 0);
 export const sacrifice = {
   open(state, params, context) {
     /* CR 101.4: the active player chooses first, then each other player in turn order. */
     const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
-    const queue = playersFor(state, params.who, context.controller).filter((p) => sacrificeable(state, p, params.selector, context.source ?? null).length > 0).sort((a, b) => apnap(a) - apnap(b));
+    const asked = {selector: params.selector ?? {}, source: context.source ?? null, ...(params.keep !== undefined ? {keep: params.keep} : {}), ...(params.greatest ? {greatest: params.greatest} : {})};
+    const queue = playersFor(state, params.who, context.controller).filter((p) => mustSacrifice(state, p, asked)).sort((a, b) => apnap(a) - apnap(b));
     if (queue.length === 0) return false;
-    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, selector: params.selector ?? {}, source: context.source ?? null};
+    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, ...asked};
     return true;
   },
 
   choice(state, awaiting) {
-    const mine = sacrificeable(state, awaiting.player, awaiting.selector, awaiting.source ?? null);
+    const mine = offeredToSacrifice(state, awaiting.player, awaiting);
+    const option = (id, index) => ({index, label: state.objects[id].card, cardId: id, ...(state.objects[id].token ? {token: true} : {})});
+    if (awaiting.keep !== undefined) {
+      const keep = Math.min(awaiting.keep, mine.length);
+      return {id: `sacrifice-keep:${awaiting.player}:${state.turn}`, title: `Choose up to ${keep} to keep; the rest are sacrificed`, mode: "many", min: 0, max: keep, options: mine.map(option)};
+    }
     const count = Math.min(awaiting.count, mine.length);
     return {
       id: `sacrifice:${awaiting.player}:${state.turn}`,
@@ -374,9 +395,12 @@ export const sacrifice = {
 
   apply(state, awaiting, indices) {
     const events = [];
-    const mine = sacrificeable(state, awaiting.player, awaiting.selector, awaiting.source ?? null);
-    for (const id of (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined)) sacrificeOne(state, id, events);
-    const next = (awaiting.remaining ?? []).filter((p) => sacrificeable(state, p, awaiting.selector, awaiting.source ?? null).length > 0);
+    const mine = offeredToSacrifice(state, awaiting.player, awaiting);
+    const chosen = (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined);
+    if (awaiting.keep !== undefined && chosen.length > awaiting.keep) throw new Error("Invalid selection");
+    /* Kept: the rest go. Otherwise: the ones chosen. */
+    for (const id of awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen) sacrificeOne(state, id, events);
+    const next = (awaiting.remaining ?? []).filter((p) => mustSacrifice(state, p, awaiting));
     if (next.length > 0) {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1)};
       return {events, again: true};

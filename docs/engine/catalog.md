@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 715 defined and playable today; 1,934 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 726 defined and playable today; 1,952 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,9 +20,9 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 41 | 1 | 24 | 126 |
+| Effects | 192 | 42 | 1 | 23 | 126 |
 | Triggers | 138 | 8 | 4 | 10 | 116 |
-| Static abilities | 77 | 3 | 2 | 0 | 72 |
+| Static abilities | 77 | 4 | 2 | 0 | 71 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 14 | 4 | 0 | 19 |
@@ -36,14 +36,13 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 10 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 106 |
 | effect | Clone | — | missing | 9 | 29 |
-| effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
-| static | CastWithFlash | — | missing | 9 | 12 |
 | keyword ability | Ninjutsu | — | missing | 8 | 14 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
+| option | Remembering what an effect moved | — | missing | 7 | 113 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
 | effect | Play | play | named | 7 | 35 |
 | effect | GenericChoice | genericChoice | named | 7 | 21 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | trigger | TapsForMana | — | missing | 7 | 18 |
 | effect | Fight | fight | named | 7 | 15 |
 | keyword ability | Crew | — | named | 7 | 15 |
+| effect | ManaReflected | addManaReflected | named | 7 | 12 |
 
 ## Keyword abilities (CR 702)
 
@@ -374,7 +374,7 @@ The things that alone hold back the most of the most-played cards.
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 7 |
 | SetState | setState | named | 19 | 280 | 19 | 5 |
-| SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 9 |
+| SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
 | DigUntil | — | missing | 18 | 167 | 18 | 6 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
@@ -423,7 +423,7 @@ The things that alone hold back the most of the most-played cards.
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 0 |
-| TwoPiles | twoPiles | named | 2 | 32 | 2 | 0 |
+| TwoPiles | twoPiles | named | 2 | 32 | 2 | 1 |
 | DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
 | NameCard | — | missing | 1 | 87 | 1 | 0 |
@@ -676,7 +676,7 @@ The things that alone hold back the most of the most-played cards.
 | AlternativeCost | rules/actions | built | 24 | 148 | 0 | 0 |
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 6 |
-| CastWithFlash | — | missing | 12 | 56 | 12 | 9 |
+| CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | — | missing | 10 | 204 | 10 | 5 |
 | RaiseCost | — | missing | 10 | 91 | 10 | 8 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
@@ -826,9 +826,9 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 6 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 7 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 9 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 10 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
@@ -1082,7 +1082,7 @@ The things that alone hold back the most of the most-played cards.
 | Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 4 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 2 |
-| MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 2 |
+| MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 3 |
 | TypeCycling | TypeCycling | built | 3 | 96 | 0 | 0 |
 | Start your engines | — | missing | 3 | 46 | 3 | 2 |
 | AlternateAdditionalCost | — | missing | 3 | 44 | 3 | 2 |

@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flare of Malice",
+    "oracleId": "4ce156f8-6b0b-41ce-9e8f-b2735c757406",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.\nEach opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may sacrifice a nontoken black creature rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "B"
+            ],
+            "token": false
+          }
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "opponent",
+          "count": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          },
+          "greatest": "manaValue"
+        }
+      ]
+    }
+  ]
+}

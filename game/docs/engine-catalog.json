@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 715,
-  "everyRule": 1934
+  "defined": 726,
+  "everyRule": 1952
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 41,
+    "built": 42,
     "partial": 1,
-    "named": 24,
+    "named": 23,
     "missing": 126
    },
    "entries": [
@@ -3744,12 +3744,12 @@
      "rule": null,
      "name": "SacrificeAll",
      "engine": "sacrificeAll",
-     "status": "named",
+     "status": "built",
      "forge": "SacrificeAll",
      "top": 19,
      "all": 130,
-     "blocks": 19,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4337,7 +4337,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 3,
+    "built": 4,
     "partial": 2,
     "named": 0,
-    "missing": 72
+    "missing": 71
    },
    "entries": [
     {
@@ -7267,13 +7267,13 @@
      "kind": "static",
      "rule": null,
      "name": "CastWithFlash",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/actions",
+     "status": "built",
      "forge": "CastWithFlash",
      "top": 12,
      "all": 56,
-     "blocks": 12,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "option",
@@ -11845,7 +11845,7 @@
      "top": 5,
      "all": 30,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword construct",

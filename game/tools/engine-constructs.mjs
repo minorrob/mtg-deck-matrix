@@ -60,7 +60,9 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "That ability triggers an additional time" (batch 34): the static `triggers-again`, read by rules/trigger.mjs. */
   Panharmonicon: "rules/trigger",
   /* "Rather than pay this spell's mana cost" (batch 39): the card's own `alternative-cost` static, rules/actions.mjs. */
-  AlternativeCost: "rules/actions"};
+  AlternativeCost: "rules/actions",
+  /* "You may cast spells as though they had flash" (batch 49): `cast-as-though-flash`, rules/actions.mjs. */
+  CastWithFlash: "rules/actions"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
