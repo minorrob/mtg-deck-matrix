@@ -44,6 +44,10 @@ export const STATIC_RULES = Object.freeze({
       and `spells` (a selector of the spells, or true for any). For the static's controller; rules/actions.mjs offers
       them. */
   "play-from": "rules/actions.mjs",
+  /** "You may cast spells as though they had flash" (Vedalken Orrery), "artifact spells" (Shimmer Myr), "Aura and
+      Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
+      by permission). rules/actions.mjs, flashGranted. */
+  "cast-as-though-flash": "rules/actions.mjs",
   /** "You may look at the top card of your library any time": its owner sees it (projection.mjs). */
   "look-at-top": "projection.mjs",
   /** "Play with the top card of your library revealed": everyone sees it (projection.mjs). */
@@ -146,6 +150,14 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
     }
   }
   return false;
+}
+
+/** Whether a permanent of this player's lets them cast this card as though it had flash (`cast-as-though-flash`). */
+export function flashGranted(state, player, id) {
+  const object = state.objects[id];
+  if (!object) return false;
+  return playerStatics(state, "cast-as-though-flash", player).some(({ability, source}) => ability.spells === true
+    || (ability.spells && typeof ability.spells === "object" && matchesSelector({...ability.spells, what: "card", zone: object.zone}, state, id, {controller: player, source})));
 }
 
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
