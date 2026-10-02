@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 558 defined and playable today; 1,712 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 565 defined and playable today; 1,721 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,7 +21,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 37 | 1 | 27 | 127 |
-| Triggers | 138 | 5 | 4 | 13 | 116 |
+| Triggers | 138 | 6 | 4 | 12 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -45,12 +45,12 @@ The things that alone hold back the most of the most-played cards.
 | option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 | effect | GainControl | gainControl | named | 9 | 22 |
-| trigger | LifeGained | life gained | named | 9 | 18 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
 | static | Panharmonicon | — | missing | 8 | 19 |
 | static | CastWithFlash | — | missing | 8 | 12 |
+| keyword ability | Station | — | missing | 8 | 11 |
 
 ## Keyword abilities (CR 702)
 
@@ -536,7 +536,7 @@ The things that alone hold back the most of the most-played cards.
 | Drawn | drawn | built | 31 | 145 | 0 | 0 |
 | AttackersDeclared | attackers declared | named | 25 | 227 | 26 | 5 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
-| LifeGained | life gained | named | 18 | 94 | 18 | 9 |
+| LifeGained | life gained | built | 18 | 94 | 0 | 0 |
 | TapsForMana | — | missing | 18 | 64 | 18 | 6 |
 | Sacrificed | sacrificed | named | 17 | 114 | 17 | 9 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
@@ -878,7 +878,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Life you gained this turn | — | missing | 12 | 84 | 12 | 1 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 11 | 4 |
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
-| — | LifeAmount | — | missing | 11 | 38 | 11 | 0 |
+| — | LifeAmount | — | missing | 11 | 38 | 11 | 5 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 2 |
 | — | Amount | — | missing | 10 | 43 | 10 | 1 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 1 |

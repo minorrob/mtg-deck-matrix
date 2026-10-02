@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Voice of the Blessed",
+    "oracleId": "01e742ed-660c-43c6-b393-e589a54cbe1b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Cleric"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever you gain life, put a +1/+1 counter on this creature.\nAs long as this creature has four or more +1/+1 counters on it, it has flying and vigilance.\nAs long as this creature has ten or more +1/+1 counters on it, it has indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you gain life, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "life gained"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "As long as this creature has four or more +1/+1 counters on it, it has flying and vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true,
+        "countersAtLeast": {
+          "counter": "+1/+1",
+          "count": 4
+        }
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as this creature has ten or more +1/+1 counters on it, it has indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true,
+        "countersAtLeast": {
+          "counter": "+1/+1",
+          "count": 10
+        }
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    }
+  ]
+}
