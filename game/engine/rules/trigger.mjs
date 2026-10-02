@@ -46,7 +46,7 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility} from "./stack.mjs";
-import {cardsIn} from "../state/index.mjs";
+import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
@@ -177,6 +177,19 @@ export function collectTriggers(state, events) {
      resolution is read the same way. */
   const departed = (events ?? []).filter((e) => e.kind === "GameEventCardChangeZone" && e.data?.fields?.from?.zoneType === "Battlefield" && e.data.fields.leftBehind)
     .map((e) => e.data.fields.leftBehind);
+  /* "WHENEVER ONE OR MORE other creatures die" (`batch`): everything this action did is one event for it (CR 603.2c), so it
+     triggers once, about all of them (`about.cards`: "for each of them"). One entry per source and ability, per action. */
+  const batched = new Map();
+  const joined = (key, about) => {
+    if (!batched.has(key)) return false;
+    if (about.card !== undefined) state.pendingTriggers[batched.get(key)].about.cards.push(about.card);
+    return true;
+  };
+  const opened = (key, about) => {
+    batched.set(key, state.pendingTriggers.length - 1);
+    const entry = state.pendingTriggers[state.pendingTriggers.length - 1];
+    entry.about = {...(entry.about ?? {}), cards: about.card !== undefined ? [about.card] : []};
+  };
   for (const event of events ?? []) {
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
@@ -184,7 +197,12 @@ export function collectTriggers(state, events) {
         for (const ability of object.abilities ?? []) {
           if (ability.kind !== "triggered" || !ability.trigger) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
-          if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id})) continue;
+          /* "If it isn't that player's turn" asks about the player the event is about. */
+          if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
+          if (ability.trigger.batch && joined(`${id}:${ability.id}`, about)) continue;
+          /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
+          if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
+          if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
           state.pendingTriggers.push({
             abilityId: ability.id,
             text: ability.text ?? ability.id,
@@ -202,6 +220,7 @@ export function collectTriggers(state, events) {
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });
+          if (ability.trigger.batch) opened(`${id}:${ability.id}`, about);
           }
         }
       }
@@ -245,6 +264,9 @@ export function collectTriggers(state, events) {
         if (ability.kind !== "triggered" || !ability.trigger) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
         if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;
+        /* Dying with the rest, it sees them all (CR 603.10a) -- once, for "one or more". */
+        const about = event.data?.fields?.becomes !== undefined ? {card: event.data.fields.becomes} : {};
+        if (ability.trigger.batch && joined(`${gone.cardId}:${ability.id}`, about)) continue;
         state.pendingTriggers.push({
           abilityId: ability.id,
           text: ability.text ?? ability.id,
@@ -256,6 +278,7 @@ export function collectTriggers(state, events) {
           ...(event.data?.fields?.becomes !== undefined ? {about: {card: event.data.fields.becomes}} : {}),
           ...scriptOf(ability),
         });
+        if (ability.trigger.batch) opened(`${gone.cardId}:${ability.id}`, about);
       }
     }
   }

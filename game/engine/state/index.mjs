@@ -205,6 +205,20 @@ export function cardsIn(state, zone, player = null) {
  * no damage, no attachments, and nothing that was tracking the old one is tracking this. Callers
  * must use the returned id; the old one stops existing.
  */
+/* "ACTIVATE ONLY ONCE EACH TURN" (CR 602.5b) AND "THIS ABILITY TRIGGERS ONLY ONCE EACH TURN": counted on the object
+   itself, so the limit stays with it when its controller changes (602.5b), and a new object (CR 400.7) starts afresh --
+   moveObject carries no count across. `key` is the ability's id (an activation) or "trigger:" and its id. */
+export function usesThisTurn(state, id, key) {
+  const used = state.objects[id]?.used;
+  return used && used.turn === state.turn ? used.counts[key] ?? 0 : 0;
+}
+export function recordUse(state, id, key) {
+  const object = state.objects[id];
+  if (!object) return;
+  if (!object.used || object.used.turn !== state.turn) object.used = {turn: state.turn, counts: {}};
+  object.used.counts[key] = (object.used.counts[key] ?? 0) + 1;
+}
+
 export function moveObject(state, id, zone, player = null) {
   const from = state.objects[id];
   if (!from) throw new Error(`There is no object ${id} to move`);
