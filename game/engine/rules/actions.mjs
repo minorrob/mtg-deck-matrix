@@ -60,14 +60,14 @@ import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
 import {targetChoices, targetName, isHostile, modalScript} from "../script/bind.mjs";
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
-import {compileSelector, matchesSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, playerStatics, freeCast, flashGranted} from "./statics.mjs";
+import {costReduction, costIncrease, playerStatics, freeCast, flashGranted} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown} from "./layers.mjs";
+import {lastKnown, characteristicsOf} from "./layers.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 
@@ -91,6 +91,9 @@ function castCost(state, player, id, tax, free = false, instead = null) {
   /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts.
      `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. */
   const cost = parseManaCost(free ? "" : instead ?? state.objects[id].manaCost);
+  /* Increases first, then reductions (CR 601.2f): Thalia's {1} more and a Medallion's {1} less cancel out. A cast without
+     paying its mana cost still pays an increase (CR 118.9d). */
+  cost.generic += costIncrease(state, player, id);
   let reduction = costReduction(state, player, id);
   const fromPrinted = Math.min(cost.generic, reduction);
   cost.generic -= fromPrinted;
@@ -271,6 +274,22 @@ export function manaAlternatives(state, player, ability, source = null) {
   if (ability.produces) return [countMana(state, {...ability.produces}, context)];
   if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
+  /* "Any color that a land an opponent controls could produce" (Exotic Orchard), "any type ... a land you control"
+     (Reflecting Pool, `anyType`, colorless too): what those lands' own mana abilities could add, now -- never another
+     such ability's (CR 106.7), so two Reflecting Pools do not feed each other. */
+  if (ability.reflect) {
+    const kinds = new Set();
+    for (const id of selectMatching(state, ability.reflect, context))
+      for (const theirs of state.objects[id].abilities ?? [])
+        if (theirs.kind === "mana" && !theirs.reflect && !theirs.among) for (const m of manaAlternatives(state, state.objects[id].controller, theirs, id)) for (const k of Object.keys(m)) kinds.add(k);
+    return [...COLORS, ...(ability.anyType ? ["C"] : [])].filter((k) => kinds.has(k)).map((k) => ({[k]: count}));
+  }
+  /* "Any color among legendary creatures and planeswalkers you control" (Mox Amber), "among legendary creature cards in
+     your graveyard": their colors, now. */
+  if (ability.among) {
+    const colors = new Set(selectMatching(state, ability.among, context).flatMap((id) => (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors) ?? []));
+    return COLORS.filter((c) => colors.has(c)).map((c) => ({[c]: count}));
+  }
   return [];
 }
 
@@ -394,7 +413,7 @@ export function legalActions(state, player) {
       for (const costChoice of fodder) alternatives.forEach((mana, produce) => actions.push({
         kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card, mana,
         /* A fixed ability is one offer and looks as it always has; a choice says which it is. */
-        ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor ? {produce} : {}),
+        ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor || ability.reflect || ability.among ? {produce} : {}),
         ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice].card]} : {}),
       }));
     }
