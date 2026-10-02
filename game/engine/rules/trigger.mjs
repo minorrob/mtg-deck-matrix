@@ -83,11 +83,14 @@ function subjects(state, event, condition, sourceId, controller) {
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
-    /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. */
-    if (condition.firstThisTurn) {
+    /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
+       "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
+       of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */
+    if (condition.firstThisTurn || condition.countBefore) {
       const {what: _ignored, ...shape} = condition.filter ?? {};
       const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
-      if (fitted.length !== 1) return [];
+      if (condition.firstThisTurn && fitted.length !== 1) return [];
+      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1)}];
     }
     return [{card: spell, player: caster}];
   }
