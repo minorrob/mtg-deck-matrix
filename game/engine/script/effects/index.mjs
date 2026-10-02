@@ -34,6 +34,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
+  becomeCopy,
 } from "./permanents.mjs";
 
 /**
@@ -123,6 +124,8 @@ export const EFFECTS = Object.freeze({
   fight,
   /* Batch 40: a change of control, for a turn or for good. Batch 49: every permanent a selector fits, sacrificed. */
   gainControl, sacrificeAll,
+  /* Batch 58: a permanent becomes a copy (CR 707.2, layer 1). */
+  becomeCopy,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
