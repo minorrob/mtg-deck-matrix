@@ -1,0 +1,134 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Emperor Mihail II",
+  "fixtures": {
+    "Merrow": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Merfolk cast from the top of his library; he pays {1}: a 1/1 Merfolk",
+      "library": [
+        "Merrow"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Emperor Mihail II",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Merrow"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {1}"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Merfolk",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "He doesn't pay: no token",
+      "library": [
+        "Merrow"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Emperor Mihail II",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Merrow"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Emperor Mihail II",
+            "Island",
+            "Wastes",
+            "Merrow"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

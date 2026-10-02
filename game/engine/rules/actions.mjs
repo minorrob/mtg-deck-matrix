@@ -316,14 +316,31 @@ function castFromTopGains(state, player, id) {
 /* WHAT A PLAYER MAY PLAY FROM ANOTHER ZONE (CR 601.2a, 305.1), by their permanents' static abilities: lands from the
    graveyard, the top card of the library, a card that says it may be cast from its graveyard or exile. `lands` and
    `spells` are each true or a selector the card must match. One list, read by the land offer and the cast offer. */
+/* "Once during each of your turns" (Kess, Gisa and Geralf): a permission that says `yourTurn` is open only on its holder's
+   turns, and one with a `limit` only until this source has been used that many times this turn (recordUse, as a card is
+   played through it). */
+const playKey = (ability) => `play-from:${ability.id}`;
+const permissionOpen = (state, player, ability, source) => (!ability.yourTurn || state.activePlayer === player)
+  && (ability.limit === undefined || usesThisTurn(state, source, playKey(ability)) < ability.limit);
+const permits = (state, player, ability, id, kind) => {
+  const which = kind === "land" ? ability.lands : ability.spells;
+  return Boolean(which) && isLand(state.objects[id]) === (kind === "land")
+    && (which === true || (typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player})));
+};
+const permittedFrom = (state, player, ability) => (ability.zone === "graveyard" ? cardsIn(state, "graveyard", player)
+  : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : []);
+/* The permission a card is played through: one with no limit first, so a limited one is spent only when it must be. */
+function playPermission(state, player, id, kind) {
+  const open = playerStatics(state, "play-from", player)
+    .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind));
+  return open.find(({ability}) => ability.limit === undefined) ?? open[0] ?? null;
+}
+
 function playableElsewhere(state, player, kind) {
   const found = [];
-  const fits = (id, which) => which === true || (which && typeof which === "object" && matchesSelector({...which, what: "card", zone: state.objects[id].zone}, state, id, {controller: player}));
-  for (const {ability} of playerStatics(state, "play-from", player)) {
-    const which = kind === "land" ? ability.lands : ability.spells;
-    if (!which) continue;
-    const ids = ability.zone === "graveyard" ? cardsIn(state, "graveyard", player) : ability.zone === "library-top" ? cardsIn(state, "library", player).slice(0, 1) : [];
-    for (const id of ids) if (isLand(state.objects[id]) === (kind === "land") && fits(id, which) && !found.includes(id)) found.push(id);
+  for (const {ability, source} of playerStatics(state, "play-from", player)) {
+    if (!permissionOpen(state, player, ability, source)) continue;
+    for (const id of permittedFrom(state, player, ability)) if (permits(state, player, ability, id, kind) && !found.includes(id)) found.push(id);
   }
   if (kind === "spell") for (const zone of ["graveyard", "exile"]) {
     const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === player) : cardsIn(state, zone, player);
@@ -583,6 +600,9 @@ function perform(state, player, action) {
     /* The order matters to a reader: the land is announced as a land, then as the zone change it
        also is, which is what `match-telemetry.mjs` counts and what the audio rules listen for. */
     events.push(event("GameEventLandPlayed", state, {land: card, player: {playerId: player, name: state.players[player].name}}));
+    /* From another zone, by a permission with a limit: spent. */
+    const permission = state.objects[action.objectId].zone !== "hand" ? playPermission(state, player, action.objectId, "land") : null;
+    if (permission?.ability.limit !== undefined) recordUse(state, permission.source, playKey(permission.ability));
     /* CR 614.12: a land played enters the way any permanent does -- through the replacements that change how it
        enters, its own "This land enters tapped" first. Moving it straight there let a tapped land arrive untapped. */
     moveOne(state, action.objectId, "battlefield", events);
@@ -655,6 +675,10 @@ function perform(state, player, action) {
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
     /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
     if (free?.limited) recordUse(state, free.source, `free:${free.abilityId}`);
+    /* Cast from a graveyard or a library by a permanent's permission (play-from): its limit spent, and what it says of
+       the spell remembered for when it leaves the stack. Not a flashback cast, which is the card's own permission. */
+    const permission = !back && ["graveyard", "library"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell") : null;
+    if (permission?.ability.limit !== undefined) recordUse(state, permission.source, playKey(permission.ability));
     /* "If you cast a creature spell this way, it gains haste until end of turn" (Thundermane Dragon): remembered on the spell,
        given to the permanent it becomes (rules/stack.mjs). */
     const gains = object.zone === "library" ? castFromTopGains(state, player, action.objectId) : [];
@@ -673,6 +697,8 @@ function perform(state, player, action) {
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
+    /* "If a spell cast this way would be put into your graveyard, exile it instead" (Kess): to exile, if to a graveyard. */
+    if (permission?.ability.graveyardToExile) entry.graveyardToExile = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     for (const [kind, id] of extraPaid) {

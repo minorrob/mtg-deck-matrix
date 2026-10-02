@@ -444,7 +444,9 @@ export const unlessPays = {
     if (payer === undefined) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
       ...(params.life ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
-      effects: structuredClone(params.effects ?? []), source: context.source ?? null};
+      effects: structuredClone(params.effects ?? []), source: context.source ?? null,
+      /* "You may pay {1}. If you do, ...": the effects when it is paid, not when it is not. */
+      ...(params.ifPaid ? {ifPaid: true} : {})};
     return true;
   },
   choice(state, awaiting) {
@@ -456,7 +458,7 @@ export const unlessPays = {
   apply(state, awaiting, indices) {
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
-    if (!option.pay) return {events: [], splice: structuredClone(awaiting.effects)};
+    if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
     const events = [];
     if ((awaiting.amount ?? 0) > 0) {
       const paid = payGeneric(state, awaiting.player, awaiting.amount);
@@ -468,7 +470,7 @@ export const unlessPays = {
       if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
     }
     if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
-    return events;
+    return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
   },
 };
 

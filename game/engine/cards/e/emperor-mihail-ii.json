@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Emperor Mihail II",
+    "oracleId": "6c901ff4-15c3-468f-9a1b-4c69a7bbc31a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Noble"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "You may look at the top card of your library any time.\nYou may cast Merfolk spells from the top of your library.\nWhenever you cast a Merfolk spell, you may pay {1}. If you do, create a 1/1 blue Merfolk creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may cast Merfolk spells from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "spells": {
+        "subtypes": [
+          "Merfolk"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a Merfolk spell, you may pay {1}. If you do, create a 1/1 blue Merfolk creature token.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "subtypes": [
+            "Merfolk"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "createToken",
+              "token": {
+                "name": "Merfolk",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Merfolk"
+                ],
+                "colors": [
+                  "U"
+                ],
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

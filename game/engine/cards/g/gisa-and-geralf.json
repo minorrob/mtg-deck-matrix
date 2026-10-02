@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gisa and Geralf",
+    "oracleId": "20e94d0f-6887-45f8-a137-877011d786c6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When Gisa and Geralf enters, mill four cards.\nOnce during each of your turns, you may cast a Zombie creature spell from your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Gisa and Geralf enters, mill four cards.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast a Zombie creature spell from your graveyard.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "spells": {
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie"
+        ]
+      },
+      "yourTurn": true,
+      "limit": 1
+    }
+  ]
+}

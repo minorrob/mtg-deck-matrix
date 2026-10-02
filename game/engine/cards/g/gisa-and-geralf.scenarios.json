@@ -1,0 +1,152 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gisa and Geralf",
+  "fixtures": {
+    "Ghoul": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: he mills four",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gisa and Geralf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gisa and Geralf"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "name": "Once each of his turns, a Zombie creature from his graveyard -- not the Bear, and not a second Ghoul",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gisa and Geralf",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ghoul",
+            "Ghoul",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Ghoul"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gisa and Geralf",
+            "Wastes",
+            "Wastes",
+            "Ghoul"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Ghoul"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kess, Dissident Mage",
+    "oracleId": "f5092c14-eec4-472c-999c-ba96c36b2fbb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}{B}{R}",
+    "colors": [
+      "B",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nOnce during each of your turns, you may cast an instant or sorcery spell from your graveyard. If a spell cast this way would be put into your graveyard, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast an instant or sorcery spell from your graveyard. If a spell cast this way would be put into your graveyard, exile it instead.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "spells": {
+        "anyOf": [
+          {
+            "types": [
+              "Instant"
+            ]
+          },
+          {
+            "types": [
+              "Sorcery"
+            ]
+          }
+        ]
+      },
+      "yourTurn": true,
+      "limit": 1,
+      "graveyardToExile": true
+    }
+  ]
+}

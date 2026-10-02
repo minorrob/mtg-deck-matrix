@@ -63,7 +63,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
   /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too.
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
-  const destination = leaving >= 0 && state.stack[leaving].flashback ? "exile" : proposal.to;
+  /* Cast "this way" by Kess: to exile only instead of a graveyard. */
+  const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
 
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
@@ -274,7 +275,7 @@ export function counterSpell(state, params, context) {
     else if (entry.objectId !== null && state.objects[entry.objectId]) {
       /* Countered after a flashback cast, it is exiled instead (CR 702.34a). */
       /* "If that spell is countered this way, exile it instead" (Force of Negation, `to: "exile"`). */
-      moveOne(state, entry.objectId, entry.flashback || params.to === "exile" ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
+      moveOne(state, entry.objectId, entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
     }
     events.push(event("GameEventSpellResolved", state, {
       stackId: entry.stackId, abilityId: entry.abilityId, playerId: entry.playerId,
