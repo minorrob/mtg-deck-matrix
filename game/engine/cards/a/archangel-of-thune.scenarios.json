@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Archangel of Thune",
+  "fixtures": {
+    "Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob gains life: a +1/+1 counter on each creature he controls",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Thune",
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Archangel of Thune",
+            "power": 4,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

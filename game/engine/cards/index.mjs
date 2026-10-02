@@ -68,6 +68,8 @@ const TRIGGERS = {
     ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
   drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
+  /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
+  "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
      any; `filter` the card discarded. */
   discarded: (t) => ({on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you", ...(t.filter ? {filter: t.filter} : {})}),

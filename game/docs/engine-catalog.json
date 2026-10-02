@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 558,
-  "everyRule": 1712
+  "defined": 565,
+  "everyRule": 1721
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 5,
+    "built": 6,
     "partial": 4,
-    "named": 13,
+    "named": 12,
     "missing": 116
    },
    "entries": [
@@ -5638,12 +5638,12 @@
      "rule": null,
      "name": "LifeGained",
      "engine": "life gained",
-     "status": "named",
+     "status": "built",
      "forge": "LifeGained",
      "top": 18,
      "all": 94,
-     "blocks": 18,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -9497,7 +9497,7 @@
      "top": 11,
      "all": 38,
      "blocks": 11,
-     "alone": 0
+     "alone": 5
     },
     {
      "kind": "count",
