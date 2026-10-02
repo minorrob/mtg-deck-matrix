@@ -32,7 +32,8 @@ import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards} from "./permanents.mjs";
 import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {pushCopy} from "../../rules/stack.mjs";
+import {pushCopy, becameTarget} from "../../rules/stack.mjs";
+import {loseLife} from "./resources.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
@@ -411,25 +412,61 @@ export const populate = {
    player pays {1}". The player named is asked; paying is offered only to a player who can (pool and untapped mana
    sources together) and taps for them; not paying, the effects that follow `unless` happen, in order, with the same
    targets. Generic mana only; the amount may be counted ("{X}, where X is this creature's power"). ---- */
+/* Ward's other costs (CR 702.21a): `life`, which a player can pay only if their total is at least that much (CR 119.4);
+   `discard` a card, each in their hand its own option; `sacrifice` a permanent of theirs the selector describes, each its
+   own option. With mana, all of it is paid or none. */
+const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
+function costWords(awaiting) {
+  const paid = [awaiting.amount > 0 ? `{${awaiting.amount}}` : null, awaiting.life > 0 ? `${awaiting.life} life` : null].filter(Boolean);
+  const other = awaiting.discard ? "discard a card" : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}` : null;
+  return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
+}
+function payOptions(state, awaiting) {
+  const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
+  if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
+  if (life > state.players[player].life) return [];
+  const paid = [amount > 0 ? `{${amount}}` : null, life > 0 ? `${life} life` : null].filter(Boolean).join(" and ");
+  const also = paid ? ` and pay ${paid}` : "";
+  if (awaiting.sacrifice) {
+    const alternatives = Array.isArray(awaiting.sacrifice.anyOf) ? awaiting.sacrifice.anyOf : [awaiting.sacrifice];
+    const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
+    return state.zones.battlefield.filter((id) => matchers.some((m) => m(state, id, {controller: player})))
+      .map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+  }
+  if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  return [{label: `Pay ${paid || `{${amount}}`}`, pay: true}];
+}
 export const unlessPays = {
   open(state, params, context) {
     const [payer] = playersFor(state, params.who, context.controller);
     if (payer === undefined) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
+      ...(params.life ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null};
     return true;
   },
   choice(state, awaiting) {
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
-    const can = canPayGeneric(state, awaiting.player, awaiting.amount);
-    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}pay {${awaiting.amount}}?`, mode: "one", min: 1, max: 1,
-      options: [...(can ? [{index: 0, label: `Pay {${awaiting.amount}}`, pay: true}] : []), {index: can ? 1 : 0, label: "Don't pay", pay: false}]};
+    const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
+    return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
+      options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
-    if (option.pay) return payGeneric(state, awaiting.player, awaiting.amount);
-    return {events: [], splice: structuredClone(awaiting.effects)};
+    if (!option.pay) return {events: [], splice: structuredClone(awaiting.effects)};
+    const events = [];
+    if ((awaiting.amount ?? 0) > 0) {
+      const paid = payGeneric(state, awaiting.player, awaiting.amount);
+      events.push(...(Array.isArray(paid) ? paid : paid?.events ?? []));
+    }
+    /* Paying life is losing it (CR 119.4, 119.3). */
+    if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
+    if (option.discard !== undefined && state.objects[option.discard]) {
+      if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
+    }
+    if (option.sacrifice !== undefined && state.objects[option.sacrifice]) moveOne(state, option.sacrifice, "graveyard", events);
+    return events;
   },
 };
 
@@ -487,13 +524,16 @@ export const copySpell = {
     const option = copySpell.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     const [question, ...rest] = awaiting.questions;
+    const events = [];
     if (!option.keep) {
       const entry = state.stack.find((e) => e.stackId === question.stackId);
       if (entry) entry.targets[question.index] = {kind: option.target.kind, id: option.target.id};
+      /* The new target becomes the copy's target (ward, CR 702.21a). */
+      if (entry && option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
-    if (rest.length === 0) return {events: []};
+    if (rest.length === 0) return {events};
     awaiting.questions = rest;
-    return {events: [], again: true};
+    return {events, again: true};
   },
 };
 

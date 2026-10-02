@@ -45,7 +45,7 @@
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {pushAbility} from "./stack.mjs";
+import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
@@ -135,6 +135,14 @@ function subjects(state, event, condition, sourceId, controller) {
     const card = fields.becomes;
     if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
+  }
+  /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
+     and the stack entry, which "counter it" counters (script/bind.mjs, `stack: "that"`). */
+  if (condition.on === "GameEventBecomesTarget") {
+    if (condition.who === "self" && fields.targetId !== sourceId) return [];
+    const by = fields.by?.playerId;
+    if (condition.by === "opponent" && (by === undefined || by === controller)) return [];
+    return [{card: fields.targetId, player: by, stackId: fields.stackId}];
   }
   /* "Whenever you gain life" (CR 119.9): each gain its own event -- lifelink from two creatures at once is two -- about the
      player and how much. A loss, or no change, is not a gain. */
@@ -427,7 +435,8 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   entry.stage = "waiting";
   state.awaiting = null;
   askTriggerTargets(state);
-  return [];
+  /* What it is aimed at becomes its target (ward, CR 702.21a). */
+  return becameTarget(state, entry);
 }
 
 function putOnStack(state, triggers) {

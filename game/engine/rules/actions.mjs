@@ -53,7 +53,7 @@
  */
 
 import {cardsIn, moveObject, usesThisTurn, recordUse} from "../state/index.mjs";
-import {pushSpell, pushAbility} from "./stack.mjs";
+import {pushSpell, pushAbility, becameTarget} from "./stack.mjs";
 import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS} from "./mana.mjs";
@@ -624,6 +624,8 @@ function perform(state, player, action) {
       const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
     }
+    /* What it is aimed at becomes its target (ward, CR 702.21a). */
+    events.push(...becameTarget(state, entry));
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},
@@ -659,6 +661,7 @@ function perform(state, player, action) {
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
     }));
+    events.push(...becameTarget(state, entry));
     for (const atom of ability.cost ?? []) {
       if (atom.atom === "{T}") {
         object.tapped = true;

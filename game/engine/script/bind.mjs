@@ -166,6 +166,8 @@ export function bindEffect(effect, context) {
   }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
+  /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
+  if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
   if ("who" in bound) bound.who = playersOf(bound.who, context);

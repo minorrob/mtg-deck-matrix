@@ -37,10 +37,10 @@
 
 import {selectMatching, compileSelector} from "./filter.mjs";
 import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
-import {parseManaCost} from "../rules/mana.mjs";
+import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -128,6 +128,11 @@ export function amountOf(state, value, context = {}) {
   else if ("thoseCards" in value) n = (context.about?.cards ?? []).length;
   /* "That many", after damage: how much the trigger's damage was (rules/trigger.mjs). */
   else if ("damageDealt" in value) n = context.about?.amount ?? 0;
+  /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
+  else if ("manaValueOf" in value) {
+    const id = objectOf(value.manaValueOf, context);
+    n = id !== null && state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0;
+  }
   /* "For each other instant and sorcery spell you've cast before it this turn": counted as the trigger triggered. */
   else if ("castBefore" in value) n = context.about?.castBefore ?? 0;
   /* "For each of that spell's colors" (Ramos, CR 105.2): how many colors it has, through the layers on the battlefield. */
