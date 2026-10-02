@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Swarmyard",
+    "oracleId": "4b508087-99da-4eb1-8b12-29162f2ec85d",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Regenerate target Insect, Rat, Spider, or Squirrel. (The next time it would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Regenerate target Insect, Rat, Spider, or Squirrel.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Insect"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Rat"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Spider"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Squirrel"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

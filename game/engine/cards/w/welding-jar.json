@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Welding Jar",
+    "oracleId": "e4a6c421-bef1-4360-a2dc-ae9c61d86b2f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{0}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice this artifact: Regenerate target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Sacrifice this artifact: Regenerate target artifact.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

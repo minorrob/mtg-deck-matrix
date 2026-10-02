@@ -30,7 +30,7 @@ import {
   putCounter, putCounterAll, removeCounter, proliferate, damageAll,
 } from "./resources.mjs";
 import {
-  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent,
+  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate,
 } from "./permanents.mjs";
 
 /**
@@ -85,8 +85,8 @@ export const EFFECTS = Object.freeze({
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
   /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
   attach, copyPermanent,
-  /* Batch 24: damage to each creature and each opponent. */
-  damageAll,
+  /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. */
+  damageAll, regenerate,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

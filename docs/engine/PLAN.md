@@ -642,7 +642,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   `replaceCounters`, `amass`.
 - Permanents: `createToken`, `copyPermanent`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`.
-- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`.
+- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `genericChoice`, `twoPiles`, `connive`,
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive).

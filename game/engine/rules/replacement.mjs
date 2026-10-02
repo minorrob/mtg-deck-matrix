@@ -132,6 +132,32 @@ function preventedForAWhile(state, proposal) {
   });
 }
 
+/**
+ * A REGENERATION SHIELD, USED (CR 701.19a): destruction replaced -- "instead remove all damage marked on it and tap it. If
+ * it's an attacking or blocking creature, remove it from combat." One shield, one destruction; the shield made this turn
+ * is gone at its end (turn.mjs cleanup, `until: "end-of-turn"`). Called where a permanent would be DESTROYED -- the
+ * destroy effects, and the state-based actions for lethal damage and deathtouch -- and never for toughness zero or less
+ * (704.5f) or a sacrifice, which are not destruction. Returns whether it was regenerated.
+ */
+export function regenerated(state, id, events = []) {
+  const at = (state.effects ?? []).findIndex((e) => e.rule === "regeneration" && (e.affects?.ids ?? []).includes(id));
+  const object = state.objects[id];
+  if (at < 0 || !object) return false;
+  state.effects.splice(at, 1);
+  object.damage = 0;
+  object.deathtouched = false;
+  if (!object.tapped) {
+    object.tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: id, name: object.card, owner: object.owner, controller: object.controller}, tapped: true}}});
+  }
+  if (state.combat?.attacks) {
+    state.combat.attacks = state.combat.attacks.filter((attack) => attack.attacker !== id);
+    for (const attack of state.combat.attacks) if (attack.blockers) attack.blockers = attack.blockers.filter((b) => b !== id);
+  }
+  events.push({kind: "GameEventCardRegenerated", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: id, name: object.card, owner: object.owner, controller: object.controller}}}});
+  return true;
+}
+
 /** Who chooses the order (CR 616.1): the affected object's controller, or the affected player. */
 function affectedPlayer(state, proposal) {
   if (proposal.event === "enters") return proposal.player ?? null;

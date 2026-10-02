@@ -278,6 +278,19 @@ export function effectUntil(state, params, context) {
 }
 
 /**
+ * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
+ * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
+ */
+export function regenerate(state, params, context) {
+  const ids = params.selector ? selectMatching(state, params.selector, context) : params.targets ?? [];
+  for (const id of ids) {
+    if (!state.objects[id] || state.objects[id].zone !== "battlefield") continue;
+    (state.effects ??= []).push({id: `regeneration:${id}:${(state.effects ?? []).length}`, rule: "regeneration", affects: {ids: [id]}, until: "end-of-turn", sourceController: context.controller});
+  }
+  return [];
+}
+
+/**
  * `delayedTrigger` — CR 603.7, something that will happen later.
  *
  * Created by a resolving effect and fired when its moment arrives. Held on the state so a
