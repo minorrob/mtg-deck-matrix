@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brawn",
+    "oracleId": "00876e98-d062-4a12-85e6-86a2b20cf867",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Incarnation"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Trample\nAs long as this card is in your graveyard and you control a Forest, creatures you control have trample.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "As long as this card is in your graveyard and you control a Forest, creatures you control have trample.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Forest"
+          ],
+          "controller": "you"
+        }
+      },
+      "worksFrom": "graveyard"
+    }
+  ]
+}

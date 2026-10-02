@@ -101,7 +101,7 @@ export const FORGE_OPTIONS = Object.freeze({
   Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "missing"},
   CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},
-  IsPresentStatic: {name: "As long as a permanent is present (a static ability's condition)", status: "missing"},
+  IsPresentStatic: {name: "As long as a permanent is present (a static ability's condition)", status: "built", engine: "a static's condition {present, atLeast | atMost}; worksFrom: graveyard"},
   PresentZone: {name: "Present in a zone other than the battlefield (\"as long as this card is in your graveyard\")", status: "missing"},
   AtEOT: {name: "Sacrifice or exile it at the beginning of the next end step", status: "built", engine: "a delayed trigger (CR 603.7)"},
   PumpKeywords: {name: "It gains a keyword until end of turn (a token made this way)", status: "built", engine: "gainsUntilEndOfTurn"},

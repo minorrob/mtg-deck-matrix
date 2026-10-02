@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 619 defined and playable today; 1,804 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 627 defined and playable today; 1,816 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -25,7 +25,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Static abilities | 77 | 2 | 2 | 0 | 73 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 37 | 10 | 4 | 0 | 23 |
+| Options and conditions | 37 | 11 | 4 | 0 | 22 |
 | Amounts the game counts | 188 | 8 | 1 | 0 | 179 |
 | Choices | 15 | 10 | 0 | 2 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | As long as a permanent is present (a static ability's condition) | — | missing | 12 | 35 |
+| static | AlternativeCost | — | missing | 13 | 24 |
 | effect | GainControl | gainControl | named | 10 | 22 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
@@ -132,7 +132,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 1 |
 | 702.129 | Eternalize | — | missing | 2 | 12 | 2 | 2 |
-| 702.121 | Melee | — | missing | 2 | 12 | 2 | 0 |
+| 702.121 | Melee | — | missing | 2 | 12 | 2 | 1 |
 | 702.107 | Outlast | — | missing | 2 | 12 | 2 | 2 |
 | 702.130 | Afflict | — | missing | 2 | 10 | 2 | 0 |
 | 702.139 | Companion | — | missing | 2 | 10 | 2 | 1 |
@@ -393,7 +393,7 @@ The things that alone hold back the most of the most-played cards.
 | Poison | — | missing | 11 | 36 | 11 | 6 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
-| ChangeTargets | — | missing | 10 | 43 | 10 | 3 |
+| ChangeTargets | — | missing | 10 | 43 | 10 | 4 |
 | Earthbend | — | missing | 10 | 36 | 10 | 4 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
@@ -673,11 +673,11 @@ The things that alone hold back the most of the most-played cards.
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
 | CantBlockBy | — | missing | 26 | 353 | 13 | 3 |
-| AlternativeCost | — | missing | 24 | 148 | 24 | 6 |
+| AlternativeCost | — | missing | 24 | 148 | 24 | 13 |
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
 | CastWithFlash | — | missing | 12 | 56 | 12 | 9 |
-| CantAttack | — | missing | 10 | 204 | 10 | 4 |
+| CantAttack | — | missing | 10 | 204 | 10 | 5 |
 | RaiseCost | — | missing | 10 | 91 | 10 | 8 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
 | CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
@@ -685,7 +685,7 @@ The things that alone hold back the most of the most-played cards.
 | CantBeActivated | — | missing | 5 | 34 | 5 | 2 |
 | MustAttack | — | missing | 4 | 100 | 4 | 0 |
 | CantGainLife | — | missing | 4 | 20 | 4 | 3 |
-| AttackRestrict | — | missing | 4 | 8 | 4 | 1 |
+| AttackRestrict | — | missing | 4 | 8 | 4 | 2 |
 | CombatDamageToughness | rules/statics | built | 3 | 20 | 0 | 0 |
 | ManaConvert | — | missing | 3 | 14 | 3 | 2 |
 | IgnoreLegendRule | — | missing | 3 | 11 | 3 | 1 |
@@ -696,7 +696,7 @@ The things that alone hold back the most of the most-played cards.
 | CantSacrifice | — | missing | 2 | 10 | 2 | 0 |
 | ActivateAbilityAsIfHaste | — | missing | 2 | 4 | 2 | 1 |
 | OptionalCost | — | missing | 1 | 40 | 1 | 1 |
-| OptionalAttackCost | — | missing | 1 | 28 | 1 | 0 |
+| OptionalAttackCost | — | missing | 1 | 28 | 1 | 1 |
 | AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
 | CantBlockUnless | — | missing | 1 | 9 | 1 | 0 |
 | DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
@@ -841,7 +841,7 @@ The things that alone hold back the most of the most-played cards.
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
-| As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 12 |
+| As long as a permanent is present (a static ability's condition) | a static's condition {present, atLeast / atMost}; worksFrom: graveyard | built | 36 | 458 | 0 | 0 |
 | A comparison of permanents present for a condition | condition {present, atLeast / atMost} | built | 35 | 385 | 0 | 0 |
 | Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 6 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 1 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 3 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 4 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 3 |
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
@@ -873,7 +873,7 @@ The things that alone hold back the most of the most-played cards.
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | CounterNum | — | missing | 16 | 32 | 16 | 0 |
-| — | Cards in a library | — | missing | 13 | 63 | 13 | 3 |
+| — | Cards in a library | — | missing | 13 | 63 | 13 | 4 |
 | — | Spells cast this turn | — | missing | 12 | 139 | 12 | 3 |
 | — | Life you gained this turn | — | missing | 12 | 84 | 12 | 1 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 11 | 4 |
@@ -902,7 +902,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Morbid (a creature died this turn) | — | missing | 2 | 41 | 2 | 1 |
 | — | A number an effect remembered | — | missing | 2 | 38 | 2 | 1 |
 | — | Cards you drew this turn | — | missing | 2 | 30 | 2 | 1 |
-| — | This card's mana value | — | missing | 2 | 12 | 2 | 1 |
+| — | This card's mana value | — | missing | 2 | 12 | 2 | 2 |
 | — | MostCardName | — | missing | 2 | 4 | 2 | 0 |
 | — | ValidStack | — | missing | 2 | 4 | 2 | 0 |
 | — | wasCastFromExile | — | missing | 2 | 4 | 2 | 0 |

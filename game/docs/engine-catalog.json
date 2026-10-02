@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 619,
-  "everyRule": 1804
+  "defined": 627,
+  "everyRule": 1816
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -943,7 +943,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3977,7 +3977,7 @@
      "top": 10,
      "all": 43,
      "blocks": 10,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -7237,7 +7237,7 @@
      "top": 24,
      "all": 148,
      "blocks": 24,
-     "alone": 6
+     "alone": 13
     },
     {
      "kind": "static",
@@ -7285,7 +7285,7 @@
      "top": 10,
      "all": 204,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",
@@ -7381,7 +7381,7 @@
      "top": 4,
      "all": 8,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7513,7 +7513,7 @@
      "top": 1,
      "all": 28,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 10,
+    "built": 11,
     "partial": 4,
     "named": 0,
-    "missing": 23
+    "missing": 22
    },
    "entries": [
     {
@@ -9097,13 +9097,13 @@
      "kind": "option",
      "rule": null,
      "name": "As long as a permanent is present (a static ability's condition)",
-     "engine": null,
-     "status": "missing",
+     "engine": "a static's condition {present, atLeast | atMost}; worksFrom: graveyard",
+     "status": "built",
      "forge": "IsPresentStatic",
      "top": 36,
      "all": 458,
-     "blocks": 35,
-     "alone": 12
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9235,7 +9235,7 @@
      "top": 9,
      "all": 160,
      "blocks": 9,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9437,7 +9437,7 @@
      "top": 13,
      "all": 63,
      "blocks": 13,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "count",
@@ -9785,7 +9785,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
