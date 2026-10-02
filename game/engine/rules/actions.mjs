@@ -474,7 +474,8 @@ export function legalActions(state, player) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
     for (const ability of object.abilities ?? []) {
-      if (ability.kind !== "activated") continue;
+      /* An ability of the card in its owner's hand (cycling, ninjutsu) is not the permanent's (CR 602.2, 702.29a). */
+      if (ability.kind !== "activated" || ability.zone === "hand") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
@@ -504,8 +505,11 @@ export function legalActions(state, player) {
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       const payment = costPayment(state, player, id, ability.cost, 0, abilityLess(state, player, id, ability));
       if (!payment) continue;
-      actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment},
-        ability, {controller: player, source: id}));
+      /* "Return an unblocked attacking creature you control to its owner's hand" (ninjutsu): one offer per creature it may be. */
+      const back = returnAtom(ability.cost);
+      for (const costChoice of back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r})) : [null])
+        actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment,
+          ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.returnToHand].card]} : {})}, ability, {controller: player, source: id}));
     }
   }
 
@@ -770,8 +774,12 @@ function perform(state, player, action) {
     const card = cardRef(state, action.objectId);
     const targets = structuredClone(action.targets ?? []);
     const targetDescription = targets.map((t) => targetName(state, t)).join(", ");
+    /* Whom an attacker the cost returns was attacking: "tapped and attacking" (ninjutsu) attacks the same player. */
+    const returning = action.costChoice?.returnToHand;
+    const attacked = returning !== undefined ? (state.combat?.attacks ?? []).find((attack) => attack.attacker === returning)?.defender : undefined;
     /* CR 602.2a, then 602.2b and 601.2h: on the stack first, then the costs. */
     const entry = pushAbility(state, {sourceId: action.objectId, controller: player, abilityId: ability.id, kind: "ability", targets, script: ability,
+      ...(attacked !== undefined ? {about: {player: attacked}} : {}),
       ...(action.x !== undefined ? {x: action.x} : {}), ...(sacrificesSelf && object.zone === "battlefield" ? {lastKnown: lastKnown(state, action.objectId)} : {})});
     events.push(event("GameEventSpellAbilityCast", state, {
       card,

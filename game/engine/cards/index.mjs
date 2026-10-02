@@ -251,6 +251,18 @@ export function compileScript(script) {
       keywords.push("Ward");
       return;
     }
+    /* NINJUTSU (CR 702.49a): "{cost}, Return an unblocked attacking creature you control to its owner's hand: Put this card
+       onto the battlefield from your hand tapped and attacking" -- an ability of the card in its owner's hand, attacking
+       whom the returned creature attacked (rules/actions.mjs remembers it as the ability goes on the stack). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "ninjutsu") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: a ninjutsu cost of mana`);
+      abilities.push({id, kind: "activated", zone: "hand", text: ability.text,
+        cost: [...structuredClone(cost), {atom: "returnToHand", selector: {what: "permanent", types: ["Creature"], controller: "you", attacking: true, unblocked: true}}],
+        effects: [{effect: "moveZone", targets: "self", to: "battlefield", tapped: true, attacking: "that player"}]});
+      keywords.push("Ninjutsu");
+      return;
+    }
     /* STORM (CR 702.40a): kept on the card as a static ability, read as the spell is cast (rules/actions.mjs). Only on an
        instant or sorcery here -- an Aura's storm copies become tokens, and that card has more the engine lacks. */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "storm") {
