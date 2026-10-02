@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Doom Whisperer",
+    "oracleId": "4a01db2e-cd43-4b1a-a480-169018f82501",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightmare",
+      "Demon"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying, trample\nPay 2 life: Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "activated",
+      "text": "Pay 2 life: Surveil 2.",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

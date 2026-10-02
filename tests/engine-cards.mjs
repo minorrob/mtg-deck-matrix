@@ -105,7 +105,7 @@ const files = loadCardScenarios();
     const {definition, problems} = compileScript(script);
     ok(definition === null && problems.some((p) => re.test(p)), `${message} (${problems.join("; ")})`);
   };
-  problem(base([{kind: "spell", text: "Surveil 2.", effects: [{effect: "surveil", count: 2}]}]), /surveil: declared, not built/, "a primitive declared and not built");
+  problem(base([{kind: "spell", text: "Separate all creatures into two piles.", effects: [{effect: "twoPiles"}]}]), /twoPiles: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
   problem(base([{kind: "activated", text: "Discard a card: Draw a card.", cost: [{atom: "discard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
     /discard: a cost atom nothing pays/, "a cost atom nothing pays yet");
@@ -139,8 +139,8 @@ const files = loadCardScenarios();
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
-  const mixed = createCardIndex([base([{kind: "spell", text: "Surveil 2.", effects: [{effect: "surveil", count: 2}]}])]);
-  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["surveil: declared, not built"]],
+  const mixed = createCardIndex([base([{kind: "spell", text: "Separate all creatures into two piles.", effects: [{effect: "twoPiles"}]}])]);
+  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["twoPiles: declared, not built"]],
     "a card the engine cannot play resolves, says so and why, and has no definition to seat");
   throws(() => createCardIndex([scripts[0], scripts[0]]), /Two definitions of/, "two definitions of one card are refused, by name and file");
   throws(() => createCardIndex([{schema: SCRIPT_SCHEMA, identity: {}, abilities: []}]), /has no name/, "and a nameless one");
