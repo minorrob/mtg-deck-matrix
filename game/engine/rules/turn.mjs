@@ -192,6 +192,8 @@ function cleanup(state, events) {
     if (state.objects[id].damage !== 0) state.objects[id].damage = 0;
   }
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
+  /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
+  if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);
   const player = state.players[state.activePlayer];
   /* CR 800.4: a turn whose active player has left the game runs to its end without them, so nobody discards. */
   /* CR 402.2: seven, unless a static ability says the player has no maximum hand size. */

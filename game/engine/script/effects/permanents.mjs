@@ -19,6 +19,7 @@
 
 import {addObject} from "../../state/index.mjs";
 import {selectMatching} from "../filter.mjs";
+import {bindEffect, rememberNow} from "../bind.mjs";
 import {event, cardRef} from "./zones.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
@@ -123,7 +124,7 @@ export function makeCopies(state, ids, params, context, events) {
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
       events.push(event("GameEventCardChangeZone", state, {
-        card: cardRef(state, copy), enteredAs: copy,
+        card: cardRef(state, copy), enteredAs: copy, becomes: copy,
         from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
       }));
     }
@@ -166,6 +167,8 @@ export function createToken(state, params, context) {
     if (spec.tapped) state.objects[id].tapped = true;
     events.push(event("GameEventCardChangeZone", state, {
       card: cardRef(state, id),
+      /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
+      becomes: id,
       from: {zoneType: null, player: {playerId: controller}},
       to: {zoneType: "Battlefield", player: {playerId: controller}},
       createdAsToken: true,
@@ -234,6 +237,9 @@ export function pumpAll(state, params, context) {
   /* CR 611.2c: the set of objects a resolving spell's continuous effect changes is fixed as it begins. "Permanents you
      control gain indestructible until end of turn" protects the ones there now, not one that enters later. */
   const ids = selectMatching(state, params.selector ?? {what: "permanent"}, context);
+  /* "Prevent all damage that would be dealt to those permanents this turn" (Mutational Advantage): the same set, for the
+     effects after this one to name as "remembered" (script/bind.mjs). */
+  if (params.remember) context.remembered = ids.slice();
   pushEffect(state, {
     id: `pumpAll:${context.source ?? "effect"}`,
     layer: 7, sublayer: "c", affects: {ids},
@@ -273,14 +279,25 @@ export function effectUntil(state, params, context) {
  * Created by a resolving effect and fired when its moment arrives. Held on the state so a
  * checkpoint carries it: a delayed trigger lost in a save is a promise the game made and did not
  * keep, with nothing to show it ever existed.
+ *
+ * WHEN: `at` "end step" (the next end step's beginning) or "upkeep" (the next turn's upkeep), or `on`, an event, in
+ * the words a triggered ability uses (cards/index.mjs compiles a script's `when`) -- "when that creature dies this
+ * turn" with `watch` the object it waits on, "whenever a creature dies this turn" with none. One that waits for an
+ * event triggers once unless it has a duration (`thisTurn`, CR 603.7b), and never on what happened before it was
+ * made (CR 603.7a): it is `fresh` until the action that made it has been read for triggers (rules/trigger.mjs).
+ * WHAT: its effects, with every reference remembered now (script/bind.mjs, rememberNow; CR 603.7c).
  */
 export function delayedTrigger(state, params, context) {
   if (!state.delayedTriggers) state.delayedTriggers = [];
+  const waits = Boolean(params.on);
+  /* "That creature": the object, now; gone already, and the trigger waits on nothing (CR 603.7a's example). */
+  const watch = waits && params.watch !== undefined ? ((bindEffect({targets: params.watch}, context).targets ?? [])[0] ?? null) : undefined;
   state.delayedTriggers.push({
-    at: params.at ?? "end step",
+    ...(waits ? {on: structuredClone(params.on), ...(watch !== undefined ? {watch} : {}), ...(params.thisTurn ? {thisTurn: true} : {}), fresh: true}
+      : {at: params.at ?? "end step"}),
     controller: context.controller,
     source: context.source ?? null,
-    effects: structuredClone(params.effects ?? []),
+    effects: rememberNow(params.effects ?? [], context, {keepThat: waits}),
     text: params.text ?? null,
   });
   return [];

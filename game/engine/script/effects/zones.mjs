@@ -19,7 +19,7 @@
 
 import {afterwards, delayedTrigger} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
@@ -31,6 +31,7 @@ const ZONE_LABEL = {
 };
 /* Which zones belong to a player, so a move knows whose to put it in. */
 const PER_PLAYER = ["library", "hand", "graveyard", "command"];
+
 
 export const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
 
@@ -81,6 +82,8 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
     ...(leftBehind ? {leftBehind} : {}),
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
+    /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
+    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
   }));
@@ -99,9 +102,10 @@ export const playersFor = (state, who, controller) => {
 /** `moveZone` — put the named objects somewhere. */
 export function moveZone(state, params, context) {
   const events = [];
-  const arrived = [];
+  const arrived = [], became = [];
   for (const id of params.targets ?? []) {
     const moved = moveOne(state, id, params.to ?? "graveyard", events);
+    if (moved !== null) became.push(moved);
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
       state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
@@ -116,6 +120,9 @@ export function moveZone(state, params, context) {
       else events.push(...moveZone(state, back, context));
     }
   }
+  /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
+     objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
+  if (params.remember) context.remembered = became.filter((id) => state.objects[id]);
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature")) state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + 1;
   afterwards(state, arrived, params, context);

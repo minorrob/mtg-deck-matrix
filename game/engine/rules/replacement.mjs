@@ -75,6 +75,8 @@ function applies(state, ability, holder, proposal) {
   if (proposal.event === "zone-change") {
     if (watches.from && watches.from !== proposal.from) return false;
     if (watches.to && watches.to !== proposal.to) return false;
+    /* "If a creature an opponent controls would die" (Liesa): what is moving, as it is now, "you" the holder's controller. */
+    if (watches.filter && !(holder && compileSelector(watches.filter)(state, proposal.objectId, {controller: holder.controller, source: holder.id}))) return false;
     return true;
   }
 
@@ -113,6 +115,20 @@ function applicable(state, proposal) {
     }
   }
   return found;
+}
+
+/* Whether a "prevent all damage ... this turn" effect stops this damage: `affects.ids` the objects it is about (fixed as it
+   began, as the card says "that creature" or "those permanents"), `apply.to` damage dealt to them (the default),
+   `apply.by` damage they deal, `apply.combat` combat damage only. A new object is not one of them (CR 400.7). */
+function preventedForAWhile(state, proposal) {
+  return (state.effects ?? []).some((effect) => {
+    if (effect.rule !== "prevent-damage") return false;
+    const ids = effect.affects?.ids ?? [];
+    const how = effect.apply ?? {};
+    if (how.combat === true && proposal.combat !== true) return false;
+    return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && ids.includes(proposal.toCard))
+      || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && ids.includes(proposal.sourceId));
+  });
 }
 
 /** Who chooses the order (CR 616.1): the affected object's controller, or the affected player. */
@@ -170,6 +186,13 @@ function applyOne(state, {holderId, ability}, proposal) {
  */
 export function applyReplacements(state, proposal) {
   let current = {...proposal, applied: proposal.applied ?? []};
+
+  /* PREVENTION FOR A WHILE (CR 615): "prevent all combat damage that would be dealt to and dealt by that creature this
+     turn" (Maze of Ith), "prevent all damage that would be dealt to those permanents this turn" (Mutational Advantage)
+     -- an effect with a duration (`rule: "prevent-damage"`, effects/permanents.mjs's effectUntil). It prevents all of
+     the damage, so nothing is left for another effect to apply to, and there is no order to ask (CR 616.1). */
+  if (proposal.event === "damage" && preventedForAWhile(state, current))
+    return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* Each round finds what still applies to the event AS IT NOW IS, which is what makes an effect
      that rewrites the destination able to bring a different effect into play. Bounded by CR 614.5:

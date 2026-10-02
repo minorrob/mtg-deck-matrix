@@ -48,7 +48,7 @@ import {cardsIn} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf} from "./statics.mjs";
+import {combatDamageOf, ruleChanged} from "./statics.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -71,14 +71,14 @@ const hasNow = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 /* CR 302.6, summoning sickness, and haste lifting it (CR 702.10b), are keywords/timing.mjs's: the same rule
    decides a creature's {T} abilities, on anyone's turn. */
 
-/** CR 508.1a: untapped, not sick, no defender, and yours. */
+/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b), and yours. */
 export function canAttack(state, id, player) {
   const object = state.objects[id];
   return isCreatureNow(state, id)
     && controllerOf(state, id) === player
     && !object.tapped
     && !summoningSick(state, id)
-    && !hasNow(state, id, "Defender");
+    && (!hasNow(state, id, "Defender") || ruleChanged(state, "attacks-despite-defender", id));
 }
 
 /** CR 509.1a: untapped, yours, and you are the one being attacked. */
