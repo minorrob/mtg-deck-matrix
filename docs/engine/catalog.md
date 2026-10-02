@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 627 defined and playable today; 1,816 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 637 defined and playable today; 1,829 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,7 +22,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 40 | 1 | 25 | 126 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
-| Static abilities | 77 | 2 | 2 | 0 | 73 |
+| Static abilities | 77 | 3 | 2 | 0 | 72 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 11 | 4 | 0 | 22 |
@@ -36,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| static | AlternativeCost | — | missing | 13 | 24 |
+| option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 10 | 41 |
 | effect | GainControl | gainControl | named | 10 | 22 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
+| effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | static | CastWithFlash | — | missing | 9 | 12 |
 | option | Remembering what an effect moved | — | missing | 8 | 117 |
-| option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
-| effect | SacrificeAll | sacrificeAll | named | 8 | 19 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
 | option | You may play or cast a card from another zone | — | missing | 7 | 84 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 | keyword ability | Crew | — | named | 7 | 15 |
+| keyword ability | Ninjutsu | — | missing | 7 | 14 |
 
 ## Keyword abilities (CR 702)
 
@@ -374,7 +374,7 @@ The things that alone hold back the most of the most-played cards.
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 6 |
 | SetState | setState | named | 19 | 280 | 19 | 5 |
-| SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 8 |
+| SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 9 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
 | DigUntil | — | missing | 18 | 167 | 18 | 6 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
@@ -393,7 +393,7 @@ The things that alone hold back the most of the most-played cards.
 | Poison | — | missing | 11 | 36 | 11 | 6 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 3 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 2 |
-| ChangeTargets | — | missing | 10 | 43 | 10 | 4 |
+| ChangeTargets | — | missing | 10 | 43 | 10 | 6 |
 | Earthbend | — | missing | 10 | 36 | 10 | 4 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
@@ -673,7 +673,7 @@ The things that alone hold back the most of the most-played cards.
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
 | CantBlockBy | — | missing | 26 | 353 | 13 | 3 |
-| AlternativeCost | — | missing | 24 | 148 | 24 | 13 |
+| AlternativeCost | rules/actions | built | 24 | 148 | 0 | 0 |
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
 | CastWithFlash | — | missing | 12 | 56 | 12 | 9 |
@@ -840,7 +840,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
-| An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
+| An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 10 |
 | As long as a permanent is present (a static ability's condition) | a static's condition {present, atLeast / atMost}; worksFrom: graveyard | built | 36 | 458 | 0 | 0 |
 | A comparison of permanents present for a condition | condition {present, atLeast / atMost} | built | 35 | 385 | 0 | 0 |
 | Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 6 |

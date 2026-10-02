@@ -57,6 +57,10 @@ export const STATIC_RULES = Object.freeze({
       triggers an additional time" (Panharmonicon, CR 603.2d): `affects` whose abilities, `cause` {event: enters, dies or
       attacks, filter} what caused it, if the card says. rules/trigger.mjs, as triggers are collected. */
   "triggers-again": "rules/trigger.mjs",
+  /** CR 118.9, the card's own: "you may pay 1 life and exile a blue card from your hand rather than pay this spell's mana
+      cost" -- `condition` ("if you control a commander"), `cost` atoms (mana or none, payLife, exileFromHand, sacrifice).
+      rules/actions.mjs offers it beside the paid cast. */
+  "alternative-cost": "rules/actions.mjs",
   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
       Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
   "attacks-despite-defender": "rules/combat.mjs",

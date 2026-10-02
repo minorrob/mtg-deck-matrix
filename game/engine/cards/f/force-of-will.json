@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Force of Will",
+    "oracleId": "956381ba-6d37-4a8a-846c-bad79222dbee",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may pay 1 life and exile a blue card from your hand rather than pay this spell's mana cost.\nCounter target spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may pay 1 life and exile a blue card from your hand rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 1
+        },
+        {
+          "atom": "exileFromHand",
+          "selector": {
+            "colors": [
+              "U"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target spell.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}
