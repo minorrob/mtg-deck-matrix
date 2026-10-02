@@ -40,6 +40,7 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
+import {chosenFor} from "../script/chosen.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -162,7 +163,8 @@ function allEffects(state) {
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
       found.push({
-        ...ability,
+        /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
+        ...chosenFor(ability, holder),
         sourceId: id,
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
@@ -335,6 +337,8 @@ export function lastKnown(state, id) {
     /* What "another Vampire you control dies" and "equipped creature dies" ask of a thing that is gone. */
     subtypes: [...(object.subtypes ?? [])],
     supertypes: [...(object.supertypes ?? [])],
+    /* What it chose as it entered, for its abilities read as it last was. */
+    ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
     attachments: [...(object.attachments ?? [])],
     colors: [...current.colors],
     keywords: [...current.keywords],

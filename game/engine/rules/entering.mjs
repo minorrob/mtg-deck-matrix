@@ -16,6 +16,7 @@
 import {runEffect} from "../script/effects/index.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector} from "../script/filter.mjs";
+import {creatureTypesInGame} from "../script/effects/asking.mjs";
 
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
@@ -37,7 +38,11 @@ export function askEntering(state) {
     if (!object || object.zone !== "battlefield") { queue.shift(); continue; }
     /* A reveal with nothing to reveal is no choice: it stays tapped, and nobody is asked. */
     if (q.reveal && revealable(state, object.controller, q.reveal).length === 0) { queue.shift(); continue; }
-    state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, life: q.life ?? 0, ...(q.reveal ? {reveal: q.reveal} : {})};
+    /* "Choose a creature type": of the creature types among the game's cards (effects/asking.mjs); "choose artifact,
+       creature, ...": the options named. None to choose among, and nothing is asked. */
+    const choices = q.choose === "creature type" ? creatureTypesInGame(state) : Array.isArray(q.choose) ? q.choose : null;
+    if (q.choose !== undefined && !(choices ?? []).length) { queue.shift(); continue; }
+    state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, life: q.life ?? 0, ...(q.reveal ? {reveal: q.reveal} : {}), ...(choices ? {choose: choices} : {})};
     return true;
   }
   return false;
@@ -46,6 +51,8 @@ export function askEntering(state) {
 /** The choice (§12.1): pay, if the player can, or let it enter tapped. */
 export function enteringChoice(state, awaiting) {
   const name = state.objects[awaiting.objectId]?.card ?? "It";
+  if (awaiting.choose) return {id: `entering-choose:${awaiting.objectId}`, title: `${name}: choose`, mode: "one", min: 1, max: 1,
+    options: awaiting.choose.map((label, index) => ({index, label, cardId: awaiting.objectId, chosen: label}))};
   /* A reveal: one option per card that could be shown, and not revealing (the player's own hand: nobody else is asked). */
   if (awaiting.reveal) {
     const cards = revealable(state, awaiting.player, awaiting.reveal);
@@ -79,6 +86,8 @@ export function resolveEnteringChoice(state, awaiting, indices) {
     events.push({kind: "GameEventCardRevealed", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: option.reveal, name: state.objects[option.reveal].card, owner: awaiting.player}, player: {playerId: awaiting.player}}}});
     state.objects[awaiting.objectId].tapped = false;
   }
+  /* What was chosen as it entered, kept on the permanent for its abilities to read ("$chosen", script/chosen.mjs). */
+  if (option.chosen !== undefined && state.objects[awaiting.objectId]) state.objects[awaiting.objectId].chosen = option.chosen;
   if (option.pay) {
     /* Paying life is losing it (CR 119.4, 119.3). */
     events.push(...runEffect(state, {effect: "loseLife", amount: awaiting.life}, {controller: awaiting.player, source: awaiting.objectId}));

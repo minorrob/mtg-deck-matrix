@@ -21,6 +21,7 @@ import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {usesThisTurn} from "../state/index.mjs";
+import {chosenFor} from "../script/chosen.mjs";
 import {parseManaCost, manaValue} from "./mana.mjs";
 
 /** Every rule a static ability may change, with the module that reads it. */
@@ -184,7 +185,7 @@ export function playerStatics(state, rule, player) {
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     if (holder.controller !== player) continue;
-    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === rule) found.push({ability, source: holderId});
+    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === rule) found.push({ability: chosenFor(ability, holder), source: holderId});
   }
   return found;
 }
@@ -201,8 +202,10 @@ export function costReduction(state, player, cardId) {
   let total = 0;
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
-      if (ability.kind !== "static" || ability.rule !== "spells-cost-less") continue;
+    for (const own of holder.abilities ?? []) {
+      if (own.kind !== "static" || own.rule !== "spells-cost-less") continue;
+      /* "Creature spells of the chosen type cost {2} less" (Urza's Incubator): its own choice. */
+      const ability = chosenFor(own, holder);
       const caster = ability.caster ?? "you";
       if (caster === "you" && player !== holder.controller) continue;
       if (caster === "opponent" && player === holder.controller) continue;
@@ -227,8 +230,9 @@ export function costIncrease(state, player, cardId) {
   let total = 0;
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
-    for (const ability of holder.abilities ?? []) {
-      if (ability.kind !== "static" || ability.rule !== "spells-cost-more") continue;
+    for (const own of holder.abilities ?? []) {
+      if (own.kind !== "static" || own.rule !== "spells-cost-more") continue;
+      const ability = chosenFor(own, holder);
       const caster = ability.caster ?? "any";
       if (caster === "you" && player !== holder.controller) continue;
       if (caster === "opponent" && player === holder.controller) continue;
@@ -262,7 +266,7 @@ export function ruleChanged(state, rule, id) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;
       /* The whole selector grammar ("creatures you control with power 2 or less"): a rule changes nothing a layer
          derives, so reading it through the layers cannot loop, as the layers' own narrower matcher has to avoid. */
-      if (matchesSelector(ability.affects, state, id, {controller: holder.controller, source: holderId})) return true;
+      if (matchesSelector(chosenFor(ability, holder).affects, state, id, {controller: holder.controller, source: holderId})) return true;
     }
   }
   for (const effect of state.effects ?? []) {

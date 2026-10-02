@@ -68,6 +68,7 @@ import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {lastKnown, characteristicsOf} from "./layers.mjs";
+import {namesChosen, withChosen} from "../script/chosen.mjs";
 import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
@@ -238,7 +239,9 @@ function payCounters(state, id, costs) {
 /* "Sacrifice a creature: ..." (Viscera Seer, Ashnod's Altar, Phyrexian Tower): a cost the player chooses as they activate
    (CR 602.2b, 601.2h), so each permanent they could sacrifice is its own offer, as with a spell's additional cost. Only
    their own (CR 701.21a); "another" leaves out the source itself. */
-function sacrificeChoices(state, player, sourceId, selector) {
+function sacrificeChoices(state, player, sourceId, given) {
+  /* "Sacrifice a creature of the chosen type" (Etchings of the Chosen): its source's choice. */
+  const selector = namesChosen(given) ? withChosen(given, state.objects[sourceId]?.chosen) : given;
   const matches = (Array.isArray(selector?.anyOf) ? selector.anyOf : [selector ?? {}])
     .map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
   return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})));
