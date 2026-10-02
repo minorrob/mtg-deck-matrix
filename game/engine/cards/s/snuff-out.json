@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Snuff Out",
+    "oracleId": "324824cb-f938-401c-b9b5-d8908b431ef0",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control a Swamp, you may pay 4 life rather than pay this spell's mana cost.\nDestroy target nonblack creature. It can't be regenerated.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you control a Swamp, you may pay 4 life rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 4
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Swamp"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Destroy target nonblack creature. It can't be regenerated.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "nonColors": [
+            "B"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          },
+          "noRegenerate": true
+        }
+      ]
+    }
+  ]
+}

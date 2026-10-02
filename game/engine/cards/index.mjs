@@ -53,6 +53,9 @@ function wardCost(cost) {
   return unless;
 }
 
+/* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs). */
+const RULES_READING_A_CONDITION = ["alternative-cost"];
+
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];
 
@@ -251,6 +254,10 @@ export function compileScript(script) {
 
     if (ability.kind === "spell") {
       if (spell) problems.push("a second spell ability: one card, one spell");
+      /* What an alternative cost (CR 118.9) may be made of: mana or none, life, a card exiled from the hand, a sacrifice. */
+      for (const alt of (script.abilities ?? []).filter((a) => a?.kind === "static" && a.rule === "alternative-cost"))
+        for (const atom of alt.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector))
+          problems.push(`${alt.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       for (const atom of ability.additionalCost ?? [])
         if (!["discard", "sacrifice"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
       /* MODES CHOSEN AS IT IS CAST (CR 700.2): a spell whose one effect is a modal with targets in its modes, or with "you
@@ -311,7 +318,8 @@ export function compileScript(script) {
     /* A condition on a static (Forge's IsPresentStatic) is read by the layers (rules/layers.mjs), and a static that works
        from a graveyard is a layer's too; a rule static (rules/statics.mjs) reads neither yet, and is refused rather than
        always on. */
-    if (ability.kind === "static" && ability.rule && (ability.condition || ability.worksFrom)) problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
+    if (ability.kind === "static" && ability.rule && ((ability.condition && !RULES_READING_A_CONDITION.includes(ability.rule)) || ability.worksFrom))
+      problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
     if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
     /* static and replacement: their schema is the rules modules' own shape. */
     abilities.push({...ability, id});

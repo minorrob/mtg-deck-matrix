@@ -58,7 +58,9 @@ export const FORGE_TRIGGER = {
    replacement and goes through `replacement.mjs`. Everything else is genuinely absent. */
 export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules/statics", ReduceCost: "rules/statics",
   /* "That ability triggers an additional time" (batch 34): the static `triggers-again`, read by rules/trigger.mjs. */
-  Panharmonicon: "rules/trigger"};
+  Panharmonicon: "rules/trigger",
+  /* "Rather than pay this spell's mana cost" (batch 39): the card's own `alternative-cost` static, rules/actions.mjs. */
+  AlternativeCost: "rules/actions"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring

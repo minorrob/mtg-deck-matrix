@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flare of Denial",
+    "oracleId": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.\nCounter target spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "U"
+            ],
+            "token": false
+          }
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target spell.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

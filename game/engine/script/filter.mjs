@@ -39,7 +39,7 @@ import {parseManaCost, manaValue} from "../rules/mana.mjs";
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
-  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander",
+  "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -159,6 +159,8 @@ export function compileSelector(selector) {
       const current = characteristicsOf(state, id).colors ?? [];
       if (!selector.colors.every((color) => current.includes(color))) return false;
     }
+    /* "Target nonblack creature" (Snuff Out): none of these colors. */
+    if (selector.nonColors && selector.nonColors.some((color) => (characteristicsOf(state, id).colors ?? []).includes(color))) return false;
 
     /* Types through the layers: a land animated this turn IS a creature, and a selector that read
        the printed type line would not find it. */

@@ -149,6 +149,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.x !== undefined) found = found.filter((a) => a.x === step.x);
     /* Which modes, chosen as it is cast (CR 700.2): the offer that names them. */
     if (step.modes !== undefined) found = found.filter((a) => JSON.stringify(a.modes) === JSON.stringify(step.modes));
+    /* Which way it is paid for: an alternative cost by its ability's place (CR 118.9), or `false` for the mana cost. */
+    if (step.alternative !== undefined) found = found.filter((a) => (a.alternative ?? false) === step.alternative);
+    for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
     for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     if (!found.length && step.optional) return;
