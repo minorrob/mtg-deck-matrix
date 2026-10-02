@@ -58,7 +58,7 @@ import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} fr
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
-import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, modalScript} from "../script/bind.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
@@ -133,6 +133,26 @@ function additionalChoices(state, player, spellId, costs) {
     choices = choices.flatMap((chosen) => options.filter((o) => !Object.values(chosen).includes(Object.values(o)[0])).map((o) => ({...chosen, ...o})));
   }
   return choices;
+}
+
+/* MODES CHOSEN AS IT IS CAST (CR 700.2a, 601.2b): one offer per choice of modes -- as many as it says, or up to more
+   when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
+   and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
+function withModes(state, base, modal, context) {
+  const least = Math.max(1, modal.choose ?? 1);
+  const most = Math.min(modal.modes.length, modal.more && conditionHolds(state, modal.more.condition, context) ? modal.more.choose : least);
+  const picks = [];
+  const pick = (from, chosen) => {
+    if (chosen.length >= least) picks.push(chosen);
+    if (chosen.length === most) return;
+    for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
+  };
+  pick(0, []);
+  return picks.flatMap((modes) => {
+    const {targets: specs, effects} = modalScript(modal, modes);
+    const hostile = isHostile(effects);
+    return targetChoices(state, specs, context).map((targets) => ({...base, modes, targets, targetNames: targets.map((t) => targetName(state, t)), hostile}));
+  });
 }
 
 /* One offer per way to choose the targets (script/bind.mjs); a single offer, unchanged, when there are none. */
@@ -376,10 +396,11 @@ export function legalActions(state, player) {
       if (!payment) continue;
       const extra = object.spell?.additionalCost ?? [];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
-      for (const costChoice of paysFor)
-        actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
-          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {})},
-          object.spell, {controller: player, source: id}));
+      for (const costChoice of paysFor) {
+        const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
+          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {})};
+        actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
+      }
     }
     }
   }
@@ -477,6 +498,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.x ?? null) === (b.x ?? null)
   /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
   && (a.flashback === true) === (b.flashback === true)
+  /* And the modes chosen as it is cast (CR 700.2): another choice is another action. */
+  && JSON.stringify(a.modes ?? null) === JSON.stringify(b.modes ?? null)
   && targetKey(a) === targetKey(b);
 
 /**
@@ -615,7 +638,7 @@ function perform(state, player, action) {
     }
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
-    const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {})});
+    const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */

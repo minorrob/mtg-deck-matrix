@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ilysian Caryatid",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{2}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One mana of any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ilysian Caryatid"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ilysian Caryatid",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With a creature of power 4: two mana of one color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ilysian Caryatid",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ilysian Caryatid",
+          "mana": {
+            "G": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2
+          }
+        }
+      ]
+    }
+  ]
+}

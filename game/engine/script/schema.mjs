@@ -131,8 +131,21 @@ function checkAbility(ability, path, errors) {
       else selector.anyOf.forEach((one, at) => checkSelector(one, `${path}.targets[${index}].anyOf[${at}]`, errors));
     } else checkSelector(selector, `${path}.targets[${index}]`, errors);
   }
-  /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. */
-  for (const n of targetRefs(ability.effects ?? []))
+  /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. A
+     modal whose modes carry their own targets (chosen as it is cast, CR 700.2): each mode's effects name its own. */
+  const modal = (ability.effects ?? []).length === 1 && ability.effects[0]?.effect === "modal" && (ability.effects[0].modes ?? []).some((m) => Array.isArray(m?.targets))
+    ? ability.effects[0] : null;
+  if (modal) {
+    for (const [m, mode] of (modal.modes ?? []).entries()) {
+      for (const [index, selector] of (mode.targets ?? []).entries()) {
+        if (selector && typeof selector === "object" && "anyOf" in selector) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
+        else checkSelector(selector, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
+      }
+      for (const n of targetRefs(mode.effects ?? []))
+        if (n < 0 || n >= (mode.targets ?? []).length)
+          errors.push({path: `${path}.effects[0].modes[${m}]`, message: `A mode names target ${n}, and declares ${(mode.targets ?? []).length}`});
+    }
+  } else for (const n of targetRefs(ability.effects ?? []))
     if (n < 0 || n >= (ability.targets ?? []).length)
       errors.push({path: `${path}.effects`, message: `An effect names target ${n}, and the ability declares ${(ability.targets ?? []).length}`});
   for (const [index, reveal] of (ability.reveals ?? []).entries()) {

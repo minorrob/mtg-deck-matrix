@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Twinferno",
+    "oracleId": "93989dd7-2d3e-46e2-8e92-8d0479796087",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\n• Target creature you control gains double strike until end of turn. (It deals both first-strike and regular combat damage.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\n• Target creature you control gains double strike until end of turn. (It deals both first-strike and regular combat damage.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+              "effects": [
+                {
+                  "effect": "delayedTrigger",
+                  "when": {
+                    "on": "spell cast",
+                    "caster": "you",
+                    "filter": {
+                      "anyOf": [
+                        {
+                          "types": [
+                            "Instant"
+                          ]
+                        },
+                        {
+                          "types": [
+                            "Sorcery"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "thisTurn": true,
+                  "once": true,
+                  "text": "When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+                  "effects": [
+                    {
+                      "effect": "copySpell",
+                      "spells": "that card",
+                      "newTargets": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Target creature you control gains double strike until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Double Strike"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

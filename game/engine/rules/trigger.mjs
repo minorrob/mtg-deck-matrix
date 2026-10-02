@@ -343,7 +343,8 @@ export function collectTriggers(state, events) {
           ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
           script: {targets: [], effects: d.effects},
         });
-        if (!d.thisTurn) { state.delayedTriggers = state.delayedTriggers.filter((other) => other !== d); break; }
+        /* Once, unless it is "whenever ... this turn"; "your next ... this turn" (`once`) is once, and gone at the turn's end. */
+        if (!d.thisTurn || d.once) { state.delayedTriggers = state.delayedTriggers.filter((other) => other !== d); break; }
       }
     }
     /* A trigger that watches a permanent LEAVING has to also fire for the permanent that left,

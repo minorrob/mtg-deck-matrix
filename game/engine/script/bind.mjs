@@ -207,6 +207,27 @@ export function rememberNow(effects, context, {keepThat = false} = {}) {
   return (effects ?? []).map(walk);
 }
 
+/**
+ * A MODAL SPELL'S CHOSEN MODES AS ONE SCRIPT (CR 700.2): their targets in the order chosen, and their effects with each
+ * `{target: n}` moved past the targets of the modes before it -- a mode's script names its own targets from 0.
+ */
+export function modalScript(modal, modes) {
+  const targets = [], effects = [];
+  const shift = (value, by) => {
+    if (Array.isArray(value)) return value.map((v) => shift(v, by));
+    if (!value || typeof value !== "object") return value;
+    if (isRef(value)) return {...value, target: value.target + by};
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shift(v, by)]));
+  };
+  for (const index of modes ?? []) {
+    const mode = modal.modes[index];
+    if (!mode) continue;
+    effects.push(...shift(structuredClone(mode.effects ?? []), targets.length));
+    targets.push(...structuredClone(mode.targets ?? []));
+  }
+  return {targets, effects};
+}
+
 /** Every `{target: n}` an ability's effects name, nested ones included, so the schema can check each is declared. */
 export function targetRefs(effects) {
   const found = [];

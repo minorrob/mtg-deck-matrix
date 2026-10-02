@@ -145,6 +145,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
     /* The value chosen for X (CR 107.3): the offer that names it. */
     if (step.x !== undefined) found = found.filter((a) => a.x === step.x);
+    /* Which modes, chosen as it is cast (CR 700.2): the offer that names them. */
+    if (step.modes !== undefined) found = found.filter((a) => JSON.stringify(a.modes) === JSON.stringify(step.modes));
     /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
     for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     if (!found.length && step.optional) return;

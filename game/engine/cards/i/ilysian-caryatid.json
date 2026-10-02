@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ilysian Caryatid",
+    "oracleId": "5f2be3c2-060a-43e1-b63b-9cd3c78ffcb0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add one mana of any color. If you control a creature with power 4 or greater, add two mana of any one color instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color. If you control a creature with power 4 or greater, add two mana of any one color instead.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "if": {
+              "present": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "power": {
+                  "min": 4
+                },
+                "controller": "you"
+              }
+            },
+            "then": 2,
+            "else": 1
+          }
+        }
+      ]
+    }
+  ]
+}

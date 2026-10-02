@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 602 defined and playable today; 1,776 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 608 defined and playable today; 1,786 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -26,7 +26,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 9 | 4 | 0 | 24 |
-| Amounts the game counts | 188 | 7 | 1 | 0 | 180 |
+| Amounts the game counts | 188 | 8 | 1 | 0 | 179 |
 | Choices | 15 | 10 | 0 | 2 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
 
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
 | option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | option | You may play or cast a card from another zone | — | missing | 7 | 84 |
 | option | As long as a permanent is present (a static ability's condition) | — | missing | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
+| keyword ability | Crew | — | named | 7 | 15 |
 
 ## Keyword abilities (CR 702)
 
@@ -386,7 +386,7 @@ The things that alone hold back the most of the most-played cards.
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
-| ManaReflected | addManaReflected | named | 12 | 47 | 12 | 6 |
+| ManaReflected | addManaReflected | named | 12 | 47 | 12 | 7 |
 | PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 2 |
 | Goad | — | missing | 11 | 67 | 11 | 4 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 4 |
@@ -871,7 +871,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Cards in a graveyard | {count: {what: "card", zone: "graveyard"}} | built | 30 | 460 | 0 | 0 |
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
-| — | A comparison ("if you control ...") | — | missing | 17 | 146 | 17 | 10 |
+| — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | CounterNum | — | missing | 16 | 32 | 16 | 0 |
 | — | Cards in a library | — | missing | 13 | 63 | 13 | 3 |
 | — | Spells cast this turn | — | missing | 12 | 139 | 12 | 3 |
@@ -887,7 +887,7 @@ The things that alone hold back the most of the most-played cards.
 | 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
 | — | A number a player chose | — | missing | 5 | 77 | 5 | 0 |
 | — | Attackers declared | — | missing | 5 | 62 | 5 | 0 |
-| — | Cards in exile | — | missing | 5 | 42 | 5 | 1 |
+| — | Cards in exile | — | missing | 5 | 42 | 5 | 2 |
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
 | — | LifeGained | — | missing | 5 | 20 | 5 | 0 |
 | — | Whether it was kicked | — | missing | 3 | 92 | 3 | 0 |
