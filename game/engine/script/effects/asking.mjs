@@ -315,11 +315,13 @@ export const modal = {
 /* "Choose any number of permanents and/or players, then give each another counter of each kind already there." Asked
    of the ability's controller: one option per permanent and per player that has a counter, any number of them. */
 const hasCounters = (counters) => Object.values(counters ?? {}).some((n) => n > 0);
+/* A player's counters, poison among them (CR 122.1f; batch 77 -- kept apart, as `poison`, for the state-based action). */
+const playerCounters = (player) => ({...(player.counters ?? {}), ...(player.poison > 0 ? {poison: player.poison} : {})});
 export const proliferate = {
   open(state, params, context) {
     const candidates = [
       ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
-      ...state.players.filter((p) => !p.lost && hasCounters(p.counters)).map((p) => ({player: p.id})),
+      ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
     if (candidates.length === 0) return false;
     state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
@@ -328,7 +330,7 @@ export const proliferate = {
 
   choice(state, awaiting) {
     const live = awaiting.candidates;
-    const countersOf = (c) => Object.entries((c.player !== undefined ? state.players[c.player] : state.objects[c.id])?.counters ?? {})
+    const countersOf = (c) => Object.entries((c.player !== undefined ? playerCounters(state.players[c.player]) : state.objects[c.id]?.counters) ?? {})
       .filter(([, n]) => n > 0).map(([kind, n]) => `${n} ${kind}`).join(", ");
     return {
       id: `proliferate:${state.turn}:${live.length}`,

@@ -119,7 +119,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Station (batch 58): tap another creature, charge counters equal to its power; what it has at N+ on that condition. */
   Station: "putCounter",
   /* Chapter (batch 60): a Saga's lore counters -- entering, after the draw step -- its chapters, and its sacrifice. */
-  Chapter: "putCounter"};
+  Chapter: "putCounter",
+  /* Prowess (batch 77): the triggered ability, +1/+1 until end of turn on a noncreature spell cast (cards/index.mjs).
+     Toxic (batch 77): poison counters with combat damage to a player, its number (rules/combat.mjs). */
+  Prowess: "pump", Toxic: "poison"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

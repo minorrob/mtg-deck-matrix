@@ -211,16 +211,17 @@ export function fight(state, params, context) {
  * on each player it names, `count` of them. Ten or more and that player loses (CR 704.5c, rules/sba.mjs).
  */
 export function poison(state, params, context) {
-  const events = [];
   const count = params.count ?? 1;
-  if (!(count > 0)) return events;
-  for (const id of playersFor(state, params.who, context.controller)) {
-    const player = state.players[id];
-    const before = player.poison ?? 0;
-    player.poison = before + count;
-    events.push(event("GameEventPlayerPoisoned", state, {receiver: {playerId: id, name: player.name}, oldValue: before, amount: count}));
-  }
-  return events;
+  if (!(count > 0)) return [];
+  return playersFor(state, params.who, context.controller).flatMap((id) => givePoison(state, id, count));
+}
+
+/** Poison counters on a player, reported as the board knows them -- an effect's (poison), or toxic's (rules/combat.mjs). */
+export function givePoison(state, id, count) {
+  const player = state.players[id];
+  const before = player.poison ?? 0;
+  player.poison = before + count;
+  return [event("GameEventPlayerPoisoned", state, {receiver: {playerId: id, name: player.name}, oldValue: before, amount: count})];
 }
 
 /**
@@ -287,6 +288,8 @@ export function proliferate(state, params, context) {
       for (const [kind, amount] of Object.entries(player.counters)) {
         if (amount > 0) player.counters[kind] = amount + 1;
       }
+      /* Poison counters are counters (CR 122.1f): one more, reported as any poisoning is (batch 77). */
+      if (player.poison > 0) events.push(...givePoison(state, choice.player, 1));
       continue;
     }
     const object = state.objects[choice];

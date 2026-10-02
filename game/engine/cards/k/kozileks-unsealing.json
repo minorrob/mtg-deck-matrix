@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kozilek's Unsealing",
+    "oracleId": "bd9d761f-79cc-4082-8375-51af582f1472",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Devoid (This card has no color.)\nWhenever you cast a creature spell with mana value 4, 5, or 6, create two 0/1 colorless Eldrazi Spawn creature tokens with \"Sacrifice this token: Add {C}.\"\nWhenever you cast a creature spell with mana value 7 or greater, draw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Devoid",
+      "keyword": "devoid"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a creature spell with mana value 4, 5, or 6, create two 0/1 colorless Eldrazi Spawn creature tokens with \"Sacrifice this token: Add {C}.\"",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "manaValue": {
+            "min": 4,
+            "max": 6
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Eldrazi Spawn",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi",
+              "Spawn"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "spawn",
+                "kind": "mana",
+                "tapSelf": false,
+                "produces": {
+                  "C": 1
+                },
+                "sacrificeSelf": true,
+                "text": "Sacrifice this token: Add {C}."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a creature spell with mana value 7 or greater, draw three cards.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "manaValue": {
+            "min": 7
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

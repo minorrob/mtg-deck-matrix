@@ -47,7 +47,8 @@
 import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
+import {givePoison} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
 import {canPayGeneric, payGeneric} from "./mana.mjs";
@@ -463,6 +464,10 @@ export const combatDamage = {
           player: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
           oldLives: before, newLives: state.players[hit.toPlayer].life,
         }));
+        /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
+           poison counters -- every instance it has, given ones too, added together (702.164b). */
+        const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
+        if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
       } else {
         state.objects[hit.toCard].damage += hit.amount;
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
