@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 613 defined and playable today; 1,795 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 619 defined and playable today; 1,804 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -25,7 +25,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Static abilities | 77 | 2 | 2 | 0 | 73 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 37 | 9 | 4 | 0 | 24 |
+| Options and conditions | 37 | 10 | 4 | 0 | 23 |
 | Amounts the game counts | 188 | 8 | 1 | 0 | 179 |
 | Choices | 15 | 10 | 0 | 2 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
@@ -36,9 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
+| option | As long as a permanent is present (a static ability's condition) | — | missing | 12 | 35 |
+| effect | GainControl | gainControl | named | 10 | 22 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
-| effect | GainControl | gainControl | named | 9 | 22 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | static | CastWithFlash | — | missing | 9 | 12 |
 | option | Remembering what an effect moved | — | missing | 8 | 117 |
@@ -49,8 +49,8 @@ The things that alone hold back the most of the most-played cards.
 | static | RaiseCost | — | missing | 8 | 10 |
 | option | You may play or cast a card from another zone | — | missing | 7 | 84 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
-| option | As long as a permanent is present (a static ability's condition) | — | missing | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
+| keyword ability | Crew | — | named | 7 | 15 |
 
 ## Keyword abilities (CR 702)
 
@@ -268,7 +268,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.18 | Play | play | named | 35 | 315 | 35 | 5 |
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | 701.25 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
-| 701.27 | Transform | setState | named | 19 | 280 | 19 | 3 |
+| 701.27 | Transform | setState | named | 19 | 280 | 19 | 5 |
 | 701.14 | Fight | fight | named | 15 | 148 | 15 | 6 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
 | 701.19 | Regenerate | — | missing | 12 | 269 | 0 | 0 |
@@ -370,17 +370,17 @@ The things that alone hold back the most of the most-played cards.
 | ReplaceEffect | effectUntil | built | 27 | 156 | 0 | 0 |
 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | AddPhase | addPhase | built | 24 | 58 | 0 | 0 |
-| GainControl | gainControl | named | 22 | 316 | 22 | 9 |
+| GainControl | gainControl | named | 22 | 316 | 22 | 10 |
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 6 |
-| SetState | setState | named | 19 | 280 | 19 | 3 |
+| SetState | setState | named | 19 | 280 | 19 | 5 |
 | SacrificeAll | sacrificeAll | named | 19 | 130 | 19 | 8 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
 | DigUntil | — | missing | 18 | 167 | 18 | 6 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | named | 15 | 148 | 15 | 6 |
-| WinsGame | — | missing | 15 | 43 | 15 | 2 |
+| WinsGame | — | missing | 15 | 43 | 15 | 3 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | named | 14 | 113 | 14 | 5 |
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
@@ -557,7 +557,7 @@ The things that alone hold back the most of the most-played cards.
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
 | RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
 | Blocks | blocks | named | 2 | 127 | 2 | 1 |
-| Always | — | missing | 2 | 62 | 2 | 0 |
+| Always | — | missing | 2 | 62 | 2 | 1 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 0 |
 | DiscardedAll | discarded | built | 2 | 22 | 0 | 0 |
 | DamageAll | — | missing | 2 | 9 | 2 | 1 |
@@ -841,8 +841,8 @@ The things that alone hold back the most of the most-played cards.
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
 | An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 0 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
-| As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
-| A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 9 |
+| As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 12 |
+| A comparison of permanents present for a condition | condition {present, atLeast / atMost} | built | 35 | 385 | 0 | 0 |
 | Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 6 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 1 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 1 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 3 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 3 |
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Emeria, the Sky Ruin",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Seven Plains at the upkeep: the Bear returns from the graveyard",
+      "at": {
+        "turn": 1,
+        "phase": "UPKEEP"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Emeria, the Sky Ruin",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 9
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

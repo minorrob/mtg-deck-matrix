@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leechridden Swamp",
+    "oracleId": "d83c86c1-126d-49e9-9b13-9e55784c49c5",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Swamp"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {B}.)\nThis land enters tapped.\n{B}, {T}: Each opponent loses 1 life. Activate only if you control two or more black permanents.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{B}, {T}: Each opponent loses 1 life. Activate only if you control two or more black permanents.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "colors": [
+            "B"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 2
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

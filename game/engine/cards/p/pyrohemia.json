@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pyrohemia",
+    "oracleId": "9ac57a10-3402-4656-9079-f713884cde35",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment.\n{R}: This enchantment deals 1 damage to each creature and each player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        },
+        "atMost": 0
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "graveyard"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{R}: This enchantment deals 1 damage to each creature and each player.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 1,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "who": "each"
+        }
+      ]
+    }
+  ]
+}
