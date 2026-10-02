@@ -503,6 +503,8 @@ export function advance(state) {
     state.activePlayer = nextLivingPlayer(state, state.activePlayer);
     state.turn += 1;
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* "Until your next turn" (goad, CR 701.15a): over as that player's turn begins. */
+    state.effects = (state.effects ?? []).filter((e) => !(e.until === "your-next-turn" && e.sourceController === state.activePlayer));
     /* CR 305.2 says "already played a land THIS TURN", so the count is per turn and resets for
        everyone, not only for whoever is about to take it. The difference shows the moment an
        effect lets somebody play a land on another player's turn: resetting only the active

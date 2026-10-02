@@ -157,6 +157,8 @@ export function castForbidden(state, player, cardId) {
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
       if (!conditionHolds(state, ability.condition, context)) continue;
       if (ability.fromAnywhereButHand && object.zone !== "hand") return true;
+      /* "Your opponents can't cast spells with even mana values" (Void Winnower): spells of a kind. */
+      if (ability.spells && compileSelector({...ability.spells, what: "card", zone: object.zone})(state, cardId, context)) return true;
       if (ability.duringYourTurn && state.activePlayer === holder.controller) return true;
       if (Number.isInteger(ability.moreThan)) {
         const {what: _ignored, ...shape} = ability.filter ?? {};
@@ -167,6 +169,11 @@ export function castForbidden(state, player, cardId) {
     }
   }
   return false;
+}
+
+/** Who has goaded this creature (CR 701.15; effects/permanents.mjs goad), each until their next turn. */
+export function goadersOf(state, id) {
+  return [...new Set((state.effects ?? []).filter((e) => e.rule === "goaded" && e.affects.ids.includes(id)).map((e) => e.sourceController))];
 }
 
 /**

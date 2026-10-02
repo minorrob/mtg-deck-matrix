@@ -34,7 +34,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend,
+  becomeCopy, earthbend, goad,
 } from "./permanents.mjs";
 
 /**
@@ -134,6 +134,8 @@ export const EFFECTS = Object.freeze({
   earthbend,
   /* Batch 68: "you win the game". */
   winGame,
+  /* Batch 69: goad. */
+  goad,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

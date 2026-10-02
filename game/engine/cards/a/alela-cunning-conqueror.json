@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Alela, Cunning Conqueror",
+    "oracleId": "1cae5752-b4af-4a8f-8c8c-2493e163083b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Warlock"
+    ],
+    "manaCost": "{2}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever you cast your first spell during each opponent's turn, create a 1/1 black Faerie Rogue creature token with flying.\nWhenever one or more Faeries you control deal combat damage to a player, goad target creature that player controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast your first spell during each opponent's turn, create a 1/1 black Faerie Rogue creature token with flying.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "firstThisTurn": true
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Faerie Rogue",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Faerie",
+              "Rogue"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "notYourTurn": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more Faeries you control deal combat damage to a player, goad target creature that player controls.",
+      "trigger": {
+        "on": "damage dealt once",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "subtypes": [
+            "Faerie"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "goad",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "that player"
+        }
+      ]
+    }
+  ]
+}
