@@ -54,7 +54,7 @@ function wardCost(cost) {
 }
 
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs). */
-const RULES_READING_A_CONDITION = ["alternative-cost"];
+const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];

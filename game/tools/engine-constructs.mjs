@@ -95,12 +95,12 @@ export const FORGE_OPTIONS = Object.freeze({
   /* Judged kind by kind (FORGE_COUNTS below), not as one: "for each creature you control" is built, "for each spell
      you've cast this turn" is not. */
   Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},
-  ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "missing"},
+  ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "built", engine: "an effect's condition {present ...}"},
   ConditionCompare: {name: "An effect's condition: a comparison", status: "missing"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
   ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
   ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},
-  Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "missing"},
+  Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "built", engine: "an effect's or a static's condition: present, turn, graveyard types"},
   CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},
   IsPresentStatic: {name: "As long as a permanent is present (a static ability's condition)", status: "built", engine: "a static's condition {present, atLeast | atMost}; worksFrom: graveyard"},

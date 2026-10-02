@@ -26,7 +26,7 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn"];
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined} = {}) {
@@ -43,6 +43,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   }
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
+  /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
+  if (condition.notYourTurn === true && state.activePlayer === controller) return false;
   /* "If it's the first combat phase of the turn" (Genji Glove; rules/turn.mjs counts them). */
   if (condition.firstCombat === true && (state.combatsThisTurn ?? 0) > 1) return false;
   /* Delirium: "if there are four or more card types among cards in your graveyard" (CR 205.2a). */
@@ -68,6 +70,7 @@ export function conditionProblems(condition) {
   if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
+  if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("present" in condition) {
     const {anyOf, ...shared} = condition.present ?? {};

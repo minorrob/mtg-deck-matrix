@@ -16,6 +16,7 @@
  * object as it currently is, with "you" meaning the static ability's controller.
  */
 
+import {conditionHolds} from "../script/condition.mjs";
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
@@ -175,7 +176,10 @@ export function costReduction(state, player, cardId) {
       if (caster === "opponent" && player === holder.controller) continue;
       const selector = {...(ability.affects ?? {}), what: "card", zone: object.zone};
       if (!matchesSelector(selector, state, cardId, {controller: holder.controller, source: holderId})) continue;
-      total += ability.amount ?? 1;
+      /* "During your turn, spells you cast cost {1} less for each creature you control with power 4 or greater" (Temur
+         Battlecrier): its condition, and its amount counted now. */
+      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
+      total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
     }
   }
   for (const ability of object.abilities ?? [])

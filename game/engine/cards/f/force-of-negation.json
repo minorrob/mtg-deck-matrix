@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Force of Negation",
+    "oracleId": "ac2173f9-f223-440a-9231-fd98762bdc6f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost.\nCounter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "exileFromHand",
+          "selector": {
+            "colors": [
+              "U"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "notYourTurn": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+      "targets": [
+        {
+          "what": "spell",
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

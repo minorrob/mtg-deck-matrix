@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bedrock Tortoise",
+    "oracleId": "d9c2e674-11a9-47f0-8790-a53b62c43fe6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 6
+  },
+  "oracleText": "During your turn, creatures you control have hexproof.\nEach creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "During your turn, creatures you control have hexproof.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "toughnessOverPower": true
+      }
+    }
+  ]
+}

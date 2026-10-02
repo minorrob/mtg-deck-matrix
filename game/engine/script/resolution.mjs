@@ -23,6 +23,7 @@ import {runEffect} from "./effects/index.mjs";
 import {ASKING} from "./effects/asking.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
+import {conditionHolds} from "./condition.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -59,6 +60,12 @@ export function runResolution(state) {
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
     const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context), resolving.context);
     resolving.queue[0] = effect;
+    /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
+       creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
+    if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about})) {
+      resolving.queue.shift();
+      continue;
+    }
     const asking = ASKING[effect?.effect];
 
     if (asking) {
