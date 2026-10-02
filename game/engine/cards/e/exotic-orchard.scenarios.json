@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Exotic Orchard",
+  "scenarios": [
+    {
+      "name": "Maya's Island and Forest: blue or green -- not his Plains' white, not her Wastes' colorless",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exotic Orchard",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Exotic Orchard",
+            "seat": 0
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya has no lands: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exotic Orchard",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Exotic Orchard",
+            "seat": 0
+          },
+          "count": 0,
+          "mana": []
+        }
+      ]
+    }
+  ]
+}

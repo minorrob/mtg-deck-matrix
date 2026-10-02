@@ -24,7 +24,8 @@ export const FORGE_API = {
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
-  Mana: "addMana", ManaReflected: "addManaReflected", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
+  /* ManaReflected ("any color that a land an opponent controls could produce", batch 50): addMana's reflect and among. */
+  Mana: "addMana", ManaReflected: "addMana", Tap: "tap", Untap: "untap", UntapAll: "untapAll",
   ReduceCost: "costReduction", AlternativeCost: "alternativeCost",
   GainLife: "gainLife", LoseLife: "loseLife", DealDamage: "dealDamage", EachDamage: "damageEach",
   DamageAll: "damageAll", ExchangeLifeVariant: "exchangeLife", Fight: "fight",

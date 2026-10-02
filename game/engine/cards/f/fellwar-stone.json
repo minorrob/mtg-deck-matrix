@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fellwar Stone",
+    "oracleId": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ]
+    }
+  ]
+}

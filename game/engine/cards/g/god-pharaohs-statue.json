@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "God-Pharaoh's Statue",
+    "oracleId": "183954d2-7b40-4c7e-adfa-d80191ab5ad6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spells your opponents cast cost {2} more to cast.\nAt the beginning of your end step, each opponent loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spells your opponents cast cost {2} more to cast.",
+      "rule": "spells-cost-more",
+      "affects": {
+        "what": "spell"
+      },
+      "amount": 2,
+      "caster": "opponent"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, each opponent loses 1 life.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 1,
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

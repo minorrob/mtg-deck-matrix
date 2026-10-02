@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Grey Havens",
+  "fixtures": {
+    "Sage": {
+      "types": [
+        "Creature"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: scry 1; a legendary blue creature card in his graveyard: blue, or colorless",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Grey Havens"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "The Grey Havens"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "The Grey Havens",
+            "seat": 0
+          },
+          "count": 2,
+          "mana": [
+            {
+              "C": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

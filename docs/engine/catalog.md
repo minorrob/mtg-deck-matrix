@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 726 defined and playable today; 1,952 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 736 defined and playable today; 1,963 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 42 | 1 | 23 | 126 |
+| Effects | 192 | 43 | 1 | 22 | 126 |
 | Triggers | 138 | 8 | 4 | 10 | 116 |
 | Static abilities | 77 | 4 | 2 | 0 | 71 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -38,19 +38,19 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 10 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
+| trigger | TapsForMana | — | missing | 10 | 18 |
 | effect | Clone | — | missing | 9 | 29 |
 | keyword ability | Ninjutsu | — | missing | 8 | 14 |
 | keyword ability | Station | — | missing | 8 | 11 |
-| static | RaiseCost | — | missing | 8 | 10 |
 | option | Remembering what an effect moved | — | missing | 7 | 113 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
 | effect | Play | play | named | 7 | 35 |
 | effect | GenericChoice | genericChoice | named | 7 | 21 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
-| trigger | TapsForMana | — | missing | 7 | 18 |
 | effect | Fight | fight | named | 7 | 15 |
 | keyword ability | Crew | — | named | 7 | 15 |
-| effect | ManaReflected | addManaReflected | named | 7 | 12 |
+| keyword ability | Storm | — | named | 7 | 7 |
+| static | UntapOtherPlayer | — | missing | 7 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -386,7 +386,7 @@ The things that alone hold back the most of the most-played cards.
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
-| ManaReflected | addManaReflected | named | 12 | 47 | 12 | 7 |
+| ManaReflected | addMana | built | 12 | 47 | 0 | 0 |
 | PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 3 |
 | Goad | — | missing | 11 | 67 | 11 | 5 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 5 |
@@ -537,7 +537,7 @@ The things that alone hold back the most of the most-played cards.
 | AttackersDeclared | attackers declared | named | 25 | 227 | 26 | 6 |
 | ChangesZoneAll | enters | partial | 24 | 122 | 0 | 0 |
 | LifeGained | life gained | built | 18 | 94 | 0 | 0 |
-| TapsForMana | — | missing | 18 | 64 | 18 | 7 |
+| TapsForMana | — | missing | 18 | 64 | 18 | 10 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
@@ -678,7 +678,7 @@ The things that alone hold back the most of the most-played cards.
 | CantBeCast | — | missing | 14 | 97 | 14 | 6 |
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | — | missing | 10 | 204 | 10 | 5 |
-| RaiseCost | — | missing | 10 | 91 | 10 | 8 |
+| RaiseCost | — | missing | 10 | 91 | 6 | 4 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
 | CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
 | UntapOtherPlayer | — | missing | 7 | 15 | 7 | 7 |
@@ -849,7 +849,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 3 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 1 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 2 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 4 |

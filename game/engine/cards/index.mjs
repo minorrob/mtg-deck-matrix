@@ -163,6 +163,10 @@ function manaAbility(ability, id) {
   const adds = MANA(first.mana) ? {produces: {...first.mana}}
     : Array.isArray(first.choice) && first.choice.length > 1 && first.choice.every(MANA) ? {produces: first.choice.map((m) => ({...m}))}
     : first.anyColor === true || first.anyColor === "identity" ? {anyColor: first.anyColor, ...(first.count ? {count: first.count} : {})}
+    /* "Any color that a land an opponent controls could produce", "any color among legendary creatures you control"
+       (rules/actions.mjs, manaAlternatives): read as it is activated. */
+    : first.reflect && typeof first.reflect === "object" ? {reflect: first.reflect, ...(first.anyType ? {anyType: true} : {}), ...(first.count ? {count: first.count} : {})}
+    : first.among && typeof first.among === "object" ? {among: first.among, ...(first.count ? {count: first.count} : {})}
     : null;
   if (!adds) return "unbuilt";
   const mana = cost.find((a) => a.atom === "mana");
