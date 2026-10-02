@@ -402,6 +402,9 @@ function putOnStack(state, triggers) {
       kind: "trigger",
       script: trigger.script ?? null,
       about: trigger.about ?? null,
+      /* A permanent's own "when this dies" reads it as it last existed (CR 603.10a): "its power", "for each +1/+1 counter on
+         this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
+      lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets). */
     if ((entry.script?.targets ?? []).length) entry.stage = "targeting";
