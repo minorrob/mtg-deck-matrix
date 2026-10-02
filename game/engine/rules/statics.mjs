@@ -39,8 +39,10 @@ export const STATIC_RULES = Object.freeze({
       blocked". keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked": "keywords/combat.mjs",
   /** "You may play lands from your graveyard" (Crucible of Worlds), "you may cast Dragon spells from the top of your
-      library" (Korlessa): `zone` "graveyard" or "library-top", `lands` and `spells` (a selector of the spells, or
-      true for any). For the static's controller; rules/actions.mjs offers them. */
+      library" (Korlessa): `zone` "graveyard" or "library-top"; "once during each of your turns" (Kess) `yourTurn` and
+      `limit`; "if a spell cast this way would be put into your graveyard, exile it instead" `graveyardToExile`; `lands`
+      and `spells` (a selector of the spells, or true for any). For the static's controller; rules/actions.mjs offers
+      them. */
   "play-from": "rules/actions.mjs",
   /** "You may look at the top card of your library any time": its owner sees it (projection.mjs). */
   "look-at-top": "projection.mjs",

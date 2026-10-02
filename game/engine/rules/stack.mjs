@@ -266,7 +266,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
     /* Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a): resolved, or fizzled. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback ? "exile" : "graveyard";
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
