@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thunderhawk Gunship",
+  "scenarios": [
+    {
+      "name": "It enters: two 2/2 Astartes Warriors with vigilance, who crew it (2)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thunderhawk Gunship"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Thunderhawk Gunship"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Thunderhawk Gunship"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Thunderhawk Gunship"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thunderhawk Gunship",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Astartes Warrior",
+            "has": [
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

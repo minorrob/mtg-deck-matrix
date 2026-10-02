@@ -52,6 +52,9 @@ export const STATIC_RULES = Object.freeze({
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
       by permission). rules/actions.mjs, flashGranted. */
   "cast-as-though-flash": "rules/actions.mjs",
+  /** "This token crews Vehicles as though its power were 2 greater" (Shorikai's Pilot): `amount` added as it crews.
+      rules/actions.mjs, crewChoices. */
+  "crews-with-more": "rules/actions.mjs",
   /** "Untap all permanents you control during each other player's untap step" (Seedborn Muse), "all artifacts" (Unwinding
       Clock), "this artifact" (Bender's Waterskin): `affects` what it untaps, its controller's. rules/turn.mjs, untap. */
   "untap-during-others": "rules/turn.mjs",
