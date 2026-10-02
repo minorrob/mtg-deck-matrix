@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 935,
-  "everyRule": 2217
+  "defined": 940,
+  "everyRule": 2222
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 25,
+    "built": 26,
     "partial": 0,
-    "named": 25,
+    "named": 24,
     "missing": 144
    },
    "entries": [
@@ -289,13 +289,13 @@
      "kind": "keyword ability",
      "rule": "702.73",
      "name": "Changeling",
-     "engine": null,
-     "status": "named",
+     "engine": "Changeling",
+     "status": "built",
      "forge": "Changeling",
      "top": 10,
      "all": 63,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -7309,7 +7309,7 @@
      "top": 8,
      "all": 139,
      "blocks": 8,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "static",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 33,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "keyword construct",

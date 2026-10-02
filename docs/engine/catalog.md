@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 935 defined and playable today; 2,217 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 940 defined and playable today; 2,222 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
+| Keyword abilities (CR 702) | 194 | 26 | 0 | 24 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
 | Effects | 192 | 56 | 1 | 15 | 120 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
@@ -39,18 +39,18 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 21 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 18 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
+| keyword construct | ETBReplacement | — | missing | 8 | 33 |
 | effect | SetState | setState | named | 7 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
-| keyword construct | ETBReplacement | — | missing | 6 | 33 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
 | keyword construct | etbCounter | — | missing | 5 | 25 |
 | count | Cards in a library | — | missing | 5 | 13 |
 | keyword ability | Convoke | — | named | 5 | 11 |
-| keyword ability | Changeling | — | named | 5 | 10 |
 | static | CantAttack | — | missing | 5 | 10 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 | keyword construct | Class | — | missing | 5 | 9 |
 | keyword ability | Prowess | — | missing | 5 | 8 |
+| keyword ability | Devoid | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -78,7 +78,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 5 |
 | 702.184 | Station | Station | built | 11 | 35 | 0 | 0 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
-| 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
+| 702.73 | Changeling | Changeling | built | 10 | 63 | 0 | 0 |
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
 | 702.108 | Prowess | — | missing | 8 | 93 | 8 | 5 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 5 |
@@ -679,7 +679,7 @@ The things that alone hold back the most of the most-played cards.
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
 | CantAttack | — | missing | 10 | 204 | 10 | 5 |
 | RaiseCost | — | missing | 10 | 91 | 6 | 4 |
-| CantBlock | — | missing | 8 | 139 | 8 | 2 |
+| CantBlock | — | missing | 8 | 139 | 8 | 3 |
 | CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 4 |
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 33 | 6 |
+| ETBReplacement | — | missing | 68 | 408 | 33 | 8 |
 | etbCounter | — | missing | 35 | 475 | 25 | 5 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |
