@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 707 defined and playable today; 1,926 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 715 defined and playable today; 1,934 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,9 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering what an effect moved | — | missing | 10 | 117 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
-| option | An effect's condition: about a named object | — | missing | 10 | 57 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 106 |
 | effect | Clone | — | missing | 9 | 29 |
 | effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
@@ -51,6 +49,8 @@ The things that alone hold back the most of the most-played cards.
 | effect | GenericChoice | genericChoice | named | 7 | 21 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 | trigger | TapsForMana | — | missing | 7 | 18 |
+| effect | Fight | fight | named | 7 | 15 |
+| keyword ability | Crew | — | named | 7 | 15 |
 
 ## Keyword abilities (CR 702)
 
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 117 | 10 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 6 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 9 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -839,7 +839,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
-| An effect's condition: about a named object | — | missing | 57 | 973 | 57 | 10 |
+| An effect's condition: about a named object | — | missing | 57 | 973 | 53 | 6 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | an effect's or a static's condition: present, turn, graveyard types | built | 41 | 461 | 0 | 0 |
 | As long as a permanent is present (a static ability's condition) | a static's condition {present, atLeast / atMost}; worksFrom: graveyard | built | 36 | 458 | 0 | 0 |
 | A comparison of permanents present for a condition | condition {present, atLeast / atMost} | built | 35 | 385 | 0 | 0 |

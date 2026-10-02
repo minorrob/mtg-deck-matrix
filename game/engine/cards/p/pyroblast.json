@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pyroblast",
+    "oracleId": "ecc435e2-deb1-420a-a79f-01dd08747314",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target spell if it's blue.\n• Destroy target permanent if it's blue.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Counter target spell if it's blue.\n• Destroy target permanent if it's blue.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target spell if it's blue.",
+              "targets": [
+                {
+                  "what": "spell"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "counterSpell",
+                  "spells": {
+                    "target": 0
+                  },
+                  "condition": {
+                    "about": "target",
+                    "is": {
+                      "colors": [
+                        "U"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target permanent if it's blue.",
+              "targets": [
+                {
+                  "what": "permanent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  },
+                  "condition": {
+                    "about": "target",
+                    "is": {
+                      "colors": [
+                        "U"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

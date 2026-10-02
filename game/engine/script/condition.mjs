@@ -26,11 +26,29 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is"];
+/* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
+   blue" (Pyroblast: the target), "if it's a planeswalker" (Forge of Heroes): `about` which -- "remembered", "that card"
+   (a trigger's subject), "target" (the first) -- and `is` what it must be, read where it now is. None there, and it is
+   not. */
+const NAMED = ["remembered", "that card", "target"];
+function namedObject(about, {remembered, targets, about: subject}) {
+  if (about === "remembered") return remembered?.[0] ?? null;
+  if (about === "that card") return subject?.card ?? null;
+  if (about === "target") { const t = targets?.[0]; return t && t.kind === "object" ? t.id : null; }
+  return null;
+}
+function namedIs(state, id, selector, context) {
+  const object = id === null || id === undefined ? null : state.objects[id];
+  if (!object) return false;
+  const what = object.zone === "battlefield" ? "permanent" : object.zone === "stack" ? "spell" : "card";
+  return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
+}
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined} = {}) {
   if (!condition) return true;
+  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source})) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
   if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
@@ -72,6 +90,9 @@ export function conditionProblems(condition) {
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
+  if (("about" in condition) !== ("is" in condition)) problems.push("about names an object and is says what it must be: both, or neither");
+  if ("about" in condition && !NAMED.includes(condition.about)) problems.push(`about is ${NAMED.join(", ")}`);
+  if ("is" in condition) { try { compileSelector({...condition.is, what: "card"}); } catch (error) { problems.push(`What a named object must be: ${error.message}`); } }
   if ("present" in condition) {
     const {anyOf, ...shared} = condition.present ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [condition.present]) compileSelector(one); }
