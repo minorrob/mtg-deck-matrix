@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rise of the Witch-king",
+    "oracleId": "3c86541c-3601-4a38-8872-39705e41303a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices a creature of their choice. If you sacrificed a creature this way, you may return another permanent card from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices a creature of their choice. If you sacrificed a creature this way, you may return another permanent card from your graveyard to the battlefield.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "selector": {
+            "nonTypes": [
+              "Instant",
+              "Sorcery"
+            ]
+          },
+          "to": "battlefield",
+          "upTo": true,
+          "except": "remembered",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}

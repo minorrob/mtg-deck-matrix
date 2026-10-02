@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 910,
-  "everyRule": 2181
+  "defined": 916,
+  "everyRule": 2188
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -463,7 +463,7 @@
      "top": 5,
      "all": 239,
      "blocks": 5,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -655,7 +655,7 @@
      "top": 3,
      "all": 35,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -2634,7 +2634,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 3
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3905,7 +3905,7 @@
      "top": 11,
      "all": 158,
      "blocks": 11,
-     "alone": 5
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -4109,7 +4109,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4385,7 +4385,7 @@
      "top": 1,
      "all": 67,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4529,7 +4529,7 @@
      "top": 1,
      "all": 8,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 16,
+    "built": 17,
     "partial": 4,
     "named": 0,
-    "missing": 17
+    "missing": 16
    },
    "entries": [
     {
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 16
+     "alone": 21
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 13
+     "alone": 14
     },
     {
      "kind": "option",
@@ -9073,13 +9073,13 @@
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: about a named object",
-     "engine": null,
-     "status": "missing",
+     "engine": "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent",
+     "status": "built",
      "forge": "ConditionDefined",
      "top": 57,
      "all": 973,
-     "blocks": 53,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9199,7 +9199,7 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
-     "alone": 4
+     "alone": 7
     },
     {
      "kind": "option",
@@ -9437,7 +9437,7 @@
      "top": 13,
      "all": 63,
      "blocks": 13,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "count",
@@ -9689,7 +9689,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "count",

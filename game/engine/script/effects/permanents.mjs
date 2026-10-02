@@ -18,7 +18,7 @@
  */
 
 import {addObject} from "../../state/index.mjs";
-import {selectMatching} from "../filter.mjs";
+import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
@@ -72,6 +72,32 @@ export function attach(state, params, context) {
   host.attachments = [...(host.attachments ?? []), sourceId];
   events.push(event("GameEventCardAttachment", state, {card: cardRef(state, sourceId), attachedTo: cardRef(state, hostId)}));
   return events;
+}
+
+/* AN AURA THAT ENTERS WITHOUT BEING CAST (CR 303.4f, batch 70): a token copy of an Aura (Yenna, Redtooth Regent), an Aura
+   card returned from a graveyard (Sun Titan, Sevinne's Reclamation). Its controller chooses what it will enchant as it
+   enters -- anything its Enchant could enchant, which is not targeting, so hexproof does not stop it; asked before it is
+   on the battlefield, so never itself (CR 303.4d). With nothing to enchant it does not enter: a card stays where it was,
+   and a token is not made (CR 303.4g). What it may enchant here are permanents; an Aura that enchants a player is not
+   built, and finds nothing. */
+export function enchantable(state, enchant, controller) {
+  const {anyOf, ...shared} = enchant ?? {};
+  const each = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [enchant ?? {}])
+    .filter((one) => (one.what ?? "permanent") === "permanent")
+    .map((one) => compileSelector({...one, what: "permanent"}));
+  return state.zones.battlefield.filter((id) => each.some((match) => match(state, id, {controller})));
+}
+/* It enters attached (CR 303.4f): to the one there is, at once; with a choice, its controller is asked next, before the
+   rest of what the effect does (asking.mjs, enchantWhat) -- or, with no resolution to ask in, it takes the first. */
+export function enchantOnArrival(state, auraId, hosts, controller) {
+  if (hosts.length === 1 || !state.resolving) { attachTo(state, auraId, hosts[0]); return; }
+  state.resolving.queue.unshift({effect: "enchantWhat", aura: auraId, hosts: [...hosts], player: controller});
+}
+/** Attach an Aura entering the battlefield to what it enchants (CR 303.4f): no event of its own, it enters attached. */
+export function attachTo(state, auraId, hostId) {
+  const host = state.objects[hostId];
+  state.objects[auraId].attachedTo = hostId;
+  host.attachments = [...(host.attachments ?? []), auraId];
 }
 
 /* COPIABLE VALUES (CR 707.2): what a copy of a permanent copies -- its name, mana cost, colors, types, subtypes,
@@ -174,7 +200,12 @@ export function makeCopies(state, ids, params, context, events) {
     const original = state.objects[id];
     if (!original) continue;
     for (let i = 0; i < (params.count ?? 1); i += 1) {
-      const copy = addObject(state, {...copiable(original, params.except), owner: controller, controller, token: true}, "battlefield");
+      const values = copiable(original, params.except);
+      /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
+      const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
+      if (hosts && !hosts.length) continue;
+      const copy = addObject(state, {...values, owner: controller, controller, token: true}, "battlefield");
+      if (hosts) enchantOnArrival(state, copy, hosts, controller);
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
       events.push(event("GameEventCardChangeZone", state, {
@@ -191,7 +222,9 @@ export function makeCopies(state, ids, params, context, events) {
 export function copyPermanent(state, params, context) {
   const events = [];
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
-  makeCopies(state, originals, params, context, events);
+  const made = makeCopies(state, originals, params, context, events);
+  /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
+  if (params.remember) context.remembered = made;
   return events;
 }
 

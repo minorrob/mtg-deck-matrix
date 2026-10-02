@@ -220,6 +220,8 @@ export function resolveTop(state, effect = null) {
   const x = entry.x ?? (source !== null ? state.objects[source]?.xPaid : undefined) ?? 0;
   const attached = source !== null ? state.objects[source]?.attachedTo ?? null : null;
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
+    /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
+    ...(entry.cast ? {cast: entry.cast} : {}),
     /* What its permanent chose as it entered: "draw a card for each creature of the chosen type". */
     ...(source !== null && state.objects[source]?.chosen !== undefined ? {chosen: state.objects[source].chosen} : {})};
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, context);
@@ -325,5 +327,6 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
  * into the state; everything the board draws is here.
  */
 export function stackProjection(state) {
-  return state.stack.map(({objectId, permanent, script, ...shown}) => ({...shown}));
+  /* How a spell was cast (`cast`, rules/actions.mjs) is the engine's, for its conditions: the board's contract is as it was. */
+  return state.stack.map(({objectId, permanent, script, cast, ...shown}) => ({...shown}));
 }
