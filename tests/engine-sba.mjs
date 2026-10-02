@@ -213,4 +213,19 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
   eq(s.zones.battlefield.length, 1, "everyone else's stay");
 }
 
+/* ---- indestructible (CR 702.12b): not destroyed by lethal damage or deathtouch; zero toughness is not destruction ---- */
+{
+  const s = fresh();
+  const dented = addObject(s, creature({card: "Myr", keywords: ["Indestructible"], owner: 0, controller: 0}), "battlefield");
+  const touched = addObject(s, creature({card: "Golem", keywords: ["Indestructible"], owner: 0, controller: 0}), "battlefield");
+  const shrunk = addObject(s, creature({card: "Ghost", toughness: 0, keywords: ["Indestructible"], owner: 0, controller: 0}), "battlefield");
+  const plain = addObject(s, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  s.objects[dented].damage = 5;
+  s.objects[touched].damage = 1; s.objects[touched].deathtouched = true;
+  s.objects[plain].damage = 2;
+  checkStateBasedActions(s);
+  eq([Boolean(s.objects[dented]), s.objects[dented]?.damage, Boolean(s.objects[touched]), Boolean(s.objects[shrunk]), Boolean(s.objects[plain])], [true, 5, true, false, false],
+    "an indestructible 2/2 with 5 damage stays, damage and all; so does one dealt deathtouch damage; an indestructible 2/0 is put into the graveyard (704.5f is not destruction); a plain 2/2 with 2 damage dies");
+}
+
 console.log(`engine-sba: ${checks} checks passed — two commanders' damage is not pooled, life gain does not erase it, an empty library is not a loss until you draw, and a dead player's board leaves with them.`);

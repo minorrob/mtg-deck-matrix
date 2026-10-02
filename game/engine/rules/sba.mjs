@@ -35,7 +35,7 @@
 
 import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
 
@@ -194,6 +194,10 @@ export function checkStateBasedActions(state) {
          state-based action and not the assignment rule -- the assignment rule only decides how much
          has to be put on a blocker before damage may move past it. */
       const deathtouched = object.deathtouched === true && toughness > 0;
+      /* CR 702.12b: lethal damage and deathtouch DESTROY, and an indestructible permanent is not destroyed -- it stays,
+         damage and all. Toughness zero or less is not destruction (704.5f), so indestructible does not save it. */
+      const destroyed = !(toughness <= 0) && (deathtouched || (object.damage > 0 && object.damage >= toughness));
+      if (destroyed && keywordsOf(state, id).includes("Indestructible")) continue;
       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
         /* WHAT DIED, IN FULL. A "whenever this creature dies" trigger has to be found after the
