@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bushwhack",
+    "oracleId": "c61374e5-a7f6-455e-a40b-a481751b536b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Search your library for a basic land card, reveal it, put it into your hand, then shuffle.\n• Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Search your library for a basic land card, reveal it, put it into your hand, then shuffle.\n• Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "selector": {
+                    "types": [
+                      "Land"
+                    ],
+                    "supertypes": [
+                      "Basic"
+                    ]
+                  },
+                  "to": "hand",
+                  "reveal": true,
+                  "shuffle": true
+                }
+              ]
+            },
+            {
+              "text": "Target creature you control fights target creature you don't control.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "fight",
+                  "from": {
+                    "target": 0
+                  },
+                  "targets": {
+                    "target": 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

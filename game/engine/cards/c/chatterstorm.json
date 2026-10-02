@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chatterstorm",
+    "oracleId": "7e6c7b57-bd6a-4ac8-bcab-c3a879f479c2",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a 1/1 green Squirrel creature token.\nStorm (When you cast this spell, copy it for each spell cast before it this turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Storm",
+      "keyword": "storm"
+    },
+    {
+      "kind": "spell",
+      "text": "Create a 1/1 green Squirrel creature token.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Squirrel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Squirrel"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

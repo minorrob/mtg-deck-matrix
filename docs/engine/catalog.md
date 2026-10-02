@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 742 defined and playable today; 1,973 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 753 defined and playable today; 1,994 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,9 +18,9 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
-| Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 43 | 1 | 22 | 126 |
+| Keyword abilities (CR 702) | 194 | 21 | 0 | 26 | 147 |
+| Keyword actions (CR 701) | 70 | 15 | 3 | 8 | 44 |
+| Effects | 192 | 45 | 1 | 20 | 126 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
 | Static abilities | 77 | 4 | 2 | 0 | 71 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 11 | 106 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 12 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
 | effect | Clone | — | missing | 9 | 29 |
 | keyword ability | Ninjutsu | — | missing | 8 | 14 |
@@ -44,13 +44,13 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 7 | 113 |
 | effect | ChooseType | chooseType | named | 7 | 35 |
 | effect | Play | play | named | 7 | 35 |
-| effect | GenericChoice | genericChoice | named | 7 | 21 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
-| effect | Fight | fight | named | 7 | 15 |
 | keyword ability | Crew | — | named | 7 | 15 |
-| keyword ability | Storm | — | named | 7 | 7 |
 | static | UntapOtherPlayer | — | missing | 7 | 7 |
+| keyword construct | ETBReplacement | — | missing | 6 | 68 |
 | option | An effect's condition: about a named object | — | missing | 6 | 53 |
+| trigger | AttackersDeclared | attackers declared | named | 6 | 26 |
+| effect | DigUntil | — | missing | 6 | 18 |
 
 ## Keyword abilities (CR 702)
 
@@ -82,7 +82,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
 | 702.108 | Prowess | — | missing | 8 | 93 | 8 | 5 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 4 |
-| 702.40 | Storm | — | named | 7 | 37 | 7 | 7 |
+| 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 4 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 4 |
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 5 |
@@ -269,7 +269,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | 701.25 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | 701.27 | Transform | setState | named | 19 | 280 | 19 | 5 |
-| 701.14 | Fight | fight | named | 15 | 148 | 15 | 7 |
+| 701.14 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
 | 701.19 | Regenerate | — | missing | 12 | 269 | 0 | 0 |
 | 701.10 | Double | multiplyCounters | named | 12 | 53 | 12 | 4 |
@@ -372,14 +372,14 @@ The things that alone hold back the most of the most-played cards.
 | AddPhase | addPhase | built | 24 | 58 | 0 | 0 |
 | GainControl | gainControl | built | 22 | 316 | 0 | 0 |
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
-| GenericChoice | genericChoice | named | 21 | 153 | 21 | 7 |
+| GenericChoice | modal | built | 21 | 153 | 0 | 0 |
 | SetState | setState | named | 19 | 280 | 19 | 5 |
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
 | DigUntil | — | missing | 18 | 167 | 18 | 6 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
-| Fight | fight | named | 15 | 148 | 15 | 7 |
+| Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | — | missing | 15 | 43 | 15 | 5 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | named | 14 | 113 | 14 | 5 |
@@ -828,7 +828,7 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 7 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 11 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 12 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 68 | 3 |
+| ETBReplacement | — | missing | 68 | 408 | 68 | 6 |
 | etbCounter | — | missing | 35 | 475 | 25 | 4 |
 | Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 4 |

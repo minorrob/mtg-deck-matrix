@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 742,
-  "everyRule": 1973
+  "defined": 753,
+  "everyRule": 1994
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 20,
+    "built": 21,
     "partial": 0,
-    "named": 27,
+    "named": 26,
     "missing": 147
    },
    "entries": [
@@ -337,13 +337,13 @@
      "kind": "keyword ability",
      "rule": "702.40",
      "name": "Storm",
-     "engine": null,
-     "status": "named",
+     "engine": "Storm",
+     "status": "built",
      "forge": "Storm",
      "top": 7,
      "all": 37,
-     "blocks": 7,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -2353,9 +2353,9 @@
   },
   "Keyword actions (CR 701)": {
    "tally": {
-    "built": 14,
+    "built": 15,
     "partial": 3,
-    "named": 9,
+    "named": 8,
     "missing": 44
    },
    "entries": [
@@ -2533,12 +2533,12 @@
      "rule": "701.14",
      "name": "Fight",
      "engine": "fight",
-     "status": "named",
+     "status": "built",
      "forge": "Fight",
      "top": 15,
      "all": 148,
-     "blocks": 15,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 43,
+    "built": 45,
     "partial": 1,
-    "named": 22,
+    "named": 20,
     "missing": 126
    },
    "entries": [
@@ -3719,13 +3719,13 @@
      "kind": "effect",
      "rule": null,
      "name": "GenericChoice",
-     "engine": "genericChoice",
-     "status": "named",
+     "engine": "modal",
+     "status": "built",
      "forge": "GenericChoice",
      "top": 21,
      "all": 153,
-     "blocks": 21,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3804,12 +3804,12 @@
      "rule": null,
      "name": "Fight",
      "engine": "fight",
-     "status": "named",
+     "status": "built",
      "forge": "Fight",
      "top": 15,
      "all": 148,
-     "blocks": 15,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "option",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 68,
-     "alone": 3
+     "alone": 6
     },
     {
      "kind": "keyword construct",

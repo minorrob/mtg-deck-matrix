@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tireless Provisioner",
+  "scenarios": [
+    {
+      "name": "A land enters: he chooses a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tireless Provisioner"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Create a Treasure token."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tireless Provisioner",
+            "Forest",
+            "Treasure"
+          ]
+        }
+      ]
+    }
+  ]
+}

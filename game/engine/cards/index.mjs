@@ -251,6 +251,14 @@ export function compileScript(script) {
       keywords.push("Ward");
       return;
     }
+    /* STORM (CR 702.40a): kept on the card as a static ability, read as the spell is cast (rules/actions.mjs). Only on an
+       instant or sorcery here -- an Aura's storm copies become tokens, and that card has more the engine lacks. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "storm") {
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: storm on a card that is not an instant or sorcery`);
+      abilities.push({id, kind: "static", rule: "storm", text: ability.text, affects: {what: "card", self: true}});
+      keywords.push("Storm");
+      return;
+    }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
        static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
        instant or sorcery: "if the resulting spell is an instant or sorcery spell". */

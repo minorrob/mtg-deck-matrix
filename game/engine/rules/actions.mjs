@@ -734,6 +734,16 @@ function perform(state, player, action) {
     }
     /* What it is aimed at becomes its target (ward, CR 702.21a). */
     events.push(...becameTarget(state, entry));
+    /* STORM (CR 702.40a): "when you cast this spell, copy it for each spell cast before it this turn. You may choose new
+       targets for the copies" -- a triggered ability of the spell on the stack, waiting with the rest; every player's
+       spells this turn counted, this one aside. */
+    if ((object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "storm")) {
+      const before = state.players.reduce((n, p) => n + (p.castThisTurn ?? []).length, 0) - 1;
+      (state.pendingTriggers ??= []).push({abilityId: "storm", text: `Storm: copy ${object.card} for each spell cast before it this turn.`, controller: player,
+        source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
+        about: {card: entry.objectId, player, stackId: entry.stackId, castBefore: Math.max(0, before)},
+        script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: {castBefore: true}, newTargets: true}]}});
+    }
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},

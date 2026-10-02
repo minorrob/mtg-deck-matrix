@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Radstorm",
+    "oracleId": "d4cde3d5-eb13-4ad5-8178-08780dc85d39",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Storm (When you cast this spell, copy it for each spell cast before it this turn.)\nProliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Storm",
+      "keyword": "storm"
+    },
+    {
+      "kind": "spell",
+      "text": "Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}
