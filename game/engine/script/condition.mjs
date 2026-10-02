@@ -26,7 +26,7 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes"];
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined} = {}) {
@@ -34,9 +34,12 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
   if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
+  /* How many permanents the selector finds now (Forge's PresentCompare): at least `atLeast` ("five or more lands", one
+     when it says nothing), at most `atMost` ("if you control no Snakes": none). */
   if (condition.present) {
     const n = state.zones.battlefield.filter((id) => matchesSelector(condition.present, state, id, {controller, source})).length;
-    if (n < (condition.atLeast ?? 1)) return false;
+    if (n < (condition.atLeast ?? (condition.atMost !== undefined ? 0 : 1))) return false;
+    if (condition.atMost !== undefined && n > condition.atMost) return false;
   }
   /* "If it's the first combat phase of the turn" (Genji Glove; rules/turn.mjs counts them). */
   if (condition.firstCombat === true && (state.combatsThisTurn ?? 0) > 1) return false;
@@ -57,6 +60,8 @@ export function conditionProblems(condition) {
   const problems = [];
   for (const key of Object.keys(condition)) if (!CONDITION_KEYS.includes(key)) problems.push(`A condition has no key ${JSON.stringify(key)}; it has ${CONDITION_KEYS.join(", ")}`);
   if ("atLeast" in condition && !(Number.isInteger(condition.atLeast) && condition.atLeast >= 1)) problems.push("A condition's atLeast is a whole number, 1 or more");
+  if ("atMost" in condition && !(Number.isInteger(condition.atMost) && condition.atMost >= 0)) problems.push("A condition's atMost is a whole number, 0 or more");
+  if (("atLeast" in condition || "atMost" in condition) && !("present" in condition)) problems.push("atLeast and atMost count what `present` describes");
   if ("handEmpty" in condition && typeof condition.handEmpty !== "boolean") problems.push("handEmpty is true or false");
   if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
