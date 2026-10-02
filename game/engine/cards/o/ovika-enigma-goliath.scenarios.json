@@ -1,0 +1,228 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ovika, Enigma Goliath",
+  "fixtures": {
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Battle"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Study": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{3}",
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A noncreature spell of mana value 3: three 1/1 Phyrexian Goblins with haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ovika, Enigma Goliath",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Study"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Study"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 7
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Phyrexian Goblin",
+            "has": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ward--{3}, Pay 3 life: Maya pays both, and Bolt resolves",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ovika, Enigma Goliath"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ovika, Enigma Goliath",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Pay {3} and 3 life",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Pay {3} and 3 life"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ovika, Enigma Goliath"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bolt"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

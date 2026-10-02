@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vein Ripper",
+    "oracleId": "f83a768c-162d-46f0-8ebd-d9c6b2c69322",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Assassin"
+    ],
+    "manaCost": "{3}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWard—Sacrifice a creature.\nWhenever a creature dies, target opponent loses 2 life and you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward—Sacrifice a creature.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature dies, target opponent loses 2 life and you gain 2 life.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

@@ -82,9 +82,10 @@ function copiable(object, except = {}) {
   return {
     card: object.card, manaCost: object.manaCost ?? null,
     types: [...new Set([...(object.types ?? []), ...(except.addTypes ?? [])])],
-    subtypes: [...(except.setSubtypes ?? object.subtypes ?? [])],
+    /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
+    subtypes: [...new Set([...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])])],
     ...(supertypes.length ? {supertypes} : {}),
-    colors: [...(except.setColors ?? object.colors ?? [])],
+    colors: [...new Set([...(except.setColors ?? object.colors ?? []), ...(except.addColors ?? [])])],
     keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
     abilities: structuredClone(object.abilities ?? []),
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
@@ -151,6 +152,7 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
+  const made = [];
   for (let i = 0; i < count; i += 1) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
@@ -177,7 +179,10 @@ export function createToken(state, params, context) {
       to: {zoneType: "Battlefield", player: {playerId: controller}},
       createdAsToken: true,
     }));
+    made.push(id);
   }
+  /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
+  afterwards(state, made, {...params, controller}, context);
   return events;
 }
 

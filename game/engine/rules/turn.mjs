@@ -278,8 +278,12 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "trigger-targets") {
     const events = resolveTriggerTargets(state, awaiting, indices);
-    grantStepPriority(state, events);
-    return events;
+    /* What the trigger is now aimed at triggers at once (ward), even while another trigger still asks for its targets
+       and nobody receives priority yet. */
+    collectTriggers(state, events);
+    const after = [];
+    grantStepPriority(state, after);
+    return [...events, ...after];
   }
   if (awaiting.kind === "entering-choice") {
     const events = resolveEnteringChoice(state, awaiting, indices);

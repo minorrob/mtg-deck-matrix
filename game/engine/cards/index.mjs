@@ -37,6 +37,21 @@ import {compileSelector} from "../script/filter.mjs";
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
 
+/* A ward cost as "unless that player pays" asks it (effects/asking.mjs): `amount` generic mana, `life`, `discard` a
+   card, `sacrifice` a permanent the selector describes. Null for a cost it cannot ask. */
+function wardCost(cost) {
+  if (!Array.isArray(cost) || !cost.length) return null;
+  const unless = {};
+  for (const atom of cost) {
+    if (atom?.atom === "mana" && /^\{\d+\}$/.test(atom.cost ?? "")) unless.amount = Number(atom.cost.slice(1, -1));
+    else if (atom?.atom === "payLife" && Number.isInteger(atom.amount)) unless.life = atom.amount;
+    else if (atom?.atom === "discard" && atom.self !== true) unless.discard = 1;
+    else if (atom?.atom === "sacrifice" && atom.selector && typeof atom.selector === "object") unless.sacrifice = structuredClone(atom.selector);
+    else return null;
+  }
+  return unless;
+}
+
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];
 
@@ -191,6 +206,18 @@ export function compileScript(script) {
       if (!ability.target || typeof ability.target !== "object") { problems.push(`${ability.text}: Enchant says what it may enchant, as a selector in \`target\``); return; }
       try { compileSelector(ability.target.anyOf ? ability.target.anyOf[0] : ability.target); } catch (error) { problems.push(`${ability.text}: ${error.message}`); return; }
       enchant = {target: ability.target, text: ability.text, hostile: ability.hostile === true};
+      return;
+    }
+    /* WARD (CR 702.21a): "Whenever this permanent becomes the target of a spell or ability an opponent controls, counter
+       it unless that player pays [cost]." The keyword IS that triggered ability: its cost a list of atoms -- generic
+       mana, life, a card to discard, a permanent to sacrifice -- asked of that player as "unless" is (unlessPays), and
+       "counter it" the stack entry it is about, spell or ability. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "ward") {
+      const unless = wardCost(ability.cost);
+      if (!unless) problems.push(`${ability.text}: a ward cost of generic mana, life, a discard or a sacrifice, and at least one`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"},
+        effects: [{effect: "unlessPays", who: "that player", ...(unless ?? {}), effects: [{effect: "counterSpell", stack: "that"}]}]});
+      keywords.push("Ward");
       return;
     }
     /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a

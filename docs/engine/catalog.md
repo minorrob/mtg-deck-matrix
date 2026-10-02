@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 580 defined and playable today; 1,744 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 588 defined and playable today; 1,755 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 19 | 0 | 28 | 147 |
+| Keyword abilities (CR 702) | 194 | 20 | 0 | 27 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 38 | 1 | 26 | 127 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| keyword ability | Ward | — | named | 11 | 26 |
 | effect | AddPhase | — | missing | 11 | 24 |
 | static | Panharmonicon | — | missing | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
 | option | Remembering what an effect moved | — | missing | 7 | 117 |
+| option | As long as a permanent is present (a static ability's condition) | — | missing | 7 | 35 |
 
 ## Keyword abilities (CR 702)
 
@@ -70,7 +70,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.12 | Indestructible | Indestructible | built | 37 | 111 | 0 | 0 |
 | 702.17 | Reach | Reach | built | 31 | 436 | 0 | 0 |
 | 702.111 | Menace | Menace | built | 26 | 411 | 0 | 0 |
-| 702.21 | Ward | — | named | 26 | 212 | 26 | 11 |
+| 702.21 | Ward | Ward | built | 26 | 212 | 0 | 0 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
@@ -407,7 +407,7 @@ The things that alone hold back the most of the most-played cards.
 | Discover | discover | named | 6 | 35 | 6 | 3 |
 | AlterAttribute | alterAttribute | named | 5 | 115 | 5 | 1 |
 | ChooseNumber | — | missing | 5 | 57 | 5 | 0 |
-| Protection | — | missing | 5 | 53 | 5 | 4 |
+| Protection | — | missing | 5 | 53 | 5 | 5 |
 | MoveCounter | moveCounters | named | 5 | 32 | 5 | 3 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
 | Radiation | — | missing | 4 | 22 | 4 | 1 |
@@ -542,8 +542,8 @@ The things that alone hold back the most of the most-played cards.
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 2 |
 | AttackersDeclaredOneTarget | attackers declared | named | 8 | 32 | 26 | 5 |
-| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
-| LifeLost | — | missing | 6 | 20 | 6 | 0 |
+| SpellCastOrCopy | — | missing | 6 | 31 | 6 | 3 |
+| LifeLost | — | missing | 6 | 20 | 6 | 1 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 4 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
@@ -754,7 +754,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
 | DamageDone | — | missing | 22 | 209 | 22 | 3 |
-| Counter | — | missing | 21 | 110 | 12 | 4 |
+| Counter | — | missing | 21 | 110 | 12 | 6 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
 | AddCounter | — | missing | 15 | 30 | 15 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 3 |
@@ -925,7 +925,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Num | — | missing | 1 | 3 | 1 | 0 |
 | — | Times your commander was cast from the command zone | — | missing | 1 | 3 | 1 | 1 |
 | — | ValidCommand | — | missing | 1 | 3 | 1 | 0 |
-| — | CardBasePower | — | missing | 1 | 2 | 1 | 0 |
+| — | CardBasePower | — | missing | 1 | 2 | 1 | 1 |
 | — | HasPropertyHasCardsInHand | — | missing | 1 | 2 | 1 | 0 |
 | — | MaxOppDamageThisTurn | — | missing | 1 | 2 | 1 | 0 |
 | — | BloodthirstAmount | — | missing | 1 | 1 | 1 | 0 |
@@ -1079,7 +1079,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | ETBReplacement | — | missing | 68 | 408 | 68 | 3 |
 | etbCounter | — | missing | 35 | 475 | 25 | 4 |
-| Chapter | — | missing | 19 | 236 | 19 | 6 |
+| Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 3 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 2 |
 | MayEffectFromOpeningHand | — | missing | 5 | 30 | 5 | 2 |

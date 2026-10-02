@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ratadrabik of Urborg",
+    "oracleId": "b3ab43f2-4f2b-4439-9254-0110ce443fdb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Wizard"
+    ],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance, ward {2}\nOther Zombies you control have vigilance.\nWhenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in addition to its other colors and types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Other Zombies you control have vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Zombie"
+        ],
+        "another": true,
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in addition to its other colors and types.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "supertypes": [
+            "Legendary"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "that card",
+          "except": {
+            "nonLegendary": true,
+            "setPower": 2,
+            "setToughness": 2,
+            "addColors": [
+              "B"
+            ],
+            "addSubtypes": [
+              "Zombie"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
