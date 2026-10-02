@@ -152,7 +152,11 @@ export function moveZone(state, params, context) {
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   for (const id of moving) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events);
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
+    /* "Tapped and attacking" (ninjutsu): attacking the player the ability is about, in this combat -- never declared as an
+       attacker (CR 508.4), and unblocked, its blockers already declared. */
+    if (moved !== null && params.attacking === "that player" && state.objects[moved]?.zone === "battlefield" && state.combat && context.about?.player !== undefined)
+      state.combat.attacks.push({attacker: moved, defender: context.about.player, blocked: false, blockers: []});
     if (moved !== null) became.push(moved);
     /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
     if (moved !== null && params.to === "library" && params.top === true && state.objects[moved]) {

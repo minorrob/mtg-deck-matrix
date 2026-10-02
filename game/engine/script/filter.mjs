@@ -36,10 +36,14 @@ import {usesThisTurn} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
+/* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
+const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
+
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
+  "unblocked",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -247,6 +251,9 @@ export function compileSelector(selector) {
     if (selector.countersAtLeast && ((object.counters ?? {})[selector.countersAtLeast.counter] ?? 0) < selector.countersAtLeast.count) return false;
     /* "Target attacking creature" (Maze of Ith, CR 508.1k): declared as an attacker in this combat. */
     if (selector.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id)) return false;
+    /* "An unblocked attacking creature" (CR 509.1h): its blockers declared -- from the declare blockers step on -- and
+       none blocking it. */
+    if (selector.unblocked === true && !(BLOCKERS_DECLARED.includes(state.phase) && (state.combat?.attacks ?? []).some((attack) => attack.attacker === id && !attack.blocked))) return false;
     if (selector.power) {
       const power = characteristicsOf(state, id).power ?? 0;
       if (selector.power.min !== undefined && power < selector.power.min) return false;
