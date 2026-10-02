@@ -316,7 +316,8 @@ export function manaAlternatives(state, player, given, source = null) {
   if (ability.anyColor === true) return COLORS.map((color) => ({[color]: count}));
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
   /* "Two mana in any combination of colors" (Great Hall of the Citadel): each way to make it, an offer each. */
-  if (ability.anyCombination === true) return combinations(count);
+  /* "In any combination of {U} and/or {R}" (Vivi Ornitier): of those colors only. */
+  if (ability.anyCombination) return combinations(count, 0, Array.isArray(ability.anyCombination) ? COLORS.filter((c) => ability.anyCombination.includes(c)) : COLORS);
   /* "Any color that a land an opponent controls could produce" (Exotic Orchard), "any type ... a land you control"
      (Reflecting Pool, `anyType`, colorless too): what those lands' own mana abilities could add, now -- never another
      such ability's (CR 106.7), so two Reflecting Pools do not feed each other. */
@@ -347,8 +348,8 @@ function manaAbilityPayment(state, player, ability) {
 
 const total = (mana) => Object.values(mana ?? {}).reduce((n, v) => n + v, 0);
 /* Every way to make `n` mana of the five colors, each once: {W: 2}, {W: 1, U: 1}, ... -- 15 ways for two. */
-const combinations = (n, from = 0) => (n <= 0 ? [{}]
-  : COLORS.slice(from).flatMap((color, i) => combinations(n - 1, from + i).map((rest) => ({[color]: (rest[color] ?? 0) + 1, ...Object.fromEntries(Object.entries(rest).filter(([k]) => k !== color))}))));
+const combinations = (n, from = 0, colors = COLORS) => (n <= 0 ? [{}]
+  : colors.slice(from).flatMap((color, i) => combinations(n - 1, from + i, colors).map((rest) => ({[color]: (rest[color] ?? 0) + 1, ...Object.fromEntries(Object.entries(rest).filter(([k]) => k !== color))}))));
 
 /* The values X may take for a cost with {X} (CR 107.3): nothing up to what the pool holds past the rest of the cost,
    each X symbol taking X (CR 107.3a). A cost without X: the one null. `extra` is generic already owed (the tax). */

@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Adeline, Resplendent Cathar",
+    "oracleId": "38515f89-348b-4cf3-b7bd-1f6fe4ce2fba",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": 4
+  },
+  "oracleText": "Vigilance\nAdeline's power is equal to the number of creatures you control.\nWhenever you attack, for each opponent, create a 1/1 white Human creature token that's tapped and attacking that player or a planeswalker they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "Adeline's power is equal to the number of creatures you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, for each opponent, create a 1/1 white Human creature token that's tapped and attacking that player or a planeswalker they control.",
+      "trigger": {
+        "on": "attackers declared"
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "opponent",
+          "effects": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Human",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Human"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 1,
+                "toughness": 1
+              },
+              "tapped": true,
+              "attacking": "that player"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

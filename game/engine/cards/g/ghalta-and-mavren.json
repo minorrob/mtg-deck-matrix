@@ -1,0 +1,132 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghalta and Mavren",
+    "oracleId": "756042c5-e444-45d7-8dc6-ae7c83c98438",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Vampire"
+    ],
+    "manaCost": "{3}{G}{G}{W}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 12,
+    "toughness": 12
+  },
+  "oracleText": "Trample\nWhenever you attack, choose one —\n• Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other attacking creatures.\n• Create X 1/1 white Vampire creature tokens with lifelink, where X is the number of other attacking creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack, choose one —\n• Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other attacking creatures.\n• Create X 1/1 white Vampire creature tokens with lifelink, where X is the number of other attacking creatures.",
+      "trigger": {
+        "on": "attackers declared"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "modes": [
+            {
+              "text": "Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other attacking creatures.",
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Dinosaur",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Dinosaur"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": {
+                      "greatestPower": {
+                        "what": "permanent",
+                        "types": [
+                          "Creature"
+                        ],
+                        "attacking": true,
+                        "another": true
+                      }
+                    },
+                    "toughness": {
+                      "greatestPower": {
+                        "what": "permanent",
+                        "types": [
+                          "Creature"
+                        ],
+                        "attacking": true,
+                        "another": true
+                      }
+                    },
+                    "keywords": [
+                      "Trample"
+                    ]
+                  },
+                  "tapped": true,
+                  "attacking": true
+                }
+              ]
+            },
+            {
+              "text": "Create X 1/1 white Vampire creature tokens with lifelink, where X is the number of other attacking creatures.",
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": {
+                    "count": {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ],
+                      "attacking": true,
+                      "another": true
+                    }
+                  },
+                  "token": {
+                    "name": "Vampire",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Vampire"
+                    ],
+                    "colors": [
+                      "W"
+                    ],
+                    "power": 1,
+                    "toughness": 1,
+                    "keywords": [
+                      "Lifelink"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

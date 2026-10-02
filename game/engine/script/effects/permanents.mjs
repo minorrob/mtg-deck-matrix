@@ -22,6 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
+import {typesOf} from "../../rules/layers.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -97,6 +98,45 @@ function copiable(object, except = {}) {
   };
 }
 
+/* WHO A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): a defending player -- and where every opponent
+   is one (Commander's attack multiple players option, CR 802.2), each opponent still in the game, in turn order. */
+export function defendingPlayers(state, controller) {
+  const seats = state.players.map((p) => p.id), from = seats.indexOf(controller);
+  return [...seats.slice(from + 1), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
+}
+
+/* It attacks that player in this combat: never declared as an attacker (CR 508.4: no "whenever ... attacks" for it), and
+   blocked or not as the combat goes. The player defends now, so they declare blockers. */
+export function joinAttack(state, id, player) {
+  state.combat.attacks.push({attacker: id, defender: player, blocked: false, blockers: []});
+  if (!state.combat.defenders.includes(player)) state.combat.defenders.push(player);
+}
+
+/**
+ * "Tapped and attacking" (CR 508.4; Forge's TokenAttacking) -- `attacking` on what makes or moves permanents: "that
+ * player", the one the ability is about (Adeline's "attacking that player", ninjutsu's returned attacker's); `true`, the
+ * defending player its controller chooses as it enters -- the only one, or asked, a creature at a time (asking.mjs,
+ * attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
+ * the game is attacked by nothing (CR 508.4a).
+ */
+export function enterAttacking(state, ids, whom, context, controller) {
+  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
+  const creatures = ids.filter((id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature"));
+  if (!creatures.length) return;
+  if (whom === "that player") {
+    const player = context.about?.player;
+    if (player === controller || !state.players[player] || state.players[player].lost) return;
+    for (const id of creatures) joinAttack(state, id, player);
+    return;
+  }
+  const players = defendingPlayers(state, controller);
+  if (!players.length) return;
+  /* One defending player, or an effect run outside a resolution with no one to ask: the first in turn order. */
+  if (players.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, players[0]); return; }
+  /* Asked next, before the rest of what the ability does. */
+  state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller});
+}
+
 /**
  * What permanents just put onto the battlefield gain -- "it gains haste until end of turn", "that creature gains haste"
  * -- and "sacrifice it at the beginning of the next end step", a delayed trigger that remembers them. Shared by token
@@ -114,6 +154,8 @@ export function afterwards(state, ids, params, context) {
   if (params.exileIfLeaves) for (const id of made) state.objects[id].exileIfLeaves = true;
   if (params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
     effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
+  /* "Tapped and attacking" (Leonin Warleader's Cats, a ninja put onto the battlefield). */
+  if (params.attacking) enterAttacking(state, made, params.attacking, context, controller);
 }
 
 /**

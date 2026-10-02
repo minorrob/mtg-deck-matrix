@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ainok Strike Leader",
+  "scenarios": [
+    {
+      "name": "Ainok attacks: a Goblin attacking Maya; 3 to her",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ainok Strike Leader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ainok Strike Leader"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ainok Strike Leader",
+            "Goblin"
+          ]
+        }
+      ]
+    }
+  ]
+}

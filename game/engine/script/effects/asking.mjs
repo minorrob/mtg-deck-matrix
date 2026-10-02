@@ -29,7 +29,7 @@ import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
-import {makeCopies, afterwards} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, defendingPlayers} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
@@ -624,6 +624,30 @@ export const changeTargets = {
   },
 };
 
+/* ---- attackWhom: a creature put onto the battlefield attacking, with more than one defending player it could attack
+   (CR 508.4): which one, its controller's choice as it enters -- a question for each, in the order they were made.
+   Queued by what made them (effects/permanents.mjs, enterAttacking); never written in a card script. ---- */
+export const attackWhom = {
+  /* Queued only with two defending players or more, and asked at once: nothing happens between. */
+  open(state, params) {
+    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], players: defendingPlayers(state, params.player)};
+    return true;
+  },
+  choice(state, awaiting) {
+    const id = awaiting.tokens[0];
+    return {id: `attackWhom:${id}`, title: `${state.objects[id].card} enters attacking: which player?`, mode: "one", min: 1, max: 1,
+      options: awaiting.players.map((p, index) => ({index, label: state.players[p].name, playerId: p}))};
+  },
+  apply(state, awaiting, indices) {
+    const option = attackWhom.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    const [id, ...rest] = awaiting.tokens;
+    joinAttack(state, id, option.playerId);
+    if (rest.length) { state.awaiting = {...awaiting, tokens: rest}; return {events: [], again: true}; }
+    return {events: []};
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -763,4 +787,4 @@ export const play = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom});

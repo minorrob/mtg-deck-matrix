@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soaring Lightbringer",
+    "oracleId": "65ea7eb1-751b-4ecd-83cb-e9b6015ec194",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Glimmer"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nOther enchantment creatures you control have flying.\nWhenever you attack a player, create a 1/1 white Glimmer enchantment creature token that's tapped and attacking that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Other enchantment creatures you control have flying.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Enchantment",
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack a player, create a 1/1 white Glimmer enchantment creature token that's tapped and attacking that player.",
+      "trigger": {
+        "on": "attackers declared",
+        "each": "defender"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Glimmer",
+            "types": [
+              "Enchantment",
+              "Creature"
+            ],
+            "subtypes": [
+              "Glimmer"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "tapped": true,
+          "attacking": "that player"
+        }
+      ]
+    }
+  ]
+}

@@ -84,7 +84,9 @@ const TRIGGERS = {
   enters: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
       /* "When this land enters untapped" (Mystic Sanctuary): not when it entered tapped (rules/trigger.mjs). */
-      ...(t.untapped ? {untapped: true} : {})} : null),
+      ...(t.untapped ? {untapped: true} : {}),
+      /* "When this creature enters from your hand" (Thousand-Faced Shadow): the zone it came from (rules/trigger.mjs). */
+      ...(t.from ? {from: t.from[0].toUpperCase() + t.from.slice(1)} : {})} : null),
   /* "When this dies", "whenever another creature you control dies", "whenever this or another creature dies": `filter`
      read as the thing last existed (CR 603.10a). */
   dies: (t) => (ARRIVALS.includes(t.who ?? "self")
@@ -99,9 +101,10 @@ const TRIGGERS = {
     ...(t.countBefore ? {countBefore: true} : {})}),
   /* "Whenever you attack" (CR 508.1): the attack as a whole, once, about the attacking player; "whenever you attack a player"
      (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
-     creatures attacked you" (`notAttacking: "you"`). `attacker`: you, opponent ("another player") or any. */
+     creatures attacked you" (`notAttacking: "you"`); "with one or more non-Gnome creatures", "whenever one or more Goblins
+     you control attack" (`filter`: an attacker it fits, one at least). `attacker`: you, opponent ("another player") or any. */
   "attackers declared": (t) => ({on: "GameEventAttackersDeclared", declared: true, attacker: t.attacker ?? "you", ...(t.atLeast ? {atLeast: t.atLeast} : {}),
-    ...(t.each === "defender" ? {eachDefender: true} : {}), ...(t.notAttacking ? {notAttacking: t.notAttacking} : {})}),
+    ...(t.each === "defender" ? {eachDefender: true} : {}), ...(t.notAttacking ? {notAttacking: t.notAttacking} : {}), ...(t.filter ? {filter: t.filter} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
   attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
     /* "Attack one of your opponents"; "attacks with three or more creatures" (rules/trigger.mjs). */
@@ -185,7 +188,9 @@ function manaAbility(ability, id) {
     : first.reflect && typeof first.reflect === "object" ? {reflect: first.reflect, ...(first.anyType ? {anyType: true} : {}), ...(first.count ? {count: first.count} : {})}
     : first.among && typeof first.among === "object" ? {among: first.among, ...(first.count ? {count: first.count} : {})}
     /* "Two mana in any combination of colors" (Great Hall of the Citadel). */
-    : first.anyCombination === true ? {anyCombination: true, ...(first.count ? {count: first.count} : {})}
+    /* "In any combination of {U} and/or {R}" (Vivi Ornitier): the colors it may be. */
+    : first.anyCombination === true || (Array.isArray(first.anyCombination) && first.anyCombination.length > 0 && first.anyCombination.every((c) => ["W", "U", "B", "R", "G"].includes(c)))
+      ? {anyCombination: first.anyCombination, ...(first.count ? {count: first.count} : {})}
     : null;
   if (!adds) return "unbuilt";
   /* "Spend this mana only to cast a creature spell of the chosen type" (CR 106.6; rules/restricted-mana.mjs): a spell or
