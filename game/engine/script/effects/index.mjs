@@ -27,7 +27,7 @@ import {isPrimitive} from "../../vocabulary.mjs";
 import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll,
@@ -119,8 +119,8 @@ export const EFFECTS = Object.freeze({
   /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
      Batch 36: the same for each player, opponent or creature. */
   damageAll, regenerate, addPhase, repeatFor,
-  /* Batch 40: a change of control, for a turn or for good. */
-  gainControl,
+  /* Batch 40: a change of control, for a turn or for good. Batch 49: every permanent a selector fits, sacrificed. */
+  gainControl, sacrificeAll,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

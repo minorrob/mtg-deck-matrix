@@ -175,6 +175,9 @@ export function bindEffect(effect, context) {
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];
   /* Where the damage comes from, when it is not the spell: "target creature you control deals damage ..." (damageAll). */
   if ("from" in bound) bound.from = objectsOf(bound.from, context);
+  /* What is attached, when it is not the ability's source: "you may attach it to target creature you control" (Sigarda's
+     Aid, "it" the Equipment that entered). Gone, it is nothing -- never the source in its place. */
+  if (typeof bound.source === "string") { const [id] = objectsOf(bound.source, context); bound.source = id ?? -1; }
   if ("who" in bound) bound.who = playersOf(bound.who, context);
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);

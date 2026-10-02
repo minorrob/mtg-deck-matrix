@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skittering Cicada",
+    "oracleId": "ac141679-6ada-49a8-b225-d1a20c3838db",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nYou may cast colorless spells as though they had flash.\nWhenever you cast a colorless spell, until end of turn, this creature gains trample and gets +X/+X, where X is that spell's mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast colorless spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "colorless": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a colorless spell, until end of turn, this creature gains trample and gets +X/+X, where X is that spell's mana value.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "colorless": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": {
+            "manaValueOf": "that card"
+          },
+          "toughness": {
+            "manaValueOf": "that card"
+          },
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ]
+    }
+  ]
+}
