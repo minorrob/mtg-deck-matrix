@@ -42,7 +42,7 @@ import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
-import {playerRuleChanged, untapsDuringOthers} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
 import {endCopies} from "../script/effects/permanents.mjs";
 import {runEffect} from "../script/effects/index.mjs";
@@ -133,6 +133,8 @@ function untap(state, events) {
     const o = state.objects[id];
     /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
     if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
+    /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
+    if (ruleChanged(state, "doesnt-untap", id)) continue;
     o.tapped = false;
     events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
   }

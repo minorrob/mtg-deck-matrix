@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 871 defined and playable today; 2,130 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 881 defined and playable today; 2,141 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,8 +22,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
 | Effects | 192 | 51 | 1 | 18 | 122 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
-| Static abilities | 77 | 6 | 2 | 0 | 69 |
-| Replacement effects | 34 | 0 | 2 | 0 | 32 |
+| Static abilities | 77 | 7 | 2 | 0 | 68 |
+| Replacement effects | 34 | 0 | 3 | 0 | 31 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 14 | 4 | 0 | 19 |
 | Amounts the game counts | 188 | 9 | 1 | 0 | 178 |
@@ -46,11 +46,11 @@ The things that alone hold back the most of the most-played cards.
 | static | CantBlockBy | — | missing | 6 | 13 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
 | effect | Goad | — | missing | 6 | 11 |
-| static | CantAttackUnless | — | missing | 6 | 7 |
 | effect | WinsGame | — | missing | 5 | 15 |
 | replacement | DamageDone | — | missing | 5 | 15 |
 | effect | Branch | branch | named | 5 | 14 |
 | effect | PeekAndReveal | peekAndReveal | named | 5 | 11 |
+| count | LifeAmount | — | missing | 5 | 11 |
 
 ## Keyword abilities (CR 702)
 
@@ -680,7 +680,7 @@ The things that alone hold back the most of the most-played cards.
 | CantAttack | — | missing | 10 | 204 | 10 | 5 |
 | RaiseCost | — | missing | 10 | 91 | 6 | 4 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
-| CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
+| CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |
 | UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 4 |
 | MustAttack | — | missing | 4 | 100 | 4 | 2 |
@@ -698,7 +698,7 @@ The things that alone hold back the most of the most-played cards.
 | OptionalCost | — | missing | 1 | 40 | 1 | 1 |
 | OptionalAttackCost | — | missing | 1 | 28 | 1 | 1 |
 | AssignCombatDamageAsUnblocked | — | missing | 1 | 14 | 1 | 1 |
-| CantBlockUnless | — | missing | 1 | 9 | 1 | 0 |
+| CantBlockUnless | — | missing | 1 | 9 | 1 | 1 |
 | DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
 | CantDraw | — | missing | 1 | 7 | 1 | 1 |
 | BlockRestrict | — | missing | 1 | 4 | 1 | 0 |
@@ -759,7 +759,7 @@ The things that alone hold back the most of the most-played cards.
 | AddCounter | — | missing | 15 | 30 | 15 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 4 |
 | GainLife | — | missing | 6 | 21 | 6 | 1 |
-| Untap | — | missing | 5 | 157 | 5 | 5 |
+| Untap | rules/turn | partial | 5 | 157 | 0 | 0 |
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |
 | Mill | — | missing | 2 | 2 | 2 | 0 |
 | BeginPhase | — | missing | 1 | 21 | 1 | 0 |

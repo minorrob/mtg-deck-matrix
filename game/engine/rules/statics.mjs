@@ -68,6 +68,12 @@ export const STATIC_RULES = Object.freeze({
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. */
   "cant-cast": "rules/actions.mjs",
+  /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
+      are declared. rules/combat.mjs. */
+  "attack-tax": "rules/combat.mjs",
+  /** "This artifact doesn't untap during your untap step", "creatures with power 3 or greater don't untap during their
+      controllers' untap steps": `affects` what stays tapped, read in the untap step (ruleChanged). rules/turn.mjs. */
+  "doesnt-untap": "rules/turn.mjs",
   /** "Lands you control enter untapped" (Horizon Explorer): entersUntapped, as a land arrives. effects/zones.mjs. */
   "lands-enter-untapped": "script/effects/zones.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
@@ -161,6 +167,21 @@ export function castForbidden(state, player, cardId) {
     }
   }
   return false;
+}
+
+/**
+ * "CREATURES CAN'T ATTACK YOU UNLESS THEIR CONTROLLER PAYS {2} FOR EACH" (Propaganda; Forge's CantAttackUnless; CR 508.1g):
+ * what these attackers cost their controller, from each defending player's `attack-tax` statics -- `amount` for each
+ * creature attacking that player ("{X} ... where X is the number of enchantments you control": an amount, counted now).
+ */
+export function attackTax(state, picked) {
+  let total = 0;
+  for (const {defenderId} of picked) for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    if (holder.controller !== defenderId) continue;
+    for (const ability of holder.abilities ?? []) if (ability.kind === "static" && ability.rule === "attack-tax") total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
+  }
+  return total;
 }
 
 /** "Lands you control enter untapped" (Horizon Explorer; `rule: "lands-enter-untapped"`): this land, its controller's. */

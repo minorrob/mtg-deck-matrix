@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Baird, Steward of Argive",
+    "oracleId": "69aa6809-5468-413a-94c9-562e6de93957",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Vigilance\nCreatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+      "rule": "attack-tax",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": 1
+    }
+  ]
+}
