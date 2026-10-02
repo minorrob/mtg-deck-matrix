@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Consuming Aberration",
+    "oracleId": "9b55fb72-237d-4935-b645-8ebc6eb4140e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horror"
+    ],
+    "manaCost": "{3}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Consuming Aberration's power and toughness are each equal to the number of cards in your opponents' graveyards.\nWhenever you cast a spell, each opponent reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Consuming Aberration's power and toughness are each equal to the number of cards in your opponents' graveyards.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "opponent"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "opponent"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, each opponent reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard.",
+      "trigger": {
+        "on": "spell cast"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": "opponent",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "found": {
+            "to": "graveyard"
+          },
+          "rest": "graveyard"
+        }
+      ]
+    }
+  ]
+}

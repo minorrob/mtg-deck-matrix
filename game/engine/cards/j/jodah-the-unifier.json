@@ -1,0 +1,123 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jodah, the Unifier",
+    "oracleId": "490a8045-e160-4ccf-a05e-658ad2b7ac2d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{W}{U}{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control.\nWhenever you cast a legendary spell from your hand, exile cards from the top of your library until you exile a legendary nonland card with lesser mana value. You may cast that card without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "supertypes": [
+          "Legendary"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "supertypes": [
+              "Legendary"
+            ],
+            "controller": "you"
+          }
+        },
+        "toughness": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "supertypes": [
+              "Legendary"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a legendary spell from your hand, exile cards from the top of your library until you exile a legendary nonland card with lesser mana value. You may cast that card without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "supertypes": [
+            "Legendary"
+          ]
+        },
+        "from": "hand"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "exile": true,
+          "selector": {
+            "supertypes": [
+              "Legendary"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "manaValueBelow": {
+            "manaValueOf": "that card"
+          },
+          "remember": true,
+          "rest": "bottom"
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "library"
+        }
+      ]
+    }
+  ]
+}

@@ -258,7 +258,7 @@ export function smokeTest(script, cards) {
   const {scenario, fixtures} = smokeScenario(script);
   const resolve = (name) => (name === script.identity.name ? structuredClone(definition) : cards(name));
   try {
-    const {state, events} = runScenario(scenario, resolve, fixtures);
+    const {state, events} = runScenario({...scenario, stopWhenOver: true}, resolve, fixtures);
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */

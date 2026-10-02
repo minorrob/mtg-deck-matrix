@@ -84,6 +84,7 @@ function subjects(state, event, condition, sourceId, controller) {
     const caster = fields.si?.actor?.playerId;
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
+    if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
     /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
        "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many

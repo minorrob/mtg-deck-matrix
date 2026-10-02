@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tasha's Hideous Laughter",
+    "oracleId": "e352f5b9-6406-4914-bc79-f24608be6bc9",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each opponent exiles cards from the top of their library until that player has exiled cards with total mana value 20 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each opponent exiles cards from the top of their library until that player has exiled cards with total mana value 20 or greater.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": "opponent",
+          "exile": true,
+          "totalManaValue": 20,
+          "rest": "exile"
+        }
+      ]
+    }
+  ]
+}

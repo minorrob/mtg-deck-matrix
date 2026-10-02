@@ -31,6 +31,7 @@ import {createState, addObject} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
 import {passPriority} from "../rules/priority.mjs";
+import {gameOver} from "../rules/sba.mjs";
 import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
 import {targetName} from "../script/bind.mjs";
@@ -110,6 +111,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
   };
   const goTo = ({turn, phase, settle = false}) => {
     for (let n = 0; n < STEP_LIMIT; n += 1) {
+      /* A smoke game the card ended (Tasha's Hideous Laughter exiling a library of Wastes): played to its end. */
+      if (scenario.stopWhenOver && gameOver(state)) return;
       if (settle && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) { settleOne(); continue; }
       /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
          stack, which is what a scenario about that trigger wants to see. */
