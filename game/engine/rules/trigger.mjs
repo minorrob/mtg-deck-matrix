@@ -219,6 +219,11 @@ function matches(state, event, condition, sourceId, controller) {
     return true;
   }
 
+  /* A SAGA'S CHAPTER (CR 714.2c): "when one or more lore counters are put onto this Saga, if the number of lore counters
+     on it was less than N and became at least N" -- its own counters of the kind, from below N to N or more. */
+  if (condition.on === "GameEventCardCounters")
+    return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
+
   if (condition.on === "GameEventTurnPhase") {
     if (condition.phase && fields.phase !== condition.phase) return false;
     if (condition.yourTurn && fields.playerTurn?.playerId !== controller) return false;

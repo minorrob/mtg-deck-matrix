@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Binding the Old Gods",
+    "oracleId": "4050e5b3-07c2-461c-9852-a2c081c0198d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Destroy target nonland permanent an opponent controls.\nII — Search your library for a Forest card, put it onto the battlefield tapped, then shuffle.\nIII — Creatures you control gain deathtouch until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Destroy target nonland permanent an opponent controls.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Search your library for a Forest card, put it onto the battlefield tapped, then shuffle.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Forest"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Creatures you control gain deathtouch until end of turn.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Deathtouch"
+          ]
+        }
+      ]
+    }
+  ]
+}

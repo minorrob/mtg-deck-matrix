@@ -90,7 +90,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Crew (batch 55): the `crew` cost and the Vehicle animated until end of turn (cards/index.mjs). */
   Crew: "animate",
   /* Station (batch 58): tap another creature, charge counters equal to its power; what it has at N+ on that condition. */
-  Station: "putCounter"};
+  Station: "putCounter",
+  /* Chapter (batch 60): a Saga's lore counters -- entering, after the draw step -- its chapters, and its sacrifice. */
+  Chapter: "putCounter"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

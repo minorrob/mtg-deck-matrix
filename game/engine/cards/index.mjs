@@ -121,6 +121,10 @@ const TRIGGERS = {
   "end step": (t) => ({on: "GameEventTurnPhase", phase: "END_OF_TURN", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you sacrifice a permanent", "whenever a player sacrifices another permanent" (CR 701.21): `sacrificer` you,
      opponent or any; `filter` what it was; `another`, not this one. */
+  /* A Saga's chapter (CR 714.2c): "I" as the Saga enters with its first lore counter (CR 714.3a); "II" and on as a lore
+     counter brings it from below that number to it (rules/trigger.mjs). `chapter` names it for the sacrifice (rules/sba.mjs). */
+  chapter: (t) => (!(Number.isInteger(t.chapter) && t.chapter >= 1) ? null : t.chapter === 1 ? {on: "GameEventCardChangeZone", to: "Battlefield", who: "self", chapter: 1}
+    : {on: "GameEventCardCounters", counter: "lore", reaches: t.chapter, chapter: t.chapter}),
   sacrificed: (t) => ({on: "GameEventCardChangeZone", from: "Battlefield", sacrificed: true, sacrificer: t.sacrificer ?? "you", ...(t.filter ? {filter: t.filter} : {}), ...(t.another ? {another: true} : {})}),
   /* "At the beginning of each player's draw step", "of your first main phase", "of combat on your turn": the beginning of
      a step (CR 503-513), yours unless `yours: false`. */
@@ -274,6 +278,13 @@ export function compileScript(script) {
       abilities.push({id, kind: "activated", text: ability.text, cost: [{atom: "crew", power: ability.amount ?? 0}],
         effects: [{effect: "animate", targets: "self", addTypes: ["Creature"], until: "end-of-turn"}]});
       keywords.push("Crew");
+      return;
+    }
+    /* A SAGA'S REMINDER LINE (CR 714.3a): "As this Saga enters and after your draw step, add a lore counter" -- the lore
+       counter it enters with; the one after the draw step is rules/turn.mjs's, and "sacrifice after III" rules/sba.mjs's. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "saga") {
+      if (!(identity.subtypes ?? []).includes("Saga")) problems.push(`${ability.text}: a Saga's lore counter on a card that is not a Saga`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {entersWithCounters: {counter: "lore", count: 1}}});
       return;
     }
     /* STATION (CR 702.184a): "Tap another untapped creature you control: Put a number of charge counters on this permanent

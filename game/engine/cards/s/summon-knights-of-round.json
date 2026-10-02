@@ -1,0 +1,186 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Summon: Knights of Round",
+    "oracleId": "73122880-d7f4-422f-a336-18773bcb7bfe",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Saga",
+      "Knight"
+    ],
+    "manaCost": "{6}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after V.)\nI, II, III, IV — Create three 2/2 white Knight creature tokens.\nV — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.\nIndestructible",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after V.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Knight",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Knight"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Knight",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Knight"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Knight",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Knight"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "I, II, III, IV — Create three 2/2 white Knight creature tokens.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 4
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "token": {
+            "name": "Knight",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Knight"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "V — Ultimate End — Other creatures you control get +2/+2 until end of turn. Put an indestructible counter on each of them.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 5
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "power": 2,
+          "toughness": 2
+        },
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "counter": "indestructible",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    }
+  ]
+}

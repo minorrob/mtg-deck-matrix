@@ -45,6 +45,7 @@ import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
 import {endCopies} from "../script/effects/permanents.mjs";
+import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
@@ -373,6 +374,10 @@ function arrive(state, events) {
     if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
+  /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what
+     brings its next chapter. */
+  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === state.activePlayer && (state.objects[x].subtypes ?? []).includes("Saga")))
+    events.push(...runEffect(state, {effect: "putCounter", targets: [id], counter: "lore", count: 1}, {controller: state.activePlayer, source: id}));
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */
   /* "If it's the first combat phase of the turn" (Genji Glove): each combat phase counted as it begins. */
