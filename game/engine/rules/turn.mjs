@@ -43,6 +43,7 @@ import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers} from "./statics.mjs";
+import {emptyRestricted} from "./restricted-mana.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
@@ -165,6 +166,8 @@ const skipsFirstDraw = (state) =>
    news, and a board that announces it every step buries what matters. */
 function emptyManaPools(state, events) {
   for (const player of state.players) {
+    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
+    emptyRestricted(player);
     const total = Object.values(player.manaPool).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
     const had = {...player.manaPool};

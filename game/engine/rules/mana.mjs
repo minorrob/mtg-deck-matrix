@@ -264,7 +264,7 @@ function plainSources(state, player) {
     if (object.controller !== player || object.tapped) continue;
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
     if (summoningSick(state, id)) continue;
-    const ability = (object.abilities ?? []).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition
+    const ability = (object.abilities ?? []).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
       && (a.produces || a.anyColor === true));
     if (ability) out.push({id, ability});
   }

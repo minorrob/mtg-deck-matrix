@@ -131,6 +131,8 @@ export function freeCast(state, player, cardId) {
 export function cantBeCountered(state, spellId) {
   const spell = state.objects[spellId];
   if (!spell) return false;
+  /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so (rules/restricted-mana.mjs). */
+  if (state.stack.some((entry) => entry.objectId === spellId && entry.uncounterable === true)) return true;
   for (const ability of spell.abilities ?? []) {
     if (ability.kind === "static" && ability.rule === "cant-be-countered" && ability.affects?.self === true) return true;
   }
