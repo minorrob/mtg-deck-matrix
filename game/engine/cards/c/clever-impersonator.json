@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clever Impersonator",
+    "oracleId": "d4ec0df9-a4a3-48cf-a0aa-b1aea5c49142",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "You may have this creature enter as a copy of any nonland permanent on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this creature enter as a copy of any nonland permanent on the battlefield.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "nonTypes": [
+            "Land"
+          ]
+        }
+      }
+    }
+  ]
+}

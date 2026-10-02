@@ -34,6 +34,7 @@
  * whose every target is illegal does nothing and leaves the stack with `hasFizzled`.
  */
 
+import {holdArrival} from "./entering.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
@@ -303,6 +304,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       from: {zoneType: ZONE_LABEL.stack, player: {playerId: entry.playerId}},
       to: {zoneType: ZONE_LABEL[to], player: {playerId: to === "graveyard" ? owner : entry.playerId}},
     }));
+    /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
+    if (to === "battlefield") holdArrival(state, arrived, events[events.length - 1]);
   }
 
   events.push(event("GameEventSpellResolved", state, {

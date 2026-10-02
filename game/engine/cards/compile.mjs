@@ -68,10 +68,13 @@ export function assembleScript(card, answer, model = null) {
 
 const normalize = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“”]/g, "\"").replace(/—/g, "-")
   .toLowerCase().replace(/\s+/g, " ").replace(/\s*\.\s*$/, "").trim();
-/* A line that is all reminder text (a basic land's "({T}: Add {W}.)") is the card's ability; anywhere else, reminder
-   text in parentheses explains a keyword and claims nothing. */
+/* A line that is all reminder text (a basic land's "({T}: Add {W}.)") is the card's ability -- unless it explains a
+   Phyrexian mana symbol ("({U/P} can be paid with either {U} or 2 life.)", Phyrexian Metamorph), which is the cost's
+   reminder and claims nothing; anywhere else, reminder text in parentheses explains a keyword and claims nothing. */
+const PHYREXIAN_REMINDER = /^\(\{[WUBRGC]\/P\} can be paid with either \{[WUBRGC]\} or 2 life\.\)$/;
 const withoutReminders = (line) => {
   const t = line.trim();
+  if (PHYREXIAN_REMINDER.test(t)) return "";
   if (/^\(.*\)$/.test(t)) return t.slice(1, -1);
   return t.replace(/\s*\([^)]*\)/g, "").trim();
 };
@@ -146,6 +149,9 @@ function landsFor(cost) {
     const s = symbol.slice(1, -1);
     if (/^\d+$/.test(s)) for (let i = 0; i < Number(s); i += 1) lands.push("Wastes");
     else if (s === "X") continue;
+    /* A Phyrexian symbol ({U/P}): paid with 2 life. With its color's land beside it, mana or life would be the player's
+       to decide, and automatic payment does not guess. */
+    else if (/^[WUBRGC]\/P$/.test(s)) continue;
     else {
       const color = s.split("/").find((c) => COLOR_LAND[c]);
       lands.push(color ? COLOR_LAND[color] : "Wastes");
