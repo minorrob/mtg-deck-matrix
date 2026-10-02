@@ -26,6 +26,7 @@
  * A table refuses it at prepare, never on the turn it is drawn.
  */
 
+import {ADDED_PHASES} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
 import {validateScript} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION} from "../script/effects/index.mjs";
@@ -81,7 +82,9 @@ const TRIGGERS = {
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
   attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
     /* "Attack one of your opponents"; "attacks with three or more creatures" (rules/trigger.mjs). */
-    ...(t.defender ? {defender: t.defender} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {})} : null),
+    ...(t.defender ? {defender: t.defender} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
+    /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
+    ...(t.firstTime ? {firstTime: true} : {})} : null),
   /* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2). */
   "damage dealt": (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "self", ...(t.combat ? {combat: true} : {})}
     : ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
@@ -237,6 +240,8 @@ export function compileScript(script) {
       /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
          `spells: {target: n}` (script/bind.mjs). */
       if (effect.effect === "counterSpell" && effect.targets !== undefined) problems.push("counterSpell: a script names the spell by `spells: {target: n}`, not by stack id");
+      /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
+      if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
     }
 
     if (ability.kind === "spell") {

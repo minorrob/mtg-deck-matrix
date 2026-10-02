@@ -36,7 +36,7 @@ export const FORGE_API = {
   Pump: "pump", PumpAll: "pumpAll", AlterAttribute: "alterAttribute", Effect: "effectUntil",
   Charm: "modal", RepeatEach: "repeatFor", Branch: "branch", DelayedTrigger: "delayedTrigger",
   ImmediateTrigger: "immediateTrigger", Counter: "counterSpell", CopySpellAbility: "copySpell",
-  AddTurn: "addTurn", ChooseCard: "chooseCard", ChooseType: "chooseType",
+  AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
   GenericChoice: "genericChoice", TwoPiles: "twoPiles", Connive: "connive",
   Investigate: "investigate", Cleanup: "cleanup", ReplaceEffect: "effectUntil",
 };

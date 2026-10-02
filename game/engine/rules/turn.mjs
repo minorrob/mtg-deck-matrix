@@ -363,6 +363,8 @@ function arrive(state, events) {
   }
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */
+  /* "If it's the first combat phase of the turn" (Genji Glove): each combat phase counted as it begins. */
+  if (state.phase === "COMBAT_BEGIN") state.combatsThisTurn = (state.combatsThisTurn ?? 0) + 1;
   if (state.phase === "COMBAT_DECLARE_ATTACKERS") attackers.open(state);
   if (state.phase === "COMBAT_DECLARE_BLOCKERS") blockers.open(state);
   /* CR 510.4: the first-strike step deals its own damage, and then the regular step deals the rest.
@@ -457,8 +459,24 @@ export function advance(state) {
   /* CR 500.4, on the way out of the step that is ending. */
   emptyManaPools(state, events);
 
-  let next = state.stepIndex + 1;
-  while (next < STEPS.length && STEPS[next].when && !CONDITIONS[STEPS[next].when](state)) next += 1;
+  /* CR 500.8: phases added after the one now ending go directly after it -- the most recently added first -- and then the
+     turn goes on from where it was (`resumeAfter`). A conditional step among them happens only if it would. */
+  const due = (state.extraPhases ?? []).filter((added) => added.turn === state.turn && added.after === state.phase);
+  if (due.length) {
+    state.extraPhases = state.extraPhases.filter((added) => !due.includes(added));
+    state.stepQueue = [...due.reverse().flatMap((added) => added.steps.map((name) => PHASE_NAMES.indexOf(name))), ...(state.stepQueue ?? [])];
+    if (!Number.isInteger(state.resumeAfter)) state.resumeAfter = state.stepIndex;
+  }
+  let next;
+  while (next === undefined && (state.stepQueue ?? []).length) {
+    const queued = state.stepQueue.shift();
+    if (!STEPS[queued].when || CONDITIONS[STEPS[queued].when](state)) next = queued;
+  }
+  if (next === undefined) {
+    next = (Number.isInteger(state.resumeAfter) ? state.resumeAfter : state.stepIndex) + 1;
+    state.resumeAfter = null;
+    while (next < STEPS.length && STEPS[next].when && !CONDITIONS[STEPS[next].when](state)) next += 1;
+  }
 
   if (next >= STEPS.length) {
     /* CR 500.7 extra turns and CR 500.8 extra phases arrive in 1.6 with the triggers that grant
@@ -473,6 +491,11 @@ export function advance(state) {
     for (const player of state.players) player.landsPlayed = 0;
     /* And what each has cast this turn (rules/actions.mjs), counted afresh. */
     for (const player of state.players) if (player.castThisTurn) player.castThisTurn = [];
+    /* Phases added to the turn that ended went with it; the combats of this one are counted from none. */
+    state.extraPhases = [];
+    state.stepQueue = [];
+    state.resumeAfter = null;
+    state.combatsThisTurn = 0;
     next = 0;
   }
 

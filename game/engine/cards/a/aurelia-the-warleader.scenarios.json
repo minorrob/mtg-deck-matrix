@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Aurelia, the Warleader",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Her first attack: everything untaps and another combat follows; her second attack triggers nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Aurelia, the Warleader",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Aurelia, the Warleader",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Aurelia, the Warleader",
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 30
+        }
+      ]
+    }
+  ]
+}

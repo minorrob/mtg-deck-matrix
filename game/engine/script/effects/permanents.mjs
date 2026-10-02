@@ -304,6 +304,30 @@ export function regenerate(state, params, context) {
   return [];
 }
 
+/* The steps of each phase an effect may add (CR 500.8), by name: a combat phase; a main phase (after a combat, a
+   postcombat one, CR 505.1a); a beginning phase. And the step a phase ends with, which the added ones follow. */
+const ADDED_STEPS = Object.freeze({
+  combat: ["COMBAT_BEGIN", "COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"],
+  main: ["MAIN2"],
+  beginning: ["UNTAP", "UPKEEP", "DRAW"],
+});
+export const ADDED_PHASES = Object.freeze(Object.keys(ADDED_STEPS));
+const endOfPhase = (step) => (["UNTAP", "UPKEEP", "DRAW"].includes(step) ? "DRAW" : String(step).startsWith("COMBAT") ? "COMBAT_END"
+  : step === "END_OF_TURN" ? "CLEANUP" : step);
+
+/**
+ * `addPhase` — CR 500.8: "after this main phase, there is an additional combat phase followed by an additional main
+ * phase" (`phases: ["combat", "main"]`), "after this phase, there is an additional combat phase", "an additional
+ * beginning phase after this phase". Remembered on the state for this turn, after the phase now under way; rules/turn.mjs
+ * puts the steps there, the most recently added first, and then goes on from where the turn was.
+ */
+export function addPhase(state, params, context) {
+  const steps = (params.phases ?? ["combat"]).flatMap((kind) => ADDED_STEPS[kind] ?? []);
+  if (steps.length) (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps});
+  void context;
+  return [];
+}
+
 /**
  * `delayedTrigger` — CR 603.7, something that will happen later.
  *

@@ -26,7 +26,7 @@
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "handEmpty", "notTheirTurn"];
+const CONDITION_KEYS = ["present", "atLeast", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes"];
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined} = {}) {
@@ -38,8 +38,17 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const n = state.zones.battlefield.filter((id) => matchesSelector(condition.present, state, id, {controller, source})).length;
     if (n < (condition.atLeast ?? 1)) return false;
   }
+  /* "If it's the first combat phase of the turn" (Genji Glove; rules/turn.mjs counts them). */
+  if (condition.firstCombat === true && (state.combatsThisTurn ?? 0) > 1) return false;
+  /* Delirium: "if there are four or more card types among cards in your graveyard" (CR 205.2a). */
+  if (Number.isInteger(condition.graveyardTypes)) {
+    const types = new Set(cardsIn(state, "graveyard", controller).flatMap((id) => (state.objects[id].types ?? []).filter((t) => CARD_TYPES.includes(t))));
+    if (types.size < condition.graveyardTypes) return false;
+  }
   return true;
 }
+/* The card types (CR 205.2a): what delirium counts. */
+const CARD_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Instant", "Kindred", "Land", "Planeswalker", "Sorcery"];
 
 /** Every problem with a condition, for the schema (script/schema.mjs). */
 export function conditionProblems(condition) {
@@ -50,6 +59,8 @@ export function conditionProblems(condition) {
   if ("atLeast" in condition && !(Number.isInteger(condition.atLeast) && condition.atLeast >= 1)) problems.push("A condition's atLeast is a whole number, 1 or more");
   if ("handEmpty" in condition && typeof condition.handEmpty !== "boolean") problems.push("handEmpty is true or false");
   if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
+  if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
+  if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("present" in condition) {
     const {anyOf, ...shared} = condition.present ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [condition.present]) compileSelector(one); }
