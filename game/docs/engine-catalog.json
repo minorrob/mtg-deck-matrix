@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 644,
-  "everyRule": 1839
+  "defined": 651,
+  "everyRule": 1849
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -427,7 +427,7 @@
      "top": 6,
      "all": 30,
      "blocks": 6,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -991,7 +991,7 @@
      "top": 2,
      "all": 9,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -2490,7 +2490,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -3581,7 +3581,7 @@
      "top": 35,
      "all": 315,
      "blocks": 35,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -6039,7 +6039,7 @@
      "top": 1,
      "all": 4,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -7261,7 +7261,7 @@
      "top": 14,
      "all": 97,
      "blocks": 14,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",
@@ -7357,7 +7357,7 @@
      "top": 4,
      "all": 100,
      "blocks": 4,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 11,
+    "built": 13,
     "partial": 4,
     "named": 0,
-    "missing": 22
+    "missing": 20
    },
    "entries": [
     {
@@ -8893,12 +8893,12 @@
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: if a permanent is present",
-     "engine": null,
-     "status": "missing",
+     "engine": "an effect's condition {present ...}",
+     "status": "built",
      "forge": "ConditionPresent",
      "top": 142,
      "all": 1292,
-     "blocks": 112,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8983,7 +8983,7 @@
      "top": 104,
      "all": 684,
      "blocks": 74,
-     "alone": 0
+     "alone": 33
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 84,
-     "alone": 7
+     "alone": 15
     },
     {
      "kind": "option",
@@ -9079,19 +9079,19 @@
      "top": 57,
      "all": 973,
      "blocks": 57,
-     "alone": 0
+     "alone": 4
     },
     {
      "kind": "option",
      "rule": null,
      "name": "An effect's condition (threshold, metalcraft, kicked, ...)",
-     "engine": null,
-     "status": "missing",
+     "engine": "an effect's or a static's condition: present, turn, graveyard types",
+     "status": "built",
      "forge": "Condition",
      "top": 41,
      "all": 461,
-     "blocks": 41,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -11869,7 +11869,7 @@
      "top": 3,
      "all": 46,
      "blocks": 3,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "keyword construct",

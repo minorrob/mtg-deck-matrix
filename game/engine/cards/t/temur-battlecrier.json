@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Temur Battlecrier",
+    "oracleId": "fadf984c-c224-432a-87b9-b34f929b8409",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Ranger"
+    ],
+    "manaCost": "{G}{U}{R}",
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "During your turn, spells you cast cost {1} less to cast for each creature you control with power 4 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "During your turn, spells you cast cost {1} less to cast for each creature you control with power 4 or greater.",
+      "rule": "spells-cost-less",
+      "affects": {},
+      "condition": {
+        "yourTurn": true
+      },
+      "amount": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 4
+          }
+        }
+      }
+    }
+  ]
+}

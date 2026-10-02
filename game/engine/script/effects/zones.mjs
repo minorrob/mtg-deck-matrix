@@ -246,7 +246,8 @@ export function counterSpell(state, params, context) {
     if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);
     else if (entry.objectId !== null && state.objects[entry.objectId]) {
       /* Countered after a flashback cast, it is exiled instead (CR 702.34a). */
-      moveOne(state, entry.objectId, entry.flashback ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
+      /* "If that spell is countered this way, exile it instead" (Force of Negation, `to: "exile"`). */
+      moveOne(state, entry.objectId, entry.flashback || params.to === "exile" ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
     }
     events.push(event("GameEventSpellResolved", state, {
       stackId: entry.stackId, abilityId: entry.abilityId, playerId: entry.playerId,

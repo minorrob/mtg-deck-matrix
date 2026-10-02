@@ -149,6 +149,9 @@ export function addObject(state, object, zone, player = null) {
        zone change makes a new object, so an entering permanent gets the current turn and a creature
        that has been out since an earlier one does not. Blank until a turn has begun. */
     controlledSinceTurn: state.turn,
+    /* The turn it arrived in this zone: "destroy all creatures that entered this turn" (Force of Despair). A change of
+       control does not touch it (effects/permanents.mjs gainControl). */
+    arrivedTurn: state.turn,
     owner: Number.isInteger(object.owner) ? object.owner : player,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,

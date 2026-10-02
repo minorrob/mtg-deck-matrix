@@ -1,0 +1,111 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cid, Freeflier Pilot",
+    "oracleId": "d3bdfb25-dfb2-4df4-b502-ef0909a39f86",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Pilot"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Equipment and Vehicle spells you cast cost {1} less to cast.\nJump — During your turn, Cid has flying.\n{2}, {T}: Return target Equipment or Vehicle card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipment and Vehicle spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "anyOf": [
+          {
+            "subtypes": [
+              "Equipment"
+            ]
+          },
+          {
+            "subtypes": [
+              "Vehicle"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Jump — During your turn, Cid has flying.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Return target Equipment or Vehicle card from your graveyard to your hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Equipment"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Vehicle"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}
