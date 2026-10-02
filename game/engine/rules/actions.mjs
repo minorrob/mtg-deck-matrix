@@ -569,6 +569,23 @@ export function legalActions(state, player) {
   return actions;
 }
 
+/**
+ * Cast a card as an effect resolves (CR 608.2g; effects/asking.mjs, `play`): one of `castChoicesNow`'s, what it costs
+ * already the effect's to have paid. No priority is needed, nor a sorcery's timing.
+ */
+export function castNow(state, player, action) {
+  return perform(state, player, action, {paid: true});
+}
+
+/** The ways to cast this card now as an effect lets it be cast: its targets or modes. Not a land, an Aura, or a spell with an additional cost to choose. */
+export function castChoicesNow(state, player, id) {
+  const object = state.objects[id];
+  if (!object || (object.types ?? []).includes("Land") || object.enchant || (object.spell?.additionalCost ?? []).length) return [];
+  const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
+  const context = {controller: player, source: id};
+  return object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context);
+}
+
 const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
 
 /**
@@ -656,12 +673,15 @@ export function applyAction(state, player, action) {
   return events;
 }
 
-function perform(state, player, action) {
-  if (state.priorityPlayer !== player)
-    throw new Error("That player does not hold priority");
-  const offered = legalActions(state, player);
-  if (!action || !offered.some((candidate) => sameAction(candidate, action)))
-    throw new Error(`That is not a legal action here: ${JSON.stringify(action?.kind ?? action)}`);
+function perform(state, player, action, during = null) {
+  /* Cast as an effect resolves (castNow): no priority, and not one of the offers -- the effect has chosen it, and paid. */
+  if (!during) {
+    if (state.priorityPlayer !== player)
+      throw new Error("That player does not hold priority");
+    const offered = legalActions(state, player);
+    if (!action || !offered.some((candidate) => sameAction(candidate, action)))
+      throw new Error(`That is not a legal action here: ${JSON.stringify(action?.kind ?? action)}`);
+  }
 
   /* Passing is the priority module's business, because what a full round of passes means depends on
      the stack. The caller routes it there; this refusal is so that nobody routes it here and gets a
@@ -749,7 +769,7 @@ function perform(state, player, action) {
     const way = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) : null;
     if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
     const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : way ? way.mana : null);
-    const payment = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    const payment = during ? {mana: {}, life: 0} : automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     const paid = spendFor(state, player, {spell: action.objectId}, payment.mana);

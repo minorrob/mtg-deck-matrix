@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Buster Sword",
+    "oracleId": "5e060d58-4d6e-425c-b7d4-727669fcce5b",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +3/+2.\nWhenever equipped creature deals combat damage to a player, draw a card, then you may cast a spell from your hand with mana value less than or equal to that damage without paying its mana cost.\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +3/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever equipped creature deals combat damage to a player, draw a card, then you may cast a spell from your hand with mana value less than or equal to that damage without paying its mana cost.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "combat": true,
+        "to": "player",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "play",
+          "from": "hand",
+          "manaValueAtMost": {
+            "damageDealt": true
+          },
+          "free": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

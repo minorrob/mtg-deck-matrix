@@ -279,6 +279,9 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         types: object.types, abilities: object.abilities, x: entry.x ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
+    /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
+       the Pickpocket casting a card from an opponent's graveyard). */
+    if (to === "battlefield") state.objects[arrived].controller = entry.playerId;
     /* An Aura enters attached to what it was cast at (CR 303.4f). */
     if (to === "battlefield" && attachTo !== null && state.objects[attachTo]) {
       state.objects[arrived].attachedTo = attachTo;

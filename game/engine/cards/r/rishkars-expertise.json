@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rishkar's Expertise",
+    "oracleId": "97407cd0-2bd2-4074-94d3-4ec3d243fa78",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw cards equal to the greatest power among creatures you control.\nYou may cast a spell with mana value 5 or less from your hand without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw cards equal to the greatest power among creatures you control.\nYou may cast a spell with mana value 5 or less from your hand without paying its mana cost.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "greatestPower": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        },
+        {
+          "effect": "play",
+          "from": "hand",
+          "manaValueAtMost": 5,
+          "free": true
+        }
+      ]
+    }
+  ]
+}

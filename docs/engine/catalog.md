@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 841 defined and playable today; 2,082 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 846 defined and playable today; 2,089 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -19,8 +19,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
-| Keyword actions (CR 701) | 70 | 15 | 3 | 8 | 44 |
-| Effects | 192 | 47 | 1 | 19 | 125 |
+| Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
+| Effects | 192 | 48 | 1 | 18 | 125 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
 | Static abilities | 77 | 5 | 2 | 0 | 70 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -36,11 +36,10 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
+| option | Remembering what an effect moved | — | missing | 15 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 13 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 12 | 79 |
-| option | Remembering what an effect moved | — | missing | 11 | 113 |
-| effect | Play | play | named | 7 | 35 |
-| effect | DigUntil | — | missing | 7 | 18 |
+| effect | DigUntil | — | missing | 8 | 18 |
 | option | An effect's condition: about a named object | — | missing | 6 | 53 |
 | trigger | AttackersDeclared | attackers declared | named | 6 | 26 |
 | option | Only once (or N times) each turn | — | missing | 6 | 18 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | Earthbend | — | missing | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 10 |
 | static | CantAttackUnless | — | missing | 6 | 7 |
+| effect | SetState | setState | named | 5 | 19 |
 
 ## Keyword abilities (CR 702)
 
@@ -104,7 +104,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.100 | Evolve | — | named | 4 | 23 | 4 | 2 |
 | 702.61 | Split Second | — | missing | 4 | 22 | 4 | 3 |
 | 702.175 | Offspring | — | missing | 4 | 21 | 4 | 3 |
-| 702.75 | Hideaway | — | named | 4 | 15 | 4 | 0 |
+| 702.75 | Hideaway | — | named | 4 | 15 | 4 | 1 |
 | 702.62 | Suspend | — | missing | 3 | 72 | 3 | 3 |
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 2 |
@@ -265,7 +265,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.6 | Counter | counterSpell | built | 48 | 517 | 0 | 0 |
 | 701.22 | Scry | scry | built | 42 | 445 | 0 | 0 |
 | 701.34 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
-| 701.18 | Play | play | named | 35 | 315 | 35 | 7 |
+| 701.18 | Play | play | built | 35 | 315 | 0 | 0 |
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | 701.25 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | 701.27 | Transform | setState | named | 19 | 280 | 19 | 5 |
@@ -360,7 +360,7 @@ The things that alone hold back the most of the most-played cards.
 | DestroyAll | destroyAll | built | 40 | 338 | 0 | 0 |
 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
 | DelayedTrigger | delayedTrigger | partial | 37 | 447 | 0 | 0 |
-| Play | play | named | 35 | 315 | 35 | 7 |
+| Play | play | built | 35 | 315 | 0 | 0 |
 | CopySpellAbility | copySpell | built | 35 | 241 | 0 | 0 |
 | ChooseType | chooseType | built | 35 | 176 | 0 | 0 |
 | UntapAll | untapAll | built | 30 | 126 | 0 | 0 |
@@ -376,7 +376,7 @@ The things that alone hold back the most of the most-played cards.
 | SetState | setState | named | 19 | 280 | 19 | 5 |
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 1 |
-| DigUntil | — | missing | 18 | 167 | 18 | 7 |
+| DigUntil | — | missing | 18 | 167 | 18 | 8 |
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
@@ -387,7 +387,7 @@ The things that alone hold back the most of the most-played cards.
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
 | ManaReflected | addMana | built | 12 | 47 | 0 | 0 |
-| PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 3 |
+| PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 5 |
 | Goad | — | missing | 11 | 67 | 11 | 5 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 6 |
 | Poison | — | missing | 11 | 36 | 11 | 6 |
@@ -419,7 +419,7 @@ The things that alone hold back the most of the most-played cards.
 | RearrangeTopOfLibrary | — | missing | 3 | 32 | 3 | 3 |
 | ReplaceMana | — | missing | 3 | 22 | 3 | 0 |
 | Reveal | — | missing | 2 | 84 | 2 | 1 |
-| RevealHand | — | missing | 2 | 80 | 2 | 1 |
+| RevealHand | — | missing | 2 | 80 | 2 | 2 |
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 0 |
@@ -572,7 +572,7 @@ The things that alone hold back the most of the most-played cards.
 | AbilityTriggered | — | missing | 1 | 4 | 1 | 1 |
 | Countered | — | missing | 1 | 4 | 1 | 1 |
 | Exiled | exiled | named | 1 | 3 | 1 | 0 |
-| LifeLostAll | — | missing | 1 | 2 | 1 | 0 |
+| LifeLostAll | — | missing | 1 | 2 | 1 | 1 |
 | MilledOnce | — | missing | 1 | 2 | 1 | 0 |
 | TapAll | — | missing | 1 | 2 | 1 | 1 |
 | AttackerUnblockedOnce | — | missing | 1 | 1 | 1 | 1 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 11 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 15 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 13 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -849,7 +849,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
 | A token that enters tapped and attacking | — | missing | 16 | 88 | 16 | 5 |
 | It gains a keyword until end of turn (a token made this way) | gainsUntilEndOfTurn | built | 16 | 67 | 0 | 0 |
-| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 3 |
+| Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 4 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 4 |
