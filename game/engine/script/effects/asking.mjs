@@ -599,9 +599,8 @@ export const chooseCard = {
       const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
       if (where.to === "top") { tops.push(id); return; }
-      const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner});
+      const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
-        if (where.tapped) state.objects[moved].tapped = true;
         /* "Under your control": the searcher's, when the card is another player's own (it never is from a library). */
         if (awaiting.controller !== null && awaiting.controller !== undefined) state.objects[moved].controller = awaiting.controller;
         arrivedHere.push(moved);
