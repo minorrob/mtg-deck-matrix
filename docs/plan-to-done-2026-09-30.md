@@ -68,7 +68,11 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
 7. **Decisions inside the game belong to the players**, and a behavior that would break a game is **refused with
    instructions** (AGENTS.md). Nothing is automated where the rules leave a choice; where they leave none, the
    code says so and cites the rule.
-8. **The gate.** GitHub Actions is out on billing (the job is refused within seconds). A PR merges on
+8. **The gate.** *Since 2026-10-01 Actions runs again, and its run is the gate (Rob: "decrease the # of scans
+   avoiding those that are redundant ... Prefer to leave with github"): mark the PR ready, merge on its green run,
+   and before the push run only the suites the change touches and `tools/local-ci.sh <ref> 0` (the scan and the
+   merge with main; AGENTS.md, "Merging to main"). What follows is the fallback for when Actions is out again.*
+   GitHub Actions is out on billing (the job is refused within seconds). A PR merges on
    `tools/local-ci.sh HEAD 2` — the workflow's toolchain on a clean worktree of the exact head merged with main,
    twice — and its PASS block goes on the PR before the merge. On Personal-HP the toolchain is Node 22 at
    `C:/Users/robmi/CrankMagic/workbench/node22/node_modules/node-win-x64/bin` (first on PATH; unset `UAT_CHROME`
@@ -655,8 +659,8 @@ Paste this, unchanged, as the first message of the new session (Opus) in `C:\Use
 > take the recommended one and say so in the PR.
 >
 > How you work: one proven PR at a time, each on its own `claude/<topic>` branch from `main`, each merged only on
-> a green `tools/local-ci.sh HEAD 2` (Actions is out; the toolchain and the procedure are in Part 0, rule 8) with
-> its PASS block on the PR, and each released to staging afterward the way Part 0 rule 9 says — staging first,
+> a green Actions run of its head (since 2026-10-01; while Actions is out, a green `tools/local-ci.sh HEAD 2` with
+> its PASS block on the PR — Part 0, rule 8), and each released to staging afterward the way Part 0 rule 9 says — staging first,
 > production never without Rob's go. Before you touch the board, render the four-seat fixture at 1280×720,
 > 1400×900, 1920×1080 and 2560×1080 and keep those renders as your before-and-after; send Rob screenshots at every
 > UI iteration. Extend `tests/table-board.mjs`; never delete a check. Move the pins of every served file you change.
