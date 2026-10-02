@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 762,
-  "everyRule": 2008
+  "defined": 769,
+  "everyRule": 2016
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 21,
+    "built": 22,
     "partial": 0,
     "named": 26,
-    "missing": 147
+    "missing": 146
    },
    "entries": [
     {
@@ -241,13 +241,13 @@
      "kind": "keyword ability",
      "rule": "702.49",
      "name": "Ninjutsu",
-     "engine": null,
-     "status": "missing",
+     "engine": "Ninjutsu",
+     "status": "built",
      "forge": "Ninjutsu",
      "top": 14,
      "all": 45,
-     "blocks": 14,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "option",
@@ -9175,7 +9175,7 @@
      "top": 16,
      "all": 88,
      "blocks": 16,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "option",

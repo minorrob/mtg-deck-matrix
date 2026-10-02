@@ -498,7 +498,8 @@ function targeting(state, stackId) {
   const entry = state.stack.find((e) => e.stackId === stackId);
   if (!entry) return null;
   const source = entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null;
-  return {entry, context: {controller: entry.playerId, source}};
+  /* What it is about, for a target described by it: "target creature that player controls" (Mistblade Shinobi). */
+  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {})}};
 }
 
 /**

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moon-Circuit Hacker",
+    "oracleId": "7cd8b017-8d59-4b55-bb9a-8d8e492ef1ac",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Ninja"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Ninjutsu {U} ({U}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)\nWhenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card unless this creature entered this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ninjutsu {U}",
+      "keyword": "ninjutsu",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card unless this creature entered this turn.",
+      "trigger": {
+        "on": "damage dealt",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1,
+          "condition": {
+            "present": {
+              "self": true,
+              "enteredThisTurn": true
+            },
+            "atMost": 0
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}
