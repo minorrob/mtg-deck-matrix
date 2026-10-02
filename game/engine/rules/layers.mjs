@@ -38,6 +38,7 @@
  * depend on each other — falls back to timestamp order here, which is what the rule says to do.
  */
 
+import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 
 /** The seven layers of CR 613.1, in order. */
@@ -119,14 +120,38 @@ function applyEffect(current, effect) {
   return current;
 }
 
+/* A STATIC ABILITY'S CONDITION (Forge's IsPresentStatic): "as long as you control three or more creatures". Asked as the
+   effects are gathered, every time. Counting creatures asks their types, which are derived here, so a condition asked
+   while another is being asked leaves conditional statics out of that inner derivation (they change keywords and power,
+   never what a condition counts) instead of asking forever. */
+let conditioning = 0;
+function holdsNow(state, condition, context) {
+  if (!condition) return true;
+  if (conditioning > 0) return false;
+  conditioning += 1;
+  try { return conditionHolds(state, condition, context); } finally { conditioning -= 1; }
+}
+
 /* Every continuous effect in play: the static abilities of permanents, plus effects with a
-   duration that a resolved spell left behind in `state.effects`. */
+   duration that a resolved spell left behind in `state.effects`. And a card's static that works from its owner's
+   graveyard (`worksFrom: "graveyard"`, CR 113.6b): "as long as this card is in your graveyard and you control a Mountain". */
 function allEffects(state) {
   const found = [];
+  for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
+    const card = state.objects[id];
+    for (const ability of card?.abilities ?? []) {
+      if (ability.kind !== "static" || ability.worksFrom !== "graveyard" || ability.rule) continue;
+      if (!holdsNow(state, ability.condition, {controller: card.owner, source: id})) continue;
+      found.push({...ability, sourceId: id, sourceController: card.owner, timestamp: ability.timestamp ?? card.timestamp});
+    }
+  }
   for (const id of state.zones.battlefield) {
     const holder = state.objects[id];
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static") continue;
+      /* One that works from a graveyard does not work here (CR 113.6). */
+      if (ability.worksFrom === "graveyard") continue;
+      if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
       found.push({
         ...ability,
         sourceId: id,
