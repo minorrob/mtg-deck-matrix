@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Combat Research",
+    "oracleId": "fbfd7f38-be9a-49bf-8769-79e1e7e8dfdc",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature has \"Whenever this creature deals combat damage to a player, draw a card.\"\nAs long as enchanted creature is legendary, it gets +1/+1 and has ward {1}. (Whenever enchanted creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature has \"Whenever this creature deals combat damage to a player, draw a card.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever this creature deals combat damage to a player, draw a card.",
+            "trigger": {
+              "on": "damage dealt",
+              "who": "self",
+              "combat": true,
+              "to": "player"
+            },
+            "effects": [
+              {
+                "effect": "draw",
+                "count": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "supertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "supertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "keyword",
+            "text": "ward {1}",
+            "keyword": "ward",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{1}"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

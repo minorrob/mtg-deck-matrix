@@ -113,9 +113,11 @@ const files = loadCardScenarios();
   /* Batch 8 built "whenever this attacks": it compiles now, and a trigger still unbuilt is refused by name. */
   eq(compileScript(base([{kind: "triggered", text: "Whenever this attacks, draw.", trigger: {on: "attacks"}, effects: [{effect: "draw"}]}], ["Creature"])).problems, [],
     "\"whenever this attacks\" compiles");
-  /* (Batch 29 built "life gained"; the example is now a trigger still unbuilt.) */
-  problem(base([{kind: "triggered", text: "Whenever this becomes the target of a spell, draw.", trigger: {on: "becomes target"}, effects: [{effect: "draw"}]}], ["Creature"]),
-    /becomes target: a trigger the engine does not watch/, "a trigger the engine does not watch for");
+  /* (Batch 29 built "life gained", and batch 76 "becomes target"; the example is now a trigger still unbuilt.) */
+  eq(compileScript(base([{kind: "triggered", text: "Whenever this becomes the target of a spell, draw.", trigger: {on: "becomes target", spell: true}, effects: [{effect: "draw"}]}], ["Creature"])).problems, [],
+    "\"whenever this becomes the target of a spell\" compiles");
+  problem(base([{kind: "triggered", text: "Whenever an opponent loses life, draw.", trigger: {on: "life lost"}, effects: [{effect: "draw"}]}], ["Creature"]),
+    /life lost: a trigger the engine does not watch/, "a trigger the engine does not watch for");
   /* Batch 7 built "whenever another creature dies" (CR 603.10a): it compiles now, and a death watched for some other
      way is still refused by name. */
   const another = compileScript(base([{kind: "triggered", text: "Whenever another creature dies, gain 1.", trigger: {on: "dies", who: "another", filter: {types: ["Creature"]}},

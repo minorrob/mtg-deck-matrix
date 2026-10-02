@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Manaweft Sliver",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Sliver": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Sliver"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His Sliver taps for any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Manaweft Sliver",
+            "Sliver",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sliver"
+          },
+          "count": 5
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Manaweft Sliver"
+          },
+          "count": 5
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Bear"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya's Sliver is not his",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Manaweft Sliver"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sliver"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Sliver",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

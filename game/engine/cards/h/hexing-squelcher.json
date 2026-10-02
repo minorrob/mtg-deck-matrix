@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hexing Squelcher",
+    "oracleId": "96c2d71e-0fc9-42aa-bc6b-6d0ae3f66f8b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Sorcerer"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This spell can't be countered.\nWard—Pay 2 life.\nSpells you control can't be countered.\nOther creatures you control have \"Ward—Pay 2 life.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward—Pay 2 life.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Spells you control can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control have \"Ward—Pay 2 life.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "another": true
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "keyword",
+            "text": "Ward—Pay 2 life.",
+            "keyword": "ward",
+            "cost": [
+              {
+                "atom": "payLife",
+                "amount": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

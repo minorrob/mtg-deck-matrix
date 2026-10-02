@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 942,
-  "everyRule": 2222
+  "defined": 960,
+  "everyRule": 2225
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -331,7 +331,7 @@
      "top": 7,
      "all": 44,
      "blocks": 7,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 11,
+    "built": 12,
     "partial": 4,
-    "named": 8,
+    "named": 7,
     "missing": 115
    },
    "entries": [
@@ -5734,12 +5734,12 @@
      "rule": null,
      "name": "BecomesTarget",
      "engine": "becomes target",
-     "status": "named",
+     "status": "built",
      "forge": "BecomesTarget",
      "top": 5,
      "all": 116,
-     "blocks": 5,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 17,
+    "built": 18,
     "partial": 4,
     "named": 0,
-    "missing": 16
+    "missing": 15
    },
    "entries": [
     {
@@ -9289,12 +9289,12 @@
      "kind": "option",
      "rule": null,
      "name": "Grants a triggered ability (\"has 'whenever ...'\")",
-     "engine": null,
-     "status": "missing",
+     "engine": "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)",
+     "status": "built",
      "forge": "AddTriggers",
      "top": 3,
      "all": 15,
-     "blocks": 3,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 33,
-     "alone": 8
+     "alone": 10
     },
     {
      "kind": "keyword construct",
