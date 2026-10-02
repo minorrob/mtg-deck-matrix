@@ -116,6 +116,22 @@ export function flashbackCost(state, player, id) {
   return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0)};
 }
 
+/**
+ * ALTERNATIVE COSTS (CR 118.9): the card's own "rather than pay this spell's mana cost" statics whose condition holds now
+ * for this player -- each as `{index, mana, life, extra}`: the mana paid instead ("" for none), the life, and the atoms
+ * chosen as it is cast (a card exiled from the hand, a permanent sacrificed).
+ */
+export function alternativeCosts(state, player, id) {
+  const object = state.objects[id];
+  return (object?.abilities ?? []).flatMap((ability, index) => {
+    if (ability.kind !== "static" || ability.rule !== "alternative-cost") return [];
+    if (!conditionHolds(state, ability.condition, {controller: player, source: id})) return [];
+    const cost = ability.cost ?? [];
+    return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
+      extra: cost.filter((a) => a.atom === "exileFromHand" || a.atom === "sacrifice")}];
+  });
+}
+
 /* A spell's additional cost (CR 601.2b, 601.2h): "As an additional cost to cast this spell, discard a card" or
    "sacrifice a creature". The player chooses what as they cast, so each choice is its own offer, as targets are --
    one per card that could be discarded (never the spell itself) or permanent that could be sacrificed. An additional
@@ -125,6 +141,11 @@ function additionalChoices(state, player, spellId, costs) {
   for (const atom of costs ?? []) {
     let options = [];
     if (atom.atom === "discard") options = cardsIn(state, "hand", player).filter((id) => id !== spellId).map((id) => ({discard: id}));
+    /* "Exile a blue card from your hand" (Force of Will): a card the selector describes, never the spell itself. */
+    if (atom.atom === "exileFromHand") {
+      const matches = compileSelector({...(atom.selector ?? {}), what: "card", zone: "hand", controller: "you"});
+      options = cardsIn(state, "hand", player).filter((id) => id !== spellId && matches(state, id, {controller: player})).map((id) => ({exile: id}));
+    }
     if (atom.atom === "sacrifice") {
       const alternatives = Array.isArray(atom.selector?.anyOf) ? atom.selector.anyOf : [atom.selector ?? {}];
       const matchers = alternatives.map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
@@ -384,23 +405,28 @@ export function legalActions(state, player) {
     /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
        each turn", so the player decides which spell spends it. */
     const free = flashback ? null : freeCast(state, player, id);
+    /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback or a free cast (118.9a). */
+    const alternatives = flashback ? [] : alternativeCosts(state, player, id);
     /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
        that much (CR 119.4). */
     const back = flashback ? flashbackCost(state, player, id) : null;
     if (back && back.life > state.players[player].life) continue;
-    for (const freely of free ? (free.limited ? [false, true] : [true]) : [false]) {
-    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : null);
+    for (const way of [null, ...alternatives]) {
+    if (way && way.life > state.players[player].life) continue;
+    for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) {
+    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : way ? way.mana : null);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
     for (const X of xValues(state.players[player].manaPool, cost, x)) {
-      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0), x: x + (X ?? 0) * cost.variable});
+      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (X ?? 0) * cost.variable});
       if (!payment) continue;
-      const extra = object.spell?.additionalCost ?? [];
+      const extra = [...(object.spell?.additionalCost ?? []), ...(way?.extra ?? [])];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
       for (const costChoice of paysFor) {
         const base = {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
-          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {})};
+          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(way ? {alternative: way.index} : {})};
         actions.push(...(object.spell?.modal ? withModes(state, base, object.spell.modal, {controller: player, source: id}) : withTargets(state, base, object.spell, {controller: player, source: id})));
       }
+    }
     }
     }
   }
@@ -498,6 +524,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.x ?? null) === (b.x ?? null)
   /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
   && (a.flashback === true) === (b.flashback === true)
+  /* An alternative cost (CR 118.9) is another action than paying the mana cost. */
+  && (a.alternative ?? null) === (b.alternative ?? null)
   /* And the modes chosen as it is cast (CR 700.2): another choice is another action. */
   && JSON.stringify(a.modes ?? null) === JSON.stringify(b.modes ?? null)
   && targetKey(a) === targetKey(b);
@@ -612,13 +640,17 @@ function perform(state, player, action) {
     /* Flashback (CR 702.34a): its cost rather than the mana cost, life and all. */
     const back = action.flashback ? flashbackCost(state, player, action.objectId) : null;
     if (action.flashback && !back) throw new Error(`${object.card} cannot be cast with flashback now`);
-    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : null);
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
-    if (!payment || (back && back.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
+    /* Its alternative cost (CR 118.9), asked again now. */
+    const way = action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative) : null;
+    if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
+    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : way ? way.mana : null);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     spend(state.players[player].manaPool, payment.mana);
     if (payment.life > 0) state.players[player].life -= payment.life;
     if (back?.life) state.players[player].life -= back.life;
+    if (way?.life) state.players[player].life -= way.life;
     /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
     /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
@@ -644,7 +676,8 @@ function perform(state, player, action) {
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     for (const [kind, id] of extraPaid) {
-      const paid = moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+      /* A card exiled from the hand (Force of Will) goes to exile; a discard or a sacrifice to its owner's graveyard. */
+      const paid = moveOne(state, id, kind === "exile" ? "exile" : "graveyard", events, {owner: state.objects[id].owner});
       if (kind === "discard" && paid !== null) events[events.length - 1].data.fields.discarded = true;
     }
     /* What it is aimed at becomes its target (ward, CR 702.21a). */

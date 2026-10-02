@@ -32,7 +32,7 @@
  * 1.8 for one that lasts "this turn" and then goes away.
  */
 
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
@@ -124,11 +124,15 @@ function applicable(state, proposal) {
 function preventedForAWhile(state, proposal) {
   return (state.effects ?? []).some((effect) => {
     if (effect.rule !== "prevent-damage") return false;
-    const ids = effect.affects?.ids ?? [];
+    const ids = effect.affects?.ids;
+    /* Fixed objects ("that creature"), or a description read as the damage is dealt ("creatures your opponents control",
+       Obscuring Haze): a prevention effect is not one CR 611.2c fixes, so a creature that arrives later is one of them. */
+    const among = (id) => (Array.isArray(ids) ? ids.includes(id) : Boolean(effect.affects) && state.objects[id]?.zone === "battlefield"
+      && matchesSelector({what: "permanent", ...effect.affects}, state, id, {controller: effect.sourceController}));
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
-    return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && ids.includes(proposal.toCard))
-      || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && ids.includes(proposal.sourceId));
+    return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
+      || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));
   });
 }
 
