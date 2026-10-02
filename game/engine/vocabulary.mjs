@@ -75,7 +75,7 @@ export const PRIMITIVES = Object.freeze({
     "moveCounters", "replaceCounters", "amass",
   ]),
   permanents: Object.freeze([
-    "createToken", "copyPermanent", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
+    "createToken", "copyPermanent", "becomeCopy", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut",
   ]),
   modifiers: Object.freeze([
@@ -147,8 +147,8 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 /* Keyword abilities the app already recognizes that tier 0 did not carry. Tier 0 was measured on
    seven decks, so this is growth rather than a correction. */
 const BEYOND_TIER0 = ["shroud", "ward",
-  /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). */
-  "ninjutsu"];
+  /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
+  "ninjutsu", "station"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

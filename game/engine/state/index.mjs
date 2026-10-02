@@ -235,8 +235,10 @@ export function recordUse(state, id, key) {
 }
 
 export function moveObject(state, id, zone, player = null) {
-  const from = state.objects[id];
-  if (!from) throw new Error(`There is no object ${id} to move`);
+  const current = state.objects[id];
+  if (!current) throw new Error(`There is no object ${id} to move`);
+  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy). */
+  const from = current.uncopied ? {...current, ...current.uncopied} : current;
   assertZone(state, zone, player);
 
   const fromList = listFor(state, from.zone, from.zonePlayer);

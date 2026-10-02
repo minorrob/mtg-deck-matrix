@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Seriema",
+    "oracleId": "a6bcec1f-f515-4e63-9e84-8eb04cc582ff",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Spacecraft"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "When The Seriema enters, search your library for a legendary creature card, reveal it, put it into your hand, then shuffle.\nStation (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 7+.)\n7+ | Flying\nOther tapped legendary creatures you control have indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When The Seriema enters, search your library for a legendary creature card, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "supertypes": [
+              "Legendary"
+            ]
+          },
+          "reveal": true,
+          "shuffle": true,
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Station",
+      "keyword": "station"
+    },
+    {
+      "kind": "static",
+      "text": "It's an artifact creature at 7+.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addTypes": [
+          "Creature"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 7
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "7+ | Flying",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 7
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other tapped legendary creatures you control have indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "supertypes": [
+          "Legendary"
+        ],
+        "controller": "you",
+        "tapped": true,
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 7
+        }
+      }
+    }
+  ]
+}

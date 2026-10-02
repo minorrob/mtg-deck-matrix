@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 810,
-  "everyRule": 2047
+  "defined": 824,
+  "everyRule": 2064
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 23,
+    "built": 24,
     "partial": 0,
     "named": 25,
-    "missing": 146
+    "missing": 145
    },
    "entries": [
     {
@@ -265,13 +265,13 @@
      "kind": "keyword ability",
      "rule": "702.184",
      "name": "Station",
-     "engine": null,
-     "status": "missing",
+     "engine": "Station",
+     "status": "built",
      "forge": "Station",
      "top": 11,
      "all": 35,
-     "blocks": 11,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 46,
+    "built": 47,
     "partial": 1,
     "named": 19,
-    "missing": 126
+    "missing": 125
    },
    "entries": [
     {
@@ -3623,13 +3623,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Clone",
-     "engine": null,
-     "status": "missing",
+     "engine": "becomeCopy",
+     "status": "built",
      "forge": "Clone",
      "top": 29,
      "all": 167,
-     "blocks": 29,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 13,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "static",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 12
+     "alone": 13
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "option",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 44,
-     "alone": 3
+     "alone": 15
     },
     {
      "kind": "keyword construct",

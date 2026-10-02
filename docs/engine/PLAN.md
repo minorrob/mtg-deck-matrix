@@ -640,7 +640,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
   `replaceCounters`, `amass`.
-- Permanents: `createToken`, `copyPermanent`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
+- Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`.
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,

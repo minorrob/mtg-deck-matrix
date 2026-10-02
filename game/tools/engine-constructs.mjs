@@ -32,6 +32,8 @@ export const FORGE_API = {
   PutCounter: "putCounter", PutCounterAll: "putCounterAll", RemoveCounter: "removeCounter",
   Proliferate: "proliferate", MultiplyCounter: "multiplyCounters", MoveCounter: "moveCounters",
   ReplaceCounter: "replaceCounters", Amass: "amass",
+  /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
+  Clone: "becomeCopy",
   Token: "createToken", CopyPermanent: "copyPermanent", Animate: "animate", AnimateAll: "animateAll",
   Attach: "attach", GainControl: "gainControl", SetState: "setState", Phases: "phaseOut",
   Pump: "pump", PumpAll: "pumpAll", AlterAttribute: "alterAttribute", Effect: "effectUntil",
@@ -86,7 +88,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
      tapped and attacking (cards/index.mjs). */
   Ninjutsu: "moveZone",
   /* Crew (batch 55): the `crew` cost and the Vehicle animated until end of turn (cards/index.mjs). */
-  Crew: "animate"};
+  Crew: "animate",
+  /* Station (batch 58): tap another creature, charge counters equal to its power; what it has at N+ on that condition. */
+  Station: "putCounter"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

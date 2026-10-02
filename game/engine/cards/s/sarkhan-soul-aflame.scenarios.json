@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sarkhan, Soul Aflame",
+  "fixtures": {
+    "Wyrm": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Dragon for {1} less; Sarkhan a copy of it until end of turn, named Sarkhan and legendary",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sarkhan, Soul Aflame",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wyrm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Wyrm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sarkhan, Soul Aflame",
+            "Mountain",
+            "Wyrm"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Sarkhan, Soul Aflame",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Seriema",
+  "fixtures": {
+    "Colossus": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 12,
+      "toughness": 12,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: a legendary creature card from his library",
+      "library": [
+        "Hero"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Seriema"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Seriema"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Hero"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hero"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Seven: a flying 5/5, and his tapped legendary Colossus indestructible",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Seriema",
+            "Colossus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "The Seriema"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "The Seriema",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "The Seriema",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Colossus",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

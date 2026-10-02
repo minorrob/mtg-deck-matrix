@@ -1,0 +1,157 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hearthhull, the Worldseed",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Colossus": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 12,
+      "toughness": 12,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two counters: a land sacrificed, two cards, and a second land played",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hearthhull, the Worldseed",
+            "Bear",
+            "Wastes",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Hearthhull, the Worldseed",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Hearthhull, the Worldseed",
+          "ability": "a2",
+          "sacrifice": "Wastes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "play": "Wastes"
+        },
+        {
+          "play": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hearthhull, the Worldseed",
+            "Bear",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Eight: a 6/7 flying creature, and each land sacrificed costs Maya 2 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hearthhull, the Worldseed",
+            "Colossus",
+            "Wastes",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Hearthhull, the Worldseed",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Hearthhull, the Worldseed",
+          "ability": "a2",
+          "sacrifice": "Wastes"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hearthhull, the Worldseed",
+            "power": 6,
+            "toughness": 7
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Hearthhull, the Worldseed",
+            "has": [
+              "Flying",
+              "Vigilance",
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

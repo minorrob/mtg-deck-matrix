@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Adagia, Windswept Bastion",
+  "fixtures": {
+    "Colossus": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 12,
+      "toughness": 12,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Stationed: a legendary token copy of his Trinket",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Adagia, Windswept Bastion",
+            "Colossus",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Adagia, Windswept Bastion",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Adagia, Windswept Bastion",
+          "ability": "a3",
+          "targets": [
+            {
+              "card": "Trinket"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Adagia, Windswept Bastion",
+            "Colossus",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Trinket",
+            "Trinket"
+          ]
+        }
+      ]
+    }
+  ]
+}

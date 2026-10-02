@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Uthros, Titanic Godcore",
+  "fixtures": {
+    "Colossus": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 12,
+      "toughness": 12,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Stationed by a 12-power creature: {U} for each of his two artifacts",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Uthros, Titanic Godcore",
+            "Colossus",
+            "Island",
+            "Trinket",
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Uthros, Titanic Godcore"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Uthros, Titanic Godcore",
+          "mana": {
+            "U": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 2
+          }
+        }
+      ]
+    }
+  ]
+}

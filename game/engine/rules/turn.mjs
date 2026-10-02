@@ -44,6 +44,7 @@ import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {playerRuleChanged, untapsDuringOthers} from "./statics.mjs";
 import {emptyRestricted} from "./restricted-mana.mjs";
+import {endCopies} from "../script/effects/permanents.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets} from "./trigger.mjs";
 
@@ -201,6 +202,8 @@ function cleanup(state, events) {
   for (const effect of (state.effects ?? []).filter((e) => e.rule === "control-returns").reverse())
     for (const id of effect.affects?.ids ?? []) if (state.objects[id]) state.objects[id].controller = effect.apply.controller;
   if ((state.effects ?? []).some((effect) => effect.until === "end-of-turn")) state.effects = state.effects.filter((effect) => effect.until !== "end-of-turn");
+  /* "Becomes a copy of target artifact until end of turn" ends with them (effects/permanents.mjs). */
+  endCopies(state);
   /* And a delayed trigger that lasted "this turn" ("whenever a creature dies this turn", CR 603.7b) ends with them. */
   if ((state.delayedTriggers ?? []).some((d) => d.thisTurn)) state.delayedTriggers = state.delayedTriggers.filter((d) => !d.thisTurn);
   const player = state.players[state.activePlayer];

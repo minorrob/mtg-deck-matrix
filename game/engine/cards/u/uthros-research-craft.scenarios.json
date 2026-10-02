@@ -1,0 +1,135 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Uthros Research Craft",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Colossus": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 12,
+      "toughness": 12,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three counters: an artifact spell draws a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Uthros Research Craft",
+            "Ogre",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Uthros Research Craft"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Trinket"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Twelve: a flying artifact creature, +1/+0 for its one artifact",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Uthros Research Craft",
+            "Colossus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Uthros Research Craft"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Uthros Research Craft",
+            "power": 1,
+            "toughness": 8
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Uthros Research Craft",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
