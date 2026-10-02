@@ -24,6 +24,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching} from "../filter.mjs";
 import {applyReplacements, enteringModifications} from "../../rules/replacement.mjs";
+import {cantBeCountered} from "../../rules/statics.mjs";
 
 const ZONE_LABEL = {
   library: "Library", hand: "Hand", battlefield: "Battlefield",
@@ -227,6 +228,8 @@ export function counterSpell(state, params, context) {
   for (const stackId of [...(params.targets ?? []), ...fromSpells]) {
     const at = state.stack.findIndex((entry) => entry.stackId === stackId);
     if (at < 0) continue;
+    /* "This spell can't be countered": the counter effect does nothing to it -- it was still a legal target (CR 101.2). */
+    if (state.stack[at].objectId !== null && cantBeCountered(state, state.stack[at].objectId)) continue;
     const [entry] = state.stack.splice(at, 1);
     if (entry.objectId !== null && state.objects[entry.objectId]) {
       moveOne(state, entry.objectId, "graveyard", events, {owner: state.objects[entry.objectId].owner});
