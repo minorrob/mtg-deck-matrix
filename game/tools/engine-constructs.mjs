@@ -110,7 +110,7 @@ export const FORGE_OPTIONS = Object.freeze({
   TokenAttacking: {name: "A token that enters tapped and attacking", status: "missing"},
   AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "missing"},
   SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
-  PresentCompare: {name: "A comparison of permanents present for a condition", status: "missing"},
+  PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
   ActivationLimit: {name: "Only once (or N times) each turn", status: "missing"},
   ActivationPhases: {name: "Activate only during a step or phase", status: "missing"},
   TargetMin: {name: "Fewer targets than the most (\"up to\", \"any number of\")", status: "missing"},

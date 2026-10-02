@@ -113,6 +113,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
       /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
          stack, which is what a scenario about that trigger wants to see. */
       if (state.turn === turn && state.phase === phase && state.priorityPlayer !== null && !state.awaiting) return;
+      /* Or a question that step asks which no routine answers -- an upkeep trigger's targets -- for the scenario to answer. */
+      if (state.turn === turn && state.phase === phase && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) return;
       if (state.turn > turn) break;
       stepOnce();
     }

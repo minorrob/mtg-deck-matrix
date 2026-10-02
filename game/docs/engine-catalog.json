@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 613,
-  "everyRule": 1795
+  "defined": 619,
+  "everyRule": 1804
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -3701,7 +3701,7 @@
      "top": 22,
      "all": 316,
      "blocks": 22,
-     "alone": 9
+     "alone": 10
     },
     {
      "kind": "effect",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3821,7 +3821,7 @@
      "top": 15,
      "all": 43,
      "blocks": 15,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -5895,7 +5895,7 @@
      "top": 2,
      "all": 62,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 9,
+    "built": 10,
     "partial": 4,
     "named": 0,
-    "missing": 24
+    "missing": 23
    },
    "entries": [
     {
@@ -9103,19 +9103,19 @@
      "top": 36,
      "all": 458,
      "blocks": 35,
-     "alone": 7
+     "alone": 12
     },
     {
      "kind": "option",
      "rule": null,
      "name": "A comparison of permanents present for a condition",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {present, atLeast | atMost}",
+     "status": "built",
      "forge": "PresentCompare",
      "top": 35,
      "all": 385,
-     "blocks": 35,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9235,7 +9235,7 @@
      "top": 9,
      "all": 160,
      "blocks": 9,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "option",
