@@ -24,6 +24,9 @@
  */
 
 import {isPrimitive} from "../../vocabulary.mjs";
+import {bindEffect} from "../bind.mjs";
+import {countEffect} from "../amount.mjs";
+import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
@@ -75,6 +78,34 @@ export const TOP_25 = Object.freeze([
  */
 export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "unlessPays", "copySpell"]);
 
+/* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
+   (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
+function eachOf(state, each, context) {
+  const seats = state.players.map((p) => p.id), from = seats.indexOf(state.activePlayer ?? 0);
+  const players = [...seats.slice(from), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
+  if (each === "player") return players.map((player) => ({player}));
+  if (each === "opponent") return players.filter((player) => player !== context.controller).map((player) => ({player}));
+  if (each === "creature") return state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature")).map((card) => ({card, player: controllerOf(state, card)}));
+  return [];
+}
+/** What `repeatFor` may range over. */
+export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
+
+/**
+ * `repeatFor` — Forge's RepeatEach: "deals damage to each player equal to twice the number of nonbasic lands that
+ * player controls". Its effects, once for each player, opponent or creature, in that order, with "that player" and
+ * "that card" bound to it and every amount counted for it (CR 608.2h, each as it is done). What it repeats does not
+ * stop to ask (cards/index.mjs refuses one that would).
+ */
+function repeatFor(state, params, context) {
+  const events = [];
+  for (const about of eachOf(state, params.each, context)) {
+    const each = {...context, about: {...(context.about ?? {}), ...about}};
+    for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each));
+  }
+  return events;
+}
+
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
   moveZone, moveZoneAll, draw, destroy, counterSpell,
@@ -85,8 +116,9 @@ export const EFFECTS = Object.freeze({
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
   /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
   attach, copyPermanent,
-  /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases. */
-  damageAll, regenerate, addPhase,
+  /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
+     Batch 36: the same for each player, opponent or creature. */
+  damageAll, regenerate, addPhase, repeatFor,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
