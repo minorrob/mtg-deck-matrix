@@ -264,12 +264,21 @@ export function pumpAll(state, params, context) {
  * duration. `Effect` is 16 of the 821 uses in Rob's decks, and it is how a card says something the
  * narrower primitives cannot.
  */
+/* What a selector names now, a choice of alternatives (`anyOf`) each with what they share. */
+function fixedAt(state, selector, context) {
+  const {anyOf, ...shared} = selector;
+  const each = Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [selector];
+  return [...new Set(each.flatMap((one) => selectMatching(state, one, context)))];
+}
+
 export function effectUntil(state, params, context) {
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
     ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
-    affects: params.targets ? {ids: params.targets} : params.affects ?? {what: "permanent"},
+    /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
+       gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
+    affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)} : params.affects ?? {what: "permanent"},
     apply: params.apply ?? {},
     until: params.until ?? "end-of-turn",
     sourceController: context.controller,

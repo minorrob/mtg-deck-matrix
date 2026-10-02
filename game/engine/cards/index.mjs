@@ -37,6 +37,9 @@ import {compileSelector} from "../script/filter.mjs";
 /** The keywords some rules module acts on, in its own spelling. A keyword not here is a word with no behavior. */
 const KEYWORDS_WITH_BEHAVIOR = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
 
+/* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
+const FLASHBACK_ATOMS = ["mana", "payLife"];
+
 /* "first strike" in the script's vocabulary is "First Strike" to the rules modules. */
 const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
@@ -188,6 +191,18 @@ export function compileScript(script) {
       if (!ability.target || typeof ability.target !== "object") { problems.push(`${ability.text}: Enchant says what it may enchant, as a selector in \`target\``); return; }
       try { compileSelector(ability.target.anyOf ? ability.target.anyOf[0] : ability.target); } catch (error) { problems.push(`${ability.text}: ${error.message}`); return; }
       enchant = {target: ability.target, text: ability.text, hostile: ability.hostile === true};
+      return;
+    }
+    /* FLASHBACK (CR 702.34a): the keyword with its cost, a list of atoms -- a mana cost, and "pay 3 life" -- kept as a
+       static ability so the card carries it into its graveyard (rules/actions.mjs offers the cast there). Only on an
+       instant or sorcery: "if the resulting spell is an instant or sorcery spell". */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "flashback") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom)))
+        problems.push(`${ability.text}: a flashback cost of ${FLASHBACK_ATOMS.join(" and ")} only, and at least one`);
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: flashback on a card that is not an instant or sorcery`);
+      abilities.push({id, kind: "static", rule: "flashback", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Flashback");
       return;
     }
     for (const effect of effectsIn(ability.effects)) {

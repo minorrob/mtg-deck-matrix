@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 571 defined and playable today; 1,732 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 580 defined and playable today; 1,744 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
+| Keyword abilities (CR 702) | 194 | 19 | 0 | 28 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
 | Effects | 192 | 38 | 1 | 26 | 127 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
@@ -36,9 +36,8 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| keyword ability | Flashback | — | named | 12 | 14 |
 | keyword ability | Ward | — | named | 11 | 26 |
-| effect | AddPhase | — | missing | 10 | 24 |
+| effect | AddPhase | — | missing | 11 | 24 |
 | static | Panharmonicon | — | missing | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | static | CastWithFlash | — | missing | 8 | 12 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | static | RaiseCost | — | missing | 8 | 10 |
+| option | Remembering what an effect moved | — | missing | 7 | 117 |
 
 ## Keyword abilities (CR 702)
 
@@ -73,7 +73,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.21 | Ward | — | named | 26 | 212 | 26 | 11 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
-| 702.34 | Flashback | — | named | 14 | 214 | 14 | 12 |
+| 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
 | 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 7 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
@@ -369,7 +369,7 @@ The things that alone hold back the most of the most-played cards.
 | DamageAll | damageAll | built | 27 | 402 | 0 | 0 |
 | ReplaceEffect | effectUntil | built | 27 | 156 | 0 | 0 |
 | Attach | attach | built | 24 | 243 | 0 | 0 |
-| AddPhase | — | missing | 24 | 58 | 24 | 10 |
+| AddPhase | — | missing | 24 | 58 | 24 | 11 |
 | GainControl | gainControl | named | 22 | 316 | 22 | 9 |
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | genericChoice | named | 21 | 153 | 21 | 6 |

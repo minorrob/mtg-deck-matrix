@@ -243,7 +243,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* CR 608.3: a permanent spell becomes a permanent. CR 608.2m: an instant or sorcery is put into
        its OWNER's graveyard as the final part of its resolution — not the graveyard of whoever
        cast it, which is a different player whenever a card has been borrowed. */
-    const to = entry.permanent && !fizzled ? "battlefield" : "graveyard";
+    /* Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a): resolved, or fizzled. */
+    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback ? "exile" : "graveyard";
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */

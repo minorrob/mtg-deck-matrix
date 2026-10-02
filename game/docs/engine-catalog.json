@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 571,
-  "everyRule": 1732
+  "defined": 580,
+  "everyRule": 1744
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 18,
+    "built": 19,
     "partial": 0,
-    "named": 29,
+    "named": 28,
     "missing": 147
    },
    "entries": [
@@ -229,13 +229,13 @@
      "kind": "keyword ability",
      "rule": "702.34",
      "name": "Flashback",
-     "engine": null,
-     "status": "named",
+     "engine": "Flashback",
+     "status": "built",
      "forge": "Flashback",
      "top": 14,
      "all": 214,
-     "blocks": 14,
-     "alone": 12
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -3689,7 +3689,7 @@
      "top": 24,
      "all": 58,
      "blocks": 24,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "effect",

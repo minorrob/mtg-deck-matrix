@@ -135,6 +135,8 @@ export function offerDetails(state, seat, actions) {
     for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : "sacrificing"} ${object(id, plain)}`);
     /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
     if (a.free) parts.push("without paying its mana cost");
+    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after. */
+    if (a.flashback) parts.push("flashback");
     if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
     return parts.join(" · ");
   };

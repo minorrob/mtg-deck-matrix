@@ -49,6 +49,10 @@ export const STATIC_RULES = Object.freeze({
   "extra-land-drop": "rules/actions.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
+  /** Flashback (CR 702.34a): the card's own, from its keyword and cost (cards/index.mjs), or given until end of turn
+      (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
+      the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */
+  "flashback": "rules/actions.mjs",
   /** "Target creature with defender can attack this turn as though it didn't have defender" (Assault Formation, Walking
       Bulwark; CR 702.3b): combat.mjs, as attackers are offered. */
   "attacks-despite-defender": "rules/combat.mjs",

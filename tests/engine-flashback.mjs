@@ -1,0 +1,129 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+
+/* M4 PHASE 3, BATCH 31 (THE CATALOG'S ORDER): FLASHBACK (CR 702.34a).
+ *
+ * "You may cast this card from your graveyard by paying [cost] rather than its mana cost." The cast is offered from its
+ * owner's graveyard only, at the speed of its type, for the flashback cost -- mana, and life a player can pay only when
+ * their total is at least that much (CR 119.4). Cast that way, the spell is exiled instead of going anywhere else
+ * whenever it would leave the stack: resolved, countered, returned to a hand. Cast from a hand, it is not. Past in
+ * Flames gives flashback, until end of turn, to the instants and sorceries in its controller's graveyard as it resolves
+ * (CR 611.2c), for their mana costs -- not to a card put there later.
+ */
+import assert from "node:assert/strict";
+import {createState, addObject} from "../game/engine/state/index.mjs";
+import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
+import {legalActions, applyAction, flashbackCost} from "../game/engine/rules/actions.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
+import {passPriority} from "../game/engine/rules/priority.mjs";
+import {beginResolution} from "../game/engine/script/resolution.mjs";
+import {missingFor} from "../game/tools/engine-constructs.mjs";
+import {offerDetails} from "../game/room/room.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+
+let checks = 0;
+const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
+
+const cards = loadCardIndex();
+const card = (name) => ({...cards.definition(name), card: name});
+const WASTES = {card: "Wastes", types: ["Land"], supertypes: ["Basic"], abilities: [{id: "a0", kind: "mana", tapSelf: true, produces: {C: 1}}]};
+const BOLT = {card: "Bolt", types: ["Instant"], manaCost: "{R}", colors: ["R"],
+  spell: {id: "s", text: "Bolt deals 3 damage to any target.", targets: [{anyOf: [{what: "permanent", types: ["Creature"]}, {what: "player"}]}], effects: [{effect: "dealDamage", amount: 3, targets: {target: 0}, who: {target: 0}}]}};
+const pod = {matchId: "m", seed: "flashback", players: [{name: "Rob"}, {name: "Maya"}]};
+function table() {
+  const s = createState(pod);
+  for (let seat = 0; seat < 2; seat += 1) for (let i = 0; i < 12; i += 1) addObject(s, {...WASTES, owner: seat, controller: seat}, "library", seat);
+  return s;
+}
+function main(s) { beginGame(s); for (let n = 0; n < 50 && !(s.phase === "MAIN1" && s.priorityPlayer === 0); n += 1) advance(s); return s; }
+const put = (s, o, seat, zone) => addObject(s, {...o, owner: seat, controller: seat}, zone, zone === "battlefield" ? null : seat);
+const pool = (s, seat, mana) => Object.assign(s.players[seat].manaPool, mana);
+const casts = (s, seat, name) => legalActions(s, seat).filter((a) => a.kind === "cast" && a.label === name);
+const zoneNames = (s, zone, seat) => (zone === "exile" ? s.zones.exile : s.zones[zone][seat]).map((id) => s.objects[id].card);
+
+{
+  /* Offered from its owner's graveyard, for the flashback cost, at the speed of its type. */
+  const s = main(table());
+  const mine = put(s, card("Faithless Looting"), 0, "graveyard");
+  const hers = put(s, card("Faithless Looting"), 1, "graveyard");
+  eq([flashbackCost(s, 0, mine), flashbackCost(s, 0, hers), flashbackCost(s, 1, hers)], [{mana: "{2}{R}", life: 0}, null, {mana: "{2}{R}", life: 0}],
+    "its flashback cost is {2}{R} for its owner; Rob cannot flash back Maya's card");
+  put(s, BOLT, 0, "graveyard");
+  pool(s, 0, {R: 1});
+  eq(casts(s, 0, "Faithless Looting").length, 0, "with {R}: its mana cost, not the flashback cost -- not offered");
+  pool(s, 0, {C: 2});
+  const offers = casts(s, 0, "Faithless Looting");
+  eq(offers.map((a) => [a.from, a.flashback, s.objects[a.objectId].owner]), [["graveyard", true, 0]], "with {2}{R}: offered once, from Rob's own graveyard -- not from Maya's -- with flashback");
+  eq(casts(s, 0, "Bolt").length, 0, "a card without flashback in the graveyard: not offered");
+  eq(offerDetails(s, 0, offers), ["flashback"], "the table says how it is cast");
+  put(s, card("Faithless Looting"), 0, "hand");
+  applyAction(s, 0, casts(s, 0, "Faithless Looting").find((a) => a.from === "hand"));
+  eq(casts(s, 0, "Faithless Looting").length, 0, "a sorcery: not offered while a spell is on the stack");
+}
+{
+  /* Its cost, life and all (CR 119.4); and exiled as it resolves. Cast from a hand, it goes to the graveyard. */
+  const s = main(table());
+  const analysis = put(s, card("Deep Analysis"), 0, "graveyard");
+  pool(s, 0, {U: 1, C: 1});
+  s.players[0].life = 2;
+  eq(casts(s, 0, "Deep Analysis").length, 0, "at 2 life Rob cannot pay 3: not offered");
+  s.players[0].life = 3;
+  const offer = casts(s, 0, "Deep Analysis").find((a) => a.targets?.[0]?.id === 0);
+  eq(Boolean(offer?.flashback), true, "at exactly 3 he can: offered");
+  applyAction(s, 0, offer);
+  eq([s.players[0].life, s.players[0].manaPool.U, s.players[0].manaPool.C, s.stack.at(-1).flashback], [0, 0, 0, true], "cast: {1}{U} and 3 life paid -- not its {3}{U} -- and the spell remembers how it was cast");
+  resolveTop(s);
+  eq([zoneNames(s, "exile"), zoneNames(s, "graveyard", 0), s.objects[analysis]], [["Deep Analysis"], [], undefined], "it resolves and is exiled, not put into the graveyard");
+  const fromHand = main(table());
+  put(fromHand, card("Deep Analysis"), 0, "hand");
+  pool(fromHand, 0, {U: 1, C: 3});
+  applyAction(fromHand, 0, casts(fromHand, 0, "Deep Analysis").find((a) => a.from === "hand"));
+  eq(fromHand.stack.at(-1).flashback, undefined, "cast from the hand, nothing is remembered");
+  resolveTop(fromHand);
+  eq([zoneNames(fromHand, "graveyard", 0), zoneNames(fromHand, "exile")], [["Deep Analysis"], []], "and it goes to the graveyard, ready to be flashed back");
+}
+{
+  /* Exiled whenever it would leave the stack: countered, or returned to a hand. And no flashback cast without the flag. */
+  const s = main(table());
+  put(s, card("Faithless Looting"), 0, "graveyard");
+  pool(s, 0, {R: 1, C: 2});
+  const offer = casts(s, 0, "Faithless Looting")[0];
+  assert.throws(() => applyAction(s, 0, {...offer, flashback: undefined}), /not a legal action/, "the same card from the graveyard without flashback is not an action anyone was offered");
+  checks += 1;
+  applyAction(s, 0, offer);
+  beginResolution(s, [{effect: "counterSpell", spells: [s.stack.at(-1).objectId]}], {controller: 1, source: null});
+  eq([zoneNames(s, "exile"), zoneNames(s, "graveyard", 0), s.stack.length], [["Faithless Looting"], [], 0], "countered: exiled");
+  const t = main(table());
+  put(t, card("Faithless Looting"), 0, "graveyard");
+  pool(t, 0, {R: 1, C: 2});
+  applyAction(t, 0, casts(t, 0, "Faithless Looting")[0]);
+  beginResolution(t, [{effect: "moveZone", targets: [t.stack.at(-1).objectId], to: "hand"}], {controller: 1, source: null});
+  eq([zoneNames(t, "exile"), zoneNames(t, "hand", 0), t.stack.length], [["Faithless Looting"], [], 0], "returned to its owner's hand by an effect: exiled instead");
+}
+{
+  /* Past in Flames: the instants and sorceries in Rob's graveyard as it resolves, for their mana costs, this turn only. */
+  const s = main(table());
+  const bolt = put(s, BOLT, 0, "graveyard");
+  const theirs = put(s, BOLT, 1, "graveyard");
+  put(s, card("Past in Flames"), 0, "hand");
+  pool(s, 0, {R: 1, C: 3});
+  applyAction(s, 0, casts(s, 0, "Past in Flames")[0]);
+  resolveTop(s);
+  pool(s, 0, {R: 1});
+  const offers = casts(s, 0, "Bolt");
+  eq([new Set(offers.map((a) => a.objectId)).size, offers.every((a) => a.flashback && a.objectId === bolt)], [1, true], "Rob's Bolt has flashback for {R}; Maya's Bolt, in her graveyard, does not");
+  const late = put(s, BOLT, 0, "graveyard");
+  eq(casts(s, 0, "Bolt").some((a) => a.objectId === late), false, "a Bolt put into the graveyard after it resolved: no flashback (CR 611.2c)");
+  eq(casts(s, 0, "Past in Flames").map((a) => a.flashback), [], "Past in Flames itself, in the graveyard, costs {4}{R}: with {R} it is not offered");
+  for (let n = 0; n < 400 && !(s.turn === 2 && s.phase === "MAIN1"); n += 1) {
+    if (s.awaiting) { resolveAwaiting(s, s.awaiting.kind === "order-triggers" ? awaitingChoice(s).options.map((o) => o.index) : awaitingChoice(s).options.slice(0, awaitingChoice(s).min ?? 0).map((o) => o.index)); continue; }
+    if (s.priorityPlayer === null) advance(s); else if (passPriority(s).outcome === "step-ends") advance(s);
+  }
+  eq((s.effects ?? []).some((e) => e.rule === "flashback"), false, "and at the end of the turn it is gone");
+  void theirs;
+}
+{
+  /* The catalog: Flashback is built now. */
+  eq(missingFor({keywords: ["Flashback"]}), [], "a card with Flashback misses nothing for it");
+}
+
+console.log(`engine-flashback: ${checks} checks passed — cast from its owner's graveyard for the flashback cost, at its type's speed, life only if it can be paid; exiled as it leaves the stack, not when cast from a hand; Past in Flames gives it for a turn to what is there as it resolves.`);

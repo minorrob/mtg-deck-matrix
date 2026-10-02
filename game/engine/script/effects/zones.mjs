@@ -60,7 +60,10 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
   const {proposal} = applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,
   });
-  const destination = proposal.to;
+  /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too.
+     Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
+  const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
+  const destination = leaving >= 0 && state.stack[leaving].flashback ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
 
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
@@ -69,11 +72,7 @@ export function moveOne(state, id, to, events, {owner = null} = {}) {
     ? enteringModifications(state, {objectId: id, player: object.controller, types: object.types, abilities: object.abilities})
     : null;
 
-  /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too. */
-  if (from === "stack") {
-    const at = state.stack.findIndex((entry) => entry.objectId === id);
-    if (at >= 0) state.stack.splice(at, 1);
-  }
+  if (leaving >= 0) state.stack.splice(leaving, 1);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
   if (entering) {
     if (entering.tapped) state.objects[moved].tapped = true;
@@ -245,7 +244,8 @@ export function counterSpell(state, params, context) {
     /* A countered copy ceases to exist (CR 707.10a, 704.5e); it is no card to put into a graveyard. */
     if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);
     else if (entry.objectId !== null && state.objects[entry.objectId]) {
-      moveOne(state, entry.objectId, "graveyard", events, {owner: state.objects[entry.objectId].owner});
+      /* Countered after a flashback cast, it is exiled instead (CR 702.34a). */
+      moveOne(state, entry.objectId, entry.flashback ? "exile" : "graveyard", events, {owner: state.objects[entry.objectId].owner});
     }
     events.push(event("GameEventSpellResolved", state, {
       stackId: entry.stackId, abilityId: entry.abilityId, playerId: entry.playerId,

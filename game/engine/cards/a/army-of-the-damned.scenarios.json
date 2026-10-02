@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Army of the Damned",
+  "scenarios": [
+    {
+      "name": "Flashed back for {7}{B}{B}{B}: thirteen tapped 2/2 Zombies, and it is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Army of the Damned"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Army of the Damned"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 23
+        },
+        {
+          "seat": 0,
+          "tapped": "Zombie",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Army of the Damned"
+          ]
+        }
+      ]
+    }
+  ]
+}
