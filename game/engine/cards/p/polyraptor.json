@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Polyraptor",
+    "oracleId": "e47e3a40-f51f-41ed-8e7c-06200a2abc22",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{6}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Enrage — Whenever this creature is dealt damage, create a token that's a copy of this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Enrage — Whenever this creature is dealt damage, create a token that's a copy of this creature.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

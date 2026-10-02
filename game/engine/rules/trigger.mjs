@@ -287,7 +287,9 @@ export function collectTriggers(state, events) {
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
-          if (ability.trigger.batch && joined(`${id}:${ability.id}`, about)) continue;
+          /* Damage to players, "one or more" at once: once for each player dealt it. */
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}` : ""}`;
+          if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
           if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
@@ -310,7 +312,7 @@ export function collectTriggers(state, events) {
           });
           const times = triggersAgain(state, event, object.controller, id, null, departed);
           if (times) again.push({at: state.pendingTriggers.length - 1, times});
-          if (ability.trigger.batch) opened(`${id}:${ability.id}`, about);
+          if (ability.trigger.batch) opened(once, about);
           }
         }
       }

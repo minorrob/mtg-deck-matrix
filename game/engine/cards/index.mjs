@@ -67,6 +67,12 @@ const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpp
 const ARRIVALS = ["self", "another", "any"];
 /* The steps whose beginning a card may name (rules/turn.mjs announces each as it arrives). */
 const STEPS = ["UPKEEP", "DRAW", "MAIN1", "COMBAT_BEGIN", "MAIN2", "END_OF_TURN"];
+/* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2); `to:
+   "self"`, damage dealt to this permanent. */
+const damageDealt = (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "self", ...(t.combat ? {combat: true} : {})}
+    : ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
+    ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {})} : null);
+
 const TRIGGERS = {
   /* "When this enters", "whenever another creature enters", "whenever a creature you control enters": `filter` is the
      selector the arrival must match. */
@@ -89,9 +95,10 @@ const TRIGGERS = {
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {})} : null),
   /* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2). */
-  "damage dealt": (t) => (t.to === "self" ? {on: "GameEventCardDamaged", to: "self", ...(t.combat ? {combat: true} : {})}
-    : ARRIVALS.includes(t.who ?? "self") && ["player", "opponent"].includes(t.to ?? "player")
-    ? {on: "GameEventPlayerDamaged", who: t.who ?? "self", to: t.to ?? "player", ...(t.combat ? {combat: true} : {}), ...(t.noncombat ? {noncombat: true} : {}), ...(t.sourceYours ? {sourceYours: true} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),
+  "damage dealt": (t) => damageDealt(t),
+  /* "Whenever one or more creatures you control deal combat damage to a player", Enrage's "whenever this creature is dealt
+     damage" (Forge's DamageDoneOnce): the same, once for everything one action did -- per player dealt it (trigger.mjs). */
+  "damage dealt once": (t) => { const once = damageDealt(t); return once ? {...once, batch: true} : null; },
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
   drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */

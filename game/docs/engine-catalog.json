@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 651,
-  "everyRule": 1849
+  "defined": 657,
+  "everyRule": 1858
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -247,7 +247,7 @@
      "top": 14,
      "all": 45,
      "blocks": 14,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "keyword ability",
@@ -943,7 +943,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -3821,7 +3821,7 @@
      "top": 15,
      "all": 43,
      "blocks": 15,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3917,7 +3917,7 @@
      "top": 11,
      "all": 67,
      "blocks": 11,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -3929,7 +3929,7 @@
      "top": 11,
      "all": 49,
      "blocks": 11,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 6,
+    "built": 7,
     "partial": 4,
-    "named": 12,
+    "named": 11,
     "missing": 116
    },
    "entries": [
@@ -5590,12 +5590,12 @@
      "rule": null,
      "name": "DamageDoneOnce",
      "engine": "damage dealt once",
-     "status": "named",
+     "status": "built",
      "forge": "DamageDoneOnce",
      "top": 34,
      "all": 204,
-     "blocks": 34,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5799,7 +5799,7 @@
      "top": 3,
      "all": 126,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -7261,7 +7261,7 @@
      "top": 14,
      "all": 97,
      "blocks": 14,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "static",
@@ -9353,7 +9353,7 @@
      "top": 56,
      "all": 373,
      "blocks": 51,
-     "alone": 6
+     "alone": 14
     },
     {
      "kind": "count",
