@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 608,
-  "everyRule": 1786
+  "defined": 613,
+  "everyRule": 1795
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -583,7 +583,7 @@
      "top": 4,
      "all": 22,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -2538,7 +2538,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 39,
+    "built": 40,
     "partial": 1,
-    "named": 26,
+    "named": 25,
     "missing": 126
    },
    "entries": [
@@ -3528,12 +3528,12 @@
      "rule": null,
      "name": "RepeatEach",
      "engine": "repeatFor",
-     "status": "named",
+     "status": "built",
      "forge": "RepeatEach",
      "top": 41,
      "all": 326,
-     "blocks": 41,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3605,7 +3605,7 @@
      "top": 35,
      "all": 176,
      "blocks": 35,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "effect",
@@ -3749,7 +3749,7 @@
      "top": 19,
      "all": 130,
      "blocks": 19,
-     "alone": 5
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3809,7 +3809,7 @@
      "top": 15,
      "all": 148,
      "blocks": 15,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3905,7 +3905,7 @@
      "top": 11,
      "all": 158,
      "blocks": 11,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -3941,7 +3941,7 @@
      "top": 11,
      "all": 36,
      "blocks": 11,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4073,7 +4073,7 @@
      "top": 6,
      "all": 68,
      "blocks": 6,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -7369,7 +7369,7 @@
      "top": 4,
      "all": 20,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "static",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 117,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "option",

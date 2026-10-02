@@ -29,7 +29,7 @@
 import {ADDED_PHASES} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
 import {validateScript} from "../script/schema.mjs";
-import {isBuilt, NEEDS_A_DECISION} from "../script/effects/index.mjs";
+import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
 import {costAtomBuilt} from "../rules/actions.mjs";
@@ -240,6 +240,11 @@ export function compileScript(script) {
       /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
          `spells: {target: n}` (script/bind.mjs). */
       if (effect.effect === "counterSpell" && effect.targets !== undefined) problems.push("counterSpell: a script names the spell by `spells: {target: n}`, not by stack id");
+      /* What repeats for each (effects/index.mjs) ranges over players, opponents or creatures, and does not stop to ask. */
+      if (effect.effect === "repeatFor") {
+        if (!REPEAT_EACH.includes(effect.each)) problems.push(`repeatFor: each of ${REPEAT_EACH.join(", ")}`);
+        for (const inner of effect.effects ?? []) if (!EFFECTS[inner?.effect]) problems.push(`repeatFor: ${inner?.effect} asks a question, and what repeats cannot yet`);
+      }
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
     }

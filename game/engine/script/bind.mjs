@@ -165,6 +165,11 @@ export function bindEffect(effect, context) {
     else bound[key] = fact;
   }
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
+  /* "Exile target player's graveyard": a selector's controller bound to the target player, or to nobody. */
+  if (bound.selector && typeof bound.selector === "object" && isRef(bound.selector.controller)) {
+    const [player] = playersOf(bound.selector.controller, context);
+    bound.selector = {...bound.selector, controller: player ?? -1};
+  }
   if ("spells" in bound) bound.spells = objectsOf(bound.spells, context);
   /* "Counter that spell or ability" (ward): the stack entry the trigger is about, by its stack id (rules/trigger.mjs). */
   if (bound.stack === "that") bound.stack = context.about?.stackId !== undefined && context.about.stackId !== null ? [context.about.stackId] : [];

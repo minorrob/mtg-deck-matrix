@@ -67,6 +67,8 @@ function changeLife(state, player, delta, events) {
   if (delta === 0) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
+  /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
+  if (delta < 0) state.players[player].lostThisTurn = (state.players[player].lostThisTurn ?? 0) - delta;
   events.push(event("GameEventPlayerLivesChanged", state, {
     player: {playerId: player, name: state.players[player].name},
     oldLives: before, newLives: state.players[player].life,

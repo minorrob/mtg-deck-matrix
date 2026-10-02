@@ -496,6 +496,7 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
+    for (const player of state.players) if (player.lostThisTurn) player.lostThisTurn = 0;
     next = 0;
   }
 
