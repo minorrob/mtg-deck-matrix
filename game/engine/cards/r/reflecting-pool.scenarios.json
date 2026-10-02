@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Reflecting Pool",
+  "scenarios": [
+    {
+      "name": "His Plains and Wastes: white or colorless -- \"any type\"",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Reflecting Pool",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Reflecting Pool",
+            "seat": 0
+          },
+          "count": 2,
+          "mana": [
+            {
+              "W": 1
+            },
+            {
+              "C": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Alone: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Reflecting Pool"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Reflecting Pool",
+            "seat": 0
+          },
+          "count": 0,
+          "mana": []
+        }
+      ]
+    }
+  ]
+}

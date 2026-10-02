@@ -31,6 +31,10 @@ export const STATIC_RULES = Object.freeze({
   "no-maximum-hand-size": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
+  /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
+      Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
+      "Spells that target this creature cost more" waits for a cost read with the targets chosen. */
+  "spells-cost-more": "rules/actions.mjs",
   /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
       is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). */
@@ -198,6 +202,26 @@ export function costReduction(state, player, cardId) {
   }
   for (const ability of object.abilities ?? [])
     if (ability.kind === "static" && ability.rule === "this-costs-less") total += amountOf(state, ability.amount ?? 1, {controller: player, source: cardId});
+  return total;
+}
+
+/** HOW MUCH MORE A SPELL COSTS (CR 601.2f): every `spells-cost-more` static on the battlefield whose spell selector fits
+ *  this card, cast by whom it says -- anyone, unless it says you or an opponent. Generic mana, summed. */
+export function costIncrease(state, player, cardId) {
+  const object = state.objects[cardId];
+  if (!object) return 0;
+  let total = 0;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "spells-cost-more") continue;
+      const caster = ability.caster ?? "any";
+      if (caster === "you" && player !== holder.controller) continue;
+      if (caster === "opponent" && player === holder.controller) continue;
+      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
+    }
+  }
   return total;
 }
 
