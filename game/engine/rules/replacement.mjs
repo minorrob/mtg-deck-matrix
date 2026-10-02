@@ -21,7 +21,10 @@
  * WHEN SEVERAL APPLY, THE AFFECTED OBJECT'S CONTROLLER CHOOSES (CR 616.1) — not the effects'
  * controllers, and not the engine. The player whose creature is about to be replaced out of
  * existence picks which replacement happens first, and the order decides the outcome whenever the
- * first removes the second's opportunity.
+ * first removes the second's opportunity. ONE EXCEPTION, NAMED: damage. A damage event cannot yet wait mid-resolution for
+ * an answer, so when several effects apply to one (a doubler and Torbran's "plus 2"), the order that leaves the least
+ * damage is applied -- the order the affected player chooses for damage dealt to them or their permanents (leastFirst).
+ * Asking them is deferred, with the pause that needs.
  *
  * PREVENTION IS A SHIELD THAT WEARS OUT (CR 615.1), so applying it writes back what is left.
  *
@@ -55,11 +58,15 @@ function unlessHolds(state, unless, player) {
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
+/* CR 614.5 is per effect, and two permanents' effects may share an ability id ("a1" on each card): which effect it is, by
+   who holds it. `applied` reports the ability ids; this is what decides. */
+const appliedKey = (holderId, ability) => `${holderId ?? "self"}:${ability.id}`;
+
 /* Whether this effect applies to this proposal, given what has already applied to it. */
 function applies(state, ability, holder, proposal) {
   if (ability.kind !== "replacement") return false;
   /* CR 614.5: once per event, whatever else is true. */
-  if ((proposal.applied ?? []).includes(ability.id)) return false;
+  if ((proposal.appliedBy ?? []).includes(appliedKey(holder?.id ?? null, ability))) return false;
   const watches = ability.watches ?? {};
   if (watches.event !== proposal.event) return false;
 
@@ -82,6 +89,8 @@ function applies(state, ability, holder, proposal) {
   }
 
   if (proposal.event === "damage") {
+    /* Damage changed, not a shield (Dictate of the Twin Gods, Torbran, Dolmen Gate): what deals it, to what. */
+    if (ability.change) return damageWatched(state, watches, holder, proposal);
     /* A spent shield is not an applicable effect, so it is neither applied nor offered as a
        choice — a player asked to order two effects where one would do nothing is being asked a
        question that is not really a question. */
@@ -92,6 +101,56 @@ function applies(state, ability, holder, proposal) {
   }
 
   return false;
+}
+
+/* WHAT A DAMAGE CHANGE WATCHES, read as the damage is about to be dealt, "you" its holder's controller:
+   - `source`, a description of what deals it -- "a source you control", "a red source you control", "a creature you
+     control" -- read where the source is (a permanent, a spell on the stack);
+   - `to` "opponent": "to an opponent or a permanent an opponent controls";
+   - `toCard`, a description of the permanent dealt it ("attacking creatures you control");
+   - `combat` true or false: combat damage only, or noncombat only. */
+function damageWatched(state, watches, holder, proposal) {
+  if (!holder) return false;
+  const you = holder.controller, context = {controller: you, source: holder.id};
+  if (watches.combat === true && proposal.combat !== true) return false;
+  if (watches.combat === false && proposal.combat === true) return false;
+  if (watches.source) {
+    const source = proposal.sourceId === null || proposal.sourceId === undefined ? null : state.objects[proposal.sourceId];
+    if (!source) return false;
+    const what = source.zone === "battlefield" ? "permanent" : source.zone === "stack" ? "spell" : "card";
+    if (!compileSelector({...watches.source, what, ...(what === "card" ? {zone: source.zone} : {})})(state, proposal.sourceId, context)) return false;
+  }
+  const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : null;
+  if (watches.to === "opponent") {
+    const whose = toPlayer !== null ? toPlayer : state.objects[proposal.toCard]?.controller ?? null;
+    if (whose === null || whose === you) return false;
+  }
+  if (watches.toCard && !(toPlayer === null && state.objects[proposal.toCard] && compileSelector({what: "permanent", ...watches.toCard})(state, proposal.toCard, context))) return false;
+  return true;
+}
+
+/* What one effect would do to an amount of damage, done to nothing: for choosing an order (leastFirst). */
+function damageAfter(ability, amount) {
+  if (Number.isInteger(ability.prevent)) return Math.max(0, amount - ability.prevent);
+  const change = ability.change ?? {};
+  if (change.prevent === true) return 0;
+  if (Number.isInteger(change.multiply)) return amount * change.multiply;
+  if (Number.isInteger(change.add)) return amount + change.add;
+  return amount;
+}
+const leastOf = (candidates, amount) => Math.min(...candidates.map((c) => {
+  const rest = candidates.filter((other) => other !== c);
+  return rest.length ? leastOf(rest, damageAfter(c.ability, amount)) : damageAfter(c.ability, amount);
+}));
+/* The effect to apply first so that the order leaves the least damage; the first listed of equals. */
+function leastFirst(candidates, amount) {
+  let best = candidates[0], least = Infinity;
+  for (const c of candidates) {
+    const rest = candidates.filter((other) => other !== c);
+    const after = rest.length ? leastOf(rest, damageAfter(c.ability, amount)) : damageAfter(c.ability, amount);
+    if (after < least) { best = c; least = after; }
+  }
+  return best;
 }
 
 /* Every effect that could apply right now, each with the object holding it.
@@ -171,7 +230,7 @@ function affectedPlayer(state, proposal) {
 }
 
 function applyOne(state, {holderId, ability}, proposal) {
-  const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id]};
+  const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
 
@@ -193,6 +252,15 @@ function applyOne(state, {holderId, ability}, proposal) {
     const n = isCounted(count) ? amountOf(state, count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0}) : count;
     next.counters = {...(next.counters ?? {})};
     if (n > 0) next.counters[counter] = (next.counters[counter] ?? 0) + n;
+  }
+
+  /* "It deals double that damage instead", "triple", "that much damage plus 2", "prevent all combat damage that would be
+     dealt to attacking creatures you control". All of it prevented, the event does not happen (CR 615.4). */
+  if (ability.change && proposal.event === "damage") {
+    if (Number.isInteger(ability.change.multiply)) next.amount *= ability.change.multiply;
+    if (Number.isInteger(ability.change.add)) next.amount += ability.change.add;
+    if (ability.change.prevent === true) next.amount = 0;
+    if (next.amount === 0) next.prevented = true;
   }
 
   if (Number.isInteger(ability.prevent) && proposal.event === "damage") {
@@ -235,6 +303,8 @@ export function applyReplacements(state, proposal) {
   for (let guard = 0; guard < 64; guard += 1) {
     const candidates = applicable(state, current);
     if (candidates.length === 0) break;
+    /* Damage: the order that leaves the least, not a question (above). */
+    if (candidates.length > 1 && current.event === "damage") { current = applyOne(state, leastFirst(candidates, current.amount), current); continue; }
     if (candidates.length > 1) {
       state.awaiting = {kind: "order-replacements", player: affectedPlayer(state, current), proposal: current};
       return {proposal: current, applied: current.applied, awaiting: true};

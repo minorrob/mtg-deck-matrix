@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angrath's Marauders",
+    "oracleId": "2d4976d4-649c-4d42-ac5a-ada4b46a480c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+      "watches": {
+        "event": "damage",
+        "source": {
+          "controller": "you"
+        }
+      },
+      "change": {
+        "multiply": 2
+      }
+    }
+  ]
+}

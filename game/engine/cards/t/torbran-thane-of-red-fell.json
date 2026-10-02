@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Torbran, Thane of Red Fell",
+    "oracleId": "8c3495bf-02e7-4ad9-949d-92eb3d2b662a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Noble"
+    ],
+    "manaCost": "{1}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "If a red source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 2 instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "If a red source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 2 instead.",
+      "watches": {
+        "event": "damage",
+        "source": {
+          "colors": [
+            "R"
+          ],
+          "controller": "you"
+        },
+        "to": "opponent"
+      },
+      "change": {
+        "add": 2
+      }
+    }
+  ]
+}
