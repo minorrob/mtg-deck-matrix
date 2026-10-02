@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dolmen Gate",
+    "oracleId": "d53d000f-c92f-4d70-ae60-8be3791da8a2",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all combat damage that would be dealt to attacking creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "Prevent all combat damage that would be dealt to attacking creatures you control.",
+      "watches": {
+        "event": "damage",
+        "combat": true,
+        "toCard": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "attacking": true
+        }
+      },
+      "change": {
+        "prevent": true
+      }
+    }
+  ]
+}

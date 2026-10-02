@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 700,
-  "everyRule": 1919
+  "defined": 707,
+  "everyRule": 1926
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -8146,8 +8146,8 @@
      "forge": "DamageDone",
      "top": 22,
      "all": 209,
-     "blocks": 22,
-     "alone": 12
+     "blocks": 15,
+     "alone": 5
     },
     {
      "kind": "replacement",

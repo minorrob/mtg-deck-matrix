@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dictate of the Twin Gods",
+    "oracleId": "3d960d33-623a-4415-ae00-f8cffbc15f5a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nIf a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+      "watches": {
+        "event": "damage"
+      },
+      "change": {
+        "multiply": 2
+      }
+    }
+  ]
+}
