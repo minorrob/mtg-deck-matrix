@@ -20,6 +20,7 @@
 import {addObject} from "../../state/index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {bindEffect, rememberNow} from "../bind.mjs";
+import {amountOf} from "../amount.mjs";
 import {event, cardRef} from "./zones.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
@@ -153,6 +154,9 @@ export function createToken(state, params, context) {
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
   const made = [];
+  /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
+     counted as it is made. */
+  const sized = (value) => (value !== null && typeof value === "object" ? amountOf(state, value, context) : value ?? null);
   for (let i = 0; i < count; i += 1) {
     const id = addObject(state, {
       card: spec.name ?? "Token",
@@ -161,8 +165,8 @@ export function createToken(state, params, context) {
       subtypes: spec.subtypes ?? [],
       /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
       colors: spec.colors ?? [],
-      power: spec.power ?? null,
-      toughness: spec.toughness ?? null,
+      power: sized(spec.power),
+      toughness: sized(spec.toughness),
       keywords: spec.keywords ?? [],
       abilities: spec.abilities ?? [],
       owner: controller,
