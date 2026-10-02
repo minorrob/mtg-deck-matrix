@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 537 defined and playable today; 1,687 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 542 defined and playable today; 1,692 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| count | Damage dealt | — | missing | 11 | 56 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | keyword ability | Flashback | — | named | 11 | 14 |
 | keyword ability | Ward | — | named | 10 | 26 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | trigger | LifeGained | life gained | named | 9 | 18 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
+| effect | Clone | — | missing | 8 | 29 |
 
 ## Keyword abilities (CR 702)
 
@@ -866,7 +866,7 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
 | — | For each permanent of a kind ("for each creature you control") | {count: selector} | partial | 244 | 1813 | 0 | 0 |
 | 107.3 | X, chosen as it is cast or activated (CR 107.3) | "X", one offer per value | built | 103 | 923 | 0 | 0 |
-| — | Damage dealt | — | missing | 56 | 373 | 56 | 11 |
+| — | Damage dealt | — | missing | 56 | 373 | 51 | 6 |
 | — | Counters on this card | {countersOn, counter} | built | 33 | 288 | 0 | 0 |
 | — | Cards in a graveyard | {count: {what: "card", zone: "graveyard"}} | built | 30 | 460 | 0 | 0 |
 | — | Cards in a hand | {count: {what: "card", zone: "hand"}} | built | 26 | 242 | 0 | 0 |
