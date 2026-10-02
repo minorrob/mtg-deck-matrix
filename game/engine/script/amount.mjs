@@ -41,7 +41,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -161,6 +161,8 @@ export function amountOf(state, value, context = {}) {
   /* "For each other instant and sorcery spell you've cast before it this turn": counted as the trigger triggered. */
   else if ("castBefore" in value) n = context.about?.castBefore ?? 0;
   /* "For each of that spell's colors" (Ramos, CR 105.2): how many colors it has, through the layers on the battlefield. */
+  /* "For each color among permanents you control" (Conqueror's Flail): the colors they have between them, as they are. */
+  else if ("colorsAmong" in value) n = new Set(matching(state, value.colorsAmong, who).flatMap((id) => characteristicsOf(state, id).colors ?? [])).size;
   else if ("colorsOf" in value) {
     const id = objectOf(value.colorsOf, context);
     n = id !== null && state.objects[id] ? (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).colors : state.objects[id].colors ?? []).length : 0;

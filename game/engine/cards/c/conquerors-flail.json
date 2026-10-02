@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Conqueror's Flail",
+    "oracleId": "9aace0d3-89e6-4254-b96f-ee3a878f2f91",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +1/+1 for each color among permanents you control.\nAs long as this Equipment is attached to a creature, your opponents can't cast spells during your turn.\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 for each color among permanents you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "colorsAmong": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        },
+        "toughness": {
+          "colorsAmong": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as this Equipment is attached to a creature, your opponents can't cast spells during your turn.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "duringYourTurn": true,
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "attachedBy": "self"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

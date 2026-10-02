@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Horizon Explorer",
+    "oracleId": "e8d20361-d9b7-4f9c-8ec5-3ac7c460dcb2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Scout"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Lands you control enter untapped.\nWhenever you attack a player, create a Lander token. (It's an artifact with \"{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Lands you control enter untapped.",
+      "rule": "lands-enter-untapped",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack a player, create a Lander token.",
+      "trigger": {
+        "on": "attackers declared",
+        "each": "defender"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Lander",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Lander"
+            ],
+            "colors": [],
+            "abilities": [
+              {
+                "id": "l",
+                "kind": "activated",
+                "text": "{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{2}"
+                  },
+                  {
+                    "atom": "{T}"
+                  },
+                  {
+                    "atom": "sacrifice",
+                    "self": true
+                  }
+                ],
+                "effects": [
+                  {
+                    "effect": "chooseCard",
+                    "zone": "library",
+                    "selector": {
+                      "types": [
+                        "Land"
+                      ],
+                      "supertypes": [
+                        "Basic"
+                      ]
+                    },
+                    "to": "battlefield",
+                    "tapped": true,
+                    "shuffle": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

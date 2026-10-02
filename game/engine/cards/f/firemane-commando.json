@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Firemane Commando",
+    "oracleId": "ac675899-25bb-4f06-9c8c-bf188024495f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Soldier"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever you attack with two or more creatures, draw a card.\nWhenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you attack with two or more creatures, draw a card.",
+      "trigger": {
+        "on": "attackers declared",
+        "atLeast": 2
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.",
+      "trigger": {
+        "on": "attackers declared",
+        "attacker": "opponent",
+        "atLeast": 2,
+        "notAttacking": "you"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1,
+          "who": "that player"
+        }
+      ]
+    }
+  ]
+}

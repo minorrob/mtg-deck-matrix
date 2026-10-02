@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 851,
-  "everyRule": 2097
+  "defined": 857,
+  "everyRule": 2109
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -727,7 +727,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -3761,7 +3761,7 @@
      "top": 18,
      "all": 313,
      "blocks": 18,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -3917,7 +3917,7 @@
      "top": 11,
      "all": 67,
      "blocks": 11,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4541,7 +4541,7 @@
      "top": 1,
      "all": 7,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 9,
+    "built": 11,
     "partial": 4,
-    "named": 10,
+    "named": 8,
     "missing": 115
    },
    "entries": [
@@ -5614,12 +5614,12 @@
      "rule": null,
      "name": "AttackersDeclared",
      "engine": "attackers declared",
-     "status": "named",
+     "status": "built",
      "forge": "AttackersDeclared",
      "top": 25,
      "all": 227,
-     "blocks": 26,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5698,12 +5698,12 @@
      "rule": null,
      "name": "AttackersDeclaredOneTarget",
      "engine": "attackers declared",
-     "status": "named",
+     "status": "built",
      "forge": "AttackersDeclaredOneTarget",
      "top": 8,
      "all": 32,
-     "blocks": 26,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 5,
+    "built": 6,
     "partial": 2,
     "named": 0,
-    "missing": 70
+    "missing": 69
    },
    "entries": [
     {
@@ -7225,7 +7225,7 @@
      "top": 26,
      "all": 353,
      "blocks": 13,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "static",
@@ -7255,13 +7255,13 @@
      "kind": "static",
      "rule": null,
      "name": "CantBeCast",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/actions",
+     "status": "built",
      "forge": "CantBeCast",
      "top": 14,
      "all": 97,
-     "blocks": 14,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7345,7 +7345,7 @@
      "top": 5,
      "all": 34,
      "blocks": 5,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "static",
@@ -8159,7 +8159,7 @@
      "top": 21,
      "all": 110,
      "blocks": 12,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "replacement",
@@ -8303,7 +8303,7 @@
      "top": 1,
      "all": 5,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "replacement",
@@ -9031,7 +9031,7 @@
      "top": 75,
      "all": 603,
      "blocks": 65,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9175,7 +9175,7 @@
      "top": 16,
      "all": 88,
      "blocks": 16,
-     "alone": 5
+     "alone": 11
     },
     {
      "kind": "option",
@@ -11833,7 +11833,7 @@
      "top": 5,
      "all": 32,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword construct",

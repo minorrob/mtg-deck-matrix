@@ -56,7 +56,7 @@ function wardCost(cost) {
 }
 
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs). */
-const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again"];
+const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast"];
 
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];
@@ -97,6 +97,11 @@ const TRIGGERS = {
     ...(t.from ? {castFrom: t.from} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {})}),
+  /* "Whenever you attack" (CR 508.1): the attack as a whole, once, about the attacking player; "whenever you attack a player"
+     (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
+     creatures attacked you" (`notAttacking: "you"`). `attacker`: you, opponent ("another player") or any. */
+  "attackers declared": (t) => ({on: "GameEventAttackersDeclared", declared: true, attacker: t.attacker ?? "you", ...(t.atLeast ? {atLeast: t.atLeast} : {}),
+    ...(t.each === "defender" ? {eachDefender: true} : {}), ...(t.notAttacking ? {notAttacking: t.notAttacking} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
   attacks: (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
     /* "Attack one of your opponents"; "attacks with three or more creatures" (rules/trigger.mjs). */
