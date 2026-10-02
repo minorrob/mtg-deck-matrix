@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Walking Ballista",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for X = 2: two counters; remove one to deal 1 damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Walking Ballista"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Walking Ballista",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Walking Ballista",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "activate": "Walking Ballista",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Walking Ballista",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

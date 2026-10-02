@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Walking Ballista",
+    "oracleId": "4b515bb0-f275-4400-8032-3173b799ab40",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{X}{X}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "This creature enters with X +1/+1 counters on it.\n{4}: Put a +1/+1 counter on this creature.\nRemove a +1/+1 counter from this creature: It deals 1 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with X +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{4}: Put a +1/+1 counter on this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Remove a +1/+1 counter from this creature: It deals 1 damage to any target.",
+      "cost": [
+        {
+          "atom": "removeCounters",
+          "self": true,
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

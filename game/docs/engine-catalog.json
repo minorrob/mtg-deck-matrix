@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 496,
-  "everyRule": 1644
+  "defined": 506,
+  "everyRule": 1654
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -11796,8 +11796,8 @@
      "forge": "etbCounter",
      "top": 35,
      "all": 475,
-     "blocks": 35,
-     "alone": 14
+     "blocks": 25,
+     "alone": 4
     },
     {
      "kind": "keyword construct",

@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Threefold Thunderhulk",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters with three counters: three Gnomes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Threefold Thunderhulk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Threefold Thunderhulk"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gnome",
+            "Gnome",
+            "Gnome",
+            "Threefold Thunderhulk",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Threefold Thunderhulk",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

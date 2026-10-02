@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Threefold Thunderhulk",
+    "oracleId": "b8020a8b-557b-465d-865d-b59fecd7abc1",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Gnome"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "This creature enters with three +1/+1 counters on it.\nWhenever this creature enters or attacks, create a number of 1/1 colorless Gnome artifact creature tokens equal to its power.\n{2}, Sacrifice another artifact: Put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with three +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 3
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, create a number of 1/1 colorless Gnome artifact creature tokens equal to its power.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "powerOf": "self"
+          },
+          "token": {
+            "name": "Gnome",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Gnome"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or attacks, create a number of 1/1 colorless Gnome artifact creature tokens equal to its power.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "powerOf": "self"
+          },
+          "token": {
+            "name": "Gnome",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Gnome"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, Sacrifice another artifact: Put a +1/+1 counter on this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Artifact"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

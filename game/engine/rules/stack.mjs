@@ -215,7 +215,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     const object = state.objects[entry.objectId];
     const entering = to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
-        types: object.types, abilities: object.abilities})
+        types: object.types, abilities: object.abilities, x: entry.x ?? 0})
       : null;
     const arrived = moveObject(state, entry.objectId, to, to === "graveyard" ? owner : null);
     /* An Aura enters attached to what it was cast at (CR 303.4f). */

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 496 defined and playable today; 1,644 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 506 defined and playable today; 1,654 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| keyword construct | etbCounter | — | missing | 14 | 35 |
 | replacement | Counter | — | missing | 13 | 21 |
 | trigger | AttackersDeclared | attackers declared | named | 12 | 33 |
 | option | You may play or cast a card from another zone | — | missing | 11 | 90 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | count | Damage dealt | — | missing | 9 | 56 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
 | trigger | DamageDoneOnce | damage dealt once | named | 9 | 34 |
+| effect | GainControl | gainControl | named | 9 | 22 |
 
 ## Keyword abilities (CR 702)
 
@@ -1078,7 +1078,7 @@ The things that alone hold back the most of the most-played cards.
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | ETBReplacement | — | missing | 68 | 408 | 68 | 3 |
-| etbCounter | — | missing | 35 | 475 | 35 | 14 |
+| etbCounter | — | missing | 35 | 475 | 25 | 4 |
 | Chapter | — | missing | 19 | 236 | 19 | 6 |
 | Class | — | missing | 9 | 38 | 9 | 3 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 2 |

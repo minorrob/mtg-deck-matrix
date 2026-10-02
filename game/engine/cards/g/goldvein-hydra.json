@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goldvein Hydra",
+    "oracleId": "2b62543f-a475-457a-a96b-b5d070383d3c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hydra"
+    ],
+    "manaCost": "{X}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Vigilance, trample, haste\nThis creature enters with X +1/+1 counters on it.\nWhen this creature dies, create a number of tapped Treasure tokens equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with X +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, create a number of tapped Treasure tokens equal to its power.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "powerOf": "self"
+          },
+          "token": {
+            "predefined": "Treasure"
+          },
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

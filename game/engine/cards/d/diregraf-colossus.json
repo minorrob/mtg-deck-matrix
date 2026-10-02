@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Diregraf Colossus",
+    "oracleId": "fd62ad01-601f-4250-bc2a-8ef3982e45c4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Giant"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters with a +1/+1 counter on it for each Zombie card in your graveyard.\nWhenever you cast a Zombie spell, create a tapped 2/2 black Zombie creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with a +1/+1 counter on it for each Zombie card in your graveyard.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a Zombie spell, create a tapped 2/2 black Zombie creature token.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "subtypes": [
+            "Zombie"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "tapped": true
+          }
+        }
+      ]
+    }
+  ]
+}
