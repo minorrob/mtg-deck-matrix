@@ -34,7 +34,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy,
+  becomeCopy, earthbend,
 } from "./permanents.mjs";
 
 /**
@@ -77,7 +77,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "unlessPays", "copySpell", "chooseType", "play"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "unlessPays", "copySpell", "chooseType", "play", "changeTargets"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
@@ -130,6 +130,8 @@ export const EFFECTS = Object.freeze({
   digUntil,
   /* Batch 64: poison counters on players. */
   poison,
+  /* Batch 65: a land made a creature, its counters, and its return. */
+  earthbend,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

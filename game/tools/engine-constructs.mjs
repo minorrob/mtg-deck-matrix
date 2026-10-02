@@ -36,6 +36,8 @@ export const FORGE_API = {
   ReplaceCounter: "replaceCounters", Amass: "amass",
   /* Poison ("each opponent gets a poison counter", batch 64). */
   Poison: "poison",
+  /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
+  Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
   Clone: "becomeCopy",
   Token: "createToken", CopyPermanent: "copyPermanent", Animate: "animate", AnimateAll: "animateAll",

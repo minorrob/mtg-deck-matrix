@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Misdirection",
+    "oracleId": "c39e5fb0-6de3-4105-ad3c-0ecb8951a1d5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may exile a blue card from your hand rather than pay this spell's mana cost.\nChange the target of target spell with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may exile a blue card from your hand rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "exileFromHand",
+          "selector": {
+            "colors": [
+              "U"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Change the target of target spell with a single target.",
+      "targets": [
+        {
+          "what": "spell",
+          "singleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

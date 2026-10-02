@@ -41,7 +41,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -132,6 +132,9 @@ export function amountOf(state, value, context = {}) {
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
     n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : (context.lastKnown?.power ?? 0);
+  } else if ("countersAmong" in value) {
+    /* "The number of +1/+1 counters on lands you control" (Toph, the Blind Bandit): all of them, of the kind. */
+    n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);
   } else if ("greatestToughness" in value) {
     /* "Draw cards equal to the greatest toughness among creatures you control" (Last March of the Ents). */
     n = Math.max(0, ...matching(state, value.greatestToughness, who).map((id) => characteristicsOf(state, id).toughness ?? 0));

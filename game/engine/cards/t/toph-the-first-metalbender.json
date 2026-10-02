@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Toph, the First Metalbender",
+    "oracleId": "fbfef028-b10c-4ade-9503-d9af5b0c211b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{1}{R}{G}{W}",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Nontoken artifacts you control are lands in addition to their other types. (They don't gain the ability to {T} for mana.)\nAt the beginning of your end step, earthbend 2. (Target land you control becomes a 0/0 creature with haste that's still a land. Put two +1/+1 counters on it. When it dies or is exiled, return it to the battlefield tapped.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Nontoken artifacts you control are lands in addition to their other types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "token": false,
+        "controller": "you"
+      },
+      "apply": {
+        "addTypes": [
+          "Land"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, earthbend 2.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "earthbend",
+          "targets": {
+            "target": 0
+          },
+          "count": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

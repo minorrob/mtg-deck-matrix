@@ -589,6 +589,38 @@ export const copySpell = {
   },
 };
 
+/* ---- changeTargets: "change the target of target spell with a single target" (Forge's ChangeTargets; CR 115.7) ----
+   The spell it names, on the stack with one target (its own targeting asked for that: "with a single target"): this
+   effect's controller chooses another target that spell could have -- by its own requirements, never itself -- and it becomes the spell's target. With no other, it keeps the one it
+   has and nobody is asked. */
+export const changeTargets = {
+  open(state, params, context) {
+    const entry = state.stack.find((e) => e.objectId !== null && (params.spells ?? []).includes(e.objectId));
+    if (!entry) return false;
+    const question = {stackId: entry.stackId, index: 0};
+    if (!(retargetOptions(state, question)?.others ?? []).length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, question};
+    return true;
+  },
+  choice(state, awaiting) {
+    const {entry, others} = retargetOptions(state, awaiting.question) ?? {entry: null, others: []};
+    return {id: `changeTargets:${awaiting.question.stackId}`, title: `${entry?.name ?? "The spell"}: its new target`, mode: "one", min: 1, max: 1,
+      options: others.map((c, i) => ({index: i, label: targetName(state, c), ...(c.kind === "object" ? {cardId: c.id} : {}), target: c}))};
+  },
+  apply(state, awaiting, indices) {
+    const option = changeTargets.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
+    const events = [];
+    if (entry) {
+      entry.targets[0] = {kind: option.target.kind, id: option.target.id};
+      /* It becomes the spell's target (ward, CR 702.21a). */
+      if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
+    }
+    return {events};
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -728,4 +760,4 @@ export const play = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets});

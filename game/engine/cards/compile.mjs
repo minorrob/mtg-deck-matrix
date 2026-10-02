@@ -165,8 +165,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Relic": {types: ["Artifact"], manaCost: "{2}"},
   "Smoke Charm": {types: ["Enchantment"], manaCost: "{2}"},
   "Smoke Giant": {types: ["Creature"], manaCost: "{4}{G}", power: 5, toughness: 5},
-  /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer. */
-  "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Draw a card.", targets: [], effects: [{effect: "draw", count: 1}]}},
+  /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer -- aimed at a player, so a card
+     that changes a spell's target has one to change. */
+  "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
 });
@@ -198,7 +199,7 @@ export function smokeScenario(script) {
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   if (isLand) steps.push({play: name, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
-    if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1}, {pass: 1});
+    if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1, targets: "any"}, {pass: 1});
     if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
     steps.push({cast: name, seat: 0, targets: "any", optional: true}, {settle: true});
