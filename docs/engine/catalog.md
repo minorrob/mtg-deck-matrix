@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 689 defined and playable today; 1,900 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 694 defined and playable today; 1,905 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,9 +36,9 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | You may play or cast a card from another zone | — | missing | 15 | 84 |
 | count | Damage dealt | — | missing | 14 | 51 |
 | option | Remembering what an effect moved | — | missing | 10 | 117 |
+| option | You may play or cast a card from another zone | — | missing | 10 | 79 |
 | option | An effect's condition: about a named object | — | missing | 10 | 57 |
 | effect | Clone | — | missing | 9 | 29 |
 | effect | SacrificeAll | sacrificeAll | named | 9 | 19 |
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 84 | 15 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 79 | 10 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 2 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
