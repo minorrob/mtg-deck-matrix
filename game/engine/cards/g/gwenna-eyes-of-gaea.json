@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gwenna, Eyes of Gaea",
+    "oracleId": "7d95e72a-461e-4993-a190-847466a4b17c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid",
+      "Scout"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Add two mana in any combination of colors. Spend this mana only to cast creature spells or activate abilities of creature sources.\nWhenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add two mana in any combination of colors. Spend this mana only to cast creature spells or activate abilities of creature sources.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyCombination": true,
+          "count": 2,
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "ability": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "power": {
+            "min": 5
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "untap",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}
