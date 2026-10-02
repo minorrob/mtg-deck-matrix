@@ -167,6 +167,8 @@ function subjects(state, event, condition, sourceId, controller) {
     if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
     return [{player, amount: gained}];
   }
+  /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
+  if (condition.on === "GameEventManaPool") return tappedForMana(state, fields, condition, sourceId, controller) ? [{card: fields.source?.cardId, player: fields.player?.playerId}] : [];
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
@@ -275,6 +277,40 @@ function causedBy(state, event, cause, context) {
   return false;
 }
 
+/* TAPPED FOR MANA (CR 605.1b): a mana ability whose cost tapped its source -- by whom (`tapper`), what (`filter`, `self`,
+   `enchanted`, the permanent this Aura enchants), and what it made (`produced`, "a permanent for {C}"). */
+function tappedForMana(state, fields, condition, sourceId, controller) {
+  if (fields.tapped !== true) return false;
+  if (!whoseIs(condition.tapper ?? "you", fields.player?.playerId, controller)) return false;
+  const tapped = fields.source?.cardId;
+  if (condition.self && tapped !== sourceId) return false;
+  if (condition.enchanted && state.objects[sourceId]?.attachedTo !== tapped) return false;
+  if (condition.produced && !((fields.produced ?? {})[condition.produced] > 0)) return false;
+  if (condition.filter && !(state.objects[tapped] && matchesSelector({what: "permanent", ...condition.filter}, state, tapped, {controller, source: sourceId}))) return false;
+  return true;
+}
+
+/**
+ * THE TRIGGERED MANA ABILITIES THIS MANA EVENT TRIGGERS (CR 605.1b): not put on the stack -- the caller adds what each
+ * makes at once, to the player who tapped (its controller, for "its controller adds"). "One mana of any type that land
+ * produced": one of what it made.
+ */
+export function manaTriggered(state, event) {
+  const fields = event?.data?.fields ?? {};
+  const made = [];
+  for (const id of state.zones.battlefield) {
+    const holder = state.objects[id];
+    for (const ability of holder.abilities ?? []) {
+      const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
+      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
+      const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);
+      const adds = mana.produced ? (kind ? {[kind]: 1} : null) : mana.mana;
+      if (adds) made.push({player: fields.player?.playerId, mana: adds, source: id});
+    }
+  }
+  return made;
+}
+
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
   /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
@@ -307,7 +343,8 @@ export function collectTriggers(state, events) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
         for (const ability of object.abilities ?? []) {
-          if (ability.kind !== "triggered" || !ability.trigger) continue;
+          /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
+          if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
           /* "If it isn't that player's turn" asks about the player the event is about. */
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;

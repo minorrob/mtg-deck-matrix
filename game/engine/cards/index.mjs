@@ -109,6 +109,11 @@ const TRIGGERS = {
   drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
+  /* "Whenever you tap a land for mana", "whenever enchanted land is tapped for mana", "whenever you tap this land for mana",
+     "whenever you tap a permanent for {C}" (CR 605.1b): `tapper` you, opponent or any; `filter` what was tapped, `self`,
+     `enchanted`; `produced` a kind of mana it made (rules/trigger.mjs). */
+  "tapped for mana": (t) => ({on: "GameEventManaPool", tapper: t.tapper ?? "you", ...(t.filter ? {filter: t.filter} : {}), ...(t.who === "self" ? {self: true} : {}),
+    ...(t.enchanted ? {enchanted: true} : {}), ...(t.produced ? {produced: t.produced} : {})}),
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
      any; `filter` the card discarded. */
   discarded: (t) => ({on: "GameEventCardChangeZone", to: "Graveyard", discarded: true, discarder: t.discarder ?? "you", ...(t.filter ? {filter: t.filter} : {})}),
@@ -328,6 +333,11 @@ export function compileScript(script) {
          controller chooses whether to do it -- the card's sentence, Yes or No. Declining does nothing at all, a search
          and its shuffle included. */
       const effects = ability.optional ? [{effect: "modal", title: ability.text, modes: [{text: "Yes", effects: ability.effects}, {text: "No", effects: []}]}] : ability.effects;
+      /* A TRIGGERED MANA ABILITY (CR 605.1b): one that triggers on a mana ability and adds mana -- a fixed amount, or "one
+         mana of any type that land produced" -- with no target. It is not put on the stack (rules/trigger.mjs, manaTriggered). */
+      const [adds] = effects ?? [];
+      if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
+        && (MANA(adds.mana) || adds.produced === true)) trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
       abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects,
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {}),

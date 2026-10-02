@@ -648,8 +648,9 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
   combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
-  cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, counter added (and once),
-  life gained, life lost, token created (once), becomes monstrous.
+  cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
+  M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
+  lost, token created (once), becomes monstrous.
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.

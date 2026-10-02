@@ -47,7 +47,7 @@ export const FORGE_TRIGGER = {
   ChangesZone: "enters", ChangesZoneAll: "enters", Exiled: "exiled", Sacrificed: "sacrificed",
   Phase: "phase", Attacks: "attacks", AttackersDeclared: "attackers declared",
   AttackersDeclaredOneTarget: "attackers declared", Blocks: "blocks",
-  SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once",
+  SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
   LifeGained: "life gained", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
