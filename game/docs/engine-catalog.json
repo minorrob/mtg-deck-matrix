@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 931,
-  "everyRule": 2209
+  "defined": 935,
+  "everyRule": 2217
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 55,
+    "built": 56,
     "partial": 1,
-    "named": 16,
+    "named": 15,
     "missing": 120
    },
    "entries": [
@@ -3900,12 +3900,12 @@
      "rule": null,
      "name": "PeekAndReveal",
      "engine": "peekAndReveal",
-     "status": "named",
+     "status": "built",
      "forge": "PeekAndReveal",
      "top": 11,
      "all": 158,
-     "blocks": 11,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4337,7 +4337,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 33,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword construct",
