@@ -20,6 +20,7 @@ import {applyReplacements} from "../../rules/replacement.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
+import {typesOf, powerOf} from "../../rules/layers.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -180,6 +181,19 @@ function addCounters(state, id, kind, count, events) {
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
   }));
+}
+
+/**
+ * `fight` -- CR 701.14a: two creatures, each dealing damage equal to its power to the other -- `from` the one named first
+ * ("this creature", "target creature you control"), `targets` the other. Both powers are read before either deals any.
+ * If either is no longer a creature on the battlefield, neither deals damage (701.14b).
+ */
+export function fight(state, params, context) {
+  const [a] = params.from ?? [], [b] = params.targets ?? [];
+  const fighting = (id) => id !== undefined && state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
+  if (!fighting(a) || !fighting(b)) return [];
+  const powerA = Math.max(0, powerOf(state, a)), powerB = Math.max(0, powerOf(state, b));
+  return [...dealDamage(state, {amount: powerA, targets: [b], from: [a]}, context), ...dealDamage(state, {amount: powerB, targets: [a], from: [b]}, context)];
 }
 
 /** `putCounter` — CR 121. */
