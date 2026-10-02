@@ -47,8 +47,8 @@ claim; and what is outstanding, with the reason. Anything else is narrative.
 
 An agent may merge to `main` when it has followed standard practice, and says so: the
 readiness checks re-run by the merging session rather than taken from the handoff (base
-unmoved, no conflicts, CI green on the head), the full suite green locally with
-`PAGE_BUDGET_REQUIRED=1 GEOMETRY_REQUIRED=1`, and a merge commit or rebase rather than a
+unmoved, no conflicts, CI green on the head), the suites the change touches green locally and
+the scan clean before the push (`tools/local-ci.sh <ref> 0`), and a merge commit or rebase rather than a
 squash whenever the commits carry their own reasoning and proof. Rob set this on
 2026-09-19; before that, merging was his alone. Closing someone else's PR is still not an
 agent's call unless the PR is superseded by one the agent opened and the report names it.
@@ -64,6 +64,17 @@ with a scan for secrets and personal addresses in what the PR adds. Its closing 
 goes on the PR as a comment before the merge, and the merge report says the merge was made
 on the local gate. Rob set this on 2026-09-28, choosing not to wait out a spent allowance;
 the Actions run is still the rule whenever Actions can run.
+
+**No run twice what another run already proved.** Rob, 2026-10-01: "decrease the # of scans
+avoiding those that are redundant, especially between local vs. Github actions. Prefer to leave
+with github, and minimize to minimum required before pushes." So while Actions can run, the
+whole suite runs there and not also on the builder's machine. Before a push, run the suites the
+change touches (a new or changed suite, the suites that read the files it changes,
+`tests/data-integrity.mjs` when a suite is added, `tests/feature-wiring.mjs` for wording,
+`tests/asset-versions.mjs` when a served file moves) and `tools/local-ci.sh <ref> 0`: the
+scan for secrets and personal addresses, which must pass before anything reaches GitHub, and
+the merge with `main`. Main is not run again after a merge whose tree is exactly the PR head's
+that just ran green (`.github/workflows/tests.yml`).
 
 ## The production release
 
