@@ -104,12 +104,30 @@ export const playersFor = (state, who, controller) => {
   return [controller];
 };
 
+/**
+ * TO SACRIFICE (CR 701.21a): to move a permanent its controller controls to its owner's graveyard -- and to say so. The
+ * move is marked `sacrificed`, with who sacrificed it (its controller as it went), for "whenever you sacrifice a
+ * permanent" (rules/trigger.mjs). Every sacrifice goes through here: costs, the sacrifice effect, a ward paid this way.
+ *
+ * @returns {?number} what it became, or null
+ */
+export function sacrificeOne(state, id, events) {
+  const object = state.objects[id];
+  if (!object) return null;
+  const sacrificer = object.controller;
+  const before = events.length;
+  const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});
+  if (moved !== null && events.length > before) Object.assign(events[events.length - 1].data.fields, {sacrificed: true, sacrificer});
+  return moved;
+}
+
 /** `moveZone` — put the named objects somewhere. */
 export function moveZone(state, params, context) {
   const events = [];
   const arrived = [], became = [];
   for (const id of params.targets ?? []) {
-    const moved = moveOne(state, id, params.to ?? "graveyard", events);
+    /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events);
     if (moved !== null) became.push(moved);
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])

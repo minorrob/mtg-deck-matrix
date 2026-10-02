@@ -27,7 +27,7 @@
 
 import {cardsIn, moveObject} from "../../state/index.mjs";
 import {compileSelector} from "../filter.mjs";
-import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards} from "./permanents.mjs";
 import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
@@ -342,22 +342,24 @@ export const proliferate = {
 /* "Each opponent sacrifices a creature", "target player sacrifices a creature": each player named, in turn, chooses
    which of their OWN permanents that fit the selector go -- nobody can sacrifice what they do not control -- and
    they go to their owners' graveyards, which is a death "dies" sees (CR 700.4). A player with none is not asked. */
-const sacrificeable = (state, player, selector, controller) => {
+/* What a player may sacrifice: their own permanents the selector describes -- "another" read against the effect's source
+   ("Korvold ... sacrifice another permanent"). */
+const sacrificeable = (state, player, selector, source = null) => {
   const matches = compileSelector({...(selector ?? {}), what: "permanent", controller: "you"});
-  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source: null}));
+  return state.zones.battlefield.filter((id) => matches(state, id, {controller: player, source}));
 };
 export const sacrifice = {
   open(state, params, context) {
     /* CR 101.4: the active player chooses first, then each other player in turn order. */
     const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
-    const queue = playersFor(state, params.who, context.controller).filter((p) => sacrificeable(state, p, params.selector).length > 0).sort((a, b) => apnap(a) - apnap(b));
+    const queue = playersFor(state, params.who, context.controller).filter((p) => sacrificeable(state, p, params.selector, context.source ?? null).length > 0).sort((a, b) => apnap(a) - apnap(b));
     if (queue.length === 0) return false;
-    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, selector: params.selector ?? {}};
+    state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), count: params.count ?? 1, selector: params.selector ?? {}, source: context.source ?? null};
     return true;
   },
 
   choice(state, awaiting) {
-    const mine = sacrificeable(state, awaiting.player, awaiting.selector);
+    const mine = sacrificeable(state, awaiting.player, awaiting.selector, awaiting.source ?? null);
     const count = Math.min(awaiting.count, mine.length);
     return {
       id: `sacrifice:${awaiting.player}:${state.turn}`,
@@ -372,9 +374,9 @@ export const sacrifice = {
 
   apply(state, awaiting, indices) {
     const events = [];
-    const mine = sacrificeable(state, awaiting.player, awaiting.selector);
-    for (const id of (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined)) moveOne(state, id, "graveyard", events);
-    const next = (awaiting.remaining ?? []).filter((p) => sacrificeable(state, p, awaiting.selector).length > 0);
+    const mine = sacrificeable(state, awaiting.player, awaiting.selector, awaiting.source ?? null);
+    for (const id of (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined)) sacrificeOne(state, id, events);
+    const next = (awaiting.remaining ?? []).filter((p) => sacrificeable(state, p, awaiting.selector, awaiting.source ?? null).length > 0);
     if (next.length > 0) {
       state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1)};
       return {events, again: true};
@@ -465,7 +467,7 @@ export const unlessPays = {
     if (option.discard !== undefined && state.objects[option.discard]) {
       if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
     }
-    if (option.sacrifice !== undefined && state.objects[option.sacrifice]) moveOne(state, option.sacrifice, "graveyard", events);
+    if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
     return events;
   },
 };

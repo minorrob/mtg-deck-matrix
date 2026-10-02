@@ -129,6 +129,8 @@ function subjects(state, event, condition, sourceId, controller) {
     if (condition.combat && fields.combat !== true) return [];
     return [{card: fields.source?.cardId, player: fields.source?.controller, amount: fields.amount ?? 0}];
   }
+  /* "Whenever you sacrifice a permanent": the card it became, and who sacrificed it. */
+  if (condition.on === "GameEventCardChangeZone" && condition.sacrificed) return matches(state, event, condition, sourceId, controller) ? [{card: fields.becomes, player: fields.sacrificer}] : [];
   /* "Whenever you discard a card", "whenever an opponent discards a creature card" (CR 701.9): the card it became in the
      graveyard (a discard as a cost -- cycling, "discard a card:" -- is a discard too), and who discarded it. */
   if (condition.on === "GameEventCardChangeZone" && condition.discarded) {
@@ -175,6 +177,12 @@ function matches(state, event, condition, sourceId, controller) {
   const fields = event.data?.fields ?? {};
 
   if (condition.on === "GameEventCardChangeZone") {
+    /* A sacrifice (effects/zones.mjs sacrificeOne): by whom, and not this one if it says "another". Asked here, where a
+       permanent's own departure is read too, so a creature destroyed does not trigger "whenever you sacrifice". */
+    if (condition.sacrificed) {
+      if (fields.sacrificed !== true || !whoseIs(condition.sacrificer ?? "you", fields.sacrificer, controller)) return false;
+      if (condition.another && (fields.leftBehind?.cardId ?? fields.card?.cardId) === sourceId) return false;
+    }
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not

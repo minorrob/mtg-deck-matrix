@@ -108,7 +108,7 @@ export function afterwards(state, ids, params, context) {
   if (params.gains) pushEffect(state, {id: `gains-always:${context.source ?? "effect"}`, layer: 6, affects: {ids: made},
     apply: {addKeywords: params.gains}, until: "leaves", sourceController: controller});
   if (params.atEndStep) delayedTrigger(state, {at: "end step", text: params.atEndStep === "exile" ? "Exile it at the beginning of the next end step." : "Sacrifice it at the beginning of the next end step.",
-    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard"}]}, context);
+    effects: [{effect: "moveZone", targets: made, to: params.atEndStep === "exile" ? "exile" : "graveyard", ...(params.atEndStep === "exile" ? {} : {sacrifice: true})}]}, context);
 }
 
 /**
