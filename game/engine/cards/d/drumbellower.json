@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drumbellower",
+    "oracleId": "03dee43b-6377-4f7b-956b-a384160322e4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nUntap all creatures you control during each other player's untap step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Untap all creatures you control during each other player's untap step.",
+      "rule": "untap-during-others",
+      "affects": {
+        "types": [
+          "Creature"
+        ]
+      }
+    }
+  ]
+}

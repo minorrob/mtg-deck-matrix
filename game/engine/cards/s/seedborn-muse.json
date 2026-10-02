@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Seedborn Muse",
+    "oracleId": "463865bc-087e-477b-9e86-84e77f1ad931",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Untap all permanents you control during each other player's untap step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Untap all permanents you control during each other player's untap step.",
+      "rule": "untap-during-others",
+      "affects": {}
+    }
+  ]
+}

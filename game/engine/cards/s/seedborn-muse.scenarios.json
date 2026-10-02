@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Seedborn Muse",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's untap step: his Forest and Rock untap",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Seedborn Muse",
+            "Forest",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Rock"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Rock",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

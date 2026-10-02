@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 753 defined and playable today; 1,994 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 762 defined and playable today; 2,008 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,14 +20,14 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 21 | 0 | 26 | 147 |
 | Keyword actions (CR 701) | 70 | 15 | 3 | 8 | 44 |
-| Effects | 192 | 45 | 1 | 20 | 126 |
+| Effects | 192 | 46 | 1 | 19 | 126 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
-| Static abilities | 77 | 4 | 2 | 0 | 71 |
+| Static abilities | 77 | 5 | 2 | 0 | 70 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 14 | 4 | 0 | 19 |
 | Amounts the game counts | 188 | 9 | 1 | 0 | 178 |
-| Choices | 15 | 10 | 0 | 2 | 3 |
+| Choices | 15 | 11 | 0 | 1 | 3 |
 | Other keyword constructs | 16 | 1 | 0 | 1 | 14 |
 
 ## What to build next
@@ -36,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
+| keyword construct | ETBReplacement | — | missing | 27 | 68 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 12 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 10 | 79 |
 | effect | Clone | — | missing | 9 | 29 |
 | keyword ability | Ninjutsu | — | missing | 8 | 14 |
 | keyword ability | Station | — | missing | 8 | 11 |
 | option | Remembering what an effect moved | — | missing | 7 | 113 |
-| effect | ChooseType | chooseType | named | 7 | 35 |
 | effect | Play | play | named | 7 | 35 |
 | keyword construct | Chapter | — | missing | 7 | 19 |
 | keyword ability | Crew | — | named | 7 | 15 |
-| static | UntapOtherPlayer | — | missing | 7 | 7 |
-| keyword construct | ETBReplacement | — | missing | 6 | 68 |
 | option | An effect's condition: about a named object | — | missing | 6 | 53 |
 | trigger | AttackersDeclared | attackers declared | named | 6 | 26 |
 | effect | DigUntil | — | missing | 6 | 18 |
+| option | Only once (or N times) each turn | — | missing | 6 | 18 |
+| static | CantBeCast | — | missing | 6 | 14 |
 
 ## Keyword abilities (CR 702)
 
@@ -75,7 +75,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
 | 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 8 |
-| 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
+| 702.51 | Convoke | — | named | 11 | 106 | 11 | 4 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
@@ -362,7 +362,7 @@ The things that alone hold back the most of the most-played cards.
 | DelayedTrigger | delayedTrigger | partial | 37 | 447 | 0 | 0 |
 | Play | play | named | 35 | 315 | 35 | 7 |
 | CopySpellAbility | copySpell | built | 35 | 241 | 0 | 0 |
-| ChooseType | chooseType | named | 35 | 176 | 35 | 7 |
+| ChooseType | chooseType | built | 35 | 176 | 0 | 0 |
 | UntapAll | untapAll | built | 30 | 126 | 0 | 0 |
 | Clone | — | missing | 29 | 167 | 29 | 9 |
 | ChooseCard | chooseCard | built | 28 | 381 | 0 | 0 |
@@ -681,7 +681,7 @@ The things that alone hold back the most of the most-played cards.
 | RaiseCost | — | missing | 10 | 91 | 6 | 4 |
 | CantBlock | — | missing | 8 | 139 | 8 | 1 |
 | CantAttackUnless | — | missing | 7 | 26 | 7 | 6 |
-| UntapOtherPlayer | — | missing | 7 | 15 | 7 | 7 |
+| UntapOtherPlayer | rules/turn | built | 7 | 15 | 0 | 0 |
 | CantBeActivated | — | missing | 5 | 34 | 5 | 2 |
 | MustAttack | — | missing | 4 | 100 | 4 | 1 |
 | CantGainLife | — | missing | 4 | 20 | 4 | 3 |
@@ -1060,7 +1060,7 @@ The things that alone hold back the most of the most-played cards.
 | 107.3 | A value for X | one offer per value the pool can pay | built | 0 | 0 | 0 | 0 |
 | 601.2b | Additional cost: which card or permanent | one offer per choice | built | 0 | 0 | 0 | 0 |
 | 508.1, 509.1 | Attackers and blockers | declare-attackers, declare-blockers | built | 0 | 0 | 0 | 0 |
-| 700.2 | Choose a color, a card type or a creature type | chooseType | named | 0 | 0 | 0 | 0 |
+| 700.2 | Choose a color, a card type or a creature type | chooseType | built | 0 | 0 | 0 | 0 |
 | 115.1 | Choose a player or opponent | — | missing | 0 | 0 | 0 | 0 |
 | 700.2 | Choose one / choose two (modes) | modal | built | 0 | 0 | 0 | 0 |
 | 510.1c | Divide combat damage among blockers | assign-combat-damage | built | 0 | 0 | 0 | 0 |
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 68 | 6 |
+| ETBReplacement | — | missing | 68 | 408 | 68 | 27 |
 | etbCounter | — | missing | 35 | 475 | 25 | 4 |
 | Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 4 |

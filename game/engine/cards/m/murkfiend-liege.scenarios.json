@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Murkfiend Liege",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His green Bear 3/3; the Liege itself is not \"other\"",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Murkfiend Liege",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Murkfiend Liege",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Both attacked: in Maya's untap step the green Bear untaps, the red Goblin does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Murkfiend Liege",
+            "Bear",
+            "Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear",
+            "Goblin"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Goblin",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

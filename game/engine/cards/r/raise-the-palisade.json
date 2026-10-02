@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Raise the Palisade",
+    "oracleId": "f55a3781-fe33-4301-9bb5-6a54b9c13c4f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a creature type. Return all creatures that aren't of the chosen type to their owners' hands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a creature type. Return all creatures that aren't of the chosen type to their owners' hands.",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "$chosen"
+            ]
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

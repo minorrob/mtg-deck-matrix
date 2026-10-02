@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bender's Waterskin",
+    "oracleId": "3bc46467-323f-4cbf-9d0a-f3d2ae3c3a34",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap this artifact during each other player's untap step.\n{T}: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Untap this artifact during each other player's untap step.",
+      "rule": "untap-during-others",
+      "affects": {
+        "self": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    }
+  ]
+}

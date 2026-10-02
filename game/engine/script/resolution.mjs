@@ -121,6 +121,8 @@ export function answerResolution(state, indices, extra = {}, rng = null) {
   if (!state.resolving) return {status: "done", events};
   /* What the answer moved, remembered for the effects after it ("untap that land"). */
   if (!Array.isArray(outcome) && Array.isArray(outcome.remembered)) state.resolving.context.remembered = outcome.remembered;
+  /* "Choose a creature type": the type, for the effects after it ("$chosen", script/bind.mjs). */
+  if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
 
   /* The effect that asked is finished. A modal hands back the chosen modes' effects, which go in
      front of whatever was already queued. */
