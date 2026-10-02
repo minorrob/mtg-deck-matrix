@@ -62,7 +62,7 @@ export function runResolution(state) {
     /* Bound as it reaches the head, not when the queue was built: a modal's chosen effects arrive later, and are
        bound against the same targets as everything else (bind.mjs). */
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
-    const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context), resolving.context);
+    const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context, state), resolving.context);
     resolving.queue[0] = effect;
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */

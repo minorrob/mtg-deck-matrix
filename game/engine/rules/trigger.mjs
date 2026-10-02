@@ -129,7 +129,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
-    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
+    /* And its controller -- the attacking player (CR 508.1a): "it deals 1 damage to its controller" (Vengeful Ancestor), as
+       it last was should it leave before the trigger resolves (CR 608.2h). */
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
   }
   /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
