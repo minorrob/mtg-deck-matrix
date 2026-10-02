@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 657,
-  "everyRule": 1858
+  "defined": 665,
+  "everyRule": 1867
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -379,7 +379,7 @@
      "top": 7,
      "all": 14,
      "blocks": 7,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -4205,7 +4205,7 @@
      "top": 3,
      "all": 142,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 7,
+    "built": 8,
     "partial": 4,
-    "named": 11,
+    "named": 10,
     "missing": 116
    },
    "entries": [
@@ -5662,12 +5662,12 @@
      "rule": null,
      "name": "Sacrificed",
      "engine": "sacrificed",
-     "status": "named",
+     "status": "built",
      "forge": "Sacrificed",
      "top": 17,
      "all": 114,
-     "blocks": 17,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5979,7 +5979,7 @@
      "top": 2,
      "all": 3,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
