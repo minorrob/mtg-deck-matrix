@@ -17,6 +17,7 @@
  * behave differently later.
  */
 
+import {holdArrival} from "../../rules/entering.mjs";
 import {afterwards, delayedTrigger} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
@@ -100,6 +101,8 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
   }));
+  /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
+  if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   return moved;
 }
 

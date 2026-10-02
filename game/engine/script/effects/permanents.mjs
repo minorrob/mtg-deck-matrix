@@ -77,12 +77,14 @@ export function attach(state, params, context) {
    supertypes, rules text and printed power and toughness, which is what the state holds (the layers derive the rest),
    and never its counters, damage, tapped state or the effects on it. A copy of a token that is itself a copy copies the
    copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
-   toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"). */
+   toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"), its
+   card types set. */
 function copiable(object, except = {}) {
   const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
     card: except.name ?? object.card, manaCost: object.manaCost ?? null,
-    types: [...new Set([...(object.types ?? []), ...(except.addTypes ?? [])])],
+    /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
+    types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
     subtypes: [...new Set([...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])])],
     ...(supertypes.length ? {supertypes} : {}),
@@ -174,18 +176,20 @@ function showCopy(object) {
   }
   if (!latest) { delete object.uncopied; delete object.copyEffects; }
 }
-export function becomeCopy(state, params, context) {
-  const original = (params.targets ?? [])[0];
-  const from = state.objects[original];
-  if (!from) return [];
-  const object = state.objects[context.source];
-  if (!object || object.zone !== "battlefield") return [];
+/** The permanent `id` becomes a copy of `fromId` (becomeCopy; and entering as a copy, rules/entering.mjs). @returns {boolean} whether it did */
+export function copyOnto(state, id, fromId, {except = {}, keep = [], until = null} = {}) {
+  const from = state.objects[fromId], object = state.objects[id];
+  if (!from || !object || object.zone !== "battlefield") return false;
   object.uncopied ??= ownValues(object);
-  const values = copiable(from, params.except ?? {});
+  const values = copiable(from, except);
   /* "Except it has this ability": its own, renamed so an id the copy also has does not answer for it. */
-  for (const ability of (object.uncopied.abilities ?? []).filter((a) => (params.keep ?? []).includes(a.id))) values.abilities.push({...structuredClone(ability), id: `kept-${ability.id}`});
-  (object.copyEffects ??= []).push({values, until: params.until ?? null});
+  for (const ability of (object.uncopied.abilities ?? []).filter((a) => keep.includes(a.id))) values.abilities.push({...structuredClone(ability), id: `kept-${ability.id}`});
+  (object.copyEffects ??= []).push({values, until});
   showCopy(object);
+  return true;
+}
+export function becomeCopy(state, params, context) {
+  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */

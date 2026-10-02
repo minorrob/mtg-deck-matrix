@@ -342,6 +342,8 @@ export function collectTriggers(state, events) {
     entry.about = {...(entry.about ?? {}), cards: about.card !== undefined ? [about.card] : []};
   };
   for (const event of events ?? []) {
+    /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
+    if (event.data?.fields?.awaitingCopy === true) continue;
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
