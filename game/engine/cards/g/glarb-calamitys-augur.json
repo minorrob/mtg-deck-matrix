@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glarb, Calamity's Augur",
+    "oracleId": "df9409e6-bd6d-4b5b-b807-fcf347ee940a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Frog",
+      "Wizard",
+      "Noble"
+    ],
+    "manaCost": "{B}{G}{U}",
+    "colors": [
+      "B",
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Deathtouch\nYou may look at the top card of your library any time.\nYou may play lands and cast spells with mana value 4 or greater from the top of your library.\n{T}: Surveil 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may play lands and cast spells with mana value 4 or greater from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": true,
+      "spells": {
+        "manaValue": {
+          "min": 4
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Surveil 2.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

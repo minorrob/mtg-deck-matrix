@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 531,
-  "everyRule": 1681
+  "defined": 537,
+  "everyRule": 1687
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -9006,8 +9006,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 90,
-     "alone": 11
+     "blocks": 84,
+     "alone": 5
     },
     {
      "kind": "option",

@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "As Foretold",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Imp": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{2}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One time counter at the upkeep: a mana value 1 spell for {0}; a 2 is not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "As Foretold"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Imp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Imp"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "As Foretold",
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

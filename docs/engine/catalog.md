@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 531 defined and playable today; 1,681 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 537 defined and playable today; 1,687 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | You may play or cast a card from another zone | — | missing | 11 | 90 |
 | count | Damage dealt | — | missing | 11 | 56 |
 | effect | CopySpellAbility | copySpell | named | 11 | 35 |
 | keyword ability | Flashback | — | named | 11 | 14 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | GainControl | gainControl | named | 9 | 22 |
 | trigger | LifeGained | life gained | named | 9 | 18 |
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
+| option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 
 ## Keyword abilities (CR 702)
 
@@ -833,7 +833,7 @@ The things that alone hold back the most of the most-played cards.
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 90 | 11 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 84 | 5 |
 | An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
