@@ -94,9 +94,10 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 
 /* ---- a permanent present, as a condition (batch 11) ---- */
 {
-  eq([missingFor({apis: ["Mana"], options: ["IsPresent"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "IsPresentStatic"]})],
-    [[], [{kind: "option", name: "IsPresentStatic", why: "not built"}]],
-    "\"activate only if you control a Swamp\" and an intervening \"if\" are built; a static's \"as long as you control a Mountain\" is not, and holds Anger back");
+  /* (Batch 38 built a static's condition, IsPresentStatic; the example of one not built is now an effect's.) */
+  eq([missingFor({apis: ["Mana"], options: ["IsPresent"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "ConditionPresent"]})],
+    [[], [{kind: "option", name: "ConditionPresent", why: "not built"}]],
+    "\"activate only if you control a Swamp\" and an intervening \"if\" are built; an effect's \"if you control an artifact, ... instead\" is not");
   eq([inventory.top.perCard["Tainted Wood"].options, inventory.top.perCard.Anger.options], [["IsPresent"], ["IsPresent", "IsPresentStatic"]],
     "the measurement tells the two apart, on the card itself");
 }

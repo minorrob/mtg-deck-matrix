@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wonder",
+    "oracleId": "232284f7-c623-4895-9ab9-8b1a39926830",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Incarnation"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nAs long as this card is in your graveyard and you control an Island, creatures you control have flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "As long as this card is in your graveyard and you control an Island, creatures you control have flying.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Island"
+          ],
+          "controller": "you"
+        }
+      },
+      "worksFrom": "graveyard"
+    }
+  ]
+}

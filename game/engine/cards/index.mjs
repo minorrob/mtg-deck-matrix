@@ -308,6 +308,11 @@ export function compileScript(script) {
         ...(ability.limit ? {limit: ability.limit} : {})});
       return;
     }
+    /* A condition on a static (Forge's IsPresentStatic) is read by the layers (rules/layers.mjs), and a static that works
+       from a graveyard is a layer's too; a rule static (rules/statics.mjs) reads neither yet, and is refused rather than
+       always on. */
+    if (ability.kind === "static" && ability.rule && (ability.condition || ability.worksFrom)) problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
+    if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
     /* static and replacement: their schema is the rules modules' own shape. */
     abilities.push({...ability, id});
   });

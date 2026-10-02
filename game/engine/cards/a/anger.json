@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Anger",
+    "oracleId": "eaabd151-2160-4bff-82c0-3fa88659be98",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Incarnation"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste\nAs long as this card is in your graveyard and you control a Mountain, creatures you control have haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "static",
+      "text": "As long as this card is in your graveyard and you control a Mountain, creatures you control have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Mountain"
+          ],
+          "controller": "you"
+        }
+      },
+      "worksFrom": "graveyard"
+    }
+  ]
+}

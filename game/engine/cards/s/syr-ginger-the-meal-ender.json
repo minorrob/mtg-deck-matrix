@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Syr Ginger, the Meal Ender",
+    "oracleId": "2eb16535-718f-4b88-92bc-96429d796327",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Food",
+      "Knight"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Syr Ginger has trample, hexproof, and haste as long as an opponent controls a planeswalker.\nWhenever another artifact you control is put into a graveyard from the battlefield, put a +1/+1 counter on Syr Ginger and scry 1.\n{2}, {T}, Sacrifice Syr Ginger: You gain life equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Syr Ginger has trample, hexproof, and haste as long as an opponent controls a planeswalker.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample",
+          "Hexproof",
+          "Haste"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Planeswalker"
+          ],
+          "controller": "opponent"
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another artifact you control is put into a graveyard from the battlefield, put a +1/+1 counter on Syr Ginger and scry 1.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Sacrifice Syr Ginger: You gain life equal to its power.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "powerOf": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

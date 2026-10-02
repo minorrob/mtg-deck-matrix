@@ -1,0 +1,193 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jetmir, Nexus of Revels",
+    "oracleId": "da72a4bc-ce6f-4b72-bc66-2ee33cfa87df",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Demon"
+    ],
+    "manaCost": "{1}{R}{G}{W}",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Creatures you control get +1/+0 and have vigilance as long as you control three or more creatures.\nCreatures you control also get +1/+0 and have trample as long as you control six or more creatures.\nCreatures you control also get +1/+0 and have double strike as long as you control nine or more creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+0 and have vigilance as long as you control three or more creatures.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 3
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+0 and have vigilance as long as you control three or more creatures.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 3
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control also get +1/+0 and have trample as long as you control six or more creatures.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 6
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control also get +1/+0 and have trample as long as you control six or more creatures.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 6
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control also get +1/+0 and have double strike as long as you control nine or more creatures.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 9
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control also get +1/+0 and have double strike as long as you control nine or more creatures.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Double Strike"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 9
+      }
+    }
+  ]
+}
