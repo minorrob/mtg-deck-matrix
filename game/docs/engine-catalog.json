@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 921,
-  "everyRule": 2195
+  "defined": 931,
+  "everyRule": 2209
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -727,7 +727,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 53,
+    "built": 55,
     "partial": 1,
-    "named": 18,
+    "named": 16,
     "missing": 120
    },
    "entries": [
@@ -3756,12 +3756,12 @@
      "rule": null,
      "name": "ImmediateTrigger",
      "engine": "immediateTrigger",
-     "status": "named",
+     "status": "built",
      "forge": "ImmediateTrigger",
      "top": 18,
      "all": 313,
-     "blocks": 18,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3840,12 +3840,12 @@
      "rule": null,
      "name": "Branch",
      "engine": "branch",
-     "status": "named",
+     "status": "built",
      "forge": "Branch",
      "top": 14,
      "all": 113,
-     "blocks": 14,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5835,7 +5835,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -7429,7 +7429,7 @@
      "top": 3,
      "all": 6,
      "blocks": 3,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "static",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 16
+     "alone": 18
     },
     {
      "kind": "option",
@@ -9677,7 +9677,7 @@
      "top": 3,
      "all": 21,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9761,7 +9761,7 @@
      "top": 2,
      "all": 38,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",

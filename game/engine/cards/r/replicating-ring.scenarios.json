@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Replicating Ring",
+  "scenarios": [
+    {
+      "name": "{T}: one mana of any color -- green",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Replicating Ring"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Replicating Ring",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "His upkeep: a night counter, and nothing more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Replicating Ring"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventCardCounters",
+          "where": {
+            "type": "night",
+            "oldValue": 0,
+            "newValue": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Replicating Ring"
+          ]
+        }
+      ]
+    }
+  ]
+}

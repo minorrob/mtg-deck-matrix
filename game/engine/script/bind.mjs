@@ -250,6 +250,8 @@ export function targetRefs(effects) {
     if (isRef(value)) { found.push(value.target); return; }
     const fact = factRef(value);
     if (fact) { found.push(value[fact].target); return; }
+    /* A reflexive trigger's targets are its own, chosen as it goes on the stack (CR 603.12; schema.mjs checks them). */
+    if (value.effect === "immediateTrigger") return;
     Object.values(value).forEach(walk);
   };
   walk(effects);

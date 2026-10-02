@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scute Swarm",
+    "oracleId": "aa854d50-444c-49d9-bfb1-5476b33c1c0b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "present": {
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            },
+            "atLeast": 6
+          },
+          "then": [
+            {
+              "effect": "copyPermanent",
+              "targets": "self"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "createToken",
+              "token": {
+                "name": "Insect",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Insect"
+                ],
+                "colors": [
+                  "G"
+                ],
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

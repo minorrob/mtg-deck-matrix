@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brokers Hideout",
+    "oracleId": "bd002797-a545-4bee-88bf-b878436e7cca",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this land enters, sacrifice it. When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "library",
+              "selector": {
+                "anyOf": [
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Forest"
+                    ]
+                  },
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Plains"
+                    ]
+                  },
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Island"
+                    ]
+                  }
+                ]
+              },
+              "to": "battlefield",
+              "tapped": true,
+              "shuffle": true
+            },
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

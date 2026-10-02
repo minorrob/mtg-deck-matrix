@@ -299,6 +299,8 @@ export function createToken(state, params, context) {
       types: spec.types ?? ["Creature"],
       /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
       subtypes: spec.subtypes ?? [],
+      /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
+      supertypes: spec.supertypes ?? [],
       /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
       colors: spec.colors ?? [],
       power: sized(spec.power),
@@ -538,6 +540,24 @@ export function addPhase(state, params, context) {
  * made (CR 603.7a): it is `fresh` until the action that made it has been read for triggers (rules/trigger.mjs).
  * WHAT: its effects, with every reference remembered now (script/bind.mjs, rememberNow; CR 603.7c).
  */
+/**
+ * `immediateTrigger` -- a reflexive triggered ability (Forge's ImmediateTrigger; CR 603.12): "Sacrifice it. When you do,
+ * search your library ..." (the New Capenna lands), "you may create a Treasure token. When you do, target opponent creates
+ * a tapped Treasure token" (Generous Plunderer). It triggers as the resolution does what it names -- an effect's own
+ * condition saying whether it did ("this way", script/condition.mjs) -- and goes on the stack the next time a player
+ * would receive priority, with the other triggers waiting then, its targets chosen as it does (CR 603.3d; none legal,
+ * and it is removed). `effects` what it does, `targets` its own; "that card" and "that player" what this resolution is
+ * about.
+ */
+export function immediateTrigger(state, params, context) {
+  const source = context.source ?? null;
+  (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
+    source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
+    ...(context.about ? {about: structuredClone(context.about)} : {}),
+    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
+  return [];
+}
+
 export function delayedTrigger(state, params, context) {
   if (!state.delayedTriggers) state.delayedTriggers = [];
   const waits = Boolean(params.on);
