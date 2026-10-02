@@ -115,7 +115,10 @@ export function flashbackCost(state, player, id) {
   if (!object || object.zone !== "graveyard" || object.owner !== player) return null;
   if (!(object.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) return null;
   const own = (object.abilities ?? []).find((a) => a.kind === "static" && a.rule === "flashback");
-  const given = (state.effects ?? []).some((e) => e.rule === "flashback" && (e.affects?.ids ?? []).includes(id));
+  const given = (state.effects ?? []).some((e) => e.rule === "flashback" && (e.affects?.ids ?? []).includes(id))
+    /* "Each instant and sorcery card in your graveyard has flashback" (Lier): a permanent's static, its cost the card's mana cost. */
+    || state.zones.battlefield.some((h) => (state.objects[h].abilities ?? []).some((a) => a.kind === "static" && a.rule === "flashback" && a.affects
+      && matchesSelector({...a.affects, what: "card", zone: "graveyard"}, state, id, {controller: state.objects[h].controller, source: h})));
   const cost = own?.cost ?? (given ? [{atom: "mana", cost: object.manaCost ?? ""}] : null);
   if (!cost) return null;
   return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0)};

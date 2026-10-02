@@ -640,7 +640,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Mana and cost: `addMana`, `addManaReflected`, `tap`, `untap`, `untapAll`, `costReduction`, `alternativeCost`.
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
-  `replaceCounters`, `amass`.
+  `replaceCounters`, `amass`, `poison` (a player's poison counters; added in M4 phase 3, batch 64).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`.
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).

@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lier, Disciple of the Drowned",
+  "fixtures": {
+    "Charm": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His instant in the graveyard has flashback: cast for its mana cost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lier, Disciple of the Drowned",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Charm"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Charm"
+          ]
+        }
+      ]
+    }
+  ]
+}

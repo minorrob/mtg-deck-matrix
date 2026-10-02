@@ -196,6 +196,23 @@ export function fight(state, params, context) {
   return [...dealDamage(state, {amount: powerA, targets: [b], from: [a]}, context), ...dealDamage(state, {amount: powerB, targets: [a], from: [b]}, context)];
 }
 
+/**
+ * `poison` -- "each opponent gets a poison counter", "that player gets two poison counters" (CR 122.1f; Forge's Poison):
+ * on each player it names, `count` of them. Ten or more and that player loses (CR 704.5c, rules/sba.mjs).
+ */
+export function poison(state, params, context) {
+  const events = [];
+  const count = params.count ?? 1;
+  if (!(count > 0)) return events;
+  for (const id of playersFor(state, params.who, context.controller)) {
+    const player = state.players[id];
+    const before = player.poison ?? 0;
+    player.poison = before + count;
+    events.push(event("GameEventPlayerPoisoned", state, {receiver: {playerId: id, name: player.name}, oldValue: before, amount: count}));
+  }
+  return events;
+}
+
 /** `putCounter` — CR 121. */
 export function putCounter(state, params, context) {
   const events = [];

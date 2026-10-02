@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Last March of the Ents",
+    "oracleId": "3999cd64-ff5c-4e2c-8aa6-d14f9f8a2b4c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell can't be countered.\nDraw cards equal to the greatest toughness among creatures you control, then put any number of creature cards from your hand onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Draw cards equal to the greatest toughness among creatures you control, then put any number of creature cards from your hand onto the battlefield.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "greatestToughness": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": 99,
+          "upTo": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

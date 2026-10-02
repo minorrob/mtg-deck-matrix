@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Infectious Inquiry",
+    "oracleId": "66051196-53ea-4461-b241-205df9395b3b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You draw two cards and you lose 2 life. Each opponent gets a poison counter.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You draw two cards and you lose 2 life. Each opponent gets a poison counter.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": "you"
+        },
+        {
+          "effect": "poison",
+          "who": "opponent",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

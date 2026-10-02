@@ -34,6 +34,8 @@ export const FORGE_API = {
   PutCounter: "putCounter", PutCounterAll: "putCounterAll", RemoveCounter: "removeCounter",
   Proliferate: "proliferate", MultiplyCounter: "multiplyCounters", MoveCounter: "moveCounters",
   ReplaceCounter: "replaceCounters", Amass: "amass",
+  /* Poison ("each opponent gets a poison counter", batch 64). */
+  Poison: "poison",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
   Clone: "becomeCopy",
   Token: "createToken", CopyPermanent: "copyPermanent", Animate: "animate", AnimateAll: "animateAll",
@@ -75,7 +77,10 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
      turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
   CantBeCast: "rules/actions"};
-export const FORGE_REPLACEMENT = {Moved: "replacement"};
+export const FORGE_REPLACEMENT = {Moved: "replacement",
+  /* "This spell can't be countered", "creature spells you control can't be countered" (batch 64): the static
+     `cant-be-countered`, read where a counter would apply (rules/statics.mjs, cantBeCountered). */
+  Counter: "rules/statics"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
