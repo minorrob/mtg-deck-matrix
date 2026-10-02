@@ -77,11 +77,11 @@ export function attach(state, params, context) {
    supertypes, rules text and printed power and toughness, which is what the state holds (the layers derive the rest),
    and never its counters, damage, tapped state or the effects on it. A copy of a token that is itself a copy copies the
    copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
-   toughness, colors. */
+   toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"). */
 function copiable(object, except = {}) {
-  const supertypes = (object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary"));
+  const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
-    card: object.card, manaCost: object.manaCost ?? null,
+    card: except.name ?? object.card, manaCost: object.manaCost ?? null,
     types: [...new Set([...(object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
     subtypes: [...new Set([...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])])],
@@ -146,6 +146,56 @@ export function copyPermanent(state, params, context) {
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
   makeCopies(state, originals, params, context, events);
   return events;
+}
+
+/**
+ * `becomeCopy` -- "this land becomes a copy of target land" (Thespian's Stage), "... until end of turn" (Mirage Mirror):
+ * CR 707.2, layer 1 (CR 613.1a).
+ *
+ * `targets`, the object copied, first of them: its copiable values as they are now -- its own, or what a copy effect
+ * made them (CR 707.3) -- a permanent or a card elsewhere ("target creature card in your graveyard"). The source is what
+ * becomes the copy. `until` "end-of-turn", or for good. `except` as a token copy's (copiable), and `keep`: the ids of its own abilities it keeps ("except it has
+ * this ability").
+ *
+ * THE VALUES ARE WRITTEN ONTO THE PERMANENT, ITS OWN KEPT BESIDE THEM (`uncopied`), so everything that reads a
+ * permanent's name, types, abilities and printed power and toughness -- the layers, the triggers, the offers -- reads the
+ * copy without knowing there is one. The latest copy effect is the one that shows (CR 613.7); when it ends the one before
+ * it shows again, and with none left the permanent is its own again. Leaving the battlefield ends them all: a card moves
+ * as itself (state/index.mjs, moveObject; CR 400.7).
+ */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+const ownValues = (object) => Object.fromEntries(COPY_KEYS.map((key) => [key, object[key] === undefined ? undefined : structuredClone(object[key])]));
+function showCopy(object) {
+  const latest = (object.copyEffects ?? []).at(-1);
+  const values = latest ? latest.values : object.uncopied;
+  for (const key of COPY_KEYS) {
+    if (values[key] === undefined) delete object[key];
+    else object[key] = structuredClone(values[key]);
+  }
+  if (!latest) { delete object.uncopied; delete object.copyEffects; }
+}
+export function becomeCopy(state, params, context) {
+  const original = (params.targets ?? [])[0];
+  const from = state.objects[original];
+  if (!from) return [];
+  const object = state.objects[context.source];
+  if (!object || object.zone !== "battlefield") return [];
+  object.uncopied ??= ownValues(object);
+  const values = copiable(from, params.except ?? {});
+  /* "Except it has this ability": its own, renamed so an id the copy also has does not answer for it. */
+  for (const ability of (object.uncopied.abilities ?? []).filter((a) => (params.keep ?? []).includes(a.id))) values.abilities.push({...structuredClone(ability), id: `kept-${ability.id}`});
+  (object.copyEffects ??= []).push({values, until: params.until ?? null});
+  showCopy(object);
+  return [];
+}
+/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
+export function endCopies(state) {
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (!(object.copyEffects ?? []).some((c) => c.until === "end-of-turn")) continue;
+    object.copyEffects = object.copyEffects.filter((c) => c.until !== "end-of-turn");
+    showCopy(object);
+  }
 }
 
 /** `createToken` — CR 111. */

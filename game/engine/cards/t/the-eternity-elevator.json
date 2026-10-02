@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Eternity Elevator",
+    "oracleId": "11323af4-b8b8-4ca9-932f-377c7fd77dea",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Spacecraft"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}{C}{C}.\nStation (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery.)\n20+ | {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}{C}{C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Station",
+      "keyword": "station"
+    },
+    {
+      "kind": "activated",
+      "text": "20+ | {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "countersOn": "self",
+            "counter": "charge"
+          }
+        }
+      ],
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 20
+        }
+      }
+    }
+  ]
+}

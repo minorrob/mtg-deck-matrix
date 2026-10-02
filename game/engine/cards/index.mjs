@@ -276,6 +276,17 @@ export function compileScript(script) {
       keywords.push("Crew");
       return;
     }
+    /* STATION (CR 702.184a): "Tap another untapped creature you control: Put a number of charge counters on this permanent
+       equal to the tapped creature's power. Activate only as a sorcery" -- the `tapCreature` cost atom, the creature tapped
+       being what the ability is about (rules/actions.mjs). What it has at "N+" (CR 721.2) is the card's own abilities, each
+       on the condition `selfCounters` (script/condition.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "station") {
+      if (!["Spacecraft", "Planet"].some((t) => (identity.subtypes ?? []).includes(t))) problems.push(`${ability.text}: station on a card that is not a Spacecraft or a Planet`);
+      abilities.push({id, kind: "activated", text: ability.text, timing: "sorcery", cost: [{atom: "tapCreature", selector: {types: ["Creature"]}}],
+        effects: [{effect: "putCounter", targets: "self", counter: "charge", count: {powerOf: "that card"}}]});
+      keywords.push("Station");
+      return;
+    }
     /* NINJUTSU (CR 702.49a): "{cost}, Return an unblocked attacking creature you control to its owner's hand: Put this card
        onto the battlefield from your hand tapped and attacking" -- an ability of the card in its owner's hand, attacking
        whom the returned creature attacked (rules/actions.mjs remembers it as the ability goes on the stack). */

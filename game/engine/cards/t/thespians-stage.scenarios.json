@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thespian's Stage",
+  "fixtures": {
+    "Grove": {
+      "types": [
+        "Land"
+      ],
+      "abilities": [
+        {
+          "id": "g",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 2
+          },
+          "text": "{T}: Add {G}{G}."
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A copy of the Grove, for good, and it keeps its own ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thespian's Stage",
+            "Wastes",
+            "Wastes",
+            "Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Thespian's Stage",
+          "targets": [
+            {
+              "card": "Grove"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grove",
+            "Wastes",
+            "Wastes",
+            "Grove"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Grove"
+          },
+          "count": 2
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Grove"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

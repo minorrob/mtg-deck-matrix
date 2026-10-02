@@ -118,10 +118,11 @@ function canBeTargetedBy(state, id, chooser) {
   return true;
 }
 
-function matchesManaValue(state, id, rule) {
+function matchesManaValue(state, id, rule, context = {}) {
   const cost = state.objects[id].manaCost;
   const value = cost ? manaValue(parseManaCost(cost)) : 0;
-  if (rule.exactly !== undefined) return value === rule.exactly;
+  /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
+  if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
   if (rule.min !== undefined && value < rule.min) return false;
   if (rule.max !== undefined && value > rule.max) return false;
   return true;
@@ -229,7 +230,7 @@ export function compileSelector(selector) {
       if (id === context.source) return false;
     }
 
-    if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue)) return false;
+    if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;
     /* "Tapped land your opponents control" (CR 110.5), "creature with a +1/+1 counter on it" (CR 122.1), "power 4 or
        greater" (through the layers), "this creature" itself. */
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
