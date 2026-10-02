@@ -137,7 +137,9 @@ export function checkStateBasedActions(state) {
       const lists = PER_PLAYER.includes(zone) ? state.zones[zone] : [state.zones[zone]];
       for (const list of lists) {
         for (const id of [...list]) {
-          if (state.objects[id]?.token !== true) continue;
+          /* CR 704.5e: and a copy of a spell anywhere but the stack -- returned to a hand, put into a graveyard. */
+          const copyAway = state.objects[id]?.copy === true && zone !== "stack";
+          if (state.objects[id]?.token !== true && !copyAway) continue;
           list.splice(list.indexOf(id), 1);
           delete state.objects[id];
           acted = true;

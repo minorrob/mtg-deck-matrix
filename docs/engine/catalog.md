@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 565 defined and playable today; 1,721 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 571 defined and playable today; 1,732 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 18 | 0 | 29 | 147 |
 | Keyword actions (CR 701) | 70 | 14 | 3 | 9 | 44 |
-| Effects | 192 | 37 | 1 | 27 | 127 |
+| Effects | 192 | 38 | 1 | 26 | 127 |
 | Triggers | 138 | 6 | 4 | 12 | 116 |
 | Static abilities | 77 | 1 | 2 | 0 | 74 |
 | Replacement effects | 34 | 0 | 1 | 0 | 33 |
@@ -36,10 +36,10 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| effect | CopySpellAbility | copySpell | named | 11 | 35 |
-| keyword ability | Flashback | — | named | 11 | 14 |
-| keyword ability | Ward | — | named | 10 | 26 |
+| keyword ability | Flashback | — | named | 12 | 14 |
+| keyword ability | Ward | — | named | 11 | 26 |
 | effect | AddPhase | — | missing | 10 | 24 |
+| static | Panharmonicon | — | missing | 10 | 19 |
 | count | A comparison ("if you control ...") | — | missing | 10 | 17 |
 | effect | RepeatEach | repeatFor | named | 9 | 41 |
 | option | A comparison of permanents present for a condition | — | missing | 9 | 35 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | trigger | Sacrificed | sacrificed | named | 9 | 17 |
 | option | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 8 | 41 |
 | effect | Clone | — | missing | 8 | 29 |
-| static | Panharmonicon | — | missing | 8 | 19 |
 | static | CastWithFlash | — | missing | 8 | 12 |
 | keyword ability | Station | — | missing | 8 | 11 |
+| static | RaiseCost | — | missing | 8 | 10 |
 
 ## Keyword abilities (CR 702)
 
@@ -70,17 +70,17 @@ The things that alone hold back the most of the most-played cards.
 | 702.12 | Indestructible | Indestructible | built | 37 | 111 | 0 | 0 |
 | 702.17 | Reach | Reach | built | 31 | 436 | 0 | 0 |
 | 702.111 | Menace | Menace | built | 26 | 411 | 0 | 0 |
-| 702.21 | Ward | — | named | 26 | 212 | 26 | 10 |
+| 702.21 | Ward | — | named | 26 | 212 | 26 | 11 |
 | 702.3 | Defender | Defender | built | 19 | 310 | 0 | 0 |
 | 702.122 | Crew | — | named | 15 | 192 | 15 | 7 |
-| 702.34 | Flashback | — | named | 14 | 214 | 14 | 11 |
+| 702.34 | Flashback | — | named | 14 | 214 | 14 | 12 |
 | 702.49 | Ninjutsu | — | missing | 14 | 45 | 14 | 7 |
 | 702.51 | Convoke | — | named | 11 | 106 | 11 | 2 |
 | 702.184 | Station | — | missing | 11 | 35 | 11 | 8 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
-| 702.114 | Devoid | — | missing | 8 | 132 | 8 | 4 |
-| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 3 |
+| 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
+| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 4 |
 | 702.164 | Toxic | — | missing | 7 | 44 | 7 | 4 |
 | 702.40 | Storm | — | named | 7 | 37 | 7 | 7 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 2 |
@@ -109,7 +109,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 2 |
 | 702.88 | Rebound | — | named | 3 | 35 | 3 | 2 |
-| 702.189 | Firebending | — | missing | 3 | 26 | 3 | 0 |
+| 702.189 | Firebending | — | missing | 3 | 26 | 3 | 1 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
 | 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
@@ -361,7 +361,7 @@ The things that alone hold back the most of the most-played cards.
 | Proliferate | proliferate | built | 38 | 96 | 0 | 0 |
 | DelayedTrigger | delayedTrigger | partial | 37 | 447 | 0 | 0 |
 | Play | play | named | 35 | 315 | 35 | 5 |
-| CopySpellAbility | copySpell | named | 35 | 241 | 35 | 11 |
+| CopySpellAbility | copySpell | built | 35 | 241 | 0 | 0 |
 | ChooseType | chooseType | named | 35 | 176 | 35 | 6 |
 | UntapAll | untapAll | built | 30 | 126 | 0 | 0 |
 | Clone | — | missing | 29 | 167 | 29 | 8 |
@@ -424,7 +424,7 @@ The things that alone hold back the most of the most-played cards.
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 0 |
 | TwoPiles | twoPiles | named | 2 | 32 | 2 | 0 |
-| DigMultiple | — | missing | 2 | 12 | 2 | 0 |
+| DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
 | NameCard | — | missing | 1 | 87 | 1 | 0 |
 | ChooseSource | — | missing | 1 | 67 | 1 | 0 |
@@ -545,7 +545,7 @@ The things that alone hold back the most of the most-played cards.
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 2 |
 | LifeLost | — | missing | 6 | 20 | 6 | 0 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
-| AbilityCast | — | missing | 5 | 42 | 5 | 2 |
+| AbilityCast | — | missing | 5 | 42 | 5 | 4 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
 | CommitCrime | — | missing | 4 | 21 | 4 | 0 |
@@ -673,8 +673,8 @@ The things that alone hold back the most of the most-played cards.
 | Continuous | layers | partial | 521 | 4418 | 0 | 0 |
 | ReduceCost | rules/statics | partial | 100 | 516 | 0 | 0 |
 | CantBlockBy | — | missing | 26 | 353 | 13 | 2 |
-| AlternativeCost | — | missing | 24 | 148 | 24 | 5 |
-| Panharmonicon | — | missing | 19 | 37 | 19 | 8 |
+| AlternativeCost | — | missing | 24 | 148 | 24 | 6 |
+| Panharmonicon | — | missing | 19 | 37 | 19 | 10 |
 | CantBeCast | — | missing | 14 | 97 | 14 | 4 |
 | CastWithFlash | — | missing | 12 | 56 | 12 | 8 |
 | CantAttack | — | missing | 10 | 204 | 10 | 2 |
@@ -834,7 +834,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition: a comparison | — | missing | 104 | 684 | 74 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
 | You may play or cast a card from another zone | — | missing | 99 | 625 | 84 | 5 |
-| An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 1 |
+| An intervening "if" or "activate only if": a counted value | — | missing | 79 | 974 | 79 | 2 |
 | An effect's condition: a counted value | — | missing | 75 | 603 | 65 | 3 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
@@ -843,7 +843,7 @@ The things that alone hold back the most of the most-played cards.
 | An effect's condition (threshold, metalcraft, kicked, ...) | — | missing | 41 | 461 | 41 | 8 |
 | As long as a permanent is present (a static ability's condition) | — | missing | 36 | 458 | 35 | 7 |
 | A comparison of permanents present for a condition | — | missing | 35 | 385 | 35 | 9 |
-| Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 5 |
+| Only once (or N times) each turn | — | missing | 29 | 289 | 18 | 6 |
 | Unless a player pays life (a shock land's 2 life) | unlessPay life, as it enters | built | 27 | 67 | 0 | 0 |
 | Sacrifice or exile it at the beginning of the next end step | a delayed trigger (CR 603.7) | built | 21 | 184 | 0 | 0 |
 | Unless a player pays mana ("unless that player pays {1}") | unlessPays (generic mana) | built | 16 | 287 | 0 | 0 |
@@ -853,7 +853,7 @@ The things that alone hold back the most of the most-played cards.
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 1 |
-| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 2 |
+| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 3 |
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
 | Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 1 |
@@ -910,7 +910,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Colors of mana spent (converge) | — | missing | 1 | 31 | 1 | 1 |
 | — | CardToughness | — | missing | 1 | 20 | 1 | 0 |
 | — | Adamant | — | missing | 1 | 19 | 1 | 0 |
-| — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 0 |
+| — | TotalCommanderCastFromCommandZone | — | missing | 1 | 16 | 1 | 1 |
 | — | YourTurns | — | missing | 1 | 11 | 1 | 0 |
 | — | Blessing | — | missing | 1 | 10 | 1 | 0 |
 | — | Delirium | — | missing | 1 | 9 | 1 | 0 |

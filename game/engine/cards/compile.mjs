@@ -161,6 +161,8 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Giant": {types: ["Creature"], manaCost: "{4}{G}", power: 5, toughness: 5},
   /* A free sorcery the opponent casts, so a card cast at instant speed has a spell to answer. */
   "Smoke Sorcery": {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Draw a card.", targets: [], effects: [{effect: "draw", count: 1}]}},
+  /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
+  "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
 });
 
 /**
@@ -173,7 +175,10 @@ export function smokeScenario(script) {
   const name = script.identity.name;
   const isLand = (script.identity.types ?? []).includes("Land");
   const lands = isLand ? ["Wastes", "Wastes"] : landsFor(script.identity.manaCost);
-  const instantSpeed = !isLand && Boolean(script.identity.manaCost)
+  /* A card aimed at its controller's own spell ("copy target creature spell you control", Double Major) answers a free
+     creature spell its player casts on their own turn, not the opponent's sorcery. */
+  const ownSpell = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"what":"spell"') && JSON.stringify(t).includes('"controller":"you"')));
+  const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
   /* A spell's additional cost (CR 601.2b): a card to discard, and a creature and an artifact to sacrifice. */
   const extra = (script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [];
@@ -188,6 +193,7 @@ export function smokeScenario(script) {
   if (isLand) steps.push({play: name, seat: 0}, {settle: true});
   else if (script.identity.manaCost) {
     if (instantSpeed) steps.push({cast: "Smoke Sorcery", seat: 1}, {pass: 1});
+    if (ownSpell) steps.push({cast: "Smoke Whelp", seat: 0});
     for (let i = 0; i < lands.length - 2; i += 1) steps.push({tap: lands[i], seat: 0, optional: true});
     steps.push({cast: name, seat: 0, targets: "any", optional: true}, {settle: true});
   }
@@ -205,7 +211,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
-        ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
+        ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},
       ],

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dualcaster Mage",
+    "oracleId": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nWhen this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, copy target instant or sorcery spell. You may choose new targets for the copy.",
+      "trigger": {
+        "on": "enters"
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ]
+    }
+  ]
+}

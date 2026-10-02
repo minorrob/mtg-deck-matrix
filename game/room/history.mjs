@@ -31,6 +31,8 @@ export function historyLines(event, names = []) {
       return line(`${who(f.player.playerId)} played ${cardName(f.land)}`);
     case "GameEventSpellAbilityCast":
       return f.sa && f.sa.isSpell ? line(`${who(f.si.actor.playerId)} cast ${cardName(f.card)}`) : [];
+    case "GameEventSpellCopied":
+      return line(`${who(f.playerId)} copied ${cardName(f.card)}`);
     case "GameEventSpellResolved":
       return f.card ? line(`${cardName(f.card)} resolved`) : [];
     case "GameEventCardChangeZone": {

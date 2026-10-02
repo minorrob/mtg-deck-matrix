@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 565,
-  "everyRule": 1721
+  "defined": 571,
+  "everyRule": 1732
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -199,7 +199,7 @@
      "top": 26,
      "all": 212,
      "blocks": 26,
-     "alone": 10
+     "alone": 11
     },
     {
      "kind": "keyword ability",
@@ -235,7 +235,7 @@
      "top": 14,
      "all": 214,
      "blocks": 14,
-     "alone": 11
+     "alone": 12
     },
     {
      "kind": "keyword ability",
@@ -307,7 +307,7 @@
      "top": 8,
      "all": 132,
      "blocks": 8,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -319,7 +319,7 @@
      "top": 8,
      "all": 93,
      "blocks": 8,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -667,7 +667,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 37,
+    "built": 38,
     "partial": 1,
-    "named": 27,
+    "named": 26,
     "missing": 127
    },
    "entries": [
@@ -3588,12 +3588,12 @@
      "rule": null,
      "name": "CopySpellAbility",
      "engine": "copySpell",
-     "status": "named",
+     "status": "built",
      "forge": "CopySpellAbility",
      "top": 35,
      "all": 241,
-     "blocks": 35,
-     "alone": 11
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4349,7 +4349,7 @@
      "top": 2,
      "all": 12,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5751,7 +5751,7 @@
      "top": 5,
      "all": 42,
      "blocks": 5,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "trigger",
@@ -7237,7 +7237,7 @@
      "top": 24,
      "all": 148,
      "blocks": 24,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "static",
@@ -7249,7 +7249,7 @@
      "top": 19,
      "all": 37,
      "blocks": 19,
-     "alone": 8
+     "alone": 10
     },
     {
      "kind": "static",
@@ -9019,7 +9019,7 @@
      "top": 79,
      "all": 974,
      "blocks": 79,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "option",
@@ -9127,7 +9127,7 @@
      "top": 29,
      "all": 289,
      "blocks": 18,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "option",
@@ -9247,7 +9247,7 @@
      "top": 7,
      "all": 89,
      "blocks": 7,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "option",
@@ -9881,7 +9881,7 @@
      "top": 1,
      "all": 16,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",

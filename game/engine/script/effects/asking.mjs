@@ -32,6 +32,8 @@ import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards} from "./permanents.mjs";
 import {payGeneric, canPayGeneric} from "../../rules/mana.mjs";
 import {typesOf} from "../../rules/layers.mjs";
+import {pushCopy} from "../../rules/stack.mjs";
+import {targetCandidates, targetName} from "../bind.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -431,6 +433,70 @@ export const unlessPays = {
   },
 };
 
+/* ---- copySpell (CR 707.10): "copy target instant or sorcery spell. You may choose new targets for the copy." ----
+
+   `spells` are the spells copied, by their objects on the stack (a target, or "that card" -- the spell a trigger is
+   about); `count` copies of each ("copy it for each other ..."), controlled by this ability's controller. The copies go
+   on the stack at once, with the original's targets. `newTargets`: then, for each copy and each of its targets that has
+   another legal choice, its controller keeps the target or chooses a new one (CR 707.10c) -- a question at a time. A
+   copy is never its own target (CR 115.5). `except.nonLegendary`: "except it isn't legendary" (Double Major). The
+   copies are made as the question opens, so what they did is in the resolution's events even when nothing is asked. */
+const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
+function retargetOptions(state, question) {
+  const entry = state.stack.find((e) => e.stackId === question.stackId);
+  const object = entry ? state.objects[entry.objectId] : null;
+  const spec = object?.spell?.targets?.[question.index];
+  if (!entry || !spec) return null;
+  const current = entry.targets[question.index] ?? null;
+  const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
+    .filter((c) => !(c.kind === "object" && c.id === entry.objectId))
+    .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
+  return {entry, current, others};
+}
+export const copySpell = {
+  open(state, params, context) {
+    const originals = (params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)).filter(Boolean);
+    const count = Math.max(0, params.count ?? 1);
+    const events = [], questions = [];
+    for (const original of originals) for (let n = 0; n < count; n += 1) {
+      const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
+      events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
+        playerId: context.controller, stackId: copy.stackId}));
+      if (params.newTargets === true) copy.targets.forEach((_, index) => questions.push({stackId: copy.stackId, index}));
+    }
+    state.resolving?.events.push(...events);
+    const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
+    if (asked.length === 0) return false;
+    state.awaiting = {kind: "effect-choice", effect: "copySpell", player: context.controller, questions: asked};
+    return true;
+  },
+  choice(state, awaiting) {
+    const question = awaiting.questions[0];
+    const found = retargetOptions(state, question);
+    const {entry, current, others} = found ?? {entry: null, current: null, others: []};
+    const many = (state.objects[entry?.objectId]?.spell?.targets ?? []).length > 1;
+    return {
+      id: `copySpell:${question.stackId}:${question.index}`,
+      title: `Copy of ${entry?.name ?? "the spell"}: ${many ? `its ${ordinal(question.index)} target` : "a new target"}?`,
+      mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: `Keep ${current ? targetName(state, current) : "no target"}`, keep: true},
+        ...others.map((c, i) => ({index: i + 1, label: targetName(state, c), ...(c.kind === "object" ? {cardId: c.id} : {}), target: c}))],
+    };
+  },
+  apply(state, awaiting, indices) {
+    const option = copySpell.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    const [question, ...rest] = awaiting.questions;
+    if (!option.keep) {
+      const entry = state.stack.find((e) => e.stackId === question.stackId);
+      if (entry) entry.targets[question.index] = {kind: option.target.kind, id: option.target.id};
+    }
+    if (rest.length === 0) return {events: []};
+    awaiting.questions = rest;
+    return {events: [], again: true};
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -516,4 +582,4 @@ export const chooseCard = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays});
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell});

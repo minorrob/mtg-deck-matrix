@@ -162,6 +162,8 @@ export function addObject(state, object, zone, player = null) {
     timestamp: state.nextTimestamp,
     /* Set by whatever created it; a token ceases to exist as a state-based action (CR 704.5d). */
     token: object.token === true,
+    /* A copy of a spell (CR 707.10): a spell on the stack that is no card. Anywhere else it ceases to exist (CR 704.5e). */
+    ...(object.copy === true ? {copy: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,
@@ -185,6 +187,16 @@ export function addObject(state, object, zone, player = null) {
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
   return id;
+}
+
+/** An object that ceases to exist (CR 704.5d, 704.5e): out of its zone and out of the game, with no zone change. */
+export function removeObject(state, id) {
+  const object = state.objects[id];
+  if (!object) return;
+  const list = listFor(state, object.zone, object.zonePlayer);
+  const at = list.indexOf(id);
+  if (at >= 0) list.splice(at, 1);
+  delete state.objects[id];
 }
 
 /** Which zone an object is in, or null if it is gone. */
@@ -235,7 +247,7 @@ export function moveObject(state, id, zone, player = null) {
   return addObject(state, {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
-    owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
+    owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);

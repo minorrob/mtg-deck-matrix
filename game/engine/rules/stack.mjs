@@ -35,7 +35,7 @@
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {moveObject} from "../state/index.mjs";
+import {moveObject, addObject, removeObject} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {recheckTargets, factsOf} from "../script/bind.mjs";
@@ -126,6 +126,32 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   return entry;
 }
 
+/**
+ * Copy a spell on the stack (CR 707.10): a new spell, controlled by whoever copied it (CR 707.10, 110.2), with the
+ * original's copiable values (CR 707.2) and every choice made for it -- its targets, X, whether it becomes a permanent.
+ * It is put on the stack, not cast, so nothing that says "whenever you cast" sees it. As it leaves the stack it ceases
+ * to exist (finishTop, CR 704.5e), unless it was a permanent spell that resolved: that becomes a token (CR 608.3f).
+ * `nonLegendary`: "except it isn't legendary if the spell is legendary" (Double Major).
+ */
+export function pushCopy(state, original, {controller, nonLegendary = false} = {}) {
+  const object = original?.objectId !== null && original?.objectId !== undefined ? state.objects[original.objectId] : null;
+  if (!object) throw new Error("There is no spell there to copy");
+  const supertypes = (object.supertypes ?? []).filter((s) => !(nonLegendary && s === "Legendary"));
+  const id = addObject(state, {
+    card: object.card, types: object.types, manaCost: object.manaCost, abilities: object.abilities,
+    power: object.power, toughness: object.toughness, keywords: object.keywords, owner: controller, controller,
+    spell: object.spell, subtypes: object.subtypes, supertypes, colors: object.colors, colorIdentity: object.colorIdentity,
+    enchant: object.enchant, copy: true,
+  }, "stack", null);
+  const entry = entryFor(state, {objectId: id, cardId: id, name: object.card, playerId: controller, kind: "spell",
+    abilityId: original.abilityId, targets: structuredClone(original.targets ?? [])});
+  entry.permanent = original.permanent === true;
+  entry.copy = true;
+  if (original.x !== undefined) entry.x = original.x;
+  state.stack.push(entry);
+  return entry;
+}
+
 /* What an entry does: a spell's spell ability off its card, or the script its ability carried onto the stack. */
 function scriptOf(state, entry) {
   if (entry.kind === "spell") {
@@ -192,7 +218,8 @@ export function resolveTop(state, effect = null) {
  * @returns {Array} events, or none when the top was not waiting on its own resolution
  */
 export function finishResolving(state) {
-  const entry = peekStack(state);
+  /* The one resolving, wherever it is: what it put on the stack as it resolved -- a copy -- is above it now. */
+  const entry = state.stack.findLast((e) => e.stage === "resolving") ?? null;
   if (!entry || entry.stage !== "resolving" || resolutionPending(state)) return [];
   return finishTop(state, entry, [], false);
 }
@@ -200,9 +227,17 @@ export function finishResolving(state) {
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
 function finishTop(state, entry, events, fizzled, attachTo = null) {
-  state.stack.pop();
+  /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
+  const at = state.stack.indexOf(entry);
+  if (at >= 0) state.stack.splice(at, 1);
 
-  if (entry.objectId !== null) {
+  /* A copy leaves the stack and ceases to exist (CR 707.10a, 704.5e) -- an instant's or sorcery's, or one that did not
+     resolve. A copy of a permanent spell that resolves becomes a token instead, and is no longer a copy (CR 608.3f). */
+  const copied = entry.objectId !== null && state.objects[entry.objectId]?.copy === true;
+  if (copied && !(entry.permanent && !fizzled)) removeObject(state, entry.objectId);
+  else if (copied) { state.objects[entry.objectId].token = true; delete state.objects[entry.objectId].copy; }
+
+  if (entry.objectId !== null && state.objects[entry.objectId]) {
     const card = cardRef(state, entry.objectId);
     const owner = state.objects[entry.objectId].owner;
     /* CR 608.3: a permanent spell becomes a permanent. CR 608.2m: an instant or sorcery is put into

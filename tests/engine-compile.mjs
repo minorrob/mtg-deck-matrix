@@ -49,6 +49,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   eq(smoked.filter((r) => !r.ok).map((r) => `${r.name}: ${r.problems.join("; ")}`), [], "every hand definition survives its smoke game");
   const played = smoked.filter((r) => r.played).length;
   ok(played >= scripts.length - 2, `and ${played} of ${scripts.length} were actually played or cast in it (a counterspell for creatures has only a sorcery to answer)`);
+  /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
+  ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
 
   const bolt = handOf("Lightning Bolt");
   const four = checkFidelity({...bolt, abilities: [{...bolt.abilities[0], text: "Lightning Bolt deals 4 damage to any target."}]});
