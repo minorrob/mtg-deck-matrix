@@ -87,14 +87,33 @@ const isLand = (object) => (object.types ?? []).includes("Land");
 /* WHAT A SPELL COSTS TO CAST NOW (CR 601.2f): its mana cost plus the commander tax, less what "spells cost {N} less"
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
    payment read it here, so they cannot disagree. */
-function castCost(state, player, id, tax, free = false) {
-  /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts. */
-  const cost = parseManaCost(free ? "" : state.objects[id].manaCost);
+function castCost(state, player, id, tax, free = false, instead = null) {
+  /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts.
+     `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. */
+  const cost = parseManaCost(free ? "" : instead ?? state.objects[id].manaCost);
   let reduction = costReduction(state, player, id);
   const fromPrinted = Math.min(cost.generic, reduction);
   cost.generic -= fromPrinted;
   reduction -= fromPrinted;
   return {cost, x: Math.max(0, tax - reduction)};
+}
+
+/**
+ * FLASHBACK (CR 702.34a): what it costs to cast this card from its owner's graveyard, or null when it cannot be. Its own
+ * keyword's cost, or -- given until end of turn ("each instant and sorcery card in your graveyard gains flashback",
+ * Past in Flames) -- its mana cost. Only an instant or sorcery, and only from the caster's own graveyard.
+ *
+ * @returns {?{mana: string, life: number}}
+ */
+export function flashbackCost(state, player, id) {
+  const object = state.objects[id];
+  if (!object || object.zone !== "graveyard" || object.owner !== player) return null;
+  if (!(object.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) return null;
+  const own = (object.abilities ?? []).find((a) => a.kind === "static" && a.rule === "flashback");
+  const given = (state.effects ?? []).some((e) => e.rule === "flashback" && (e.affects?.ids ?? []).includes(id));
+  const cost = own?.cost ?? (given ? [{atom: "mana", cost: object.manaCost ?? ""}] : null);
+  if (!cost) return null;
+  return {mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0)};
 }
 
 /* A spell's additional cost (CR 601.2b, 601.2h): "As an additional cost to cast this spell, discard a card" or
@@ -333,8 +352,10 @@ export function legalActions(state, player) {
     ...cardsIn(state, "command", player)
       .filter((id) => state.objects[id].commander === true)
       .map((id) => ({id, from: "command"})),
+    /* Flashback (CR 702.34a): from the graveyard, for the flashback cost. */
+    ...cardsIn(state, "graveyard", player).filter((id) => flashbackCost(state, player, id)).map((id) => ({id, from: "graveyard", flashback: true})),
   ];
-  for (const {id, from} of castable) {
+  for (const {id, from, flashback} of castable) {
     const object = state.objects[id];
     if (!object.manaCost) continue;
     if (sorcerySpeed(object) && !hasFlash(state, id) && !(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0))
@@ -342,18 +363,22 @@ export function legalActions(state, player) {
     const tax = from === "command" ? commanderTax(state, player, id) : 0;
     /* "Without paying its mana cost": offered alone when it may be used every time; beside the paid cast when it is "once
        each turn", so the player decides which spell spends it. */
-    const free = freeCast(state, player, id);
+    const free = flashback ? null : freeCast(state, player, id);
+    /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
+       that much (CR 119.4). */
+    const back = flashback ? flashbackCost(state, player, id) : null;
+    if (back && back.life > state.players[player].life) continue;
     for (const freely of free ? (free.limited ? [false, true] : [true]) : [false]) {
-    const {cost, x} = castCost(state, player, id, tax, freely);
+    const {cost, x} = castCost(state, player, id, tax, freely, back ? back.mana : null);
     /* {X} (CR 107.3, 601.2b): one offer per value the pool can pay, from nothing up; a spell without X, one. */
     for (const X of xValues(state.players[player].manaPool, cost, x)) {
-      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (X ?? 0) * cost.variable});
+      const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0), x: x + (X ?? 0) * cost.variable});
       if (!payment) continue;
       const extra = object.spell?.additionalCost ?? [];
       const paysFor = extra.length ? additionalChoices(state, player, id, extra) : [null];
       for (const costChoice of paysFor)
         actions.push(...withTargets(state, {kind: "cast", objectId: id, label: object.card, payment, from, tax, ...(X !== null ? {x: X} : {}), ...(costChoice ? {costChoice, costNames: Object.values(costChoice).map((c) => state.objects[c].card)} : {}),
-          ...(freely ? {free: true} : {})},
+          ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {})},
           object.spell, {controller: player, source: id}));
     }
     }
@@ -450,6 +475,8 @@ const sameAction = (a, b) => a.kind === b.kind
   && (a.abilityId ?? null) === (b.abilityId ?? null)
   && (a.produce ?? null) === (b.produce ?? null)
   && (a.x ?? null) === (b.x ?? null)
+  /* A cast with flashback is another action than the same card cast another way: it is exiled after (CR 702.34a). */
+  && (a.flashback === true) === (b.flashback === true)
   && targetKey(a) === targetKey(b);
 
 /**
@@ -559,12 +586,16 @@ function perform(state, player, action) {
     const tax = fromCommand ? commanderTax(state, player, action.objectId) : 0;
     const free = action.free ? freeCast(state, player, action.objectId) : null;
     if (action.free && !free) throw new Error(`${object.card} cannot be cast without paying its mana cost now`);
-    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free));
-    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life, x: x + (action.x ?? 0) * cost.variable});
-    if (!payment) throw new Error(`${object.card} cannot be paid for from this pool`);
+    /* Flashback (CR 702.34a): its cost rather than the mana cost, life and all. */
+    const back = action.flashback ? flashbackCost(state, player, action.objectId) : null;
+    if (action.flashback && !back) throw new Error(`${object.card} cannot be cast with flashback now`);
+    const {cost, x} = castCost(state, player, action.objectId, tax, Boolean(free), back ? back.mana : null);
+    const payment = automaticPayment(state.players[player].manaPool, cost, {life: state.players[player].life - (back?.life ?? 0), x: x + (action.x ?? 0) * cost.variable});
+    if (!payment || (back && back.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     spend(state.players[player].manaPool, payment.mana);
     if (payment.life > 0) state.players[player].life -= payment.life;
+    if (back?.life) state.players[player].life -= back.life;
     /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
     /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
@@ -585,6 +616,8 @@ function perform(state, player, action) {
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {})});
+    /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
+    if (back) entry.flashback = true;
     /* On the spell as it now is: moving to the stack made a new object (CR 400.7). */
     if (gains.length && state.objects[entry.objectId]) state.objects[entry.objectId].castGains = gains;
     for (const [kind, id] of extraPaid) {
