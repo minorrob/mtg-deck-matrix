@@ -26,7 +26,7 @@
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
  * not a keyword, it is a keyword with an argument, and the card script has to express that;
  * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
- * the pool and belong with the long tail. Infect and wither change what damage DOES rather than who may block,
+ * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
@@ -39,7 +39,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
   evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
   /** What happens when damage is dealt. */
-  combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender"]),
+  combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
+    /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
+       effects/resources.mjs dealDamage). */
+    "Infect"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.

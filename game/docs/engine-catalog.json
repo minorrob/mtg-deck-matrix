@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 971,
-  "everyRule": 2241
+  "defined": 980,
+  "everyRule": 2255
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 29,
+    "built": 31,
     "partial": 0,
-    "named": 24,
-    "missing": 141
+    "named": 23,
+    "missing": 140
    },
    "entries": [
     {
@@ -373,13 +373,13 @@
      "kind": "keyword ability",
      "rule": "702.86",
      "name": "Annihilator",
-     "engine": null,
-     "status": "missing",
+     "engine": "Annihilator",
+     "status": "built",
      "forge": "Annihilator",
      "top": 7,
      "all": 14,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -415,7 +415,7 @@
      "top": 6,
      "all": 36,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -541,13 +541,13 @@
      "kind": "keyword ability",
      "rule": "702.90",
      "name": "Infect",
-     "engine": null,
-     "status": "named",
+     "engine": "Infect",
+     "status": "built",
      "forge": "Infect",
      "top": 4,
      "all": 45,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "keyword action",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -5519,10 +5519,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 12,
+    "built": 13,
     "partial": 4,
     "named": 7,
-    "missing": 115
+    "missing": 114
    },
    "entries": [
     {
@@ -5721,13 +5721,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "LifeLost",
-     "engine": null,
-     "status": "missing",
+     "engine": "life lost",
+     "status": "built",
      "forge": "LifeLost",
      "top": 6,
      "all": 20,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7441,7 +7441,7 @@
      "top": 2,
      "all": 41,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",

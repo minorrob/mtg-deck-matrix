@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Exquisite Blood",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Drain": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Each opponent loses 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 2,
+            "who": "opponent"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya loses 2 to Drain: he gains 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exquisite Blood",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Drain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Drain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "His Bear and Ogre hit her at once: one loss of 5, and he gains 5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exquisite Blood",
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "life": 45
+        }
+      ]
+    }
+  ]
+}

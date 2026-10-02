@@ -48,7 +48,7 @@ import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
-import {givePoison} from "../script/effects/resources.mjs";
+import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
 import {canPayGeneric, payGeneric} from "./mana.mjs";
@@ -452,24 +452,25 @@ export const combatDamage = {
       /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
       if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
+      /* INFECT (CR 702.90b-c, batch 78): poison counters to a player, -1/-1 counters to a creature, in place of the rest. */
+      const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
-        const before = state.players[hit.toPlayer].life;
-        state.players[hit.toPlayer].life -= hit.amount;
         events.push(event("GameEventPlayerDamaged", state, {
           source: cardRef(state, hit.source),
           target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
-          amount: hit.amount, combat: true, infect: false,
+          amount: hit.amount, combat: true, infect,
         }));
-        events.push(event("GameEventPlayerLivesChanged", state, {
-          player: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
-          oldLives: before, newLives: state.players[hit.toPlayer].life,
-        }));
+        /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
+           many poison counters. */
+        if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
+        else changeLife(state, hit.toPlayer, -hit.amount, events);
         /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
            poison counters -- every instance it has, given ones too, added together (702.164b). */
         const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
         if (toxic > 0) events.push(...givePoison(state, hit.toPlayer, toxic));
       } else {
-        state.objects[hit.toCard].damage += hit.amount;
+        if (infect) addCounters(state, hit.toCard, "-1/-1", hit.amount, events);
+        else state.objects[hit.toCard].damage += hit.amount;
         /* CR 704.5h: the mark that makes state-based actions destroy it whatever its toughness. */
         markDeathtouch(state, hit.source, hit.toCard);
         events.push(event("GameEventCardDamaged", state, {

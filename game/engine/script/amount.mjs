@@ -41,7 +41,7 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -149,6 +149,8 @@ export function amountOf(state, value, context = {}) {
   else if ("damageDealt" in value) n = context.about?.amount ?? 0;
   /* "Target opponent loses that much life" (Sanguine Bond; Forge's LifeAmount): the life the trigger is about gaining. */
   else if ("lifeGained" in value) n = context.about?.amount ?? 0;
+  /* "That player mills that many cards", "you gain that much life" (batch 78): the life lost the trigger is about. */
+  else if ("lifeLost" in value) n = context.about?.amount ?? 0;
   /* "Each opponent mills that many cards" (The Mindskinner), "a +1/+1 counter for each 1 damage prevented this way" (Vigor):
      the damage a prevention stopped, its follow-up about it (rules/replacement.mjs). */
   else if ("damagePrevented" in value) n = context.about?.amount ?? 0;

@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vilis, Broker of Blood",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Drain": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Each opponent loses 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 2,
+            "who": "opponent"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "He pays 2 life to shrink Maya's Bear: the life paid is lost, and he draws two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vilis, Broker of Blood",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "activate": "Vilis, Broker of Blood",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Drain: he loses 2, draws two",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vilis, Broker of Blood"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Drain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Drain",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

@@ -152,7 +152,9 @@ const BEYOND_TIER0 = ["shroud", "ward",
   /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
   "saga",
   /* Batch 77: toxic (CR 702.164), prowess (CR 702.108), devoid (CR 702.114). */
-  "toxic", "prowess", "devoid"];
+  "toxic", "prowess", "devoid",
+  /* Batch 78: annihilator (CR 702.86). */
+  "annihilator"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

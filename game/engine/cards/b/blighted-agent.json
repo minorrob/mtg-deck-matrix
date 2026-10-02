@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blighted Agent",
+    "oracleId": "e48ea9ea-64bc-4f1c-a424-592d48569244",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)\nThis creature can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Infect",
+      "keyword": "infect"
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plague Myr",
+    "oracleId": "2f328e05-5edf-4b21-9c2a-50dcf1e7b3ec",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Myr"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)\n{T}: Add {C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Infect",
+      "keyword": "infect"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blighted Agent",
+  "scenarios": [
+    {
+      "name": "It hits Maya: a poison counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blighted Agent"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Blighted Agent"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 1
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}
