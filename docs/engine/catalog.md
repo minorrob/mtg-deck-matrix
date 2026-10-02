@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 824 defined and playable today; 2,064 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 835 defined and playable today; 2,075 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 24 | 0 | 25 | 145 |
+| Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
 | Keyword actions (CR 701) | 70 | 15 | 3 | 8 | 44 |
 | Effects | 192 | 47 | 1 | 19 | 125 |
 | Triggers | 138 | 9 | 4 | 10 | 115 |
@@ -36,7 +36,6 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| keyword construct | ETBReplacement | — | missing | 15 | 44 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 13 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 12 | 79 |
 | option | Remembering what an effect moved | — | missing | 9 | 113 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | effect | Poison | — | missing | 6 | 11 |
 | effect | Earthbend | — | missing | 6 | 10 |
 | effect | ChangeTargets | — | missing | 6 | 10 |
+| static | CantAttackUnless | — | missing | 6 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -88,7 +88,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.86 | Annihilator | — | missing | 7 | 14 | 7 | 5 |
 | 702.124 | Partner | — | named | 6 | 78 | 6 | 4 |
 | 702.16 | Protection | — | named | 6 | 58 | 6 | 2 |
-| 702.74 | Evoke | — | named | 6 | 36 | 6 | 2 |
+| 702.74 | Evoke | — | named | 6 | 36 | 6 | 3 |
 | 702.131 | Ascend | — | named | 6 | 30 | 6 | 3 |
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
@@ -140,7 +140,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.120 | Escalate | — | named | 2 | 9 | 2 | 2 |
 | 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 1 | 1 |
 | 702.27 | Buyback | — | missing | 1 | 40 | 1 | 0 |
-| 702.36 | Fear | — | missing | 1 | 40 | 1 | 0 |
+| 702.36 | Fear | Fear | built | 1 | 40 | 0 | 0 |
 | 702.170 | Plot | — | missing | 1 | 33 | 1 | 1 |
 | 702.47 | Splice | — | missing | 1 | 30 | 1 | 1 |
 | 702.127 | Aftermath | — | missing | 1 | 27 | 1 | 1 |
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 44 | 15 |
+| ETBReplacement | — | missing | 68 | 408 | 33 | 4 |
 | etbCounter | — | missing | 35 | 475 | 25 | 4 |
 | Chapter | — | missing | 19 | 236 | 19 | 7 |
 | Class | — | missing | 9 | 38 | 9 | 4 |

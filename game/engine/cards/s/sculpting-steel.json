@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sculpting Steel",
+    "oracleId": "6c85271c-c711-49b0-a72e-9e576c33714d",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may have this artifact enter as a copy of any artifact on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this artifact enter as a copy of any artifact on the battlefield.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "types": [
+            "Artifact"
+          ]
+        }
+      }
+    }
+  ]
+}

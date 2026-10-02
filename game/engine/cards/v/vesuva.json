@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vesuva",
+    "oracleId": "4001b868-ada1-43f4-92e2-27ab0e80c913",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may have this land enter tapped as a copy of any land on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "You may have this land enter tapped as a copy of any land on the battlefield.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "types": [
+            "Land"
+          ]
+        },
+        "tapped": true
+      }
+    }
+  ]
+}

@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 824,
-  "everyRule": 2064
+  "defined": 835,
+  "everyRule": 2075
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 24,
+    "built": 25,
     "partial": 0,
     "named": 25,
-    "missing": 145
+    "missing": 144
    },
    "entries": [
     {
@@ -415,7 +415,7 @@
      "top": 6,
      "all": 36,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -1033,12 +1033,12 @@
      "kind": "keyword ability",
      "rule": "702.36",
      "name": "Fear",
-     "engine": null,
-     "status": "missing",
+     "engine": "Fear",
+     "status": "built",
      "forge": "Fear",
      "top": 1,
      "all": 40,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -11784,8 +11784,8 @@
      "forge": "ETBReplacement",
      "top": 68,
      "all": 408,
-     "blocks": 44,
-     "alone": 15
+     "blocks": 33,
+     "alone": 4
     },
     {
      "kind": "keyword construct",

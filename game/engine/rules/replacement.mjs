@@ -175,6 +175,8 @@ function applicable(state, proposal) {
   for (const ability of proposal.entering?.abilities ?? []) {
     if (applies(state, ability, null, proposal)) found.push({holderId: null, ability});
   }
+  /* The copied card's own, alone (ownEntering): the others' applied as it entered. */
+  if (proposal.ownOnly) return found;
   for (const zone of ACTING_ZONES) {
     for (const id of state.zones[zone]) {
       const holder = state.objects[id];
@@ -256,6 +258,10 @@ function applyOne(state, {holderId, ability}, proposal) {
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
+  /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
+     once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
+  if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
+    copy: {except: structuredClone(ability.change.except ?? {}), keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
   if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
@@ -317,6 +323,10 @@ export function applyReplacements(state, proposal) {
     if (candidates.length === 0) break;
     /* Damage: the order that leaves the least, not a question (above). */
     if (candidates.length > 1 && current.event === "damage") { current = applyOne(state, leastFirst(candidates, current.amount), current); continue; }
+    /* Entering: each adds its own part -- tapped, counters, a question asked once it is there -- and in any order the
+       permanent enters the same way, so nobody is asked (CR 616.1; a Clone entering beside "each creature you control
+       enters with an additional +1/+1 counter"). */
+    if (candidates.length > 1 && current.event === "enters") { current = applyOne(state, candidates[0], current); continue; }
     if (candidates.length > 1) {
       state.awaiting = {kind: "order-replacements", player: affectedPlayer(state, current), proposal: current};
       return {proposal: current, applied: current.applied, awaiting: true};
@@ -343,6 +353,19 @@ export function enteringModifications(state, {objectId, player, types, abilities
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
+  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+}
+
+/**
+ * What a permanent that has just entered as a copy gets from the copied card's own "as this enters" (CR 614.12, 707.9):
+ * "this land enters tapped", "with N counters", "as this enters, choose a creature type" -- its own abilities alone, the
+ * others' having applied as it entered; never "enter as a copy" again.
+ *
+ * @returns {{tapped: boolean, counters: object, asks: Array}}
+ */
+export function ownEntering(state, {objectId, player, types, abilities}) {
+  const own = (abilities ?? []).filter((ability) => !ability.change?.copyOf);
+  const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
   return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
 }
 
