@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Concealed Courtyard",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Concealed Courtyard"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Concealed Courtyard"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Concealed Courtyard",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Concealed Courtyard",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Concealed Courtyard"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Concealed Courtyard"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Concealed Courtyard"
+        }
+      ]
+    }
+  ]
+}

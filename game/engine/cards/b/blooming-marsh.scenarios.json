@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blooming Marsh",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blooming Marsh"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blooming Marsh"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Blooming Marsh",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Blooming Marsh",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blooming Marsh"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blooming Marsh"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blooming Marsh"
+        }
+      ]
+    }
+  ]
+}

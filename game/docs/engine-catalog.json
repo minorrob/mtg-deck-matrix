@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 665,
-  "everyRule": 1867
+  "defined": 689,
+  "everyRule": 1900
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -439,7 +439,7 @@
      "top": 6,
      "all": 27,
      "blocks": 6,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -787,7 +787,7 @@
      "top": 2,
      "all": 43,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -3629,7 +3629,7 @@
      "top": 29,
      "all": 167,
      "blocks": 29,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -3989,7 +3989,7 @@
      "top": 10,
      "all": 36,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4121,7 +4121,7 @@
      "top": 5,
      "all": 115,
      "blocks": 5,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -5619,7 +5619,7 @@
      "top": 25,
      "all": 227,
      "blocks": 26,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "trigger",
@@ -5703,7 +5703,7 @@
      "top": 8,
      "all": 32,
      "blocks": 26,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "trigger",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 13,
+    "built": 14,
     "partial": 4,
     "named": 0,
-    "missing": 20
+    "missing": 19
    },
    "entries": [
     {
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 117,
-     "alone": 8
+     "alone": 10
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "option",
@@ -8977,13 +8977,13 @@
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: a comparison",
-     "engine": null,
-     "status": "missing",
+     "engine": "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}",
+     "status": "built",
      "forge": "ConditionCompare",
      "top": 104,
      "all": 684,
-     "blocks": 74,
-     "alone": 33
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9079,7 +9079,7 @@
      "top": 57,
      "all": 973,
      "blocks": 57,
-     "alone": 4
+     "alone": 10
     },
     {
      "kind": "option",

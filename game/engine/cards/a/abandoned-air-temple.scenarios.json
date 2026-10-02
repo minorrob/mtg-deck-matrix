@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Abandoned Air Temple",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ruins": {
+      "types": [
+        "Land"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "With a basic land, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Abandoned Air Temple"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Abandoned Air Temple"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Abandoned Air Temple",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With only a nonbasic land, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruins"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Abandoned Air Temple"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Abandoned Air Temple"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Abandoned Air Temple"
+        }
+      ]
+    },
+    {
+      "name": "{3}{W}, {T}: a +1/+1 counter on each of his creatures",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Abandoned Air Temple",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Abandoned Air Temple"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

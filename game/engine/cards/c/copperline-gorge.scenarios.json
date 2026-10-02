@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Copperline Gorge",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Copperline Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Copperline Gorge"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Copperline Gorge",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Copperline Gorge",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Copperline Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Copperline Gorge"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Copperline Gorge"
+        }
+      ]
+    }
+  ]
+}

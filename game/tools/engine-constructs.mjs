@@ -96,7 +96,7 @@ export const FORGE_OPTIONS = Object.freeze({
      you've cast this turn" is not. */
   Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},
   ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "built", engine: "an effect's condition {present ...}"},
-  ConditionCompare: {name: "An effect's condition: a comparison", status: "missing"},
+  ConditionCompare: {name: "An effect's condition: a comparison", status: "built", engine: "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
   ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
   ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},

@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Razorverge Thicket",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Razorverge Thicket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Razorverge Thicket"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Razorverge Thicket",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Razorverge Thicket",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Razorverge Thicket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Razorverge Thicket"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Razorverge Thicket"
+        }
+      ]
+    }
+  ]
+}
