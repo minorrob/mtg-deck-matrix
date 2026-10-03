@@ -218,12 +218,14 @@ export function moveZone(state, params, context, rng = null) {
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
   for (const id of params.random === true ? inRandomOrder(moving, rng) : moving) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
+    /* A commander whose owner chose the command zone instead (CR 903.9b; effects/asking.mjs, commanderHome). */
+    const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true});
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
     let landed = moved;
     /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
-    if (moved !== null && params.to === "library" && params.top === true && state.objects[moved]) {
+    if (moved !== null && to === "library" && params.top === true && state.objects[moved]) {
       const library = state.zones.library[state.objects[moved].owner];
       library.splice(library.indexOf(moved), 1);
       library.unshift(moved);

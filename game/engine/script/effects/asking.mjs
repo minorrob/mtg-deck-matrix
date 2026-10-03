@@ -980,4 +980,42 @@ export const play = {
   },
 };
 
-export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat});
+/* ---- a commander going to its owner's hand or library (CR 903.9b) ----
+
+   "If a commander would be put into its owner's hand or library from anywhere, its owner may put it into the command zone
+   instead." A replacement, so it is asked BEFORE the move -- the card is never seen in the hand -- and of the OWNER. The
+   resolution puts this question in front of a moveZone that would move a commander there (script/resolution.mjs): each
+   owner in turn order from the active player (CR 101.4), and then the move happens, with the commanders whose owners said
+   yes going to the command zone instead (effects/zones.mjs, `commanderHome`). Moved as a whole, so nothing moves before
+   every owner has answered. A move other than moveZone (a cost that returns a permanent to its owner's hand) is named,
+   not built. */
+export function commandersGoingHome(state, params) {
+  if (!["hand", "library"].includes(params.to) || params.sacrifice === true || params.fromTop !== undefined || params.commandersAsked) return [];
+  return (params.targets ?? []).filter((id) => state.objects[id]?.commander === true && state.objects[id].zone !== params.to);
+}
+export const commanderHome = {
+  open(state, params) {
+    const seats = state.players.length, apnap = (id) => (state.objects[id].owner - (state.activePlayer ?? 0) + seats) % seats;
+    const queue = [...params.commanders].sort((a, b) => apnap(a) - apnap(b));
+    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: state.objects[queue[0]].owner, objectId: queue[0], remaining: queue.slice(1),
+      home: [], move: params.move};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
+      mode: "boolean", min: 1, max: 1,
+      options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to}`}]};
+  },
+  apply(state, awaiting, indices) {
+    if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");
+    const home = indices[0] === 0 ? [...awaiting.home, awaiting.objectId] : awaiting.home;
+    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => state.objects[id]);
+    if (next !== undefined) {
+      state.awaiting = {...awaiting, player: state.objects[next].owner, objectId: next, remaining: rest, home};
+      return {events: [], again: true};
+    }
+    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home} : {})}]};
+  },
+};
+
+export const ASKING = Object.freeze({scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, unlessPays, copySpell, chooseType, play, changeTargets, attackWhom, enchantWhat, commanderHome});

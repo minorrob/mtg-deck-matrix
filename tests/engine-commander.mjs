@@ -269,6 +269,33 @@ function started() {
       "a commander that dies is a creature that died: Zulaport Cutthroat drains for it, and its owner still moves it to the command zone");
   }
 
+  /* CR 903.9b: a commander that would be put into its owner's hand or library may go to the command zone instead -- a
+     replacement, so its owner is asked before it moves, and "no" lets it go where the effect sends it. */
+  const BOUNCE = {types: ["Instant"], manaCost: "{U}", colors: ["U"], spell: {id: "s", text: "Return target creature to its owner's hand.",
+    targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "moveZone", targets: {target: 0}, to: "hand"}]}};
+  const TUCK = {types: ["Instant"], manaCost: "{U}", colors: ["U"], spell: {id: "s", text: "Put target creature on the bottom of its owner's library.",
+    targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "moveZone", targets: {target: 0}, to: "library"}]}};
+  const moved = (spell, answer) => runScenario({name: `${spell} and ${answer}`, setup: [
+    {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain"]},
+    {seat: 1, zone: "battlefield", cards: ["Island"]}, {seat: 1, zone: "hand", cards: [spell]},
+  ], steps: [...cast, {pass: 1}, {tap: "Island", seat: 1}, {cast: spell, seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+    {expect: [{seat: 0, zone: "battlefield", cards: ["Mountain", "Boss"]}, {asks: {seat: 0, options: [ZONE, spell === "Bounce" ? "Let it go to your hand" : "Let it go to your library"]}}]},
+    {choose: [answer]}]}, index.definition, {Boss: BOSS, Bounce: BOUNCE, Tuck: TUCK}).state;
+  {
+    /* On Maya's own turn, the question is still Rob's: the owner's, not the active player's. */
+    const theirs = runScenario({name: "bounced on Maya's turn", setup: [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Island"]}, {seat: 1, zone: "hand", cards: ["Bounce"]},
+    ], steps: [...cast, {to: {turn: 2, phase: "MAIN1"}}, {tap: "Island", seat: 1}, {cast: "Bounce", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {expect: [{asks: {seat: 0, options: [ZONE, "Let it go to your hand"]}}]}]}, index.definition, {Boss: BOSS, Bounce: BOUNCE}).state;
+    eq(theirs.awaiting?.player, 0, "bounced on Maya's turn, Rob is the one asked (CR 903.9b: its owner)");
+    const home = moved("Bounce", ZONE), kept = moved("Bounce", "Let it go to your hand"), tucked = moved("Tuck", "Let it go to your library");
+    const where = (st) => Object.values(st.objects).find((o) => o.card === "Boss")?.zone;
+    eq([where(home), where(kept), where(tucked), kept.awaiting, cardsIn(home, "hand", 0).length],
+      ["command", "hand", "library", null, 0],
+      "a commander bounced or tucked: its owner is asked BEFORE it moves (CR 903.9b) -- yes, the command zone and never the hand; no, the hand or the library, and nothing more is asked");
+  }
+
   /* The tax (CR 903.8) follows the commander, not the object: after one cast and one return it costs {2} more. */
   {
     const {state} = play("the tax after a return", [
