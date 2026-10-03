@@ -24,7 +24,7 @@
  * zero cards all game and be fine until their draw step.
  */
 import assert from "node:assert/strict";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, commanderKeyOf} from "../game/engine/state/index.mjs";
 import {beginGame} from "../game/engine/rules/turn.mjs";
 import {checkStateBasedActions, dealCommanderDamage, gameOver} from "../game/engine/rules/sba.mjs";
 
@@ -82,7 +82,7 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
     "damage from two different commanders is NOT pooled — eleven and ten is not twenty-one (CR 903.10a)");
 
   s.players[0].life = 80;
-  eq(s.players[0].commanderDamage[krenko], 11,
+  eq(s.players[0].commanderDamage[commanderKeyOf(s.objects[krenko])], 11,
     "gaining life does not erase commander damage — the tally is damage dealt, not life lost");
 
   dealCommanderDamage(s, 0, krenko, 9);
@@ -98,11 +98,11 @@ const creature = (over) => ({types: ["Creature"], power: 2, toughness: 2, ...ove
   const krenko = addObject(s, creature({card: "Krenko, Mob Boss", owner: 1, controller: 1}), "battlefield");
   s.objects[krenko].commander = true;
   dealCommanderDamage(s, 0, krenko, 3, {combat: false});
-  eq(s.players[0].commanderDamage[krenko] ?? 0, 0,
+  eq(s.players[0].commanderDamage[commanderKeyOf(s.objects[krenko])] ?? 0, 0,
     "noncombat damage from a commander does not add to the tally (CR 903.10a is about combat damage)");
   eq(s.players[0].life, 37, "though it still costs the life");
   dealCommanderDamage(s, 0, krenko, 3, {combat: true});
-  eq(s.players[0].commanderDamage[krenko], 3, "combat damage from it does");
+  eq(s.players[0].commanderDamage[commanderKeyOf(s.objects[krenko])], 3, "combat damage from it does");
 }
 {
   const s = fresh();

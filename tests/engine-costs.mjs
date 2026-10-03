@@ -9,7 +9,7 @@
  * the active player first; nobody sacrifices what they do not control.
  */
 import assert from "node:assert/strict";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, commanderKeyOf} from "../game/engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {legalActions, applyAction, nothingToDo} from "../game/engine/rules/actions.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
@@ -81,12 +81,12 @@ const resolve = (s) => { passPriority(s); return passPriority(s); };
   const s = table();
   on(s, card("Sapphire Medallion"), 0);
   const commander = on(s, {card: "Blue General", types: ["Creature"], supertypes: ["Legendary"], manaCost: "{U}", colors: ["U"], power: 1, toughness: 1, commander: true}, 0, "command");
-  s.players[0].commanderCasts = {...(s.players[0].commanderCasts ?? {}), [commander]: 1};
+  s.players[0].commanderCasts = {...(s.players[0].commanderCasts ?? {}), [commanderKeyOf(s.objects[commander])]: 1};
   on(s, ISLAND, 0); on(s, ISLAND, 0);
   main(s);
   tap(s, "Island"); tap(s, "Island");
   const offered = casts(s, "Blue General");
-  ok(offered.length === 1, `with one cast already (tax {2}), {U} plus the tax less the Medallion's {1} is {1}{U}: two Islands cast it (tax ${offered[0]?.tax})`);
+  ok(offered.length === 1 && offered[0].tax === 2, `with one cast already (tax {2}), {U} plus the tax less the Medallion's {1} is {1}{U}: two Islands cast it (tax ${offered[0]?.tax})`);
 }
 {
   /* Nothing to do counts what a spell costs NOW: a Medallion that makes it castable is something to do. */

@@ -20,11 +20,14 @@
  * tax again is not always what they want.
  */
 import assert from "node:assert/strict";
-import {createState, addObject, cardsIn, zoneOf} from "../game/engine/state/index.mjs";
+import {createState, addObject, cardsIn, zoneOf, commanderKeyOf} from "../game/engine/state/index.mjs";
 import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
 import {colorIdentity, withinIdentity, commanderTax} from "../game/engine/rules/commander.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {projectFor} from "../game/engine/projection.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -98,25 +101,26 @@ function started() {
   const cast = legalActions(s, 0).find((a) => a.kind === "cast" && a.objectId === general);
   ok(cast, "with two green available the commander can be cast from the command zone (CR 903.8)");
 
+  const key = commanderKeyOf(s.objects[general]);
   applyAction(s, 0, cast);
   eq(s.players[0].manaPool.G, 2, "two of the four green paid for it");
-  eq(s.players[0].commanderCasts[general], 1, "and the cast is counted");
+  eq(s.players[0].commanderCasts[key], 1, "and the cast is counted, against the commander rather than the object that was cast (CR 400.7)");
 }
 {
   const s = started();
   const general = addObject(s, creature({card: "Bear General", owner: 0, controller: 0,
     manaCost: "{1}{G}", commander: true}), "command", 0);
   eq(commanderTax(s, 0, general), 0, "no tax on the first cast");
-  s.players[0].commanderCasts = {[general]: 1};
+  s.players[0].commanderCasts = {[commanderKeyOf(s.objects[general])]: 1};
   eq(commanderTax(s, 0, general), 2, "two more after one (CR 903.8)");
-  s.players[0].commanderCasts = {[general]: 3};
+  s.players[0].commanderCasts = {[commanderKeyOf(s.objects[general])]: 3};
   eq(commanderTax(s, 0, general), 6, "and six after three — two for each previous cast, not a doubling");
 }
 {
   const s = started();
   const general = addObject(s, creature({card: "Bear General", owner: 0, controller: 0,
     manaCost: "{1}{G}", commander: true}), "command", 0);
-  s.players[0].commanderCasts = {[general]: 1};
+  s.players[0].commanderCasts = {[commanderKeyOf(s.objects[general])]: 1};
   for (let i = 0; i < 3; i += 1) addObject(s, {...FOREST, owner: 0, controller: 0}, "battlefield");
   let guard = 0;
   while (currentPhase(s) !== "MAIN1" && guard < 30) { advance(s); guard += 1; }
@@ -176,6 +180,127 @@ function started() {
   checkStateBasedActions(s);
   eq(s.awaiting, null, "a creature that is not a commander is not asked anything");
   eq(cardsIn(s, "graveyard", 0).length, 1, "it just dies");
+}
+
+{
+  /* A game that is over asks nobody anything: seat 0's commander dies in the same check that puts the last opponent
+     out (CR 104.2a), and its owner, the winner, is not asked where it goes. */
+  const s = createState({matchId: "m", seed: "s", players: [{name: "Rob"}, {name: "Maya"}]});
+  beginGame(s);
+  const general = addObject(s, creature({card: "Bear General", owner: 0, controller: 0, manaCost: "{1}{G}", commander: true}), "battlefield");
+  s.objects[general].damage = 5;
+  s.players[1].life = 0;
+  checkStateBasedActions(s);
+  eq([s.players[1].lost, cardsIn(s, "graveyard", 0).length, s.awaiting], [true, 1, null],
+    "the commander died and the game ended in one check: the winner is not asked about the command zone");
+}
+
+/* ---- the question holds the triggers (CR 704.3, 603.3b) ----
+   A commander that dies as a step begins -- its damage marked before the upkeep -- is asked about before anything goes on
+   the stack: the question is part of the state-based actions, and triggers wait until those are done. The death's
+   triggers wait for the answer; had they gone first, two of them would have replaced the question with their order. */
+{
+  const index = loadCardIndex();
+  const s = started();
+  for (const name of ["Zulaport Cutthroat", "Blood Artist"]) addObject(s, {...index.definition(name), card: name, owner: 0, controller: 0}, "battlefield");
+  const general = addObject(s, creature({card: "Bear General", owner: 0, controller: 0, manaCost: "{1}{G}", commander: true}), "battlefield");
+  s.objects[general].damage = 5;
+  let guard = 0;
+  while (!s.awaiting && guard < 30) { advance(s); guard += 1; }
+  eq([s.awaiting?.kind, s.stack.length, (s.pendingTriggers ?? []).length], ["commander-replacement", 0, 2],
+    "a commander dying as the upkeep begins: its owner is asked first, and its death's two triggers wait, off the stack");
+  resolveAwaiting(s, [0]);
+  eq([cardsIn(s, "command", 0).length, s.awaiting?.kind ?? null], [1, "order-triggers"],
+    "answered, it is in the command zone, and then its owner orders the two triggers");
+}
+
+/* ---- the commander through a game: real cards, through the rules (the plan review's probes P1-P5, 2026-10-03) ----
+ *
+ * Each of these was wrong at 849845bf, and each passed every unit check above: the functions were right and nothing in a
+ * game reached them the right way. A commander removed by an effect was never asked about (only a death by damage was,
+ * and before the move, so no "dies" trigger saw it); the tax and the damage tally were kept by the object, which a zone
+ * change replaces (CR 400.7); and combat damage never reached the tally at all. */
+{
+  const index = loadCardIndex();
+  /* A one-mana 11/3 with haste, legendary: a commander that can attack the turn it is cast and die to a Lightning Bolt. */
+  const BOSS = {types: ["Creature"], subtypes: ["Ogre"], supertypes: ["Legendary"], manaCost: "{R}", colors: ["R"], power: 11, toughness: 3, keywords: ["Haste"]};
+  const play = (name, setup, steps, extra = {}) => runScenario({name, setup, steps, ...extra}, index.definition, {Boss: BOSS});
+  const cast = [{tap: "Mountain"}, {cast: "Boss"}, {resolve: true}];
+  const ZONE = "Put it into the command zone";
+
+  /* CR 903.9a: exiled by an effect (Swords to Plowshares), its owner is asked once it is there, and yes moves it. */
+  {
+    const {state} = play("exiled by an effect", [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Plains"]}, {seat: 1, zone: "hand", cards: ["Swords to Plowshares"]},
+    ], [...cast, {pass: 1}, {tap: "Plains", seat: 1}, {cast: "Swords to Plowshares", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {expect: [{seat: 0, zone: "exile", cards: ["Boss"]}, {asks: {seat: 0, options: [ZONE, "Leave it in exile"]}}]},
+      {choose: [ZONE]}]);
+    eq([cardsIn(state, "command", 0).map((id) => state.objects[id].card), state.zones.exile.length],
+      [["Boss"], 0], "a commander exiled by an effect: its owner is asked once it is in exile (CR 903.9a), and yes puts it in the command zone");
+  }
+
+  /* Destroyed by an effect (Terminate): asked; no leaves it, and it is not asked again. */
+  {
+    const {state} = play("destroyed by an effect, and left there", [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Swamp", "Mountain"]}, {seat: 1, zone: "hand", cards: ["Terminate"]},
+    ], [...cast, {pass: 1}, {tap: "Swamp", seat: 1}, {tap: "Mountain", seat: 1}, {cast: "Terminate", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {expect: [{asks: {seat: 0, options: [ZONE, "Leave it in your graveyard"]}}]},
+      {choose: ["Leave it in your graveyard"]},
+      /* On to the next turn: state-based actions are checked at every priority, and a refused commander is not asked again. */
+      {to: {turn: 2, phase: "MAIN1"}}]);
+    eq([cardsIn(state, "graveyard", 0).map((id) => state.objects[id].card), state.awaiting], [["Boss"], null],
+      "a commander destroyed by an effect: no leaves it in the graveyard, and the owner is not asked again while it stays there");
+  }
+
+  /* Killed (Lightning Bolt): it dies first -- Zulaport Cutthroat sees it -- and the question comes after (CR 903.9a is a
+     state-based action, not a replacement). */
+  {
+    const {state} = play("dies, is seen dying, then asked", [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain", "Zulaport Cutthroat"]},
+      {seat: 1, zone: "battlefield", cards: ["Mountain"]}, {seat: 1, zone: "hand", cards: ["Lightning Bolt"]},
+    ], [...cast, {pass: 1}, {tap: "Mountain", seat: 1}, {cast: "Lightning Bolt", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {expect: [{seat: 0, zone: "graveyard", cards: ["Boss"]}, {asks: {seat: 0, options: [ZONE, "Leave it in your graveyard"]}}]},
+      {choose: [ZONE]},
+      {expect: [{seat: 0, zone: "command", cards: ["Boss"]}, {stack: 1}]},
+      {resolve: true}]);
+    eq([state.players[1].life, state.players[0].life], [39, 41],
+      "a commander that dies is a creature that died: Zulaport Cutthroat drains for it, and its owner still moves it to the command zone");
+  }
+
+  /* The tax (CR 903.8) follows the commander, not the object: after one cast and one return it costs {2} more. */
+  {
+    const {state} = play("the tax after a return", [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Mountain"]}, {seat: 1, zone: "hand", cards: ["Lightning Bolt"]},
+    ], [...cast, {pass: 1}, {tap: "Mountain", seat: 1}, {cast: "Lightning Bolt", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {choose: [ZONE]}, {to: {turn: 3, phase: "MAIN1"}}, {tap: "Mountain"},
+      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 0}]},
+      {tap: "Mountain"}, {tap: "Mountain"},
+      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 1}]}]);
+    eq(commanderTax(state, 0, cardsIn(state, "command", 0)[0]), 2, "a commander cast once and returned costs {2} more the second time (CR 903.8), whatever object it is now");
+  }
+
+  /* Commander damage (CR 903.10a) counts combat damage from the same commander over the game, across its zone changes. */
+  {
+    const {state} = play("21 from the same commander, across a death", [
+      {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain"]},
+      {seat: 1, zone: "battlefield", cards: ["Mountain"]}, {seat: 1, zone: "hand", cards: ["Lightning Bolt"]},
+    ], [...cast, {attack: ["Boss"]}, {to: {turn: 2, phase: "MAIN1"}},
+      {expect: [{seat: 1, life: 29}]},
+      {tap: "Mountain", seat: 1}, {cast: "Lightning Bolt", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
+      {choose: [ZONE]}, {to: {turn: 3, phase: "MAIN1"}},
+      {tap: "Mountain"}, {tap: "Mountain"}, {tap: "Mountain"}, {cast: "Boss"}, {resolve: true}, {attack: ["Boss"]},
+      {to: {turn: 3, phase: "MAIN2"}}], {stopWhenOver: true});
+    eq([state.players[1].life, state.players[1].lost === true, state.players[1].lostTo ?? null, Object.values(state.players[1].commanderDamage)],
+      [18, true, "commander-damage", [22]],
+      "11 combat damage, a death and a recast, then 11 more: 22 from the same commander, one tally, and the player loses at 18 life (CR 903.10a)");
+    /* And the board can say whose: the projection's commander card carries the key the tally is kept under. */
+    const seen = projectFor(state, 1).players, key = seen[0].zones.Battlefield.cards.find((c) => c.name === "Boss")?.commanderKey;
+    eq([Object.keys(seen[1].health.commanderDamage), String(key).split(":")[0]], [[key], "0"],
+      "the commander as any seat sees it names the key its damage is kept under, its owner's seat first");
+  }
 }
 
 console.log(`engine-commander: ${checks} checks passed — color identity reads the rules text too, the tax counts casts from the command zone, and the owner is asked whether their commander comes back.`);

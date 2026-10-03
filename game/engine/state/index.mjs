@@ -77,8 +77,9 @@ export function createState(pod) {
       name: seat.name ?? `Seat ${id + 1}`,
       life,
       poison: 0,
-      /* Commander damage is per source, so it is a map keyed by the commander's object id and
-         summed per player by whatever reads it — a seat with partners has two rows. */
+      /* Commander damage is per commander, so it is a map keyed by the commander's key (`commanderKeyOf`), which
+         a zone change keeps -- not by its object id, which a zone change replaces (CR 400.7) -- and read per
+         commander by whatever reads it: a seat with partners has two rows. */
       commanderDamage: {},
       /* CR 106.4: a mana pool empties at the end of each step and phase. One counter per color
          plus colorless; kept as a flat object so the state stays plain. */
@@ -128,6 +129,7 @@ export function addObject(state, object, zone, player = null) {
   assertZone(state, zone, player);
   const id = state.nextObjectId;
   state.nextObjectId += 1;
+  const owner = Number.isInteger(object.owner) ? object.owner : player;
   state.objects[id] = {
     id,
     card: object.card ?? null,
@@ -152,7 +154,7 @@ export function addObject(state, object, zone, player = null) {
     /* The turn it arrived in this zone: "destroy all creatures that entered this turn" (Force of Despair). A change of
        control does not touch it (effects/permanents.mjs gainControl). */
     arrivedTurn: state.turn,
-    owner: Number.isInteger(object.owner) ? object.owner : player,
+    owner,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
     zonePlayer: PER_PLAYER.includes(zone) ? player : null,
@@ -172,6 +174,12 @@ export function addObject(state, object, zone, player = null) {
        command-zone replacement and the 21-damage tally — and for a while none of them could,
        because it was read everywhere and written nowhere. */
     commander: object.commander === true,
+    /* WHICH commander, for as long as the game lasts. The tax (CR 903.8) counts the times a player cast it from the
+       command zone "that game", and the damage (CR 903.10a) is dealt by the same commander "over the course of the
+       game" -- across every zone change, each of which makes a new object (CR 400.7). Keyed by the object id they
+       were the tally of the object, and the second cast was the first again. Given once, when the card is first made
+       a commander; every move carries it. */
+    ...(object.commander === true ? {commanderKey: object.commanderKey ?? `${owner}:${id}`} : {}),
     /* From the card script (cards/index.mjs, phase 2.4): what the card does as a spell, which stack.mjs resolves,
        and its printed subtypes, which a selector may ask about. Present only on a card that has them, so an object
        made from a bare kernel definition is the shape it always was. */
@@ -190,6 +198,11 @@ export function addObject(state, object, zone, player = null) {
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
   return id;
+}
+
+/** Which commander an object is (CR 903.3): the key its tax and its damage are kept under, the same in every zone. */
+export function commanderKeyOf(object) {
+  return object.commanderKey ?? `${object.owner}:${object.id}`;
 }
 
 /** An object that ceases to exist (CR 704.5d, 704.5e): out of its zone and out of the game, with no zone change. */
@@ -253,6 +266,7 @@ export function moveObject(state, id, zone, player = null) {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
+    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);

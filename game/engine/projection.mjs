@@ -28,6 +28,7 @@
  */
 
 import {characteristicsOf} from "./rules/layers.mjs";
+import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
 
@@ -78,6 +79,9 @@ function cardFor(state, id, canSeeFace) {
     toughness: named ? current.toughness : null,
     keywords: named ? [...current.keywords] : [],
     commander: object.commander === true,
+    /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
+       `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
+    ...(object.commander === true ? {commanderKey: commanderKeyOf(object)} : {}),
   };
 }
 
