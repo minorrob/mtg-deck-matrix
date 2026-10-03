@@ -51,7 +51,7 @@ import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -501,7 +501,9 @@ export function collectTriggers(state, events) {
 }
 
 /* A scripted trigger's effects, for the stack entry; nothing for a kernel trigger that has none. */
-const scriptOf = (ability) => ((ability.effects ?? []).length ? {script: {targets: ability.targets ?? [], effects: ability.effects, ...(ability.condition ? {condition: ability.condition} : {})}} : {});
+/* A modal trigger's modes travel with it, to be chosen as it is put on the stack (CR 603.3c). */
+const scriptOf = (ability) => ((ability.effects ?? []).length || ability.modal ? {script: {targets: ability.targets ?? [], effects: ability.effects ?? [],
+  ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.modal ? {modal: ability.modal} : {})}} : {});
 
 /** How many triggers are waiting to go on the stack. */
 export const pendingCount = (state) => (state.pendingTriggers ?? []).length;
@@ -567,6 +569,13 @@ export function askTriggerTargets(state) {
   for (const entry of [...state.stack]) {
     if (entry.stage !== "targeting") continue;
     const {context} = targeting(state, entry.stackId);
+    /* A modal trigger (CR 603.3c): its modes and their targets, asked together. With no legal way, it is removed -- also
+       when it "may" choose none, which is then the only choice. */
+    if (entry.script.modal) {
+      if (!modalWays(state, entry.script.modal, context).length) { state.stack.splice(state.stack.indexOf(entry), 1); continue; }
+      state.awaiting = {kind: "trigger-targets", player: entry.playerId, stackId: entry.stackId};
+      return true;
+    }
     if (!targetChoices(state, entry.script.targets, context).length) {
       state.stack.splice(state.stack.indexOf(entry), 1);
       continue;
@@ -622,9 +631,45 @@ export function resolveTriggerCounted(state, awaiting, indices) {
   return becameTarget(state, entry);
 }
 
+/* EACH WAY TO CHOOSE A MODAL TRIGGER'S MODES AND THEIR TARGETS (CR 603.3c, 700.2): as many modes as it says, none twice
+   (CR 700.2d), each with a way to aim its targets; a mode with no legal target can't be chosen. "Each mode must target a
+   different player": no player twice among them. */
+function modalWays(state, modal, context) {
+  const ways = [];
+  const n = Math.min(modal.choose, modal.modes.length);
+  const pick = (from, chosen) => {
+    if (chosen.length === n) {
+      for (const targets of targetChoices(state, modalScript(modal, chosen).targets, context)) {
+        const players = targets.filter((t) => t?.kind === "player").map((t) => t.id);
+        if (modal.differentPlayers && new Set(players).size !== players.length) continue;
+        ways.push({modes: chosen, targets});
+      }
+      return;
+    }
+    for (let i = from; i < modal.modes.length; i += 1) pick(i + 1, [...chosen, i]);
+  };
+  pick(0, []);
+  return ways;
+}
+
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
 export function triggerTargetsChoice(state, awaiting) {
   const {entry, context} = targeting(state, awaiting.stackId);
+  /* A modal trigger: each way to choose its modes and their targets -- "Inkling → Maya; draws a card → Rob" -- and, when it
+     may choose none, that too. */
+  if (entry.script.modal) {
+    const modal = entry.script.modal;
+    const options = modalWays(state, modal, context).map(({modes, targets}, index) => {
+      let at = 0;
+      const label = modes.map((m) => {
+        const mine = targets.slice(at, at += modal.modes[m].targets.length);
+        return `${modal.modes[m].text} → ${mine.map((t) => targetName(state, t)).join(", ")}`;
+      }).join("; ");
+      return {index, label, modes, targets, hostile: isHostile(modalScript(modal, modes).effects), ...(entry.cardId !== null ? {cardId: entry.cardId} : {})};
+    });
+    if (modal.mayChooseNone) options.push({index: options.length, label: "Choose none", none: true});
+    return {id: `trigger-targets:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose ${modal.choose}`, mode: "one", min: 1, max: 1, options};
+  }
   const hostile = isHostile(entry.script.effects);
   return {
     id: `trigger-targets:${entry.stackId}`,
@@ -645,8 +690,19 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   const option = choice.options[indices?.[0]];
   if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
   const {entry} = targeting(state, awaiting.stackId);
-  entry.targets = structuredClone(option.targets);
   state.awaiting = null;
+  /* A modal trigger: none chosen, and it is removed from the stack (CR 603.3c); else what resolves is the chosen modes'. */
+  if (entry.script.modal) {
+    if (option.none) {
+      state.stack.splice(state.stack.indexOf(entry), 1);
+      askTriggerTargets(state);
+      return [];
+    }
+    const {modal, ...rest} = entry.script;
+    entry.script = {...rest, ...modalScript(modal, option.modes)};
+    entry.modes = [...option.modes];
+  }
+  entry.targets = structuredClone(option.targets);
   /* Its counted targets, if it has any, picked next. */
   if (entry.targets.some(isChoosing) && askCounted(state, entry)) return [];
   entry.stage = "waiting";
@@ -668,8 +724,9 @@ function putOnStack(state, triggers) {
          this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
       lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
     });
-    /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets). */
-    if ((entry.script?.targets ?? []).length) entry.stage = "targeting";
+    /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets) -- and a modal one's
+       modes with them (CR 603.3c). */
+    if ((entry.script?.targets ?? []).length || entry.script?.modal) entry.stage = "targeting";
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);
   }

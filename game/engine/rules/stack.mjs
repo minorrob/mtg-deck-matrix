@@ -131,7 +131,9 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
     playerId: controller, kind, abilityId, targets,
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
-  if (script && (script.effects ?? []).length) entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects, ...(script.condition ? {condition: script.condition} : {})});
+  /* A modal trigger's modes go with it, to be chosen now that it is on the stack (CR 603.3c; rules/trigger.mjs). */
+  if (script && ((script.effects ?? []).length || script.modal))
+    entry.script = structuredClone({targets: script.targets ?? [], effects: script.effects ?? [], ...(script.condition ? {condition: script.condition} : {}), ...(script.modal ? {modal: script.modal} : {})});
   /* What a trigger is about -- the spell cast, the attacker, the player dealt damage -- for "that player" (trigger.mjs). */
   if (about) entry.about = structuredClone(about);
   /* X chosen as it was activated (CR 602.2b); and its source as it last was, for a source the cost sacrificed. */

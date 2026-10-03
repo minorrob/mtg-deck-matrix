@@ -1,0 +1,143 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shadrix Silverquill",
+    "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "manaCost": "{3}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Flying, double strike\nAt the beginning of combat on your turn, you may choose two. Each mode must target a different player.\n• Target player creates a 2/1 white and black Inkling creature token with flying.\n• Target player draws a card and loses 1 life.\n• Target player puts a +1/+1 counter on each creature they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, you may choose two. Each mode must target a different player.\n• Target player creates a 2/1 white and black Inkling creature token with flying.\n• Target player draws a card and loses 1 life.\n• Target player puts a +1/+1 counter on each creature they control.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 2,
+          "mayChooseNone": true,
+          "differentPlayers": true,
+          "modes": [
+            {
+              "text": "Target player creates a 2/1 white and black Inkling creature token with flying.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "controller": {
+                    "target": 0
+                  },
+                  "token": {
+                    "name": "Inkling",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Inkling"
+                    ],
+                    "colors": [
+                      "W",
+                      "B"
+                    ],
+                    "power": 2,
+                    "toughness": 1,
+                    "keywords": [
+                      "Flying"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target player draws a card and loses 1 life.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1,
+                  "who": {
+                    "target": 0
+                  }
+                },
+                {
+                  "effect": "loseLife",
+                  "who": {
+                    "target": 0
+                  },
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "text": "Target player puts a +1/+1 counter on each creature they control.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounterAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": {
+                      "target": 0
+                    }
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
