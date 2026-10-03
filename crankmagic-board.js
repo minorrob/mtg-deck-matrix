@@ -849,9 +849,11 @@ globalThis.CrankBoard = Object.freeze({
     if (!coach.open) {panelEl.innerHTML = ""; return;}
     dock();
     /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
-       shut, and the Coach's reply lands on its own timer, so it would snap the menu shut under a pointer). */
-    const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more");
-    const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep, moreOpen = !!(more && more.open);
+       shut, and the Coach's reply lands on its own timer, so it would snap the menu shut under a pointer). Focus in ⋯
+       stays on ⋯ or on Clear chat; once ⋯ has closed (Clear chat closes it), it goes back to ⋯. */
+    const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more"), active = document.activeElement;
+    const typed = keep ? keep.value : "", focused = keep && active === keep, moreOpen = !!(more && more.open);
+    const moreFocus = more && more.contains(active) ? (moreOpen && active.matches("[data-action=board-coach-clear]") ? "[data-action=board-coach-clear]" : "summary") : null;
     const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
       : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<span class="cm-coach-avatar">${COACH}</span>` : ""}<p>${e(m.text)}</p></li>`;
     panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
@@ -866,6 +868,7 @@ globalThis.CrankBoard = Object.freeze({
     const input = panelEl.querySelector(".cm-coach-input");
     input.value = typed;
     if (focused) input.focus();
+    else if (moreFocus) panelEl.querySelector(`.cm-coach-more ${moreFocus}`).focus();
     const thread = panelEl.querySelector(".cm-coach-thread");
     thread.scrollTop = thread.scrollHeight;
   }
