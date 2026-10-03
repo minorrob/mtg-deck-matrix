@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elspeth Conquers Death",
+    "oracleId": "40c88392-2aa7-4e12-86a4-8d680219e670",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Exile target permanent an opponent controls with mana value 3 or greater.\nII — Noncreature spells your opponents cast cost {2} more to cast until your next turn.\nIII — Return target creature or planeswalker card from your graveyard to the battlefield. Put a +1/+1 counter or a loyalty counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Exile target permanent an opponent controls with mana value 3 or greater.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "opponent",
+          "manaValue": {
+            "min": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Noncreature spells your opponents cast cost {2} more to cast until your next turn.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "spells-cost-more",
+          "affects": {
+            "nonTypes": [
+              "Creature"
+            ]
+          },
+          "apply": {
+            "amount": 2,
+            "caster": "opponent"
+          },
+          "until": "your-next-turn"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Return target creature or planeswalker card from your graveyard to the battlefield. Put a +1/+1 counter or a loyalty counter on it.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "loyalty",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

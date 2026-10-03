@@ -184,14 +184,18 @@ export function moveZone(state, params, context) {
   const events = [];
   const arrived = [], became = [];
   /* "The top card of your library", "the top seven cards of that player's library" (`fromTop`, `who`), revealed first if
-     it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). */
-  const [whose] = params.fromTop !== undefined ? playersFor(state, params.who, context.controller) : [];
-  const moving = params.fromTop !== undefined ? (whose === undefined ? [] : cardsIn(state, "library", whose).slice(0, params.fromTop)) : params.targets ?? [];
+     it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
+     library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
+  const moving = params.fromTop !== undefined
+    ? playersFor(state, params.who, context.controller).flatMap((whose) => cardsIn(state, "library", whose).slice(0, params.fromTop))
+    : params.targets ?? [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   for (const id of moving) {
     /* "Sacrifice it" (`sacrifice: true`): to its owner's graveyard, as a sacrifice. */
     const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
-    if (moved !== null) became.push(moved);
+    /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
+       ("if that creature is a Bird", Splash Portal, batch 79), set below. */
+    let landed = moved;
     /* "On top of your library" (Mystic Sanctuary): a card put into a library goes to the bottom unless it says the top. */
     if (moved !== null && params.to === "library" && params.top === true && state.objects[moved]) {
       const library = state.zones.library[state.objects[moved].owner];
@@ -209,8 +213,14 @@ export function moveZone(state, params, context) {
       const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
         ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {})};
       if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
-      else events.push(...moveZone(state, back, context));
+      else {
+        /* The return remembers what came back in a context of its own, so this effect's `remember` is not overwritten. */
+        const returning = {...context};
+        events.push(...moveZone(state, {...back, remember: true}, returning));
+        landed = returning.remembered?.[0] ?? null;
+      }
     }
+    if (landed !== null) became.push(landed);
   }
   /* "Exile target creature card from a graveyard. Create a token that's a copy of it": what this moved, as the new
      objects it became (CR 400.7), for the effects after it to name as "remembered" (script/bind.mjs). */
@@ -231,6 +241,9 @@ export function moveZoneAll(state, params, context) {
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
     if (moved !== null) arrivedAll.push(moved);
   }
+  /* "Then puts all cards they exiled this way onto the battlefield" (Living Death, batch 79): what this moved, as the new
+     objects it became (CR 400.7), for the effects after it to name as "remembered" -- every player's at once. */
+  if (params.remember) context.remembered = arrivedAll.filter((id) => state.objects[id]);
   /* "They gain haste until end of turn" (Wake the Past). */
   afterwards(state, arrivedAll, params, context);
   return events;
