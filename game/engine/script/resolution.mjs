@@ -71,6 +71,16 @@ export function runResolution(state) {
       resolving.queue.shift();
       continue;
     }
+    /* BRANCH (Forge's Branch; batch 72): "if you control six or more lands, create a token that's a copy of this creature
+       instead" -- its own condition (`if`) asked now, as it reaches the head (CR 608.2c), and the effects of the way it goes
+       put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
+    if (effect?.effect === "branch") {
+      const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast});
+      resolving.queue.shift();
+      resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
+      continue;
+    }
     const asking = ASKING[effect?.effect];
 
     if (asking) {
