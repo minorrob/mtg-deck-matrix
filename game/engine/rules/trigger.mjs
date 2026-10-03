@@ -99,6 +99,15 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
+  /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */
+  if (condition.on === "GameEventAttackersDeclared" && condition.declared) {
+    const attacker = fields.player?.playerId, attacks = fields.attackers ?? [];
+    if (!attacks.length || !whoseIs(condition.attacker ?? "you", attacker, controller)) return [];
+    if (condition.atLeast && attacks.length < condition.atLeast) return [];
+    if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller)) return [];
+    if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))].map((player) => ({player}));
+    return [{player: attacker}];
+  }
   if (condition.on === "GameEventAttackersDeclared") {
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */

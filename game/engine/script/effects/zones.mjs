@@ -25,7 +25,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -84,7 +84,7 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
   if (entering) {
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
        event, which says how it entered. */
-    if (entering.tapped || tapped) state.objects[moved].tapped = true;
+    if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     for (const [counter, count] of Object.entries(entering.counters)) {
