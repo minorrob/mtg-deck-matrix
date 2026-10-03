@@ -533,6 +533,13 @@ moved, the workflow's toolchain checked, both of its steps run twice, and what t
 scanned for secrets and personal addresses. AGENTS.md, "Merging to `main`", says when it stands
 in for CI.
 
+While Actions can run, `tools/quick-check.sh <suite.mjs>...` is the check before a push:
+`tools/local-ci.sh HEAD 0` (the scan and the merge with `main`), then only the suites the
+change touches. `tools/release-staging.sh` builds `origin/main` for staging, walks it, and only
+then pushes `release/cloud-staging`; production is never released without Rob's go. A card
+batch for the engine (M4 phase 3) is built with the helpers in `game/tools/batch/`, whose
+README is the batch's procedure.
+
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
