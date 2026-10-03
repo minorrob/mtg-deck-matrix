@@ -721,6 +721,9 @@ export const chooseCard = {
     const except = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
     const pool = (among ? (context.remembered ?? []).filter((id) => state.objects[id]?.zone === zone) : cardsIn(state, zone, player)).filter((id) => !except?.has(id));
     const cards = pool.filter((id) => matchers.some((m) => m(state, id, {controller: player, source: context.source})));
+    /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
+       and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
+    if (among && cards.length === 0) return false;
     const count = params.count ?? 1;
     const min = params.upTo || (!among && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     state.awaiting = {

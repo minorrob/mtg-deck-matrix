@@ -28,7 +28,7 @@ import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
 import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil} from "./zones.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
@@ -151,6 +151,8 @@ export const EFFECTS = Object.freeze({
   goad,
   /* Batch 72: one way or the other, and a reflexive trigger ("when you do"). */
   branch, immediateTrigger,
+  /* Batch 73: the top of a library looked at, or revealed. */
+  peekAndReveal,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

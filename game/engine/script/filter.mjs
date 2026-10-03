@@ -43,7 +43,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName",
+  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -104,6 +104,8 @@ function assertGrammar(selector) {
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
   for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
+  /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
+  if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
@@ -249,6 +251,14 @@ export function compileSelector(selector) {
     if (selector.uniqueName === true) {
       const holder = controllerOf(state, id);
       if (state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
+    }
+    /* "A creature card that shares a creature type with a creature you control" (Descendants' Path, batch 73): one of its
+       subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types
+       (CR 205.3m), the layers' included. */
+    if (selector.sharesCreatureType) {
+      const mine = new Set(object.subtypes ?? []);
+      const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
+      if (!others.some((other) => [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])].some((t) => mine.has(t)))) return false;
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;

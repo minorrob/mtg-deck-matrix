@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 931 defined and playable today; 2,209 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 935 defined and playable today; 2,217 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
-| Effects | 192 | 55 | 1 | 16 | 120 |
+| Effects | 192 | 56 | 1 | 15 | 120 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
 | Static abilities | 77 | 8 | 2 | 0 | 67 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
@@ -39,11 +39,10 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 21 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 18 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
-| effect | PeekAndReveal | peekAndReveal | named | 8 | 11 |
 | effect | SetState | setState | named | 7 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
+| keyword construct | ETBReplacement | — | missing | 6 | 33 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
-| keyword construct | ETBReplacement | — | missing | 5 | 33 |
 | keyword construct | etbCounter | — | missing | 5 | 25 |
 | count | Cards in a library | — | missing | 5 | 13 |
 | keyword ability | Convoke | — | named | 5 | 11 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | static | CantAttack | — | missing | 5 | 10 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 | keyword construct | Class | — | missing | 5 | 9 |
+| keyword ability | Prowess | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -387,7 +387,7 @@ The things that alone hold back the most of the most-played cards.
 | AnimateAll | animateAll | built | 12 | 133 | 0 | 0 |
 | MultiplyCounter | multiplyCounters | named | 12 | 53 | 12 | 4 |
 | ManaReflected | addMana | built | 12 | 47 | 0 | 0 |
-| PeekAndReveal | peekAndReveal | named | 11 | 158 | 11 | 8 |
+| PeekAndReveal | peekAndReveal | built | 11 | 158 | 0 | 0 |
 | Goad | goad | built | 11 | 67 | 0 | 0 |
 | RingTemptsYou | — | missing | 11 | 49 | 11 | 6 |
 | Poison | poison | built | 11 | 36 | 0 | 0 |
@@ -423,7 +423,7 @@ The things that alone hold back the most of the most-played cards.
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
 | ReplaceDamage | — | missing | 2 | 38 | 2 | 2 |
-| TwoPiles | twoPiles | named | 2 | 32 | 2 | 1 |
+| TwoPiles | twoPiles | named | 2 | 32 | 2 | 2 |
 | DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
 | NameCard | — | missing | 1 | 87 | 1 | 1 |
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 33 | 5 |
+| ETBReplacement | — | missing | 68 | 408 | 33 | 6 |
 | etbCounter | — | missing | 35 | 475 | 25 | 5 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |

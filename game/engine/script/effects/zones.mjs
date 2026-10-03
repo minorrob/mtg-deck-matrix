@@ -155,6 +155,30 @@ export function sacrificeAll(state, params, context) {
   return events;
 }
 
+/**
+ * `peekAndReveal` -- Forge's PeekAndReveal (batch 73): "look at the top card of target player's library" (Mishra's Bauble),
+ * "reveal the top X cards of your library" (Sunbird's Invocation): the top `count` cards of each library `who` names, left
+ * where they are (CR 701.20b) and `remember`ed for the effects after it. Revealed (`reveal`), every player is shown them
+ * (CR 701.20a). Looked at, only this effect's controller is (CR 701.20e) -- and keeps seeing them for as long as they are
+ * that library's top cards in that order (projection.mjs, `looks`); a draw or a shuffle ends it (CR 701.20d). The history
+ * names a looked-at card to nobody.
+ */
+export function peekAndReveal(state, params, context) {
+  const events = [], seen = [];
+  const count = params.count ?? 1;
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const top = cardsIn(state, "library", player).slice(0, count);
+    seen.push(...top);
+    if (params.reveal) for (const id of top) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+    else if (top.length) {
+      /* What the looker knows, replacing what they knew of that library before. */
+      state.looks = [...(state.looks ?? []).filter((l) => !(l.viewer === context.controller && l.owner === player)), {viewer: context.controller, owner: player, ids: [...top]}];
+    }
+  }
+  if (params.remember) context.remembered = seen;
+  return events;
+}
+
 /** `moveZone` — put the named objects somewhere. */
 export function moveZone(state, params, context) {
   const events = [];
