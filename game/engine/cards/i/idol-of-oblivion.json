@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Idol of Oblivion",
+    "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Draw a card. Activate only if you created a token this turn.\n{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Draw a card. Activate only if you created a token this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "tokensCreatedThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{8}, {T}, Sacrifice this artifact: Create a 10/10 colorless Eldrazi creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{8}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Eldrazi",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi"
+            ],
+            "colors": [],
+            "power": 10,
+            "toughness": 10
+          }
+        }
+      ]
+    }
+  ]
+}

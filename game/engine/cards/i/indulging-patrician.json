@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Indulging Patrician",
+    "oracleId": "189131b7-ed59-4750-a4ed-453e4497a5c8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Noble"
+    ],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nLifelink (Damage dealt by this creature also causes you to gain that much life.)\nAt the beginning of your end step, if you gained 3 or more life this turn, each opponent loses 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you gained 3 or more life this turn, each opponent loses 3 life.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 3
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

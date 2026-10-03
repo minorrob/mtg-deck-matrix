@@ -25,8 +25,11 @@
 
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
+import {amountOf, amountProblems} from "./amount.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare"];
+/* A counted comparison's keys: what is counted, and against what. */
+const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
    blue" (Pyroblast: the target), "if it's a planeswalker" (Forge of Heroes): `about` which -- "remembered", "that card"
    (a trigger's subject), "target" (the first) -- and `is` what it must be, read where it now is. None there, and it is
@@ -89,6 +92,17 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     if (n < (condition.atLeast ?? (condition.atMost !== undefined ? 0 : 1))) return false;
     if (condition.atMost !== undefined && n > condition.atMost) return false;
   }
+  /* A COUNTED COMPARISON (Forge's CheckSVar and SVarCompare): an amount (script/amount.mjs) counted now, against a number
+     or another amount counted now -- "if you gained 3 or more life this turn" (Indulging Patrician), "only if you created
+     a token this turn" (Idol of Oblivion), "only if an opponent controls more lands than you" (Weathered Wayfarer). */
+  if (condition.compare !== undefined) {
+    const counted = {controller, source, ...(about ? {about} : {})};
+    const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
+    if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
+    if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
+    if (condition.compare.moreThan !== undefined && !(n > than(condition.compare.moreThan))) return false;
+    if (condition.compare.fewerThan !== undefined && !(n < than(condition.compare.fewerThan))) return false;
+  }
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
   /* "If you have 40 or more life" (Felidar Sovereign). */
@@ -123,6 +137,16 @@ export function conditionProblems(condition) {
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
   if ("chosen" in condition && typeof condition.chosen !== "string") problems.push("chosen names what was chosen");
+  if ("compare" in condition) {
+    const compare = condition.compare;
+    if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan}");
+    else {
+      for (const key of Object.keys(compare)) if (!COMPARE_KEYS.includes(key)) problems.push(`compare has no key ${JSON.stringify(key)}; it has ${COMPARE_KEYS.join(", ")}`);
+      if (!("count" in compare)) problems.push("compare counts something: {count: an amount}");
+      if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan or fewerThan");
+      for (const key of COMPARE_KEYS) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
+    }
+  }
   if ("selfCounters" in condition && !(typeof condition.selfCounters?.counter === "string" && Number.isInteger(condition.selfCounters?.atLeast) && condition.selfCounters.atLeast >= 1))
     problems.push("selfCounters names a counter and how many, at least 1");
   if (("about" in condition) !== ("is" in condition)) problems.push("about names an object and is says what it must be: both, or neither");

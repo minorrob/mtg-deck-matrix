@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 995,
-  "everyRule": 2320
+  "defined": 997,
+  "everyRule": 2373
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -355,7 +355,7 @@
      "top": 7,
      "all": 37,
      "blocks": 7,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -427,7 +427,7 @@
      "top": 6,
      "all": 30,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -523,7 +523,7 @@
      "top": 5,
      "all": 23,
      "blocks": 5,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -607,7 +607,7 @@
      "top": 4,
      "all": 15,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -967,7 +967,7 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1363,7 +1363,7 @@
      "top": 1,
      "all": 7,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "keyword action",
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "effect",
@@ -4025,7 +4025,7 @@
      "top": 8,
      "all": 120,
      "blocks": 8,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -7309,7 +7309,7 @@
      "top": 8,
      "all": 139,
      "blocks": 8,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "static",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 19,
+    "built": 23,
     "partial": 5,
     "named": 0,
-    "missing": 13
+    "missing": 9
    },
    "entries": [
     {
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 102,
-     "alone": 19
+     "alone": 22
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 22
+     "alone": 25
     },
     {
      "kind": "option",
@@ -9007,31 +9007,31 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 15
+     "alone": 17
     },
     {
      "kind": "option",
      "rule": null,
      "name": "An intervening \"if\" or \"activate only if\": a counted value",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare}",
+     "status": "built",
      "forge": "CheckSVar",
      "top": 79,
      "all": 974,
-     "blocks": 79,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: a counted value",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare: {count, atLeast | atMost | moreThan | fewerThan}}",
+     "status": "built",
      "forge": "ConditionCheckSVar",
      "top": 75,
      "all": 603,
-     "blocks": 65,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9049,24 +9049,24 @@
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: a counted comparison",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare}",
+     "status": "built",
      "forge": "ConditionSVarCompare",
      "top": 65,
      "all": 455,
-     "blocks": 55,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "option",
      "rule": null,
      "name": "A counted comparison for a condition",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare}: at least, at most, more than, fewer than a number or another amount",
+     "status": "built",
      "forge": "SVarCompare",
      "top": 59,
      "all": 524,
-     "blocks": 59,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9247,7 +9247,7 @@
      "top": 7,
      "all": 89,
      "blocks": 7,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9313,10 +9313,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 10,
+    "built": 11,
     "partial": 1,
     "named": 0,
-    "missing": 177
+    "missing": 176
    },
    "entries": [
     {
@@ -9437,7 +9437,7 @@
      "top": 13,
      "all": 63,
      "blocks": 13,
-     "alone": 7
+     "alone": 8
     },
     {
      "kind": "count",
@@ -9449,19 +9449,19 @@
      "top": 12,
      "all": 139,
      "blocks": 12,
-     "alone": 3
+     "alone": 7
     },
     {
      "kind": "count",
      "rule": null,
      "name": "Life you gained this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it)",
+     "status": "built",
      "forge": "LifeYouGainedThisTurn",
      "top": 12,
      "all": 84,
-     "blocks": 12,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9472,8 +9472,8 @@
      "forge": "ThisTurnEntered",
      "top": 11,
      "all": 174,
-     "blocks": 11,
-     "alone": 4
+     "blocks": 10,
+     "alone": 8
     },
     {
      "kind": "count",
@@ -9509,7 +9509,7 @@
      "top": 10,
      "all": 92,
      "blocks": 10,
-     "alone": 2
+     "alone": 4
     },
     {
      "kind": "count",
@@ -9533,7 +9533,7 @@
      "top": 8,
      "all": 71,
      "blocks": 8,
-     "alone": 1
+     "alone": 3
     },
     {
      "kind": "count",
@@ -9545,7 +9545,7 @@
      "top": 7,
      "all": 31,
      "blocks": 7,
-     "alone": 0
+     "alone": 5
     },
     {
      "kind": "count",
@@ -9593,7 +9593,7 @@
      "top": 5,
      "all": 62,
      "blocks": 5,
-     "alone": 0
+     "alone": 3
     },
     {
      "kind": "count",
@@ -9665,7 +9665,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9701,7 +9701,7 @@
      "top": 3,
      "all": 13,
      "blocks": 3,
-     "alone": 0
+     "alone": 3
     },
     {
      "kind": "count",
@@ -9773,7 +9773,7 @@
      "top": 2,
      "all": 30,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9797,7 +9797,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9809,7 +9809,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9869,7 +9869,7 @@
      "top": 1,
      "all": 19,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9893,7 +9893,7 @@
      "top": 1,
      "all": 11,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9917,7 +9917,7 @@
      "top": 1,
      "all": 9,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9953,7 +9953,7 @@
      "top": 1,
      "all": 7,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9989,7 +9989,7 @@
      "top": 1,
      "all": 6,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -11845,7 +11845,7 @@
      "top": 5,
      "all": 30,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword construct",

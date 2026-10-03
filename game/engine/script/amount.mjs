@@ -43,7 +43,8 @@ import {powerOf, characteristicsOf, controllerOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount"]);
+export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
+  "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -59,6 +60,7 @@ export function amountProblems(value) {
   const problems = [];
   for (const key of Object.keys(value)) if (!AMOUNT_KINDS.includes(key) && !AMOUNT_EXTRAS.includes(key)) problems.push(`An amount has no key ${JSON.stringify(key)}`);
   if ("countersOn" in value && typeof value.counter !== "string") problems.push("Counting counters says which kind: {countersOn, counter}");
+  for (const key of ["lifeGainedThisTurn", "tokensCreatedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key])) problems.push(`An amount's ${key} is a whole number`);
   if ("if" in value) {
@@ -66,7 +68,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -171,6 +173,22 @@ export function amountOf(state, value, context = {}) {
   else if ("lifeLostThisTurn" in value) {
     const player = playerOf(value.lifeLostThisTurn, context);
     n = player !== null ? state.players[player]?.lostThisTurn ?? 0 : 0;
+  }
+  /* "If you gained 3 or more life this turn" (Indulging Patrician), "only if you created a token this turn" (Idol of
+     Oblivion): what that player has gained, and made, this turn (resources.mjs and permanents.mjs keep them, turn.mjs
+     clears them). */
+  else if ("lifeGainedThisTurn" in value) {
+    const player = playerOf(value.lifeGainedThisTurn, context);
+    n = player !== null ? state.players[player]?.gainedThisTurn ?? 0 : 0;
+  } else if ("tokensCreatedThisTurn" in value) {
+    const player = playerOf(value.tokensCreatedThisTurn, context);
+    n = player !== null ? state.players[player]?.tokensThisTurn ?? 0 : 0;
+  }
+  /* "If an opponent controls more lands than you" (Weathered Wayfarer): the most of them any one opponent has -- the
+     selector counted as each opponent still in the game sees it ("you" being that opponent). */
+  else if ("mostAmongOpponents" in value) {
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    n = Math.max(0, ...opponents.map((opponent) => matching(state, value.mostAmongOpponents, {...who, controller: opponent}).length));
   }
   /* "Where X is the mana value of that spell" (Ovika): its printed cost, X counted as 0 (CR 202.3). */
   else if ("manaValueOf" in value) {

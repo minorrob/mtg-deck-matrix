@@ -1,0 +1,203 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Idol of Oblivion",
+  "fixtures": {
+    "Two Soldiers": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s0",
+        "text": "Create two 1/1 white Soldier creature tokens.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 2,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "No token made this turn: \"{T}: Draw a card\" is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Idol of Oblivion"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Idol of Oblivion"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Two Soldiers made: {T}, draw a card -- and on his next turn it is not offered again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Idol of Oblivion",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Two Soldiers"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Two Soldiers"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Idol of Oblivion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Idol of Oblivion"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "{8}, {T}, sacrifice it: a 10/10 colorless Eldrazi",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Idol of Oblivion",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Idol of Oblivion",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Eldrazi",
+            "power": 10,
+            "toughness": 10
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Idol of Oblivion"
+          ]
+        }
+      ]
+    }
+  ]
+}

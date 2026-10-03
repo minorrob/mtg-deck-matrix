@@ -322,6 +322,9 @@ export function createToken(state, params, context) {
       createdAsToken: true,
     }));
     made.push(id);
+    /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
+       is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
+    state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;
   }
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
