@@ -38,6 +38,8 @@ export const FORGE_API = {
   Poison: "poison",
   /* "You win the game" (batch 68). */
   WinsGame: "winGame",
+  /* Goad (batch 69): attacks each combat, not its goader if it can. */
+  Goad: "goad",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
   Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
@@ -82,7 +84,10 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
      turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
   CantBeCast: "rules/actions",
   /* "Creatures can't attack you unless their controller pays {2} for each" (batch 66): `attack-tax`, rules/combat.mjs. */
-  CantAttackUnless: "rules/combat"};
+  CantAttackUnless: "rules/combat",
+  /* "Can't be blocked by creatures with power 3 or greater", "your opponents can't block with creatures with even mana
+     values" (batch 69 credits it): the static `cant-be-blocked-by`, its attackers `affects` and its blockers `by`. */
+  CantBlockBy: "keywords/combat"};
 export const FORGE_REPLACEMENT = {Moved: "replacement",
   /* "This artifact doesn't untap during your untap step" (batch 66): the static `doesnt-untap`, rules/turn.mjs. */
   Untap: "rules/turn",

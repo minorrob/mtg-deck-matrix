@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 904,
-  "everyRule": 2168
+  "defined": 910,
+  "everyRule": 2181
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -367,7 +367,7 @@
      "top": 7,
      "all": 28,
      "blocks": 7,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -547,7 +547,7 @@
      "top": 4,
      "all": 45,
      "blocks": 4,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 52,
+    "built": 53,
     "partial": 1,
     "named": 18,
-    "missing": 121
+    "missing": 120
    },
    "entries": [
     {
@@ -3911,13 +3911,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Goad",
-     "engine": null,
-     "status": "missing",
+     "engine": "goad",
+     "status": "built",
      "forge": "Goad",
      "top": 11,
      "all": 67,
-     "blocks": 11,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 7,
+    "built": 8,
     "partial": 2,
     "named": 0,
-    "missing": 68
+    "missing": 67
    },
    "entries": [
     {
@@ -7219,13 +7219,13 @@
      "kind": "static",
      "rule": null,
      "name": "CantBlockBy",
-     "engine": null,
-     "status": "missing",
+     "engine": "keywords/combat",
+     "status": "built",
      "forge": "CantBlockBy",
      "top": 26,
      "all": 353,
-     "blocks": 13,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7309,7 +7309,7 @@
      "top": 8,
      "all": 139,
      "blocks": 8,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7465,7 +7465,7 @@
      "top": 2,
      "all": 11,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8147,7 +8147,7 @@
      "top": 22,
      "all": 209,
      "blocks": 15,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "replacement",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 15
+     "alone": 16
     },
     {
      "kind": "option",
@@ -9307,7 +9307,7 @@
      "top": 1,
      "all": 150,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     }
    ]
   },
