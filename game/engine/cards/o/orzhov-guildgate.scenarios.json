@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Orzhov Guildgate",
+  "scenarios": [
+    {
+      "name": "It enters tapped; next turn it taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Orzhov Guildgate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Orzhov Guildgate"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Orzhov Guildgate",
+              "is": true
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Orzhov Guildgate",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

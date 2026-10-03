@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clachan Festival",
+    "oracleId": "5396045d-744b-435e-8324-a1bfbb03449d",
+    "types": [
+      "Kindred",
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Kithkin"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, create two 1/1 green and white Kithkin creature tokens.\n{4}{W}: Create a 1/1 green and white Kithkin creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, create two 1/1 green and white Kithkin creature tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Kithkin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Kithkin"
+            ],
+            "colors": [
+              "G",
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{W}: Create a 1/1 green and white Kithkin creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Kithkin",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Kithkin"
+            ],
+            "colors": [
+              "G",
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

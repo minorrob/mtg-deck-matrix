@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pawn of Ulamog",
+    "oracleId": "9bcaf141-1f1f-491f-aced-13dc093b9e2c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Shaman"
+    ],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has \"Sacrifice this token: Add {C}.\"",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "token": false,
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Eldrazi Spawn",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi",
+              "Spawn"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "spawn",
+                "kind": "mana",
+                "tapSelf": false,
+                "produces": {
+                  "C": 1
+                },
+                "sacrificeSelf": true,
+                "text": "Sacrifice this token: Add {C}."
+              }
+            ]
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

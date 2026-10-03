@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Orzhov Basilica",
+  "scenarios": [
+    {
+      "name": "It enters tapped and returns a land Rob controls -- the Plains he chooses -- to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Orzhov Basilica"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Orzhov Basilica"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Orzhov Basilica"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Orzhov Basilica",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "{T}: Add {W}{B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Orzhov Basilica"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Orzhov Basilica"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}
