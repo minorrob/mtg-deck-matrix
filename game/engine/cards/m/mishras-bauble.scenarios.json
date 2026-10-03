@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mishra's Bauble",
+  "scenarios": [
+    {
+      "name": "He looks at the top of Maya's library; at the next turn's upkeep -- hers -- he draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mishra's Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mishra's Bauble",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Mishra's Bauble"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    }
+  ]
+}

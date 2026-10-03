@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Monastery Mentor",
+    "oracleId": "3979067a-9c68-443d-a85f-d9f07be880b9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Monk"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nWhenever you cast a noncreature spell, create a 1/1 white Monk creature token with prowess.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Prowess",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, create a 1/1 white Monk creature token with prowess.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Monk",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Monk"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Prowess"
+            ],
+            "abilities": [
+              {
+                "id": "prowess",
+                "kind": "triggered",
+                "text": "Prowess",
+                "trigger": {
+                  "on": "GameEventSpellAbilityCast",
+                  "caster": "you",
+                  "filter": {
+                    "nonTypes": [
+                      "Creature"
+                    ]
+                  }
+                },
+                "effects": [
+                  {
+                    "effect": "pump",
+                    "targets": "self",
+                    "power": 1,
+                    "toughness": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

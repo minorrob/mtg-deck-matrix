@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 910,
-  "everyRule": 2181
+  "defined": 980,
+  "everyRule": 2255
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 25,
+    "built": 31,
     "partial": 0,
-    "named": 25,
-    "missing": 144
+    "named": 23,
+    "missing": 140
    },
    "entries": [
     {
@@ -259,7 +259,7 @@
      "top": 11,
      "all": 106,
      "blocks": 11,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -289,49 +289,49 @@
      "kind": "keyword ability",
      "rule": "702.73",
      "name": "Changeling",
-     "engine": null,
-     "status": "named",
+     "engine": "Changeling",
+     "status": "built",
      "forge": "Changeling",
      "top": 10,
      "all": 63,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.114",
      "name": "Devoid",
-     "engine": null,
-     "status": "missing",
+     "engine": "Devoid",
+     "status": "built",
      "forge": "Devoid",
      "top": 8,
      "all": 132,
-     "blocks": 8,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.108",
      "name": "Prowess",
-     "engine": null,
-     "status": "missing",
+     "engine": "Prowess",
+     "status": "built",
      "forge": "Prowess",
      "top": 8,
      "all": 93,
-     "blocks": 8,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.164",
      "name": "Toxic",
-     "engine": null,
-     "status": "missing",
+     "engine": "Toxic",
+     "status": "built",
      "forge": "Toxic",
      "top": 7,
      "all": 44,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -373,13 +373,13 @@
      "kind": "keyword ability",
      "rule": "702.86",
      "name": "Annihilator",
-     "engine": null,
-     "status": "missing",
+     "engine": "Annihilator",
+     "status": "built",
      "forge": "Annihilator",
      "top": 7,
      "all": 14,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -415,7 +415,7 @@
      "top": 6,
      "all": 36,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -463,7 +463,7 @@
      "top": 5,
      "all": 239,
      "blocks": 5,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -541,13 +541,13 @@
      "kind": "keyword ability",
      "rule": "702.90",
      "name": "Infect",
-     "engine": null,
-     "status": "named",
+     "engine": "Infect",
+     "status": "built",
      "forge": "Infect",
      "top": 4,
      "all": 45,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -655,7 +655,7 @@
      "top": 3,
      "all": 35,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -667,7 +667,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -727,7 +727,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "keyword action",
@@ -2634,7 +2634,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -3205,9 +3205,9 @@
   },
   "Effects": {
    "tally": {
-    "built": 53,
+    "built": 56,
     "partial": 1,
-    "named": 18,
+    "named": 15,
     "missing": 120
    },
    "entries": [
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3756,12 +3756,12 @@
      "rule": null,
      "name": "ImmediateTrigger",
      "engine": "immediateTrigger",
-     "status": "named",
+     "status": "built",
      "forge": "ImmediateTrigger",
      "top": 18,
      "all": 313,
-     "blocks": 18,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3840,12 +3840,12 @@
      "rule": null,
      "name": "Branch",
      "engine": "branch",
-     "status": "named",
+     "status": "built",
      "forge": "Branch",
      "top": 14,
      "all": 113,
-     "blocks": 14,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3900,12 +3900,12 @@
      "rule": null,
      "name": "PeekAndReveal",
      "engine": "peekAndReveal",
-     "status": "named",
+     "status": "built",
      "forge": "PeekAndReveal",
      "top": 11,
      "all": 158,
-     "blocks": 11,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4109,7 +4109,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4325,7 +4325,7 @@
      "top": 2,
      "all": 38,
      "blocks": 2,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4337,7 +4337,7 @@
      "top": 2,
      "all": 32,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4385,7 +4385,7 @@
      "top": 1,
      "all": 67,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4529,7 +4529,7 @@
      "top": 1,
      "all": 8,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5519,10 +5519,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 11,
+    "built": 13,
     "partial": 4,
-    "named": 8,
-    "missing": 115
+    "named": 7,
+    "missing": 114
    },
    "entries": [
     {
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -5721,25 +5721,25 @@
      "kind": "trigger",
      "rule": null,
      "name": "LifeLost",
-     "engine": null,
-     "status": "missing",
+     "engine": "life lost",
+     "status": "built",
      "forge": "LifeLost",
      "top": 6,
      "all": 20,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
      "rule": null,
      "name": "BecomesTarget",
      "engine": "becomes target",
-     "status": "named",
+     "status": "built",
      "forge": "BecomesTarget",
      "top": 5,
      "all": 116,
-     "blocks": 5,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5835,7 +5835,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -7309,7 +7309,7 @@
      "top": 8,
      "all": 139,
      "blocks": 8,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "static",
@@ -7429,7 +7429,7 @@
      "top": 3,
      "all": 6,
      "blocks": 3,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "static",
@@ -7441,7 +7441,7 @@
      "top": 2,
      "all": 41,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8120,9 +8120,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 3,
+    "partial": 4,
     "named": 0,
-    "missing": 31
+    "missing": 30
    },
    "entries": [
     {
@@ -8141,13 +8141,13 @@
      "kind": "replacement",
      "rule": null,
      "name": "DamageDone",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/replacement",
+     "status": "partial",
      "forge": "DamageDone",
      "top": 22,
      "all": 209,
-     "blocks": 15,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 16,
+    "built": 18,
     "partial": 4,
     "named": 0,
-    "missing": 17
+    "missing": 15
    },
    "entries": [
     {
@@ -8911,7 +8911,7 @@
      "top": 126,
      "all": 1672,
      "blocks": 126,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "option",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 16
+     "alone": 21
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 16
+     "alone": 20
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 13
+     "alone": 14
     },
     {
      "kind": "option",
@@ -9073,13 +9073,13 @@
      "kind": "option",
      "rule": null,
      "name": "An effect's condition: about a named object",
-     "engine": null,
-     "status": "missing",
+     "engine": "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent",
+     "status": "built",
      "forge": "ConditionDefined",
      "top": 57,
      "all": 973,
-     "blocks": 53,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9199,7 +9199,7 @@
      "top": 10,
      "all": 97,
      "blocks": 10,
-     "alone": 4
+     "alone": 7
     },
     {
      "kind": "option",
@@ -9289,12 +9289,12 @@
      "kind": "option",
      "rule": null,
      "name": "Grants a triggered ability (\"has 'whenever ...'\")",
-     "engine": null,
-     "status": "missing",
+     "engine": "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)",
+     "status": "built",
      "forge": "AddTriggers",
      "top": 3,
      "all": 15,
-     "blocks": 3,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9437,7 +9437,7 @@
      "top": 13,
      "all": 63,
      "blocks": 13,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "count",
@@ -9677,7 +9677,7 @@
      "top": 3,
      "all": 21,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9689,7 +9689,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "count",
@@ -9761,7 +9761,7 @@
      "top": 2,
      "all": 38,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "count",
@@ -11785,7 +11785,7 @@
      "top": 68,
      "all": 408,
      "blocks": 33,
-     "alone": 5
+     "alone": 10
     },
     {
      "kind": "keyword construct",
@@ -11797,7 +11797,7 @@
      "top": 35,
      "all": 475,
      "blocks": 25,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword construct",

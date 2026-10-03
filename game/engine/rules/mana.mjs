@@ -30,6 +30,7 @@
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
 import {summoningSick} from "../keywords/timing.mjs";
+import {abilitiesOf} from "./layers.mjs";
 
 /** The pool's keys: the five colors plus colorless. */
 export const MANA_KEYS = Object.freeze([...COLORS, "C"]);
@@ -264,7 +265,7 @@ function plainSources(state, player) {
     if (object.controller !== player || object.tapped) continue;
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began. */
     if (summoningSick(state, id)) continue;
-    const ability = (object.abilities ?? []).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
+    const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
       && (a.produces || a.anyColor === true));
     if (ability) out.push({id, ability});
   }

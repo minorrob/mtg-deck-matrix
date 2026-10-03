@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crystal Barricade",
+    "oracleId": "291c7abf-9d64-4ba0-ae21-e3459edc9a95",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender (This creature can't attack.)\nYou have hexproof. (You can't be the target of spells or abilities your opponents control.)\nPrevent all noncombat damage that would be dealt to other creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender (This creature can't attack.)",
+      "keyword": "defender"
+    },
+    {
+      "kind": "static",
+      "text": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)",
+      "rule": "player-hexproof",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "Prevent all noncombat damage that would be dealt to other creatures you control.",
+      "watches": {
+        "event": "damage",
+        "combat": false,
+        "toCard": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      },
+      "change": {
+        "prevent": true
+      }
+    }
+  ]
+}

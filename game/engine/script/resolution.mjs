@@ -41,7 +41,9 @@ export function beginResolution(state, effects, context = {}) {
     context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? [], facts: context.facts ?? [],
       ...(context.about ? {about: context.about} : {}), ...(context.lastKnown ? {lastKnown: context.lastKnown} : {}), ...(context.attached !== undefined ? {attached: context.attached} : {}),
       /* What the ability's permanent chose as it entered ("the chosen type", script/chosen.mjs). */
-      ...(context.chosen !== undefined ? {chosen: context.chosen} : {})},
+      ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
+      /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
+      ...(context.cast ? {cast: context.cast} : {})},
     events: [],
   };
   return runResolution(state);
@@ -60,13 +62,23 @@ export function runResolution(state) {
     /* Bound as it reaches the head, not when the queue was built: a modal's chosen effects arrive later, and are
        bound against the same targets as everything else (bind.mjs). */
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
-    const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context), resolving.context);
+    const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context, state), resolving.context);
     resolving.queue[0] = effect;
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-      remembered: resolving.context.remembered, targets: resolving.context.targets})) {
+      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast})) {
       resolving.queue.shift();
+      continue;
+    }
+    /* BRANCH (Forge's Branch; batch 72): "if you control six or more lands, create a token that's a copy of this creature
+       instead" -- its own condition (`if`) asked now, as it reaches the head (CR 608.2c), and the effects of the way it goes
+       put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
+    if (effect?.effect === "branch") {
+      const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast});
+      resolving.queue.shift();
+      resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
     }
     const asking = ASKING[effect?.effect];

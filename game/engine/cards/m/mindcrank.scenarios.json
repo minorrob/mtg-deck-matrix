@@ -1,0 +1,152 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mindcrank",
+  "fixtures": {
+    "Drain": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Each opponent loses 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 2,
+            "who": "opponent"
+          }
+        ]
+      }
+    },
+    "Sting": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Sting deals 1 damage to each opponent.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": "opponent"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sting: she loses 1 and mills 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mindcrank",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sting"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Sting"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "He loses life: nothing",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mindcrank"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Drain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Drain",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

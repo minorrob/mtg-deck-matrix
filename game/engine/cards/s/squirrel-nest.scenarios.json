@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Squirrel Nest",
+  "scenarios": [
+    {
+      "name": "On his Plains: the Plains makes a Squirrel",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Squirrel Nest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Squirrel Nest",
+          "targets": [
+            {
+              "card": "Plains"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Plains"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "controls": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Plains",
+            "Squirrel",
+            "Squirrel Nest"
+          ],
+          "seat": 0
+        }
+      ]
+    }
+  ]
+}

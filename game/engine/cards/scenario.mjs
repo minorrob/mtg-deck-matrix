@@ -156,8 +156,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Which way it is paid for: an alternative cost by its ability's place (CR 118.9), or `false` for the mana cost. */
     if (step.alternative !== undefined) found = found.filter((a) => (a.alternative ?? false) === step.alternative);
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
-    /* Which permanent a "Sacrifice a creature" cost takes, or which card a discard does: the offer that names it. */
-    for (const key of ["sacrifice", "discard"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
+    /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, or which creature an "untap a tapped
+       creature you control" cost untaps: the offer that names it. */
+    for (const key of ["sacrifice", "discard", "untap"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which creature a "tap another untapped creature you control" cost taps (station): the offer that names it. */
     if (step.tapping !== undefined) found = found.filter((a) => a.costChoice?.tap !== undefined && state.objects[a.costChoice.tap]?.card === step.tapping);
     if (!found.length && step.optional) return;

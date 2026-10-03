@@ -98,14 +98,28 @@ function topSeenBy(state, owner, viewer) {
   return revealed || (looked && viewer === owner);
 }
 
+/* THE TOP OF A LIBRARY A PLAYER HAS LOOKED AT (CR 701.20e; effects/zones.mjs, peekAndReveal): "look at the top card of
+   target player's library" -- shown to that player alone, and only while those cards are still that library's top, in
+   that order: a draw, a shuffle or a card put on top ends it (CR 701.20d). How many of the top cards the viewer knows --
+   a look's cards are that library's own objects, so no other library's top can match them. */
+function topLookedAtBy(state, viewer, ids) {
+  let known = 0;
+  for (const look of state.looks ?? []) {
+    if (look.viewer !== viewer) continue;
+    if (look.ids.every((id, i) => ids[i] === id)) known = Math.max(known, look.ids.length);
+  }
+  return known;
+}
+
 function zoneFor(state, zone, owner, viewer) {
   const ids = zone === "battlefield" || zone === "exile"
     ? state.zones[zone].filter((id) => state.objects[id].owner === owner)
     : state.zones[zone][owner];
   const rule = VISIBILITY[zone];
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
+  const looked = zone === "library" ? topLookedAtBy(state, viewer, ids) : 0;
   const cards = visible ? ids.map((id) => cardFor(state, id, true)).filter(Boolean)
-    : zone === "library" && ids.length && topSeenBy(state, owner, viewer) ? [cardFor(state, ids[0], true)].filter(Boolean) : [];
+    : zone === "library" && ids.length && (looked || topSeenBy(state, owner, viewer)) ? ids.slice(0, Math.max(1, looked)).map((id) => cardFor(state, id, true)).filter(Boolean) : [];
   return {
     count: ids.length,
     /* Said outright rather than left to be inferred from count minus cards.length, because a

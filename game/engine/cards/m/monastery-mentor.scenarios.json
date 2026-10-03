@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Monastery Mentor",
+  "fixtures": {
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two Sparks: the Mentor a 4/4, two Monks -- the first a 2/2, its prowess seeing the second Spark",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Monastery Mentor",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark",
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Spark"
+        },
+        {
+          "settle": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Spark"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Monastery Mentor",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Monk",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "controls": [
+            "Monastery Mentor",
+            "Monk",
+            "Monk",
+            "Mountain",
+            "Mountain"
+          ],
+          "seat": 0
+        },
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

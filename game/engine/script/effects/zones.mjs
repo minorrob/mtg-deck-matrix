@@ -18,7 +18,7 @@
  */
 
 import {holdArrival} from "../../rules/entering.mjs";
-import {afterwards, delayedTrigger} from "./permanents.mjs";
+import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {moveObject, cardsIn, PUBLIC_ZONES, removeObject} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
@@ -79,8 +79,17 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     ? enteringModifications(state, {objectId: id, player: object.controller, types: object.types, abilities: object.abilities})
     : null;
 
+  /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
+     enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
+     stack, goes to its owner's graveyard (CR 303.4g). */
+  const hosts = destination === "battlefield" && object.enchant ? enchantable(state, object.enchant, object.owner) : null;
+  if (hosts && !hosts.length) {
+    if (from !== "stack") return null;
+    return moveOne(state, id, "graveyard", events, {owner: object.owner});
+  }
   if (leaving >= 0) state.stack.splice(leaving, 1);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null);
+  if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
   if (entering) {
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
        event, which says how it entered. */
@@ -143,6 +152,30 @@ export function sacrificeAll(state, params, context) {
   const matches = compileSelector({...(params.selector ?? {}), what: "permanent"});
   const doomed = state.zones.battlefield.filter((id) => players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
   for (const id of doomed) if (state.objects[id]) sacrificeOne(state, id, events);
+  return events;
+}
+
+/**
+ * `peekAndReveal` -- Forge's PeekAndReveal (batch 73): "look at the top card of target player's library" (Mishra's Bauble),
+ * "reveal the top X cards of your library" (Sunbird's Invocation): the top `count` cards of each library `who` names, left
+ * where they are (CR 701.20b) and `remember`ed for the effects after it. Revealed (`reveal`), every player is shown them
+ * (CR 701.20a). Looked at, only this effect's controller is (CR 701.20e) -- and keeps seeing them for as long as they are
+ * that library's top cards in that order (projection.mjs, `looks`); a draw or a shuffle ends it (CR 701.20d). The history
+ * names a looked-at card to nobody.
+ */
+export function peekAndReveal(state, params, context) {
+  const events = [], seen = [];
+  const count = params.count ?? 1;
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const top = cardsIn(state, "library", player).slice(0, count);
+    seen.push(...top);
+    if (params.reveal) for (const id of top) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+    else if (top.length) {
+      /* What the looker knows, replacing what they knew of that library before. */
+      state.looks = [...(state.looks ?? []).filter((l) => !(l.viewer === context.controller && l.owner === player)), {viewer: context.controller, owner: player, ids: [...top]}];
+    }
+  }
+  if (params.remember) context.remembered = seen;
   return events;
 }
 

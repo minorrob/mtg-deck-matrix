@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Replicating Ring",
+    "oracleId": "1ff00f5b-4bf9-4724-8bb5-6b9a9eb0ec7f",
+    "supertypes": [
+      "Snow"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color.\nAt the beginning of your upkeep, put a night counter on this artifact. Then if it has eight or more night counters on it, remove all of them and create eight colorless snow artifact tokens named Replicated Ring with \"{T}: Add one mana of any color.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, put a night counter on this artifact. Then if it has eight or more night counters on it, remove all of them and create eight colorless snow artifact tokens named Replicated Ring with \"{T}: Add one mana of any color.\"",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "night",
+          "count": 1
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "selfCounters": {
+              "counter": "night",
+              "atLeast": 8
+            }
+          },
+          "then": [
+            {
+              "effect": "removeCounter",
+              "targets": "self",
+              "counter": "night",
+              "count": {
+                "countersOn": "self",
+                "counter": "night"
+              }
+            },
+            {
+              "effect": "createToken",
+              "count": 8,
+              "token": {
+                "name": "Replicated Ring",
+                "types": [
+                  "Artifact"
+                ],
+                "supertypes": [
+                  "Snow"
+                ],
+                "colors": [],
+                "abilities": [
+                  {
+                    "id": "rr",
+                    "kind": "mana",
+                    "tapSelf": true,
+                    "anyColor": true,
+                    "text": "{T}: Add one mana of any color."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

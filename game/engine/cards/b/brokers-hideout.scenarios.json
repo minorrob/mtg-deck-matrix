@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Brokers Hideout",
+  "scenarios": [
+    {
+      "name": "It enters and is sacrificed; when he does, a basic Plains onto the battlefield tapped, and 1 life",
+      "library": [
+        "Swamp",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Brokers Hideout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Brokers Hideout"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Brokers Hideout"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Plains",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

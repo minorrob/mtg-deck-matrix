@@ -35,6 +35,7 @@
 import {usesThisTurn} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
+import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 
 /* The steps after blockers are declared, in which an attacker is blocked or unblocked (CR 509.1h). */
 const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"];
@@ -43,7 +44,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded",
+  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -57,10 +58,12 @@ export function matchesLastKnown(selector, lki, context = {}) {
   if (Array.isArray(s.anyOf)) return s.anyOf.some((one) => matchesLastKnown({...one, ...(s.controller ? {controller: s.controller} : {})}, lki, context));
   if (s.what && s.what !== "permanent" && s.what !== "card") return false;
   const types = lki.types ?? [], subtypes = [...types, ...(lki.subtypes ?? [])];
+  /* A changeling as it last was is every creature type (keywords/types.mjs). */
+  const changeling = lki.everyCreatureType === true;
   if (s.types && !s.types.every((t) => types.includes(t))) return false;
   if (s.nonTypes && s.nonTypes.some((t) => types.includes(t))) return false;
-  if (s.subtypes && !s.subtypes.every((t) => subtypes.includes(t))) return false;
-  if (s.nonSubtypes && s.nonSubtypes.some((t) => subtypes.includes(t))) return false;
+  if (s.subtypes && !s.subtypes.every((t) => subtypes.includes(t) || (changeling && isCreatureType(t)))) return false;
+  if (s.nonSubtypes && s.nonSubtypes.some((t) => subtypes.includes(t) || (changeling && isCreatureType(t)))) return false;
   if (s.supertypes && !s.supertypes.every((t) => (lki.supertypes ?? []).includes(t))) return false;
   if (s.controller === "you" && lki.controller !== context.controller) return false;
   if (s.controller === "opponent" && lki.controller === context.controller) return false;
@@ -104,7 +107,13 @@ function assertGrammar(selector) {
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
   for (const key of ["supertypes", "nonTypes", "nonSubtypes"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
+  /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
+  if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
 }
+
+/* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
+const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) => controllerOf(state, id) === player
+  && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "player-hexproof"));
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
@@ -154,6 +163,8 @@ export function compileSelector(selector) {
       const player = state.players[id];
       /* CR 800.4a: a player who has left the game is not a player to be chosen. */
       if (!player || player.lost) return false;
+      /* "You have hexproof" (Crystal Barricade, batch 71; CR 702.11c): no target of a spell or ability an opponent controls. */
+      if (selector.target === true && id !== chooser && playerHasHexproof(state, id)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -187,9 +198,10 @@ export function compileSelector(selector) {
 
     /* Subtypes (CR 205.3): the printed ones, and any the layers added -- an animated land's "Elemental" arrives
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
+    /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
-      if (!selector.subtypes.every((subtype) => current.includes(subtype))) return false;
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
+      if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
     /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
@@ -200,9 +212,10 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])];
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
-      if ((selector.nonSubtypes ?? []).some((subtype) => current.includes(subtype))) return false;
+      /* "Non-Elf": a changeling is an Elf. */
+      if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
     if (selector.named !== undefined && object.card !== selector.named) return false;
@@ -238,6 +251,27 @@ export function compileSelector(selector) {
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
     /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
     if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).length !== 1) return false;
+    /* "Target enchantment you control that doesn't have the same name as another permanent you control" (Yenna, batch
+       70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
+    if (selector.uniqueName === true) {
+      const holder = controllerOf(state, id);
+      if (state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
+    }
+    /* "A creature card that shares a creature type with a creature you control" (Descendants' Path, batch 73): one of its
+       subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types
+       (CR 205.3m), the layers' included. */
+    if (selector.sharesCreatureType) {
+      const mine = new Set(object.subtypes ?? []), mineAll = characteristicsOf(state, id).everyCreatureType;
+      const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
+      /* A changeling shares every creature type (CR 702.73a): with anything that has one. */
+      const shares = (other) => {
+        const theirs = [...typesOf(state, other), ...(state.objects[other].subtypes ?? [])], theirsAll = characteristicsOf(state, other).everyCreatureType;
+        if (mineAll) return theirsAll || theirs.some(isCreatureType);
+        if (theirsAll) return [...mine].some(isCreatureType);
+        return theirs.some((t) => mine.has(t));
+      };
+      if (!others.some(shares)) return false;
+    }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */

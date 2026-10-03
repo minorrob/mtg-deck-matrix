@@ -56,6 +56,9 @@ export const STATIC_RULES = Object.freeze({
   /** "This token crews Vehicles as though its power were 2 greater" (Shorikai's Pilot): `amount` added as it crews.
       rules/actions.mjs, crewChoices. */
   "crews-with-more": "rules/actions.mjs",
+  /** Toxic N (CR 702.164a, batch 77): "players dealt combat damage by this creature also get N poison counters" -- the
+      keyword compiled to this static with its number (cards/index.mjs), instances added together (702.164b). */
+  "toxic": "rules/combat.mjs",
   /** "Untap all permanents you control during each other player's untap step" (Seedborn Muse), "all artifacts" (Unwinding
       Clock), "this artifact" (Bender's Waterskin): `affects` what it untaps, its controller's. rules/turn.mjs, untap. */
   "untap-during-others": "rules/turn.mjs",
@@ -78,10 +81,16 @@ export const STATIC_RULES = Object.freeze({
   "lands-enter-untapped": "script/effects/zones.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
+  /** "You have hexproof" (Crystal Barricade; CR 702.11c): its controller can't be the target of spells or abilities their
+      opponents control. script/filter.mjs, as a player is targeted. */
+  "player-hexproof": "script/filter.mjs",
   /** Flashback (CR 702.34a): the card's own, from its keyword and cost (cards/index.mjs), or given until end of turn
       (Past in Flames: effectUntil, its cards fixed as it resolves, their mana costs the cost). rules/actions.mjs offers
       the cast from its owner's graveyard; rules/stack.mjs and effects/zones.mjs exile it as it leaves the stack. */
   "flashback": "rules/actions.mjs",
+  /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
+      here, where every rule a definition carries is named). */
+  "storm": "rules/actions.mjs",
   /** "If an artifact or creature entering causes a triggered ability of a permanent you control to trigger, that ability
       triggers an additional time" (Panharmonicon, CR 603.2d): `affects` whose abilities, `cause` {event: enters, dies or
       attacks, filter} what caused it, if the card says. rules/trigger.mjs, as triggers are collected. */

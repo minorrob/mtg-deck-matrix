@@ -127,9 +127,10 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every
      rule for just because the vocabulary names the event (the catalog showed coverage counting it, 2026-10-01). */
-  eq([missingFor({triggers: ["BecomesTarget"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]}), missingFor({triggers: ["SpellCast"]})],
-    [[{kind: "trigger", name: "becomes target", why: "declared, not built"}], [], [], []],
-    "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not, nor one built (batch 8: spell cast)");
+  /* (Batch 76 built "becomes target"; the example of one the compiler does not build is now "land played".) */
+  eq([missingFor({triggers: ["LandPlayed"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]}), missingFor({triggers: ["SpellCast"]}), missingFor({triggers: ["BecomesTarget"]})],
+    [[{kind: "trigger", name: "land played", why: "declared, not built"}], [], [], [], []],
+    "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not, nor one built (batch 8: spell cast; batch 76: becomes target)");
   /* A defined card has every rule it needs, whatever Forge's script names: its shock lands' "pay 2 life or it enters
      tapped" is an unless-cost to Forge, and the engine plays them (batch 5). */
   const directory = loadCardIndex();

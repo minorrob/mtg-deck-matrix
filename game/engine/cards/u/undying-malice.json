@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Undying Malice",
+    "oracleId": "8b061702-1bc3-45aa-a758-446b25034801",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\"",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "abilities": [
+            {
+              "kind": "triggered",
+              "text": "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.",
+              "trigger": {
+                "on": "dies"
+              },
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "that card",
+                  "to": "battlefield",
+                  "tapped": true,
+                  "withCounter": "+1/+1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -195,6 +195,9 @@ export function smokeScenario(script) {
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
     || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"controller":"you"')));
   const fodderField = extra.some((a) => a?.atom === "sacrifice") || ownTargets ? ["Smoke Bear", "Smoke Relic"] : [];
+  /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
+     Reanimate) gets a creature card in its player's graveyard to aim at (batch 70). */
+  const graveTargets = (script.abilities ?? []).some((a) => (a?.targets ?? []).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   if (isLand) steps.push({play: name, seat: 0}, {settle: true});
@@ -218,6 +221,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
+        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: ["Smoke Sorcery"]},

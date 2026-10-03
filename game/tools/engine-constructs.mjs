@@ -13,6 +13,7 @@ import {isPrimitive, isKeyword, isTriggerEvent, normalizeKeyword} from "../engin
 import {isBuilt} from "../engine/script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../engine/keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../engine/keywords/timing.mjs";
+import {KEYWORD_FAMILIES as TYPE_FAMILIES} from "../engine/keywords/types.mjs";
 import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 
 /* Forge's API names to the engine's primitives — §12.2's parenthesised pairs, as data. A name that
@@ -64,7 +65,7 @@ export const FORGE_TRIGGER = {
   SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
-  LifeGained: "life gained", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
+  LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
@@ -93,13 +94,16 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   Untap: "rules/turn",
   /* "This spell can't be countered", "creature spells you control can't be countered" (batch 64): the static
      `cant-be-countered`, read where a counter would apply (rules/statics.mjs, cantBeCountered). */
-  Counter: "rules/statics"};
+  Counter: "rules/statics",
+  /* Damage replaced (batch 71): doubled, plus N, prevented -- for a while, a shield, or with what follows "that many"
+     (CR 615.5) -- and redirected to what the holder enchants (CR 614.9); by its source, to whom, combat or not. */
+  DamageDone: "rules/replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
    a flier unblockable by the ground. Coverage has to mean the second — the whole reason this file
    exists is that the engine knew the word `Flying` for a week and did nothing with it. */
-export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES)].flat());
+export const BEHAVIORAL_KEYWORDS = new Set([...Object.values(KEYWORD_FAMILIES), ...Object.values(TIMING_FAMILIES), ...Object.values(TYPE_FAMILIES)].flat());
 
 /* Keywords that stand for an ability rather than a behavior, built once the primitive the ability uses is. Equip is
    "[Cost]: Attach this permanent to target creature you control. Activate only as a sorcery" (CR 702.6a): an
@@ -115,7 +119,12 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Station (batch 58): tap another creature, charge counters equal to its power; what it has at N+ on that condition. */
   Station: "putCounter",
   /* Chapter (batch 60): a Saga's lore counters -- entering, after the draw step -- its chapters, and its sacrifice. */
-  Chapter: "putCounter"};
+  Chapter: "putCounter",
+  /* Prowess (batch 77): the triggered ability, +1/+1 until end of turn on a noncreature spell cast (cards/index.mjs).
+     Toxic (batch 77): poison counters with combat damage to a player, its number (rules/combat.mjs). */
+  Prowess: "pump", Toxic: "poison",
+  /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
+  Annihilator: "sacrifice"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */
@@ -140,7 +149,10 @@ export const FORGE_OPTIONS = Object.freeze({
   ConditionCompare: {name: "An effect's condition: a comparison", status: "built", engine: "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
   ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
-  ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},
+  /* Batch 70: its seven forms -- how the spell was cast (from a graveyard, Addendum's main phase), what the effect before
+     did "this way" (sacrificed, discarded, dealt damage to, made), and the spell a trigger is about, as it last was. */
+  ConditionDefined: {name: "An effect's condition: about a named object", status: "built",
+    engine: "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent"},
   Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "built", engine: "an effect's or a static's condition: present, turn, graveyard types"},
   CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},
@@ -151,7 +163,10 @@ export const FORGE_OPTIONS = Object.freeze({
   NonLegendary: {name: "Except it isn't legendary (a copy)", status: "built", engine: "except.nonLegendary"},
   Populate: {name: "Populate (copy a creature token you control)", status: "built", engine: "populate"},
   TokenAttacking: {name: "A token that enters tapped and attacking", status: "built", engine: "`attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67)"},
-  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "missing"},
+  /* Batch 76: granted abilities -- a layer-6 static's `addAbilities` ("equipped creature has 'whenever this creature
+     attacks ...'", "all Slivers have 'when this permanent enters ...'") and a pump's `abilities` until end of turn
+     ("target creature gains 'when this creature dies ...'"); activated, mana and keyword abilities given the same way. */
+  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "built", engine: "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)"},
   SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
   PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
   ActivationLimit: {name: "Only once (or N times) each turn", status: "built", engine: "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)"},

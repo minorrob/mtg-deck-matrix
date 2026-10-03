@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vilis, Broker of Blood",
+    "oracleId": "7c209753-121b-4859-944b-4e33f885e777",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon"
+    ],
+    "manaCost": "{5}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 8,
+    "toughness": 8
+  },
+  "oracleText": "Flying\n{B}, Pay 2 life: Target creature gets -1/-1 until end of turn.\nWhenever you lose life, draw that many cards. (Damage causes loss of life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "activated",
+      "text": "{B}, Pay 2 life: Target creature gets -1/-1 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -1,
+          "toughness": -1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you lose life, draw that many cards.",
+      "trigger": {
+        "on": "life lost",
+        "loser": "you"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "lifeLost": true
+          }
+        }
+      ]
+    }
+  ]
+}

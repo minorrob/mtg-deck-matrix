@@ -62,12 +62,13 @@ import {targetChoices, targetName, isHostile, modalScript} from "../script/bind.
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
+import {changeLife} from "../script/effects/resources.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, castForbidden} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -210,7 +211,9 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
   /* "Crew 3": other untapped creatures with total power 3 or more, the player's choice (crewChoices). */
   || (atom?.atom === "crew" && Number.isInteger(atom.power) && atom.power >= 0)
   /* "Tap another untapped creature you control" (station, CR 702.184a): which one, chosen as it is activated (tapChoices). */
-  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object");
+  || (atom?.atom === "tapCreature" && Boolean(atom.selector) && typeof atom.selector === "object")
+  /* "Untap a tapped creature you control", "untap two" (Halo Fountain, batch 75): which, chosen as it is activated (untapChoices). */
+  || (atom?.atom === "untapCreature" && Number.isInteger(atom.count) && atom.count >= 1);
 
 /* CREW (CR 702.122a): the sets of other untapped creatures you control whose power totals at least N -- each smallest
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
@@ -232,6 +235,21 @@ function crewChoices(state, player, vehicle, power) {
   return sets.filter((set) => !sets.some((other) => other !== set && other.length < set.length && other.every((id) => set.includes(id))));
 }
 const crewAtom = (cost) => (cost ?? []).find((a) => a?.atom === "crew");
+const untapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "untapCreature");
+/* "Untap a tapped creature you control", "untap fifteen tapped creatures you control": each set of that many tapped
+   creatures the player controls, ids ascending, no more than CREW_OFFERS_MAX of them (as crew); too few, and none. */
+function untapChoices(state, player, count) {
+  const tapped = state.zones.battlefield.filter((id) => state.objects[id].tapped
+    && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
+  const sets = [];
+  const walk = (from, chosen) => {
+    if (sets.length >= CREW_OFFERS_MAX) return;
+    if (chosen.length === count) { sets.push(chosen); return; }
+    for (let i = from; i < tapped.length; i += 1) walk(i + 1, [...chosen, tapped[i]]);
+  };
+  walk(0, []);
+  return sets;
+}
 const tapAtom = (cost) => (cost ?? []).find((a) => a?.atom === "tapCreature");
 /* "Tap another untapped creature you control": each one it may be, one offer each -- a summoning-sick one too, since it is
    not its own {T} (CR 302.6). */
@@ -260,6 +278,18 @@ function sacrificeChoices(state, player, sourceId, given) {
 const sacrificeAtom = (cost) => (cost ?? []).find((a) => a?.atom === "sacrifice" && a.selector);
 const returnAtom = (cost) => (cost ?? []).find((a) => a?.atom === "returnToHand" && a.selector);
 const discardAtom = (cost) => (cost ?? []).find((a) => a?.atom === "discard" && a.self !== true);
+/* "Discard two cards" (Solphim, batch 70's next): each set of `count` cards in the hand, never the source itself, one offer
+   each -- a single card as itself, as a one-card discard always was; none, and the ability can't be activated. */
+function discardSets(cards, count) {
+  if (count <= 1) return cards.map((c) => c);
+  const sets = [];
+  const walk = (from, chosen) => {
+    if (chosen.length === count) { sets.push([...chosen]); return; }
+    for (let i = from; i < cards.length; i += 1) walk(i + 1, [...chosen, cards[i]]);
+  };
+  walk(0, []);
+  return sets;
+}
 
 function costPayment(state, player, id, cost, x = 0, less = 0) {
   const object = state.objects[id];
@@ -446,7 +476,8 @@ export function legalActions(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
-    for (const ability of object.abilities ?? []) {
+    /* Its abilities now: its own and any given it (layers.mjs). */
+    for (const ability of abilitiesOf(state, id)) {
       if (ability.kind !== "mana") continue;
       if (ability.tapSelf && object.tapped) continue;
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
@@ -526,7 +557,7 @@ export function legalActions(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
-    for (const ability of object.abilities ?? []) {
+    for (const ability of abilitiesOf(state, id)) {
       /* An ability of the card in its owner's hand (cycling, ninjutsu) is not the permanent's (CR 602.2, 702.29a). */
       if (ability.kind !== "activated" || ability.zone === "hand") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
@@ -538,15 +569,18 @@ export function legalActions(state, player) {
         const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
         /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
            offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
-        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost);
+        const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost);
         const fodder = atom ? sacrificeChoices(state, player, id, atom.selector).map((s) => ({sacrifice: s}))
           : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
-          : toss ? cardsIn(state, "hand", player).filter((c) => c !== id).map((d) => ({discard: d}))
+          : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id), toss.count ?? 1).map((d) => ({discard: d}))
           : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
-          : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})) : [null];
+          : tapper ? tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t}))
+          : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set})) : [null];
         for (const costChoice of fodder)
           actions.push(...withTargets(state, {kind: "activate", objectId: id, abilityId: ability.id, label: object.card, text: ability.text, payment, ...(X !== null ? {x: X} : {}),
             ...(costChoice ? {costChoice, costNames: costChoice.crew ? costChoice.crew.map((c) => state.objects[c].card)
+              : costChoice.untap ? costChoice.untap.map((c) => state.objects[c].card)
+              : Array.isArray(costChoice.discard) ? costChoice.discard.map((c) => state.objects[c].card)
               : [state.objects[costChoice.sacrifice ?? costChoice.returnToHand ?? costChoice.discard ?? costChoice.tap].card]} : {})}, ability,
             /* "With mana value X": the X of this offer (script/filter.mjs). */
             {controller: player, source: id, ...(X !== null ? {x: X} : {})}));
@@ -607,7 +641,7 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
      dual land one however many colors it offers. */
   const best = new Map();
   for (const a of actions.filter((x) => x.kind === "activate-mana")) {
-    const ability = (state.objects[a.objectId].abilities ?? []).find((x) => x.id === a.abilityId);
+    const ability = abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId);
     const net = total(a.mana) - (ability?.cost ? manaValue(parseManaCost(ability.cost)) : 0);
     best.set(a.objectId, Math.max(best.get(a.objectId) ?? 0, net));
   }
@@ -714,7 +748,7 @@ function perform(state, player, action, during = null) {
   if (action.kind === "activate-mana") {
     const events = [];
     const object = state.objects[action.objectId];
-    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed rather than trusted, like a cast's payment: which alternative, and what it costs, now. */
     const produced = manaAlternatives(state, player, ability, action.objectId)[action.produce ?? 0];
     const payment = manaAbilityPayment(state, player, ability);
@@ -723,7 +757,8 @@ function perform(state, player, action, during = null) {
     const pool = state.players[player].manaPool;
     spend(pool, payment.mana);
     const life = (ability.payLife ?? 0) + payment.life;
-    if (life > 0) state.players[player].life -= life;
+    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
+    if (life > 0) changeLife(state, player, -life, events);
     payCounters(state, action.objectId, ability.counterCost);
     if (ability.limit) recordUse(state, action.objectId, ability.id);
     if (ability.tapSelf) {
@@ -781,9 +816,9 @@ function perform(state, player, action, during = null) {
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     const paid = spendFor(state, player, {spell: action.objectId}, payment.mana);
-    if (payment.life > 0) state.players[player].life -= payment.life;
-    if (back?.life) state.players[player].life -= back.life;
-    if (way?.life) state.players[player].life -= way.life;
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    if (back?.life) changeLife(state, player, -back.life, events);
+    if (way?.life) changeLife(state, player, -way.life, events);
     /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
     /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
@@ -808,6 +843,10 @@ function perform(state, player, action, during = null) {
     /* What this player has cast this turn, for "whenever an opponent casts their first noncreature spell each turn". */
     (state.players[player].castThisTurn ??= []).push({types: [...(object.types ?? [])], colors: [...(object.colors ?? [])]});
     const entry = pushSpell(state, action.objectId, {controller: player, permanent, targets, ...(action.x !== undefined ? {x: action.x} : {}), ...(Array.isArray(action.modes) ? {modes: action.modes} : {})});
+    /* How it was cast, for its own conditions (script/condition.mjs, `cast`): "if this spell was cast from a graveyard"
+       (Sevinne's Reclamation), and Addendum's "if you cast this spell during your main phase" -- its caster's turn, a main
+       phase (Unbreakable Formation). A copy is not cast (CR 707.10) and has none. */
+    entry.cast = {from: castFrom, mainPhase: player === state.activePlayer && MAIN_PHASES.includes(state.phase)};
     /* Cast with flashback: exiled, whatever would move it, as it leaves the stack (rules/stack.mjs, effects/zones.mjs). */
     if (back) entry.flashback = true;
     /* "And that spell can't be countered" (Cavern of Souls): paid with mana that said so. */
@@ -850,7 +889,7 @@ function perform(state, player, action, during = null) {
   if (action.kind === "activate") {
     const events = [];
     const object = state.objects[action.objectId];
-    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
     if (!payment || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);
@@ -882,16 +921,18 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "mana") {
         spendFor(state, player, {ability: action.objectId}, payment.mana.mana);
-        if (payment.mana.life > 0) state.players[player].life -= payment.mana.life;
+        if (payment.mana.life > 0) changeLife(state, player, -payment.mana.life, events);
       }
-      if (atom.atom === "payLife") state.players[player].life -= atom.amount ?? 0;
+      if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
         payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */
       if (atom.atom === "returnToHand" && action.costChoice?.returnToHand !== undefined) moveOne(state, action.costChoice.returnToHand, "hand", events);
       /* "Discard a card": the one chosen with the offer, a discard -- "whenever you discard a card" sees it. */
-      if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined
-        && moveOne(state, action.costChoice.discard, "graveyard", events, {owner: state.objects[action.costChoice.discard].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
+      /* Each card of "discard two cards" a discard of its own. */
+      if (atom.atom === "discard" && atom.self !== true && action.costChoice?.discard !== undefined)
+        for (const card of [].concat(action.costChoice.discard))
+          if (moveOne(state, card, "graveyard", events, {owner: state.objects[card].owner}) !== null) events[events.length - 1].data.fields.discarded = true;
       /* CR 701.21a: to sacrifice is to move a permanent you control to its owner's graveyard -- through the
          replacements and with its last known information, like any death, so "when this dies" still sees it. */
       if (atom.atom === "sacrifice" && atom.self === true) sacrificeOne(state, action.objectId, events);
@@ -905,6 +946,11 @@ function perform(state, player, action, during = null) {
         if (!state.objects[tapped] || state.objects[tapped].tapped) throw new Error("That creature can no longer be tapped");
         state.objects[tapped].tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, tapped), tapped: true}));
+      }
+      /* "Untap a tapped creature you control": the ones chosen (still tapped -- the action is one legalActions offers). */
+      if (atom.atom === "untapCreature") for (const id of action.costChoice?.untap ?? []) {
+        state.objects[id].tapped = false;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, id), tapped: false}));
       }
       if (atom.atom === "crew") for (const id of action.costChoice?.crew ?? []) {
         if (!state.objects[id] || state.objects[id].tapped) throw new Error("That creature can no longer crew");

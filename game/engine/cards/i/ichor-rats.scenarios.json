@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ichor Rats",
+  "scenarios": [
+    {
+      "name": "It enters: each player a poison counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ichor Rats"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ichor Rats"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "poison": 1
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    }
+  ]
+}

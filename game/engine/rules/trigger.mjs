@@ -49,6 +49,7 @@ import {pushAbility, becameTarget} from "./stack.mjs";
 import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
+import {abilitiesOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
@@ -66,6 +67,16 @@ function fits(state, id, condition, sourceId, controller) {
   if (condition.who === "another" && id === sourceId) return false;
   if (condition.filter && !(state.objects[id] && matchesSelector(condition.filter, state, id, {controller, source: sourceId}))) return false;
   return true;
+}
+
+/* "If that spell is a Lesson" (Toph), "if it's a permanent spell" (Nalfeshnee): the spell as it is now, kept with the
+   trigger, so a condition about it can still be answered once it has left the stack -- countered in response -- as it
+   last existed there (CR 608.2h; script/condition.mjs reads `was`). */
+function spellWas(state, spell) {
+  const object = state.objects[spell];
+  if (!object) return {};
+  return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
+    controller: object.controller, token: object.token === true}};
 }
 
 /**
@@ -93,9 +104,9 @@ function subjects(state, event, condition, sourceId, controller) {
       const {what: _ignored, ...shape} = condition.filter ?? {};
       const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
       if (condition.firstThisTurn && fitted.length !== 1) return [];
-      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1)}];
+      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1), ...spellWas(state, spell)}];
     }
-    return [{card: spell, player: caster}];
+    return [{card: spell, player: caster, ...spellWas(state, spell)}];
   }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
@@ -119,7 +130,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
-    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
+    /* And its controller -- the attacking player (CR 508.1a): "it deals 1 damage to its controller" (Vengeful Ancestor), as
+       it last was should it leave before the trigger resolves (CR 608.2h). */
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
   }
   /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
@@ -168,7 +181,10 @@ function subjects(state, event, condition, sourceId, controller) {
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
      and the stack entry, which "counter it" counters (script/bind.mjs, `stack: "that"`). */
   if (condition.on === "GameEventBecomesTarget") {
-    if (condition.who === "self" && fields.targetId !== sourceId) return [];
+    /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
+       (`who` another or any, `filter` what was targeted); "of a spell" (`spell`), not an ability. */
+    if (!fits(state, fields.targetId, condition, sourceId, controller)) return [];
+    if (condition.spell && fields.kind !== "spell") return [];
     const by = fields.by?.playerId;
     if (condition.by === "opponent" && (by === undefined || by === controller)) return [];
     return [{card: fields.targetId, player: by, stackId: fields.stackId}];
@@ -177,6 +193,8 @@ function subjects(state, event, condition, sourceId, controller) {
      player and how much. A loss, or no change, is not a gain. */
   if (condition.on === "GameEventPlayerLivesChanged") {
     const player = fields.player?.playerId, gained = (fields.newLives ?? 0) - (fields.oldLives ?? 0);
+    /* "Whenever an opponent loses life" (batch 78): a loss, about the player and how much. */
+    if (condition.loser !== undefined) return gained < 0 && whoseIs(condition.loser, player, controller) ? [{player, amount: -gained}] : [];
     if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
     return [{player, amount: gained}];
   }
@@ -364,7 +382,8 @@ export function collectTriggers(state, events) {
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
-        for (const own of object.abilities ?? []) {
+        /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
+        for (const own of abilitiesOf(state, id)) {
           /* "Whenever you cast a creature spell of the chosen type": read with its permanent's choice. */
           const ability = chosenFor(own, object);
           /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
@@ -374,7 +393,7 @@ export function collectTriggers(state, events) {
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
              for each creature dealt it. */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}`
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */

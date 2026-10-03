@@ -39,6 +39,7 @@ import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
 import {sacrificeOne} from "../script/effects/zones.mjs";
+import {changeLife} from "../script/effects/resources.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -68,16 +69,11 @@ const isCreature = (object) => (object.types ?? []).includes("Creature");
  */
 export function dealCommanderDamage(state, player, sourceId, amount, {combat = true} = {}) {
   const events = [];
-  const before = state.players[player].life;
-  state.players[player].life -= amount;
+  changeLife(state, player, -amount, events);
   if (combat && state.objects[sourceId]?.commander === true) {
     const tally = state.players[player].commanderDamage;
     tally[sourceId] = (tally[sourceId] ?? 0) + amount;
   }
-  events.push(event("GameEventPlayerLivesChanged", state, {
-    player: {playerId: player, name: state.players[player].name},
-    oldLives: before, newLives: state.players[player].life,
-  }));
   return events;
 }
 

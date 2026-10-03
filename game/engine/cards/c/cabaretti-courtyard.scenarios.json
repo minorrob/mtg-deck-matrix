@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cabaretti Courtyard",
+  "scenarios": [
+    {
+      "name": "It enters and is sacrificed; when he does, a basic Forest onto the battlefield tapped, and 1 life",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cabaretti Courtyard"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Cabaretti Courtyard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Cabaretti Courtyard"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

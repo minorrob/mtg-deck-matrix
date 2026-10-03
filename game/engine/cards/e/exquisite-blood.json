@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exquisite Blood",
+    "oracleId": "8f933fae-6c0c-42d7-a817-14760d8285cd",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent loses life, you gain that much life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent loses life, you gain that much life.",
+      "trigger": {
+        "on": "life lost",
+        "loser": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "lifeLost": true
+          }
+        }
+      ]
+    }
+  ]
+}
