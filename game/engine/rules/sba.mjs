@@ -38,6 +38,7 @@ import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
+import {sacrificeOne} from "../script/effects/zones.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -241,6 +242,17 @@ export function checkStateBasedActions(state) {
         }));
         acted = true;
       }
+    }
+
+    /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability
+       that has triggered and not yet left the stack, is sacrificed. */
+    for (const id of [...state.zones.battlefield]) {
+      const object = state.objects[id];
+      const chapters = (object.abilities ?? []).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
+      if (!chapters.length || (object.counters?.lore ?? 0) < Math.max(...chapters.map((a) => a.trigger.chapter))) continue;
+      const ids = new Set(chapters.map((a) => a.id));
+      if (state.stack.some((e) => e.cardId === id && ids.has(e.abilityId)) || (state.pendingTriggers ?? []).some((p) => p.source?.cardId === id && ids.has(p.abilityId))) continue;
+      if (sacrificeOne(state, id, events) !== null) acted = true;
     }
 
     for (const player of state.players) {

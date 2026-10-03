@@ -48,6 +48,13 @@ export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
 /** The sublayers of layer 7, in the order CR 613.4 gives. */
 const SUBLAYERS = Object.freeze(["a", "b", "c", "d", "e"]);
 
+/* KEYWORD COUNTERS (CR 122.1b): a counter that is a keyword gives the object that keyword -- in layer 6 (CR 613.1f),
+   read here with its printed keywords, before any effect that removes abilities. The ones the engine plays. */
+const KEYWORD_COUNTERS = Object.freeze({"flying": "Flying", "first strike": "First Strike", "double strike": "Double Strike", "deathtouch": "Deathtouch",
+  "haste": "Haste", "hexproof": "Hexproof", "indestructible": "Indestructible", "lifelink": "Lifelink", "menace": "Menace", "reach": "Reach",
+  "trample": "Trample", "vigilance": "Vigilance"});
+const counterKeywords = (counters) => Object.entries(counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind]).map(([kind]) => KEYWORD_COUNTERS[kind]);
+
 /* An object's printed characteristics: where a derivation starts. */
 function printed(state, id) {
   const object = state.objects[id];
@@ -56,7 +63,7 @@ function printed(state, id) {
     card: object.card,
     types: [...(object.types ?? [])],
     colors: [...(object.colors ?? [])],
-    keywords: [...(object.keywords ?? [])],
+    keywords: [...new Set([...(object.keywords ?? []), ...counterKeywords(object.counters)])],
     power: object.power,
     toughness: object.toughness,
     controller: object.controller,
