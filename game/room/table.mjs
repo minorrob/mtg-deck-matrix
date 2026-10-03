@@ -57,7 +57,7 @@ const clean = (v, n = 60) => String(v ?? "").trim().slice(0, n);
    commander" (its definition's `canBeCommander`, game/engine/cards/index.mjs). The library already offers only
    verified commanders; the table holds every deck to the rule itself, since a deck reaches it from a page. The one
    exception is the Basic lands test deck (crankmagic-table.js, TEST_DECK; Rob, 2026-09-29), a basic land at the head
-   of basic lands, and only on a playtest table, while the engine plays basic lands only (Rob, 2026-10-01: "confirming
+   of basic lands, and only on a playtest table, made while the engine played basic lands only (Rob, 2026-10-01: "confirming
    a basic land being the commander in the test deck is an exception"). */
 const BASIC_LANDS = new Set(["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"]);
 export function commanderLegal(definition) {
@@ -217,6 +217,14 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       record.invites = record.invites.filter((i) => i !== invite);
       await save();
       return api.view(email);
+    },
+
+    /** Which of these card names the table cannot play yet (M5): what Change deck counts per deck -- "87 of 100 known,
+        13 to learn" -- before a deck is brought, so a deck that is not whole is said to be so before it is refused.
+        Names only, read against the table's own cards; nothing about any seat or game. */
+    unknown(names) {
+      if (!Array.isArray(names) || names.length > 2000) throw new TableError(400, "Send at most 2000 card names.");
+      return [...new Set(names.map((n) => clean(n, 200)).filter(Boolean))].filter((n) => !cards(n)).sort();
     },
 
     /** A seat's deck: the person's own, or, for an AI seat, the host's choice (and an AI with a deck is ready). */

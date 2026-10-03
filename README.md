@@ -465,7 +465,9 @@ tucked is asked before it moves. `engine-rules-conformance` is the checklist an 
 would run: the commander, the state-based actions, combat, the stack, replacement effects and the
 turn, each held to its rule by number through real cards, then invariants at every step of whole
 house-pilot games (one object in one zone, no token off the battlefield, life moved only by
-logged events, the commander tally equal to the combat damage dealt). `engine-mulligan` holds the
+logged events, the commander tally equal to the combat damage dealt). `engine-room-games` plays
+seeded four-seat games of the engine's own definitions through the cloud table's card source and
+the real room, house pilots in every seat, each to its end with no exception inside a time budget. `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -580,7 +582,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 237 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 238 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -789,6 +791,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `user-state` — `tests/user-state.mjs`
 - `xlsx-writer` — `tests/xlsx-writer.mjs`
 - `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`
+- `engine-room-games` — `tests/engine-room-games.mjs`
 
 ## Design and execution record
 

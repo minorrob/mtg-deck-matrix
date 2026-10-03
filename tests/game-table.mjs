@@ -304,6 +304,27 @@ ${script.identity.name} can be your commander.`});
     "a definition says canBeCommander only when its card says it can be your commander");
 }
 
+/* WHAT THE CLOUD TABLE PLAYS (M5; the plan review's C4). Handed no cards, the table plays the basic lands and every
+   definition in the engine's directory (cloud/game-room.mjs, tableCards): a deck of those takes a seat, one with a card
+   the engine has no definition of is refused by name, and the table says which names it does not know yet -- what
+   Change deck counts per deck ("87 of 100 known, 13 to learn"). */
+{
+  const ctx = objectCtx();
+  const table = new GameTable(ctx, {}, {random, now: () => now});
+  const call = async (method, path, email, body) => {
+    const r = await table.fetch(new Request(`https://table.internal${path}`, {method, headers: {"content-type": "application/json", ...(email ? {"x-crankmagic-email": email} : {})}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}));
+    return {status: r.status, json: await r.json()};
+  };
+  await call("POST", "/table/create", ROB, {tableId: "tabledefs1", hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}]});
+  const real = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Zulaport Cutthroat", "Sol Ring"]};
+  eq((await call("POST", "/table/known", ROB, {names: [...real.commander, ...real.cards, "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"],
+    "asked which names it cannot play, the table names the one the engine has no definition of -- and only that one");
+  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: real})).status, 200, "a deck of the engine's own definitions takes a seat at a table handed no cards");
+  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: {...real, cards: [...real.cards, "Cyclonic Rift"]}})).json.unsupported, ["Cyclonic Rift"],
+    "and one card it cannot play keeps the deck from the seat, by name");
+  eq((await call("POST", "/table/known", ROB, {names: Array(2001).fill("Mountain")})).status, 400, "a question of more than 2000 names is refused");
+}
+
 /* TWO COMMANDERS ARE PARTNERS (CR 702.124; the plan review's C1, 2026-10-03): until then any two legendary creatures
    shared a command zone. Each partner ability says what the other must be, and two different ones never combine. */
 {

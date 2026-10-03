@@ -172,6 +172,8 @@ const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
 eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
 ok(engine.files.every((f) => /\.mjs$/.test(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(engine.files.includes("game/engine/cards/definitions.mjs") && sb.has("game/engine/cards/definitions.mjs"),
+  "and the cards the table plays are one of them (M5): every definition in the directory, generated as a module and bundled with the engine");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");
 eq([pw.durable_objects, pw.migrations, pw.vars.PLAYTEST_TABLES, built.has("crankmagic-table.js"), [...built.keys()].some((f) => f.startsWith("game/"))], [undefined, undefined, undefined, false, false], "production binds no table, has no playtest tables, and carries neither the lobby nor the engine: Play there waits on Rob's go");
 const without = (map, name) => new Map([...map].filter(([f]) => f !== name));

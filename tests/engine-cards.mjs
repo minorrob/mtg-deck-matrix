@@ -24,6 +24,8 @@ import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/e
 import {createCardIndex, compileScript, foldName} from "../game/engine/cards/index.mjs";
 import {runScenario, SCENARIOS_SCHEMA} from "../game/engine/cards/scenario.mjs";
 import {SCRIPT_SCHEMA} from "../game/engine/script/schema.mjs";
+import {definitionsModule, DEFINITIONS_MODULE} from "../game/tools/engine-definitions.mjs";
+import {tableDefinition, DEFINITIONS} from "../game/engine/cards/definitions.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -183,6 +185,18 @@ const files = loadCardScenarios();
   ok(top.cards.at(-1).cumulative >= 0.8 && top.cards.at(-2).cumulative < 0.8, "and exactly as many as make up 80% of every card appearance in Commander decks");
   eq(top.cards.filter((c) => !ids.has(c.oracleId)).map((c) => c.name), [], "every card on it is a card of the oracle data, by its oracle id: the card, never a print");
   eq(top.cards.slice(0, 3).map((c) => c.name), ["Sol Ring", "Command Tower", "Arcane Signet"], "led by the cards every deck plays");
+}
+
+/* ---- what the cloud table plays (M5; the plan review's C4) ----
+   The Worker reads no file system, so the directory reaches it as game/engine/cards/definitions.mjs, generated from it:
+   the module must be the directory as it stands, or a card merged today would not play at the table tomorrow. */
+{
+  eq(readFileSync(DEFINITIONS_MODULE, "utf8") === definitionsModule(), true,
+    "game/engine/cards/definitions.mjs is the card directory as it stands (node game/tools/engine-definitions.mjs --write)");
+  const playable = index.names.filter((n) => index.resolve(n)?.playable === true);
+  eq([Object.keys(DEFINITIONS).length, playable.every((n) => JSON.stringify(tableDefinition(n)) === JSON.stringify(index.definition(n)))], [playable.length, true],
+    "it holds every playable definition, each the same as the directory's");
+  eq([tableDefinition("LIGHTNING BOLT")?.manaCost, tableDefinition("No Such Card")], ["{R}", null], "found by the same folded name, and nothing for a card it does not hold");
 }
 
 console.log(`engine-cards: ${checks} checks passed — ${index.size} definitions, each the card it claims to be, each played through the rules by its scenarios, and everything the engine cannot play refused by name.`);

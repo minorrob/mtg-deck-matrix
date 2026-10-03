@@ -21,6 +21,12 @@
  */
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {tableOn, TableError} from "../game/room/table.mjs";
+import {tableDefinition} from "../game/engine/cards/definitions.mjs";
+
+/* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
+   directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
+   seat; any other is refused by name (game/room/table.mjs, readDeck). */
+export const tableCards = (name) => basicCards(name) ?? tableDefinition(name);
 
 /* A Durable Object's storage, as the M4 storage contract (game/engine/storage.mjs): strings in, strings out. */
 export function objectStorage(storage) {
@@ -38,7 +44,7 @@ const MAX_FRAME = 16 * 1024;
 const MATCH_KEY = "room-match";
 
 export class GameRoom {
-  constructor(ctx, env, {cards = basicCards} = {}) {
+  constructor(ctx, env, {cards = tableCards} = {}) {
     this.ctx = ctx; this.env = env; this.cards = cards; this.room = null;
     this.storage = objectStorage(ctx.storage);
   }
@@ -167,6 +173,7 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
+      if (route === "POST /table/known") return reply(200, {unknown: t.unknown((await body()).names)});
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
       if (route === "POST /table/mat") return reply(200, {table: await t.mat(email, String((await body()).mat || ""))});
       if (route === "POST /table/rules") return reply(200, {table: await t.rules(email, await body(), now)});

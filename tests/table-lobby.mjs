@@ -232,6 +232,12 @@ try {
   await rob.page.locator(".cm-table-deck").first().waitFor();
   const deckCount = await rob.page.locator(".cm-table-deck").count();
   ok(deckCount >= 5, `Choose a deck lists the decks in your own library (${deckCount})`);
+  /* M5 (the plan review's C4): each deck says how much of it the table can play before it is chosen -- here every card
+     but Sol Ring. */
+  await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent));
+  const counts = await rob.page.locator(".cm-table-deck-known").allInnerTexts();
+  ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
+    `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
