@@ -39,6 +39,7 @@ import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
+import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
@@ -239,6 +240,8 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "attack-tax") return attackers.taxChoice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
+  /* CR 616.1: which effect changes a hit of combat damage first, asked before any of it is dealt (rules/combat.mjs). */
+  if (awaiting.kind === "order-damage") return damageOrderChoice(state, awaiting);
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
   if (awaiting.kind === "draw-card")
     return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
@@ -346,6 +349,12 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
        first-strike damage. */
     const step = awaiting.step ?? "regular";
     if (!combatDamage.open(state, step)) events.push(...combatDamage.deal(state, {step}));
+    grantStepPriority(state, events);
+    return events;
+  }
+  /* The order of the effects changing one hit (CR 616.1); then the step's damage is dealt, or the next such hit asked. */
+  if (awaiting.kind === "order-damage") {
+    const events = combatDamage.orderDamage(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }

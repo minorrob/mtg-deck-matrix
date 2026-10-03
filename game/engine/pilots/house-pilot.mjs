@@ -205,6 +205,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         const best = options.reduce((b, o) => (aim(view, o) > aim(view, b) ? o : b));
         return {indices: [best.index]};
       }
+      /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
+      if (id.startsWith("order-damage:") && options.length) {
+        const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));
+        return {indices: [best.index]};
+      }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */
       if (choice.mode === "boolean") return {indices: [0]};

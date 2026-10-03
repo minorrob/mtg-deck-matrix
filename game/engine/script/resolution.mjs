@@ -21,6 +21,7 @@
 
 import {runEffect} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
+import {damageQuestion} from "./effects/resources.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -86,6 +87,10 @@ export function runResolution(state, rng = null) {
        replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
     const home = effect?.effect === "moveZone" ? commandersGoingHome(state, effect) : [];
     if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};
+    /* CR 616.1: damage that two or more effects would change, where the order changes how it ends -- the player dealt it
+       chooses which applies first, before any of it is dealt (effects/asking.mjs, orderDamage). */
+    else if (damageQuestion(state, effect, resolving.context, effect?.damageOrders ?? {}))
+      resolving.queue[0] = {effect: "orderDamage", damage: effect, answers: effect.damageOrders ?? {}};
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 

@@ -15,9 +15,10 @@
  * way a player would meet it in a game. Then invariants over whole games of house pilots on random definitions: what
  * must be true at every moment, whatever the cards.
  *
- * NAMED, NOT HELD HERE (each a rule the engine does not yet keep, said where it is deferred): the order of several damage
- * replacement effects that end differently is the least-damage order, not asked (rules/replacement.mjs); CR 903.9b for a
- * move that is not an effect's moveZone (rules/commander.mjs); planeswalkers (CR 306, 704.5i), which no definition plays.
+ * NAMED, NOT HELD HERE (each a rule the engine does not yet keep, said where it is deferred): damage dealt where nothing
+ * can stop to ask (an effect that repeats for each player, a mana ability's) keeps the least-damage order of several
+ * replacement effects (rules/replacement.mjs); CR 903.9b for a move that is not an effect's moveZone (rules/commander.mjs);
+ * planeswalkers (CR 306, 704.5i), which no definition plays.
  */
 import assert from "node:assert/strict";
 import {createState, addObject, cardsIn, commanderKeyOf} from "../game/engine/state/index.mjs";
@@ -174,6 +175,7 @@ Object.assign(FIXTURES, {
   Duelist: {types: ["Creature"], manaCost: "{2}", colors: [], power: 2, toughness: 2, keywords: ["First Strike"]},
   Twinblade: {types: ["Creature"], manaCost: "{2}", colors: [], power: 2, toughness: 2, keywords: ["Double Strike"]},
   Sneak: {types: ["Creature"], manaCost: "{2}", colors: [], power: 2, toughness: 2, keywords: ["Menace"]},
+  Imp: {types: ["Creature"], manaCost: "{R}", colors: ["R"], power: 2, toughness: 2},
 });
 /* A two-player game at Rob's first declare-attackers step, his creatures and Maya's already out (not summoning sick:
    they were there before the game began). */
@@ -243,6 +245,20 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   const pridemate = named(s, "Ajani's Pridemate")[0];
   eq([named(s, "Brute").length, named(s, "Vampire Nighthawk").length, s.players[1].life, s.objects[pridemate].counters["+1/+1"]], [0, 0, 42, 1],
     "CR 702.2b, 702.15b: the blocking Nighthawk's two deathtouch damage destroys the 5/5, its lifelink gains Maya two life as the damage is dealt, and \"whenever you gain life\" triggers once for that one event (Ajani's Pridemate: one counter)");
+}
+{
+  /* Two red 2/2s attack Maya with Torbran and the Dictate out: two hits, each a choice of hers, both asked before either is
+     dealt (CR 510.2), and then both dealt at once as she chose. */
+  const s = battle(["Torbran, Thane of Red Fell", "Dictate of the Twin Gods", "Imp", "Imp"], []);
+  resolveAwaiting(s, awaitingChoice(s).options.filter((o) => o.label.startsWith("Imp → ")).map((o) => o.index));
+  onTo(s, (x) => x.awaiting?.kind === "order-damage");
+  const first = awaitingChoice(s);
+  eq([s.awaiting?.player, s.players[1].life, first.options.map((o) => o.label)], [1, 40, ["Torbran, Thane of Red Fell first: 8 damage", "Dictate of the Twin Gods first: 6 damage"]],
+    "CR 616.1, 510.2: an attacking Imp's 2 to Maya, changed by Torbran and the Dictate -- she chooses the order before any combat damage is dealt");
+  resolveAwaiting(s, [0]);
+  eq([s.awaiting?.kind, s.players[1].life], ["order-damage", 40], "CR 510.2: the second Imp's hit is hers to order too, and still nothing has been dealt");
+  resolveAwaiting(s, [1]);
+  eq(s.players[1].life, 26, "CR 616.1, 510.2: then all of it at once, as she chose -- 8 and 6");
 }
 {
   const s = battle(["Duelist"], ["Bear"]);
@@ -345,10 +361,17 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
     "CR 616.1: two replacement effects that end the same either way (two players' \"exile it instead\") need no choice -- exiled, and nobody is asked");
 }
 {
-  const {state} = play("a doubler and a plus two", [at(0, "battlefield", "Torbran, Thane of Red Fell", "Dictate of the Twin Gods", "Mountain"), at(0, "hand", "Lightning Bolt")],
-    [{tap: "Mountain"}, {cast: "Lightning Bolt", targets: [{player: 1}]}, {resolve: true}]);
-  eq(state.players[1].life, 32,
-    "CR 616.1: Torbran's plus two and the Dictate's doubling apply in the order the player hit chooses -- 3 doubled then plus 2 is 8, not 10; the engine applies the order that leaves the least until it can ask (named in rules/replacement.mjs)");
+  const setup = [at(0, "battlefield", "Torbran, Thane of Red Fell", "Dictate of the Twin Gods", "Mountain"), at(0, "hand", "Lightning Bolt")];
+  const bolt = [{tap: "Mountain"}, {cast: "Lightning Bolt", targets: [{player: 1}]}, {resolve: true}];
+  const {state} = play("a doubler and a plus two", setup, bolt);
+  const choice = awaitingChoice(state);
+  eq([state.awaiting?.player, state.players[1].life, choice.title, choice.options.map((o) => o.label)],
+    [1, 40, "3 damage from Lightning Bolt to Maya: which applies first?", ["Torbran, Thane of Red Fell first: 10 damage", "Dictate of the Twin Gods first: 8 damage"]],
+    "CR 616.1: Torbran's plus two and the Dictate's doubling would both change the Bolt's 3, and the order changes how it ends -- so Maya, the player hit, chooses which applies first, before any of it is dealt, each way said by where it leads");
+  eq(choice.options.map((o) => play(`the Bolt, ${o.label}`, setup, [...bolt, {choose: [o.label]}]).state.players[1].life), [30, 32],
+    "CR 616.1: and it is dealt as she chose -- Torbran's first, 3 plus 2 doubled is 10; the Dictate's first, 3 doubled plus 2 is 8");
+  const same = play("a doubler and a tripler", [at(0, "battlefield", "Fiery Emancipation", "Dictate of the Twin Gods", "Mountain"), at(0, "hand", "Lightning Bolt")], bolt).state;
+  eq([same.awaiting, same.players[1].life], [null, 22], "CR 616.1: doubled and tripled is 18 in either order, so nobody is asked");
 }
 
 /* ======== the turn (CR 103, 104, 106, 500, 514) ======== */

@@ -51,7 +51,7 @@
  */
 
 import {cardsIn, recordUse} from "../state/index.mjs";
-import {applyReplacements} from "./replacement.mjs";
+import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
@@ -426,6 +426,17 @@ export const combatDamage = {
     return [];
   },
 
+  /** The answer to "order-damage": kept by its hit for this step; then the step's damage is dealt, or the next asked. */
+  orderDamage(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const byStep = (state.combat.damageOrders ??= {});
+    const orders = (byStep[awaiting.step] ??= {});
+    orders[awaiting.key] = [...(orders[awaiting.key] ?? []), chosen];
+    state.awaiting = null;
+    return combatDamage.deal(state, {step: awaiting.step});
+  },
+
   /**
    * Deal all combat damage at once (CR 510.2).
    *
@@ -487,19 +498,27 @@ export const combatDamage = {
       }
     }
 
+    /* CR 616.1: where two or more effects would change one of these hits and the order changes how it ends, the player
+       dealt it -- or the controller of the creature dealt it -- chooses which applies first. All of it is dealt at once
+       (CR 510.2), so every such choice is asked BEFORE any of it is dealt, one at a time ("order-damage"), each answer
+       kept by its hit for this step and replayed below. Tried dry: asking spends no shield. */
+    const proposalOf = (raw) => ({event: "damage", toPlayer: raw.toPlayer, toCard: raw.toCard, amount: raw.amount, sourceId: raw.source, combat: true});
+    const orders = state.combat.damageOrders?.[step] ?? {};
+    for (const raw of damageChoicesPossible(state) ? pending : []) {
+      const key = hitKey(raw.source, raw.toPlayer, raw.toCard);
+      const {question} = applyReplacements(state, proposalOf(raw), {orders: orders[key] ?? [], askable: true, dry: true});
+      if (question) {
+        state.awaiting = {kind: "order-damage", player: question.player, step, key, proposal: question.proposal, options: question.options};
+        return events;
+      }
+    }
+
     /* Everything was computed from the board as it was; only now is any of it applied — and each
        hit goes through the replacement and prevention effects first (CR 615.1). A shield that stops
        all of it means the damage EVENT does not happen (CR 615.4), which is why a prevented hit is
        skipped rather than reported as zero damage. */
     for (const raw of pending) {
-      const {proposal: hit} = applyReplacements(state, {
-        event: "damage",
-        toPlayer: raw.toPlayer,
-        toCard: raw.toCard,
-        amount: raw.amount,
-        sourceId: raw.source,
-        combat: true,
-      });
+      const {proposal: hit} = applyReplacements(state, proposalOf(raw), {orders: orders[hitKey(raw.source, raw.toPlayer, raw.toCard)] ?? []});
       /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
       if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
