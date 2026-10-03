@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grim Monolith",
+  "scenarios": [
+    {
+      "name": "Tapped, it stays tapped through his untap step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grim Monolith"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Grim Monolith"
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Grim Monolith"
+        }
+      ]
+    }
+  ]
+}

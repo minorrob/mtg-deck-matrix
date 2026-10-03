@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 871,
-  "everyRule": 2130
+  "defined": 881,
+  "everyRule": 2141
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7185,10 +7185,10 @@
   },
   "Static abilities": {
    "tally": {
-    "built": 6,
+    "built": 7,
     "partial": 2,
     "named": 0,
-    "missing": 69
+    "missing": 68
    },
    "entries": [
     {
@@ -7315,13 +7315,13 @@
      "kind": "static",
      "rule": null,
      "name": "CantAttackUnless",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/combat",
+     "status": "built",
      "forge": "CantAttackUnless",
      "top": 7,
      "all": 26,
-     "blocks": 7,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7537,7 +7537,7 @@
      "top": 1,
      "all": 9,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8120,9 +8120,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 2,
+    "partial": 3,
     "named": 0,
-    "missing": 32
+    "missing": 31
    },
    "entries": [
     {
@@ -8213,13 +8213,13 @@
      "kind": "replacement",
      "rule": null,
      "name": "Untap",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/turn",
+     "status": "partial",
      "forge": "Untap",
      "top": 5,
      "all": 157,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "replacement",

@@ -469,6 +469,9 @@ export const unlessPays = {
   open(state, params, context) {
     const [payer] = playersFor(state, params.who, context.controller);
     if (payer === undefined) return false;
+    /* "You may pay {4}. If you do, ..." (Mana Vault), mana alone, by a player who cannot pay it: no choice to make, and
+       nothing happens. */
+    if (params.ifPaid && !params.life && !params.discard && !params.sacrifice && !canPayGeneric(state, payer, Math.max(0, params.amount ?? 0))) return false;
     state.awaiting = {kind: "effect-choice", effect: "unlessPays", player: payer, amount: Math.max(0, params.amount ?? 0),
       ...(params.life ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,

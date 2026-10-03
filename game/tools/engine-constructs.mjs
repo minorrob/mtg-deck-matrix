@@ -78,8 +78,12 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   UntapOtherPlayer: "rules/turn",
   /* "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
      turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
-  CantBeCast: "rules/actions"};
+  CantBeCast: "rules/actions",
+  /* "Creatures can't attack you unless their controller pays {2} for each" (batch 66): `attack-tax`, rules/combat.mjs. */
+  CantAttackUnless: "rules/combat"};
 export const FORGE_REPLACEMENT = {Moved: "replacement",
+  /* "This artifact doesn't untap during your untap step" (batch 66): the static `doesnt-untap`, rules/turn.mjs. */
+  Untap: "rules/turn",
   /* "This spell can't be countered", "creature spells you control can't be countered" (batch 64): the static
      `cant-be-countered`, read where a counter would apply (rules/statics.mjs, cantBeCountered). */
   Counter: "rules/statics"};

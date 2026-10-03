@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Basalt Monolith",
+  "scenarios": [
+    {
+      "name": "Tapped, it stays tapped; {3} untaps it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Basalt Monolith",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Basalt Monolith"
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Basalt Monolith"
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Basalt Monolith"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Basalt Monolith",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

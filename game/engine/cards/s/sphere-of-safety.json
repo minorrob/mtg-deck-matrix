@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sphere of Safety",
+    "oracleId": "92f6c063-a740-4c3c-a60a-569fd298854d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures can't attack you or planeswalkers you control unless their controller pays {X} for each of those creatures, where X is the number of enchantments you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures can't attack you or planeswalkers you control unless their controller pays {X} for each of those creatures, where X is the number of enchantments you control.",
+      "rule": "attack-tax",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ],
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

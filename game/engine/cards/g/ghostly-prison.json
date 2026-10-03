@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghostly Prison",
+    "oracleId": "e828b189-0e8f-43b8-b909-4c23e742e028",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      "rule": "attack-tax",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": 2
+    }
+  ]
+}
