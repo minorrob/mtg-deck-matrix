@@ -38,6 +38,10 @@ priority rule.
 None of these is a leak of hidden information; no leak was found (Part 2, 2.10). None is an exception: G1's harness
 ("1,400 games, zero engine exceptions, the same hash on replay, no hidden card") would pass with all five in place, which
 is the review's central point about the plan: **its gates measure crashes, replay and leaks, and never correctness**.
+What that harness does catch, it catches cheaply: twelve house-pilot games in the room on the engine's own definitions
+found two exceptions a real table reaches (a blockers question about an attacker that had already left; a house pilot's
+single block on a menace creature refused by the engine and caught by nothing, which ends the table) and one game that
+had not finished after 14 minutes of CPU (2.11, 2.12). G1 is worth running now, not after E4.
 
 **The plan's order starves itself of feedback.** The 1,011 definitions the engine holds reach no table: `cloud/game-room.mjs`
 hands the room `basicCards` (M5 is step E6, after the seven decks' mechanics and G1). Until E6, nobody can play a card at
@@ -64,7 +68,7 @@ Each claim in `docs/ACTIVE.md` and `docs/plan-remaining-2026-10-03.md` was check
 | The whole gate | See Part 5 | `tools/local-ci.sh HEAD 1` run here on 849845bf: the workflow's toolchain (Node 22, Playwright 1.56.0 with Chromium, openpyxl) on a clean worktree merged with `main` |
 | Staging and production versions | Yes | the Cloudflare API, read-only: `crankmagic` (production) last deployed 2026-10-01 19:59 UTC, version 2fc36d3b (its tenth); `crankmagic-staging` last deployed 2026-10-03 04:57 UTC, version 99f23f29 (its 118th); nothing since, as ACTIVE.md says |
 | The cloud table plays no card definitions (M5) | Yes | `cloud/game-room.mjs` line 41: `cards = basicCards`; `cloud/play-worker.mjs` passes nothing else |
-| The room plays the definitions when handed them | Yes | 12 seeded four-seat games in `game/room/room.mjs` with four house pilots, each seat a random commander and 62 random defined cards plus basics (Part 6, probe R): see the table there |
+| The room plays the definitions when handed them | 9 of 12 games | 12 seeded four-seat games in `game/room/room.mjs` with four house pilots, each seat a random commander and 62 random defined cards plus basics (Part 6, probe R): nine finished, two threw an engine exception (2.11), one had not finished after 14 minutes (2.12) |
 | The board at real sizes | Yes | `node tools/board-fixture.mjs` here at 1280x720 and 1920x1080, a real four-seat table to turn 9: eight shots, the hand whole in all of them (Part 4) |
 | Rob's seven decks, per deck | New | Part 6, probe D: D5 is the closest to playable (12 cards need a mechanic, 25 a definition); D1 the farthest (30 and 28) |
 
@@ -168,8 +172,9 @@ It sees only its seat and is deterministic (`tests/engine-house-pilot.mjs` holds
 opponent it is weak in ways a player notices in a game: it never casts a spell whose every legal target is its own things
 unless the effect is friendly, it blocks only when the block is free or the attack is lethal, it attacks the lowest life
 total, it answers every trigger-order, replacement-order and "may" question with the first option, it assigns combat damage
-lethal-first, and it keeps any hand with two to five lands. It plays 1,011 real cards without an exception (Part 6, probe
-R), which is the point for G-D's AI seats; the LLM pilot (AI-2) is what makes "AI players" mean what Rob means.
+lethal-first, and it keeps any hand with two to five lands. It played nine of twelve games of 1,011 real cards to the end (Part 6, probe R); one of the two exceptions is its own,
+a single block declared on a menace creature, which `blockers.resolve` refuses and the room does not survive (2.11). The
+LLM pilot (AI-2) is what makes "AI players" mean what Rob means.
 
 ### 2.10 The 70.0% "every mechanic built" figure, and what it does not measure
 
@@ -198,14 +203,34 @@ average; 219 scenarios check nothing but which zone a card is in. Living Death's
 either side of it. A card can be "defined" with its core effect right and its timing, targets, or costs wrong, and nothing
 in the gate says so. That is the risk the velocity proposal's templated scenarios would deepen (Part 3, R5).
 
-### 2.11 Performance at a real table
+### 2.11 Two exceptions a real table reaches
 
-Twelve four-seat house-pilot games in the room (probe R) took 1.5 to 7.4 seconds each, except seeds 5 and 6: 117 and 86
-seconds (62 and 41 turns). `docs/engine/PLAN.md` §5 budgets a full four-player game at under 3 seconds and names
+Found by probe R (Part 6) and reproduced on their own:
+
+| Seed | Where | What happened | Rule |
+| --- | --- | --- | --- |
+| 10 | `rules/combat.mjs` `blockers.choice` → `keywords/combat.mjs` `canBlockAttacker` → `layers.mjs` `characteristicsOf`: "There is no object 596 to describe" | The declare-blockers question is built for every attack in `state.combat.attacks`, and one attacker had left the battlefield after attackers were declared (sacrificed, bounced or killed in the declare-attackers step); `combatDamage.deal` checks `stillThere`, the blockers' choice does not | CR 506.4: a creature that leaves the battlefield is removed from combat; no block is offered against it |
+| 11 | `rules/combat.mjs` `blockers.resolve`: "Humble Defector has menace and can't be blocked except by two or more creatures" | The house pilot answered with one blocker on a menace attacker (each block is offered per blocker; menace is a rule about the set); the engine refuses the answer by throwing, and `game/room/room.mjs` `drive` does not catch a pilot's refused answer, so `start` or `act` rejects and the table is stuck | CR 702.111b; the refusal is right, the uncaught throw is the defect, and the pilot should not offer the set |
+
+Either ends a four-seat game with an AI seat in it, which is the game G-D plays. Both are small fixes (X4 in the
+execution plan); both are the kind of thing E5's harness exists for, found here in twelve games.
+
+### 2.12 Performance at a real table
+
+Nine four-seat house-pilot games in the room (probe R) finished in 1.5 to 23 seconds each, except seeds 5 and 6: 117 and 86
+seconds (62 and 41 turns); seed 8 did not finish. `docs/engine/PLAN.md` §5 budgets a full four-player game at under 3 seconds and names
 `tests/engine-perf.mjs`, which does not exist. A Durable Object has a CPU limit per request (the plan's M5 names Workers Paid
 at 10 ms), and a room that drives four house pilots through a 60-turn game inside one `start()` call is the shape that
-hits it. Worth a measurement before G-D, not a rewrite: the slow games are the ones with many permanents, which points at
-`characteristicsOf` being derived afresh for every object on every question (the layers run every time anything asks).
+hits it. A tick profile of seed 8, which had not finished after 14 minutes of CPU and was stopped at 25 (Part 6, probe R), says
+where the time goes:
+70% of the samples under `rules/layers.mjs` `allEffects`, called from `characteristicsOf`, called from `script/filter.mjs`
+`matches`, called from `script/condition.mjs` `conditionHolds` and `script/amount.mjs` `amountOf`, called from
+`allEffects` again. Every question about any object gathers every static ability's condition and every counted change,
+each of which runs selectors over the other objects, each of which derives those objects' characteristics from scratch;
+the `conditioning` and `counting` guards stop the recursion at one level and nothing memoizes between calls. A board
+with a handful of "as long as" statics and "for each" counts makes every priority check cost the square or cube of the
+permanents. Not a hang, and not a rule: a cache of `characteristicsOf` per object, invalidated when the state changes,
+is the usual fix (X9), and the budget suite that does not yet exist is what would have found it.
 
 ## Part 3 -- What could go wrong with the plan as written (question 1)
 
@@ -226,7 +251,7 @@ Ranked by likelihood times what it costs Rob. "Certain" means it is already true
 | R11 | **Provisional definitions executing as rules.** The extraction design's own bar (`docs/plan-card-extraction-skill.md`: for the engine, G1-G4, "nothing unverified may execute") is lowered by the velocity plan to "provisional, playable and marked". A learned Cyclonic Rift that bounces the wrong things is a rules error in a real game, with the label as the only defense | Medium | Trust; findings in G-D that are definition errors, not engine errors | E2, AI-3 |
 | R12 | **The board is right by its suite and wrong at one size.** At 1280x720 in Table view the pile captions run into each other ("Command Exile 0", "Library 9Grave..."), below the 10px legibility floor AGENTS.md sets (Part 4). Everything else of Rob's September 30 list is built and photographs as the wireframes draw it | Certain | One PR; but it is the first thing a 1280-wide laptop shows | G-B |
 | R13 | **Paying mana is manual.** A spell is cast by tapping each land, then the card; "castable now" counts the pool, not the lands (the fixture's hand reads "Creature 0/3" with three untapped lands). Arena and MTGO auto-pay; an experienced player clicks a card and expects it to be cast when the payment is unambiguous, which `automaticPayment` already decides | Certain | Every spell, every turn; the first thing an invitee says | G-E |
-| R14 | **The performance budget is unmeasured.** Two of twelve house-pilot games took 86 and 117 seconds in Node (2.11); the Durable Object's CPU budget is smaller than Node's patience. No `tests/engine-perf.mjs` exists | Medium | A table that stalls or a Worker that is killed mid-game, found by Grok Bot | G-D |
+| R14 | **The performance budget is unmeasured and already broken.** Two of twelve house-pilot games took 86 and 117 seconds in Node and one did not finish in 25 minutes (2.12, the layers derived afresh and recursively); the Durable Object's CPU budget is smaller than Node's patience. No `tests/engine-perf.mjs` exists | High | A table that stalls or a Worker that is killed mid-game, found by Grok Bot | G-D |
 | R15 | **The data track (M2) and R2 are on no critical path and could absorb sessions.** Live-first reads, a refresh Worker, `current.json`: a good design that moves nothing toward a played game | Low | Scope before G-C | Track O |
 | R16 | **The phone and Firefox cells of the browser matrix are Rob's to run** and have no date; G-B lists them as its proof | Medium | G-B waits on a weekend | G-B |
 | R17 | **The two first-look disagreements with wireframe r3** (Restore a backup vs Import; the phone's action bar) are an open decision on every release-acceptance run ("27 of 29") | Certain | Noise on every walk until decided | G-C |
@@ -235,7 +260,7 @@ The counter-argument the plan deserves: its shape is sound where it is cheap to 
 replay, leaks, the browser walks, the release acceptance) are real and have caught real things, the clean-room rule is
 kept, every PR carries its proof, and the Track 0 list is honest about what only Rob can do. What it lacks is a
 correctness gate for the rules and a feedback loop short enough for Rob to be in it, and both are cheaper than the plan's
-own E5.
+own E5, whose harness, run here for twelve games, earned its place by finding two exceptions and a game that does not end.
 
 ## Part 4 -- The alternatives (question 3)
 
@@ -355,10 +380,11 @@ three. Proves: `tests/table-board.mjs` gains the one-click cast, the captions' l
 ### A10. Measure the room's cost before G-D (R14)
 
 A `tests/engine-perf.mjs` that plays the harness's games and asserts PLAN §5's budgets, skipping itself unless
-`ENGINE_PERF_REQUIRED=1`, and a profile of the slow seeds (probe R: seeds 5 and 6). The likely cause is
-`characteristicsOf` derived afresh for every object on every question; a per-action cache keyed by the state's hash is
-the usual fix and changes no rule. Cost: a session once the number is known. Proves: a game inside a Durable Object's
-budget before Grok Bot sits down.
+`ENGINE_PERF_REQUIRED=1`. The cause is measured (2.12): `characteristicsOf` derives every object from scratch on every
+question, and the statics' conditions and counted changes recurse into it through the selectors. A cache per object,
+invalidated on any change to the state (or keyed by a cheap state version counter incremented by every mutation),
+changes no rule and turns the cube into a line. Cost: a session. Proves: a game inside a Durable Object's budget before
+Grok Bot sits down, and seed 8 finishing.
 
 ### A11. Stop doing
 
@@ -520,7 +546,24 @@ control", the `tapXType` cost).
 **Probe R, twelve games in the room.** `startRoom` over `memoryStorage`, four house pilots, each seat a random commander-legal
 definition and 56 random nonland definitions, 6 nonbasic lands and basics to 99, `passEmpty` on, seeds 1-12:
 
-<!-- probe-R -->
+| Seed | Outcome | Turns | Events | Time |
+| ---: | --- | ---: | ---: | ---: |
+| 1 | finished, Rob won | 37 | 1,788 | 7.4 s |
+| 2 | finished, Sam won | 48 | 1,789 | 2.1 s |
+| 3 | finished, Sam won | 38 | 1,557 | 1.5 s |
+| 4 | finished, Sam won | 40 | 1,520 | 4.7 s |
+| 5 | finished, Maya won | 62 | 2,843 | 117.0 s |
+| 6 | finished, Maya won | 41 | 1,896 | 86.2 s |
+| 7 | finished, Rob won | 49 | 2,090 | 3.6 s |
+| 8 | **not finished**: stopped at the 25-minute limit; profiled for 90 s with `--prof` (2.12) | -- | -- | > 25 min |
+| 9 | finished, Sam won | -- | -- | 23 s |
+| 10 | **exception**: "There is no object 596 to describe" in `blockers.choice` (2.11) | -- | -- | 7 s |
+| 11 | **exception**: "Humble Defector has menace and can't be blocked except by two or more creatures" from `blockers.resolve`, uncaught (2.11) | -- | -- | 19 s |
+| 12 | finished, Trey won | -- | -- | 8 s |
+
+Nine of twelve finished; two threw; one did not finish. The scratch harness and the two reproductions are in the
+session's scratch folder and described here; the execution plan's X4 turns the harness into `tests/engine-room-games.mjs`
+with the two fixes first.
 
 **The definitions by day** (`git ls-tree` of `main` at each day's last commit): September 30, 0; October 1, 467;
 October 2, 853; October 3, 999; the handoff head, 1,011.
