@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bloated Contaminator",
+  "scenarios": [
+    {
+      "name": "It hits Maya for 4: a poison counter, then proliferate makes it two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloated Contaminator"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bloated Contaminator"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya (1 poison)"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 1,
+          "poison": 2
+        }
+      ]
+    }
+  ]
+}

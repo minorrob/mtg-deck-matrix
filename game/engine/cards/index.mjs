@@ -354,6 +354,29 @@ export function compileScript(script) {
       keywords.push("Ninjutsu");
       return;
     }
+    /* TOXIC N (CR 702.164a, batch 77): "players dealt combat damage by this creature also get N poison counters" -- a
+       static ability kept with its number, read as combat damage is dealt (rules/combat.mjs); instances add (702.164b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "toxic") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: toxic needs its number, 1 or more`);
+      abilities.push({id, kind: "static", rule: "toxic", text: ability.text, amount: ability.amount ?? 0, affects: {what: "permanent", self: true}});
+      keywords.push("Toxic");
+      return;
+    }
+    /* PROWESS (CR 702.108a, batch 77): "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn"
+       -- the keyword IS that triggered ability. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "prowess") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({caster: "you", filter: {nonTypes: ["Creature"]}}),
+        effects: [{effect: "pump", targets: "self", power: 1, toughness: 1}]});
+      keywords.push("Prowess");
+      return;
+    }
+    /* DEVOID (CR 702.114a, batch 77): "this object is colorless" in every zone -- the card's colors none, as its identity
+       must say (keywords/types.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "devoid") {
+      if ((identity.colors ?? []).length) problems.push(`${ability.text}: devoid on a card whose identity has a color`);
+      keywords.push("Devoid");
+      return;
+    }
     /* STORM (CR 702.40a): kept on the card as a static ability, read as the spell is cast (rules/actions.mjs). Only on an
        instant or sorcery here -- an Aura's storm copies become tokens, and that card has more the engine lacks. */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "storm") {

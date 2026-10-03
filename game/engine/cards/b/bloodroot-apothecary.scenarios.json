@@ -1,0 +1,133 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bloodroot Apothecary",
+  "scenarios": [
+    {
+      "name": "A Treasure each; Maya cracks hers on her turn, and gets two poison counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bloodroot Apothecary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bloodroot Apothecary"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "controls": [
+                "Forest",
+                "Wastes",
+                "Wastes",
+                "Bloodroot Apothecary",
+                "Treasure"
+              ],
+              "seat": 0
+            },
+            {
+              "controls": [
+                "Treasure"
+              ],
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Treasure",
+          "seat": 1,
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 2
+        },
+        {
+          "controls": [],
+          "seat": 1
+        }
+      ]
+    },
+    {
+      "name": "It hits Maya: two poison counters; Rob's own Treasure sacrificed: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloodroot Apothecary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bloodroot Apothecary"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 1,
+          "poison": 2
+        }
+      ]
+    }
+  ]
+}

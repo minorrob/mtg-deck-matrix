@@ -9,16 +9,16 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 960,
-  "everyRule": 2225
+  "defined": 971,
+  "everyRule": 2241
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 26,
+    "built": 29,
     "partial": 0,
     "named": 24,
-    "missing": 144
+    "missing": 141
    },
    "entries": [
     {
@@ -301,37 +301,37 @@
      "kind": "keyword ability",
      "rule": "702.114",
      "name": "Devoid",
-     "engine": null,
-     "status": "missing",
+     "engine": "Devoid",
+     "status": "built",
      "forge": "Devoid",
      "top": 8,
      "all": 132,
-     "blocks": 8,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.108",
      "name": "Prowess",
-     "engine": null,
-     "status": "missing",
+     "engine": "Prowess",
+     "status": "built",
      "forge": "Prowess",
      "top": 8,
      "all": 93,
-     "blocks": 8,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.164",
      "name": "Toxic",
-     "engine": null,
-     "status": "missing",
+     "engine": "Toxic",
+     "status": "built",
      "forge": "Toxic",
      "top": 7,
      "all": 44,
-     "blocks": 7,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -667,7 +667,7 @@
      "top": 3,
      "all": 26,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -5691,7 +5691,7 @@
      "top": 10,
      "all": 47,
      "blocks": 10,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "trigger",
@@ -8911,7 +8911,7 @@
      "top": 126,
      "all": 1672,
      "blocks": 126,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 18
+     "alone": 20
     },
     {
      "kind": "option",

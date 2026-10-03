@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 960 defined and playable today; 2,225 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 971 defined and playable today; 2,241 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 26 | 0 | 24 | 144 |
+| Keyword abilities (CR 702) | 194 | 29 | 0 | 24 | 141 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
 | Effects | 192 | 56 | 1 | 15 | 120 |
 | Triggers | 138 | 12 | 4 | 7 | 115 |
@@ -37,20 +37,20 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering what an effect moved | — | missing | 21 | 113 |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 18 | 106 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 20 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
 | keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | SetState | setState | named | 7 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
-| keyword ability | Toxic | — | missing | 6 | 7 |
 | keyword construct | etbCounter | — | missing | 5 | 25 |
 | count | Cards in a library | — | missing | 5 | 13 |
 | keyword ability | Convoke | — | named | 5 | 11 |
+| trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
 | static | CantAttack | — | missing | 5 | 10 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 | keyword construct | Class | — | missing | 5 | 9 |
-| keyword ability | Prowess | — | missing | 5 | 8 |
+| effect | Amass | amass | named | 5 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -79,9 +79,9 @@ The things that alone hold back the most of the most-played cards.
 | 702.184 | Station | Station | built | 11 | 35 | 0 | 0 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | Changeling | built | 10 | 63 | 0 | 0 |
-| 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
-| 702.108 | Prowess | — | missing | 8 | 93 | 8 | 5 |
-| 702.164 | Toxic | — | missing | 7 | 44 | 7 | 6 |
+| 702.114 | Devoid | Devoid | built | 8 | 132 | 0 | 0 |
+| 702.108 | Prowess | Prowess | built | 8 | 93 | 0 | 0 |
+| 702.164 | Toxic | Toxic | built | 7 | 44 | 0 | 0 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 4 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 5 |
@@ -109,7 +109,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.35 | Madness | — | missing | 3 | 62 | 3 | 1 |
 | 702.84 | Unearth | — | named | 3 | 58 | 3 | 2 |
 | 702.88 | Rebound | — | named | 3 | 35 | 3 | 3 |
-| 702.189 | Firebending | — | missing | 3 | 26 | 3 | 1 |
+| 702.189 | Firebending | — | missing | 3 | 26 | 3 | 2 |
 | 702.126 | Improvise | — | missing | 3 | 24 | 3 | 2 |
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
 | 702.92 | Living Weapon | — | named | 3 | 19 | 3 | 3 |
@@ -540,7 +540,7 @@ The things that alone hold back the most of the most-played cards.
 | TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 4 |
+| CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 5 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | — | missing | 6 | 20 | 6 | 5 |
@@ -825,10 +825,10 @@ The things that alone hold back the most of the most-played cards.
 | An amount the game counts (X, for each, devotion, greatest power) | script/amount.mjs, by kind | partial | 586 | 5550 | 0 | 0 |
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
-| Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
+| Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 1 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 21 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 18 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 20 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
