@@ -43,7 +43,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded",
+  "unblocked", "singleTarget", "goaded", "uniqueName",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -238,6 +238,12 @@ export function compileSelector(selector) {
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
     /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
     if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).length !== 1) return false;
+    /* "Target enchantment you control that doesn't have the same name as another permanent you control" (Yenna, batch
+       70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
+    if (selector.uniqueName === true) {
+      const holder = controllerOf(state, id);
+      if (state.zones.battlefield.some((other) => other !== id && state.objects[other].card === object.card && controllerOf(state, other) === holder)) return false;
+    }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */

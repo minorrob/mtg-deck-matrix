@@ -110,6 +110,10 @@ export function loseLife(state, params, context) {
 export function dealDamage(state, params, context) {
   const events = [];
   const amount = params.amount ?? 0;
+  /* "If a Dinosaur is dealt damage this way" (Marauding Raptor, batch 70): the permanents it was dealt to, after prevention,
+     remembered for the effects after it -- none, when there was no damage to deal. */
+  const dealt = [];
+  if (params.remember) context.remembered = dealt;
   if (amount <= 0) return events;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
@@ -132,6 +136,7 @@ export function dealDamage(state, params, context) {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
     });
     if (proposal.prevented === true || proposal.amount <= 0) continue;
+    if (hit.toCard !== undefined && state.objects[hit.toCard]) dealt.push(hit.toCard);
     if (hit.toPlayer !== undefined) {
       changeLife(state, hit.toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {

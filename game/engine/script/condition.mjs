@@ -24,13 +24,18 @@
  */
 
 import {cardsIn} from "../state/index.mjs";
-import {matchesSelector, compileSelector} from "./filter.mjs";
+import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 
-const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast"];
+const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast"];
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
    blue" (Pyroblast: the target), "if it's a planeswalker" (Forge of Heroes): `about` which -- "remembered", "that card"
    (a trigger's subject), "target" (the first) -- and `is` what it must be, read where it now is. None there, and it is
-   not. */
+   not.
+   "THIS WAY" (batch 70) is "remembered": what the effect before it did, as that effect remembers it (`remember`) -- the
+   creature you sacrificed (Rise of the Witch-king), the card you discarded ("If you do", Toph), the creature it dealt
+   damage to (Marauding Raptor), the token it made (Yenna) -- so `is: {}` asks only that there is one. "That spell"
+   (Toph's "if that spell is a Lesson", Nalfeshnee's "if it's a permanent spell") is read as it last existed on the stack
+   once it has left it (CR 608.2h): `about.was`, taken as the trigger was (rules/trigger.mjs). */
 const NAMED = ["remembered", "that card", "target"];
 function namedObject(about, {remembered, targets, about: subject}) {
   if (about === "remembered") return remembered?.[0] ?? null;
@@ -38,21 +43,38 @@ function namedObject(about, {remembered, targets, about: subject}) {
   if (about === "target") { const t = targets?.[0]; return t && t.kind === "object" ? t.id : null; }
   return null;
 }
-function namedIs(state, id, selector, context) {
+function namedIs(state, id, selector, context, was = null) {
   const object = id === null || id === undefined ? null : state.objects[id];
-  if (!object) return false;
+  /* Gone: as it last was, for what a last-known snapshot can answer (its types, subtypes, controller); anything else it
+     cannot say, and the condition does not hold. */
+  if (!object) { try { return was ? matchesLastKnown(selector, was, context) : false; } catch { return false; } }
   const what = object.zone === "battlefield" ? "permanent" : object.zone === "stack" ? "spell" : "card";
   return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
 }
 
+/* HOW A SPELL WAS CAST (batch 70; rules/actions.mjs records it on the stack entry): "if this spell was cast from a
+   graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
+   (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
+   neither holds. */
+const CAST_KEYS = ["from", "mainPhase"];
+const CAST_ZONES = ["hand", "graveyard", "exile", "library", "command"];
+function castHolds(rule, cast) {
+  if (!cast) return false;
+  if (rule.from !== undefined && cast.from !== rule.from) return false;
+  if (rule.mainPhase === true && cast.mainPhase !== true) return false;
+  return true;
+}
+
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
-export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined} = {}) {
+export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined} = {}) {
   if (!condition) return true;
+  if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
   /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
   if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
   /* "12+ | Flying" (a station symbol, CR 721.2a): as long as its own object has that many counters of the kind. */
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
-  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source})) return false;
+  if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
+    condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
   if (condition.handEmpty === false && cardsIn(state, "hand", controller).length === 0) return false;
@@ -102,6 +124,15 @@ export function conditionProblems(condition) {
   if (("about" in condition) !== ("is" in condition)) problems.push("about names an object and is says what it must be: both, or neither");
   if ("about" in condition && !NAMED.includes(condition.about)) problems.push(`about is ${NAMED.join(", ")}`);
   if ("is" in condition) { try { compileSelector({...condition.is, what: "card"}); } catch (error) { problems.push(`What a named object must be: ${error.message}`); } }
+  if ("cast" in condition) {
+    const rule = condition.cast;
+    if (!rule || typeof rule !== "object" || Array.isArray(rule) || !Object.keys(rule).length || !Object.keys(rule).every((k) => CAST_KEYS.includes(k)))
+      problems.push(`cast says how this spell was cast: ${CAST_KEYS.join(", ")}`);
+    else {
+      if ("from" in rule && !CAST_ZONES.includes(rule.from)) problems.push(`cast.from is a zone: ${CAST_ZONES.join(", ")}`);
+      if ("mainPhase" in rule && rule.mainPhase !== true) problems.push("cast.mainPhase is true");
+    }
+  }
   if ("present" in condition) {
     const {anyOf, ...shared} = condition.present ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [condition.present]) compileSelector(one); }

@@ -41,7 +41,9 @@ export function beginResolution(state, effects, context = {}) {
     context: {controller: context.controller ?? 0, source: context.source ?? null, x: context.x ?? 0, targets: context.targets ?? [], facts: context.facts ?? [],
       ...(context.about ? {about: context.about} : {}), ...(context.lastKnown ? {lastKnown: context.lastKnown} : {}), ...(context.attached !== undefined ? {attached: context.attached} : {}),
       /* What the ability's permanent chose as it entered ("the chosen type", script/chosen.mjs). */
-      ...(context.chosen !== undefined ? {chosen: context.chosen} : {})},
+      ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
+      /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
+      ...(context.cast ? {cast: context.cast} : {})},
     events: [],
   };
   return runResolution(state);
@@ -65,7 +67,7 @@ export function runResolution(state) {
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-      remembered: resolving.context.remembered, targets: resolving.context.targets})) {
+      remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast})) {
       resolving.queue.shift();
       continue;
     }
