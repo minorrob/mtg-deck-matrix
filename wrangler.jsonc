@@ -1,7 +1,7 @@
 {
   "name": "crankmagic",
   "main": "cloud/worker.mjs",
-  "compatibility_date": "2026-10-01",
+  "compatibility_date": "2026-10-03",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
