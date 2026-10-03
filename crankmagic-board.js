@@ -848,13 +848,15 @@ globalThis.CrankBoard = Object.freeze({
     panelEl.classList.toggle("is-docked", mode === "full" && !phone());
     if (!coach.open) {panelEl.innerHTML = ""; return;}
     dock();
-    const keep = panelEl.querySelector(".cm-coach-input");
-    const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep;
+    /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
+       shut, and the Coach's reply lands on its own timer, so it would snap the menu shut under a pointer). */
+    const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more");
+    const typed = keep ? keep.value : "", focused = keep && document.activeElement === keep, moreOpen = !!(more && more.open);
     const bubble = (m) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
       : `<li class="cm-coach-msg is-${m.from}">${m.from === "coach" ? `<span class="cm-coach-avatar">${COACH}</span>` : ""}<p>${e(m.text)}</p></li>`;
     panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
         <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
-        <details class="cm-coach-more"><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
+        <details class="cm-coach-more"${moreOpen ? " open" : ""}><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
         <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
       <ol class="cm-coach-thread" aria-live="polite">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
         ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><span class="cm-coach-avatar">${COACH}</span><p><i></i><i></i><i></i></p></li>` : ""}</ol>
@@ -1347,7 +1349,8 @@ globalThis.CrankBoard = Object.freeze({
   actions["board-tools"] = () => {tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; draw();};
   actions["board-coach"] = () => {coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) panelOpen = false; draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
-  actions["board-coach-clear"] = () => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); drawCoach();};
+  /* Clear chat is ⋯'s command, so doing it closes ⋯ (the redraw keeps the menu as it finds it). */
+  actions["board-coach-clear"] = (el) => {coach.thread = []; coach.typing = false; clearTimeout(coach.timer); const more = el.closest(".cm-coach-more"); if (more) more.open = false; drawCoach();};
   document.addEventListener("submit", (event) => {
     if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
     event.preventDefault();

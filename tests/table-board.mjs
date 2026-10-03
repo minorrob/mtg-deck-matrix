@@ -19,7 +19,8 @@
  *   Hand      the card-size slider and Ctrl −; a card shown large under the pointer, and in Card zoom on a right
  *             click; Show hand: Space fans it, a number holds a card up, Escape puts it back, Enter plays it.
  *   Coach     the chat panel over the right edge (the shell): prompts, a stub reply that says so, Shift+Enter,
- *             a draft kept through a view, Clear chat, Escape; from the pane, Tools and Full screen's rail.
+ *             a draft kept through a view, Clear chat, ⋯ kept open through the reply, Escape; from the pane, Tools and
+ *             Full screen's rail.
  *   Phones    Focus only: the 52px rail, the 112px seat strip, the pill; a seat tapped and ‹ ›; snapping back when
  *             asked; ✋ at a readable size; held upright, the surface turned a quarter; back at a desk, the desk board.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
@@ -1022,6 +1023,22 @@ try {
   await rob.page.click(".cm-coach-more summary");
   await rob.page.click("[data-action=board-coach-clear]");
   ok(await rob.page.locator(".cm-coach-msg").count() === 0, "⋯ › Clear chat empties the thread");
+  const moreOpen = () => rob.page.evaluate(() => document.querySelector("#cm-board-coach .cm-coach-more").open);
+  ok(!await moreOpen(), "and closes ⋯");
+  /* ⋯ STAYS OPEN THROUGH THE COACH'S REPLY. The reply lands on its own 700ms timer and redraws the panel, and a rebuilt
+     <details> is shut, so ⋯ snapped closed under the reader (under load the reply to "Who's the threat?" landed between
+     the two clicks above, and Clear chat was gone). The question is asked and ⋯ opened in one task, so the reply cannot
+     land first however busy the machine is. */
+  const staged = await rob.page.evaluate(() => {
+    document.querySelector("#cm-board-coach [data-action=board-coach-ask]").click();
+    document.querySelector("#cm-board-coach .cm-coach-more summary").click();
+    return {typing: document.querySelectorAll(".cm-coach-msg.is-typing").length, open: document.querySelector("#cm-board-coach .cm-coach-more").open};
+  });
+  ok(staged.typing === 1 && staged.open, "⋯ opened while the Coach is typing");
+  await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
+  ok(await moreOpen() && await rob.page.locator("[data-action=board-coach-clear]").isVisible(), "the reply lands and ⋯ stays open, Clear chat still in it");
+  await rob.page.click("[data-action=board-coach-clear]");
+  ok(await rob.page.locator(".cm-coach-msg").count() === 0 && !await moreOpen(), "Clear chat from the menu that stayed open empties the thread, and closes ⋯");
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-board-coach[hidden]").waitFor({state: "attached"});
   ok(true, "Escape closes the Coach");
