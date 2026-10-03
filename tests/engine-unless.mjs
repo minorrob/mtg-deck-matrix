@@ -90,6 +90,38 @@ function run(s, until) {
   eq([s.players[0].life, s.zones.battlefield.filter((id) => s.objects[id].tapped).length], [40, 2], "paying taps her lands, and nothing else happens");
 }
 {
+  /* WHICH MANA PAYS IS THE PAYER'S (CR 605.3a, 118.12; the plan review's C2): an Island and two Wastes paying {2} can leave
+     the Island or a Wastes untapped -- which decides what she can still cast -- so she is asked which. */
+  const s = table();
+  on(s, land("Island", "U"), 1); on(s, WASTES, 1); on(s, WASTES, 1);
+  main(s);
+  beginResolution(s, [{effect: "unlessPays", who: "opponent", amount: 2, effects: [{effect: "gainLife", amount: 5}]}], ctx(0, null));
+  resolveAwaiting(s, [0]);
+  const pick = awaitingChoice(s);
+  eq([s.awaiting?.player, pick.mode, pick.min, pick.max, pick.options.map((o) => o.label)], [1, "many", 2, 2, ["Tap Island", "Tap Wastes", "Tap Wastes"]],
+    "having said she pays {2}, Maya chooses the two that pay it");
+  resolveAwaiting(s, pick.options.flatMap((o) => (o.label === "Tap Wastes" ? [o.index] : [])));
+  eq([s.zones.battlefield.filter((id) => !s.objects[id].tapped).map((id) => s.objects[id].card), s.players[0].life, s.awaiting], [["Island"], 40, null],
+    "she keeps the Island up; paid, nothing else happens");
+}
+{
+  /* With mana of one kind, or exactly enough, every way is the same: nobody is asked. Her pool's {U} and an Island are one
+     kind, and the pool goes first. */
+  const s = table();
+  on(s, WASTES, 1); on(s, WASTES, 1); on(s, WASTES, 1);
+  main(s);
+  beginResolution(s, [{effect: "unlessPays", who: "opponent", amount: 2, effects: [{effect: "gainLife", amount: 5}]}], ctx(0, null));
+  resolveAwaiting(s, [0]);
+  eq([s.awaiting, s.zones.battlefield.filter((id) => s.objects[id].tapped).length], [null, 2], "three Wastes paying {2}: one way, paid without a question");
+  const t = table();
+  const island = on(t, land("Island", "U"), 1);
+  main(t);
+  t.players[1].manaPool.U = 1;
+  beginResolution(t, [{effect: "unlessPays", who: "opponent", amount: 1, effects: [{effect: "gainLife", amount: 5}]}], ctx(0, null));
+  resolveAwaiting(t, [0]);
+  eq([t.awaiting, t.players[1].manaPool.U, t.objects[island].tapped], [null, 0, false], "a {U} in her pool and an Island paying {1}: the same mana either way, the pool's spent");
+}
+{
   /* The same targets: "counter target spell unless its controller pays {3}". */
   const s = table();
   on(s, card("Mana Leak"), 0, "hand");

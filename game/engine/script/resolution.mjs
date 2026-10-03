@@ -20,7 +20,7 @@
  */
 
 import {runEffect} from "./effects/index.mjs";
-import {ASKING} from "./effects/asking.mjs";
+import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -82,14 +82,19 @@ export function runResolution(state, rng = null) {
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
     }
-    const asking = ASKING[effect?.effect];
+    /* CR 903.9b: a commander this would put into its owner's hand or library may go to the command zone instead -- a
+       replacement, so the owners are asked before anything moves (effects/asking.mjs, commanderHome). */
+    const home = effect?.effect === "moveZone" ? commandersGoingHome(state, effect) : [];
+    if (home.length) resolving.queue[0] = {effect: "commanderHome", commanders: home, move: effect};
+    const head = resolving.queue[0];
+    const asking = ASKING[head?.effect];
 
     if (asking) {
       /* `open` returns false when there is nothing to ask about — an empty library to scry, a hand
          with nothing in it to discard. The effect is then simply done, rather than the game
          stopping on a question with no answers. It returns {events} when it was done without asking
          anybody (batch 80): a discard at random, nothing among the cards a dig may take. */
-      const opened = asking.open(state, effect, resolving.context, rng);
+      const opened = asking.open(state, head, resolving.context, rng);
       if (opened === true) {
         state.awaiting.resolution = true;
         return {status: "waiting", events: resolving.events};

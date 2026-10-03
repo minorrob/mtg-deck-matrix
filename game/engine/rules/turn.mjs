@@ -236,6 +236,7 @@ export function awaitingChoice(state) {
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
   if (awaiting.kind === "entering-choice") return enteringChoice(state, awaiting);
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
+  if (awaiting.kind === "attack-tax") return attackers.taxChoice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
@@ -313,6 +314,12 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   }
   if (awaiting.kind === "declare-attackers") {
     const events = attackers.resolve(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  /* What attacking costs, paid with the mana the attacker chose (CR 508.1i-j); then the attack is declared. */
+  if (awaiting.kind === "attack-tax") {
+    const events = attackers.payTax(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }

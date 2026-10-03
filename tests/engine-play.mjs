@@ -61,6 +61,20 @@ const cast = [...EXPERTISE.map((l) => ({tap: l})), {cast: "Rishkar's Expertise"}
     return ASKING.play.open(t, {from: "command", free: true}, {controller: 0, source: null}) ? t.awaiting.choices.map((c) => c.owed) : [];
   };
   eq([taxed(2), taxed(1)], [[2], []], "its tax of {2}: owed, and payable with two lands, not one");
+  /* Which lands pay the tax is the player's when the ways differ (CR 605.3a; the plan review's C2): an Island and two
+     Wastes for {2}. */
+  const t = createState({matchId: "m", seed: "tax", players: [{name: "Rob"}, {name: "Maya"}]});
+  const bear = addObject(t, {card: "Bear", ...F.Bear, owner: 0, controller: 0, commander: true}, "command", 0);
+  const lands = [["Island", {U: 1}], ["Wastes", {C: 1}], ["Wastes", {C: 1}]].map(([card, produces]) =>
+    addObject(t, {card, types: ["Land"], abilities: [{id: "a0", kind: "mana", tapSelf: true, produces}], owner: 0, controller: 0}, "battlefield", null));
+  t.players[0].commanderCasts = {[commanderKeyOf(t.objects[bear])]: 1};
+  ASKING.play.open(t, {from: "command", free: true}, {controller: 0, source: null});
+  const cast = ASKING.play.choice(t, t.awaiting);
+  const first = ASKING.play.apply(t, t.awaiting, [cast.options.findIndex((o) => o.label.startsWith("Bear"))]);
+  const pick = ASKING.play.choice(t, t.awaiting);
+  eq([first.again, pick.min, pick.options.map((o) => o.label)], [true, 2, ["Tap Island", "Tap Wastes", "Tap Wastes"]], "casting it, he is asked which two pay the {2}");
+  ASKING.play.apply(t, t.awaiting, [1, 2]);
+  eq(lands.map((id) => t.objects[id].tapped), [false, true, true], "and the Island stays up");
 }
 {
   /* For its mana value in any mana (Tinybones): Maya's {1}{R} Ogre from her graveyard with two Wastes -- and it enters

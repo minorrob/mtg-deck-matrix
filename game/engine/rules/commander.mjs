@@ -36,8 +36,12 @@
  * again while it stays (704.6d asks only of one put there since the last check); a move makes a
  * new object, and that one is asked.
  *
- * WHAT IS DEFERRED AND NAMED: CR 903.9b, the replacement for a commander that would go to its
- * owner's hand or library -- a bounced commander goes to the hand, and its owner is not asked.
+ * GOING TO A HAND OR A LIBRARY IS A REPLACEMENT (CR 903.9b): the owner is asked BEFORE the move,
+ * so the card is never seen in the hand. Built where an effect moves it (a bounce, a tuck: the
+ * resolution asks ahead of the moveZone, script/effects/asking.mjs `commanderHome`).
+ *
+ * WHAT IS DEFERRED AND NAMED: 903.9b for a move that is not an effect's moveZone -- a cost that
+ * returns a permanent to its owner's hand, a card put into a hand from the top of a library.
  * Partner and background (CR 702.124) are a deck rule, held at the table (room/table.mjs); the
  * two-commander color identity is the union of both, which `colorIdentity` composes.
  */
