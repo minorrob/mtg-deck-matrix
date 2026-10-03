@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ministrant of Obligation",
+    "oracleId": "0cee5539-d10b-4de2-aee8-e02f0e24ac26",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Afterlife 2 (When this creature dies, create two 1/1 white and black Spirit creature tokens with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Afterlife 2",
+      "keyword": "afterlife",
+      "amount": 2
+    }
+  ]
+}

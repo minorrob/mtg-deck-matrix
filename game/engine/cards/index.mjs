@@ -114,6 +114,12 @@ const TRIGGERS = {
       ...(t.untapped ? {untapped: true} : {}),
       /* "When this creature enters from your hand" (Thousand-Faced Shadow): the zone it came from (rules/trigger.mjs). */
       ...(t.from ? {from: t.from[0].toUpperCase() + t.from.slice(1)} : {})} : null),
+  /* "Whenever you create one or more creature tokens" (Staff of the Storyteller): a token is put onto the battlefield only
+     by being created, under its creator's control unless the effect says otherwise (CR 111.1, 111.2), and one that leaves
+     never returns (111.8) -- so it is a token's arrival under your control, of the kind `filter` says; "one or more" is
+     `batch`, once for all made at once. */
+  "token created": (t) => ({on: "GameEventCardChangeZone", to: "Battlefield", who: "any",
+    filter: {...(t.filter ?? {}), token: true, controller: "you"}}),
   /* "When this dies", "whenever another creature you control dies", "whenever this or another creature dies": `filter`
      read as the thing last existed (CR 603.10a). */
   dies: (t) => (ARRIVALS.includes(t.who ?? "self")
@@ -396,6 +402,15 @@ export function compileScript(script) {
       if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: toxic needs its number, 1 or more`);
       abilities.push({id, kind: "static", rule: "toxic", text: ability.text, amount: ability.amount ?? 0, affects: {what: "permanent", self: true}});
       keywords.push("Toxic");
+      return;
+    }
+    /* AFTERLIFE N (CR 702.135a): "When this creature dies, create N 1/1 white and black Spirit creature tokens with
+       flying" -- the keyword IS that triggered ability (Ministrant of Obligation). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "afterlife") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: afterlife needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.dies({who: "self"}),
+        effects: [{effect: "createToken", count: ability.amount ?? 1, token: {name: "Spirit", types: ["Creature"], subtypes: ["Spirit"], colors: ["W", "B"], power: 1, toughness: 1, keywords: ["Flying"]}}]});
+      keywords.push("Afterlife");
       return;
     }
     /* PROWESS (CR 702.108a, batch 77): "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn"

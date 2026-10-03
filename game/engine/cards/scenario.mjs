@@ -23,7 +23,7 @@
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
- *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
+ *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
 
 import {controllerOf} from "../rules/layers.mjs";
@@ -263,6 +263,13 @@ export function runScenario(scenario, cards, fixtures = {}) {
         for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
         for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
+      } else if (e.counters !== undefined) {
+        /* A permanent's counters of one kind, as its seat sees them: {seat, counters: {card, counter, count}}. */
+        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.counters.card);
+        if (!card) fail(`${e.counters.card} is not on ${names[e.seat]}'s battlefield`);
+        const n = card.counters?.[e.counters.counter] ?? 0;
+        if (n !== e.counters.count) fail(`${e.counters.card} has ${n} ${e.counters.counter} counter${n === 1 ? "" : "s"}, not ${e.counters.count}`);
+        passed.push(`${e.counters.card}: ${e.counters.count} ${e.counters.counter}`);
       } else if (e.stats !== undefined) {
         /* A creature's current power and toughness, as its controller's view shows them (layer 7). */
         const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.stats.card);
