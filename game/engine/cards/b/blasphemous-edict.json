@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blasphemous Edict",
+    "oracleId": "6cf50e21-0f60-4e9a-b910-ebe1bad2a29e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.\nEach player sacrifices thirteen creatures of their choice.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        },
+        "atLeast": 13
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices thirteen creatures of their choice.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 13,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

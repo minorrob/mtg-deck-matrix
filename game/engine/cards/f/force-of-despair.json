@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Force of Despair",
+    "oracleId": "0f2d038e-6dab-4352-9ba7-ed9e063bb304",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If it's not your turn, you may exile a black card from your hand rather than pay this spell's mana cost.\nDestroy all creatures that entered this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If it's not your turn, you may exile a black card from your hand rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "exileFromHand",
+          "selector": {
+            "colors": [
+              "B"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "notYourTurn": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures that entered this turn.",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "enteredThisTurn": true
+          }
+        }
+      ]
+    }
+  ]
+}

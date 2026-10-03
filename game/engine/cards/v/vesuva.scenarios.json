@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vesuva",
+  "fixtures": {
+    "Grove": {
+      "types": [
+        "Land"
+      ],
+      "abilities": [
+        {
+          "id": "g",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 2
+          },
+          "text": "{T}: Add {G}{G}."
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played as a copy of the Grove, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grove"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vesuva"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vesuva"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Grove",
+                  "No copy"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Grove"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grove",
+            "Grove"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Grove"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

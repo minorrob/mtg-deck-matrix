@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Twinflame Tyrant",
+    "oracleId": "321b5cc6-8df6-4292-97a0-a6a3a22f3b55",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nIf a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead.",
+      "watches": {
+        "event": "damage",
+        "source": {
+          "controller": "you"
+        },
+        "to": "opponent"
+      },
+      "change": {
+        "multiply": 2
+      }
+    }
+  ]
+}

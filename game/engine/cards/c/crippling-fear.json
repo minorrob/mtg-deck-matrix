@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crippling Fear",
+    "oracleId": "e7a7ba65-ad14-41d5-889b-9bbeae9ab3f7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a creature type. Creatures that aren't of the chosen type get -3/-3 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a creature type. Creatures that aren't of the chosen type get -3/-3 until end of turn.",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "pumpAll",
+          "power": -3,
+          "toughness": -3,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "$chosen"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

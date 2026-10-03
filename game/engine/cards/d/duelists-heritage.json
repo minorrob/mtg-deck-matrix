@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Duelist's Heritage",
+    "oracleId": "5cdc4654-b8c5-4599-a1d2-9e9d5f6509cb",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more creatures attack, you may have target attacking creature gain double strike until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true
+      },
+      "optional": true,
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Double Strike"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Forbidden Orchard",
+  "scenarios": [
+    {
+      "name": "Tapped for {G}: Maya creates a 1/1 Spirit",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forbidden Orchard"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forbidden Orchard",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Spirit",
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Spirit"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Parhelion II",
+    "oracleId": "24d22bcb-8a77-4c47-a508-6f4bc093c1d0",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{6}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying, first strike, vigilance\nWhenever Parhelion II attacks, create two 4/4 white Angel creature tokens with flying and vigilance that are attacking.\nCrew 4 (Tap any number of creatures you control with total power 4 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "first strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Parhelion II attacks, create two 4/4 white Angel creature tokens with flying and vigilance that are attacking.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Angel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Angel"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "Flying",
+              "Vigilance"
+            ]
+          },
+          "attacking": true
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 4",
+      "keyword": "crew",
+      "amount": 4
+    }
+  ]
+}

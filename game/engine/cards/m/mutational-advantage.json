@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mutational Advantage",
+    "oracleId": "2daa5b89-e772-4a2b-ad52-bbbf148c7b2f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Permanents you control with counters on them gain hexproof and indestructible until end of turn. Prevent all damage that would be dealt to those permanents this turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Permanents you control with counters on them gain hexproof and indestructible until end of turn. Prevent all damage that would be dealt to those permanents this turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Hexproof",
+            "Indestructible"
+          ],
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "counters": "any"
+          },
+          "remember": true
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "targets": "remembered",
+          "apply": {
+            "to": true
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

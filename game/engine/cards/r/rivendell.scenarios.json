@@ -1,0 +1,183 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rivendell",
+  "fixtures": {
+    "Legend": {
+      "types": [
+        "Creature"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "With a legendary creature, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Legend"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rivendell"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Rivendell"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Rivendell",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With only a Bear, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rivendell"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Rivendell"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Rivendell"
+        }
+      ]
+    },
+    {
+      "name": "Scry 2 is offered with a legendary creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rivendell",
+            "Island",
+            "Wastes",
+            "Legend"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rivendell"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Rivendell"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "... and not without one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rivendell",
+            "Island",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Rivendell"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

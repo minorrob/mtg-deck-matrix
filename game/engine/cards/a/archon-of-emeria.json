@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archon of Emeria",
+    "oracleId": "ceef2d5a-77ea-4e56-9806-fd1a2d5be400",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Archon"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nEach player can't cast more than one spell each turn.\nNonbasic lands your opponents control enter tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Each player can't cast more than one spell each turn.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "moreThan": 1
+    },
+    {
+      "kind": "replacement",
+      "text": "Nonbasic lands your opponents control enter tapped.",
+      "watches": {
+        "event": "enters",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "nonSupertypes": [
+            "Basic"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    }
+  ]
+}

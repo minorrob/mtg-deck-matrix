@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Panharmonicon",
+  "scenarios": [
+    {
+      "name": "Elvish Visionary entering: its trigger twice, two cards; a land entering is not an artifact or creature: one life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Panharmonicon",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elvish Visionary",
+            "Scoured Barrens"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Scoured Barrens"
+        },
+        {
+          "settle": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elvish Visionary"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

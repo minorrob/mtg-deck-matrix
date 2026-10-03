@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shorikai, Genesis Engine",
+    "oracleId": "e2962883-6daf-4a84-af73-917afc73092c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{2}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 8,
+    "toughness": 8
+  },
+  "oracleText": "{1}, {T}: Draw two cards, then discard a card. Create a 1/1 colorless Pilot creature token with \"This token crews Vehicles as though its power were 2 greater.\"\nCrew 8 (Tap any number of creatures you control with total power 8 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Draw two cards, then discard a card. Create a 1/1 colorless Pilot creature token with \"This token crews Vehicles as though its power were 2 greater.\"",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        },
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Pilot",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Pilot"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "p",
+                "kind": "static",
+                "text": "This token crews Vehicles as though its power were 2 greater.",
+                "rule": "crews-with-more",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 8",
+      "keyword": "crew",
+      "amount": 8
+    }
+  ]
+}

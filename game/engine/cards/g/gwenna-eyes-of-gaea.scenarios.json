@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gwenna, Eyes of Gaea",
+  "fixtures": {
+    "Titan": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Charm": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Its {G}{G} casts the 5/5, not the instant; the 5/5 cast, a counter on Gwenna, untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gwenna, Eyes of Gaea"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Titan",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Gwenna, Eyes of Gaea",
+          "mana": {
+            "G": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Titan"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Charm"
+              },
+              "count": 0
+            },
+            {
+              "seat": 0,
+              "tapped": "Gwenna, Eyes of Gaea"
+            }
+          ]
+        },
+        {
+          "cast": "Titan"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Gwenna, Eyes of Gaea",
+            "power": 3,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Gwenna, Eyes of Gaea",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

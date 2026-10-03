@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Quartzwood Crasher",
+  "fixtures": {
+    "Rhino": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "keywords": [
+        "Trample"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It and a Rhino with trample deal 9 to Maya: one 9/9 Dinosaur Beast; the Bear without trample adds nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Quartzwood Crasher",
+            "Rhino",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Quartzwood Crasher",
+            "Rhino",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 29
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dinosaur Beast",
+            "power": 9,
+            "toughness": 9
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dinosaur Beast",
+            "has": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

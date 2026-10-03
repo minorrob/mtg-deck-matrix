@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flame Rift",
+  "scenarios": [
+    {
+      "name": "4 damage to each player, Rob included",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flame Rift"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Flame Rift"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 36
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}

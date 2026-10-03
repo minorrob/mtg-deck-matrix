@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phyrexian Obliterator",
+    "oracleId": "41820f91-27cf-41c0-bb5e-9adf6845a6a4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Horror"
+    ],
+    "manaCost": "{B}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Trample\nWhenever a source deals damage to this creature, that source's controller sacrifices that many permanents of their choice.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a source deals damage to this creature, that source's controller sacrifices that many permanents of their choice.",
+      "trigger": {
+        "on": "damage dealt",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "that player",
+          "count": {
+            "damageDealt": true
+          },
+          "selector": {
+            "what": "permanent"
+          }
+        }
+      ]
+    }
+  ]
+}

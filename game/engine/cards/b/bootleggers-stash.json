@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bootleggers' Stash",
+    "oracleId": "d1deba03-b26a-4a0d-b242-24bb3a3f9ea6",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Lands you control have \"{T}: Create a Treasure token.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Lands you control have \"{T}: Create a Treasure token.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Land"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Create a Treasure token.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "createToken",
+                "count": 1,
+                "token": {
+                  "predefined": "Treasure"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

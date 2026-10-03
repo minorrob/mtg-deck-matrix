@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Heartless Hidetsugu",
+    "oracleId": "b68e965a-96f4-447a-99be-35dbd27846e9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Shaman"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "who": "that player",
+              "amount": {
+                "lifeTotal": "that player",
+                "half": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

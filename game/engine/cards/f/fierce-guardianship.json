@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fierce Guardianship",
+    "oracleId": "d09c9cba-fdd2-479b-ad5d-d05181c3e3f9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.\nCounter target noncreature spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you control a commander, you may cast this spell without paying its mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target noncreature spell.",
+      "targets": [
+        {
+          "what": "spell",
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

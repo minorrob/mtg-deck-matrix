@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Redoubled Stormsinger",
+    "oracleId": "792c4d38-41e6-49eb-bd4e-de0a5ac8330f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Wizard"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "First strike\nWhenever this creature attacks, for each creature token you control that entered this turn, create a tapped and attacking token that's a copy of that token. At the beginning of the next end step, sacrifice those tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, for each creature token you control that entered this turn, create a tapped and attacking token that's a copy of that token. At the beginning of the next end step, sacrifice those tokens.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "token": true,
+            "controller": "you",
+            "enteredThisTurn": true
+          },
+          "tapped": true,
+          "attacking": true,
+          "atEndStep": "sacrifice"
+        }
+      ]
+    }
+  ]
+}

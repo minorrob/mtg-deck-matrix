@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ophiomancer",
+  "fixtures": {
+    "Snake": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Snake"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At an upkeep with no Snake: a 1/1 deathtouch Snake; at the next, with one there, none",
+      "at": {
+        "turn": 1,
+        "phase": "UPKEEP"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ophiomancer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ophiomancer",
+            "Snake"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Snake",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

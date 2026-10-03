@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ophiomancer",
+    "oracleId": "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+      "trigger": {
+        "on": "upkeep",
+        "yours": false
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Snake"
+          ],
+          "controller": "you"
+        },
+        "atMost": 0
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Snake",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Snake"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Adeline, Resplendent Cathar",
+  "scenarios": [
+    {
+      "name": "Rob attacks with Adeline: a Human attacking Maya, tapped; Adeline untapped (vigilance) and 2/4 with it; 3 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Adeline, Resplendent Cathar"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Adeline, Resplendent Cathar"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Human"
+            },
+            {
+              "seat": 0,
+              "tapped": "Adeline, Resplendent Cathar",
+              "is": false
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Adeline, Resplendent Cathar",
+                "power": 2,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uthros, Titanic Godcore",
+    "oracleId": "df08ac72-010f-42f8-beb3-6d645c638e1e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Planet"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {U}.\nStation (Tap another creature you control: Put charge counters equal to its power on this Planet. Station only as a sorcery.)\n12+ | {U}, {T}: Add {U} for each artifact you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Station",
+      "keyword": "station"
+    },
+    {
+      "kind": "activated",
+      "text": "12+ | {U}, {T}: Add {U} for each artifact you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": {
+              "count": {
+                "what": "permanent",
+                "types": [
+                  "Artifact"
+                ],
+                "controller": "you"
+              }
+            }
+          }
+        }
+      ],
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 12
+        }
+      }
+    }
+  ]
+}

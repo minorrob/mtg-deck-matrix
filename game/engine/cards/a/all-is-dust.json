@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "All Is Dust",
+    "oracleId": "14693689-d087-43b6-9c3f-63ab0648fc20",
+    "types": [
+      "Kindred",
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices all permanents they control that are one or more colors.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices all permanents they control that are one or more colors.",
+      "effects": [
+        {
+          "effect": "sacrificeAll",
+          "who": "each",
+          "selector": {
+            "colorless": false
+          }
+        }
+      ]
+    }
+  ]
+}

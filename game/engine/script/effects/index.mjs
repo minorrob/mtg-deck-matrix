@@ -24,13 +24,18 @@
  */
 
 import {isPrimitive} from "../../vocabulary.mjs";
-import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell} from "./zones.mjs";
+import {bindEffect} from "../bind.mjs";
+import {countEffect} from "../amount.mjs";
+import {conditionHolds} from "../condition.mjs";
+import {controllerOf, typesOf} from "../../rules/layers.mjs";
+import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame,
 } from "./resources.mjs";
 import {
-  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent,
+  createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
+  becomeCopy, earthbend, goad, immediateTrigger,
 } from "./permanents.mjs";
 
 /**
@@ -73,7 +78,47 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "unlessPays"]);
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "unlessPays", "copySpell", "chooseType", "play", "changeTargets"]);
+
+/* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
+   (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
+function eachOf(state, each, context) {
+  const seats = state.players.map((p) => p.id), from = seats.indexOf(state.activePlayer ?? 0);
+  const players = [...seats.slice(from), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
+  if (each === "player") return players.map((player) => ({player}));
+  if (each === "opponent") return players.filter((player) => player !== context.controller).map((player) => ({player}));
+  if (each === "creature") return state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature")).map((card) => ({card, player: controllerOf(state, card)}));
+  return [];
+}
+/** What `repeatFor` may range over. */
+export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
+
+/**
+ * `repeatFor` — Forge's RepeatEach: "deals damage to each player equal to twice the number of nonbasic lands that
+ * player controls". Its effects, once for each player, opponent or creature, in that order, with "that player" and
+ * "that card" bound to it and every amount counted for it (CR 608.2h, each as it is done). What it repeats does not
+ * stop to ask (cards/index.mjs refuses one that would).
+ */
+function repeatFor(state, params, context) {
+  const events = [];
+  for (const about of eachOf(state, params.each, context)) {
+    const each = {...context, about: {...(context.about ?? {}), ...about}};
+    for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each));
+  }
+  return events;
+}
+
+/**
+ * `branch` — Forge's Branch: one way or the other, by a condition asked now ("draw a card if its power is 3 or greater.
+ * Otherwise, put two +1/+1 counters on it"). In a resolution it is spliced into the queue (script/resolution.mjs), so a
+ * question inside it can be asked; called directly (what repeats for each), what it does must not ask.
+ */
+function branch(state, params, context) {
+  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast});
+  const events = [];
+  for (const effect of (holds ? params.then : params.otherwise) ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context));
+  return events;
+}
 
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
@@ -85,6 +130,29 @@ export const EFFECTS = Object.freeze({
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup,
   /* Phase 3, batch 6: Equip. Batch 13: a token that's a copy (CR 707). */
   attach, copyPermanent,
+  /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
+     Batch 36: the same for each player, opponent or creature. */
+  damageAll, regenerate, addPhase, repeatFor,
+  /* Batch 52: two creatures fight (CR 701.14). */
+  fight,
+  /* Batch 40: a change of control, for a turn or for good. Batch 49: every permanent a selector fits, sacrificed. */
+  gainControl, sacrificeAll,
+  /* Batch 58: a permanent becomes a copy (CR 707.2, layer 1). */
+  becomeCopy,
+  /* Batch 62: cards from the top of a library until one fits. */
+  digUntil,
+  /* Batch 64: poison counters on players. */
+  poison,
+  /* Batch 65: a land made a creature, its counters, and its return. */
+  earthbend,
+  /* Batch 68: "you win the game". */
+  winGame,
+  /* Batch 69: goad. */
+  goad,
+  /* Batch 72: one way or the other, and a reflexive trigger ("when you do"). */
+  branch, immediateTrigger,
+  /* Batch 73: the top of a library looked at, or revealed. */
+  peekAndReveal,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
@@ -110,6 +178,18 @@ export function runEffect(state, effect, context = {}) {
     throw new Error(`The primitive ${name} cannot be run directly: ${why}`);
   }
   return run(state, effect, context) ?? [];
+}
+
+/**
+ * What follows a prevention (CR 615.5; rules/replacement.mjs, `followUps`): "each opponent mills that many cards" (The
+ * Mindskinner), immediately after the damage event, done by whatever dealt the damage -- each effect bound to what the
+ * damage was about and counted then. What follows never asks (cards/index.mjs refuses one that would).
+ */
+export function runFollowUps(state, proposal) {
+  const events = [];
+  for (const {effects, context} of proposal.followUps ?? [])
+    for (const effect of effects) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context));
+  return events;
 }
 
 /** Run a list of effects in order, collecting what happened. */

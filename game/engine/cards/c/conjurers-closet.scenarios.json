@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Conjurer's Closet",
+  "fixtures": {
+    "Grower": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{G}",
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "replacement",
+          "text": "It enters with a +1/+1 counter.",
+          "watches": {
+            "event": "enters",
+            "who": "self"
+          },
+          "change": {
+            "entersWithCounters": {
+              "counter": "+1/+1",
+              "count": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At Rob’s end step: a creature exiled and back -- a new object, entering again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conjurer's Closet",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Grower"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grower",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN",
+            "settle": true
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conjurer's Closet",
+            "Forest",
+            "Grower"
+          ]
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "to": {
+              "zoneType": "Exile",
+              "player": {
+                "playerId": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

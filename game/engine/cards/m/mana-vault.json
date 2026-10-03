@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mana Vault",
+    "oracleId": "736892cb-a34b-4bb9-b56c-e26e3db207a2",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This artifact doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.\nAt the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.\n{T}: Add {C}{C}{C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This artifact doesn't untap during your untap step.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, you may pay {4}. If you do, untap this artifact.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 4,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "untap",
+              "targets": "self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your draw step, if this artifact is tapped, it deals 1 damage to you.",
+      "trigger": {
+        "on": "step",
+        "step": "DRAW"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "self": true,
+          "tapped": true
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}{C}{C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 3
+          }
+        }
+      ]
+    }
+  ]
+}

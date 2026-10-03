@@ -94,9 +94,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 
 /* ---- a permanent present, as a condition (batch 11) ---- */
 {
-  eq([missingFor({apis: ["Mana"], options: ["IsPresent"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "IsPresentStatic"]})],
-    [[], [{kind: "option", name: "IsPresentStatic", why: "not built"}]],
-    "\"activate only if you control a Swamp\" and an intervening \"if\" are built; a static's \"as long as you control a Mountain\" is not, and holds Anger back");
+  /* (Batch 38 built a static's condition, IsPresentStatic, batch 41 an effect's, and batch 44 credited the comparison; the
+     example of one not built is now a comparison of a counted value, "if you've gained 3 or more life this turn".) */
+  eq([missingFor({apis: ["Mana"], options: ["IsPresent", "ConditionCompare"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "ConditionSVarCompare"]})],
+    [[], [{kind: "option", name: "ConditionSVarCompare", why: "not built"}]],
+    "\"activate only if you control a Swamp\", an intervening \"if\" and a comparison of permanents are built; a comparison of a counted value is not");
   eq([inventory.top.perCard["Tainted Wood"].options, inventory.top.perCard.Anger.options], [["IsPresent"], ["IsPresent", "IsPresentStatic"]],
     "the measurement tells the two apart, on the card itself");
 }
@@ -125,9 +127,10 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   /* A trigger counts only when the compiler builds it: a "whenever you cast a spell" card is not one the engine has every
      rule for just because the vocabulary names the event (the catalog showed coverage counting it, 2026-10-01). */
-  eq([missingFor({triggers: ["LifeGained"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]}), missingFor({triggers: ["SpellCast"]})],
-    [[{kind: "trigger", name: "life gained", why: "declared, not built"}], [], [], []],
-    "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not, nor one built (batch 8: spell cast)");
+  /* (Batch 76 built "becomes target"; the example of one the compiler does not build is now "land played".) */
+  eq([missingFor({triggers: ["LandPlayed"]}), missingFor({triggers: ["ChangesZone"]}), missingFor({triggers: ["Phase"]}), missingFor({triggers: ["SpellCast"]}), missingFor({triggers: ["BecomesTarget"]})],
+    [[{kind: "trigger", name: "land played", why: "declared, not built"}], [], [], [], []],
+    "a trigger the vocabulary names but the compiler does not build holds a card back; Forge's broad zone-change and phase triggers do not, nor one built (batch 8: spell cast; batch 76: becomes target)");
   /* A defined card has every rule it needs, whatever Forge's script names: its shock lands' "pay 2 life or it enters
      tapped" is an unless-cost to Forge, and the engine plays them (batch 5). */
   const directory = loadCardIndex();

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Body of Knowledge",
+    "oracleId": "7fc6a5c1-f0da-42f6-93d0-6d94467e2ac0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Body of Knowledge's power and toughness are each equal to the number of cards in your hand.\nYou have no maximum hand size.\nWhenever this creature is dealt damage, draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Body of Knowledge's power and toughness are each equal to the number of cards in your hand.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You have no maximum hand size.",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature is dealt damage, draw that many cards.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "damageDealt": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -56,9 +56,13 @@ export const ABILITY_KINDS = Object.freeze([
 const COMPOSERS = {
   sequence: (effect) => effect.effects ?? [],
   repeatFor: (effect) => effect.effects ?? [],
-  branch: (effect) => [...(effect.then ?? []), ...(effect.otherwise ?? [])],
+  /* One way or the other (batch 72): its `then` and its `otherwise`, each a list -- one that is not is reported, not read. */
+  branch: (effect) => [...(Array.isArray(effect.then) ? effect.then : []), ...(Array.isArray(effect.otherwise) ? effect.otherwise : [])],
   modal: (effect) => (effect.modes ?? []).flatMap((mode) => mode.effects ?? []),
   unlessPays: (effect) => effect.effects ?? [],
+  delayedTrigger: (effect) => effect.effects ?? [],
+  /* A reflexive trigger (batch 72): what it does. */
+  immediateTrigger: (effect) => effect.effects ?? [],
 };
 
 /** What an ability may say it exposes. Closed, like every other vocabulary here. */
@@ -89,6 +93,21 @@ function checkEffect(effect, path, errors) {
     const keys = value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value) : [];
     if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
     for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
+  }
+  /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
+     an ability's is -- an unknown key refused here rather than read as true. */
+  for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
+  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
+  if (name === "immediateTrigger") {
+    for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
+    for (const n of targetRefs(effect.effects ?? []))
+      if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
+  }
+  /* A branch's test: a condition, and there must be one. */
+  if (name === "branch") {
+    if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
+    for (const message of conditionProblems(effect.if)) errors.push({path: `${path}.if`, message});
+    for (const key of ["then", "otherwise"]) if (effect[key] !== undefined && !Array.isArray(effect[key])) errors.push({path: `${path}.${key}`, message: `A branch's ${key} is a list of effects`});
   }
   const children = COMPOSERS[name];
   if (!children) return;
@@ -130,8 +149,21 @@ function checkAbility(ability, path, errors) {
       else selector.anyOf.forEach((one, at) => checkSelector(one, `${path}.targets[${index}].anyOf[${at}]`, errors));
     } else checkSelector(selector, `${path}.targets[${index}]`, errors);
   }
-  /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. */
-  for (const n of targetRefs(ability.effects ?? []))
+  /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. A
+     modal whose modes carry their own targets (chosen as it is cast, CR 700.2): each mode's effects name its own. */
+  const modal = (ability.effects ?? []).length === 1 && ability.effects[0]?.effect === "modal" && (ability.effects[0].modes ?? []).some((m) => Array.isArray(m?.targets))
+    ? ability.effects[0] : null;
+  if (modal) {
+    for (const [m, mode] of (modal.modes ?? []).entries()) {
+      for (const [index, selector] of (mode.targets ?? []).entries()) {
+        if (selector && typeof selector === "object" && "anyOf" in selector) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
+        else checkSelector(selector, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
+      }
+      for (const n of targetRefs(mode.effects ?? []))
+        if (n < 0 || n >= (mode.targets ?? []).length)
+          errors.push({path: `${path}.effects[0].modes[${m}]`, message: `A mode names target ${n}, and declares ${(mode.targets ?? []).length}`});
+    }
+  } else for (const n of targetRefs(ability.effects ?? []))
     if (n < 0 || n >= (ability.targets ?? []).length)
       errors.push({path: `${path}.effects`, message: `An effect names target ${n}, and the ability declares ${(ability.targets ?? []).length}`});
   for (const [index, reveal] of (ability.reveals ?? []).entries()) {
@@ -184,7 +216,16 @@ function checkAbility(ability, path, errors) {
       if (!ability.apply) errors.push({path: `${path}.apply`, message: "A static ability says what it does"});
     }
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
-    else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule === "spells-cost-less"});
+    /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
+       control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
+    else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
+    /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
+    if (ability.rule === "cant-be-blocked-by") {
+      if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
+      if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
+    }
   }
 
   if (ability.kind === "replacement") {
@@ -192,6 +233,14 @@ function checkAbility(ability, path, errors) {
       errors.push({path: `${path}.watches`, message: "A replacement effect says which event it is watching for (CR 614)"});
     if (!ability.change && ability.prevent === undefined)
       errors.push({path: `${path}`, message: "A replacement effect either changes the event or prevents it"});
+    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention
+       only. A redirection (CR 614.9) goes to what its holder enchants. */
+    const then = ability.change?.then;
+    if (then !== undefined && (ability.change.prevent !== true || !Array.isArray(then) || then.length === 0))
+      errors.push({path: `${path}.change.then`, message: "What follows a prevention is a list of effects, beside prevent: true"});
+    if (Array.isArray(then)) then.forEach((effect, index) => checkEffect(effect, `${path}.change.then[${index}]`, errors));
+    if (ability.change?.redirect !== undefined && ability.change.redirect !== "enchanted")
+      errors.push({path: `${path}.change.redirect`, message: "Damage is redirected to \"enchanted\": what the holder enchants"});
   }
 }
 

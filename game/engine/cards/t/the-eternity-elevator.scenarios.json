@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Eternity Elevator",
+  "fixtures": {
+    "Titan": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 20,
+      "toughness": 20
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Twenty counters: twenty of one color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Eternity Elevator",
+            "Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "The Eternity Elevator"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "The Eternity Elevator",
+          "mana": {
+            "G": 20
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Three counters: only its {C}{C}{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Eternity Elevator",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "The Eternity Elevator"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "The Eternity Elevator"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

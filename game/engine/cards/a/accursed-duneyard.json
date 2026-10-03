@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Accursed Duneyard",
+    "oracleId": "48edc348-93f6-4dce-9cc4-7244d76b6f4a",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{2}, {T}: Regenerate target Shade, Skeleton, Specter, Spirit, Vampire, Wraith, or Zombie. (The next time it would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Regenerate target Shade, Skeleton, Specter, Spirit, Vampire, Wraith, or Zombie.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Shade"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Skeleton"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Specter"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Spirit"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Vampire"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Wraith"
+              ]
+            },
+            {
+              "what": "permanent",
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

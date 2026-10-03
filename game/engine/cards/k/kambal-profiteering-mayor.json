@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kambal, Profiteering Mayor",
+    "oracleId": "619e0686-e88c-4238-8364-75395e733533",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Whenever one or more tokens your opponents control enter, for each of them, create a tapped token that's a copy of it. This ability triggers only once each turn.\nWhenever one or more tokens you control enter, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more tokens your opponents control enter, for each of them, create a tapped token that's a copy of it. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "token": true,
+          "controller": "opponent"
+        },
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "those cards",
+          "tapped": true
+        }
+      ],
+      "limit": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more tokens you control enter, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "token": true,
+          "controller": "you"
+        },
+        "batch": true
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "opponent",
+          "amount": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

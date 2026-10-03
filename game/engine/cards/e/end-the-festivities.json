@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "End the Festivities",
+    "oracleId": "09618da4-6e2d-4047-96d7-0576c0754e7d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "End the Festivities deals 1 damage to each opponent and each creature and planeswalker they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "End the Festivities deals 1 damage to each opponent and each creature and planeswalker they control.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 1,
+          "who": "opponent",
+          "selector": {
+            "what": "permanent",
+            "controller": "opponent",
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

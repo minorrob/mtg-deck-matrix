@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teysa Karlov",
+    "oracleId": "644eeefd-e684-4ca8-8aef-a892ca130c07",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.\nCreature tokens you control have vigilance and lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "dies",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creature tokens you control have vigilance and lifelink.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "token": true,
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance",
+          "Lifelink"
+        ]
+      }
+    }
+  ]
+}

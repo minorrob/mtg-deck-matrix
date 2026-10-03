@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mana Vault",
+  "scenarios": [
+    {
+      "name": "Tapped for {C}{C}{C}: it stays tapped through his next untap step, and his draw step deals him 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mana Vault"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mana Vault"
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Mana Vault"
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

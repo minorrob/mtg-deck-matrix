@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nightscape Familiar",
+    "oracleId": "57296ea3-3c0d-49b7-bc08-0d0d8414e9ad",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Blue spells and red spells you cast cost {1} less to cast.\n{1}{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Blue spells and red spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "colors": [
+              "U"
+            ]
+          },
+          {
+            "colors": [
+              "R"
+            ]
+          }
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{B}: Regenerate this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

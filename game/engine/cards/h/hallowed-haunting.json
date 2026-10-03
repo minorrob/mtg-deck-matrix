@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hallowed Haunting",
+    "oracleId": "e310ab58-180e-4840-bc8d-9f9b06f1b478",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As long as you control seven or more enchantments, creatures you control have flying and vigilance.\nWhenever you cast an enchantment spell, create a white Spirit Cleric creature token with \"This token's power and toughness are each equal to the number of Spirits you control.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "As long as you control seven or more enchantments, creatures you control have flying and vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Vigilance"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 7
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an enchantment spell, create a white Spirit Cleric creature token with \"This token's power and toughness are each equal to the number of Spirits you control.\"",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Enchantment"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Spirit Cleric",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit",
+              "Cleric"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 0,
+            "toughness": 0,
+            "abilities": [
+              {
+                "id": "cda",
+                "kind": "static",
+                "text": "This token's power and toughness are each equal to the number of Spirits you control.",
+                "layer": 7,
+                "sublayer": "a",
+                "affects": {
+                  "self": true
+                },
+                "apply": {
+                  "setPower": {
+                    "count": {
+                      "what": "permanent",
+                      "subtypes": [
+                        "Spirit"
+                      ],
+                      "controller": "you"
+                    }
+                  },
+                  "setToughness": {
+                    "count": {
+                      "what": "permanent",
+                      "subtypes": [
+                        "Spirit"
+                      ],
+                      "controller": "you"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ramunap Excavator",
+    "oracleId": "4f819ba4-52ef-4fdd-8e4c-5ae3b2f44db5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Cleric"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "You may play lands from your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play lands from your graveyard.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "lands": true
+    }
+  ]
+}

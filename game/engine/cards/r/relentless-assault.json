@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Relentless Assault",
+    "oracleId": "dc1c0e8c-d0c1-445c-968f-7dec91e5d5fc",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase.",
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "attackedThisTurn": true
+          }
+        },
+        {
+          "effect": "addPhase",
+          "phases": [
+            "combat",
+            "main"
+          ]
+        }
+      ]
+    }
+  ]
+}

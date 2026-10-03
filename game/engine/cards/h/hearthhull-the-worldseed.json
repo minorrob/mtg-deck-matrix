@@ -1,0 +1,146 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hearthhull, the Worldseed",
+    "oracleId": "8d6f82d9-5c5b-4c41-8857-c0936f2d894c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Spacecraft"
+    ],
+    "manaCost": "{1}{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": 6,
+    "toughness": 7
+  },
+  "oracleText": "Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 8+.)\n2+ | {1}, {T}, Sacrifice a land: Draw two cards. You may play an additional land this turn.\n8+ | Flying, vigilance, haste\nWhenever you sacrifice a land, each opponent loses 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Station",
+      "keyword": "station"
+    },
+    {
+      "kind": "static",
+      "text": "It's an artifact creature at 8+.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addTypes": [
+          "Creature"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 8
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "2+ | {1}, {T}, Sacrifice a land: Draw two cards. You may play an additional land this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "extra-land-drop",
+          "affects": {
+            "what": "player",
+            "who": "you"
+          }
+        }
+      ],
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 2
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "8+ | Flying, vigilance, haste",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Vigilance",
+          "Haste"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 8
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you sacrifice a land, each opponent loses 2 life.",
+      "trigger": {
+        "on": "sacrificed",
+        "filter": {
+          "types": [
+            "Land"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": "opponent"
+        }
+      ],
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 8
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunbird's Invocation",
+    "oracleId": "10d482fd-e034-4187-b148-51fe15885360",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "from": "hand"
+      },
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "count": {
+            "manaValueOf": "that card"
+          },
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "manaValueAtMost": {
+            "manaValueOf": "that card"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "library"
+        }
+      ]
+    }
+  ]
+}

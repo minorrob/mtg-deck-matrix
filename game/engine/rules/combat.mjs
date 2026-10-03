@@ -44,11 +44,13 @@
  * file marks damage and destroys nothing.
  */
 
-import {cardsIn} from "../state/index.mjs";
+import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
+import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
+import {canPayGeneric, payGeneric} from "./mana.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -71,14 +73,14 @@ const hasNow = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
 /* CR 302.6, summoning sickness, and haste lifting it (CR 702.10b), are keywords/timing.mjs's: the same rule
    decides a creature's {T} abilities, on anyone's turn. */
 
-/** CR 508.1a: untapped, not sick, no defender, and yours. */
+/** CR 508.1a: untapped, not sick, no defender (unless it may attack as though it had none, CR 702.3b), and yours. */
 export function canAttack(state, id, player) {
   const object = state.objects[id];
   return isCreatureNow(state, id)
     && controllerOf(state, id) === player
     && !object.tapped
     && !summoningSick(state, id)
-    && !hasNow(state, id, "Defender");
+    && (!hasNow(state, id, "Defender") || ruleChanged(state, "attacks-despite-defender", id));
 }
 
 /** CR 509.1a: untapped, yours, and you are the one being attacked. */
@@ -112,7 +114,12 @@ export const attackers = {
     const defenders = defendersFor(state, awaiting.player);
     for (const id of state.zones.battlefield) {
       if (!canAttack(state, id, awaiting.player)) continue;
+      /* GOADED (CR 701.15b): it attacks a player other than its goader if it can without a cost to pay (CR 508.1d) -- so
+         its goader is not offered while such a player is. */
+      const goaders = goadersOf(state, id);
+      const elsewhere = goaders.length > 0 && defenders.some((d) => !goaders.includes(d) && attackTax(state, [{defenderId: d}]) === 0);
       for (const defender of defenders) {
+        if (elsewhere && goaders.includes(defender)) continue;
         options.push({
           index: options.length,
           label: `${state.objects[id].card} → ${state.players[defender].name}`,
@@ -151,12 +158,32 @@ export const attackers = {
     if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
       throw new Error("A creature can attack only once; the same creature was declared twice");
 
+    /* GOADED (CR 701.15b, 508.1d): it attacks each combat if able -- with no cost to pay for it -- so one left out attacks
+       anyway: the first player after its controller in turn order it may attack for free, not its goader if it can. */
+    const seats = state.players.length;
+    for (const id of state.zones.battlefield) {
+      const goaders = goadersOf(state, id);
+      if (!goaders.length || picked.some((o) => o.cardId === id) || !canAttack(state, id, awaiting.player)) continue;
+      const free = defendersFor(state, awaiting.player).filter((d) => attackTax(state, [{defenderId: d}]) === 0)
+        .sort((a, b) => (a - awaiting.player + seats) % seats - (b - awaiting.player + seats) % seats);
+      const defender = free.find((d) => !goaders.includes(d)) ?? free[0];
+      if (defender !== undefined) picked.push({cardId: id, defenderId: defender});
+    }
+
     const events = [];
     if (picked.length === 0) {
       /* CR 506.5: with no attackers, the declare blockers and combat damage steps do not happen.
          `combat` stays null, which is what the turn table's condition reads. */
       state.awaiting = null;
       return events;
+    }
+
+    /* CR 508.1g-h: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
+       "unless" cost is -- or this is not an attack that can be declared. */
+    const tax = attackTax(state, picked);
+    if (tax > 0) {
+      if (!canPayGeneric(state, awaiting.player, tax)) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
+      events.push(...payGeneric(state, awaiting.player, tax));
     }
 
     state.combat = {
@@ -170,6 +197,8 @@ export const attackers = {
     };
     /* An attacker with first strike is enough on its own; a blocker can add to it later. */
     state.combat.firstStrike = combatNeedsFirstStrike(state);
+    /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+    for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
 
     /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
     for (const attack of state.combat.attacks) {
@@ -419,7 +448,8 @@ export const combatDamage = {
         sourceId: raw.source,
         combat: true,
       });
-      if (hit.prevented === true || hit.amount <= 0) continue;
+      /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+      if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
         const before = state.players[hit.toPlayer].life;

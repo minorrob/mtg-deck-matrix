@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reflections of Littjara",
+    "oracleId": "c3fdfb94-2d10-4743-864c-a59fdd57d8b7",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose a creature type.\nWhenever you cast a spell of the chosen type, copy that spell. (A copy of a permanent spell becomes a token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this enchantment enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell of the chosen type, copy that spell.",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "subtypes": [
+            "$chosen"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": "that card"
+        }
+      ]
+    }
+  ]
+}

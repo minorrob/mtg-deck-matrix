@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fellwar Stone",
+  "scenarios": [
+    {
+      "name": "Maya's Swamp: black",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fellwar Stone"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Fellwar Stone",
+            "seat": 0
+          },
+          "count": 1,
+          "mana": [
+            {
+              "B": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Niv-Mizzet, Visionary",
+    "oracleId": "d9f1dc61-831e-4244-a2da-aa9da6fd5b50",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Wizard"
+    ],
+    "manaCost": "{4}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nYou have no maximum hand size.\nWhenever a source you control deals noncombat damage to an opponent, you draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "You have no maximum hand size.",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a source you control deals noncombat damage to an opponent, you draw that many cards.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "opponent",
+        "noncombat": true,
+        "sourceYours": true
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "damageDealt": true
+          }
+        }
+      ]
+    }
+  ]
+}

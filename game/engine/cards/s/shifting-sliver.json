@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shifting Sliver",
+    "oracleId": "6a262f53-2eea-45d0-8189-9222d66f1b52",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sliver"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Slivers can't be blocked except by Slivers.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Slivers can't be blocked except by Slivers.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Sliver"
+        ]
+      },
+      "by": {
+        "what": "permanent",
+        "nonSubtypes": [
+          "Sliver"
+        ]
+      }
+    }
+  ]
+}

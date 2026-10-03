@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obscuring Haze",
+    "oracleId": "d0a31db0-69db-405c-99a3-945617900c54",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control a commander, you may cast this spell without paying its mana cost.\nPrevent all damage that would be dealt this turn by creatures your opponents control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you control a commander, you may cast this spell without paying its mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Prevent all damage that would be dealt this turn by creatures your opponents control.",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          },
+          "apply": {
+            "by": true,
+            "to": false
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

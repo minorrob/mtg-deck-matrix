@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crystal Skull, Isu Spyglass",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A historic spell from the top; {T}: Add {U}",
+      "library": [
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crystal Skull, Isu Spyglass"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Crystal Skull, Isu Spyglass"
+        },
+        {
+          "cast": "Rock"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crystal Skull, Isu Spyglass",
+            "Rock"
+          ]
+        }
+      ]
+    }
+  ]
+}

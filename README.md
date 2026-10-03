@@ -567,7 +567,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 168 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 231 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -629,6 +629,69 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-auras` — `tests/engine-auras.mjs`
 - `engine-copies` — `tests/engine-copies.mjs`
 - `engine-unless` — `tests/engine-unless.mjs`
+- `engine-flicker` — `tests/engine-flicker.mjs`
+- `engine-other-zones` — `tests/engine-other-zones.mjs`
+- `engine-remembered` — `tests/engine-remembered.mjs`
+- `engine-once` — `tests/engine-once.mjs`
+- `engine-unblockable` — `tests/engine-unblockable.mjs`
+- `engine-surveil` — `tests/engine-surveil.mjs`
+- `engine-enters-with` — `tests/engine-enters-with.mjs`
+- `engine-uncounterable` — `tests/engine-uncounterable.mjs`
+- `engine-attack-triggers` — `tests/engine-attack-triggers.mjs`
+- `engine-damage-all` — `tests/engine-damage-all.mjs`
+- `engine-free-cast` — `tests/engine-free-cast.mjs`
+- `engine-that-many` — `tests/engine-that-many.mjs`
+- `engine-discard` — `tests/engine-discard.mjs`
+- `engine-regenerate` — `tests/engine-regenerate.mjs`
+- `engine-life-gained` — `tests/engine-life-gained.mjs`
+- `engine-copy-spell` — `tests/engine-copy-spell.mjs`
+- `engine-flashback` — `tests/engine-flashback.mjs`
+- `engine-ward` — `tests/engine-ward.mjs`
+- `engine-phases` — `tests/engine-phases.mjs`
+- `engine-triggers-again` — `tests/engine-triggers-again.mjs`
+- `engine-modes` — `tests/engine-modes.mjs`
+- `engine-repeat` — `tests/engine-repeat.mjs`
+- `engine-present` — `tests/engine-present.mjs`
+- `engine-static-conditions` — `tests/engine-static-conditions.mjs`
+- `engine-alternative-cost` — `tests/engine-alternative-cost.mjs`
+- `engine-control` — `tests/engine-control.mjs`
+- `engine-effect-conditions` — `tests/engine-effect-conditions.mjs`
+- `engine-damage-once` — `tests/engine-damage-once.mjs`
+- `engine-sacrificed` — `tests/engine-sacrificed.mjs`
+- `engine-condition-compare` — `tests/engine-condition-compare.mjs`
+- `engine-play-from` — `tests/engine-play-from.mjs`
+- `engine-damage-amount` — `tests/engine-damage-amount.mjs`
+- `engine-damage-replaced` — `tests/engine-damage-replaced.mjs`
+- `engine-remembered-moved` — `tests/engine-remembered-moved.mjs`
+- `engine-flash-sacrifice` — `tests/engine-flash-sacrifice.mjs`
+- `engine-cost-more` — `tests/engine-cost-more.mjs`
+- `engine-tapped-for-mana` — `tests/engine-tapped-for-mana.mjs`
+- `engine-storm-fight` — `tests/engine-storm-fight.mjs`
+- `engine-untap-choose-type` — `tests/engine-untap-choose-type.mjs`
+- `engine-ninjutsu` — `tests/engine-ninjutsu.mjs`
+- `engine-crew` — `tests/engine-crew.mjs`
+- `engine-chosen` — `tests/engine-chosen.mjs`
+- `engine-restricted-mana` — `tests/engine-restricted-mana.mjs`
+- `engine-become-copy` — `tests/engine-become-copy.mjs`
+- `engine-station` — `tests/engine-station.mjs`
+- `engine-enter-copy` — `tests/engine-enter-copy.mjs`
+- `engine-saga` — `tests/engine-saga.mjs`
+- `engine-play` — `tests/engine-play.mjs`
+- `engine-dig-until` — `tests/engine-dig-until.mjs`
+- `engine-cant-cast` — `tests/engine-cant-cast.mjs`
+- `engine-poison` — `tests/engine-poison.mjs`
+- `engine-earthbend` — `tests/engine-earthbend.mjs`
+- `engine-attack-tax` — `tests/engine-attack-tax.mjs`
+- `engine-token-attacking` — `tests/engine-token-attacking.mjs`
+- `engine-win-game` — `tests/engine-win-game.mjs`
+- `engine-goad` — `tests/engine-goad.mjs`
+- `engine-named-object` — `tests/engine-named-object.mjs`
+- `engine-damage-redirect` — `tests/engine-damage-redirect.mjs`
+- `engine-branch-reflexive` — `tests/engine-branch-reflexive.mjs`
+- `engine-peek` — `tests/engine-peek.mjs`
+- `engine-changeling` — `tests/engine-changeling.mjs`
+- `engine-attacker-untap` — `tests/engine-attacker-untap.mjs`
+- `engine-grants` — `tests/engine-grants.mjs`
 - `engine-entering` — `tests/engine-entering.mjs`
 - `engine-equip` — `tests/engine-equip.mjs`
 - `engine-event-triggers` — `tests/engine-event-triggers.mjs`

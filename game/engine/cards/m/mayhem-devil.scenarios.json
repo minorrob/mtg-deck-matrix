@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mayhem Devil",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Altar": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "abilities": [
+        {
+          "id": "alt",
+          "kind": "activated",
+          "text": "Sacrifice a creature: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "sacrifice",
+              "selector": {
+                "types": [
+                  "Creature"
+                ]
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob sacrifices the Bear to his Altar: 1 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mayhem Devil",
+            "Altar",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar",
+          "sacrifice": "Bear"
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

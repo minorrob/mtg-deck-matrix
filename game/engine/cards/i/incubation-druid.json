@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Incubation Druid",
+    "oracleId": "34428f42-03ac-4795-8286-6cbea796df2b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add one mana of any type that a land you control could produce. If this creature has a +1/+1 counter on it, add three mana of that type instead.\n{3}{G}{G}: Adapt 3. (If this creature has no +1/+1 counters on it, put three +1/+1 counters on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any type that a land you control could produce. If this creature has a +1/+1 counter on it, add three mana of that type instead.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "anyType": true,
+          "count": {
+            "if": {
+              "present": {
+                "self": true,
+                "countersAtLeast": {
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              }
+            },
+            "then": 3,
+            "else": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}{G}: Adapt 3. (If this creature has no +1/+1 counters on it, put three +1/+1 counters on it.)",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 3,
+          "condition": {
+            "present": {
+              "self": true,
+              "countersAtLeast": {
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            "atMost": 0
+          }
+        }
+      ]
+    }
+  ]
+}

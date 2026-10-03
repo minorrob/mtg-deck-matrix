@@ -31,6 +31,12 @@ import {keywordsOf, typesOf, controllerOf} from "../rules/layers.mjs";
 export const KEYWORD_FAMILIES = Object.freeze({
   /** When a spell may be cast, and when a permanent may act. */
   timing: Object.freeze(["Flash", "Haste"]),
+  /** Where a spell may be cast from: Flashback (CR 702.34a), from its owner's graveyard for its flashback cost, then
+      exiled. rules/actions.mjs offers the cast, rules/stack.mjs and effects/zones.mjs exile it. */
+  zones: Object.freeze(["Flashback"]),
+  /** What happens as a spell is cast: Storm (CR 702.40a), "when you cast this spell, copy it for each spell cast before
+      it this turn" -- a triggered ability of the spell (rules/actions.mjs). */
+  cast: Object.freeze(["Storm"]),
 });
 
 /**

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Leonin Warleader",
+  "scenarios": [
+    {
+      "name": "Two Cats with lifelink attacking beside it: 6 to Maya, 2 to Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Leonin Warleader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Leonin Warleader"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Cat"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Knuckles the Echidna",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Double strike: two hits on Maya, a Treasure for each; 4 to her",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Knuckles the Echidna"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Knuckles the Echidna"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_FIRST_STRIKE_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Knuckles the Echidna",
+            "Treasure",
+            "Treasure"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Thirty artifacts at his upkeep: he wins",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Knuckles the Echidna"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventGameOutcome",
+          "where": {
+            "winner": 0
+          }
+        }
+      ]
+    }
+  ]
+}

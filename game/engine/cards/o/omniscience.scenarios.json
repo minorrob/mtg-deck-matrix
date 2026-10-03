@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Omniscience",
+  "fixtures": {
+    "Wurm": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{6}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A seven-mana Wurm cast from hand for nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omniscience"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wurm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Wurm"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omniscience",
+            "Wurm"
+          ]
+        }
+      ]
+    }
+  ]
+}

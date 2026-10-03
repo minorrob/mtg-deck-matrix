@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Parhelion II",
+  "fixtures": {
+    "Hulk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Crewed by a 4/4, it attacks: two 4/4 Angels attacking, untapped; 13 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Parhelion II",
+            "Hulk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Parhelion II"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Parhelion II"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Angel",
+              "is": false
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 27
+        }
+      ]
+    }
+  ]
+}

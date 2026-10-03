@@ -48,7 +48,8 @@
           "effect": "destroy",
           "targets": {
             "target": 0
-          }
+          },
+          "noRegenerate": true
         }
       ]
     }

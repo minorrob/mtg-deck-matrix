@@ -105,15 +105,19 @@ const files = loadCardScenarios();
     const {definition, problems} = compileScript(script);
     ok(definition === null && problems.some((p) => re.test(p)), `${message} (${problems.join("; ")})`);
   };
-  problem(base([{kind: "spell", text: "Surveil 2.", effects: [{effect: "surveil", count: 2}]}]), /surveil: declared, not built/, "a primitive declared and not built");
+  problem(base([{kind: "spell", text: "Separate all creatures into two piles.", effects: [{effect: "twoPiles"}]}]), /twoPiles: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
-  problem(base([{kind: "activated", text: "Discard a card: Draw a card.", cost: [{atom: "discard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
-    /discard: a cost atom nothing pays/, "a cost atom nothing pays yet");
+  /* (Batch 27 built "Discard a card"; the example of a cost nothing pays is now one that still is not.) */
+  problem(base([{kind: "activated", text: "Exile a card from your graveyard: Draw a card.", cost: [{atom: "exileFromGraveyard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
+    /exileFromGraveyard: a cost atom nothing pays/, "a cost atom nothing pays yet");
   /* Batch 8 built "whenever this attacks": it compiles now, and a trigger still unbuilt is refused by name. */
   eq(compileScript(base([{kind: "triggered", text: "Whenever this attacks, draw.", trigger: {on: "attacks"}, effects: [{effect: "draw"}]}], ["Creature"])).problems, [],
     "\"whenever this attacks\" compiles");
-  problem(base([{kind: "triggered", text: "Whenever you gain life, draw.", trigger: {on: "life gained"}, effects: [{effect: "draw"}]}], ["Creature"]),
-    /life gained: a trigger the engine does not watch/, "a trigger the engine does not watch for");
+  /* (Batch 29 built "life gained", and batch 76 "becomes target"; the example is now a trigger still unbuilt.) */
+  eq(compileScript(base([{kind: "triggered", text: "Whenever this becomes the target of a spell, draw.", trigger: {on: "becomes target", spell: true}, effects: [{effect: "draw"}]}], ["Creature"])).problems, [],
+    "\"whenever this becomes the target of a spell\" compiles");
+  problem(base([{kind: "triggered", text: "Whenever an opponent loses life, draw.", trigger: {on: "life lost"}, effects: [{effect: "draw"}]}], ["Creature"]),
+    /life lost: a trigger the engine does not watch/, "a trigger the engine does not watch for");
   /* Batch 7 built "whenever another creature dies" (CR 603.10a): it compiles now, and a death watched for some other
      way is still refused by name. */
   const another = compileScript(base([{kind: "triggered", text: "Whenever another creature dies, gain 1.", trigger: {on: "dies", who: "another", filter: {types: ["Creature"]}},
@@ -139,8 +143,8 @@ const files = loadCardScenarios();
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
-  const mixed = createCardIndex([base([{kind: "spell", text: "Surveil 2.", effects: [{effect: "surveil", count: 2}]}])]);
-  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["surveil: declared, not built"]],
+  const mixed = createCardIndex([base([{kind: "spell", text: "Separate all creatures into two piles.", effects: [{effect: "twoPiles"}]}])]);
+  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["twoPiles: declared, not built"]],
     "a card the engine cannot play resolves, says so and why, and has no definition to seat");
   throws(() => createCardIndex([scripts[0], scripts[0]]), /Two definitions of/, "two definitions of one card are refused, by name and file");
   throws(() => createCardIndex([{schema: SCRIPT_SCHEMA, identity: {}, abilities: []}]), /has no name/, "and a nameless one");

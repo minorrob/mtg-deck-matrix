@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frontier Warmonger",
+    "oracleId": "9cb741ae-14d6-4a8d-bfad-703abfe3682c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more creatures attack one of your opponents or a planeswalker they control, those creatures gain menace until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "batch": true,
+        "defender": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "those cards",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Menace"
+          ]
+        }
+      ]
+    }
+  ]
+}

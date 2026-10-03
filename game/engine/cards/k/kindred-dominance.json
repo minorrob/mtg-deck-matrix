@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kindred Dominance",
+    "oracleId": "ccaa44f2-96be-44e2-884f-c31baa3908d5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a creature type. Destroy all creatures that aren't of the chosen type.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a creature type. Destroy all creatures that aren't of the chosen type.",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "$chosen"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -38,15 +38,19 @@
  * any at all, and `filter` the selector the arrival must match ("a creature you control"), "you" being the
  * trigger's controller.
  *
- * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" is built (M4
- * phase 3, batch 13); other moments are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
+ * DELAYED TRIGGERS (CR 603.7), created by a resolving effect: "at the beginning of the next end step" (M4 phase 3,
+ * batch 13), "at the beginning of the next turn's upkeep", and on an event -- "when that creature dies this turn",
+ * "whenever a creature dies this turn" (batch 17). Other moments ("when you next cast a creature spell") are not yet. WHAT IS DEFERRED AND NAMED: state triggers (CR 603.8), which trigger
  * while a condition holds rather than on an event.
  */
 
 import {conditionHolds} from "../script/condition.mjs";
-import {pushAbility} from "./stack.mjs";
-import {cardsIn} from "../state/index.mjs";
+import {pushAbility, becameTarget} from "./stack.mjs";
+import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
+import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
+import {abilitiesOf} from "./layers.mjs";
+import {chosenFor} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
@@ -65,6 +69,16 @@ function fits(state, id, condition, sourceId, controller) {
   return true;
 }
 
+/* "If that spell is a Lesson" (Toph), "if it's a permanent spell" (Nalfeshnee): the spell as it is now, kept with the
+   trigger, so a condition about it can still be answered once it has left the stack -- countered in response -- as it
+   last existed there (CR 608.2h; script/condition.mjs reads `was`). */
+function spellWas(state, spell) {
+  const object = state.objects[spell];
+  if (!object) return {};
+  return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
+    controller: object.controller, token: object.token === true}};
+}
+
 /**
  * WHAT A TRIGGER IS ABOUT, ONE ENTRY PER TRIGGERING (CR 603.2c). "Whenever a creature you control attacks" triggers once
  * for each creature that attacks, so an event can answer more than once; each answer says what it was about -- the spell
@@ -81,30 +95,109 @@ function subjects(state, event, condition, sourceId, controller) {
     const caster = fields.si?.actor?.playerId;
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
+    if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
     if (condition.filter && !(state.objects[spell] && matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId}))) return [];
-    /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. */
-    if (condition.firstThisTurn) {
+    /* "Their first noncreature spell each turn": this is the first of the caster's spells this turn the filter fits. And
+       "copy it for each other instant and sorcery spell you've cast before it this turn" (Thousand-Year Storm): how many
+       of them came before this one, counted now, as it triggers -- a spell cast later, in response, did not. */
+    if (condition.firstThisTurn || condition.countBefore) {
       const {what: _ignored, ...shape} = condition.filter ?? {};
       const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
-      if (fitted.length !== 1) return [];
+      if (condition.firstThisTurn && fitted.length !== 1) return [];
+      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1), ...spellWas(state, spell)}];
     }
-    return [{card: spell, player: caster}];
+    return [{card: spell, player: caster, ...spellWas(state, spell)}];
   }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */
+  /* "Whenever you attack" ("attackers declared"): the attack as a whole, by whom, with how many, at whom. */
+  if (condition.on === "GameEventAttackersDeclared" && condition.declared) {
+    const attacker = fields.player?.playerId, attacks = fields.attackers ?? [];
+    if (!attacks.length || !whoseIs(condition.attacker ?? "you", attacker, controller)) return [];
+    if (condition.atLeast && attacks.length < condition.atLeast) return [];
+    /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
+    if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
+    if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller)) return [];
+    if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))].map((player) => ({player}));
+    return [{player: attacker}];
+  }
   if (condition.on === "GameEventAttackersDeclared") {
-    return (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
-      .map((a) => ({card: a.card.cardId, player: a.defender?.playerId}));
+    const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
+      /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
+      .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
+      /* "Attack one of your opponents" (Frontier Warmonger): the player attacked is not this ability's controller. */
+      .filter((a) => condition.defender !== "opponent" || (a.defender?.playerId !== undefined && a.defender.playerId !== controller));
+    /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
+       declares every attacker (CR 508.1). */
+    if (condition.atLeast && matched.length < condition.atLeast) return [];
+    /* And its controller -- the attacking player (CR 508.1a): "it deals 1 damage to its controller" (Vengeful Ancestor), as
+       it last was should it leave before the trigger resolves (CR 608.2h). */
+    return matched.map((a) => ({card: a.card.cardId, player: a.defender?.playerId, controller: fields.player?.playerId}));
   }
   /* "Whenever this deals combat damage to a player", "whenever a creature you control deals combat damage to an
      opponent" (CR 510.2, 120.3): the source, and the player dealt the damage. */
   if (condition.on === "GameEventPlayerDamaged") {
     if (condition.combat && fields.combat !== true) return [];
+    /* "Whenever a source you control deals noncombat damage to an opponent" (Niv-Mizzet, Visionary). */
+    if (condition.noncombat && fields.combat === true) return [];
+    /* "A source you control" -- a permanent or a spell: its controller as the damage was dealt. */
+    if (condition.sourceYours && fields.source?.controller !== controller) return [];
     const to = fields.target?.playerId, source = fields.source?.cardId;
     if (condition.to === "opponent" && to === controller) return [];
     if (!fits(state, source, condition, sourceId, controller)) return [];
-    return [{card: source, player: to}];
+    /* "Create that many Treasure tokens": the damage dealt (CR 120.3), with who dealt it and to whom. */
+    return [{card: source, player: to, amount: fields.amount ?? 0}];
   }
+  /* "Whenever a source deals damage to this creature" (Phyrexian Obliterator): about the source, its controller -- "that
+     source's controller" -- and how much. */
+  if (condition.on === "GameEventCardDamaged") {
+    if (condition.to === "self" && fields.card?.cardId !== sourceId) return [];
+    if (condition.combat && fields.combat !== true) return [];
+    /* "Whenever a Dragon you control is dealt damage, it deals that much damage" (Wrathful Red Dragon), "this enchantment
+       deals that much damage to that creature's controller" (Repercussion): about the creature dealt the damage, read as
+       the damage is dealt (triggers are collected before state-based actions, so a creature dealt lethal damage is still
+       there). */
+    if (condition.to === "creature" || condition.to === "enchanted") {
+      const damaged = fields.card?.cardId;
+      if (!state.objects[damaged]) return [];
+      if (condition.to === "enchanted" && state.objects[sourceId]?.attachedTo !== damaged) return [];
+      if (condition.filter && !matchesSelector({what: "permanent", ...condition.filter}, state, damaged, {controller, source: sourceId})) return [];
+      return [{card: damaged, player: state.objects[damaged].controller, amount: fields.amount ?? 0}];
+    }
+    return [{card: fields.source?.cardId, player: fields.source?.controller, amount: fields.amount ?? 0}];
+  }
+  /* "Whenever you sacrifice a permanent": the card it became, and who sacrificed it. */
+  if (condition.on === "GameEventCardChangeZone" && condition.sacrificed) return matches(state, event, condition, sourceId, controller) ? [{card: fields.becomes, player: fields.sacrificer}] : [];
+  /* "Whenever you discard a card", "whenever an opponent discards a creature card" (CR 701.9): the card it became in the
+     graveyard (a discard as a cost -- cycling, "discard a card:" -- is a discard too), and who discarded it. */
+  if (condition.on === "GameEventCardChangeZone" && condition.discarded) {
+    if (fields.discarded !== true) return [];
+    const discarder = fields.from?.player?.playerId;
+    if (!whoseIs(condition.discarder ?? "you", discarder, controller)) return [];
+    const card = fields.becomes;
+    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
+    return [{card, player: discarder}];
+  }
+  /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
+     and the stack entry, which "counter it" counters (script/bind.mjs, `stack: "that"`). */
+  if (condition.on === "GameEventBecomesTarget") {
+    /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
+       (`who` another or any, `filter` what was targeted); "of a spell" (`spell`), not an ability. */
+    if (!fits(state, fields.targetId, condition, sourceId, controller)) return [];
+    if (condition.spell && fields.kind !== "spell") return [];
+    const by = fields.by?.playerId;
+    if (condition.by === "opponent" && (by === undefined || by === controller)) return [];
+    return [{card: fields.targetId, player: by, stackId: fields.stackId}];
+  }
+  /* "Whenever you gain life" (CR 119.9): each gain its own event -- lifelink from two creatures at once is two -- about the
+     player and how much. A loss, or no change, is not a gain. */
+  if (condition.on === "GameEventPlayerLivesChanged") {
+    const player = fields.player?.playerId, gained = (fields.newLives ?? 0) - (fields.oldLives ?? 0);
+    if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
+    return [{player, amount: gained}];
+  }
+  /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
+  if (condition.on === "GameEventManaPool") return tappedForMana(state, fields, condition, sourceId, controller) ? [{card: fields.source?.cardId, player: fields.player?.playerId}] : [];
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
@@ -114,6 +207,9 @@ function subjects(state, event, condition, sourceId, controller) {
   if (!matches(state, event, condition, sourceId, controller)) return [];
   /* A step's beginning is about the player whose turn it is: "that player draws an additional card" (Howling Mine). */
   if (event.kind === "GameEventTurnPhase" && fields.playerTurn?.playerId !== undefined) return [{player: fields.playerTurn.playerId}];
+  /* A zone change is about what the card became, when it went somewhere public (CR 400.7e): "whenever another creature
+     you control dies, return that card to its owner's hand" returns the card in the graveyard. */
+  if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) return [{card: fields.becomes}];
   return [{}];
 }
 
@@ -123,6 +219,12 @@ function matches(state, event, condition, sourceId, controller) {
   const fields = event.data?.fields ?? {};
 
   if (condition.on === "GameEventCardChangeZone") {
+    /* A sacrifice (effects/zones.mjs sacrificeOne): by whom, and not this one if it says "another". Asked here, where a
+       permanent's own departure is read too, so a creature destroyed does not trigger "whenever you sacrifice". */
+    if (condition.sacrificed) {
+      if (fields.sacrificed !== true || !whoseIs(condition.sacrificer ?? "you", fields.sacrificer, controller)) return false;
+      if (condition.another && (fields.leftBehind?.cardId ?? fields.card?.cardId) === sourceId) return false;
+    }
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not
@@ -132,6 +234,8 @@ function matches(state, event, condition, sourceId, controller) {
     const moved = fields.enteredAs ?? fields.card?.cardId;
     if (condition.who === "self" && moved !== sourceId) return false;
     if (condition.who === "another" && moved === sourceId) return false;
+    /* "When this land enters untapped": as it entered (the event says so), not as it is now. */
+    if (condition.untapped && fields.enteredTapped === true) return false;
     /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. What LEFT the
        battlefield ("another creature you control dies") is read as it last existed (CR 603.10a). */
     if (condition.filter) {
@@ -142,6 +246,11 @@ function matches(state, event, condition, sourceId, controller) {
     }
     return true;
   }
+
+  /* A SAGA'S CHAPTER (CR 714.2c): "when one or more lore counters are put onto this Saga, if the number of lore counters
+     on it was less than N and became at least N" -- its own counters of the kind, from below N to N or more. */
+  if (condition.on === "GameEventCardCounters")
+    return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
 
   if (condition.on === "GameEventTurnPhase") {
     if (condition.phase && fields.phase !== condition.phase) return false;
@@ -165,22 +274,129 @@ function matches(state, event, condition, sourceId, controller) {
  *
  * @param {Array} events  what just happened, as the rules modules returned it
  */
+/* "THAT ABILITY TRIGGERS AN ADDITIONAL TIME" (Panharmonicon, Teysa Karlov, Annie Joins Up; CR 603.2d): one more for
+   each `triggers-again` static of the trigger's controller whose `affects` names the ability's source -- a permanent, or
+   one that has just left the battlefield, read as it last was (Teysa's own "when this dies") -- and whose `cause`, when
+   it says one, is the event that triggered it. */
+function triggersAgain(state, event, controller, sourceId, lastSeen = null, departed = []) {
+  let times = 0;
+  /* And one that left the battlefield in this same action, looking back (CR 603.10a): Teysa dying with the others still
+     doubles what their deaths trigger (her ruling). Only for a departure; an arrival does not look back. */
+  const leaving = event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield";
+  const lookBack = leaving ? departed.filter((gone) => gone?.controller === controller)
+    .flatMap((gone) => (gone.abilities ?? []).filter((a) => a.kind === "static" && a.rule === "triggers-again").map((ability) => ({ability, source: gone.cardId}))) : [];
+  for (const {ability, source: holder} of [...playerStatics(state, "triggers-again", controller), ...lookBack]) {
+    const context = {controller, source: holder};
+    /* "Mardu -- If a creature attacking causes a triggered ability ... to trigger" (Windcrag Siege): its condition. */
+    if (!conditionHolds(state, ability.condition, context)) continue;
+    let theirs = false;
+    /* A key last known information does not keep (filter.mjs) is not a match. */
+    try { theirs = lastSeen ? matchesLastKnown(ability.affects, lastSeen, context) : matchesSelector(ability.affects, state, sourceId, context); } catch { theirs = false; }
+    if (!theirs) continue;
+    if (ability.cause && !causedBy(state, event, ability.cause, context)) continue;
+    times += 1;
+  }
+  return times;
+}
+/* The event a trigger triggered on, as a `triggers-again` names it: something entering (what arrived, where it is now),
+   dying (as it last was), or attacking. */
+function causedBy(state, event, cause, context) {
+  const fields = event.data?.fields ?? {};
+  if (cause.event === "enters") {
+    const arrived = fields.enteredAs ?? fields.card?.cardId;
+    return event.kind === "GameEventCardChangeZone" && fields.to?.zoneType === "Battlefield" && state.objects[arrived]?.zone === "battlefield"
+      && matchesSelector({what: "permanent", ...(cause.filter ?? {})}, state, arrived, context);
+  }
+  if (cause.event === "dies") return event.kind === "GameEventCardChangeZone" && fields.from?.zoneType === "Battlefield" && fields.to?.zoneType === "Graveyard"
+    && Boolean(fields.leftBehind) && matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
+  if (cause.event === "attacks") return event.kind === "GameEventAttackersDeclared" && (fields.attackers ?? []).length > 0;
+  return false;
+}
+
+/* TAPPED FOR MANA (CR 605.1b): a mana ability whose cost tapped its source -- by whom (`tapper`), what (`filter`, `self`,
+   `enchanted`, the permanent this Aura enchants), and what it made (`produced`, "a permanent for {C}"). */
+function tappedForMana(state, fields, condition, sourceId, controller) {
+  if (fields.tapped !== true) return false;
+  if (!whoseIs(condition.tapper ?? "you", fields.player?.playerId, controller)) return false;
+  const tapped = fields.source?.cardId;
+  if (condition.self && tapped !== sourceId) return false;
+  if (condition.enchanted && state.objects[sourceId]?.attachedTo !== tapped) return false;
+  if (condition.produced && !((fields.produced ?? {})[condition.produced] > 0)) return false;
+  if (condition.filter && !(state.objects[tapped] && matchesSelector({what: "permanent", ...condition.filter}, state, tapped, {controller, source: sourceId}))) return false;
+  return true;
+}
+
+/**
+ * THE TRIGGERED MANA ABILITIES THIS MANA EVENT TRIGGERS (CR 605.1b): not put on the stack -- the caller adds what each
+ * makes at once, to the player who tapped (its controller, for "its controller adds"). "One mana of any type that land
+ * produced": one of what it made.
+ */
+export function manaTriggered(state, event) {
+  const fields = event?.data?.fields ?? {};
+  const made = [];
+  for (const id of state.zones.battlefield) {
+    const holder = state.objects[id];
+    for (const ability of holder.abilities ?? []) {
+      const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
+      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
+      const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);
+      const adds = mana.produced ? (kind ? {[kind]: 1} : null) : mana.mana;
+      if (adds) made.push({player: fields.player?.playerId, mana: adds, source: id});
+    }
+  }
+  return made;
+}
+
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
+  /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
+     with everything it came to be about. */
+  const again = [];
   /* EVERYTHING THAT LEFT THE BATTLEFIELD IN THIS ONE ACTION, looking back (CR 603.10a): a board wipe kills Blood Artist
      with the rest, and it sees every one of them die, its own death included. One action's events are read as one
      moment -- a wipe, a round of state-based actions; an effect that destroys one thing and then another in a single
      resolution is read the same way. */
   const departed = (events ?? []).filter((e) => e.kind === "GameEventCardChangeZone" && e.data?.fields?.from?.zoneType === "Battlefield" && e.data.fields.leftBehind)
     .map((e) => e.data.fields.leftBehind);
+  /* "WHENEVER ONE OR MORE other creatures die" (`batch`): everything this action did is one event for it (CR 603.2c), so it
+     triggers once, about all of them (`about.cards`: "for each of them"). One entry per source and ability, per action. */
+  const batched = new Map();
+  const joined = (key, about) => {
+    if (!batched.has(key)) return false;
+    const entry = state.pendingTriggers[batched.get(key)];
+    if (about.card !== undefined) entry.about.cards.push(about.card);
+    /* "That much", "that many": everything this action dealt, together (two blockers' damage is one Enrage of 5). */
+    if (about.amount !== undefined) entry.about.amount = (entry.about.amount ?? 0) + about.amount;
+    return true;
+  };
+  const opened = (key, about) => {
+    batched.set(key, state.pendingTriggers.length - 1);
+    const entry = state.pendingTriggers[state.pendingTriggers.length - 1];
+    entry.about = {...(entry.about ?? {}), cards: about.card !== undefined ? [about.card] : []};
+  };
   for (const event of events ?? []) {
+    /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
+    if (event.data?.fields?.awaitingCopy === true) continue;
     for (const zone of WATCHING_ZONES) {
       for (const id of state.zones[zone]) {
         const object = state.objects[id];
-        for (const ability of object.abilities ?? []) {
-          if (ability.kind !== "triggered" || !ability.trigger) continue;
+        /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
+        for (const own of abilitiesOf(state, id)) {
+          /* "Whenever you cast a creature spell of the chosen type": read with its permanent's choice. */
+          const ability = chosenFor(own, object);
+          /* A triggered mana ability happened with the mana ability that triggered it (manaTriggered). */
+          if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.manaAbility) continue;
           for (const about of subjects(state, event, ability.trigger, id, object.controller)) {
-          if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id})) continue;
+          /* "If it isn't that player's turn" asks about the player the event is about. */
+          if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
+          /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
+             for each creature dealt it. */
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}`
+            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
+          if (ability.trigger.batch && joined(once, about)) continue;
+          /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
+          if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
+          if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
           state.pendingTriggers.push({
             abilityId: ability.id,
             text: ability.text ?? ability.id,
@@ -193,11 +409,14 @@ export function collectTriggers(state, events) {
                longer anywhere, and `card` carries only enough to name it. */
             cause: event.data?.fields?.leftBehind ?? event.data?.fields?.card ?? null,
             optional: ability.optional === true,
-            /* What it is about ("that player", "that card"), when the event says. */
-            ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
+            /* What it is about ("that player", "that card", "that much"), when the event says. */
+            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });
+          const times = triggersAgain(state, event, object.controller, id, null, departed);
+          if (times) again.push({at: state.pendingTriggers.length - 1, times});
+          if (ability.trigger.batch) opened(once, about);
           }
         }
       }
@@ -205,23 +424,47 @@ export function collectTriggers(state, events) {
     /* A DELAYED TRIGGER (CR 603.7) -- "sacrifice it at the beginning of the next end step" -- made by a resolving spell
        or ability, triggers once, at the next end step's beginning, and then it is gone. One made during an end step was
        made after that step began, so the next beginning this sees is the following turn's (CR 603.7c). */
-    if (event.kind === "GameEventTurnPhase" && event.data?.fields?.phase === "END_OF_TURN" && (state.delayedTriggers ?? []).length) {
-      const due = state.delayedTriggers.filter((d) => d.at === "end step");
+    /* "At the beginning of the next turn's upkeep" (Arcane Denial) the same way: one made during an upkeep waits for the
+       next turn's. */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep"}[event.data?.fields?.phase] : undefined;
+    if (moment && (state.delayedTriggers ?? []).length) {
+      const due = state.delayedTriggers.filter((d) => d.at === moment);
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d));
       for (const d of due) state.pendingTriggers.push({
-        abilityId: "delayed", text: d.text ?? "At the beginning of the next end step", controller: d.controller,
+        abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,
         source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
         script: {targets: [], effects: d.effects},
       });
+    }
+    /* A DELAYED TRIGGER THAT WAITS FOR AN EVENT (CR 603.7b): "when that creature dies this turn" fires once, for that
+       creature (`watch`, the object it was as the trigger was made); "whenever a creature dies this turn" every time,
+       until the turn ends (turn.mjs, cleanup). Not on the action that made it (CR 603.7a): that one is `fresh`. */
+    for (const d of [...(state.delayedTriggers ?? [])]) {
+      if (!d.on || d.fresh) continue;
+      if (d.watch !== undefined && (d.watch === null || event.data?.fields?.card?.cardId !== d.watch)) continue;
+      for (const about of subjects(state, event, d.on, d.source, d.controller)) {
+        state.pendingTriggers.push({
+          abilityId: "delayed", text: d.text ?? "A delayed trigger", controller: d.controller,
+          source: {cardId: d.source, name: d.source !== null ? state.objects[d.source]?.card ?? null : null}, cause: null, optional: false,
+          ...(about.card !== undefined || about.player !== undefined ? {about} : {}),
+          script: {targets: [], effects: d.effects},
+        });
+        /* Once, unless it is "whenever ... this turn"; "your next ... this turn" (`once`) is once, and gone at the turn's end. */
+        if (!d.thisTurn || d.once) { state.delayedTriggers = state.delayedTriggers.filter((other) => other !== d); break; }
+      }
     }
     /* A trigger that watches a permanent LEAVING has to also fire for the permanent that left,
        whose object is already gone from the battlefield by the time this runs. The event's snapshot
        is the look-back (CR 603.10a), and `cause` carries the ability it belonged to. */
     if (event.kind === "GameEventCardChangeZone" && event.data?.fields?.from?.zoneType === "Battlefield") for (const gone of departed) {
-      for (const ability of gone?.abilities ?? []) {
+      for (const own of gone?.abilities ?? []) {
+        const ability = chosenFor(own, gone);
         if (ability.kind !== "triggered" || !ability.trigger) continue;
         if (!matches(state, event, ability.trigger, gone.cardId, gone.controller)) continue;
         if (!conditionHolds(state, ability.condition, {controller: gone.controller, source: gone.cardId})) continue;
+        /* Dying with the rest, it sees them all (CR 603.10a) -- once, for "one or more". */
+        const about = event.data?.fields?.becomes !== undefined ? {card: event.data.fields.becomes} : {};
+        if (ability.trigger.batch && joined(`${gone.cardId}:${ability.id}`, about)) continue;
         state.pendingTriggers.push({
           abilityId: ability.id,
           text: ability.text ?? ability.id,
@@ -229,11 +472,19 @@ export function collectTriggers(state, events) {
           source: {cardId: gone.cardId, name: gone.name},
           cause: gone,
           optional: ability.optional === true,
+          /* "When this dies, return it to its owner's hand": the card it became (CR 400.7e). */
+          ...(event.data?.fields?.becomes !== undefined ? {about: {card: event.data.fields.becomes}} : {}),
           ...scriptOf(ability),
         });
+        const times = triggersAgain(state, event, gone.controller, gone.cardId, gone, departed);
+        if (times) again.push({at: state.pendingTriggers.length - 1, times});
+        if (ability.trigger.batch) opened(`${gone.cardId}:${ability.id}`, about);
       }
     }
   }
+  /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
+  for (const d of state.delayedTriggers ?? []) if (d.fresh) delete d.fresh;
+  for (const {at, times} of again) for (let n = 0; n < times; n += 1) state.pendingTriggers.push(structuredClone(state.pendingTriggers[at]));
   return state.pendingTriggers.length;
 }
 
@@ -289,7 +540,8 @@ function targeting(state, stackId) {
   const entry = state.stack.find((e) => e.stackId === stackId);
   if (!entry) return null;
   const source = entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null;
-  return {entry, context: {controller: entry.playerId, source}};
+  /* What it is about, for a target described by it: "target creature that player controls" (Mistblade Shinobi). */
+  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {})}};
 }
 
 /**
@@ -340,7 +592,8 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   entry.stage = "waiting";
   state.awaiting = null;
   askTriggerTargets(state);
-  return [];
+  /* What it is aimed at becomes its target (ward, CR 702.21a). */
+  return becameTarget(state, entry);
 }
 
 function putOnStack(state, triggers) {
@@ -352,6 +605,9 @@ function putOnStack(state, triggers) {
       kind: "trigger",
       script: trigger.script ?? null,
       about: trigger.about ?? null,
+      /* A permanent's own "when this dies" reads it as it last existed (CR 603.10a): "its power", "for each +1/+1 counter on
+         this creature". Only its own departure: another creature's last state is what "that creature" means, not "this". */
+      lastKnown: trigger.cause && trigger.cause.cardId === trigger.source?.cardId && !state.objects[trigger.source.cardId] ? trigger.cause : null,
     });
     /* Its targets are asked for once every trigger of the round is on the stack (askTriggerTargets). */
     if ((entry.script?.targets ?? []).length) entry.stage = "targeting";

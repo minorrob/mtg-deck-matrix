@@ -23,6 +23,9 @@
 
 /** Zones each player has their own of (CR 400.1). */
 export const PER_PLAYER = ["library", "hand", "graveyard", "command"];
+/* The public zones (CR 400.2). What a card became in one of these can be found by an ability that triggered on the move
+   (CR 400.7e) -- "return that card to its owner's hand" -- so every move to one names it (`becomes`). */
+export const PUBLIC_ZONES = Object.freeze(["battlefield", "graveyard", "exile", "stack", "command"]);
 /** Zones shared by the table. */
 export const SHARED = ["battlefield", "stack", "exile"];
 /** Every zone, in no significant order. */
@@ -146,6 +149,9 @@ export function addObject(state, object, zone, player = null) {
        zone change makes a new object, so an entering permanent gets the current turn and a creature
        that has been out since an earlier one does not. Blank until a turn has begun. */
     controlledSinceTurn: state.turn,
+    /* The turn it arrived in this zone: "destroy all creatures that entered this turn" (Force of Despair). A change of
+       control does not touch it (effects/permanents.mjs gainControl). */
+    arrivedTurn: state.turn,
     owner: Number.isInteger(object.owner) ? object.owner : player,
     controller: Number.isInteger(object.controller) ? object.controller : (object.owner ?? player),
     zone,
@@ -159,6 +165,8 @@ export function addObject(state, object, zone, player = null) {
     timestamp: state.nextTimestamp,
     /* Set by whatever created it; a token ceases to exist as a state-based action (CR 704.5d). */
     token: object.token === true,
+    /* A copy of a spell (CR 707.10): a spell on the stack that is no card. Anywhere else it ceases to exist (CR 704.5e). */
+    ...(object.copy === true ? {copy: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,
@@ -184,6 +192,16 @@ export function addObject(state, object, zone, player = null) {
   return id;
 }
 
+/** An object that ceases to exist (CR 704.5d, 704.5e): out of its zone and out of the game, with no zone change. */
+export function removeObject(state, id) {
+  const object = state.objects[id];
+  if (!object) return;
+  const list = listFor(state, object.zone, object.zonePlayer);
+  const at = list.indexOf(id);
+  if (at >= 0) list.splice(at, 1);
+  delete state.objects[id];
+}
+
 /** Which zone an object is in, or null if it is gone. */
 export function zoneOf(state, id) {
   return state.objects[id]?.zone ?? null;
@@ -202,9 +220,25 @@ export function cardsIn(state, zone, player = null) {
  * no damage, no attachments, and nothing that was tracking the old one is tracking this. Callers
  * must use the returned id; the old one stops existing.
  */
+/* "ACTIVATE ONLY ONCE EACH TURN" (CR 602.5b) AND "THIS ABILITY TRIGGERS ONLY ONCE EACH TURN": counted on the object
+   itself, so the limit stays with it when its controller changes (602.5b), and a new object (CR 400.7) starts afresh --
+   moveObject carries no count across. `key` is the ability's id (an activation) or "trigger:" and its id. */
+export function usesThisTurn(state, id, key) {
+  const used = state.objects[id]?.used;
+  return used && used.turn === state.turn ? used.counts[key] ?? 0 : 0;
+}
+export function recordUse(state, id, key) {
+  const object = state.objects[id];
+  if (!object) return;
+  if (!object.used || object.used.turn !== state.turn) object.used = {turn: state.turn, counts: {}};
+  object.used.counts[key] = (object.used.counts[key] ?? 0) + 1;
+}
+
 export function moveObject(state, id, zone, player = null) {
-  const from = state.objects[id];
-  if (!from) throw new Error(`There is no object ${id} to move`);
+  const current = state.objects[id];
+  if (!current) throw new Error(`There is no object ${id} to move`);
+  /* A permanent that became a copy moves as itself (CR 400.7; effects/permanents.mjs, becomeCopy). */
+  const from = current.uncopied ? {...current, ...current.uncopied} : current;
   assertZone(state, zone, player);
 
   const fromList = listFor(state, from.zone, from.zonePlayer);
@@ -218,7 +252,7 @@ export function moveObject(state, id, zone, player = null) {
   return addObject(state, {
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
-    owner: from.owner, controller: from.owner, token: from.token, commander: from.commander,
+    owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colorIdentity: from.colorIdentity, colors: from.colors,
     enchant: from.enchant,
   }, zone, player);

@@ -25,19 +25,19 @@
  *
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
  * not a keyword, it is a keyword with an argument, and the card script has to express that;
- * landwalk the same. Intimidate, fear, shadow and horsemanship are one card each in the pool and
- * belong with the long tail. Infect and wither change what damage DOES rather than who may block,
+ * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
+ * the pool and belong with the long tail. Infect and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
-import {keywordsOf} from "../rules/layers.mjs";
+import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
-import {combatDamageOf} from "../rules/statics.mjs";
+import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
-  evasion: Object.freeze(["Flying", "Reach", "Menace"]),
+  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender"]),
   /**
@@ -48,8 +48,11 @@ export const KEYWORD_FAMILIES = Object.freeze({
    * shroud when a selector targets (CR 115.2). They were implemented before this file existed, and
    * leaving them off the list made `engine-coverage` report them as words with no behavior — which
    * is the very claim this module exists to stop being true by accident.
+   *
+   * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
+   * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
    */
-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud"]),
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
 });
 
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
@@ -61,10 +64,19 @@ const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
  * `blockersAreLegal`.
  */
 export function canBlockAttacker(state, blockerId, attackerId) {
+  /* "Can't be blocked" (CR 509.1b), this turn or as long as a static ability says. */
+  if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
+  /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
+  if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")
       && !has(state, blockerId, "Flying") && !has(state, blockerId, "Reach")) return false;
+  /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
+  if (has(state, attackerId, "Fear")) {
+    const blocker = characteristicsOf(state, blockerId);
+    if (!(blocker.types ?? []).includes("Artifact") && !(blocker.colors ?? []).includes("B")) return false;
+  }
   return true;
 }
 

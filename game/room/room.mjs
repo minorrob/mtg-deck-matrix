@@ -130,9 +130,21 @@ export function offerDetails(state, seat, actions) {
   const say = (a, plain) => {
     const parts = [];
     if (a.kind === "activate" && (abilities.get(a.objectId)?.size ?? 0) > 1 && a.text) parts.push(`“${a.text}”`);
+    /* The modes chosen as it is cast (CR 700.2), in the card's words. */
+    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => state.objects[a.objectId]?.spell?.modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map((t) => (!t ? "" : t.kind === "player" ? player(t.id) : object(t.id, plain))).join(", ")}`);
-    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : "sacrificing"} ${object(id, plain)}`);
+    for (const [kind, id] of Object.entries(a.costChoice ?? {})) parts.push(`${kind === "discard" ? "discarding" : kind === "returnToHand" ? "returning" : kind === "exile" ? "exiling" : "sacrificing"} ${object(id, plain)}`);
+    /* An alternative cost (CR 118.9): what is paid instead of the mana cost. */
+    if (a.alternative !== undefined) {
+      const cost = state.objects[a.objectId]?.abilities?.[a.alternative]?.cost ?? [];
+      const mana = cost.find((c) => c.atom === "mana")?.cost, life = cost.filter((c) => c.atom === "payLife").reduce((n, c) => n + (c.amount ?? 0), 0);
+      parts.push([mana ? `for ${mana} instead` : (life || cost.length ? "instead of its mana cost" : "without paying its mana cost"), life ? `paying ${life} life` : null].filter(Boolean).join(", "));
+    }
+    /* "Without paying its mana cost", beside the paid cast of the same card (rules/actions.mjs). */
+    if (a.free) parts.push("without paying its mana cost");
+    /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after. */
+    if (a.flashback) parts.push("flashback");
     if (a.kind === "activate-mana" && a.produce !== undefined) parts.push(manaText(a.mana));
     return parts.join(" · ");
   };

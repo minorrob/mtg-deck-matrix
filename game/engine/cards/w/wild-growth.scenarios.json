@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wild Growth",
+  "scenarios": [
+    {
+      "name": "On his Wastes: tapped for mana, it adds an additional {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wild Growth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Wild Growth",
+          "targets": [
+            {
+              "card": "Wastes"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1,
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Destiny Spinner",
+    "oracleId": "7dd189f8-a23f-4b43-b0ef-fb174a9664ba",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Creature and enchantment spells you control can't be countered.\n{3}{G}: Target land you control becomes an X/X Elemental creature with trample and haste until end of turn, where X is the number of enchantments you control. It's still a land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creature and enchantment spells you control can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you",
+        "anyOf": [
+          {
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}: Target land you control becomes an X/X Elemental creature with trample and haste until end of turn, where X is the number of enchantments you control. It's still a land.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "animate",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "you"
+            }
+          },
+          "toughness": {
+            "count": {
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "you"
+            }
+          },
+          "subtypes": [
+            "Elemental"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Trample",
+            "Haste"
+          ]
+        }
+      ]
+    }
+  ]
+}

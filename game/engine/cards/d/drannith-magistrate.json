@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drannith Magistrate",
+    "oracleId": "aadd10d0-6dd0-4bdc-8d93-ff08e29a5863",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Your opponents can't cast spells from anywhere other than their hands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Your opponents can't cast spells from anywhere other than their hands.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "fromAnywhereButHand": true
+    }
+  ]
+}

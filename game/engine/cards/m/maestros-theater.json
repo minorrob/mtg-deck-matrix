@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Maestros Theater",
+    "oracleId": "9464ddf2-4bcb-44f6-b945-89a132544de6",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true,
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "library",
+              "selector": {
+                "anyOf": [
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Island"
+                    ]
+                  },
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Swamp"
+                    ]
+                  },
+                  {
+                    "supertypes": [
+                      "Basic"
+                    ],
+                    "subtypes": [
+                      "Mountain"
+                    ]
+                  }
+                ]
+              },
+              "to": "battlefield",
+              "tapped": true,
+              "shuffle": true
+            },
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Captain Lannery Storm",
+  "scenarios": [
+    {
+      "name": "It attacks: a Treasure; the Treasure sacrificed for mana: +1/+0",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Captain Lannery Storm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Captain Lannery Storm"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Treasure",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Captain Lannery Storm",
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

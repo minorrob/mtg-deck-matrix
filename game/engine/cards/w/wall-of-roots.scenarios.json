@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wall of Roots",
+  "scenarios": [
+    {
+      "name": "A -0/-1 counter: {G}, once this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Roots"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wall of Roots"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wall of Roots"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wall of Roots",
+            "power": 0,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Wall of Roots",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Entish Restoration",
+    "oracleId": "736017e2-bc33-49e8-812d-1639443fdb51",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 or greater, instead search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 or greater, instead search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": {
+            "if": {
+              "present": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "power": {
+                  "min": 4
+                },
+                "controller": "you"
+              }
+            },
+            "then": 3,
+            "else": 2
+          },
+          "upTo": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

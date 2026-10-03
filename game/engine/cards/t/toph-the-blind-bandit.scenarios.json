@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Toph, the Blind Bandit",
+  "scenarios": [
+    {
+      "name": "Earthbend 2: a 2/2 land; and Toph a 2/3, for the two counters on his lands",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Toph, the Blind Bandit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Toph, the Blind Bandit"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wastes"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wastes",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Toph, the Blind Bandit",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -60,7 +60,10 @@ const triggersOn = (s) => s.stack.filter((e) => e.kind === "trigger");
   eq(triggersOn(s).length, 0, "a creature spell is not an instant or sorcery: Guttersnipe does not trigger");
   castNamed(s, "Quick");
   eq(triggersOn(s).length, 1, "an instant is: the spell, now a new object on the stack (CR 400.7), is what the filter reads");
-  eq(s.stack.at(-1).about, {card: s.stack.find((e) => e.kind === "spell" && e.name === "Quick").objectId, player: 0}, "the trigger is about that spell, and its caster");
+  const quick = s.stack.find((e) => e.kind === "spell" && e.name === "Quick").objectId;
+  /* And the spell as it was, for a condition about it once it has left the stack (batch 70, CR 608.2h). */
+  eq(s.stack.at(-1).about, {card: quick, player: 0, was: {cardId: quick, types: ["Instant"], subtypes: [], supertypes: [], controller: 0, token: false}},
+    "the trigger is about that spell, and its caster");
   resolve(s);
   eq(s.players[1].life, 38, "2 damage to each opponent");
 }
@@ -124,8 +127,8 @@ const triggersOn = (s) => s.stack.filter((e) => e.kind === "trigger");
   for (let n = 0; n < 20 && s.awaiting?.kind !== "declare-attackers"; n += 1) { if (s.priorityPlayer === null) advance(s); else if (passPriority(s).outcome === "step-ends") advance(s); }
   resolveAwaiting(s, [awaitingChoice(s).options.find((o) => o.label.startsWith("Bear")).index]);
   for (let n = 0; n < 30 && !triggersOn(s).length; n += 1) { if (s.awaiting) resolveAwaiting(s, []); else if (s.priorityPlayer === null) advance(s); else if (passPriority(s).outcome === "step-ends") advance(s); }
-  eq([s.phase, s.players[1].life, triggersOn(s)[0]?.about], ["COMBAT_DAMAGE", 37, {card: s.zones.battlefield.find((id) => s.objects[id].card === "Bear"), player: 1}],
-    "the Bear's combat damage to the opponent triggers it, about the Bear and the player");
+  eq([s.phase, s.players[1].life, triggersOn(s)[0]?.about], ["COMBAT_DAMAGE", 37, {card: s.zones.battlefield.find((id) => s.objects[id].card === "Bear"), player: 1, amount: 2}],
+    "the Bear's combat damage to the opponent triggers it, about the Bear, the player, and how much (batch 26: \"that many\")");
 }
 
 {
@@ -136,7 +139,7 @@ const triggersOn = (s) => s.stack.filter((e) => e.kind === "trigger");
   collectTriggers(s, runEffects(s, [{effect: "dealDamage", amount: 1, who: "you"}], {controller: 0, source}));
   eq(s.pendingTriggers.length, 0, "its own controller dealt damage: no trigger for \"to an opponent\"");
   collectTriggers(s, runEffects(s, [{effect: "dealDamage", amount: 1, who: "opponent"}], {controller: 0, source}));
-  eq(s.pendingTriggers.map((t) => t.about), [{card: source, player: 1}], "an opponent dealt damage: one, about the source and that opponent");
+  eq(s.pendingTriggers.map((t) => t.about), [{card: source, player: 1, amount: 1}], "an opponent dealt damage: one, about the source, that opponent, and how much");
 }
 {
   /* Combat damage only: a creature's ability dealing damage to a player is not combat damage (CR 120.2). */

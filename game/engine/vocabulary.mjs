@@ -62,7 +62,7 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "discover",
+    "returnToHand", "play", "discover", "digUntil",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -72,19 +72,19 @@ export const PRIMITIVES = Object.freeze({
   ]),
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
-    "moveCounters", "replaceCounters", "amass",
+    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad",
   ]),
   permanents: Object.freeze([
-    "createToken", "copyPermanent", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
+    "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut",
   ]),
   modifiers: Object.freeze([
-    "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword",
+    "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
     "copySpell", "addTurn", "chooseCard", "chooseType", "genericChoice", "twoPiles", "connive",
-    "investigate", "cleanup",
+    "investigate", "cleanup", "addPhase", "changeTargets",
   ]),
 });
 
@@ -103,9 +103,9 @@ export const TRIGGER_EVENTS = Object.freeze([
   "phase", "step", "upkeep", "end step",
   "attacks", "attackers declared", "blocks",
   "spell cast", "damage dealt", "damage dealt once",
-  "discarded", "drawn", "land played", "becomes target", "sacrificed",
+  "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana",
   "counter added", "counter added once", "life gained", "life lost", "token created",
-  "becomes monstrous",
+  "becomes monstrous", "chapter",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -146,7 +146,11 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 
 /* Keyword abilities the app already recognizes that tier 0 did not carry. Tier 0 was measured on
    seven decks, so this is growth rather than a correction. */
-const BEYOND_TIER0 = ["shroud", "ward"];
+const BEYOND_TIER0 = ["shroud", "ward",
+  /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
+  "ninjutsu", "station",
+  /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
+  "saga"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

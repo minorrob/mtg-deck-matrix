@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sneak Attack",
+    "oracleId": "e7aee670-e6ac-4b3a-b3d1-7b7013db8f3d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{R}: You may put a creature card from your hand onto the battlefield. That creature gains haste. Sacrifice the creature at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{R}: You may put a creature card from your hand onto the battlefield. That creature gains haste. Sacrifice the creature at the beginning of the next end step.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "gains": [
+            "Haste"
+          ],
+          "atEndStep": "sacrifice"
+        }
+      ]
+    }
+  ]
+}

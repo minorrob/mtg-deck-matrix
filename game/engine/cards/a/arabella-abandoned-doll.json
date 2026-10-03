@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arabella, Abandoned Doll",
+    "oracleId": "7c4bbb1b-29c4-4e06-aed0-b361293a585b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Toy"
+    ],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever Arabella attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Arabella attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "count": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "power": {
+                "max": 2
+              }
+            }
+          },
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "power": {
+                "max": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

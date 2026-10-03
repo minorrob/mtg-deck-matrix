@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Echoes of Eternity",
+    "oracleId": "23a79523-4be0-4d17-80aa-5ea024cb3463",
+    "types": [
+      "Kindred",
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{3}{C}{C}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time.\nWhenever you cast a colorless spell, copy it. You may choose new targets for the copy. (A copy of a permanent spell becomes a token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "colorless": true,
+        "another": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a colorless spell, copy it. You may choose new targets for the copy.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "colorless": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": "that card",
+          "newTargets": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Razorkin Needlehead",
+    "oracleId": "a78f981a-bf8a-42a4-b171-d655cc2cc1a2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature has first strike during your turn.\nWhenever an opponent draws a card, this creature deals 1 damage to them.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature has first strike during your turn.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws a card, this creature deals 1 damage to them.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "who": "that player",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

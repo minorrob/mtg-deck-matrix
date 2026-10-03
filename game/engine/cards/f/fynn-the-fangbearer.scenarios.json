@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fynn, the Fangbearer",
+  "fixtures": {
+    "Snake": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Snake"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Deathtouch"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His deathtouch Snake hits Maya: two poison counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fynn, the Fangbearer",
+            "Snake"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Snake"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 2
+        },
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

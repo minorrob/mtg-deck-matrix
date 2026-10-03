@@ -33,11 +33,12 @@
  * missing one.
  */
 
-import {moveObject, PER_PLAYER} from "../state/index.mjs";
-import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf} from "./layers.mjs";
+import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
+import {applyReplacements, regenerated} from "./replacement.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
+import {sacrificeOne} from "../script/effects/zones.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -137,7 +138,9 @@ export function checkStateBasedActions(state) {
       const lists = PER_PLAYER.includes(zone) ? state.zones[zone] : [state.zones[zone]];
       for (const list of lists) {
         for (const id of [...list]) {
-          if (state.objects[id]?.token !== true) continue;
+          /* CR 704.5e: and a copy of a spell anywhere but the stack -- returned to a hand, put into a graveyard. */
+          const copyAway = state.objects[id]?.copy === true && zone !== "stack";
+          if (state.objects[id]?.token !== true && !copyAway) continue;
           list.splice(list.indexOf(id), 1);
           delete state.objects[id];
           acted = true;
@@ -157,9 +160,11 @@ export function checkStateBasedActions(state) {
       const card = cardRef(state, id);
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
-      moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
       events.push(event("GameEventCardChangeZone", state, {
         card, leftBehind,
+        /* What it became (CR 400.7e): an Aura's "return it to its owner's hand" finds the card in the graveyard. */
+        ...(PUBLIC_ZONES.includes(proposal.to) ? {becomes: fell} : {}),
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
@@ -192,6 +197,12 @@ export function checkStateBasedActions(state) {
          state-based action and not the assignment rule -- the assignment rule only decides how much
          has to be put on a blocker before damage may move past it. */
       const deathtouched = object.deathtouched === true && toughness > 0;
+      /* CR 702.12b: lethal damage and deathtouch DESTROY, and an indestructible permanent is not destroyed -- it stays,
+         damage and all. Toughness zero or less is not destruction (704.5f), so indestructible does not save it. */
+      const destroyed = !(toughness <= 0) && (deathtouched || (object.damage > 0 && object.damage >= toughness));
+      if (destroyed && keywordsOf(state, id).includes("Indestructible")) continue;
+      /* Or regenerated (CR 701.19a): a shield on it replaces the destruction. */
+      if (destroyed && regenerated(state, id, events)) { acted = true; continue; }
       if (toughness <= 0 || deathtouched || (object.damage > 0 && object.damage >= toughness)) {
         const card = cardRef(state, id);
         /* WHAT DIED, IN FULL. A "whenever this creature dies" trigger has to be found after the
@@ -219,16 +230,29 @@ export function checkStateBasedActions(state) {
           return events;
         }
         const destination = proposal.to;
-        moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
+        const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
         events.push(event("GameEventCardChangeZone", state, {
           card,
           leftBehind,
+          /* What it became (CR 400.7e): a creature that died to damage is returned by "return that card" like any other. */
+          ...(PUBLIC_ZONES.includes(destination) ? {becomes: died} : {}),
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
         acted = true;
       }
+    }
+
+    /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability
+       that has triggered and not yet left the stack, is sacrificed. */
+    for (const id of [...state.zones.battlefield]) {
+      const object = state.objects[id];
+      const chapters = (object.abilities ?? []).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
+      if (!chapters.length || (object.counters?.lore ?? 0) < Math.max(...chapters.map((a) => a.trigger.chapter))) continue;
+      const ids = new Set(chapters.map((a) => a.id));
+      if (state.stack.some((e) => e.cardId === id && ids.has(e.abilityId)) || (state.pendingTriggers ?? []).some((p) => p.source?.cardId === id && ids.has(p.abilityId))) continue;
+      if (sacrificeOne(state, id, events) !== null) acted = true;
     }
 
     for (const player of state.players) {
@@ -305,10 +329,11 @@ export function finishCommanderReplacement(state, awaiting, indices) {
   const events = [];
   const card = cardRef(state, id);
   const leftBehind = lastKnown(state, id);
-  moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
+  const moved = moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     leftBehind,
+    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: "Battlefield", player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
   }));
@@ -324,6 +349,10 @@ export function finishCommanderReplacement(state, awaiting, indices) {
  * crash and not an arbitrary winner.
  */
 export function gameOver(state) {
+  /* "You win the game" (CR 104.2b, effects/resources.mjs winGame): over at once, that player the winner -- before any
+     state-based action could take it from them (CR 104.1). */
+  const won = state.players.find((p) => p.won === true);
+  if (won) return {winner: won.id, reason: "won by an effect"};
   const alive = state.players.filter((p) => !p.lost);
   if (alive.length === 1) return {winner: alive[0].id, reason: "last player standing"};
   if (alive.length === 0) return {winner: null, reason: "all players lost"};

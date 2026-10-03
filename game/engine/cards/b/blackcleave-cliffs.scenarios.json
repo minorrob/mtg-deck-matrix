@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blackcleave Cliffs",
+  "scenarios": [
+    {
+      "name": "With two other lands, it enters untapped, and taps for either color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blackcleave Cliffs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blackcleave Cliffs"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Blackcleave Cliffs",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Blackcleave Cliffs",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With three, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blackcleave Cliffs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Blackcleave Cliffs"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Blackcleave Cliffs"
+        }
+      ]
+    }
+  ]
+}

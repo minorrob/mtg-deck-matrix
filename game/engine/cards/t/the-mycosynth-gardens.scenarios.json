@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Mycosynth Gardens",
+  "fixtures": {
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X = 2: a copy of his {2} Trinket",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Mycosynth Gardens",
+            "Wastes",
+            "Wastes",
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "The Mycosynth Gardens",
+          "x": 2,
+          "targets": [
+            {
+              "card": "Trinket"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Trinket",
+            "Wastes",
+            "Wastes",
+            "Trinket"
+          ]
+        }
+      ]
+    }
+  ]
+}
