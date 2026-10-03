@@ -36,6 +36,8 @@ export const FORGE_API = {
   ReplaceCounter: "replaceCounters", Amass: "amass",
   /* Poison ("each opponent gets a poison counter", batch 64). */
   Poison: "poison",
+  /* "You win the game" (batch 68). */
+  WinsGame: "winGame",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
   Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
@@ -173,6 +175,7 @@ export const FORGE_COUNTS = Object.freeze({
   ValidGraveyard: {name: "Cards in a graveyard", status: "built", engine: "{count: {what: \"card\", zone: \"graveyard\"}}"},
   ValidLibrary: {name: "Cards in a library", status: "missing"},
   ValidExile: {name: "Cards in exile", status: "missing"},
+  LifeAmount: {name: "That much life (\"loses that much life\", the life gained)", status: "built", engine: "{lifeGained: true}: the life the trigger is about (batch 68)"},
   Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
   DevotionDual: {name: "Devotion to two colors (CR 700.5)", status: "built", engine: "{devotion: [color, color]}"},
   Compare: {name: "A comparison (\"if you control ...\")", status: "built", engine: "{if: condition, then, else}; a modal's chooseMore, as it is cast"},

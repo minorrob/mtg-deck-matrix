@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 894 defined and playable today; 2,158 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 904 defined and playable today; 2,168 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,13 +20,13 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
-| Effects | 192 | 51 | 1 | 18 | 122 |
+| Effects | 192 | 52 | 1 | 18 | 121 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
 | Static abilities | 77 | 7 | 2 | 0 | 68 |
 | Replacement effects | 34 | 0 | 3 | 0 | 31 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 16 | 4 | 0 | 17 |
-| Amounts the game counts | 188 | 9 | 1 | 0 | 178 |
+| Amounts the game counts | 188 | 10 | 1 | 0 | 177 |
 | Choices | 15 | 11 | 0 | 1 | 3 |
 | Other keyword constructs | 16 | 2 | 0 | 1 | 13 |
 
@@ -46,11 +46,11 @@ The things that alone hold back the most of the most-played cards.
 | static | CantBlockBy | — | missing | 6 | 13 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
 | keyword construct | ETBReplacement | — | missing | 5 | 33 |
-| effect | WinsGame | — | missing | 5 | 15 |
 | effect | Branch | branch | named | 5 | 14 |
 | effect | PeekAndReveal | peekAndReveal | named | 5 | 11 |
-| count | LifeAmount | — | missing | 5 | 11 |
 | keyword ability | Changeling | — | named | 5 | 10 |
+| static | CantAttack | — | missing | 5 | 10 |
+| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 
 ## Keyword abilities (CR 702)
 
@@ -380,7 +380,7 @@ The things that alone hold back the most of the most-played cards.
 | ReplaceToken | — | missing | 17 | 35 | 17 | 0 |
 | ReplaceCounter | replaceCounters | named | 16 | 33 | 16 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
-| WinsGame | — | missing | 15 | 43 | 15 | 5 |
+| WinsGame | winGame | built | 15 | 43 | 0 | 0 |
 | ChooseColor | — | missing | 14 | 132 | 14 | 2 |
 | Branch | branch | named | 14 | 113 | 14 | 5 |
 | Regenerate | regenerate | built | 12 | 269 | 0 | 0 |
@@ -543,7 +543,7 @@ The things that alone hold back the most of the most-played cards.
 | CounterAddedOnce | counter added once | named | 10 | 47 | 10 | 4 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
-| LifeLost | — | missing | 6 | 20 | 6 | 1 |
+| LifeLost | — | missing | 6 | 20 | 6 | 5 |
 | BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 10 | 4 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 4 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 9 | 5 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 7 | 3 |
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
@@ -878,7 +878,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Life you gained this turn | — | missing | 12 | 84 | 12 | 1 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 11 | 4 |
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
-| — | LifeAmount | — | missing | 11 | 38 | 11 | 5 |
+| — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 2 |
 | — | Amount | — | missing | 10 | 43 | 10 | 1 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 1 |
