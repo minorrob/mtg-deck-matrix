@@ -110,6 +110,25 @@ function readPod(pod, cards) {
    the first. Everything named is the deciding seat's to see: what is on the battlefield or the stack, the players,
    and the seat's own hand for a discard. Two things that would read the same are told apart by power and toughness
    and whether they are tapped, then numbered. */
+/** The least legal answer to a question (room drive, answerForPilot): the minimum of options, in the order offered; an
+    amount or a division filled lethal-first, then the rest on the last; a number at its minimum. */
+export function leastAnswer(choice) {
+  const options = choice.options ?? [];
+  if (choice.mode === "damage" || choice.mode === "amount") {
+    const amounts = options.map(() => choice.minEach ?? 0);
+    let left = (choice.total ?? 0) - amounts.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < options.length && left > 0; i += 1) {
+      const room = choice.mode === "damage" ? Math.max(0, options[i].lethal ?? 0) : Math.max(0, (options[i].max ?? left) - amounts[i]);
+      const take = Math.min(left, room);
+      amounts[i] += take; left -= take;
+    }
+    if (left > 0 && amounts.length) amounts[amounts.length - 1] += left;
+    return {indices: [], amounts};
+  }
+  if (choice.mode === "integer") return {indices: [], value: choice.min ?? 0};
+  return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
+}
+
 export function offerDetails(state, seat, actions) {
   const player = (id) => (id === seat ? `${state.players[id]?.name ?? "you"} (you)` : state.players[id]?.name ?? `Seat ${id + 1}`);
   const object = (id, plain) => {
@@ -222,6 +241,21 @@ function roomOn(storage, matchId, cards) {
   const seatIndex = (seatId) => seats.findIndex((s) => s.seatId === seatId);
 
   /* Run the game until a person has to decide, or it is over. AI seats are answered on the way. */
+  /* A PILOT'S ANSWER THE RULES REFUSE IS THE PILOT'S MISTAKE, NEVER THE GAME'S END (the plan review's C2; probe R's seed
+     11 stopped a table this way). The rules check an answer before they change anything, so a refused one leaves the game
+     as it was: the refusal is said in the history, and the least legal answer is given instead -- nothing chosen where
+     nothing need be, the first options up to the minimum, damage lethal-first. Were that refused too, the game really
+     could not go on, and that is thrown as before. */
+  function answerForPilot(seat, choice, a) {
+    try {
+      return resolveAwaiting(state, a.indices, a.amounts, rng, a);
+    } catch (error) {
+      note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
+      const least = leastAnswer(choice);
+      return resolveAwaiting(state, least.indices, least.amounts, rng, least);
+    }
+  }
+
   function drive() {
     for (let steps = 0; steps < DRIVE_LIMIT; steps += 1) {
       if (finished()) {pendingSeat = null; pendingActions = null; return;}
@@ -236,7 +270,7 @@ function roomOn(storage, matchId, cards) {
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
           const a = pilotFor(seat).answer(projectFor(state, seat), choice);
           step.acted = true;
-          write(resolveAwaiting(state, a.indices, a.amounts, rng, a));
+          write(answerForPilot(seat, choice, a));
           continue;
         }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; return;

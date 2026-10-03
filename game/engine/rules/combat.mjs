@@ -23,10 +23,16 @@
  * step is cast at creatures that are already attacking and already tapped. The engine stops at
  * `state.awaiting` and asks; nobody holds priority until it has an answer.
  *
- * LETHAL BEFORE THE DAMAGE MOVES ON (CR 510.1c). An attacker facing two blockers may not assign
- * past the first until the first has lethal. `controller.mjs` already enforces exactly that in
- * `damage` mode — the same validator the board has always used — so the engine offers that record
- * rather than deciding for the player.
+ * DIVIDED AS ITS CONTROLLER CHOOSES (CR 510.1c). An attacker facing two or more blockers divides
+ * its damage among them however its controller likes: there has been no damage assignment order
+ * since the 2024 rules, and nothing needs lethal first. Lethal matters for trample alone, whose
+ * damage reaches the player only once every blocker has been assigned lethal (CR 702.19b), and
+ * deathtouch makes one damage lethal (CR 702.2c). `controller.mjs`'s `damageAssignmentProblem` says
+ * what is wrong with a division, and the engine holds every answer to it as the board's validator
+ * does. Each combat damage step asks for its own division (CR 510.4): a double striker divides twice.
+ *
+ * A CREATURE THAT HAS LEFT THE BATTLEFIELD IS OUT OF COMBAT (CR 506.4): no block is offered against
+ * an attacker that is gone, and a blocker that is gone is no longer one to divide damage among.
  *
  * THE KEYWORDS LIVE IN `keywords/combat.mjs` AND THIS FILE ASKS THEM. Evasion decides what is
  * offered as a block, menace is checked against the whole declaration because it is a rule about
@@ -53,6 +59,7 @@ import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
 import {canPayGeneric, payGeneric} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
+import {damageAssignmentProblem} from "../controller.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -248,7 +255,7 @@ export const blockers = {
     const options = [];
     /* Only the attacks aimed at THIS player. A creature cannot block an attack on somebody else
        (CR 509.1a), and offering it would let a seat defend a rival by accident. */
-    const mine = state.combat.attacks.filter((a) => a.defender === awaiting.player);
+    const mine = state.combat.attacks.filter((a) => a.defender === awaiting.player && onBattlefield(state, a.attacker));
     for (const id of state.zones.battlefield) {
       if (!canBlock(state, id, awaiting.player)) continue;
       for (const attack of mine) {
@@ -331,51 +338,63 @@ export const blockers = {
    layers that do not exist. And the amount a creature assigns is its power unless a static ability
    says toughness (CR 510.1a, rules/statics.mjs). */
 const power = (state, id) => combatDamageOf(state, id);
-/** What it takes to kill it now: its current toughness less the damage already marked (CR 510.1a). */
-const lethalFor = (state, id) => Math.max(0, toughnessOf(state, id) - state.objects[id].damage);
+/* CR 506.4: a creature that has left the battlefield is out of combat. */
+const onBattlefield = (state, id) => state.objects[id] !== undefined && state.objects[id].zone === "battlefield";
+/** Which combat damage step this is (CR 510.4): the first-strike step, or the regular one. */
+export const damageStep = (state) => (state.phase === "COMBAT_FIRST_STRIKE_DAMAGE" ? "first" : "regular");
 
 export const combatDamage = {
-  /* Only an attacker facing more than one blocker has a decision: with one blocker all its damage
-     goes there, and with none it all goes to the player. */
-  open(state) {
+  /* Only an attacker that deals damage in this step (CR 510.4) and faces more than one blocker still in combat has a
+     decision: with one blocker its damage goes there (trample pushing past lethal), and with none it goes to the player
+     with trample (CR 702.19d) or nowhere. Asked once in each damage step it deals damage in. */
+  open(state, step = damageStep(state)) {
     if (!state.combat) return false;
-    const attack = state.combat.attacks.find((a) => a.blockers.length > 1 && !a.assigned);
+    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    const attack = state.combat.attacks.find((a) => a.assignment?.step !== step && onBattlefield(state, a.attacker) && dealsNow(a.attacker)
+      && power(state, a.attacker) > 0 && a.blockers.filter((id) => onBattlefield(state, id)).length > 1);
     if (!attack) return false;
-    state.awaiting = {kind: "assign-combat-damage", player: state.combat.attackingPlayerId, attacker: attack.attacker};
+    state.awaiting = {kind: "assign-combat-damage", player: state.combat.attackingPlayerId, attacker: attack.attacker, step};
     return true;
   },
 
   choice(state, awaiting) {
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
+    const options = attack.blockers.filter((id) => onBattlefield(state, id)).map((id, index) => ({
+      index,
+      label: state.objects[id].card,
+      cardId: id,
+      /* What counts as lethal for this source (CR 702.2c: one, from deathtouch), damage already marked included. */
+      lethal: lethalNeededFrom(state, awaiting.attacker, id),
+      defender: false,
+    }));
+    /* CR 702.19b: a trampler's damage may go on to the player it attacks, once every blocker has lethal. */
+    if (hasNow(state, awaiting.attacker, "Trample"))
+      options.push({index: options.length, label: `${state.players[attack.defender].name}, once every blocker has lethal damage`, lethal: 0, defender: true, playerId: attack.defender});
     return {
-      id: `assign-damage:${state.turn}:${awaiting.attacker}`,
+      id: `assign-damage:${state.turn}:${awaiting.step ?? "regular"}:${awaiting.attacker}`,
       title: `Assign ${power(state, awaiting.attacker)} damage`,
       mode: "damage",
       min: 0,
       max: 0,
       total: power(state, awaiting.attacker),
       maySkip: false,
-      divide: false,
-      /* CR 510.1c applies in the order the blockers are listed, which is the order they were
-         declared. Letting the attacking player reorder them is CR 509.2 and arrives with the
-         ordering choice; until then the declared order is the assignment order. */
+      /* CR 510.1c: divided among the blockers as the attacking creature's controller chooses -- in no order. */
+      divide: true,
       overrideOrder: false,
-      options: attack.blockers.map((id, index) => ({
-        index,
-        label: state.objects[id].card,
-        cardId: id,
-        lethal: lethalFor(state, id),
-        defender: false,
-      })),
+      options,
     };
   },
 
   resolve(state, awaiting, amounts) {
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
-    if (!Array.isArray(amounts) || amounts.length !== attack.blockers.length)
-      throw new Error("Assign damage to each listed recipient");
-    attack.assignment = amounts.slice();
-    attack.assigned = true;
+    const choice = combatDamage.choice(state, awaiting);
+    const problem = damageAssignmentProblem(choice, amounts);
+    if (problem) throw new Error(problem);
+    attack.assignment = {
+      step: awaiting.step ?? "regular",
+      toBlockers: Object.fromEntries(choice.options.filter((o) => !o.defender).map((o) => [o.cardId, amounts[o.index]])),
+      toDefender: choice.options.filter((o) => o.defender).reduce((n, o) => n + amounts[o.index], 0),
+    };
     state.awaiting = null;
     return [];
   },
@@ -405,27 +424,31 @@ export const combatDamage = {
         if (!attack.blocked) {
           /* CR 510.1a: an unblocked attacker assigns its damage to the player it is attacking. */
           pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
-        } else if (attack.blockers.length === 1 && stillThere(attack.blockers[0])) {
-          /* CR 702.19b: with trample, only LETHAL has to be assigned to the blocker and the rest
-             may be pushed through. Without it the excess is simply lost, which is the whole point
-             of chump blocking. Lethal is asked of the SOURCE as well as the target, because
-             deathtouch makes one damage lethal (CR 702.2b). */
-          const lethal = Math.min(attackPower, lethalNeededFrom(state, attack.attacker, attack.blockers[0]));
-          const over = trampleOver(state, attack.attacker, lethal);
-          const toBlocker = over > 0 ? lethal : attackPower;
-          if (toBlocker > 0) pending.push({toCard: attack.blockers[0], amount: toBlocker, source: attack.attacker});
-          if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
-        } else if (attack.blockers.length > 1) {
-          const assignment = attack.assignment ?? [];
-          let assigned = 0;
-          attack.blockers.forEach((id, index) => {
-            if (!stillThere(id)) return;
-            const amount = assignment[index] ?? 0;
-            assigned += amount;
-            if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
-          });
-          const over = trampleOver(state, attack.attacker, assigned);
-          if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
+        } else {
+          const standing = attack.blockers.filter(stillThere);
+          if (standing.length === 0) {
+            /* CR 702.19d: blocked, with nothing left blocking it -- with trample, all of it to the player; without,
+               none (CR 510.1c). */
+            if (trampleOver(state, attack.attacker, 0) > 0) pending.push({toPlayer: attack.defender, amount: attackPower, source: attack.attacker});
+          } else if (standing.length === 1) {
+            /* CR 702.19b: with trample, only LETHAL has to be assigned to the blocker and the rest
+               may be pushed through. Without it the excess is simply lost, which is the whole point
+               of chump blocking. Lethal is asked of the SOURCE as well as the target, because
+               deathtouch makes one damage lethal (CR 702.2c). */
+            const lethal = Math.min(attackPower, lethalNeededFrom(state, attack.attacker, standing[0]));
+            const over = trampleOver(state, attack.attacker, lethal);
+            const toBlocker = over > 0 ? lethal : attackPower;
+            if (toBlocker > 0) pending.push({toCard: standing[0], amount: toBlocker, source: attack.attacker});
+            if (over > 0) pending.push({toPlayer: attack.defender, amount: over, source: attack.attacker});
+          } else {
+            /* Divided as its controller chose for this step (open, resolve). */
+            const assignment = attack.assignment?.step === step ? attack.assignment : {toBlockers: {}, toDefender: 0};
+            for (const id of standing) {
+              const amount = assignment.toBlockers[id] ?? 0;
+              if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
+            }
+            if (assignment.toDefender > 0) pending.push({toPlayer: attack.defender, amount: assignment.toDefender, source: attack.attacker});
+          }
         }
       }
       /* CR 510.1d: each blocking creature assigns its damage to the creature it is blocking. */

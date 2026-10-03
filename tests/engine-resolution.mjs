@@ -230,11 +230,12 @@ const asked = (s) => { const c = awaitingChoice(s); return {mode: c.mode, min: c
   const first = awaitingChoice(s);
   eq(first.options.length, 4, "over their own hand");
   resolveAwaiting(s, [0]);
-  eq(handNames(s, 1).length, 3, "one gone");
+  eq(handNames(s, 1).length, 4, "chosen, and still in hand: every opponent chooses before anything is discarded (CR 101.4)");
   eq(s.awaiting.player, 2, "and the next opponent is asked in turn");
   resolveAwaiting(s, [0]);
   resolveAwaiting(s, [0]);
   eq(resolutionPending(s), false, "once every one of them has answered");
+  eq([handNames(s, 1).length, handNames(s, 2).length, handNames(s, 3).length], [3, 3, 3], "then each discards the card they chose, together");
   eq(handNames(s, 0).length, 4, "the controller discarded nothing");
   eq(cardsIn(s, "graveyard", 1).length, 1, "and each discard went to its own graveyard");
 }

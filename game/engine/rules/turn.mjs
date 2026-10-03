@@ -37,7 +37,7 @@
 
 import {cardsIn, moveObject} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
-import {checkStateBasedActions, gameOver, finishCommanderReplacement} from "./sba.mjs";
+import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule} from "./sba.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, resolutionChoice} from "../script/resolution.mjs";
@@ -231,6 +231,7 @@ export function awaitingChoice(state) {
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
+  if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
   if (awaiting.kind === "order-triggers") return triggerChoice(state, awaiting);
   if (awaiting.kind === "trigger-targets") return triggerTargetsChoice(state, awaiting);
   if (awaiting.kind === "entering-choice") return enteringChoice(state, awaiting);
@@ -286,6 +287,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, events);
     return events;
   }
+  if (awaiting.kind === "legend-rule") {
+    const events = finishLegendRule(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "order-triggers") {
     const events = resolveTriggerOrder(state, awaiting, indices);
     grantStepPriority(state, events);
@@ -328,8 +334,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
-       the last is answered is any damage dealt — CR 510.2, all of it at the same time. */
-    if (!combatDamage.open(state)) events.push(...combatDamage.deal(state));
+       the last is answered is any damage dealt — CR 510.2, all of it at the same time, and as the
+       damage of the step it was asked in (CR 510.4): a division in the first-strike step is
+       first-strike damage. */
+    const step = awaiting.step ?? "regular";
+    if (!combatDamage.open(state, step)) events.push(...combatDamage.deal(state, {step}));
     grantStepPriority(state, events);
     return events;
   }

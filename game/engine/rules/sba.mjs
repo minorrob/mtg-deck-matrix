@@ -30,19 +30,26 @@
  * else has settled: it died, or was exiled, like any card, and what watches for that saw it. Asked once each time it
  * arrives (rules/commander.mjs), never while the game is over.
  *
- * WHAT IS DEFERRED AND NAMED: the legend rule (CR 704.5j) and planeswalker loyalty (CR 704.5i) need
- * card types and supertypes that arrive with the card directory in phase 2; "can't lose" effects,
- * which the Java probe also pinned, need continuous effects (1.8). Each is a rule this file will
- * grow, not one it silently ignores — an unimplemented rule that looks implemented is worse than a
- * missing one.
+ * THE LEGEND RULE IS A CHOICE (CR 704.5j). Two or more legendary permanents with one name under one
+ * controller: that player chooses the one to keep, and the rest are PUT INTO their owners' graveyards
+ * -- not destroyed, so indestructible does not save them, and a death all the same, so "dies" sees
+ * it. Asked here like the commander's question, once everything else has settled.
+ *
+ * +1/+1 AND -1/-1 COUNTERS ANNIHILATE (CR 704.5q): N of each go, N the smaller count.
+ *
+ * WHAT IS DEFERRED AND NAMED: planeswalker loyalty (CR 704.5i) waits for planeswalkers, which no
+ * definition plays yet; "can't lose" effects, which the Java probe also pinned, need continuous
+ * effects (1.8); a permanent that turns the legend rule off (Mirror Gallery) has no script. Each is
+ * a rule this file will grow, not one it silently ignores — an unimplemented rule that looks
+ * implemented is worse than a missing one.
  */
 
 import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne} from "../script/effects/zones.mjs";
+import {sacrificeOne, moveOne} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -143,6 +150,19 @@ export function checkStateBasedActions(state) {
           acted = true;
         }
       }
+    }
+
+    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller. */
+    for (const id of state.zones.battlefield) {
+      const counters = state.objects[id].counters ?? {};
+      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
+      if (n <= 0) continue;
+      for (const kind of ["+1/+1", "-1/-1"]) {
+        const before = counters[kind];
+        counters[kind] = before - n;
+        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
+      }
+      acted = true;
     }
 
     /* CR 704.5m: an Aura attached to nothing, or to a permanent its Enchant could not enchant, is put into its owner's
@@ -262,7 +282,7 @@ export function checkStateBasedActions(state) {
          command zone, so the engine stops and asks (rules/commander.mjs). Last, once the rest has settled: a player
          who lost is not asked, and a game that is over asks nobody anything. */
       if (!state.awaiting && !gameOver(state)) {
-        const ask = commanderToAsk(state);
+        const ask = legendToAsk(state) ?? commanderToAsk(state);
         if (ask) state.awaiting = ask;
       }
       break;
@@ -307,6 +327,63 @@ export function concede(state, playerId) {
     state.priorityPlayer = gameOver(state) ? null : next;
     state.passes = 0;
   }
+  return events;
+}
+
+/* ---- CR 704.5j, the legend rule ---- */
+
+/* The first player, in turn order from the active player (CR 101.4), with two or more legendary permanents of one name:
+   the question for them, or null. A face-down permanent has no name (CR 708.2), so it is in no group. */
+function legendToAsk(state) {
+  const count = state.players.length;
+  for (let step = 0; step < count; step += 1) {
+    const player = ((state.activePlayer ?? 0) + step) % count;
+    const byName = new Map();
+    for (const id of state.zones.battlefield) {
+      const object = state.objects[id];
+      if (object.faceDown === true || !(object.supertypes ?? []).includes("Legendary") || controllerOf(state, id) !== player) continue;
+      byName.set(object.card, [...(byName.get(object.card) ?? []), id]);
+    }
+    for (const [name, objectIds] of byName) if (objectIds.length > 1) return {kind: "legend-rule", player, name, objectIds};
+  }
+  return null;
+}
+
+/** The legend rule's question (§12.1): which one to keep. Each is told apart in words -- tapped, counters, damage, the
+    turn it arrived -- and numbered only where those are the same. */
+export function legendChoice(state, awaiting) {
+  const ids = awaiting.objectIds.filter((id) => state.objects[id]?.zone === "battlefield");
+  const describe = (id) => {
+    const o = state.objects[id];
+    const counters = Object.entries(o.counters ?? {}).filter(([, n]) => n > 0).map(([kind, n]) => `${n} ${kind}`);
+    return [o.tapped ? "tapped" : "untapped", ...counters, ...(o.damage > 0 ? [`${o.damage} damage`] : []), `arrived turn ${o.arrivedTurn ?? 0}`].join(", ");
+  };
+  const words = ids.map(describe);
+  return {
+    id: `legend-rule:${state.turn}:${ids.join("-")}`,
+    title: `The legend rule: keep which ${awaiting.name}?`,
+    mode: "one",
+    min: 1,
+    max: 1,
+    options: ids.map((id, index) => ({index, cardId: id,
+      label: `Keep ${awaiting.name} (${words[index]}${words.filter((w) => w === words[index]).length > 1 ? `, #${index + 1}` : ""})`})),
+  };
+}
+
+/**
+ * Finish the legend rule: the one chosen stays, and each other is put into its owner's graveyard -- through the
+ * replacements, with its last known information, as a death (effects/zones.mjs, moveOne). Then the whole check again.
+ *
+ * @returns {Array} events for the caller to journal
+ */
+export function finishLegendRule(state, awaiting, indices) {
+  const ids = awaiting.objectIds.filter((id) => state.objects[id]?.zone === "battlefield");
+  if (!Array.isArray(indices) || indices.length !== 1 || ids[indices[0]] === undefined) throw new Error("Choose the one to keep");
+  const keep = ids[indices[0]];
+  state.awaiting = null;
+  const events = [];
+  for (const id of ids) if (id !== keep) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+  events.push(...checkStateBasedActions(state));
   return events;
 }
 

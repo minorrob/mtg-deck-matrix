@@ -299,8 +299,12 @@ export const discard = {
           discardOne(state, rng.pick(cardsIn(state, "hand", player)), player, events);
       return {events};
     }
+    /* CR 101.4: the active player chooses first, then each other player in turn order -- and nobody's card moves until
+       the last has chosen (apply). */
+    const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
+    const asked = [...queue].sort((a, b) => apnap(a) - apnap(b));
     state.awaiting = {
-      kind: "effect-choice", effect: "discard", player: queue[0], remaining: queue.slice(1),
+      kind: "effect-choice", effect: "discard", player: asked[0], remaining: asked.slice(1),
       count: params.count ?? 1, who: params.who, controller: context.controller,
       ...(params.remember ? {remembering: []} : {}),
     };
@@ -326,16 +330,18 @@ export const discard = {
     /* Resolved to ids before anything moves, because each move makes a new object and rewrites the
        hand underneath the positions the player answered with. */
     const chosen = (indices ?? []).map((index) => hand[index]).filter((id) => id !== undefined);
-    const gone = [];
-    for (const id of chosen) gone.push(discardOne(state, id, awaiting.player, events));
-    /* What the effect's controller discarded, as the cards it became. */
-    const remembering = awaiting.remembering && awaiting.player === awaiting.controller ? [...awaiting.remembering, ...gone] : awaiting.remembering;
-
-    /* The next player who still has to discard, if there is one. */
+    /* CR 101.4: chosen now, discarded when the last player has chosen -- every player's at the same time. */
+    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: chosen}];
     const next = (awaiting.remaining ?? []).filter((player) => cardsIn(state, "hand", player).length > 0);
     if (next.length > 0) {
-      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), ...(remembering ? {remembering} : {})};
+      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
+    }
+    /* What the effect's controller discarded, as the cards it became. */
+    let remembering = awaiting.remembering;
+    for (const {player, ids} of decided) {
+      const gone = ids.map((id) => discardOne(state, id, player, events));
+      if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
     }
     return remembering ? {events, remembered: remembering} : events;
   },
@@ -490,18 +496,24 @@ export const sacrifice = {
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);
     const chosen = (indices ?? []).map((i) => mine[i]).filter((id) => id !== undefined);
     if (awaiting.keep !== undefined && chosen.length > awaiting.keep) throw new Error("Invalid selection");
-    /* Kept: the rest go. Otherwise: the ones chosen. */
-    const gone = [];
-    for (const id of awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen) {
-      const moved = sacrificeOne(state, id, events);
-      if (moved !== null) gone.push(moved);
-    }
-    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
-    const remembering = awaiting.remember === awaiting.player ? [...awaiting.remembering, ...gone] : awaiting.remembering;
+    /* Kept: the rest go. Otherwise: the ones chosen. CR 101.4: chosen now, sacrificed when the last player has chosen --
+       every player's at the same time, so nothing the first gave up is gone while the next decides. */
+    const going = awaiting.keep !== undefined ? mine.filter((id) => !chosen.includes(id)) : chosen;
+    const decided = [...(awaiting.decided ?? []), {player: awaiting.player, ids: going}];
     const next = (awaiting.remaining ?? []).filter((p) => mustSacrifice(state, p, awaiting));
     if (next.length > 0) {
-      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), ...(remembering ? {remembering} : {})};
+      state.awaiting = {...awaiting, player: next[0], remaining: next.slice(1), decided};
       return {events, again: true};
+    }
+    /* What the effect's controller sacrificed, as the objects it became (a token's until it ceases to exist, CR 704.5d). */
+    let remembering = awaiting.remembering;
+    for (const {player, ids} of decided) {
+      const gone = [];
+      for (const id of ids) {
+        const moved = sacrificeOne(state, id, events);
+        if (moved !== null) gone.push(moved);
+      }
+      if (awaiting.remember === player) remembering = [...remembering, ...gone];
     }
     return remembering ? {events, remembered: remembering} : events;
   },
