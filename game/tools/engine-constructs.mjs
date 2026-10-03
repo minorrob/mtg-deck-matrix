@@ -140,7 +140,10 @@ export const FORGE_OPTIONS = Object.freeze({
   ConditionCompare: {name: "An effect's condition: a comparison", status: "built", engine: "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}"},
   ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
   ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
-  ConditionDefined: {name: "An effect's condition: about a named object", status: "missing"},
+  /* Batch 70: its seven forms -- how the spell was cast (from a graveyard, Addendum's main phase), what the effect before
+     did "this way" (sacrificed, discarded, dealt damage to, made), and the spell a trigger is about, as it last was. */
+  ConditionDefined: {name: "An effect's condition: about a named object", status: "built",
+    engine: "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent"},
   Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "built", engine: "an effect's or a static's condition: present, turn, graveyard types"},
   CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},

@@ -1,0 +1,293 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yenna, Redtooth Regent",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Blessing": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Aura"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "enchant": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "spell": {
+        "id": "enchant",
+        "text": "Enchant creature",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": []
+      },
+      "abilities": [
+        {
+          "id": "b",
+          "kind": "static",
+          "layer": 7,
+          "sublayer": "c",
+          "text": "Enchanted creature gets +1/+1.",
+          "affects": {
+            "attachedBy": "self"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Anthem": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "abilities": [
+        {
+          "id": "a",
+          "kind": "static",
+          "layer": 7,
+          "sublayer": "c",
+          "text": "Creatures you control get +1/+1.",
+          "affects": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A copy of her Blessing: it enchants the Bear she chooses, and Yenna untaps and scries 2; two Blessings now, so no third",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yenna, Redtooth Regent",
+            "Bear",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blessing"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Blessing",
+          "targets": [
+            {
+              "card": "Yenna, Redtooth Regent"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Yenna, Redtooth Regent"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Blessing"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Yenna, Redtooth Regent",
+          "targets": [
+            {
+              "card": "Blessing"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Yenna, Redtooth Regent",
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1
+          ],
+          "extra": {
+            "toBottom": []
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Yenna, Redtooth Regent"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Yenna, Redtooth Regent",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Yenna, Redtooth Regent",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "A copy of her Anthem: not an Aura, so Yenna stays tapped and nothing is scried",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yenna, Redtooth Regent",
+            "Anthem",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Yenna, Redtooth Regent",
+          "targets": [
+            {
+              "card": "Anthem"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Yenna, Redtooth Regent",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Yenna, Redtooth Regent",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

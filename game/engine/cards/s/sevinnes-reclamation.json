@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sevinne's Reclamation",
+    "oracleId": "1b9f9f5b-8712-4f00-90cb-1b7b9970eccc",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target permanent card with mana value 3 or less from your graveyard to the battlefield. If this spell was cast from a graveyard, you may copy this spell and may choose a new target for the copy.\nFlashback {4}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target permanent card with mana value 3 or less from your graveyard to the battlefield. If this spell was cast from a graveyard, you may copy this spell and may choose a new target for the copy.",
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        },
+        {
+          "effect": "modal",
+          "title": "If this spell was cast from a graveyard, you may copy this spell and may choose a new target for the copy.",
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "copySpell",
+                  "spells": "self",
+                  "newTargets": true
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ],
+          "condition": {
+            "cast": {
+              "from": "graveyard"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "nonTypes": [
+            "Instant",
+            "Sorcery"
+          ],
+          "manaValue": {
+            "max": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {4}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ]
+    }
+  ]
+}

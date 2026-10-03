@@ -68,6 +68,16 @@ function fits(state, id, condition, sourceId, controller) {
   return true;
 }
 
+/* "If that spell is a Lesson" (Toph), "if it's a permanent spell" (Nalfeshnee): the spell as it is now, kept with the
+   trigger, so a condition about it can still be answered once it has left the stack -- countered in response -- as it
+   last existed there (CR 608.2h; script/condition.mjs reads `was`). */
+function spellWas(state, spell) {
+  const object = state.objects[spell];
+  if (!object) return {};
+  return {was: {cardId: spell, types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])],
+    controller: object.controller, token: object.token === true}};
+}
+
 /**
  * WHAT A TRIGGER IS ABOUT, ONE ENTRY PER TRIGGERING (CR 603.2c). "Whenever a creature you control attacks" triggers once
  * for each creature that attacks, so an event can answer more than once; each answer says what it was about -- the spell
@@ -93,9 +103,9 @@ function subjects(state, event, condition, sourceId, controller) {
       const {what: _ignored, ...shape} = condition.filter ?? {};
       const fitted = (state.players[caster]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(shape, {...cast, controller: caster}, {controller}));
       if (condition.firstThisTurn && fitted.length !== 1) return [];
-      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1)}];
+      if (condition.countBefore) return [{card: spell, player: caster, castBefore: Math.max(0, fitted.length - 1), ...spellWas(state, spell)}];
     }
-    return [{card: spell, player: caster}];
+    return [{card: spell, player: caster, ...spellWas(state, spell)}];
   }
   /* "Whenever this creature attacks", "whenever a creature you control attacks" (CR 508.1m): each attacker, and the
      player it attacks. */

@@ -91,6 +91,9 @@ function checkEffect(effect, path, errors) {
     if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
     for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
   }
+  /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
+     an ability's is -- an unknown key refused here rather than read as true. */
+  for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);

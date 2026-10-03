@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yenna, Redtooth Regent",
+    "oracleId": "0adede77-5181-4190-8066-4797cefe0189",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Noble"
+    ],
+    "manaCost": "{2}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "{2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it isn't legendary. If the token is an Aura, untap Yenna, then scry 2. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it isn't legendary. If the token is an Aura, untap Yenna, then scry 2. Activate only as a sorcery.",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ],
+          "controller": "you",
+          "uniqueName": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          },
+          "except": {
+            "nonLegendary": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "self",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "subtypes": [
+                "Aura"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "scry",
+          "count": 2,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "subtypes": [
+                "Aura"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
