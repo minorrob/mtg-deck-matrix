@@ -46,10 +46,10 @@ if (browser) try {
   await openMenu();
   const items = await page.$$eval("#cm-user-menu > p, #cm-user-menu button, #cm-user-menu a", (els) => els.map((el) => el.textContent.replace(/^[^\p{L}]+/u, "").trim()).filter((t) => !t.startsWith("Signed in")));
   eq(await page.locator("#cm-account > p").first().textContent(), "Account", "the Menu opens on Account");
-  eq(items, ["Sync now", "Refresh", "Settings", "Save a backup file", "Restore from a backup file",
+  eq(items, ["Sync now", "Refresh", "Settings", "Save a backup file", "Restore from a backup file", "Reset All",
     "Help", "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code",
     "Switch theme", "Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt", "Sign out"],
-  "the Menu: Account with Sync now and Refresh under it, Settings and backups, Help with the glossary switch, then Switch theme, then Sign out");
+  "the Menu: Account with Sync now and Refresh under it, Settings, the backups and Reset All, Help with the glossary switch, then Switch theme, then Sign out");
   ok(!items.includes("Share CrankMagic by email") && !(await page.locator("#cm-share-mail").count()), "Share CrankMagic by email is gone");
   await shot(page, "menu-1400");
 
