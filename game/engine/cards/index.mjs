@@ -659,6 +659,22 @@ export function compileScript(script) {
     ...(spell ? {spell} : {}),
     ...(enchant ? {enchant: enchant.target} : {}),
   };
+  /* A MODAL DOUBLE-FACED CARD (CR 712.3): "Front // Back", each face compiled as a card of its own, the card's oracle id
+     and color identity both faces' (CR 903.4). Each face's characteristics go with the card (`mdfc`); which is up is the
+     object's (state/index.mjs): the front, but for a back face played as a land (CR 712.12, 712.8a, 712.8f). */
+  if (script.back !== undefined) {
+    const names = String(identity.name).split(" // ");
+    const back = compileScript({schema: script.schema, identity: {...script.back.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
+      oracleText: script.back.oracleText, source: script.source, abilities: script.back.abilities});
+    if (names.length !== 2 || script.back.identity?.name !== names[1]) problems.push(`a double-faced card is named "Front // Back", and its back face is the second name`);
+    for (const problem of back.problems) problems.push(`back face: ${problem}`);
+    if (back.definition) {
+      const face = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
+        colors: [...d.colors], power: d.power, toughness: d.toughness, keywords: [...d.keywords], abilities: structuredClone(d.abilities),
+        ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
+      definition.mdfc = {front: face(definition, names[0]), back: face(back.definition, names[1])};
+    }
+  }
   return {definition: problems.length ? null : definition, problems: [...new Set(problems)]};
 }
 

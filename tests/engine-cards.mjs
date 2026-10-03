@@ -48,13 +48,25 @@ const files = loadCardScenarios();
   for (const {script, path} of scripts) {
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
-    const num = (v) => (v !== null && /^\d+$/.test(v) ? Number(v) : null);
-    const want = {oracleId: card.id, manaCost: card.mana, colors: card.colors, colorIdentity: card.ci, power: num(card.power), toughness: num(card.toughness)};
+    const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
+    /* A modal double-faced card (CR 712.3): its identity is its front face's, its back face the oracle's second. */
+    const double = card.layout === "modal_dfc";
+    const front = double ? card.faces[0] : card;
+    const want = {oracleId: card.id, manaCost: front.mana, colors: front.colors, colorIdentity: card.ci, power: num(front.power), toughness: num(front.toughness)};
     const got = {oracleId: script.identity.oracleId, manaCost: script.identity.manaCost, colors: script.identity.colors,
       colorIdentity: script.identity.colorIdentity, power: script.identity.power, toughness: script.identity.toughness};
     if (JSON.stringify(got) !== JSON.stringify(want)) drift.push(`${path}: identity ${JSON.stringify(got)} is not the oracle's ${JSON.stringify(want)}`);
-    if (script.oracleText !== card.text) drift.push(`${path}: its oracle text is not the oracle's`);
-    for (const ability of script.abilities) if (!card.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of the card`);
+    if (script.oracleText !== front.text) drift.push(`${path}: its oracle text is not the oracle's`);
+    for (const ability of script.abilities) if (!front.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of the card`);
+    if (double !== (script.back !== undefined)) drift.push(`${path}: ${double ? "a double-faced card without its back face" : "a back face on a card that has none"}`);
+    if (double && script.back) {
+      const back = card.faces[1];
+      const wantBack = {name: back.name, manaCost: back.mana || null, colors: back.colors, power: num(back.power), toughness: num(back.toughness)};
+      const gotBack = {name: script.back.identity.name, manaCost: script.back.identity.manaCost ?? null, colors: script.back.identity.colors, power: script.back.identity.power, toughness: script.back.identity.toughness};
+      if (JSON.stringify(gotBack) !== JSON.stringify(wantBack)) drift.push(`${path}: back face ${JSON.stringify(gotBack)} is not the oracle's ${JSON.stringify(wantBack)}`);
+      if (script.back.oracleText !== back.text) drift.push(`${path}: its back face's oracle text is not the oracle's`);
+      for (const ability of script.back.abilities) if (!back.text.includes(ability.text)) drift.push(`${path}: "${ability.text}" is not a sentence of its back face`);
+    }
     if (!path.startsWith(`${foldName(script.identity.name).charAt(0)}/`)) drift.push(`${path}: filed under the wrong letter`);
   }
   eq(drift, [], "each definition's identity and text are the committed oracle data's, and every ability is a sentence of the card (§3.2.5)");

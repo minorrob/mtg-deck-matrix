@@ -125,8 +125,27 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  * `card` is the definition's name or id; the engine never stores card TEXT in the state, only a
  * reference, so a state stays small and the card directory stays the one place text lives.
  */
+/* A modal double-faced card's face (CR 712.8): its characteristics, from the card's own two. */
+const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "keywords", "abilities", "spell", "enchant"];
+function faceOf(mdfc, face) {
+  const side = face === "back" ? mdfc.back : mdfc.front;
+  return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
+}
+
+/** Turn a modal double-faced card in a player's hand to the face it is played with (CR 712.12): before it moves, so how
+    it enters is that face's own "as this land enters". */
+export function showFace(state, id, face) {
+  const object = state.objects[id];
+  if (!object?.mdfc) return;
+  Object.assign(object, faceOf(object.mdfc, face));
+  if (face === "back") object.face = "back"; else delete object.face;
+}
+
 export function addObject(state, object, zone, player = null) {
   assertZone(state, zone, player);
+  /* A MODAL DOUBLE-FACED CARD (CR 712.8): the characteristics of the face that is up -- its front, unless it was played
+     with its back face up (`face`), which only a permanent can be (rules/actions.mjs). */
+  if (object.mdfc) object = {...object, ...faceOf(object.mdfc, object.face), mdfc: object.mdfc, face: object.face === "back" ? "back" : undefined};
   const id = state.nextObjectId;
   state.nextObjectId += 1;
   const owner = Number.isInteger(object.owner) ? object.owner : player;
@@ -194,6 +213,7 @@ export function addObject(state, object, zone, player = null) {
     /* The card's printed colors (CR 105.2), the base the layers start from: "a red spell", "white creatures you
        control" and a token's own color read them. Present only on a card that has one, as with subtypes. */
     ...(Array.isArray(object.colors) && object.colors.length ? {colors: [...object.colors]} : {}),
+    ...(object.mdfc ? {mdfc: structuredClone(object.mdfc), ...(object.face === "back" ? {face: "back"} : {})} : {}),
   };
   state.nextTimestamp += 1;
   listFor(state, zone, player).push(id);
@@ -267,6 +287,9 @@ export function moveObject(state, id, zone, player = null) {
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   return addObject(state, {
+    /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
+       it is its front (CR 712.8a). */
+    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && from.face === "back" ? "back" : undefined} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
     power: from.power, toughness: from.toughness, keywords: from.keywords,
     owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,

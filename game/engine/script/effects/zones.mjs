@@ -44,6 +44,9 @@ export const cardRef = (state, id) => {
   return o ? {cardId: o.id, name: o.card, owner: o.owner, controller: o.controller, faceDown: false} : null;
 };
 
+/* The card types a permanent may have (CR 110.4). */
+const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"];
+
 /**
  * Move one object, through the replacement effects, and report where it actually went.
  *
@@ -73,6 +76,9 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false} = 
     : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
   const holder = owner ?? object.owner;
 
+  /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it
+     stays where it is. */
+  if (destination === "battlefield" && object.mdfc && object.face !== "back" && !PERMANENT_TYPES.some((type) => (object.mdfc.front.types ?? []).includes(type))) return null;
   /* CR 614.12: how it ENTERS, asked before it moves, because the abilities answering it belong to
      the card as it is now -- a zone change makes a new object. */
   const entering = destination === "battlefield"

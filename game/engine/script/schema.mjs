@@ -302,6 +302,18 @@ export function validateScript(script) {
     script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors));
   }
 
+  /* A MODAL DOUBLE-FACED CARD'S BACK FACE (CR 712.3, 712.8): its own identity and abilities, the card's oracle id. */
+  if (script.back !== undefined) {
+    const back = script.back;
+    if (!back || typeof back !== "object" || !Array.isArray(back.abilities)) errors.push({path: "back", message: "A back face is an identity and a list of abilities"});
+    else {
+      const before = errors.length;
+      checkIdentity({...back.identity, oracleId: back.identity?.oracleId ?? script.identity?.oracleId}, errors);
+      for (const e of errors.slice(before)) e.path = `back.${e.path}`;
+      back.abilities.forEach((ability, index) => checkAbility(ability, `back.abilities[${index}]`, errors));
+    }
+  }
+
   return {valid: errors.length === 0, errors};
 }
 

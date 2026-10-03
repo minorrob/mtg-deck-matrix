@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fell the Profane // Fell Mire",
+    "oracleId": "053a69d8-2b5e-4f14-8b02-ca405891dc4a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature or planeswalker.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Fell Mire",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {B}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true,
+          "unlessPay": {
+            "life": 3
+          }
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {B}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "B": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
