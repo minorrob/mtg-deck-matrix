@@ -30,7 +30,7 @@ import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -128,6 +128,8 @@ export const EFFECTS = Object.freeze({
   becomeCopy,
   /* Batch 62: cards from the top of a library until one fits. */
   digUntil,
+  /* Batch 64: poison counters on players. */
+  poison,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

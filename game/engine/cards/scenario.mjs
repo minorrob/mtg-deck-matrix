@@ -22,7 +22,7 @@
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
- *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {stack} | {seat, tapped, is}
+ *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
  */
 
@@ -183,6 +183,11 @@ export function runScenario(scenario, cards, fixtures = {}) {
         const life = projectFor(state, e.seat).players[e.seat].life;
         if (life !== e.life) fail(`${names[e.seat]} is at ${life} life, not ${e.life}`);
         passed.push(`${names[e.seat]} at ${e.life} life`);
+      } else if (e.poison !== undefined) {
+        /* Poison counters, as the board shows them. */
+        const poison = projectFor(state, e.seat).players[e.seat].health?.poison ?? 0;
+        if (poison !== e.poison) fail(`${names[e.seat]} has ${poison} poison counters, not ${e.poison}`);
+        passed.push(`${names[e.seat]} with ${e.poison} poison`);
       } else if (e.controls !== undefined) {
         /* What a seat controls on the battlefield -- a stolen creature is its new controller's (the zones are by owner). */
         const got = state.zones.battlefield.filter((id) => controllerOf(state, id) === e.seat).map((id) => state.objects[id].card).sort();

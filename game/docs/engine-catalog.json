@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 857,
-  "everyRule": 2109
+  "defined": 864,
+  "everyRule": 2122
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -331,7 +331,7 @@
      "top": 7,
      "all": 44,
      "blocks": 7,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -547,7 +547,7 @@
      "top": 4,
      "all": 45,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -2526,7 +2526,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -2634,7 +2634,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword action",
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 49,
+    "built": 50,
     "partial": 1,
     "named": 18,
-    "missing": 124
+    "missing": 123
    },
    "entries": [
     {
@@ -3737,7 +3737,7 @@
      "top": 19,
      "all": 280,
      "blocks": 19,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3935,13 +3935,13 @@
      "kind": "effect",
      "rule": null,
      "name": "Poison",
-     "engine": null,
-     "status": "missing",
+     "engine": "poison",
+     "status": "built",
      "forge": "Poison",
      "top": 11,
      "all": 36,
-     "blocks": 11,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3953,7 +3953,7 @@
      "top": 10,
      "all": 65,
      "blocks": 10,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -4109,7 +4109,7 @@
      "top": 6,
      "all": 35,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -7357,7 +7357,7 @@
      "top": 4,
      "all": 100,
      "blocks": 4,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -8120,9 +8120,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 1,
+    "partial": 2,
     "named": 0,
-    "missing": 33
+    "missing": 32
    },
    "entries": [
     {
@@ -8153,13 +8153,13 @@
      "kind": "replacement",
      "rule": null,
      "name": "Counter",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "partial",
      "forge": "Counter",
      "top": 21,
      "all": 110,
-     "blocks": 12,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 13
+     "alone": 14
     },
     {
      "kind": "option",
