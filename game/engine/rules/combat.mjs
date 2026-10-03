@@ -57,7 +57,7 @@ import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} fr
 import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
-import {canPayGeneric, payGeneric} from "./mana.mjs";
+import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
 import {
@@ -187,47 +187,74 @@ export const attackers = {
       return events;
     }
 
-    /* CR 508.1g-h: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
-       "unless" cost is -- or this is not an attack that can be declared. */
+    /* CR 508.1h-j: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
+       "unless" cost is -- or this is not an attack that can be declared. The attackers are tapped first (508.1f), so none
+       of them pays unless it has vigilance. Which mana pays is the player's when the ways to pay differ (CR 508.1i). */
     const tax = attackTax(state, picked);
     if (tax > 0) {
-      if (!canPayGeneric(state, awaiting.player, tax)) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
-      events.push(...payGeneric(state, awaiting.player, tax));
+      const units = taxUnits(state, awaiting.player, picked);
+      if (units.length < tax) throw new Error(`Those attackers cost {${tax}} to attack with, more than can be paid`);
+      if (paymentIsAChoice(units, tax)) {
+        state.awaiting = {kind: "attack-tax", player: awaiting.player, tax, picked: picked.map(({cardId, defenderId}) => ({cardId, defenderId}))};
+        return events;
+      }
+      events.push(...payWithUnits(state, awaiting.player, units, units.slice(0, tax).map((_, i) => i), tax));
     }
+    return declareAttacks(state, awaiting.player, picked, events);
+  },
 
-    state.combat = {
-      attackingPlayerId: awaiting.player,
-      defenders: [...new Set(picked.map((o) => o.defenderId))],
-      attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, blocked: false, blockers: []})),
-      /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
-         Recomputed once blockers are in, because a blocker with first strike makes the step
-         happen just as an attacker with it does. */
-      firstStrike: false,
-    };
-    /* An attacker with first strike is enough on its own; a blocker can add to it later. */
-    state.combat.firstStrike = combatNeedsFirstStrike(state);
-    /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
-    for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
-
-    /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
-    for (const attack of state.combat.attacks) {
-      const object = state.objects[attack.attacker];
-      if (hasNow(state, attack.attacker, "Vigilance")) continue;
-      object.tapped = true;
-      events.push(event("GameEventCardTapped", state, {card: cardRef(state, attack.attacker), tapped: true}));
-    }
-
-    events.push(event("GameEventAttackersDeclared", state, {
-      player: {playerId: awaiting.player, name: state.players[awaiting.player].name},
-      attackers: state.combat.attacks.map((a) => ({
-        card: cardRef(state, a.attacker),
-        defender: {playerId: a.defender, name: state.players[a.defender].name},
-      })),
-    }));
-    state.awaiting = null;
-    return events;
+  /* The attack tax's question, when the ways to pay it differ: which mana pays. */
+  taxChoice(state, awaiting) {
+    return paymentChoice(`attack-tax:${state.turn}:${awaiting.player}`, awaiting.tax, taxUnits(state, awaiting.player, awaiting.picked));
+  },
+  /* Paid with what was chosen, and then the attack is declared. */
+  payTax(state, awaiting, indices) {
+    const events = payWithUnits(state, awaiting.player, taxUnits(state, awaiting.player, awaiting.picked), indices, awaiting.tax);
+    return declareAttacks(state, awaiting.player, awaiting.picked, events);
   },
 };
+
+/* What can pay an attack tax: the player's pool and plain sources, less the attackers, which are tapped by attacking --
+   all but one with vigilance (CR 508.1f, 702.20b). */
+const taxUnits = (state, player, picked) => {
+  const attacking = new Set(picked.map((o) => o.cardId));
+  return paymentUnits(state, player).filter((u) => !(u.from === "tap" && attacking.has(u.id) && !hasNow(state, u.id, "Vigilance")));
+};
+
+/* The attack, declared: who attacks whom, tapped (CR 508.1f), and said. */
+function declareAttacks(state, player, picked, events) {
+  state.combat = {
+    attackingPlayerId: player,
+    defenders: [...new Set(picked.map((o) => o.defenderId))],
+    attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, blocked: false, blockers: []})),
+    /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
+       Recomputed once blockers are in, because a blocker with first strike makes the step
+       happen just as an attacker with it does. */
+    firstStrike: false,
+  };
+  /* An attacker with first strike is enough on its own; a blocker can add to it later. */
+  state.combat.firstStrike = combatNeedsFirstStrike(state);
+  /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
+  for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
+
+  /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
+  for (const attack of state.combat.attacks) {
+    const object = state.objects[attack.attacker];
+    if (hasNow(state, attack.attacker, "Vigilance")) continue;
+    object.tapped = true;
+    events.push(event("GameEventCardTapped", state, {card: cardRef(state, attack.attacker), tapped: true}));
+  }
+
+  events.push(event("GameEventAttackersDeclared", state, {
+    player: {playerId: player, name: state.players[player].name},
+    attackers: state.combat.attacks.map((a) => ({
+      card: cardRef(state, a.attacker),
+      defender: {playerId: a.defender, name: state.players[a.defender].name},
+    })),
+  }));
+  state.awaiting = null;
+  return events;
+}
 
 /* ---- declare blockers ---- */
 

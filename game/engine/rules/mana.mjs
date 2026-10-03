@@ -275,6 +275,43 @@ function plainSources(state, player) {
 export function canPayGeneric(state, player, amount) {
   return poolSize(state.players[player].manaPool) + plainSources(state, player).length >= amount;
 }
+/* ---- which mana pays (CR 605.3a, 118.12, 508.1h) ----
+ *
+ * A generic amount paid without priority is still the payer's to pay: which land they tap decides what they can cast
+ * afterwards. The units it can come from are each mana in their pool and each untapped plain source; two units are the
+ * same KIND when they give the same mana (a {U} in the pool and an Island are one kind; an Island and a land that taps
+ * for {U} or {B} are two). With one kind, or exactly as many units as the amount, every way to pay is the same and it is
+ * paid without asking -- the pool first, then the sources in the order they sit; otherwise the payer chooses. */
+const kindOf = (ability) => (ability.anyColor === true ? "WUBRG"
+  : [...new Set((Array.isArray(ability.produces) ? ability.produces : [ability.produces]).flatMap((p) => Object.keys(p ?? {})))].sort().join(""));
+/** The units a generic payment can come from, in the order an unasked payment uses them. */
+export function paymentUnits(state, player) {
+  const pool = state.players[player].manaPool;
+  const units = [];
+  for (const key of PAY_ORDER) for (let n = 0; n < (pool[key] ?? 0); n += 1) units.push({from: "pool", color: key, kind: key, label: `{${key}} from your mana pool`});
+  for (const {id, ability} of plainSources(state, player)) units.push({from: "tap", id, kind: kindOf(ability), label: `Tap ${state.objects[id].card}`});
+  return units;
+}
+/** Whether paying `amount` from these units is a choice: more than one kind, and more units than the amount. */
+export const paymentIsAChoice = (units, amount) => new Set(units.map((u) => u.kind)).size > 1 && units.length > amount;
+/** The question: which `amount` of the units pay. */
+export function paymentChoice(id, amount, units) {
+  return {id, title: `Pay {${amount}}: choose the mana`, mode: "many", min: amount, max: amount,
+    options: units.map((u, index) => ({index, label: u.label, ...(u.from === "tap" ? {cardId: u.id} : {})}))};
+}
+/** Pay with exactly the units at these positions. @returns {Array} events */
+export function payWithUnits(state, player, units, indices, amount) {
+  const picked = [...new Set(indices ?? [])].map((i) => units[i]);
+  if (picked.length !== amount || picked.some((u) => !u)) throw new Error(`Choose exactly ${amount} to pay with`);
+  const events = [];
+  for (const unit of picked) {
+    if (unit.from === "pool") { state.players[player].manaPool[unit.color] -= 1; continue; }
+    state.objects[unit.id].tapped = true;
+    events.push({kind: "GameEventCardTapped", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: unit.id, name: state.objects[unit.id].card, owner: state.objects[unit.id].owner, controller: player, faceDown: false}, tapped: true}}});
+  }
+  return events;
+}
+
 /** Pay it: the pool first, then tap sources as needed. @returns {Array} events */
 export function payGeneric(state, player, amount) {
   const events = [];

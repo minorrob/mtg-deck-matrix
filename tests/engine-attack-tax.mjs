@@ -62,6 +62,22 @@ const tapped = (s, ...ids) => ids.map((id) => s.objects[id].tapped === true);
   eq([t.zones.battlefield.filter((id) => t.objects[id].card === "Wastes").some((id) => t.objects[id].tapped), t.combat ?? null], [false, null], "declining to attack costs nothing");
 }
 {
+  /* Which lands pay is the attacker's (CR 508.1h; the plan review's C2): an Island and two Wastes for Propaganda's {2} can
+     leave either kind untapped, so Rob is asked, and keeps the Island. */
+  const {state: s} = runScenario({name: "which pays", setup: [at(0, "battlefield", "Bear", "Island", "Wastes", "Wastes"), at(1, "battlefield", "Propaganda")],
+    steps: [{attack: ["Bear"]},
+      {expect: [{asks: {seat: 0, options: ["Tap Island", "Tap Wastes", "Tap Wastes"]}}]},
+      {answer: [1, 2]}], expect: []}, cards.definition, FIX);
+  eq([s.zones.battlefield.filter((id) => ["Island", "Wastes"].includes(s.objects[id].card) && !s.objects[id].tapped).map((id) => s.objects[id].card), s.combat?.attacks.length],
+    [["Island"], 1], "the two Wastes pay, the Island stays up, and the Bear attacks");
+  /* An attacker is tapped by attacking before the tax is paid (CR 508.1f, 508.1j), so it does not pay its own: an Elf that
+     taps for {G}, attacking beside the Bear, leaves three Wastes for Propaganda's {4}. */
+  const MANA_ELF = {...FIX.Elf, abilities: [{id: "a0", kind: "mana", tapSelf: true, produces: {G: 1}}]};
+  assert.throws(() => runScenario({name: "elf pays", setup: [at(0, "battlefield", "Bear", "Mana Elf", "Wastes", "Wastes", "Wastes"), at(1, "battlefield", "Propaganda")],
+    steps: [{attack: ["Bear", "Mana Elf"]}], expect: []}, cards.definition, {...FIX, "Mana Elf": MANA_ELF}), /cost \{4\} to attack with, more than can be paid/,
+    "an attacking Elf cannot tap for the mana its own attack costs"); checks += 1;
+}
+{
   /* Only the player whose permanent says so: Maya's Propaganda taxes attacks on her, not on Trey; Rob's own taxes attacks
      on Rob. */
   const s = table(3);

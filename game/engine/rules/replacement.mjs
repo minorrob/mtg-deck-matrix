@@ -21,10 +21,15 @@
  * WHEN SEVERAL APPLY, THE AFFECTED OBJECT'S CONTROLLER CHOOSES (CR 616.1) — not the effects'
  * controllers, and not the engine. The player whose creature is about to be replaced out of
  * existence picks which replacement happens first, and the order decides the outcome whenever the
- * first removes the second's opportunity. ONE EXCEPTION, NAMED: damage. A damage event cannot yet wait mid-resolution for
- * an answer, so when several effects apply to one (a doubler and Torbran's "plus 2"), the order that leaves the least
- * damage is applied -- the order the affected player chooses for damage dealt to them or their permanents (leastFirst).
- * Asking them is deferred, with the pause that needs.
+ * first removes the second's opportunity -- and ONLY then: when every order ends the same way (two players' "exile it
+ * instead") the first applies and nobody is asked, because there is nothing to choose (sameEnd).
+ *
+ * TWO EXCEPTIONS, NAMED. Damage: a damage event cannot yet wait mid-resolution for an answer, so when several effects
+ * apply to one and the orders differ (a doubler and Torbran's "plus 2"), the order that leaves the least damage is applied
+ * -- the order the affected player chooses for damage dealt to them or their permanents in all but rare boards
+ * (leastFirst); asking them waits for a damage event that can pause (the plan review's C2, carried forward). And a zone
+ * change whose orders end differently is asked, but the move does not yet pause for the answer either: no two such
+ * effects are among the definitions (one card, Liesa, replaces a zone change), so nothing reaches it today.
  *
  * PREVENTION IS A SHIELD THAT WEARS OUT (CR 615.1), so applying it writes back what is left.
  *
@@ -347,6 +352,10 @@ export function applyReplacements(state, proposal) {
        permanent enters the same way, so nobody is asked (CR 616.1; a Clone entering beside "each creature you control
        enters with an additional +1/+1 counter"). */
     if (candidates.length > 1 && current.event === "enters") { current = applyOne(state, candidates[0], current); continue; }
+    /* CR 616.1 gives the affected player the order, and the order matters only when the orders end differently: two
+       players' "exile it instead" (Liesa) exile it either way, so the first applies and nobody is asked. Asking there had
+       left a question nothing could answer, and the game stopped. */
+    if (candidates.length > 1 && sameEnd(state, current)) { current = applyOne(state, candidates[0], current); continue; }
     if (candidates.length > 1) {
       state.awaiting = {kind: "order-replacements", player: affectedPlayer(state, current), proposal: current};
       return {proposal: current, applied: current.applied, awaiting: true};
@@ -388,6 +397,17 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
   const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
   return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
 }
+
+/* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
+   and whether that is one way. `applyOne` changes nothing but the proposal it returns, so trying each order is free. */
+const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? []});
+function ends(state, proposal, out = new Set(), depth = 0) {
+  const candidates = depth < 8 ? applicable(state, proposal) : [];
+  if (!candidates.length) { out.add(endOf(proposal)); return out; }
+  for (const candidate of candidates) ends(state, applyOne(state, candidate, proposal), out, depth + 1);
+  return out;
+}
+const sameEnd = (state, proposal) => ends(state, proposal).size === 1;
 
 /** The choice (§12.1) for CR 616.1: which applicable effect happens first. */
 export function replacementChoice(state, awaiting) {

@@ -31,7 +31,7 @@ import {compileSelector} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne} from "./zones.mjs";
 import {proliferate as giveEachAnother} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, defendingPlayers, attachTo} from "./permanents.mjs";
-import {payGeneric, canPayGeneric, parseManaCost, manaValue} from "../../rules/mana.mjs";
+import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf} from "../../rules/layers.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife} from "./resources.mjs";
@@ -587,29 +587,45 @@ export const unlessPays = {
     return true;
   },
   choice(state, awaiting) {
+    /* Having said they pay: which mana pays, when that is a choice (rules/mana.mjs, paymentUnits). */
+    if (awaiting.paying) return paymentChoice(`unless-mana:${awaiting.player}:${state.turn}:${awaiting.amount}`, awaiting.amount, paymentUnits(state, awaiting.player));
     const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
     const pays = payOptions(state, awaiting).map((option, index) => ({index, ...option}));
     return {id: `unless:${awaiting.player}:${state.turn}:${awaiting.amount}`, title: `${source ? `${source}: ` : ""}${costWords(awaiting)}?`, mode: "one", min: 1, max: 1,
       options: [...pays, {index: pays.length, label: "Don't pay", pay: false}]};
   },
   apply(state, awaiting, indices) {
+    /* The mana chosen (CR 605.3a), then the rest of what paying is. */
+    if (awaiting.paying) {
+      const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.amount);
+      return unlessPaid(state, awaiting, awaiting.paying.option, events);
+    }
     const option = unlessPays.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     if (!option.pay) return awaiting.ifPaid ? [] : {events: [], splice: structuredClone(awaiting.effects)};
+    /* Which mana pays is the payer's: asked next when the ways to pay differ, paid at once when they do not. */
+    if ((awaiting.amount ?? 0) > 0 && paymentIsAChoice(paymentUnits(state, awaiting.player), awaiting.amount)) {
+      state.awaiting = {...awaiting, paying: {option}};
+      return {events: [], again: true};
+    }
     const events = [];
     if ((awaiting.amount ?? 0) > 0) {
       const paid = payGeneric(state, awaiting.player, awaiting.amount);
       events.push(...(Array.isArray(paid) ? paid : paid?.events ?? []));
     }
-    /* Paying life is losing it (CR 119.4, 119.3). */
-    if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
-    if (option.discard !== undefined && state.objects[option.discard]) {
-      if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
-    }
-    if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
-    return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
+    return unlessPaid(state, awaiting, option, events);
   },
 };
+/* What paying an "unless" cost is besides its mana -- life, a discard, a sacrifice -- and what follows it. */
+function unlessPaid(state, awaiting, option, events) {
+  /* Paying life is losing it (CR 119.4, 119.3). */
+  if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
+  if (option.discard !== undefined && state.objects[option.discard]) {
+    if (moveOne(state, option.discard, "graveyard", events, {owner: awaiting.player}) !== null) events[events.length - 1].data.fields.discarded = true;
+  }
+  if (option.sacrifice !== undefined && state.objects[option.sacrifice]) sacrificeOne(state, option.sacrifice, events);
+  return awaiting.ifPaid ? {events, splice: structuredClone(awaiting.effects)} : events;
+}
 
 /* ---- chooseType (CR 205.3m): "choose a creature type" -- one of the creature types among the cards in the game, which is
    every one that could matter; what is chosen, the effects after it name as "$chosen" (resolution.mjs, script/bind.mjs). ---- */
@@ -923,24 +939,40 @@ export const play = {
     return true;
   },
   choice(state, awaiting) {
+    /* What it still costs (a commander's tax, "for its mana value in any mana"): which mana pays, when that is a choice. */
+    if (awaiting.paying) return paymentChoice(`play-mana:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, awaiting.paying.owed, paymentUnits(state, awaiting.player));
     return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
         {index: awaiting.choices.length, label: "Don't cast"}]};
   },
   apply(state, awaiting, indices) {
-    const index = (indices ?? [])[0];
-    if (index === awaiting.choices.length) return {events: []};
-    const chosen = awaiting.choices[index];
-    if (!chosen) throw new Error("Invalid selection");
-    const {owed, ...action} = chosen;
-    const events = owed ? payGeneric(state, awaiting.player, owed) : [];
+    let chosen, events;
+    if (awaiting.paying) {
+      chosen = awaiting.choices[awaiting.paying.index];
+      events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.paying.owed);
+    } else {
+      const index = (indices ?? [])[0];
+      if (index === awaiting.choices.length) return {events: []};
+      chosen = awaiting.choices[index];
+      if (!chosen) throw new Error("Invalid selection");
+      /* Which mana pays what it still costs is the player's when the ways differ (rules/mana.mjs, paymentUnits). */
+      if (chosen.owed && paymentIsAChoice(paymentUnits(state, awaiting.player), chosen.owed)) {
+        state.awaiting = {...awaiting, paying: {index, owed: chosen.owed}};
+        return {events: [], again: true};
+      }
+      events = chosen.owed ? payGeneric(state, awaiting.player, chosen.owed) : [];
+    }
+    const action = {...chosen};
+    delete action.owed;
     events.push(...castNow(state, awaiting.player, action));
     /* Any number: asked again, of what is still there to cast. */
     if (awaiting.again) {
       const {pool, most, free, anyMana} = awaiting.again;
       const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana});
       if (choices.length) {
-        state.awaiting = {...awaiting, choices, cast: awaiting.cast + 1};
+        const next = {...awaiting, choices, cast: awaiting.cast + 1};
+        delete next.paying;
+        state.awaiting = next;
         return {events, again: true};
       }
     }

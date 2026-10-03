@@ -26,6 +26,8 @@ import {createState, addObject, cardsIn, zoneOf} from "../game/engine/state/inde
 import {beginGame} from "../game/engine/rules/turn.mjs";
 import {applyReplacements, replacementChoice, resolveReplacementOrder} from "../game/engine/rules/replacement.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -193,6 +195,28 @@ const SHIELD = (amount) => ({id: `shield-${amount}`, kind: "replacement",
   const s = started();
   assert.throws(() => resolveReplacementOrder(s, {kind: "order-replacements", player: 0}, [0]),
     /not waiting|no replacement/i, "answering a question nobody asked is refused"); checks += 1;
+}
+
+/* ---- two effects that end the same are no choice (CR 616.1; the plan review's C2) ----
+   Two players' "exile it instead" both apply to a third player's creature dying. Either order exiles it, so the order is
+   not asked: before, the engine asked a question nothing could answer, the creature went to the graveyard after all, and
+   the game stopped. */
+{
+  const board = started();
+  addObject(board, {card: "One", types: ["Enchantment"], owner: 1, controller: 1, abilities: [{...REST_IN_PEACE, id: "one"}]}, "battlefield");
+  addObject(board, {card: "Two", types: ["Enchantment"], owner: 2, controller: 2, abilities: [{...REST_IN_PEACE, id: "two"}]}, "battlefield");
+  const target = addObject(board, creature({card: "Bear", owner: 0, controller: 0}), "battlefield");
+  const result = applyReplacements(board, {event: "zone-change", objectId: target, from: "battlefield", to: "graveyard", player: 0});
+  eq([result.awaiting, board.awaiting, result.proposal.to], [false, null, "exile"], "two effects that both exile it: exiled, and nobody is asked");
+}
+{
+  const index = loadCardIndex();
+  const BEAR = {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2};
+  const {state} = runScenario({name: "two Liesas", seats: 3, setup: [{seat: 0, zone: "battlefield", cards: ["Liesa, Forgotten Archangel", "Mountain"]},
+    {seat: 1, zone: "battlefield", cards: ["Liesa, Forgotten Archangel"]}, {seat: 2, zone: "battlefield", cards: ["Bear"]}, {seat: 0, zone: "hand", cards: ["Lightning Bolt"]}],
+  steps: [{tap: "Mountain"}, {cast: "Lightning Bolt", targets: [{card: "Bear"}]}, {resolve: true}, {expect: [{seat: 2, zone: "exile", cards: ["Bear"]}]},
+    {to: {turn: 2, phase: "MAIN1"}}]}, index.definition, {Bear: BEAR});
+  eq(state.awaiting, null, "with Liesa under two players, Trey's Bear bolted is exiled, and the game goes on");
 }
 
 console.log(`engine-replacement: ${checks} checks passed — a replaced event never happens, each effect applies once, the affected object's controller chooses the order, and a shield wears out.`);
