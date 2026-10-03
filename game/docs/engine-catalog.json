@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 835,
-  "everyRule": 2075
+  "defined": 841,
+  "everyRule": 2082
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3929,7 +3929,7 @@
      "top": 11,
      "all": 49,
      "blocks": 11,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -4097,7 +4097,7 @@
      "top": 6,
      "all": 45,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 9
+     "alone": 11
     },
     {
      "kind": "option",
@@ -11769,10 +11769,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 1,
+    "built": 2,
     "partial": 0,
     "named": 1,
-    "missing": 14
+    "missing": 13
    },
    "entries": [
     {
@@ -11803,13 +11803,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Chapter",
-     "engine": null,
-     "status": "missing",
+     "engine": "Chapter",
+     "status": "built",
      "forge": "Chapter",
      "top": 19,
      "all": 236,
-     "blocks": 19,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

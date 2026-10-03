@@ -1,0 +1,179 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Summon: Leviathan",
+    "oracleId": "b38d1811-64d7-4a35-a86c-3291eecd8391",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Saga",
+      "Leviathan"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand.\nII, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.\nWard {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "Kraken",
+              "Leviathan",
+              "Merfolk",
+              "Octopus",
+              "Serpent"
+            ]
+          },
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "attacks",
+            "who": "any",
+            "filter": {
+              "anyOf": [
+                {
+                  "subtypes": [
+                    "Kraken"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Leviathan"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Merfolk"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Octopus"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Serpent"
+                  ]
+                }
+              ]
+            }
+          },
+          "thisTurn": true,
+          "text": "Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II, III — Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "attacks",
+            "who": "any",
+            "filter": {
+              "anyOf": [
+                {
+                  "subtypes": [
+                    "Kraken"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Leviathan"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Merfolk"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Octopus"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Serpent"
+                  ]
+                }
+              ]
+            }
+          },
+          "thisTurn": true,
+          "text": "Until end of turn, whenever a Kraken, Leviathan, Merfolk, Octopus, or Serpent attacks, draw a card.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Ward {2}",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ]
+    }
+  ]
+}

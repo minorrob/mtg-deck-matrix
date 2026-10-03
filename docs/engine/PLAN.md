@@ -650,7 +650,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
-  lost, token created (once), becomes monstrous.
+  lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60).
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.
