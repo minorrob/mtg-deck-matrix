@@ -8,7 +8,7 @@
  * it, the board saying which offer is which. "If you cast a creature spell this way, it gains haste until end of turn."
  */
 import assert from "node:assert/strict";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, commanderKeyOf} from "../game/engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
@@ -73,7 +73,7 @@ const named = (s, name, zone = "battlefield") => Object.keys(s.objects).map(Numb
   s.objects[whelp].commander = true;
   on(s, WASTES, 0); on(s, WASTES, 0);
   main(s);
-  s.players[0].commanderCasts = {[whelp]: 1};   /* cast once before: a tax of {2} */
+  s.players[0].commanderCasts = {[commanderKeyOf(s.objects[whelp])]: 1};   /* cast once before: a tax of {2} */
   const before = casts(s, "Whelp");
   for (const a of legalActions(s, 0).filter((x) => x.kind === "activate-mana")) applyAction(s, 0, a);
   const after = casts(s, "Whelp");

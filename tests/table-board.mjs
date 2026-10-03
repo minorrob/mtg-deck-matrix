@@ -392,6 +392,28 @@ try {
   ok(true, "any seat's vitals pill opens Table vitals too");
   await rob.page.keyboard.press("Escape");
 
+  /* THE BARS TOWARD 21 (CR 903.10a; the plan review's C1, 2026-10-03). The tally is kept under the commander's key, the
+     same in every zone (game/engine/rules/commander.mjs), and the projection gives the commander card that key, so the
+     board says whose commander dealt it -- one row per commander, and a key whose card is out of sight still names its
+     owner. Shown by handing the board views with a tally in them (no creature attacks in this game), then taking it away. */
+  const plainView = object.room.view;
+  const mayaGeneral = Object.values(plainView("s0").state.players[1].zones).flatMap((z) => z.cards).find((c) => c.name === "Maya General");
+  ok(/^1:\d+$/.test(mayaGeneral?.commanderKey ?? ""), `Maya's commander, as Rob sees it, carries its key, her seat first (${mayaGeneral?.commanderKey})`);
+  object.room.view = (seatId) => {const v = plainView(seatId); v.state.players[0].health.commanderDamage = {[mayaGeneral.commanderKey]: 11, "1:9999": 4}; return v;};
+  object.broadcast();
+  await rob.page.locator(".cm-seatboard.is-you .cm-vitals-bar").nth(1).waitFor();
+  const bars = await rob.page.locator(".cm-seatboard.is-you .cm-vitals-bar").evaluateAll((els) => els.map((el) => el.getAttribute("title")));
+  eq(bars, ["Maya: 11 of 21", "Maya: 4 of 21"], "Rob's vitals draw a bar for each commander that dealt him combat damage, each in its owner's name -- the one out of sight too");
+  await rob.page.click(".cm-board-center");
+  await rob.page.locator(".cm-table-vitals").waitFor();
+  const tallied = (await rob.page.locator(".cm-table-vitals [role=row]").allInnerTexts()).map((r) => r.replace(/\s+/g, " ").trim());
+  ok(tallied.includes("From Maya General 11 / 21 —") && tallied.includes("From Maya's commander, out of sight 4 / 21 —") && tallied.includes("From Rob General — 0 / 21"),
+    `Table vitals: the damage from Maya's commander under its name, the one out of sight under hers (${tallied.slice(3).join(" | ")})`);
+  await rob.page.keyboard.press("Escape");
+  object.room.view = plainView;
+  object.broadcast();
+  await rob.page.waitForFunction(() => !document.querySelector(".cm-seatboard.is-you .cm-vitals-bar"));
+
   /* B4, THE TABLE VIEW'S SHAPE (docs/plan-to-done-2026-09-30.md, items 3-9). Still: the sea is painted once. */
   const seaAt = () => rob.page.evaluate(() => {const c = document.querySelector(".cm-board-table > .cm-board-sea"), f = document.querySelector(".cm-board-table > .cm-board-fan"); return {t: c ? c.dataset.t : null, fan: f ? getComputedStyle(f).transitionDuration : null};});
   const sea1 = await seaAt();

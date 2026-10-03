@@ -304,4 +304,44 @@ ${script.identity.name} can be your commander.`});
     "a definition says canBeCommander only when its card says it can be your commander");
 }
 
+/* TWO COMMANDERS ARE PARTNERS (CR 702.124; the plan review's C1, 2026-10-03): until then any two legendary creatures
+   shared a command zone. Each partner ability says what the other must be, and two different ones never combine. */
+{
+  const t = tableOn(memoryStorage(), {cards, random});
+  await t.create({tableId: "partners1", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}]});
+  const legend = (name, partners, over = {}) => def(name, {types: ["Creature"], supertypes: ["Legendary"], power: 2, toughness: 2, manaCost: "{1}{G}", ...(partners ? {partners} : {}), ...over});
+  const pair = (a, b) => ({...deckFor("pair"), commander: [a, b]});
+  const refusal = async (deck) => t.deck(ROB, 1, deck, now).then(() => null, (e) => [e.status, e.notPartners ?? null, e.notCommanders ?? null]);
+  const P = [{kind: "partner"}], SURVIVORS = [{kind: "text", text: "survivors"}], FRIENDS = [{kind: "text", text: "friends forever"}];
+  const plainA = legend("Lone Legend A"), plainB = legend("Lone Legend B");
+  eq(await refusal(pair(plainA, plainB)), [422, [plainA, plainB], null], "two legendary creatures without partner are refused as a pair, both named");
+  const message = await t.deck(ROB, 1, pair(plainA, plainB), now).catch((e) => e.message);
+  eq(message, "Lone Legend A and Lone Legend B can't both be commanders: two commanders must be partners. Both need Partner (or the same named Partner ability), each must say Partner with the other, or one must say Choose a Background and the other be a Background.",
+    "saying what a pair of commanders must be");
+  eq(await refusal(pair(legend("Partner A", P), legend("Partner B", P))), null, "both with Partner (702.124h)");
+  eq(await refusal(pair(legend("Partner C", P), plainA)), [422, ["Partner C", plainA], null], "one with Partner is not enough");
+  eq(await refusal(pair(legend("Survivor A", SURVIVORS), legend("Survivor B", SURVIVORS))), null, "both with the same Partner--Survivors (702.124i)");
+  eq(await refusal(pair(legend("Survivor C", SURVIVORS), legend("Friend A", FRIENDS))), [422, ["Survivor C", "Friend A"], null], "two different named Partner abilities do not combine");
+  eq(await refusal(pair(legend("Partner D", P), legend("Survivor D", SURVIVORS))), [422, ["Partner D", "Survivor D"], null], "nor Partner with a named one (702.124f)");
+  const okaun = legend("Okaun, Eye of Chaos", [{kind: "with", name: "Zndrsplt, Eye of Wisdom"}]), zndrsplt = legend("Zndrsplt, Eye of Wisdom", [{kind: "with", name: "Okaun, Eye of Chaos"}]);
+  eq(await refusal(pair(okaun, zndrsplt)), null, "each Partner with the other (702.124j)");
+  eq(await refusal(pair(okaun, legend("Someone Else", [{kind: "with", name: "Okaun, Eye of Chaos"}]))), [422, [okaun, "Someone Else"], null], "Partner with one way only is not a pair");
+  const chooser = legend("Chooser", [{kind: "background"}]), background = def("Noble Upbringing", {types: ["Enchantment"], subtypes: ["Background"], supertypes: ["Legendary"], manaCost: "{1}{W}"});
+  eq(await refusal(pair(chooser, background)), null, "a commander that says Choose a Background, with a Background (702.124k)");
+  eq(await refusal({...deckFor("bg"), commander: [background]}), [422, null, [background]], "a Background alone is no commander");
+  eq(await refusal(pair(plainA, background)), [422, null, [background]], "nor beside a commander that does not choose one");
+  eq(await t.deck(ROB, 1, {...deckFor("bg"), commander: [background]}, now).catch((e) => e.message),
+    "Noble Upbringing can't be a commander: a commander is a legendary creature, or a card that says it can be your commander; a Background is one only beside a commander that says Choose a Background.",
+    "and the refusal says when a Background is one");
+  eq(await refusal(pair(chooser, plainA)), [422, [chooser, plainA], null], "Choose a Background pairs with a Background, nothing else");
+  const companion = legend("Companion", [{kind: "doctor"}]);
+  eq(await refusal(pair(companion, legend("The Doctor", null, {subtypes: ["Time Lord", "Doctor"]}))), null, "the Doctor's companion with a Time Lord Doctor (702.124m)");
+  eq(await refusal(pair(companion, legend("Human Doctor", null, {subtypes: ["Time Lord", "Doctor", "Human"]}))), [422, [companion, "Human Doctor"], null], "but not one that is another creature type too");
+  const script = structuredClone(loadCardScripts()[0].script);
+  eq(["Partner", "Partner with Okaun, Eye of Chaos (When this creature enters, target player may put Okaun into their hand from their library.)", "Partner\u2014Survivors", "Choose a Background", "Flying"]
+    .map((text) => compileScript({...script, oracleText: `${script.oracleText}\n${text}`}).definition.partners ?? null),
+    [[{kind: "partner"}], [{kind: "with", name: "Okaun, Eye of Chaos"}], [{kind: "text", text: "survivors"}], [{kind: "background"}], null],
+    "a definition carries its card's partner abilities, read from its words -- a comma inside a Partner with name kept whole");
+}
+
 console.log(`game-table: ${checks} checks passed — the approved journeys as rules: the host invites, the invited join as themselves, each brings a playable deck, the countdown waits for every person and the host can cancel it, and the door is shut until Play ships.`);

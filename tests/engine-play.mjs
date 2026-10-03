@@ -11,7 +11,7 @@
  */
 import assert from "node:assert/strict";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, commanderKeyOf} from "../game/engine/state/index.mjs";
 import {ASKING} from "../game/engine/script/effects/asking.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
@@ -57,7 +57,7 @@ const cast = [...EXPERTISE.map((l) => ({tap: l})), {cast: "Rishkar's Expertise"}
     const t = createState({matchId: "m", seed: "tax", players: [{name: "Rob"}, {name: "Maya"}]});
     const bear = addObject(t, {card: "Bear", ...F.Bear, owner: 0, controller: 0, commander: true}, "command", 0);
     for (let i = 0; i < lands; i += 1) addObject(t, {card: "Wastes", types: ["Land"], abilities: [{id: "a0", kind: "mana", tapSelf: true, produces: {C: 1}}], owner: 0, controller: 0}, "battlefield", null);
-    t.players[0].commanderCasts = {[bear]: 1};
+    t.players[0].commanderCasts = {[commanderKeyOf(t.objects[bear])]: 1};
     return ASKING.play.open(t, {from: "command", free: true}, {controller: 0, source: null}) ? t.awaiting.choices.map((c) => c.owed) : [];
   };
   eq([taxed(2), taxed(1)], [[2], []], "its tax of {2}: owed, and payable with two lands, not one");

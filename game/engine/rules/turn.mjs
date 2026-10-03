@@ -419,7 +419,9 @@ function grantStepPriority(state, events = []) {
          already gone. `openTriggers` returns true when a player has more than one and has to be
          asked for the order, and that question holds priority off until it is answered. */
       collectTriggers(state, sba);
-      openTriggers(state);
+      /* Unless a state-based action is asking something (a commander's owner, CR 903.9a): the triggers wait for the
+         answer, as they do after a resolution (priority.mjs, afterResolving). */
+      if (!state.awaiting) openTriggers(state);
     }
   }
   /* Re-read after the above: a player can lose during their own turn, and ordering triggers can

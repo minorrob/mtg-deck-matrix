@@ -62,6 +62,32 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
 /* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
 const FLASHBACK_ATOMS = ["mana", "payLife"];
 
+/* THE PARTNER ABILITIES (CR 702.124a), read from the card's own words: a deck rule a table holds a deck to
+   (room/table.mjs), which the game itself never reads. Reminder text first goes, and "Partner with" is read whole --
+   the name it gives may have a comma in it -- before a keyword line is split at its commas.
+     {kind: "partner"}                 Partner (702.124h)
+     {kind: "text", text}              Partner--Friends forever, --Survivors, --Father & son, --Character select (702.124i);
+                                       the older "Friends forever" alone is the same ability
+     {kind: "with", name}              Partner with [name] (702.124j)
+     {kind: "background"}              Choose a Background (702.124k)
+     {kind: "doctor"}                  Doctor's companion (702.124m) */
+export function partnersIn(text) {
+  const found = [];
+  for (const line of String(text ?? "").replace(/\([^)]*\)/g, "").split("\n").map((l) => l.trim()).filter(Boolean)) {
+    const withName = /^partner with (.+)$/i.exec(line);
+    if (withName) { found.push({kind: "with", name: withName[1].trim()}); continue; }
+    for (const part of line.split(",").map((p) => p.trim())) {
+      const dashed = /^partner\s*[\u2014\u2013-]+\s*(.+)$/i.exec(part);
+      if (dashed) found.push({kind: "text", text: dashed[1].trim().toLowerCase()});
+      else if (/^friends forever$/i.test(part)) found.push({kind: "text", text: "friends forever"});
+      else if (/^partner$/i.test(part)) found.push({kind: "partner"});
+      else if (/^choose a background$/i.test(part)) found.push({kind: "background"});
+      else if (/^doctor['\u2019]s companion$/i.test(part)) found.push({kind: "doctor"});
+    }
+  }
+  return found;
+}
+
 /* "first strike" in the script's vocabulary is "First Strike" to the rules modules. */
 const titleCase = (word) => String(word).split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
@@ -529,6 +555,7 @@ export function compileScript(script) {
   /* The Aura as a spell: its one target, nothing done as it resolves -- it enters attached (stack.mjs). */
   if (enchant) spell = {id: "enchant", text: enchant.text, targets: [enchant.target], effects: [], ...(enchant.hostile ? {hostile: true} : {})};
 
+  const partners = partnersIn(script.oracleText);
   const definition = {
     oracleId: identity.oracleId,
     types: [...types],
@@ -536,6 +563,8 @@ export function compileScript(script) {
     ...((identity.supertypes ?? []).length ? {supertypes: [...identity.supertypes]} : {}),
     /* "<Name> can be your commander" (CR 903.3): the card's own word, for a table holding a deck to the rule. */
     ...(/can be your commander/i.test(script.oracleText ?? "") ? {canBeCommander: true} : {}),
+    /* And whether it may share the command zone, and with what (CR 702.124; partnersIn above). */
+    ...(partners.length ? {partners} : {}),
     manaCost: identity.manaCost ?? null,
     colors: [...(identity.colors ?? [])],
     colorIdentity: [...(identity.colorIdentity ?? [])],

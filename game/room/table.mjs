@@ -58,7 +58,7 @@ const clean = (v, n = 60) => String(v ?? "").trim().slice(0, n);
    verified commanders; the table holds every deck to the rule itself, since a deck reaches it from a page. The one
    exception is the Basic lands test deck (crankmagic-table.js, TEST_DECK; Rob, 2026-09-29), a basic land at the head
    of basic lands, and only on a playtest table, while the engine plays basic lands only (Rob, 2026-10-01: "confirming
-   a basic land being the commander in the test deck is an exception"). Partner pairs (CR 702.124) are not checked yet. */
+   a basic land being the commander in the test deck is an exception"). */
 const BASIC_LANDS = new Set(["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"]);
 export function commanderLegal(definition) {
   if (!definition) return false;
@@ -66,6 +66,25 @@ export function commanderLegal(definition) {
   return (definition.types || []).includes("Creature") && (definition.supertypes || []).includes("Legendary");
 }
 export const isBasicLandsTestDeck = (commander, list) => commander.length === 1 && BASIC_LANDS.has(commander[0]) && list.every((n) => BASIC_LANDS.has(n));
+
+/* TWO COMMANDERS ARE PARTNERS OR THEY ARE NOT TWO COMMANDERS (CR 702.124a). Each partner ability says what the other
+   must be, and two different ones never combine (702.124f): both with partner (h); both with the same "Partner--"
+   ability (i); each "Partner with" the other (j); one that chooses a Background with a legendary Background
+   enchantment (k), which can be a commander no other way; the Doctor's companion with a legendary Time Lord Doctor that
+   is no other creature type (m). Read from the definitions' `partners` (game/engine/cards/index.mjs, partnersIn). */
+const has = (definition, kind) => (definition?.partners || []).filter((p) => p.kind === kind);
+const isBackground = (d) => (d?.types || []).includes("Enchantment") && (d?.subtypes || []).includes("Background") && (d?.supertypes || []).includes("Legendary");
+const isDoctor = (d) => (d?.types || []).includes("Creature") && (d?.supertypes || []).includes("Legendary")
+  && (d?.subtypes || []).length === 2 && (d?.subtypes || []).includes("Time Lord") && (d?.subtypes || []).includes("Doctor");
+const sameName = (a, b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+const chosenBackground = (a, b) => has(a, "background").length > 0 && isBackground(b);
+export function partnered([nameA, nameB], [a, b]) {
+  if (has(a, "partner").length && has(b, "partner").length) return true;
+  if (has(a, "text").some((p) => has(b, "text").some((q) => q.text === p.text))) return true;
+  if (has(a, "with").some((p) => sameName(p.name, nameB)) && has(b, "with").some((q) => sameName(q.name, nameA))) return true;
+  if (chosenBackground(a, b) || chosenBackground(b, a)) return true;
+  return (has(a, "doctor").length > 0 && isDoctor(b)) || (has(b, "doctor").length > 0 && isDoctor(a));
+}
 
 /* The deck a seat brings: a name, its commander(s) and its cards, bounded, every card playable, and every commander
    one that can be. */
@@ -76,9 +95,13 @@ function readDeck(deck, cards, {playtest = false} = {}) {
   if (commander.length > 2 || commander.length + list.length === 0 || commander.length + list.length > 250) throw new TableError(400, "That is not a deck a table can hold.");
   const missing = [...new Set([...commander, ...list].filter((n) => !cards(n)))].sort();
   if (missing.length) throw new TableError(422, `The table cannot play ${missing.length === 1 ? "this card" : `these ${missing.length} cards`} yet: ${missing.join(", ")}.`, {unsupported: missing});
-  const notCommanders = commander.filter((n) => !commanderLegal(cards(n)));
+  /* A Background is a commander only beside the one that chose it (CR 702.124k). */
+  const other = (n) => cards(commander.find((m) => m !== n) ?? "");
+  const notCommanders = commander.filter((n) => !commanderLegal(cards(n)) && !(commander.length === 2 && chosenBackground(other(n), cards(n))));
   if (notCommanders.length && !(playtest && isBasicLandsTestDeck(commander, list)))
-    throw new TableError(422, `${notCommanders.join(" and ")} ${notCommanders.length === 1 ? "can't be a commander" : "can't be commanders"}: a commander is a legendary creature, or a card that says it can be your commander.`, {notCommanders});
+    throw new TableError(422, `${notCommanders.join(" and ")} ${notCommanders.length === 1 ? "can't be a commander" : "can't be commanders"}: a commander is a legendary creature, or a card that says it can be your commander${notCommanders.some((n) => isBackground(cards(n))) ? "; a Background is one only beside a commander that says Choose a Background" : ""}.`, {notCommanders});
+  if (commander.length === 2 && !partnered(commander, commander.map(cards)))
+    throw new TableError(422, `${commander[0]} and ${commander[1]} can't both be commanders: two commanders must be partners. Both need Partner (or the same named Partner ability), each must say Partner with the other, or one must say Choose a Background and the other be a Background.`, {notPartners: [...commander]});
   /* The deck's bracket as its library measures it (the Decks page's B1-B5), which a table's limit is held to. */
   const bracket = Number.isInteger(deck.bracket) && deck.bracket >= 1 && deck.bracket <= 5 ? deck.bracket : null;
   return {name: clean(deck.name) || commander[0] || "A deck", commander, cards: list, bracket, source: readSource(deck.source)};

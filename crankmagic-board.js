@@ -284,11 +284,16 @@ globalThis.CrankBoard = Object.freeze({
   const departed = (i) => (view.departures || {})[`s${i}`] || null;
   const visibleCards = (p) => Object.values(p.zones).flatMap((z) => z.cards);
   const commanderOf = (p) => visibleCards(p).find((c) => c.commander && c.name) || null;
-  /* A commander's damage is kept by the commander's object; which seat that is, the owner of the card says. */
-  function commanderSeat(objectId) {
+  /* A commander's damage is kept under its commander key, "<owner seat>:<id>", the same in every zone (CR 903.10a is
+     "over the course of the game"), so the seat is the key's own first part -- even while the card is out of sight. A
+     key that is a bare object id (a view from before the key) is the visible card's. */
+  const keyOf = (c) => c.commanderKey || String(c.cardId);
+  function commanderSeat(key) {
+    const m = /^(\d+):/.exec(String(key));
+    if (m) return Number(m[1]);
     for (const p of players()) for (const zone of Object.values(p.zones)) {
-      const card = zone.cards.find((c) => c.cardId === Number(objectId));
-      if (card && card.commander) return card.owner;
+      const card = zone.cards.find((c) => c.commander && keyOf(c) === String(key));
+      if (card) return card.owner;
     }
     return null;
   }
@@ -600,20 +605,27 @@ globalThis.CrankBoard = Object.freeze({
     /* a heart for life, a skull and crossbones for poison, nothing for commander damage (item 9) */
     const row = (label, cells, name = "") => `<div role="row"><span role="rowheader"${name ? ` class="cm-vitals-icon" aria-label="${e(name)}" title="${e(name)}"` : ""}>${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
     const rows = [row("♥", ps.map((p) => `<b>${p.health.life}</b>`), "Life"), row("☠", ps.map((p) => `${p.health.poison} / 10`), "Poison")];
+    /* A row for each commander, not each seat: partners are two commanders, and 21 is from ONE of them (CR 903.10a). */
     const known = new Set();
+    const cells = (key, seat) => ps.map((t) => {
+      if (t.playerId === seat) return "—";
+      const n = (t.health.commanderDamage || {})[key] || 0;
+      return `${n} / 21<i class="cm-vitals-meter" style="--fill:${Math.min(1, n / 21)};--seat:${seat === null ? SEAT_COLORS[0] : seatColor(seat)}"></i>`;
+    });
     for (const src of ps) {
-      const ids = visibleCards(src).filter((c) => c.commander).map((c) => c.cardId);
-      if (!ids.length) continue;
-      ids.forEach((id) => known.add(String(id)));
-      const name = (commanderOf(src) || {}).name || `${src.name}'s commander`;
-      rows.push(row(`From ${name}`, ps.map((t) => {
-        if (t.playerId === src.playerId) return "—";
-        const n = ids.reduce((sum, id) => sum + ((t.health.commanderDamage || {})[id] || 0), 0);
-        return `${n} / 21<i class="cm-vitals-meter" style="--fill:${Math.min(1, n / 21)};--seat:${seatColor(src.playerId)}"></i>`;
-      })));
+      for (const c of visibleCards(src).filter((x) => x.commander)) {
+        const key = keyOf(c);
+        if (known.has(key)) continue;
+        known.add(key);
+        rows.push(row(`From ${c.name || `${src.name}'s commander`}`, cells(key, src.playerId)));
+      }
     }
-    const unknown = [...new Set(ps.flatMap((t) => Object.keys(t.health.commanderDamage || {})))].filter((id) => !known.has(id));
-    for (const id of unknown) rows.push(row("From a commander out of sight", ps.map((t) => `${(t.health.commanderDamage || {})[id] || 0} / 21`)));
+    /* A commander out of sight (in a hand or a library) still has its tally, and its key still says whose it is. */
+    const unknown = [...new Set(ps.flatMap((t) => Object.keys(t.health.commanderDamage || {})))].filter((key) => !known.has(key));
+    for (const key of unknown) {
+      const seat = commanderSeat(key), owner = ps.find((p) => p.playerId === seat);
+      rows.push(row(owner ? `From ${owner.name}'s commander, out of sight` : "From a commander out of sight", cells(key, seat)));
+    }
     C.modal("Table vitals", `<div class="cm-table-vitals" role="table" aria-label="Table vitals" style="--cols:${ps.length}">${head}${rows.join("")}</div>
       <p class="cm-muted">A player loses at 0 life, at 10 poison, or at 21 combat damage from one commander.</p><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   }

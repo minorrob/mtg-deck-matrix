@@ -18,17 +18,32 @@
  * the cost, so a taxed commander a player cannot afford is simply not offered — never offered and
  * then refused at payment.
  *
- * THE COMMAND-ZONE REPLACEMENT IS A CHOICE, AND IT IS THE OWNER'S (CR 903.9a). "May" means the
+ * THE TAX AND THE DAMAGE BELONG TO THE COMMANDER, NOT TO AN OBJECT. Every zone change makes a new
+ * object (CR 400.7), and a commander changes zones every time it is cast, dies or is exiled. Both are
+ * kept under its `commanderKey` (state/index.mjs), which every move carries: the second cast from
+ * the command zone costs {2} more, and 11 combat damage before a death and 11 after are 22 from the
+ * same commander (CR 903.10a).
+ *
+ * RETURNING TO THE COMMAND ZONE IS A CHOICE, AND IT IS THE OWNER'S (CR 903.9a). "May" means the
  * engine asks. An engine that always returns a commander takes away a real decision: leaving it in
  * a graveyard is where a reanimation starts, and paying the tax again is not always what a player
  * wants. It is the OWNER who chooses, not whoever controlled it — a borrowed commander goes home.
  *
- * WHAT IS DEFERRED AND NAMED: partner and background (CR 702.124, 702.153) need the card script to
- * declare them, and the two-commander color identity is the union of both, which this file's
- * `colorIdentity` already composes correctly once there are two cards to hand it.
+ * IT IS A STATE-BASED ACTION, NOT A REPLACEMENT (CR 903.9a, 704.6d). The commander goes to the
+ * graveyard or to exile first -- it dies, and "whenever a creature dies" sees it die -- and the
+ * next time state-based actions are checked its owner is asked whether to move it. However it got
+ * there: destroyed, exiled, sacrificed, countered, discarded. Once asked about, it is not asked
+ * again while it stays (704.6d asks only of one put there since the last check); a move makes a
+ * new object, and that one is asked.
+ *
+ * WHAT IS DEFERRED AND NAMED: CR 903.9b, the replacement for a commander that would go to its
+ * owner's hand or library -- a bounced commander goes to the hand, and its owner is not asked.
+ * Partner and background (CR 702.124) are a deck rule, held at the table (room/table.mjs); the
+ * two-commander color identity is the union of both, which `colorIdentity` composes.
  */
 
 import {COLORS} from "./mana.mjs";
+import {commanderKeyOf, cardsIn} from "../state/index.mjs";
 
 /** What the tax adds per previous cast from the command zone (CR 903.8). */
 const TAX_PER_CAST = 2;
@@ -73,13 +88,17 @@ export function withinIdentity(card, identity) {
   return colorIdentity(card).every((color) => identity.includes(color));
 }
 
+/* The key a commander's tax and damage are kept under: the commander's own, or -- for an id that names nothing now --
+   the id itself, which matches nothing and so counts nothing. */
+const keyFor = (state, objectId) => (state.objects[objectId] ? commanderKeyOf(state.objects[objectId]) : String(objectId));
+
 /**
  * The extra generic mana this commander costs right now (CR 903.8).
  *
  * Two for each previous time it was cast FROM THE COMMAND ZONE — not for each time it was cast.
  */
 export function commanderTax(state, player, objectId) {
-  const casts = state.players[player].commanderCasts?.[objectId] ?? 0;
+  const casts = state.players[player].commanderCasts?.[keyFor(state, objectId)] ?? 0;
   return casts * TAX_PER_CAST;
 }
 
@@ -87,23 +106,46 @@ export function commanderTax(state, player, objectId) {
 export function recordCommanderCast(state, player, objectId) {
   if (!state.players[player].commanderCasts) state.players[player].commanderCasts = {};
   const casts = state.players[player].commanderCasts;
-  casts[objectId] = (casts[objectId] ?? 0) + 1;
+  const key = keyFor(state, objectId);
+  casts[key] = (casts[key] ?? 0) + 1;
 }
 
-/* ---- CR 903.9a, the command-zone replacement ---- */
+/**
+ * Keep the tally of combat damage a commander has dealt a player (CR 903.10a).
+ *
+ * The caller says the damage was combat damage, and the source is still the object that dealt it. Nothing from an
+ * object that is not a commander is counted, however much it is.
+ */
+export function recordCommanderDamage(state, player, sourceId, amount) {
+  const source = state.objects[sourceId];
+  if (source?.commander !== true || !(amount > 0)) return;
+  const tally = state.players[player].commanderDamage;
+  const key = commanderKeyOf(source);
+  tally[key] = (tally[key] ?? 0) + amount;
+}
 
-/** The zones a commander may be pulled back from (CR 903.9a). */
-const RECOVERABLE = ["graveyard", "exile", "hand", "library"];
+/* ---- CR 903.9a, back to the command zone ---- */
+
+/** The zones a commander may be moved back from as a state-based action (CR 903.9a). */
+const RECOVERABLE = ["graveyard", "exile"];
 
 /**
- * Whether this move is one the owner may redirect to the command zone.
- *
- * Asked BEFORE the move, like any replacement (CR 614.1): the commander never reaches the graveyard
- * at all, so nothing that watches graveyards sees it arrive and then leave.
+ * The commander whose owner is to be asked now, or null: one in a graveyard or in exile that nobody has asked about
+ * since it got there, owned by a player still in the game. Several at once (a wrath) are asked in turn order from the
+ * active player, the order CR 101.4 gives simultaneous choices.
  */
-export function offersCommandZone(state, objectId, to) {
-  const object = state.objects[objectId];
-  return object?.commander === true && RECOVERABLE.includes(to);
+export function commanderToAsk(state) {
+  const count = state.players.length;
+  for (let step = 0; step < count; step += 1) {
+    const owner = ((state.activePlayer ?? 0) + step) % count;
+    if (state.players[owner].lost) continue;
+    for (const zone of RECOVERABLE) {
+      const ids = zone === "exile" ? state.zones.exile.filter((id) => state.objects[id].owner === owner) : cardsIn(state, zone, owner);
+      const id = ids.find((at) => state.objects[at].commander === true && state.objects[at].commanderAsked !== true);
+      if (id !== undefined) return {kind: "commander-replacement", player: owner, objectId: id, name: state.objects[id].card, from: zone};
+    }
+  }
+  return null;
 }
 
 /** The choice (§12.1). A yes or no, asked of the OWNER. */
@@ -111,26 +153,28 @@ export function commanderChoice(state, awaiting) {
   const name = awaiting.name ?? "your commander";
   return {
     id: `commander-zone:${state.turn}:${awaiting.objectId}`,
-    title: `Put ${name} into the command zone instead?`,
+    title: `Put ${name} into the command zone?`,
     mode: "boolean",
     min: 1,
     max: 1,
     options: [
       {index: 0, label: "Put it into the command zone"},
-      {index: 1, label: `Let it go to your ${awaiting.to}`},
+      {index: 1, label: awaiting.from === "exile" ? "Leave it in exile" : "Leave it in your graveyard"},
     ],
   };
 }
 
 /**
- * Apply the answer. Returns the zone the card should actually go to.
+ * Apply the answer: true when the commander is to go to the command zone. A no is remembered on the object, so its
+ * owner is not asked again while it stays where it is.
  *
  * The caller does the moving, because the caller is the one that knows what event to report — this
- * module decides only where.
+ * module decides only whether.
  */
 export function resolveCommanderChoice(state, awaiting, indices) {
   if (!Array.isArray(indices) || indices.length !== 1) throw new Error("Answer yes or no");
   const toCommandZone = indices[0] === 0;
   state.awaiting = null;
-  return toCommandZone ? "command" : awaiting.to;
+  if (!toCommandZone && state.objects[awaiting.objectId]) state.objects[awaiting.objectId].commanderAsked = true;
+  return toCommandZone;
 }

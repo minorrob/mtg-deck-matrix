@@ -26,6 +26,10 @@
  * AN EMPTY LIBRARY IS NOT A LOSS (CR 704.5b). ATTEMPTING TO DRAW from one is. A player can sit at
  * zero cards for the rest of the game and be fine until their next draw step.
  *
+ * A COMMANDER IN A GRAVEYARD OR IN EXILE MAY GO HOME (CR 903.9a, 704.6d), and its owner is asked here, once everything
+ * else has settled: it died, or was exiled, like any card, and what watches for that saw it. Asked once each time it
+ * arrives (rules/commander.mjs), never while the game is over.
+ *
  * WHAT IS DEFERRED AND NAMED: the legend rule (CR 704.5j) and planeswalker loyalty (CR 704.5i) need
  * card types and supertypes that arrive with the card directory in phase 2; "can't lose" effects,
  * which the Java probe also pinned, need continuous effects (1.8). Each is a rule this file will
@@ -37,7 +41,7 @@ import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
-import {offersCommandZone, resolveCommanderChoice} from "./commander.mjs";
+import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 
@@ -70,10 +74,7 @@ const isCreature = (object) => (object.types ?? []).includes("Creature");
 export function dealCommanderDamage(state, player, sourceId, amount, {combat = true} = {}) {
   const events = [];
   changeLife(state, player, -amount, events);
-  if (combat && state.objects[sourceId]?.commander === true) {
-    const tally = state.players[player].commanderDamage;
-    tally[sourceId] = (tally[sourceId] ?? 0) + amount;
-  }
+  if (combat) recordCommanderDamage(state, player, sourceId, amount);
   return events;
 }
 
@@ -215,16 +216,8 @@ export function checkStateBasedActions(state) {
         const {proposal} = applyReplacements(state, {
           event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller,
         });
-        /* CR 903.9a is a MAY, so the engine asks its OWNER — not its controller, which is why a
-           borrowed commander goes home. Asked before the move, like any replacement, so the
-           commander never reaches a graveyard at all. */
-        if (offersCommandZone(state, id, proposal.to)) {
-          state.awaiting = {
-            kind: "commander-replacement", player: object.owner, objectId: id,
-            name: object.card, to: proposal.to, damage: object.damage,
-          };
-          return events;
-        }
+        /* A commander dies like any creature (CR 903.9a is a state-based action, not a replacement): its owner is
+           asked below, once it is in the graveyard and everything else has settled. */
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
@@ -264,7 +257,16 @@ export function checkStateBasedActions(state) {
       acted = true;
     }
 
-    if (!acted) break;
+    if (!acted) {
+      /* CR 903.9a: a commander put into a graveyard or exile since the last check -- its OWNER may put it into the
+         command zone, so the engine stops and asks (rules/commander.mjs). Last, once the rest has settled: a player
+         who lost is not asked, and a game that is over asks nobody anything. */
+      if (!state.awaiting && !gameOver(state)) {
+        const ask = commanderToAsk(state);
+        if (ask) state.awaiting = ask;
+      }
+      break;
+    }
     if (pass === 9) throw new Error("State-based actions did not settle; two of them are undoing each other");
   }
 
@@ -309,11 +311,12 @@ export function concede(state, playerId) {
 }
 
 /**
- * Finish a commander's zone change once its owner has answered CR 903.9a.
+ * Finish CR 903.9a once a commander's owner has answered: yes moves it from the graveyard or exile to the command
+ * zone, no leaves it where it is.
  *
  * The move happens here rather than in `commander.mjs` because this is the module that knows what
- * event to report; that one decides only where the card goes. Afterwards the whole check runs
- * again, because a commander leaving can be the thing that settles something else.
+ * event to report; that one decides only whether. Afterwards the whole check runs again: another
+ * commander may be waiting to be asked about.
  *
  * @returns {Array} events for the caller to journal
  */
@@ -321,18 +324,19 @@ export function finishCommanderReplacement(state, awaiting, indices) {
   const id = awaiting.objectId;
   const object = state.objects[id];
   if (!object) throw new Error("That commander is no longer there to move");
-  const destination = resolveCommanderChoice(state, awaiting, indices);
+  const home = resolveCommanderChoice(state, awaiting, indices);
   const events = [];
-  const card = cardRef(state, id);
-  const leftBehind = lastKnown(state, id);
-  const moved = moveObject(state, id, destination, destination === "battlefield" || destination === "exile" ? null : object.owner);
-  events.push(event("GameEventCardChangeZone", state, {
-    card,
-    leftBehind,
-    ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
-    from: {zoneType: "Battlefield", player: {playerId: object.controller}},
-    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
-  }));
+  if (home) {
+    const card = cardRef(state, id);
+    const from = object.zone;
+    const moved = moveObject(state, id, "command", object.owner);
+    events.push(event("GameEventCardChangeZone", state, {
+      card,
+      becomes: moved,
+      from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.owner}},
+      to: {zoneType: "Command", player: {playerId: object.owner}},
+    }));
+  }
   events.push(...checkStateBasedActions(state));
   return events;
 }

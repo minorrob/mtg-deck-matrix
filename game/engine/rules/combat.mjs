@@ -52,6 +52,7 @@ import {givePoison, changeLife, infects, addCounters} from "../script/effects/re
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
 import {canPayGeneric, payGeneric} from "./mana.mjs";
+import {recordCommanderDamage} from "./commander.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
   combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
@@ -464,6 +465,10 @@ export const combatDamage = {
            many poison counters. */
         if (infect) events.push(...givePoison(state, hit.toPlayer, hit.amount));
         else changeLife(state, hit.toPlayer, -hit.amount, events);
+        /* CR 903.10a: combat damage a commander deals a player -- infect or not, it was dealt -- is kept against that
+           commander for the rest of the game. Until 2026-10-03 nothing in combat kept it, and no game could be lost
+           this way. */
+        recordCommanderDamage(state, hit.toPlayer, hit.source, hit.amount);
         /* TOXIC (CR 702.164c, batch 77): dealt combat damage by a creature with toxic, the player also gets that many
            poison counters -- every instance it has, given ones too, added together (702.164b). */
         const toxic = abilitiesOf(state, hit.source).filter((a) => a.kind === "static" && a.rule === "toxic").reduce((n, a) => n + (a.amount ?? 0), 0);
