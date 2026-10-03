@@ -43,7 +43,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget",
+  "unblocked", "singleTarget", "goaded",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -123,6 +123,8 @@ function matchesManaValue(state, id, rule, context = {}) {
   const value = cost ? manaValue(parseManaCost(cost)) : 0;
   /* "With mana value X" (Likeness Looter): the X paid, as it is targeted and as it resolves. */
   if (rule.exactly !== undefined) return value === (rule.exactly === "X" ? context.x ?? 0 : rule.exactly);
+  /* "With even mana values" (Void Winnower): zero is even. */
+  if (rule.even !== undefined && (value % 2 === 0) !== rule.even) return false;
   if (rule.min !== undefined && value < rule.min) return false;
   if (rule.max !== undefined && value > rule.max) return false;
   return true;
@@ -236,6 +238,8 @@ export function compileSelector(selector) {
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
     /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
     if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).length !== 1) return false;
+    /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
+    if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;

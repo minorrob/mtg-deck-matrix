@@ -443,6 +443,18 @@ export function gainControl(state, params, context) {
 }
 
 /**
+ * `goad` -- "goad target creature", "goad all creatures you don't control" (CR 701.15; Forge's Goad): until this effect's
+ * controller's next turn, each creature it names (`targets`, or every one `selector` describes, fixed as it resolves)
+ * attacks each combat if able and attacks a player other than its goader if able (rules/combat.mjs). Goaded again by the
+ * same player, nothing more (CR 701.15b); by two players, it avoids both if it can.
+ */
+export function goad(state, params, context) {
+  const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: "your-next-turn", sourceController: context.controller});
+  return [];
+}
+
+/**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
  */
