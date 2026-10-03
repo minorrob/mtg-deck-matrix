@@ -214,6 +214,13 @@ export function housePilot({seat, cards = () => null} = {}) {
         const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
         return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
       }
+      /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
+      if (id.startsWith("choose-cost:")) {
+        const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));
+        const rank = (o) => (isLand(yard.get(o.cardId)) ? -1 : manaValue(o.label.replace(/ \(\d+\)$/, "")));
+        const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {
         const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));

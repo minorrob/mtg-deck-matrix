@@ -9,15 +9,15 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 997,
-  "everyRule": 2373
+  "defined": 1000,
+  "everyRule": 2382
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 32,
+    "built": 33,
     "partial": 0,
-    "named": 22,
+    "named": 21,
     "missing": 140
    },
    "entries": [
@@ -403,7 +403,7 @@
      "top": 6,
      "all": 58,
      "blocks": 6,
-     "alone": 3
+     "alone": 4
     },
     {
      "kind": "keyword ability",
@@ -751,7 +751,7 @@
      "top": 3,
      "all": 14,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -817,13 +817,13 @@
      "kind": "keyword ability",
      "rule": "702.138",
      "name": "Escape",
-     "engine": null,
-     "status": "named",
+     "engine": "Escape",
+     "status": "built",
      "forge": "Escape",
      "top": 2,
      "all": 33,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -919,7 +919,7 @@
      "top": 2,
      "all": 15,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -2574,7 +2574,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 6
+     "alone": 10
     },
     {
      "kind": "keyword action",
@@ -3881,7 +3881,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 6
+     "alone": 10
     },
     {
      "kind": "effect",
@@ -4025,7 +4025,7 @@
      "top": 8,
      "all": 120,
      "blocks": 8,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -5787,7 +5787,7 @@
      "top": 4,
      "all": 21,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "trigger",
@@ -5895,7 +5895,7 @@
      "top": 2,
      "all": 62,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -7441,7 +7441,7 @@
      "top": 2,
      "all": 41,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 102,
-     "alone": 22
+     "alone": 23
     },
     {
      "kind": "option",
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 25
+     "alone": 26
     },
     {
      "kind": "option",
@@ -9605,7 +9605,7 @@
      "top": 5,
      "all": 42,
      "blocks": 5,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "count",
@@ -11769,10 +11769,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 2,
+    "built": 3,
     "partial": 0,
     "named": 1,
-    "missing": 13
+    "missing": 12
    },
    "entries": [
     {
@@ -11791,13 +11791,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "etbCounter",
-     "engine": null,
-     "status": "missing",
+     "engine": "etbCounter",
+     "status": "built",
      "forge": "etbCounter",
      "top": 35,
      "all": 475,
-     "blocks": 25,
-     "alone": 7
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",

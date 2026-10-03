@@ -126,7 +126,14 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
   Annihilator: "sacrifice",
   /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
-  Afterlife: "createToken"};
+  Afterlife: "createToken",
+  /* Forge's etbCounter, "this creature enters with two +1/+1 counters on it" (X5e): the replacement `entersWithCounters` on
+     the permanent's own entering (CR 614.1c, rules/replacement.mjs) -- a number, X paid (CR 107.3m), an amount counted as it
+     enters, and "escapes with" (CR 702.138c). Walking Ballista and Hangarback Walker were defined with it before it was
+     credited. A kicker count is Multikicker's, and converge is Converge's: each is measured, and held back, on its own.
+     Named, not built: "if you cast it" (Nine-Lives Familiar, held back by RememberObjects too) and shield counters' rule
+     (CR 122.1c; Sanctuary Warden enters with two and they would do nothing). */
+  etbCounter: "putCounter"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

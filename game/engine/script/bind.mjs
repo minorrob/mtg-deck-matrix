@@ -74,7 +74,8 @@ export const choosing = (spec) => ({kind: "choose", ...countOf(spec)});
 export const isChoosing = (t) => Boolean(t) && !Array.isArray(t) && t.kind === "choose";
 
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-const inWords = (n) => COUNT_WORDS[n] ?? String(n);
+/** A small number in words, as a card says it: "four other cards". */
+export const inWords = (n) => COUNT_WORDS[n] ?? String(n);
 /** A count in words, as a card says it: "up to two targets", "any number of targets", "one or two targets". */
 export function countWords({min = 0, max = null} = {}) {
   if (max === null) return min > 0 ? `${inWords(min)} or more targets` : "any number of targets";
