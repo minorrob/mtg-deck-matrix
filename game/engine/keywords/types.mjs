@@ -9,6 +9,10 @@
  * nonSubtypes and their last-known form (script/filter.mjs), a lord's `affects` (rules/layers.mjs), "shares a creature
  * type" -- through `everyCreatureType` as the layers derive it: the printed keyword, or an effect that gives "all creature
  * types" (Mirror Entity), a type change in layer 4 (CR 613.1d) that a lord in layer 7 then sees.
+ *
+ * DEVOID (CR 702.114a, batch 77): "this object is colorless" -- a characteristic-defining ability in every zone. The card's
+ * colors are none, as its identity says (the oracle data agrees, and the card compiler holds a devoid card to it), so
+ * every reader of colors -- a selector's `colors` and `colorless`, the layers' color changes after it -- sees none.
  */
 import {CREATURE_TYPES} from "./creature-types.mjs";
 
@@ -16,6 +20,8 @@ import {CREATURE_TYPES} from "./creature-types.mjs";
 export const KEYWORD_FAMILIES = Object.freeze({
   /** What it is: every creature type. */
   types: Object.freeze(["Changeling"]),
+  /** What color it is: none. */
+  colors: Object.freeze(["Devoid"]),
 });
 
 const TYPES = new Set(CREATURE_TYPES);
