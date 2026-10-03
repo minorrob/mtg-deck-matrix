@@ -59,6 +59,8 @@ export function housePilot({seat, cards = () => null} = {}) {
   };
   /* How many of an offer's targets are on the side its effect is meant for. */
   const aim = (view, action) => (action.targets ?? []).reduce((n, t) => {
+    /* A counted target is picked later, by `answer` below ("choose-targets"): worth taking the offer for. */
+    if (Array.isArray(t) || t?.kind === "choose") return n + 1;
     const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
@@ -204,6 +206,13 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("trigger-targets:") && options.length) {
         const best = options.reduce((b, o) => (aim(view, o) > aim(view, b) ? o : b));
         return {indices: [best.index]};
+      }
+      /* A counted target ("up to two target creatures"): every one on the side its effect is meant for, as many as it may,
+         at least as many as it must. */
+      if (id.startsWith("choose-targets:")) {
+        const aimed = options.filter((o) => aim(view, o) > 0).map((o) => o.index);
+        const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
+        return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
       }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {

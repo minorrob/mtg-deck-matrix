@@ -21,7 +21,7 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, keywordsOf} from "../../rules/layers.mjs";
+import {typesOf, powerOf, keywordsOf, isKeywordCounter} from "../../rules/layers.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -212,6 +212,12 @@ export function addCounters(state, id, kind, count, events) {
   if (!object) return;
   const before = object.counters[kind] ?? 0;
   object.counters[kind] = before + count;
+  /* A keyword counter's ability has the timestamp of the counter's placing (CR 122.1b, 613.7): a "loses all abilities"
+     from before it does not take it away (rules/layers.mjs). */
+  if (before <= 0 && object.counters[kind] > 0 && isKeywordCounter(kind)) {
+    (object.counterStamps ??= {})[kind] = state.nextTimestamp;
+    state.nextTimestamp += 1;
+  }
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
   }));

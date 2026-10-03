@@ -171,8 +171,10 @@ export const FORGE_OPTIONS = Object.freeze({
   PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
   ActivationLimit: {name: "Only once (or N times) each turn", status: "built", engine: "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)"},
   ActivationPhases: {name: "Activate only during a step or phase", status: "missing"},
-  TargetMin: {name: "Fewer targets than the most (\"up to\", \"any number of\")", status: "missing"},
-  TargetMax: {name: "More than one target of a kind (\"up to N\")", status: "missing"},
+  /* X5a: a target spec's count, `{min, max}` (script/bind.mjs), picked as a pick-several once the offer is taken
+     ("choose-targets"). A count that is X ("up to X target creatures") is not built: TargetMax stays partial. */
+  TargetMin: {name: "Fewer targets than the most (\"up to\", \"any number of\")", status: "built", engine: "a target's count {min, max} (script/bind.mjs), picked as a pick-several"},
+  TargetMax: {name: "More than one target of a kind (\"up to N\")", status: "partial", engine: "a target's count {min, max} (script/bind.mjs); a count that is X is not built"},
   MayPlay: {name: "You may play or cast a card from another zone", status: "missing"},
   Duration: {name: "How long an effect lasts (until end of turn is built; others not)", status: "partial"},
   Optional: {name: "You may (an optional effect, CR 603.5)", status: "built", engine: "modal (Yes / No)"},

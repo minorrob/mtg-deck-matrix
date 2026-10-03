@@ -455,7 +455,10 @@ export function effectUntil(state, params, context) {
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
     affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)} : params.affects ?? {what: "permanent"},
     apply: params.apply ?? {},
-    until: params.until ?? "end-of-turn",
+    /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
+       target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
+       that leaves is a new object, CR 400.7). */
+    until: params.until === "ever" ? null : params.until ?? "end-of-turn",
     sourceController: context.controller,
   });
   return [];

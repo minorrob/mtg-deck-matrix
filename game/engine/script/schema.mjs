@@ -128,6 +128,12 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
   }
 }
 
+/* A target's count: `min` a whole number (0 when absent), `max` a whole number at least 1 and at least `min`, or absent. */
+const countValid = (count) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
+  && Object.keys(count).every((k) => k === "min" || k === "max")
+  && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
+  && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+
 function checkAbility(ability, path, errors) {
   if (!ability || typeof ability !== "object") {
     errors.push({path, message: "An ability is an object"});
@@ -141,13 +147,17 @@ function checkAbility(ability, path, errors) {
   if (!isText(ability.text))
     errors.push({path: `${path}.text`, message: "An ability carries the oracle sentence it implements, so it can be re-checked when the card is errata'd"});
 
-  /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs). */
-  for (const [index, selector] of (ability.targets ?? []).entries()) {
-    if (selector && typeof selector === "object" && "anyOf" in selector) {
+  /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
+     "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
+  for (const [index, spec] of (ability.targets ?? []).entries()) {
+    const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+    if (count !== undefined && !countValid(count))
+      errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
+    if (spec && typeof spec === "object" && "anyOf" in spec) {
       if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
-        errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else"});
+        errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else, or that with a count"});
       else selector.anyOf.forEach((one, at) => checkSelector(one, `${path}.targets[${index}].anyOf[${at}]`, errors));
-    } else checkSelector(selector, `${path}.targets[${index}]`, errors);
+    } else checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.targets[${index}]`, errors);
   }
   /* Every `{target: n}` an effect names is a target the ability declares, or it would bind to nothing, silently. A
      modal whose modes carry their own targets (chosen as it is cast, CR 700.2): each mode's effects name its own. */
@@ -155,9 +165,12 @@ function checkAbility(ability, path, errors) {
     ? ability.effects[0] : null;
   if (modal) {
     for (const [m, mode] of (modal.modes ?? []).entries()) {
-      for (const [index, selector] of (mode.targets ?? []).entries()) {
-        if (selector && typeof selector === "object" && "anyOf" in selector) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
-        else checkSelector(selector, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
+      for (const [index, spec] of (mode.targets ?? []).entries()) {
+        const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+        if (count !== undefined && !countValid(count))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].count`, message: "A target's count is `{min, max}`"});
+        if (spec && typeof spec === "object" && "anyOf" in spec) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
+        else checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
       }
       for (const n of targetRefs(mode.effects ?? []))
         if (n < 0 || n >= (mode.targets ?? []).length)

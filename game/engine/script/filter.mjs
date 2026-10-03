@@ -250,7 +250,8 @@ export function compileSelector(selector) {
        greater" (through the layers), "this creature" itself. */
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
     /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
-    if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).length !== 1) return false;
+    /* "With a single target": one object or player chosen in all -- a counted target's list counts each it holds. */
+    if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).flat().filter(Boolean).length !== 1) return false;
     /* "Target enchantment you control that doesn't have the same name as another permanent you control" (Yenna, batch
        70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
     if (selector.uniqueName === true) {

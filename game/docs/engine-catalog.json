@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 992,
-  "everyRule": 2267
+  "defined": 994,
+  "everyRule": 2320
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -403,7 +403,7 @@
      "top": 6,
      "all": 58,
      "blocks": 6,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -415,7 +415,7 @@
      "top": 6,
      "all": 36,
      "blocks": 6,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "keyword ability",
@@ -559,7 +559,7 @@
      "top": 4,
      "all": 24,
      "blocks": 4,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -643,7 +643,7 @@
      "top": 3,
      "all": 58,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -751,7 +751,7 @@
      "top": 3,
      "all": 14,
      "blocks": 3,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -859,7 +859,7 @@
      "top": 2,
      "all": 23,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -2574,7 +2574,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "keyword action",
@@ -3881,7 +3881,7 @@
      "top": 12,
      "all": 53,
      "blocks": 12,
-     "alone": 4
+     "alone": 6
     },
     {
      "kind": "effect",
@@ -3929,7 +3929,7 @@
      "top": 11,
      "all": 49,
      "blocks": 11,
-     "alone": 6
+     "alone": 8
     },
     {
      "kind": "effect",
@@ -3977,7 +3977,7 @@
      "top": 10,
      "all": 43,
      "blocks": 8,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4001,7 +4001,7 @@
      "top": 9,
      "all": 56,
      "blocks": 9,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4157,7 +4157,7 @@
      "top": 5,
      "all": 32,
      "blocks": 5,
-     "alone": 3
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4193,7 +4193,7 @@
      "top": 4,
      "all": 13,
      "blocks": 4,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4241,7 +4241,7 @@
      "top": 3,
      "all": 32,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "effect",
@@ -4397,7 +4397,7 @@
      "top": 1,
      "all": 64,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -7285,7 +7285,7 @@
      "top": 10,
      "all": 204,
      "blocks": 10,
-     "alone": 5
+     "alone": 6
     },
     {
      "kind": "static",
@@ -7345,7 +7345,7 @@
      "top": 5,
      "all": 34,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "static",
@@ -7489,7 +7489,7 @@
      "top": 2,
      "all": 4,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "static",
@@ -8859,10 +8859,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 18,
-    "partial": 4,
+    "built": 19,
+    "partial": 5,
     "named": 0,
-    "missing": 15
+    "missing": 13
    },
    "entries": [
     {
@@ -8905,13 +8905,13 @@
      "kind": "option",
      "rule": null,
      "name": "Fewer targets than the most (\"up to\", \"any number of\")",
-     "engine": null,
-     "status": "missing",
+     "engine": "a target's count {min, max} (script/bind.mjs), picked as a pick-several",
+     "status": "built",
      "forge": "TargetMin",
      "top": 126,
      "all": 1672,
-     "blocks": 126,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -8923,18 +8923,18 @@
      "top": 124,
      "all": 1168,
      "blocks": 102,
-     "alone": 12
+     "alone": 19
     },
     {
      "kind": "option",
      "rule": null,
      "name": "More than one target of a kind (\"up to N\")",
-     "engine": null,
-     "status": "missing",
+     "engine": "a target's count {min, max} (script/bind.mjs); a count that is X is not built",
+     "status": "partial",
      "forge": "TargetMax",
      "top": 123,
      "all": 1664,
-     "blocks": 123,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8947,7 +8947,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 106,
-     "alone": 20
+     "alone": 22
     },
     {
      "kind": "option",
@@ -9007,7 +9007,7 @@
      "top": 99,
      "all": 625,
      "blocks": 79,
-     "alone": 14
+     "alone": 15
     },
     {
      "kind": "option",
@@ -9283,7 +9283,7 @@
      "top": 3,
      "all": 162,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "option",
@@ -9437,7 +9437,7 @@
      "top": 13,
      "all": 63,
      "blocks": 13,
-     "alone": 5
+     "alone": 7
     },
     {
      "kind": "count",
@@ -9977,7 +9977,7 @@
      "top": 1,
      "all": 6,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -11797,7 +11797,7 @@
      "top": 35,
      "all": 475,
      "blocks": 25,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "keyword construct",
@@ -11917,7 +11917,7 @@
      "top": 2,
      "all": 20,
      "blocks": 2,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "keyword construct",

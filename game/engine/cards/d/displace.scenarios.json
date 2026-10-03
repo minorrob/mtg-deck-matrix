@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Displace",
+  "scenarios": [
+    {
+      "name": "Two Elvish Visionaries exiled and returned: each enters again and draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Elvish Visionary",
+            "Elvish Visionary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Displace"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Displace",
+          "targets": [
+            [
+              {
+                "card": "Elvish Visionary"
+              },
+              {
+                "card": "Elvish Visionary"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Elvish Visionary",
+            "Elvish Visionary"
+          ]
+        }
+      ]
+    }
+  ]
+}
