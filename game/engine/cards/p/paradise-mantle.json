@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Paradise Mantle",
+    "oracleId": "c1121b83-1ba2-473d-89c9-e3bbd4529072",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{0}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature has \"{T}: Add one mana of any color.\"\nEquip {1}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature has \"{T}: Add one mana of any color.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add one mana of any color.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "anyColor": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {1}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

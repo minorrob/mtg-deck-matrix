@@ -28,7 +28,7 @@
 
 import {ADDED_PHASES} from "../script/effects/permanents.mjs";
 import {isCounted} from "../script/amount.mjs";
-import {validateScript} from "../script/schema.mjs";
+import {validateScript, SCRIPT_SCHEMA} from "../script/schema.mjs";
 import {isBuilt, NEEDS_A_DECISION, EFFECTS, REPEAT_EACH} from "../script/effects/index.mjs";
 import {KEYWORD_FAMILIES} from "../keywords/combat.mjs";
 import {KEYWORD_FAMILIES as TIMING_FAMILIES} from "../keywords/timing.mjs";
@@ -112,6 +112,12 @@ const TRIGGERS = {
     ...(t.defender ? {defender: t.defender} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {})} : null),
+  /* "Whenever this creature becomes the target of a spell" (Goldspan Dragon), "whenever a Dragon you control becomes the
+     target of a spell or ability an opponent controls" (Thunderbreak Regent): `who` and `filter` what was targeted, `by`
+     whose spell or ability (any, or opponent), `spell` a spell's only (CR 115.1, batch 76). About what was targeted and
+     the player who targeted it -- "that player" -- and its stack entry ("counter that spell or ability"). */
+  "becomes target": (t) => (ARRIVALS.includes(t.who ?? "self") && ["any", "opponent"].includes(t.by ?? "any")
+    ? {on: "GameEventBecomesTarget", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}), ...(t.by === "opponent" ? {by: "opponent"} : {}), ...(t.spell ? {spell: true} : {})} : null),
   /* "Whenever this deals combat damage to a player": `who` the source, `combat`, `to` player or opponent (CR 510.2). */
   "damage dealt": (t) => damageDealt(t),
   /* "Whenever one or more creatures you control deal combat damage to a player", Enrage's "whenever this creature is dealt
@@ -248,6 +254,31 @@ function withDelayedTriggers(abilities, problems) {
  *
  * @returns {{definition: ?object, problems: string[]}}
  */
+/* GRANTED ABILITIES (Forge's AddAbility, batch 76): what a layer-6 static gives ("lands you control have '{T}: Add one
+   mana of any color'", "other creatures you control have 'Ward--Pay 2 life'") or a pump gives until end of turn ("target
+   creature gains 'When this creature dies, return it to the battlefield ...'"), compiled as a card's own abilities are:
+   activated (a mana ability among them), triggered, and keyword abilities -- a keyword that is an ability (ward) given
+   as both. A static or replacement ability given is refused: nothing gathers one from a grant yet. */
+const GRANT_IDENTITY = Object.freeze({name: "A granted ability", oracleId: "granted", types: ["Creature"]});
+const GRANTABLE = ["activated", "triggered", "keyword"];
+function compileGrant(list, text, problems) {
+  if (!Array.isArray(list) || !list.length) { problems.push(`${text}: the abilities given are a list, with at least one`); return null; }
+  for (const ability of list) if (!GRANTABLE.includes(ability?.kind)) problems.push(`${text}: a ${ability?.kind ?? "nameless"} ability given -- only ${GRANTABLE.join(", ")} abilities are given yet`);
+  const {definition, problems: inner} = compileScript({schema: SCRIPT_SCHEMA, identity: GRANT_IDENTITY, oracleText: "", abilities: list});
+  problems.push(...inner.map((problem) => `${text}: ${problem}`));
+  return definition ? {abilities: definition.abilities, keywords: definition.keywords} : null;
+}
+/* A pump's `abilities`, compiled wherever an ability's effects hold one, nested or in a mode -- in place, on the
+   compiler's own copies of the effects (withDelayedTriggers copies each), never the script's. */
+function compileGivenIn(effects, text, problems) {
+  for (const effect of effectsIn(effects)) {
+    if (effect.abilities === undefined) continue;
+    if (effect.effect !== "pump") problems.push(`${text}: ${effect.effect} gives no abilities; a pump does`);
+    const given = compileGrant(effect.abilities, text, problems);
+    if (given) { effect.abilities = given.abilities; if (given.keywords.length) effect.keywords = [...(effect.keywords ?? []), ...given.keywords]; }
+  }
+}
+
 export function compileScript(script) {
   const {valid, errors} = validateScript(script);
   if (!valid) return {definition: null, problems: errors.map((e) => `${e.path}: ${e.message}`)};
@@ -440,6 +471,18 @@ export function compileScript(script) {
     /* static and replacement: their schema is the rules modules' own shape. */
     abilities.push({...ability, id});
   });
+
+  /* What a static or an effect gives (compileGrant): compiled here, in place of the script's words. */
+  for (const [index, ability] of abilities.entries()) {
+    if (ability.kind === "static" && ability.apply?.addAbilities !== undefined) {
+      if (ability.layer !== 6) problems.push(`${ability.text}: abilities are given in layer 6 (CR 613.1f)`);
+      const given = compileGrant(ability.apply.addAbilities, ability.text, problems);
+      if (given) abilities[index] = {...ability, apply: {...ability.apply, addAbilities: given.abilities,
+        ...(given.keywords.length ? {addKeywords: [...(ability.apply.addKeywords ?? []), ...given.keywords]} : {})}};
+    }
+    if (["activated", "triggered"].includes(ability.kind)) compileGivenIn(ability.effects, ability.text, problems);
+  }
+  if (spell) compileGivenIn(spell.effects, spell.text, problems);
 
   const types = identity.types;
   if (!spell && types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("an instant or sorcery with no spell ability does nothing");

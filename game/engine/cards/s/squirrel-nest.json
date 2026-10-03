@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squirrel Nest",
+    "oracleId": "2d584333-b25e-4291-a2c9-80c6d9f8732a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant land\nEnchanted land has \"{T}: Create a 1/1 green Squirrel creature token.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant land",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted land has \"{T}: Create a 1/1 green Squirrel creature token.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Create a 1/1 green Squirrel creature token.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "createToken",
+                "count": 1,
+                "token": {
+                  "name": "Squirrel",
+                  "types": [
+                    "Creature"
+                  ],
+                  "subtypes": [
+                    "Squirrel"
+                  ],
+                  "colors": [
+                    "G"
+                  ],
+                  "power": 1,
+                  "toughness": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

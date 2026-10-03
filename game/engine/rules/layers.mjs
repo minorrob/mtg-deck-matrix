@@ -71,6 +71,8 @@ function printed(state, id) {
     toughness: object.toughness,
     controller: object.controller,
     counters: {...object.counters},
+    /* Abilities other effects give it (batch 76), in the order they were given. */
+    granted: [],
   };
 }
 
@@ -131,7 +133,14 @@ function applyEffect(current, effect) {
   if (change.setColors) current.colors = [...change.setColors];
   /* "Gain all creature types" (Mirror Entity, batch 74): a type change, layer 4 (CR 613.1d). */
   if (change.allCreatureTypes === true) current.everyCreatureType = true;
-  if (change.removeAllAbilities) current.keywords = [];
+  /* "Loses all abilities" (CR 613.1f): its own, and any given it before -- one given after, in timestamp order, it keeps. */
+  if (change.removeAllAbilities) { current.keywords = []; current.granted = []; current.lostAbilities = true; }
+  /* GRANTED ABILITIES (Forge's AddAbility, batch 76): "lands you control have '{T}: Add one mana of any color'", "equipped
+     creature has 'Whenever this creature attacks, create a Treasure token'" -- abilities compiled as a card's own are
+     (cards/index.mjs), each with an id naming the effect that gave it -- its timestamp, and which of its holder's
+     abilities it is -- so two grants of one ability are two abilities. */
+  if (change.addAbilities) for (const ability of change.addAbilities)
+    current.granted.push({...ability, id: `granted:${effect.timestamp ?? ""}:${effect.id ?? ""}:${ability.id}`});
   if (change.addKeywords) for (const word of change.addKeywords) if (!current.keywords.includes(word)) current.keywords.push(word);
   if (Number.isInteger(change.setPower)) current.power = change.setPower;
   if (Number.isInteger(change.setToughness)) current.toughness = change.setToughness;
@@ -320,6 +329,29 @@ export const typesOf = (state, id) => characteristicsOf(state, id).types;
 /** What it currently has, after layer 6. */
 export const keywordsOf = (state, id) => characteristicsOf(state, id).keywords;
 
+/* Its own abilities unless it lost them, then the ones given it. */
+const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : object.abilities ?? []), ...current.granted];
+
+/* Whether any effect in play may give or take abilities -- an effect left behind, a static on the battlefield or in a
+   graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
+   be derived to read them. */
+function abilitiesChange(state) {
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities));
+  if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
+  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
+  return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
+}
+
+/**
+ * A PERMANENT'S ABILITIES NOW (CR 613.1f, batch 76): its own, less them if it lost them, and those other effects gave it
+ * -- what its activated, mana and triggered abilities are read from. Anywhere but the battlefield, the card's own.
+ */
+export function abilitiesOf(state, id) {
+  const object = state.objects[id];
+  if (object.zone !== "battlefield" || !abilitiesChange(state)) return object.abilities ?? [];
+  return heldAbilities(object, characteristicsOf(state, id));
+}
+
 /**
  * LAST KNOWN INFORMATION (CR 113.7a) — everything about an object, captured before it leaves.
  *
@@ -367,6 +399,7 @@ export function lastKnown(state, id) {
     tapped: object.tapped === true,
     token: object.token === true,
     commander: object.commander === true,
-    abilities: structuredClone(object.abilities ?? []),
+    /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
+    abilities: structuredClone(heldAbilities(object, current)),
   };
 }

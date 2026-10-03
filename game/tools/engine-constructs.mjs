@@ -158,7 +158,10 @@ export const FORGE_OPTIONS = Object.freeze({
   NonLegendary: {name: "Except it isn't legendary (a copy)", status: "built", engine: "except.nonLegendary"},
   Populate: {name: "Populate (copy a creature token you control)", status: "built", engine: "populate"},
   TokenAttacking: {name: "A token that enters tapped and attacking", status: "built", engine: "`attacking` on createToken and copyPermanent: that player, or the one its controller chooses (batch 67)"},
-  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "missing"},
+  /* Batch 76: granted abilities -- a layer-6 static's `addAbilities` ("equipped creature has 'whenever this creature
+     attacks ...'", "all Slivers have 'when this permanent enters ...'") and a pump's `abilities` until end of turn
+     ("target creature gains 'when this creature dies ...'"); activated, mana and keyword abilities given the same way. */
+  AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "built", engine: "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)"},
   SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
   PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
   ActivationLimit: {name: "Only once (or N times) each turn", status: "built", engine: "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)"},

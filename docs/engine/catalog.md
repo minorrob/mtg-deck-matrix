@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 942 defined and playable today; 2,222 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 960 defined and playable today; 2,225 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -21,11 +21,11 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword abilities (CR 702) | 194 | 26 | 0 | 24 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
 | Effects | 192 | 56 | 1 | 15 | 120 |
-| Triggers | 138 | 11 | 4 | 8 | 115 |
+| Triggers | 138 | 12 | 4 | 7 | 115 |
 | Static abilities | 77 | 8 | 2 | 0 | 67 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
-| Options and conditions | 37 | 17 | 4 | 0 | 16 |
+| Options and conditions | 37 | 18 | 4 | 0 | 15 |
 | Amounts the game counts | 188 | 10 | 1 | 0 | 177 |
 | Choices | 15 | 11 | 0 | 1 | 3 |
 | Other keyword constructs | 16 | 2 | 0 | 1 | 13 |
@@ -39,10 +39,11 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering what an effect moved | — | missing | 21 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 18 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
-| keyword construct | ETBReplacement | — | missing | 8 | 33 |
+| keyword construct | ETBReplacement | — | missing | 10 | 33 |
 | effect | SetState | setState | named | 7 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
+| keyword ability | Toxic | — | missing | 6 | 7 |
 | keyword construct | etbCounter | — | missing | 5 | 25 |
 | count | Cards in a library | — | missing | 5 | 13 |
 | keyword ability | Convoke | — | named | 5 | 11 |
@@ -50,7 +51,6 @@ The things that alone hold back the most of the most-played cards.
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 | keyword construct | Class | — | missing | 5 | 9 |
 | keyword ability | Prowess | — | missing | 5 | 8 |
-| keyword ability | Devoid | — | missing | 5 | 8 |
 
 ## Keyword abilities (CR 702)
 
@@ -81,7 +81,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.73 | Changeling | Changeling | built | 10 | 63 | 0 | 0 |
 | 702.114 | Devoid | — | missing | 8 | 132 | 8 | 5 |
 | 702.108 | Prowess | — | missing | 8 | 93 | 8 | 5 |
-| 702.164 | Toxic | — | missing | 7 | 44 | 7 | 5 |
+| 702.164 | Toxic | — | missing | 7 | 44 | 7 | 6 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
 | 702.185 | Warp | — | missing | 7 | 37 | 7 | 4 |
 | 702.96 | Overload | — | named | 7 | 28 | 7 | 5 |
@@ -544,7 +544,7 @@ The things that alone hold back the most of the most-played cards.
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | — | missing | 6 | 20 | 6 | 5 |
-| BecomesTarget | becomes target | named | 5 | 116 | 5 | 3 |
+| BecomesTarget | becomes target | built | 5 | 116 | 0 | 0 |
 | AbilityCast | — | missing | 5 | 42 | 5 | 5 |
 | Cycled | — | missing | 4 | 77 | 4 | 3 |
 | LandPlayed | land played | named | 4 | 40 | 4 | 3 |
@@ -857,7 +857,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player discards a card | — | missing | 5 | 83 | 5 | 2 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
 | Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 1 |
-| Grants a triggered ability ("has 'whenever ...'") | — | missing | 3 | 15 | 3 | 0 |
+| Grants a triggered ability ("has 'whenever ...'") | a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf) | built | 3 | 15 | 0 | 0 |
 | Activate only during a step or phase | — | missing | 1 | 150 | 1 | 1 |
 
 ## Amounts the game counts
@@ -1077,7 +1077,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| ETBReplacement | — | missing | 68 | 408 | 33 | 8 |
+| ETBReplacement | — | missing | 68 | 408 | 33 | 10 |
 | etbCounter | — | missing | 35 | 475 | 25 | 5 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |

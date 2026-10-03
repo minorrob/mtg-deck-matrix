@@ -67,7 +67,7 @@ import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, cast
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -475,7 +475,8 @@ export function legalActions(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
-    for (const ability of object.abilities ?? []) {
+    /* Its abilities now: its own and any given it (layers.mjs). */
+    for (const ability of abilitiesOf(state, id)) {
       if (ability.kind !== "mana") continue;
       if (ability.tapSelf && object.tapped) continue;
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
@@ -555,7 +556,7 @@ export function legalActions(state, player) {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player) continue;
-    for (const ability of object.abilities ?? []) {
+    for (const ability of abilitiesOf(state, id)) {
       /* An ability of the card in its owner's hand (cycling, ninjutsu) is not the permanent's (CR 602.2, 702.29a). */
       if (ability.kind !== "activated" || ability.zone === "hand") continue;
       if (ability.timing === "sorcery" && !sorceryTime) continue;
@@ -639,7 +640,7 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
      dual land one however many colors it offers. */
   const best = new Map();
   for (const a of actions.filter((x) => x.kind === "activate-mana")) {
-    const ability = (state.objects[a.objectId].abilities ?? []).find((x) => x.id === a.abilityId);
+    const ability = abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId);
     const net = total(a.mana) - (ability?.cost ? manaValue(parseManaCost(ability.cost)) : 0);
     best.set(a.objectId, Math.max(best.get(a.objectId) ?? 0, net));
   }
@@ -746,7 +747,7 @@ function perform(state, player, action, during = null) {
   if (action.kind === "activate-mana") {
     const events = [];
     const object = state.objects[action.objectId];
-    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed rather than trusted, like a cast's payment: which alternative, and what it costs, now. */
     const produced = manaAlternatives(state, player, ability, action.objectId)[action.produce ?? 0];
     const payment = manaAbilityPayment(state, player, ability);
@@ -886,7 +887,7 @@ function perform(state, player, action, during = null) {
   if (action.kind === "activate") {
     const events = [];
     const object = state.objects[action.objectId];
-    const ability = (object.abilities ?? []).find((candidate) => candidate.id === action.abilityId);
+    const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability));
     if (!payment || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);

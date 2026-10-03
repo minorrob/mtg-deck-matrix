@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Chromatic Lantern",
+  "fixtures": {
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His Wastes taps for {R}: Spark cast with it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chromatic Lantern",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Wastes"
+              },
+              "count": 6
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Chromatic Lantern"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "cast": "Spark"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    },
+    {
+      "name": "Maya's Wastes is not his land: {C} only",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chromatic Lantern"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Wastes",
+            "seat": 1
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
