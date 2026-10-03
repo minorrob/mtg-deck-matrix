@@ -641,13 +641,14 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
   `replaceCounters`, `amass`, `poison` (a player's poison counters; added in M4 phase 3, batch 64).
-- Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
+- Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
   flip), `phaseOut`.
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `genericChoice`, `twoPiles`, `connive`,
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
-  combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33).
+  combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33), `changeTargets` (a spell's single target
+  changed, CR 115.7; batch 65).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life

@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Imp's Mischief",
+    "oracleId": "30ec73ad-c7a1-4527-8dc6-44bdd65b9ba6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Change the target of target spell with a single target. You lose life equal to that spell's mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Change the target of target spell with a single target. You lose life equal to that spell's mana value.",
+      "targets": [
+        {
+          "what": "spell",
+          "singleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "who": "you",
+          "amount": {
+            "manaValueOf": {
+              "target": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

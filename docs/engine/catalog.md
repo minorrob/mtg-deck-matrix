@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 864 defined and playable today; 2,122 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 871 defined and playable today; 2,130 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,7 +20,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 25 | 0 | 25 | 144 |
 | Keyword actions (CR 701) | 70 | 16 | 3 | 7 | 44 |
-| Effects | 192 | 50 | 1 | 18 | 123 |
+| Effects | 192 | 51 | 1 | 18 | 122 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
 | Static abilities | 77 | 6 | 2 | 0 | 69 |
 | Replacement effects | 34 | 0 | 2 | 0 | 32 |
@@ -36,21 +36,21 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering what an effect moved | — | missing | 15 | 113 |
+| option | Remembering what an effect moved | — | missing | 16 | 113 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 14 | 106 |
 | option | You may play or cast a card from another zone | — | missing | 12 | 79 |
 | option | A token that enters tapped and attacking | — | missing | 11 | 16 |
-| option | An effect's condition: about a named object | — | missing | 6 | 53 |
+| option | An effect's condition: about a named object | — | missing | 7 | 53 |
 | effect | SetState | setState | named | 6 | 19 |
 | option | Only once (or N times) each turn | — | missing | 6 | 18 |
 | static | CantBlockBy | — | missing | 6 | 13 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
 | effect | Goad | — | missing | 6 | 11 |
-| effect | Earthbend | — | missing | 6 | 10 |
-| effect | ChangeTargets | — | missing | 6 | 10 |
 | static | CantAttackUnless | — | missing | 6 | 7 |
 | effect | WinsGame | — | missing | 5 | 15 |
 | replacement | DamageDone | — | missing | 5 | 15 |
+| effect | Branch | branch | named | 5 | 14 |
+| effect | PeekAndReveal | peekAndReveal | named | 5 | 11 |
 
 ## Keyword abilities (CR 702)
 
@@ -393,8 +393,8 @@ The things that alone hold back the most of the most-played cards.
 | Poison | poison | built | 11 | 36 | 0 | 0 |
 | AddTurn | addTurn | named | 10 | 65 | 10 | 4 |
 | BecomeMonarch | — | missing | 10 | 62 | 10 | 3 |
-| ChangeTargets | — | missing | 10 | 43 | 10 | 6 |
-| Earthbend | — | missing | 10 | 36 | 10 | 6 |
+| ChangeTargets | — | missing | 10 | 43 | 8 | 4 |
+| Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
 | Phases | phaseOut | named | 9 | 56 | 9 | 3 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
 | ChoosePlayer | — | missing | 8 | 120 | 8 | 1 |
@@ -826,7 +826,7 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | — | missing | 126 | 1672 | 126 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 15 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 113 | 16 |
 | More than one target of a kind ("up to N") | — | missing | 123 | 1664 | 123 | 0 |
 | Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 106 | 14 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
@@ -839,7 +839,7 @@ The things that alone hold back the most of the most-played cards.
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
 | An effect's condition: a counted comparison | — | missing | 65 | 455 | 55 | 0 |
 | A counted comparison for a condition | — | missing | 59 | 524 | 59 | 0 |
-| An effect's condition: about a named object | — | missing | 57 | 973 | 53 | 6 |
+| An effect's condition: about a named object | — | missing | 57 | 973 | 53 | 7 |
 | An effect's condition (threshold, metalcraft, kicked, ...) | an effect's or a static's condition: present, turn, graveyard types | built | 41 | 461 | 0 | 0 |
 | As long as a permanent is present (a static ability's condition) | a static's condition {present, atLeast / atMost}; worksFrom: graveyard | built | 36 | 458 | 0 | 0 |
 | A comparison of permanents present for a condition | condition {present, atLeast / atMost} | built | 35 | 385 | 0 | 0 |
@@ -894,7 +894,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Times kicked | — | missing | 3 | 30 | 3 | 0 |
 | — | Life your opponents lost this turn | — | missing | 3 | 26 | 3 | 0 |
 | — | An amount the trigger carries | — | missing | 3 | 21 | 3 | 1 |
-| — | Your experience counters | — | missing | 3 | 15 | 3 | 0 |
+| — | Your experience counters | — | missing | 3 | 15 | 3 | 1 |
 | — | Abilities activated this turn | — | missing | 3 | 13 | 3 | 0 |
 | — | A gift promised | — | missing | 3 | 11 | 3 | 0 |
 | — | Number | — | missing | 3 | 8 | 3 | 0 |

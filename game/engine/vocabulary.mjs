@@ -75,7 +75,7 @@ export const PRIMITIVES = Object.freeze({
     "moveCounters", "replaceCounters", "amass", "poison",
   ]),
   permanents: Object.freeze([
-    "createToken", "copyPermanent", "becomeCopy", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
+    "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut",
   ]),
   modifiers: Object.freeze([
@@ -84,7 +84,7 @@ export const PRIMITIVES = Object.freeze({
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
     "copySpell", "addTurn", "chooseCard", "chooseType", "genericChoice", "twoPiles", "connive",
-    "investigate", "cleanup", "addPhase",
+    "investigate", "cleanup", "addPhase", "changeTargets",
   ]),
 });
 

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ba Sing Se",
+  "scenarios": [
+    {
+      "name": "Earthbend 2 at sorcery speed: his Plains a 2/2 creature with haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ba Sing Se",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Ba Sing Se",
+          "targets": [
+            {
+              "card": "Plains"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Plains",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Plains",
+            "has": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

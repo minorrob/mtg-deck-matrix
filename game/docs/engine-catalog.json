@@ -9,8 +9,8 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 864,
-  "everyRule": 2122
+  "defined": 871,
+  "everyRule": 2130
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -3205,10 +3205,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 50,
+    "built": 51,
     "partial": 1,
     "named": 18,
-    "missing": 123
+    "missing": 122
    },
    "entries": [
     {
@@ -3976,20 +3976,20 @@
      "forge": "ChangeTargets",
      "top": 10,
      "all": 43,
-     "blocks": 10,
-     "alone": 6
+     "blocks": 8,
+     "alone": 4
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "Earthbend",
-     "engine": null,
-     "status": "missing",
+     "engine": "earthbend",
+     "status": "built",
      "forge": "Earthbend",
      "top": 10,
      "all": 36,
-     "blocks": 10,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -8923,7 +8923,7 @@
      "top": 124,
      "all": 1168,
      "blocks": 113,
-     "alone": 15
+     "alone": 16
     },
     {
      "kind": "option",
@@ -9079,7 +9079,7 @@
      "top": 57,
      "all": 973,
      "blocks": 53,
-     "alone": 6
+     "alone": 7
     },
     {
      "kind": "option",
@@ -9689,7 +9689,7 @@
      "top": 3,
      "all": 15,
      "blocks": 3,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
