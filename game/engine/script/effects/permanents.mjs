@@ -277,6 +277,29 @@ export function animate(state, params, context) {
   return [];
 }
 
+/**
+ * `earthbend` -- "Earthbend N: target land you control becomes a 0/0 creature with haste that's still a land. Put N +1/+1
+ * counters on it. When it dies or is exiled, return it to the battlefield tapped" (Forge's Earthbend): for good, the
+ * land's own (`targets`), `count` the counters; the return a delayed trigger waiting on that permanent (CR 603.7).
+ */
+export function earthbend(state, params, context) {
+  const events = [];
+  for (const id of (params.targets ?? []).filter((t) => state.objects[t]?.zone === "battlefield")) {
+    animate(state, {targets: [id], addTypes: ["Creature"], power: 0, toughness: 0}, context);
+    pushEffect(state, {id: `earthbend:${id}`, layer: 6, affects: {ids: [id]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: context.controller});
+    const count = params.count ?? 1;
+    if (count > 0) {
+      const before = state.objects[id].counters["+1/+1"] ?? 0;
+      state.objects[id].counters["+1/+1"] = before + count;
+      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count}));
+    }
+    const back = [{effect: "moveZone", targets: "that card", to: "battlefield", tapped: true}];
+    for (const to of ["Graveyard", "Exile"])
+      delayedTrigger(state, {on: {on: "GameEventCardChangeZone", from: "Battlefield", to, who: "any"}, watch: [id], text: "When it dies or is exiled, return it to the battlefield tapped.", effects: back}, context);
+  }
+  return events;
+}
+
 /** `animateAll` — the same over a selector. */
 export function animateAll(state, params, context) {
   return animate(state, {...params, targets: selectMatching(state, params.selector ?? {what: "permanent"}, context)}, context);

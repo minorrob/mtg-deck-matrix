@@ -43,7 +43,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked",
+  "unblocked", "singleTarget",
 ]);
 
 /* A SELECTOR READ AGAINST LAST KNOWN INFORMATION (CR 603.10a, 608.2h). "Whenever another creature you control dies"
@@ -234,6 +234,8 @@ export function compileSelector(selector) {
     /* "Tapped land your opponents control" (CR 110.5), "creature with a +1/+1 counter on it" (CR 122.1), "power 4 or
        greater" (through the layers), "this creature" itself. */
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;
+    /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
+    if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).length !== 1) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
