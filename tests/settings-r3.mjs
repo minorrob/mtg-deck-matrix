@@ -39,8 +39,9 @@ try {
 
   /* 1. The Menu, slimmed. */
   await openMenu(page);
-  /* Rob, 2026-09-29: Switch theme under Help, a glossary switch in Help, no Share CrankMagic by email (tests/menu-help.mjs). */
-  eq(await entries(page), ["Settings", "Save a backup file", "Restore from a backup file",
+  /* Rob, 2026-09-29: Switch theme under Help, a glossary switch in Help, no Share CrankMagic by email (tests/menu-help.mjs).
+     Rob, 2026-10-03: Reset All beside the backups (tests/reset-all.mjs). */
+  eq(await entries(page), ["Settings", "Save a backup file", "Restore from a backup file", "Reset All",
     "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code", "Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "the Menu holds what INTAKE §4.7 lists, in the order Rob set on 2026-09-29");
   for (const moved of ["Share CrankMagic by email", "Export as Excel", "Email the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
     ok(!(await entries(page)).includes(moved), `${moved} has left the Menu`);
