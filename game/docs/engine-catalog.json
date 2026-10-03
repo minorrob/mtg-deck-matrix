@@ -15,9 +15,9 @@
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 31,
+    "built": 32,
     "partial": 0,
-    "named": 23,
+    "named": 22,
     "missing": 140
    },
    "entries": [
@@ -1861,8 +1861,8 @@
      "kind": "keyword ability",
      "rule": "702.135",
      "name": "Afterlife",
-     "engine": null,
-     "status": "named",
+     "engine": "Afterlife",
+     "status": "built",
      "forge": "Afterlife",
      "top": 0,
      "all": 11,
@@ -5519,9 +5519,9 @@
   },
   "Triggers": {
    "tally": {
-    "built": 13,
+    "built": 14,
     "partial": 4,
-    "named": 7,
+    "named": 6,
     "missing": 114
    },
    "entries": [
@@ -6874,7 +6874,7 @@
      "rule": null,
      "name": "TokenCreatedOnce",
      "engine": "token created",
-     "status": "named",
+     "status": "built",
      "forge": "TokenCreatedOnce",
      "top": 0,
      "all": 2,

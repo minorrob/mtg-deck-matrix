@@ -124,7 +124,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
      Toxic (batch 77): poison counters with combat damage to a player, its number (rules/combat.mjs). */
   Prowess: "pump", Toxic: "poison",
   /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
-  Annihilator: "sacrifice"};
+  Annihilator: "sacrifice",
+  /* Afterlife (X5c): the dies trigger, N 1/1 white and black Spirit tokens with flying (cards/index.mjs). */
+  Afterlife: "createToken"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

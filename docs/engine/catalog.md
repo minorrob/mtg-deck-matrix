@@ -18,10 +18,10 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 31 | 0 | 23 | 140 |
+| Keyword abilities (CR 702) | 194 | 32 | 0 | 22 | 140 |
 | Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
 | Effects | 192 | 57 | 1 | 14 | 120 |
-| Triggers | 138 | 13 | 4 | 7 | 114 |
+| Triggers | 138 | 14 | 4 | 6 | 114 |
 | Static abilities | 77 | 8 | 2 | 0 | 67 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
@@ -209,7 +209,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.26 | Phasing | — | missing | 0 | 13 | 0 | 0 |
 | 702.136 | Riot | — | missing | 0 | 13 | 0 | 0 |
 | 702.72 | Champion | — | missing | 0 | 12 | 0 | 0 |
-| 702.135 | Afterlife | — | named | 0 | 11 | 0 | 0 |
+| 702.135 | Afterlife | Afterlife | built | 0 | 11 | 0 | 0 |
 | 702.78 | Conspire | — | missing | 0 | 11 | 0 | 0 |
 | 702.77 | Reinforce | — | missing | 0 | 11 | 0 | 0 |
 | 702.117 | Surge | — | missing | 0 | 11 | 0 | 0 |
@@ -639,7 +639,7 @@ The things that alone hold back the most of the most-played cards.
 | Milled | — | missing | 0 | 2 | 0 | 0 |
 | PhaseOut | — | missing | 0 | 2 | 0 | 0 |
 | Saddled | — | missing | 0 | 2 | 0 | 0 |
-| TokenCreatedOnce | token created | named | 0 | 2 | 0 | 0 |
+| TokenCreatedOnce | token created | built | 0 | 2 | 0 | 0 |
 | Abandoned | — | missing | 0 | 1 | 0 | 0 |
 | BecomesSaddled | — | missing | 0 | 1 | 0 | 0 |
 | BlockersDeclared | — | missing | 0 | 1 | 0 | 0 |
