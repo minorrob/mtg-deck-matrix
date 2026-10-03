@@ -123,6 +123,30 @@
   actions["account-sign-out"] = () => {location.href = "/cdn-cgi/access/logout";};
   actions["account-sync"] = () => sync("manual");
 
+  /* RESET ALL (the Menu; crankmagic-app.js). Emptying this device's library alone would be undone by the next
+     sync: an empty library on a device the cloud has no record of takes the cloud's. So the cloud is asked first,
+     and a reset that cannot reach it changes nothing; syncing is held off while `wipe` empties the library; and
+     the empty library then replaces the cloud's by force, which keeps the version it replaces for 30 days. If that
+     last step fails, the record written before it says "this device changed since it matched the cloud", so the
+     next sync saves the empty library rather than bringing the old one back. Says how the cloud fared. */
+  C.resetCloud = async (wipe) => {
+    if (!who.email) {await wipe(); return "";}
+    clearTimeout(timer);
+    for (const end = Date.now() + 15000; running; await new Promise((resolve) => setTimeout(resolve, 100)))
+      if (Date.now() > end) throw Error("Nothing was reset: your library is still syncing with the cloud. Try Reset All again in a moment.");
+    running = true;
+    try {
+      let head;
+      try {({head} = await api("GET", "/api/library"));}
+      catch (error) {throw Error(`Nothing was reset: your cloud library could not be reached (${error.message}), and your other devices would bring the old library back. Try again when you are online.`);}
+      await wipe();
+      if (!head) return "";
+      await remember(head.id, null);
+      try {await save(head.id, {force: true}); return "emptied";}
+      catch {trouble = "Not saved to the cloud"; return "later";}
+    } finally {running = false; draw();}
+  };
+
   /* THE MENU'S FIRST SECTION, AND THE CHIP THAT OPENS IT (r3, 06-global-menu). The chip at the rail's
      foot says who is signed in and whether the library has reached the cloud; the Account section
      says it in full, with Sync now; Sign out is the Menu's last entry, in red, away from everything
