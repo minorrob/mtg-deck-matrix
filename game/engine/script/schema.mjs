@@ -56,10 +56,13 @@ export const ABILITY_KINDS = Object.freeze([
 const COMPOSERS = {
   sequence: (effect) => effect.effects ?? [],
   repeatFor: (effect) => effect.effects ?? [],
-  branch: (effect) => [...(effect.then ?? []), ...(effect.otherwise ?? [])],
+  /* One way or the other (batch 72): its `then` and its `otherwise`, each a list -- one that is not is reported, not read. */
+  branch: (effect) => [...(Array.isArray(effect.then) ? effect.then : []), ...(Array.isArray(effect.otherwise) ? effect.otherwise : [])],
   modal: (effect) => (effect.modes ?? []).flatMap((mode) => mode.effects ?? []),
   unlessPays: (effect) => effect.effects ?? [],
   delayedTrigger: (effect) => effect.effects ?? [],
+  /* A reflexive trigger (batch 72): what it does. */
+  immediateTrigger: (effect) => effect.effects ?? [],
 };
 
 /** What an ability may say it exposes. Closed, like every other vocabulary here. */
@@ -94,6 +97,18 @@ function checkEffect(effect, path, errors) {
   /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
      an ability's is -- an unknown key refused here rather than read as true. */
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
+  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
+  if (name === "immediateTrigger") {
+    for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
+    for (const n of targetRefs(effect.effects ?? []))
+      if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
+  }
+  /* A branch's test: a condition, and there must be one. */
+  if (name === "branch") {
+    if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
+    for (const message of conditionProblems(effect.if)) errors.push({path: `${path}.if`, message});
+    for (const key of ["then", "otherwise"]) if (effect[key] !== undefined && !Array.isArray(effect[key])) errors.push({path: `${path}.${key}`, message: `A branch's ${key} is a list of effects`});
+  }
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);

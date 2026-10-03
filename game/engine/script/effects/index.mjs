@@ -26,6 +26,7 @@
 import {isPrimitive} from "../../vocabulary.mjs";
 import {bindEffect} from "../bind.mjs";
 import {countEffect} from "../amount.mjs";
+import {conditionHolds} from "../condition.mjs";
 import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil} from "./zones.mjs";
 import {
@@ -34,7 +35,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad,
+  becomeCopy, earthbend, goad, immediateTrigger,
 } from "./permanents.mjs";
 
 /**
@@ -107,6 +108,18 @@ function repeatFor(state, params, context) {
   return events;
 }
 
+/**
+ * `branch` — Forge's Branch: one way or the other, by a condition asked now ("draw a card if its power is 3 or greater.
+ * Otherwise, put two +1/+1 counters on it"). In a resolution it is spliced into the queue (script/resolution.mjs), so a
+ * question inside it can be asked; called directly (what repeats for each), what it does must not ask.
+ */
+function branch(state, params, context) {
+  const holds = conditionHolds(state, params.if, {controller: context.controller, source: context.source ?? null, about: context.about, remembered: context.remembered, targets: context.targets, cast: context.cast});
+  const events = [];
+  for (const effect of (holds ? params.then : params.otherwise) ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context));
+  return events;
+}
+
 /** Every primitive that can be called directly. A name here the catalog does not declare is a bug. */
 export const EFFECTS = Object.freeze({
   moveZone, moveZoneAll, draw, destroy, counterSpell,
@@ -136,6 +149,8 @@ export const EFFECTS = Object.freeze({
   winGame,
   /* Batch 69: goad. */
   goad,
+  /* Batch 72: one way or the other, and a reflexive trigger ("when you do"). */
+  branch, immediateTrigger,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */
