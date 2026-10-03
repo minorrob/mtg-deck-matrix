@@ -116,6 +116,8 @@ function applies(state, ability, holder, proposal) {
    - `source`, a description of what deals it -- "a source you control", "a red source you control", "a creature you
      control" -- read where the source is (a permanent, a spell on the stack);
    - `to` "opponent": "to an opponent or a permanent an opponent controls";
+   - `toPlayer` "opponent" or "you": to that player only -- "a source you control would deal damage to an opponent" (The
+     Mindskinner), "all damage that would be dealt to you" (Pariah; batch 71);
    - `toCard`, a description of the permanent dealt it ("attacking creatures you control");
    - `combat` true or false: combat damage only, or noncombat only. */
 function damageWatched(state, watches, holder, proposal) {
@@ -134,6 +136,8 @@ function damageWatched(state, watches, holder, proposal) {
     const whose = toPlayer !== null ? toPlayer : state.objects[proposal.toCard]?.controller ?? null;
     if (whose === null || whose === you) return false;
   }
+  if (watches.toPlayer === "opponent" && (toPlayer === null || toPlayer === you)) return false;
+  if (watches.toPlayer === "you" && toPlayer !== you) return false;
   if (watches.toCard && !(toPlayer === null && state.objects[proposal.toCard] && compileSelector({what: "permanent", ...watches.toCard})(state, proposal.toCard, context))) return false;
   return true;
 }
@@ -277,7 +281,23 @@ function applyOne(state, {holderId, ability}, proposal) {
   if (ability.change && proposal.event === "damage") {
     if (Number.isInteger(ability.change.multiply)) next.amount *= ability.change.multiply;
     if (Number.isInteger(ability.change.add)) next.amount += ability.change.add;
+    /* "Prevent that damage and each opponent mills that many cards" (The Mindskinner), "prevent that damage. Put a +1/+1
+       counter on that creature for each 1 damage prevented this way" (Vigor): what follows the prevention, part of the
+       same replacement (CR 615.5), done by the damage's dealer once the event is settled (`followUps`) -- about the
+       permanent or player it would have been dealt to, "that many" the damage stopped (amount.mjs, damagePrevented). */
+    if (ability.change.prevent === true && Array.isArray(ability.change.then) && next.amount > 0) {
+      const holder = state.objects[holderId];
+      next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: holder.controller, source: holderId,
+        about: {...(proposal.toCard !== undefined && proposal.toCard !== null ? {card: proposal.toCard} : {}), ...(proposal.toPlayer !== undefined && proposal.toPlayer !== null ? {player: proposal.toPlayer} : {}), amount: next.amount}}}];
+    }
     if (ability.change.prevent === true) next.amount = 0;
+    /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
+       same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
+       at the damage as it now is. */
+    if (ability.change.redirect === "enchanted") {
+      const host = state.objects[holderId]?.attachedTo;
+      if (host !== null && host !== undefined && state.objects[host]?.zone === "battlefield") { next.toPlayer = null; next.toCard = host; }
+    }
     if (next.amount === 0) next.prevented = true;
   }
 

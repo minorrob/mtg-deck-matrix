@@ -17,6 +17,7 @@
 
 import {addMana as addToPool} from "../../rules/mana.mjs";
 import {applyReplacements} from "../../rules/replacement.mjs";
+import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
@@ -135,24 +136,28 @@ export function dealDamage(state, params, context) {
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
     });
-    if (proposal.prevented === true || proposal.amount <= 0) continue;
-    if (hit.toCard !== undefined && state.objects[hit.toCard]) dealt.push(hit.toCard);
-    if (hit.toPlayer !== undefined) {
-      changeLife(state, hit.toPlayer, -proposal.amount, events);
+    /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+    if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
+    /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
+    const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : undefined;
+    const toCard = toPlayer === undefined ? proposal.toCard : undefined;
+    if (toCard !== undefined && state.objects[toCard]) dealt.push(toCard);
+    if (toPlayer !== undefined) {
+      changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
         source: source === null ? null : cardRef(state, source),
-        target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
+        target: {playerId: toPlayer, name: state.players[toPlayer].name},
         amount: proposal.amount, combat: false, infect: false,
       }));
-    } else if (state.objects[hit.toCard]) {
-      state.objects[hit.toCard].damage += proposal.amount;
+    } else if (state.objects[toCard]) {
+      state.objects[toCard].damage += proposal.amount;
       events.push(event("GameEventCardDamaged", state, {
-        card: cardRef(state, hit.toCard),
+        card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
         amount: proposal.amount,
       }));
       /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
-      markDeathtouch(state, source, hit.toCard);
+      markDeathtouch(state, source, toCard);
     }
     /* CR 702.15b: so is lifelink -- its controller gains that much life as the damage is dealt. */
     const linked = source === null ? 0 : lifelinkFrom(state, source, proposal.amount);

@@ -46,6 +46,7 @@
 
 import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
+import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf} from "./statics.mjs";
@@ -447,7 +448,8 @@ export const combatDamage = {
         sourceId: raw.source,
         combat: true,
       });
-      if (hit.prevented === true || hit.amount <= 0) continue;
+      /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+      if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
         const before = state.players[hit.toPlayer].life;
