@@ -149,14 +149,16 @@ export const FORGE_OPTIONS = Object.freeze({
   Count: {name: "An amount the game counts (X, for each, devotion, greatest power)", status: "partial", engine: "script/amount.mjs, by kind"},
   ConditionPresent: {name: "An effect's condition: if a permanent is present", status: "built", engine: "an effect's condition {present ...}"},
   ConditionCompare: {name: "An effect's condition: a comparison", status: "built", engine: "a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost}"},
-  ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "missing"},
-  ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "missing"},
+  /* X5d: a condition that counts and compares (`compare`, script/condition.mjs), over the amount grammar (script/amount.mjs);
+     an ability's condition and an effect's alike. */
+  ConditionCheckSVar: {name: "An effect's condition: a counted value", status: "built", engine: "condition {compare: {count, atLeast | atMost | moreThan | fewerThan}}"},
+  ConditionSVarCompare: {name: "An effect's condition: a counted comparison", status: "built", engine: "condition {compare}"},
   /* Batch 70: its seven forms -- how the spell was cast (from a graveyard, Addendum's main phase), what the effect before
      did "this way" (sacrificed, discarded, dealt damage to, made), and the spell a trigger is about, as it last was. */
   ConditionDefined: {name: "An effect's condition: about a named object", status: "built",
     engine: "{cast: {from | mainPhase}}; {about: \"remembered\" | \"that card\" | \"target\", is} -- `remember` on sacrifice, discard, dealDamage, copyPermanent"},
   Condition: {name: "An effect's condition (threshold, metalcraft, kicked, ...)", status: "built", engine: "an effect's or a static's condition: present, turn, graveyard types"},
-  CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "missing"},
+  CheckSVar: {name: "An intervening \"if\" or \"activate only if\": a counted value", status: "built", engine: "condition {compare}"},
   IsPresent: {name: "An intervening \"if\" or \"activate only if\": a permanent present", status: "built", engine: "condition {present: selector}"},
   IsPresentStatic: {name: "As long as a permanent is present (a static ability's condition)", status: "built", engine: "a static's condition {present, atLeast | atMost}; worksFrom: graveyard"},
   PresentZone: {name: "Present in a zone other than the battlefield (\"as long as this card is in your graveyard\")", status: "missing"},
@@ -169,7 +171,7 @@ export const FORGE_OPTIONS = Object.freeze({
      attacks ...'", "all Slivers have 'when this permanent enters ...'") and a pump's `abilities` until end of turn
      ("target creature gains 'when this creature dies ...'"); activated, mana and keyword abilities given the same way. */
   AddTriggers: {name: "Grants a triggered ability (\"has 'whenever ...'\")", status: "built", engine: "a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf)"},
-  SVarCompare: {name: "A counted comparison for a condition", status: "missing"},
+  SVarCompare: {name: "A counted comparison for a condition", status: "built", engine: "condition {compare}: at least, at most, more than, fewer than a number or another amount"},
   PresentCompare: {name: "A comparison of permanents present for a condition", status: "built", engine: "condition {present, atLeast | atMost}"},
   ActivationLimit: {name: "Only once (or N times) each turn", status: "built", engine: "an activated or triggered ability's `limit`, times each turn (rules/actions.mjs, rules/trigger.mjs)"},
   ActivationPhases: {name: "Activate only during a step or phase", status: "missing"},
@@ -204,7 +206,7 @@ export const FORGE_COUNTS = Object.freeze({
   DevotionDual: {name: "Devotion to two colors (CR 700.5)", status: "built", engine: "{devotion: [color, color]}"},
   Compare: {name: "A comparison (\"if you control ...\")", status: "built", engine: "{if: condition, then, else}; a modal's chooseMore, as it is cast"},
   YourLifeTotal: {name: "Your life total", status: "missing"},
-  LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "missing"},
+  LifeYouGainedThisTurn: {name: "Life you gained this turn", status: "built", engine: "amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it)"},
   LifeOppsLostThisTurn: {name: "Life your opponents lost this turn", status: "missing"},
   ThisTurnEntered: {name: "What entered or died this turn", status: "missing"},
   ThisTurnCast: {name: "Spells cast this turn", status: "missing"},

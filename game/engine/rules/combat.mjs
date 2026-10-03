@@ -560,6 +560,8 @@ export const combatDamage = {
         if (gains !== undefined) {
           const before = state.players[gains].life;
           state.players[gains].life += linked;
+          /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */
+          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + linked;
           events.push(event("GameEventPlayerLivesChanged", state, {
             player: {playerId: gains, name: state.players[gains].name},
             oldLives: before, newLives: state.players[gains].life, lifelink: true,

@@ -557,7 +557,12 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
-    for (const player of state.players) if (player.lostThisTurn) player.lostThisTurn = 0;
+    for (const player of state.players) {
+      if (player.lostThisTurn) player.lostThisTurn = 0;
+      /* And what each gained and made this turn (script/amount.mjs, lifeGainedThisTurn, tokensCreatedThisTurn). */
+      if (player.gainedThisTurn) player.gainedThisTurn = 0;
+      if (player.tokensThisTurn) player.tokensThisTurn = 0;
+    }
     next = 0;
   }
 

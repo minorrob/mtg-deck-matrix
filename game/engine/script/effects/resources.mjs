@@ -79,6 +79,8 @@ export function changeLife(state, player, delta, events) {
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
   if (delta < 0) state.players[player].lostThisTurn = (state.players[player].lostThisTurn ?? 0) - delta;
+  /* And gained ("if you gained 3 or more life this turn", Indulging Patrician). */
+  if (delta > 0) state.players[player].gainedThisTurn = (state.players[player].gainedThisTurn ?? 0) + delta;
   events.push(event("GameEventPlayerLivesChanged", state, {
     player: {playerId: player, name: state.players[player].name},
     oldLives: before, newLives: state.players[player].life,

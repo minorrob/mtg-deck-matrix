@@ -94,11 +94,12 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 
 /* ---- a permanent present, as a condition (batch 11) ---- */
 {
-  /* (Batch 38 built a static's condition, IsPresentStatic, batch 41 an effect's, and batch 44 credited the comparison; the
-     example of one not built is now a comparison of a counted value, "if you've gained 3 or more life this turn".) */
-  eq([missingFor({apis: ["Mana"], options: ["IsPresent", "ConditionCompare"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "ConditionSVarCompare"]})],
-    [[], [{kind: "option", name: "ConditionSVarCompare", why: "not built"}]],
-    "\"activate only if you control a Swamp\", an intervening \"if\" and a comparison of permanents are built; a comparison of a counted value is not");
+  /* (Batch 38 built a static's condition, IsPresentStatic, batch 41 an effect's, and batch 44 credited the comparison; X5d
+     a comparison of a counted value, "if you've gained 3 or more life this turn". The example of one not built is now
+     "activate only during combat", a step or phase.) */
+  eq([missingFor({apis: ["Mana"], options: ["IsPresent", "ConditionCompare", "ConditionSVarCompare"]}), missingFor({statics: ["Continuous"], options: ["IsPresent", "ActivationPhases"]})],
+    [[], [{kind: "option", name: "ActivationPhases", why: "not built"}]],
+    "\"activate only if you control a Swamp\", an intervening \"if\", a comparison of permanents and one of a counted value are built; \"activate only during combat\" is not");
   eq([inventory.top.perCard["Tainted Wood"].options, inventory.top.perCard.Anger.options], [["IsPresent"], ["IsPresent", "IsPresentStatic"]],
     "the measurement tells the two apart, on the card itself");
 }
