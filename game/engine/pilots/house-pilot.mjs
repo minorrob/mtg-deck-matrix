@@ -214,6 +214,12 @@ export function housePilot({seat, cards = () => null} = {}) {
         const rest = options.map((o) => o.index).filter((i) => !aimed.includes(i));
         return {indices: [...aimed.slice(0, max), ...rest].slice(0, Math.max(min, Math.min(max, aimed.length)))};
       }
+      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
+        const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
+        const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {
         const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));

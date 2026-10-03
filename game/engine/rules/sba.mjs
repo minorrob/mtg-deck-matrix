@@ -49,7 +49,7 @@ import {applyReplacements, regenerated} from "./replacement.mjs";
 import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne, moveOne} from "../script/effects/zones.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil} from "../script/effects/zones.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -105,7 +105,7 @@ function lossReason(state, player) {
    counts permanents would count theirs. */
 function removePlayerFromBoard(state, playerId, events) {
   for (const id of [...state.zones.battlefield]) {
-    if (state.objects[id].owner !== playerId) continue;
+    if (state.objects[id]?.owner !== playerId) continue;
     const card = cardRef(state, id);
     const at = state.zones.battlefield.indexOf(id);
     state.zones.battlefield.splice(at, 1);
@@ -116,6 +116,8 @@ function removePlayerFromBoard(state, playerId, events) {
       to: {zoneType: null, player: {playerId}},
       leftTheGame: true,
     }));
+    /* It left the battlefield: what it exiled "until this leaves the battlefield" comes back (CR 610.3). */
+    returnExiledUntil(state, id, events);
   }
 }
 
@@ -185,6 +187,8 @@ export function checkStateBasedActions(state) {
         from: {zoneType: "Battlefield", player: {playerId: object.controller}},
         to: {zoneType: ZONE_LABEL[proposal.to] ?? proposal.to, player: {playerId: object.owner}},
       }));
+      /* What it exiled "until this Aura leaves the battlefield", back (CR 610.3; Ossification). */
+      returnExiledUntil(state, id, events);
       acted = true;
     }
 
@@ -260,6 +264,8 @@ export function checkStateBasedActions(state) {
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
+        /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
+        returnExiledUntil(state, id, events);
         acted = true;
       }
     }

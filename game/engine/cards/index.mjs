@@ -59,8 +59,9 @@ function wardCost(cost) {
 /* The rule statics that read their own condition: an alternative cost's "if you control a commander" (rules/actions.mjs). */
 const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast"];
 
-/* What a flashback cost may be made of (CR 702.34a): mana, and life ("Flashback--{1}{U}, Pay 3 life"). */
-const FLASHBACK_ATOMS = ["mana", "payLife"];
+/* What a flashback cost may be made of (CR 702.34a): mana, life ("Flashback--{1}{U}, Pay 3 life"), and creatures to tap
+   ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`). */
+const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature"];
 /* What an escape cost is made of (CR 702.138a): mana, and "exile N other cards from your graveyard" (`exileFromGraveyard`,
    its `count`) -- every escape cost printed has both. */
 export function escapeCostProblems(cost, {given = false} = {}) {
@@ -474,6 +475,9 @@ export function compileScript(script) {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => FLASHBACK_ATOMS.includes(atom?.atom)))
         problems.push(`${ability.text}: a flashback cost of ${FLASHBACK_ATOMS.join(" and ")} only, and at least one`);
+      const taps = cost.filter((atom) => atom?.atom === "tapCreature");
+      if (taps.length > 1 || taps.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object"))
+        problems.push(`${ability.text}: a flashback cost taps a number of creatures, 1 or more, fitting a selector, once`);
       if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: flashback on a card that is not an instant or sorcery`);
       abilities.push({id, kind: "static", rule: "flashback", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
       keywords.push("Flashback");
