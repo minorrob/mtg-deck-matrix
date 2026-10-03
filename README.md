@@ -458,8 +458,14 @@ a power from once CR 400.7 has made the card a new object. `engine-commander`
 holds CR 903: color identity reads the rules text as well as the mana cost and ignores reminder
 text, so a colorless artifact that makes black mana is a black card; the tax counts casts from the
 command zone rather than casts, and is part of the cost, so a commander a player cannot afford is
-never offered; and the command-zone replacement is a choice put to the card's OWNER, because
-leaving a commander in a graveyard is where a reanimation starts. `engine-mulligan` holds the
+never offered; the tax and the 21-damage tally follow the commander across every zone change; a
+commander in a graveyard or exile is a question put to its OWNER as a state-based action, after
+"dies" has seen it, because leaving it there is where a reanimation starts; and one bounced or
+tucked is asked before it moves. `engine-rules-conformance` is the checklist an experienced player
+would run: the commander, the state-based actions, combat, the stack, replacement effects and the
+turn, each held to its rule by number through real cards, then invariants at every step of whole
+house-pilot games (one object in one zone, no token off the battlefield, life moved only by
+logged events, the commander tally equal to the combat damage dealt). `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
 
@@ -574,7 +580,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 236 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 237 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -782,6 +788,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-history` — `tests/game-history.mjs`
 - `user-state` — `tests/user-state.mjs`
 - `xlsx-writer` — `tests/xlsx-writer.mjs`
+- `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`
 
 ## Design and execution record
 
