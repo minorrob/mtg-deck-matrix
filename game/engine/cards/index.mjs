@@ -127,6 +127,10 @@ const TRIGGERS = {
   drawn: (t) => ({on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you"}),
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
+  /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
+     the player and how much -- once for each player for everything one action took (combat damage from three creatures
+     at once is one loss), "that much" all of it. */
+  "life lost": (t) => ({on: "GameEventPlayerLivesChanged", loser: t.loser ?? "you", batch: true}),
   /* "Whenever you tap a land for mana", "whenever enchanted land is tapped for mana", "whenever you tap this land for mana",
      "whenever you tap a permanent for {C}" (CR 605.1b): `tapper` you, opponent or any; `filter` what was tapped, `self`,
      `enchanted`; `produced` a kind of mana it made (rules/trigger.mjs). */
@@ -375,6 +379,15 @@ export function compileScript(script) {
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "devoid") {
       if ((identity.colors ?? []).length) problems.push(`${ability.text}: devoid on a card whose identity has a color`);
       keywords.push("Devoid");
+      return;
+    }
+    /* ANNIHILATOR N (CR 702.86a, batch 78): "Whenever this creature attacks, defending player sacrifices N permanents of
+       their choice" -- the keyword IS that triggered ability; the defending player is the one it attacks ("that player"). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "annihilator") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: annihilator needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "sacrifice", who: "that player", count: ability.amount ?? 0, selector: {what: "permanent"}}]});
+      keywords.push("Annihilator");
       return;
     }
     /* STORM (CR 702.40a): kept on the card as a static ability, read as the spell is cast (rules/actions.mjs). Only on an

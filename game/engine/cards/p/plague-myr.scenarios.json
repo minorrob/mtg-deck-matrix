@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Plague Myr",
+  "scenarios": [
+    {
+      "name": "It hits Maya: a poison counter, no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plague Myr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Plague Myr"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    },
+    {
+      "name": "Tapped for {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plague Myr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plague Myr"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

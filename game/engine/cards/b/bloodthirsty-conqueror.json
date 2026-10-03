@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodthirsty Conqueror",
+    "oracleId": "fd505c02-c59e-476d-8e88-35da862ddc23",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Knight"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying, deathtouch\nWhenever an opponent loses life, you gain that much life. (Damage causes loss of life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent loses life, you gain that much life.",
+      "trigger": {
+        "on": "life lost",
+        "loser": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "lifeLost": true
+          }
+        }
+      ]
+    }
+  ]
+}

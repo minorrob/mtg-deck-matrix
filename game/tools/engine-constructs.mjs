@@ -65,7 +65,7 @@ export const FORGE_TRIGGER = {
   SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
   BecomesTarget: "becomes target", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
-  LifeGained: "life gained", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
+  LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
@@ -122,7 +122,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   Chapter: "putCounter",
   /* Prowess (batch 77): the triggered ability, +1/+1 until end of turn on a noncreature spell cast (cards/index.mjs).
      Toxic (batch 77): poison counters with combat damage to a player, its number (rules/combat.mjs). */
-  Prowess: "pump", Toxic: "poison"};
+  Prowess: "pump", Toxic: "poison",
+  /* Annihilator (batch 78): the triggered ability, the defending player sacrificing N permanents (cards/index.mjs). */
+  Annihilator: "sacrifice"};
 
 
 /* What a card needs that the engine has not got. Empty means the engine can play it. */

@@ -62,6 +62,7 @@ import {targetChoices, targetName, isHostile, modalScript} from "../script/bind.
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
+import {changeLife} from "../script/effects/resources.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
 import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, castForbidden} from "./statics.mjs";
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
@@ -756,7 +757,8 @@ function perform(state, player, action, during = null) {
     const pool = state.players[player].manaPool;
     spend(pool, payment.mana);
     const life = (ability.payLife ?? 0) + payment.life;
-    if (life > 0) state.players[player].life -= life;
+    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
+    if (life > 0) changeLife(state, player, -life, events);
     payCounters(state, action.objectId, ability.counterCost);
     if (ability.limit) recordUse(state, action.objectId, ability.id);
     if (ability.tapSelf) {
@@ -814,9 +816,9 @@ function perform(state, player, action, during = null) {
     if (!payment || (back && back.life > state.players[player].life) || (way && way.life > state.players[player].life)) throw new Error(`${object.card} cannot be paid for from this pool`);
     const card = cardRef(state, action.objectId);
     const paid = spendFor(state, player, {spell: action.objectId}, payment.mana);
-    if (payment.life > 0) state.players[player].life -= payment.life;
-    if (back?.life) state.players[player].life -= back.life;
-    if (way?.life) state.players[player].life -= way.life;
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    if (back?.life) changeLife(state, player, -back.life, events);
+    if (way?.life) changeLife(state, player, -way.life, events);
     /* CR 903.8: the tax counts casts from the command zone, so it is recorded only here. */
     if (fromCommand) recordCommanderCast(state, player, action.objectId);
     /* "Once each turn" spent (Darksteel Monolith, As Foretold). */
@@ -919,9 +921,9 @@ function perform(state, player, action, during = null) {
       }
       if (atom.atom === "mana") {
         spendFor(state, player, {ability: action.objectId}, payment.mana.mana);
-        if (payment.mana.life > 0) state.players[player].life -= payment.mana.life;
+        if (payment.mana.life > 0) changeLife(state, player, -payment.mana.life, events);
       }
-      if (atom.atom === "payLife") state.players[player].life -= atom.amount ?? 0;
+      if (atom.atom === "payLife") changeLife(state, player, -(atom.amount ?? 0), events);
       if (atom.atom === "addCounters" || atom.atom === "removeCounters")
         payCounters(state, action.objectId, [{counter: atom.counter, count: atom.count ?? 1, put: atom.atom === "addCounters"}]);
       /* "Return a Forest you control to its owner's hand": the one chosen with the offer. */

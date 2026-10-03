@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bloodthirsty Conqueror",
+  "scenarios": [
+    {
+      "name": "It hits Maya for 5: he gains 5",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloodthirsty Conqueror"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bloodthirsty Conqueror"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "life": 45
+        }
+      ]
+    }
+  ]
+}

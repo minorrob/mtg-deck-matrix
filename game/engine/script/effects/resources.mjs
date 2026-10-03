@@ -21,7 +21,7 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf} from "../../rules/layers.mjs";
+import {typesOf, powerOf, keywordsOf} from "../../rules/layers.mjs";
 
 /** `addMana` — into the controller's pool, which empties at the end of the step (CR 500.4). */
 export function addMana(state, params, context) {
@@ -65,7 +65,15 @@ export function untapAll(state, params, context) {
   return untap(state, {targets: selectMatching(state, params.selector ?? {what: "permanent"}, context)}, context);
 }
 
-function changeLife(state, player, delta, events) {
+/** Whether a source deals its damage with infect (CR 702.90): the keyword, as the layers have it now. */
+export const infects = (state, id) => Boolean(state.objects[id]) && keywordsOf(state, id).includes("Infect");
+
+/**
+ * A PLAYER'S LIFE CHANGED (CR 119.3), and said so: every life loss and gain goes through here -- an effect's, combat
+ * damage's, a commander's, a cost's ("pay 2 life", CR 119.4; batch 78) -- so "whenever an opponent loses life" sees
+ * each, and "the life they lost this turn" counts each.
+ */
+export function changeLife(state, player, delta, events) {
   if (delta === 0) return;
   const before = state.players[player].life;
   state.players[player].life += delta;
@@ -142,15 +150,20 @@ export function dealDamage(state, params, context) {
     const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : undefined;
     const toCard = toPlayer === undefined ? proposal.toCard : undefined;
     if (toCard !== undefined && state.objects[toCard]) dealt.push(toCard);
+    /* INFECT (CR 702.90b-c, batch 78): from a source with infect, damage to a player is poison counters, not life lost, and
+       damage to a creature is -1/-1 counters, not damage marked -- still damage dealt. */
+    const infect = source !== null && infects(state, source);
     if (toPlayer !== undefined) {
-      changeLife(state, toPlayer, -proposal.amount, events);
+      if (infect) events.push(...givePoison(state, toPlayer, proposal.amount));
+      else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
         source: source === null ? null : cardRef(state, source),
         target: {playerId: toPlayer, name: state.players[toPlayer].name},
-        amount: proposal.amount, combat: false, infect: false,
+        amount: proposal.amount, combat: false, infect,
       }));
     } else if (state.objects[toCard]) {
-      state.objects[toCard].damage += proposal.amount;
+      if (infect) addCounters(state, toCard, "-1/-1", proposal.amount, events);
+      else state.objects[toCard].damage += proposal.amount;
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
         source: source === null ? null : cardRef(state, source),
@@ -182,7 +195,7 @@ export function damageAll(state, params, context) {
   return dealDamage(state, {amount: params.amount, targets: ids, ...(params.who !== undefined ? {who: params.who} : {})}, {...context, source: from});
 }
 
-function addCounters(state, id, kind, count, events) {
+export function addCounters(state, id, kind, count, events) {
   if (count === 0) return;
   const object = state.objects[id];
   if (!object) return;
