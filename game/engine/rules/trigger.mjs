@@ -193,6 +193,8 @@ function subjects(state, event, condition, sourceId, controller) {
      player and how much. A loss, or no change, is not a gain. */
   if (condition.on === "GameEventPlayerLivesChanged") {
     const player = fields.player?.playerId, gained = (fields.newLives ?? 0) - (fields.oldLives ?? 0);
+    /* "Whenever an opponent loses life" (batch 78): a loss, about the player and how much. */
+    if (condition.loser !== undefined) return gained < 0 && whoseIs(condition.loser, player, controller) ? [{player, amount: -gained}] : [];
     if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
     return [{player, amount: gained}];
   }
@@ -391,7 +393,7 @@ export function collectTriggers(state, events) {
           if (!conditionHolds(state, ability.condition, {controller: object.controller, source: id, about})) continue;
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
              for each creature dealt it. */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" ? `:${about.player}`
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
