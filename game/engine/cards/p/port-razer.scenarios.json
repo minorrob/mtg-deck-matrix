@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Port Razer",
+  "scenarios": [
+    {
+      "name": "It hits Maya, every creature Rob controls untaps, and in the additional combat it attacks Trey",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Port Razer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Port Razer"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Port Razer"
+          ],
+          "at": "Trey"
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 2,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,001 defined and playable today; 2,383 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,004 defined and playable today; 2,389 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -22,7 +22,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Keyword actions (CR 701) | 70 | 17 | 3 | 6 | 44 |
 | Effects | 192 | 57 | 1 | 14 | 120 |
 | Triggers | 138 | 14 | 4 | 6 | 114 |
-| Static abilities | 77 | 8 | 2 | 0 | 67 |
+| Static abilities | 77 | 9 | 2 | 0 | 66 |
 | Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 23 | 5 | 0 | 9 |
@@ -47,10 +47,10 @@ The things that alone hold back the most of the most-played cards.
 | count | What entered or died this turn | — | missing | 8 | 10 |
 | count | Spells cast this turn | — | missing | 7 | 12 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
-| static | CantAttack | — | missing | 6 | 10 |
 | keyword ability | Evoke | — | named | 6 | 6 |
 | keyword ability | Convoke | — | named | 5 | 11 |
 | trigger | CounterAddedOnce | counter added once | named | 5 | 10 |
+| effect | Phases | phaseOut | named | 5 | 9 |
 
 ## Keyword abilities (CR 702)
 
@@ -93,7 +93,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.174 | Gift | — | missing | 6 | 27 | 6 | 1 |
 | 702.172 | Spree | — | missing | 6 | 21 | 6 | 4 |
 | 702.33 | Kicker | — | missing | 5 | 239 | 5 | 1 |
-| 702.14 | Landwalk | — | named | 5 | 131 | 5 | 3 |
+| 702.14 | Landwalk | — | named | 5 | 131 | 5 | 4 |
 | 702.11 | Hexproof | Hexproof | built | 5 | 94 | 0 | 0 |
 | 702.41 | Affinity | — | missing | 5 | 77 | 5 | 4 |
 | 702.85 | Cascade | — | missing | 5 | 37 | 5 | 4 |
@@ -677,7 +677,7 @@ The things that alone hold back the most of the most-played cards.
 | Panharmonicon | rules/trigger | built | 19 | 37 | 0 | 0 |
 | CantBeCast | rules/actions | built | 14 | 97 | 0 | 0 |
 | CastWithFlash | rules/actions | built | 12 | 56 | 0 | 0 |
-| CantAttack | — | missing | 10 | 204 | 10 | 6 |
+| CantAttack | rules/combat | built | 10 | 204 | 0 | 0 |
 | RaiseCost | — | missing | 10 | 91 | 6 | 4 |
 | CantBlock | — | missing | 8 | 139 | 8 | 4 |
 | CantAttackUnless | rules/combat | built | 7 | 26 | 0 | 0 |

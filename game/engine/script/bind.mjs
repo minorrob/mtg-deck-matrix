@@ -266,6 +266,8 @@ export function bindEffect(effect, context, state = null) {
   if ("who" in bound) bound.who = playersOf(bound.who, context, state);
   /* "Target opponent creates a 1/1 Spirit" (Forbidden Orchard): a token's controller, a target player -- or no one. */
   if (isRef(bound.controller)) { const [player] = playersOf(bound.controller, context); bound.controller = player ?? -1; }
+  /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
+  if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   if (isRef(bound.toPlayer)) {
     const [player] = playersOf(bound.toPlayer, context);
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;

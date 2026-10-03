@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bloodthirster",
+  "scenarios": [
+    {
+      "name": "It hits Maya, untaps, and in the additional combat it may attack Trey -- not Maya again",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bloodthirster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bloodthirster"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bloodthirster"
+          ],
+          "at": "Trey"
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 2,
+          "life": 34
+        }
+      ]
+    }
+  ]
+}

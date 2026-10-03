@@ -56,7 +56,7 @@ import {runFollowUps} from "../script/effects/index.mjs";
 import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -108,7 +108,9 @@ export const attackers = {
   open(state) {
     /* CR 800.4: an active player who has left the game declares nothing; the turn runs on without them. */
     if (state.players[state.activePlayer]?.lost) return false;
-    const candidates = state.zones.battlefield.filter((id) => canAttack(state, id, state.activePlayer));
+    /* One that some restriction keeps from every defending player (CR 508.1c) is no candidate. */
+    const candidates = state.zones.battlefield.filter((id) => canAttack(state, id, state.activePlayer)
+      && defendersFor(state, state.activePlayer).some((d) => !cantAttack(state, id, d)));
     /* CR 508.1: the active player declares attackers whether or not they have any. With no legal
        attacker there is nothing to decide, so nothing is asked and the step simply proceeds. */
     if (candidates.length === 0) return false;
@@ -120,9 +122,10 @@ export const attackers = {
      the engine refuses a pair of them that names the same creature twice. */
   choice(state, awaiting) {
     const options = [];
-    const defenders = defendersFor(state, awaiting.player);
     for (const id of state.zones.battlefield) {
       if (!canAttack(state, id, awaiting.player)) continue;
+      /* RESTRICTIONS FIRST (CR 508.1c): a player it can't attack is not offered, and no requirement asks it of them. */
+      const defenders = defendersFor(state, awaiting.player).filter((d) => !cantAttack(state, id, d));
       /* GOADED (CR 701.15b): it attacks a player other than its goader if it can without a cost to pay (CR 508.1d) -- so
          its goader is not offered while such a player is. */
       const goaders = goadersOf(state, id);
@@ -177,7 +180,7 @@ export const attackers = {
     for (const id of state.zones.battlefield) {
       const goaders = goadersOf(state, id);
       if (!goaders.length || picked.some((o) => o.cardId === id) || !canAttack(state, id, awaiting.player)) continue;
-      const free = defendersFor(state, awaiting.player).filter((d) => attackTax(state, [{defenderId: d}]) === 0)
+      const free = defendersFor(state, awaiting.player).filter((d) => !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0)
         .sort((a, b) => (a - awaiting.player + seats) % seats - (b - awaiting.player + seats) % seats);
       const defender = free.find((d) => !goaders.includes(d)) ?? free[0];
       if (defender !== undefined) picked.push({cardId: id, defenderId: defender});
@@ -187,7 +190,7 @@ export const attackers = {
        with no cost to pay. */
     for (const id of state.zones.battlefield) {
       if (picked.some((o) => o.cardId === id) || !canAttack(state, id, awaiting.player)) continue;
-      const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && attackTax(state, [{defenderId: d}]) === 0);
+      const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0);
       if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
     }
 
@@ -248,6 +251,8 @@ function declareAttacks(state, player, picked, events) {
   state.combat.firstStrike = combatNeedsFirstStrike(state);
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
+  /* And whom it attacked: "a player it has already attacked this turn" (Port Razer; rules/statics.mjs, cantAttack). */
+  for (const attack of state.combat.attacks) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
 
   /* CR 508.1f: attacking creatures become tapped. CR 702.20b: vigilance does not. */
   for (const attack of state.combat.attacks) {

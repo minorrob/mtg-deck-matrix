@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sandwurm Convergence",
+    "oracleId": "429eff2b-635b-43f6-b20f-82e25992c0b9",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures with flying can't attack you or planeswalkers you control.\nAt the beginning of your end step, create a 5/5 green Wurm creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures with flying can't attack you or planeswalkers you control.",
+      "rule": "cant-attack",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "defender": "you"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, create a 5/5 green Wurm creature token.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Wurm",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wurm"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 5,
+            "toughness": 5
+          }
+        }
+      ]
+    }
+  ]
+}

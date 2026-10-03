@@ -36,7 +36,7 @@ import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
 import {targetRefs} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
-import {STATIC_RULES} from "../rules/statics.mjs";
+import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
 import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionProblems} from "./condition.mjs";
 
@@ -235,6 +235,12 @@ function checkAbility(ability, path, errors) {
     /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
     if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
       errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
+    /* A restriction on attacking (CR 508.1c): whom, in its words, and a condition under which it does not apply. */
+    if (ability.rule === "cant-attack") {
+      if (ability.defender !== undefined && !CANT_ATTACK_DEFENDERS.includes(ability.defender))
+        errors.push({path: `${path}.defender`, message: `Whom it can't attack is one of ${CANT_ATTACK_DEFENDERS.join(", ")}, or anyone when unsaid`});
+      if (ability.unless !== undefined) for (const message of conditionProblems(ability.unless)) errors.push({path: `${path}.unless`, message});
+    }
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

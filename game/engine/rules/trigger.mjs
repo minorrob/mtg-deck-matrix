@@ -118,7 +118,10 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
     if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
     if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller)) return [];
-    if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))].map((player) => ({player}));
+    /* Each player attacked, "that player"; the attacking player is `attacker` ("that attacking player creates ..."). One of
+       this ability's controller's opponents only, when it says so (CR 508.3e). */
+    if (condition.eachDefender) return [...new Set(attacks.map((a) => a.defender?.playerId))]
+      .filter((player) => condition.defender !== "opponent" || player !== controller).map((player) => ({player, attacker}));
     return [{player: attacker}];
   }
   if (condition.on === "GameEventAttackersDeclared") {
