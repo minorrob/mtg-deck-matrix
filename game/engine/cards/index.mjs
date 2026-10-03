@@ -433,6 +433,9 @@ export function compileScript(script) {
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
+    /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
+    if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
+      if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);
     /* static and replacement: their schema is the rules modules' own shape. */
     abilities.push({...ability, id});
   });

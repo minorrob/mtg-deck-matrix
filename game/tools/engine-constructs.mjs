@@ -93,7 +93,10 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   Untap: "rules/turn",
   /* "This spell can't be countered", "creature spells you control can't be countered" (batch 64): the static
      `cant-be-countered`, read where a counter would apply (rules/statics.mjs, cantBeCountered). */
-  Counter: "rules/statics"};
+  Counter: "rules/statics",
+  /* Damage replaced (batch 71): doubled, plus N, prevented -- for a while, a shield, or with what follows "that many"
+     (CR 615.5) -- and redirected to what the holder enchants (CR 614.9); by its source, to whom, combat or not. */
+  DamageDone: "rules/replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pariah",
+    "oracleId": "2c5c8250-1860-42a1-a335-071f54830d37",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nAll damage that would be dealt to you is dealt to enchanted creature instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "All damage that would be dealt to you is dealt to enchanted creature instead.",
+      "watches": {
+        "event": "damage",
+        "toPlayer": "you"
+      },
+      "change": {
+        "redirect": "enchanted"
+      }
+    }
+  ]
+}

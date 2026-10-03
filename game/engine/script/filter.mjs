@@ -106,6 +106,10 @@ function assertGrammar(selector) {
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
 }
 
+/* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs). */
+const playerHasHexproof = (state, player) => state.zones.battlefield.some((id) => controllerOf(state, id) === player
+  && (state.objects[id].abilities ?? []).some((a) => a.kind === "static" && a.rule === "player-hexproof"));
+
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
 function canBeTargetedBy(state, id, chooser) {
@@ -154,6 +158,8 @@ export function compileSelector(selector) {
       const player = state.players[id];
       /* CR 800.4a: a player who has left the game is not a player to be chosen. */
       if (!player || player.lost) return false;
+      /* "You have hexproof" (Crystal Barricade, batch 71; CR 702.11c): no target of a spell or ability an opponent controls. */
+      if (selector.target === true && id !== chooser && playerHasHexproof(state, id)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 916 defined and playable today; 2,188 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 921 defined and playable today; 2,195 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -23,7 +23,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 | Effects | 192 | 53 | 1 | 18 | 120 |
 | Triggers | 138 | 11 | 4 | 8 | 115 |
 | Static abilities | 77 | 8 | 2 | 0 | 67 |
-| Replacement effects | 34 | 0 | 3 | 0 | 31 |
+| Replacement effects | 34 | 0 | 4 | 0 | 30 |
 | Costs | 26 | 5 | 1 | 10 | 10 |
 | Options and conditions | 37 | 17 | 4 | 0 | 16 |
 | Amounts the game counts | 188 | 10 | 1 | 0 | 177 |
@@ -41,16 +41,16 @@ The things that alone hold back the most of the most-played cards.
 | option | You may play or cast a card from another zone | — | missing | 14 | 79 |
 | effect | ImmediateTrigger | immediateTrigger | named | 9 | 18 |
 | effect | PeekAndReveal | peekAndReveal | named | 8 | 11 |
-| replacement | DamageDone | — | missing | 7 | 15 |
+| effect | SetState | setState | named | 7 | 19 |
 | option | Imprint (a card exiled with this) | — | missing | 7 | 10 |
-| effect | SetState | setState | named | 6 | 19 |
 | effect | RingTemptsYou | — | missing | 6 | 11 |
 | keyword construct | ETBReplacement | — | missing | 5 | 33 |
+| keyword construct | etbCounter | — | missing | 5 | 25 |
 | effect | Branch | branch | named | 5 | 14 |
 | count | Cards in a library | — | missing | 5 | 13 |
+| keyword ability | Convoke | — | named | 5 | 11 |
 | keyword ability | Changeling | — | named | 5 | 10 |
 | static | CantAttack | — | missing | 5 | 10 |
-| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 5 | 9 |
 
 ## Keyword abilities (CR 702)
 
@@ -75,7 +75,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.122 | Crew | Crew | built | 15 | 192 | 0 | 0 |
 | 702.34 | Flashback | Flashback | built | 14 | 214 | 0 | 0 |
 | 702.49 | Ninjutsu | Ninjutsu | built | 14 | 45 | 0 | 0 |
-| 702.51 | Convoke | — | named | 11 | 106 | 11 | 4 |
+| 702.51 | Convoke | — | named | 11 | 106 | 11 | 5 |
 | 702.184 | Station | Station | built | 11 | 35 | 0 | 0 |
 | 702.4 | Double Strike | Double Strike | built | 10 | 125 | 0 | 0 |
 | 702.73 | Changeling | — | named | 10 | 63 | 10 | 5 |
@@ -268,7 +268,7 @@ The things that alone hold back the most of the most-played cards.
 | 701.18 | Play | play | built | 35 | 315 | 0 | 0 |
 | 701.3 | Attach | attach | built | 24 | 243 | 0 | 0 |
 | 701.25 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
-| 701.27 | Transform | setState | named | 19 | 280 | 19 | 6 |
+| 701.27 | Transform | setState | named | 19 | 280 | 19 | 7 |
 | 701.14 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | 701.20 | Reveal | chooseCard | partial | 13 | 242 | 0 | 0 |
 | 701.19 | Regenerate | — | missing | 12 | 269 | 0 | 0 |
@@ -373,7 +373,7 @@ The things that alone hold back the most of the most-played cards.
 | GainControl | gainControl | built | 22 | 316 | 0 | 0 |
 | Surveil | surveil | built | 21 | 226 | 0 | 0 |
 | GenericChoice | modal | built | 21 | 153 | 0 | 0 |
-| SetState | setState | named | 19 | 280 | 19 | 6 |
+| SetState | setState | named | 19 | 280 | 19 | 7 |
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | named | 18 | 313 | 18 | 9 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
@@ -422,7 +422,7 @@ The things that alone hold back the most of the most-played cards.
 | RevealHand | — | missing | 2 | 80 | 2 | 2 |
 | TapAll | — | missing | 2 | 73 | 2 | 2 |
 | SetLife | — | missing | 2 | 45 | 2 | 1 |
-| ReplaceDamage | — | missing | 2 | 38 | 2 | 0 |
+| ReplaceDamage | — | missing | 2 | 38 | 2 | 2 |
 | TwoPiles | twoPiles | named | 2 | 32 | 2 | 1 |
 | DigMultiple | — | missing | 2 | 12 | 2 | 1 |
 | ExchangeLifeVariant | exchangeLife | named | 2 | 3 | 2 | 2 |
@@ -753,7 +753,7 @@ The things that alone hold back the most of the most-played cards.
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
-| DamageDone | — | missing | 22 | 209 | 15 | 7 |
+| DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
 | CreateToken | — | missing | 17 | 32 | 17 | 0 |
 | AddCounter | — | missing | 15 | 30 | 15 | 0 |
@@ -1078,7 +1078,7 @@ The things that alone hold back the most of the most-played cards.
 | Name | Engine | Status | Top | All | Holds back | Alone |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
 | ETBReplacement | — | missing | 68 | 408 | 33 | 5 |
-| etbCounter | — | missing | 35 | 475 | 25 | 4 |
+| etbCounter | — | missing | 35 | 475 | 25 | 5 |
 | Chapter | Chapter | built | 19 | 236 | 0 | 0 |
 | Class | — | missing | 9 | 38 | 9 | 5 |
 | Choose a Background | — | missing | 5 | 32 | 5 | 3 |

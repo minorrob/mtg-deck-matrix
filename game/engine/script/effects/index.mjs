@@ -163,6 +163,18 @@ export function runEffect(state, effect, context = {}) {
   return run(state, effect, context) ?? [];
 }
 
+/**
+ * What follows a prevention (CR 615.5; rules/replacement.mjs, `followUps`): "each opponent mills that many cards" (The
+ * Mindskinner), immediately after the damage event, done by whatever dealt the damage -- each effect bound to what the
+ * damage was about and counted then. What follows never asks (cards/index.mjs refuses one that would).
+ */
+export function runFollowUps(state, proposal) {
+  const events = [];
+  for (const {effects, context} of proposal.followUps ?? [])
+    for (const effect of effects) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context));
+  return events;
+}
+
 /** Run a list of effects in order, collecting what happened. */
 export function runEffects(state, effects, context = {}) {
   const events = [];

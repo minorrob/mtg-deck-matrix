@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Mindskinner",
+    "oracleId": "2e3ec514-fc9e-4964-a493-2a6cc9e63630",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightmare"
+    ],
+    "manaCost": "{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 10,
+    "toughness": 1
+  },
+  "oracleText": "The Mindskinner can't be blocked.\nIf a source you control would deal damage to an opponent, prevent that damage and each opponent mills that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "The Mindskinner can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source you control would deal damage to an opponent, prevent that damage and each opponent mills that many cards.",
+      "watches": {
+        "event": "damage",
+        "source": {
+          "controller": "you"
+        },
+        "toPlayer": "opponent"
+      },
+      "change": {
+        "prevent": true,
+        "then": [
+          {
+            "effect": "mill",
+            "who": "opponent",
+            "count": {
+              "damagePrevented": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
