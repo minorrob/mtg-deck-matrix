@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Abigale, Eloquent First-Year",
+  "fixtures": {
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "keywords": [
+        "Trample",
+        "Haste"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Abigale enters: Maya's Brute loses trample and haste and gets flying, first strike and lifelink counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Abigale, Eloquent First-Year"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Abigale, Eloquent First-Year"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Brute (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Brute",
+            "has": [
+              "Flying",
+              "First Strike",
+              "Lifelink"
+            ],
+            "lacks": [
+              "Trample",
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Abigale, Eloquent First-Year",
+            "has": [
+              "Flying",
+              "First Strike",
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Up to one other: none chosen, and nothing changes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Abigale, Eloquent First-Year"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Abigale, Eloquent First-Year"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Brute",
+            "has": [
+              "Trample",
+              "Haste"
+            ],
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -62,7 +62,8 @@ const cardRef = (state, id) => {
  */
 export function becameTarget(state, entry, only = null) {
   const seen = new Set();
-  return (entry?.targets ?? []).filter((t) => t && t.kind === "object" && state.objects[t.id] && (only === null || t.id === only) && !seen.has(t.id) && seen.add(t.id))
+  /* A counted target's list: each of them (script/bind.mjs). */
+  return (entry?.targets ?? []).flat().filter((t) => t && t.kind === "object" && state.objects[t.id] && (only === null || t.id === only) && !seen.has(t.id) && seen.add(t.id))
     .map((t) => event("GameEventBecomesTarget", state, {card: cardRef(state, t.id), targetId: t.id, stackId: entry.stackId, kind: entry.kind, by: {playerId: entry.playerId}}));
 }
 

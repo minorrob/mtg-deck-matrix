@@ -49,12 +49,19 @@ export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
 /** The sublayers of layer 7, in the order CR 613.4 gives. */
 const SUBLAYERS = Object.freeze(["a", "b", "c", "d", "e"]);
 
-/* KEYWORD COUNTERS (CR 122.1b): a counter that is a keyword gives the object that keyword -- in layer 6 (CR 613.1f),
-   read here with its printed keywords, before any effect that removes abilities. The ones the engine plays. */
+/* KEYWORD COUNTERS (CR 122.1b): a counter that is a keyword gives the object that keyword -- in layer 6 (CR 613.1f), read
+   here with its printed keywords; an effect that removes abilities takes away only the ones whose counter was put on
+   before it, in timestamp order (CR 613.7): Abigale's "loses all abilities. Put a flying counter ... on that creature"
+   leaves it flying. A counter's timestamp is its placing (effects/resources.mjs addCounters); one it entered with is as
+   old as the permanent. The ones the engine plays. */
 const KEYWORD_COUNTERS = Object.freeze({"flying": "Flying", "first strike": "First Strike", "double strike": "Double Strike", "deathtouch": "Deathtouch",
   "haste": "Haste", "hexproof": "Hexproof", "indestructible": "Indestructible", "lifelink": "Lifelink", "menace": "Menace", "reach": "Reach",
   "trample": "Trample", "vigilance": "Vigilance"});
 const counterKeywords = (counters) => Object.entries(counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind]).map(([kind]) => KEYWORD_COUNTERS[kind]);
+export const isKeywordCounter = (kind) => Boolean(KEYWORD_COUNTERS[kind]);
+/* The keywords an object's counters give it, each with its counter's timestamp. */
+const stampedCounterKeywords = (object) => Object.entries(object.counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind])
+  .map(([kind]) => [KEYWORD_COUNTERS[kind], object.counterStamps?.[kind] ?? object.timestamp ?? 0]);
 
 /* An object's printed characteristics: where a derivation starts. */
 function printed(state, id) {
@@ -65,6 +72,7 @@ function printed(state, id) {
     types: [...(object.types ?? [])],
     colors: [...(object.colors ?? [])],
     keywords: [...new Set([...(object.keywords ?? []), ...counterKeywords(object.counters)])],
+    counterKeywords: stampedCounterKeywords(object),
     /* Changeling (CR 702.73a), every creature type; an effect may make it so in layer 4 (applyEffect). */
     everyCreatureType: everyCreatureType(object.keywords),
     power: object.power,
@@ -134,7 +142,11 @@ function applyEffect(current, effect) {
   /* "Gain all creature types" (Mirror Entity, batch 74): a type change, layer 4 (CR 613.1d). */
   if (change.allCreatureTypes === true) current.everyCreatureType = true;
   /* "Loses all abilities" (CR 613.1f): its own, and any given it before -- one given after, in timestamp order, it keeps. */
-  if (change.removeAllAbilities) { current.keywords = []; current.granted = []; current.lostAbilities = true; }
+  if (change.removeAllAbilities) {
+    /* A keyword counter put on after it keeps its keyword (above). */
+    current.keywords = [...new Set((current.counterKeywords ?? []).filter(([, stamp]) => stamp > (effect.timestamp ?? 0)).map(([word]) => word))];
+    current.granted = []; current.lostAbilities = true;
+  }
   /* GRANTED ABILITIES (Forge's AddAbility, batch 76): "lands you control have '{T}: Add one mana of any color'", "equipped
      creature has 'Whenever this creature attacks, create a Treasure token'" -- abilities compiled as a card's own are
      (cards/index.mjs), each with an id naming the effect that gave it -- its timestamp, and which of its holder's

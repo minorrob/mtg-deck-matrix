@@ -58,7 +58,7 @@ import {addMana, spend, parseManaCost, automaticPayment, manaValue, poolSize} fr
 import {commanderTax, recordCommanderCast, colorIdentity} from "./commander.mjs";
 import {COLORS} from "./mana.mjs";
 import {summoningSick, hasFlash} from "../keywords/timing.mjs";
-import {targetChoices, targetName, isHostile, modalScript} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice} from "../script/bind.mjs";
 import {moveOne, sacrificeOne} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
 import {runEffects} from "../script/effects/index.mjs";
@@ -625,7 +625,10 @@ export function castChoicesNow(state, player, id) {
   if (!object || (object.types ?? []).includes("Land") || object.enchant || (object.spell?.additionalCost ?? []).length || castForbidden(state, player, id)) return [];
   const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
   const context = {controller: player, source: id};
-  return object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context);
+  /* NAMED: a spell with a counted target ("up to two target creatures") is not cast this way yet -- its targets would be a
+     question in the middle of a resolution, which the cast an effect makes does not stop for. */
+  return (object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context))
+    .filter((offer) => !(offer.targets ?? []).some(isChoosing));
 }
 
 const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
@@ -667,7 +670,8 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
    across a network boundary submits a copy, not the object it was handed. */
-const targetKey = (action) => (action.targets ?? []).map((t) => `${t?.kind}:${t?.id}`).join(",")
+/* A counted target is one offer however it is then picked: its placeholder and the list chosen for it are the same offer. */
+const targetKey = (action) => (action.targets ?? []).map((t) => (Array.isArray(t) || isChoosing(t) ? "many" : `${t?.kind}:${t?.id}`)).join(",")
   + "|" + Object.entries(action.costChoice ?? {}).map(([k, v]) => `${k}:${v}`).join(",");
 const sameAction = (a, b) => a.kind === b.kind
   && (a.objectId ?? null) === (b.objectId ?? null)
@@ -681,6 +685,73 @@ const sameAction = (a, b) => a.kind === b.kind
   /* And the modes chosen as it is cast (CR 700.2): another choice is another action. */
   && JSON.stringify(a.modes ?? null) === JSON.stringify(b.modes ?? null)
   && targetKey(a) === targetKey(b);
+
+/** The target specs an offer's targets were chosen by, and the context they were chosen in. */
+export function offerSpecs(state, player, action) {
+  const object = state.objects[action.objectId];
+  if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
+  const context = {controller: player, source: action.objectId};
+  if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
+  const ability = abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId);
+  return {specs: ability?.targets ?? [], context};
+}
+
+/* The next counted target of an offer still to be picked, or -1. One with nothing it could choose is no question: it is
+   chosen as nothing (its least is 0, or the offer would not have been made). */
+function nextToChoose(state, player, action) {
+  const {specs, context} = offerSpecs(state, player, action);
+  for (let index = action.targets.findIndex(isChoosing); index >= 0; index = action.targets.findIndex(isChoosing)) {
+    if (targetCandidates(state, specs[index], context).length) return index;
+    action.targets[index] = [];
+  }
+  return -1;
+}
+
+/** The question for an offer's counted target (CR 601.2c): its legal choices, picked as a pick-several (script/bind.mjs). */
+export function chooseTargetsChoice(state, awaiting) {
+  const {specs, context} = offerSpecs(state, awaiting.player, awaiting.action);
+  const object = state.objects[awaiting.action.objectId];
+  const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
+  return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
+    name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? [])});
+}
+
+/**
+ * The counted target picked: kept in the offer, then the next asked, or the offer taken with every target chosen --
+ * cast or activated now, as it would have been had they been chosen with it (CR 601.2c-i, 602.2b).
+ */
+export function resolveChooseTargets(state, awaiting, indices) {
+  const choice = chooseTargetsChoice(state, awaiting);
+  const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
+  if (picked.length !== (indices ?? []).length || picked.length < choice.min || picked.length > choice.max || picked.some((i) => !choice.options[i]))
+    throw new Error("Invalid selection");
+  const action = structuredClone(awaiting.action);
+  action.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
+  const next = nextToChoose(state, awaiting.player, action);
+  if (next >= 0) {
+    state.awaiting = {...awaiting, action, index: next};
+    return [];
+  }
+  state.awaiting = null;
+  state.priorityPlayer = awaiting.player;
+  return applyAction(state, awaiting.player, action);
+}
+
+/* A counted target's list, as its controller picked it: each a legal choice now, none twice (CR 115.3), as many as its
+   count allows. Refused before anything moves. */
+function countedProblem(state, player, action) {
+  const {specs, context} = offerSpecs(state, player, action);
+  for (const [index, spec] of specs.entries()) {
+    const count = countOf(spec), chosen = (action.targets ?? [])[index];
+    if (!count) continue;
+    if (!Array.isArray(chosen)) throw new Error("Choose those targets first");
+    const legal = targetCandidates(state, spec, context);
+    const keys = chosen.map((t) => `${t?.kind}:${t?.id}`);
+    if (new Set(keys).size !== keys.length || !chosen.every((t) => legal.some((c) => c.kind === t?.kind && c.id === t?.id))
+      || chosen.length < count.min || (count.max !== null && chosen.length > count.max))
+      throw new Error(`Those are not ${targetName(state, {kind: "choose", ...count})} it can have`);
+  }
+}
 
 /**
  * Perform an action, after checking the engine actually offered it.
@@ -723,6 +794,17 @@ function perform(state, player, action, during = null) {
     const offered = legalActions(state, player);
     if (!action || !offered.some((candidate) => sameAction(candidate, action)))
       throw new Error(`That is not a legal action here: ${JSON.stringify(action?.kind ?? action)}`);
+    /* A COUNTED TARGET (CR 601.2c, 602.2b; script/bind.mjs): taken with its placeholder, the offer stops to ask which,
+       nothing moved or paid before the answer (rules/turn.mjs, "choose-targets"); taken with a list, the list is checked. */
+    if ((action.targets ?? []).some(isChoosing)) {
+      action = structuredClone(action);
+      const index = nextToChoose(state, player, action);
+      if (index >= 0) {
+        state.awaiting = {kind: "choose-targets", player, action, index};
+        return [];
+      }
+    }
+    countedProblem(state, player, action);
   }
 
   /* Passing is the priority module's business, because what a full round of passes means depends on

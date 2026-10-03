@@ -34,7 +34,7 @@ import {passPriority} from "../rules/priority.mjs";
 import {gameOver} from "../rules/sba.mjs";
 import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
-import {targetName} from "../script/bind.mjs";
+import {targetName, isChoosing} from "../script/bind.mjs";
 
 export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 
@@ -135,6 +135,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (got.length !== (wanted ?? []).length) return false;
     return got.every((t, i) => {
       const w = wanted[i];
+      /* A counted target ("up to two target creatures", a list in the step): the offer holds its placeholder, and the list
+         is picked once the offer is taken (CR 601.2c; script/bind.mjs). */
+      if (Array.isArray(w)) return isChoosing(t);
       if (w.player !== undefined) return t.kind === "player" && t.id === w.player;
       return t.kind === "object" && targetName(state, t) === w.card && (w.seat === undefined || state.objects[t.id].controller === w.seat);
     });
@@ -166,6 +169,18 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
+    /* Each counted target the step names as a list, picked as it is asked: by name, or player, and seat. */
+    for (let n = 0; n < 8 && state.awaiting?.kind === "choose-targets" && state.awaiting.stackId === undefined && Array.isArray((aim ?? [])[state.awaiting.index]); n += 1) {
+      const choice = awaitingChoice(state), used = new Set();
+      const indices = aim[state.awaiting.index].map((w) => {
+        const option = choice.options.find((o) => !used.has(o.index) && (w.player !== undefined ? o.targets[0].kind === "player" && o.targets[0].id === w.player
+          : o.targets[0].kind === "object" && targetName(state, o.targets[0]) === w.card && (w.seat === undefined || controllerOf(state, o.targets[0].id) === w.seat)));
+        if (!option) fail(`${card}: no ${JSON.stringify(w)} among ${choice.options.map((o) => o.label).join(", ")}`);
+        used.add(option.index);
+        return option.index;
+      });
+      record(resolveAwaiting(state, indices));
+    }
   }
 
   function check(expect) {

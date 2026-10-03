@@ -51,7 +51,7 @@ import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {targetChoices, targetName, isHostile} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -561,10 +561,55 @@ export function askTriggerTargets(state) {
       state.stack.splice(state.stack.indexOf(entry), 1);
       continue;
     }
+    /* Only counted targets to choose ("up to one other target creature"): there is one way to aim it before they are
+       picked, so it is not asked -- its counted targets are (CR 603.3d, 601.2c; script/bind.mjs). */
+    const ways = targetChoices(state, entry.script.targets, context);
+    if (ways.length === 1 && ways[0].every((t) => isChoosing(t))) {
+      entry.targets = structuredClone(ways[0]);
+      if (askCounted(state, entry)) return true;
+      continue;
+    }
     state.awaiting = {kind: "trigger-targets", player: entry.playerId, stackId: entry.stackId};
     return true;
   }
   return false;
+}
+
+/* The next counted target of a trigger still to be picked, asked; or, none left, the trigger aimed and waiting. One with
+   nothing it could choose is chosen as nothing. Returns whether it asked. */
+function askCounted(state, entry) {
+  const {context} = targeting(state, entry.stackId);
+  for (let index = entry.targets.findIndex(isChoosing); index >= 0; index = entry.targets.findIndex(isChoosing)) {
+    if (targetCandidates(state, entry.script.targets[index], context).length) {
+      state.awaiting = {kind: "choose-targets", player: entry.playerId, stackId: entry.stackId, index};
+      return true;
+    }
+    entry.targets[index] = [];
+  }
+  entry.stage = "waiting";
+  return false;
+}
+
+/** The question for a trigger's counted target (CR 603.3d, 601.2c): a pick-several of its legal choices (script/bind.mjs). */
+export function triggerCountedChoice(state, awaiting) {
+  const {entry, context} = targeting(state, awaiting.stackId);
+  return countedChoice(state, entry.script.targets[awaiting.index], context, {id: `choose-targets:${entry.stackId}:${awaiting.index}`,
+    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects)});
+}
+
+/** The counted target picked; then the next, or the next trigger's targets. */
+export function resolveTriggerCounted(state, awaiting, indices) {
+  const choice = triggerCountedChoice(state, awaiting);
+  const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
+  if (picked.length !== (indices ?? []).length || picked.length < choice.min || picked.length > choice.max || picked.some((i) => !choice.options[i]))
+    throw new Error("Invalid selection");
+  const {entry} = targeting(state, awaiting.stackId);
+  entry.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
+  state.awaiting = null;
+  if (askCounted(state, entry)) return [];
+  askTriggerTargets(state);
+  /* What it is aimed at becomes its target (ward, CR 702.21a). */
+  return becameTarget(state, entry);
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -591,8 +636,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
   if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
   const {entry} = targeting(state, awaiting.stackId);
   entry.targets = structuredClone(option.targets);
-  entry.stage = "waiting";
   state.awaiting = null;
+  /* Its counted targets, if it has any, picked next. */
+  if (entry.targets.some(isChoosing) && askCounted(state, entry)) return [];
+  entry.stage = "waiting";
   askTriggerTargets(state);
   /* What it is aimed at becomes its target (ward, CR 702.21a). */
   return becameTarget(state, entry);

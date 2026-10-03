@@ -663,7 +663,9 @@ function retargetOptions(state, question) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
-  const current = entry.targets[question.index] ?? null;
+  /* A counted target's list holding its one target (changeTargets): that one. */
+  const was = entry.targets[question.index];
+  const current = (Array.isArray(was) ? was[0] : was) ?? null;
   const others = targetCandidates(state, spec, {controller: entry.playerId, source: entry.objectId})
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
@@ -678,7 +680,9 @@ export const copySpell = {
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));
-      if (params.newTargets === true) copy.targets.forEach((_, index) => questions.push({stackId: copy.stackId, index}));
+      /* NAMED: a counted target ("up to two target creatures") keeps the original's list on the copy; choosing a new list
+         for it is not asked yet. */
+      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
     }
     state.resolving?.events.push(...events);
     const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
@@ -726,7 +730,11 @@ export const changeTargets = {
   open(state, params, context) {
     const entry = state.stack.find((e) => e.objectId !== null && (params.spells ?? []).includes(e.objectId));
     if (!entry) return false;
-    const question = {stackId: entry.stackId, index: 0};
+    /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
+       included, the others empty. */
+    const index = entry.targets.findIndex((t) => (Array.isArray(t) ? t.length > 0 : Boolean(t)));
+    if (index < 0) return false;
+    const question = {stackId: entry.stackId, index};
     if (!(retargetOptions(state, question)?.others ?? []).length) return false;
     state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, question};
     return true;
@@ -742,7 +750,8 @@ export const changeTargets = {
     const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
     const events = [];
     if (entry) {
-      entry.targets[0] = {kind: option.target.kind, id: option.target.id};
+      const index = awaiting.question.index ?? 0, chosen = {kind: option.target.kind, id: option.target.id};
+      entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
       /* It becomes the spell's target (ward, CR 702.21a). */
       if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
