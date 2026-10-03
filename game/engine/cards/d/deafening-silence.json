@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deafening Silence",
+    "oracleId": "6284ef01-d17d-4584-aecb-1b841ae638e5",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player can't cast more than one noncreature spell each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each player can't cast more than one noncreature spell each turn.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "moreThan": 1,
+      "filter": {
+        "nonTypes": [
+          "Creature"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Horizon Explorer",
+  "fixtures": {
+    "Tapland": {
+      "types": [
+        "Land"
+      ],
+      "abilities": [
+        {
+          "id": "r",
+          "kind": "replacement",
+          "text": "This land enters tapped.",
+          "watches": {
+            "event": "enters",
+            "who": "self"
+          },
+          "change": {
+            "entersTapped": true
+          }
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "His land that enters tapped enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Horizon Explorer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tapland"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Tapland"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Tapland",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "He attacks Maya: a Lander",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Horizon Explorer",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Horizon Explorer",
+            "Bear",
+            "Lander"
+          ]
+        }
+      ]
+    }
+  ]
+}

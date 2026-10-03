@@ -18,7 +18,7 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {staticAffects, powerOf, toughnessOf} from "./layers.mjs";
-import {compileSelector, matchesSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {usesThisTurn} from "../state/index.mjs";
 import {chosenFor} from "../script/chosen.mjs";
@@ -65,6 +65,11 @@ export const STATIC_RULES = Object.freeze({
   "top-revealed": "projection.mjs",
   /** "You may play an additional land on each of your turns" (CR 305.2): one more land drop. rules/actions.mjs. */
   "extra-land-drop": "rules/actions.mjs",
+  /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
+      turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. */
+  "cant-cast": "rules/actions.mjs",
+  /** "Lands you control enter untapped" (Horizon Explorer): entersUntapped, as a land arrives. effects/zones.mjs. */
+  "lands-enter-untapped": "script/effects/zones.mjs",
   /** "You may cast this card from your graveyard or from exile" (Squee): the card's own, read where it is. rules/actions.mjs. */
   "cast-self-from": "rules/actions.mjs",
   /** Flashback (CR 702.34a): the card's own, from its keyword and cost (cards/index.mjs), or given until end of turn
@@ -126,6 +131,40 @@ export function freeCast(state, player, cardId) {
   }
   return null;
 }
+
+/**
+ * "CAN'T CAST" (Forge's CantBeCast): whether a static ability on the battlefield forbids this player casting this card now.
+ * `rule: "cant-cast"`, its `affects` the players it binds (a player selector: "your opponents", "each player"), its
+ * `condition` its own ("as long as this Equipment is attached to a creature"), and what it forbids: `fromAnywhereButHand`
+ * (Drannith Magistrate), `duringYourTurn` -- its controller's turn (Conqueror's Flail) -- or `moreThan` N spells each turn,
+ * those fitting `filter` (Deafening Silence: noncreature; Archon of Emeria: any), counted from what the player has cast this
+ * turn. Read where a cast is offered (rules/actions.mjs), a free cast as an effect resolves among them.
+ */
+export function castForbidden(state, player, cardId) {
+  const object = state.objects[cardId];
+  if (!object) return false;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== "cant-cast") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (ability.fromAnywhereButHand && object.zone !== "hand") return true;
+      if (ability.duringYourTurn && state.activePlayer === holder.controller) return true;
+      if (Number.isInteger(ability.moreThan)) {
+        const {what: _ignored, ...shape} = ability.filter ?? {};
+        const fits = (cast) => matchesLastKnown(shape, {...cast, controller: player}, {controller: player});
+        const already = (state.players[player].castThisTurn ?? []).filter(fits).length;
+        if (already >= ability.moreThan && fits({types: object.types ?? [], colors: object.colors ?? []})) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** "Lands you control enter untapped" (Horizon Explorer; `rule: "lands-enter-untapped"`): this land, its controller's. */
+export const entersUntapped = (state, id) => (state.objects[id]?.types ?? []).includes("Land") && playerStatics(state, "lands-enter-untapped", state.objects[id].controller).length > 0;
 
 /** Whether this spell can't be countered: its own "this spell can't be countered", or a permanent's static ability over it. */
 export function cantBeCountered(state, spellId) {

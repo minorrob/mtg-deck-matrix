@@ -71,7 +71,10 @@ export const FORGE_STATIC = {Continuous: "layers", CombatDamageToughness: "rules
   /* "You may cast spells as though they had flash" (batch 49): `cast-as-though-flash`, rules/actions.mjs. */
   CastWithFlash: "rules/actions",
   /* "Untap all permanents you control during each other player's untap step" (batch 53): rules/turn.mjs. */
-  UntapOtherPlayer: "rules/turn"};
+  UntapOtherPlayer: "rules/turn",
+  /* "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
+     turn" (batch 63): the static `cant-cast`, read where a cast is offered (rules/statics.mjs castForbidden). */
+  CantBeCast: "rules/actions"};
 export const FORGE_REPLACEMENT = {Moved: "replacement"};
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
