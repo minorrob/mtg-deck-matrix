@@ -8,26 +8,30 @@
  * history, never the table's end (C2a).
  *
  * At the review (849845bf) two of twelve such games threw (seeds 10 and 11: a departed attacker, a single block on a
- * menace creature) and one never finished. Here every seed finishes or is slow; none throws. The seeds held below are
- * the ones that finish in seconds. Seeds 2, 6 and 7 of the same deal (the order of game/engine/cards/definitions.mjs)
- * ran past 90 seconds on 2026-10-03 -- the room's per-request cost the review measured (2.12) and the plan's later step
- * on the room's budget answers (characteristicsOf cached per object). They join this suite when that lands.
+ * menace creature) and one never finished. Here every seed finishes or is slow; none throws. Seeds 2, 6 and 7 of the
+ * same deal ran past 90 seconds on 2026-10-03 -- the room's per-request cost the review measured (2.12) -- and join now
+ * that each object is derived once per question (rules/layers.mjs, `deriving`; engine-derive-once).
+ *
+ * THE DEAL IS PINNED (tests/fixtures/room-games-pool.json): the cards it deals from, in order, are main's definitions at
+ * e243ccde. Dealt from the live directory, every batch of new definitions changed every seed's decks -- X5e to X5g's
+ * nine cards turned seed 4 into a 78-turn game nobody had chosen -- so what a seed held depended on the card count, not
+ * on the change under test. The table's current definitions of those cards are what is played.
  */
 import assert from "node:assert/strict";
 import {startRoom} from "../game/room/room.mjs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {tableCards} from "../cloud/game-room.mjs";
-import {DEFINITIONS} from "../game/engine/cards/definitions.mjs";
+import {readFileSync} from "node:fs";
 import {commanderLegal} from "../game/room/table.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
 
-const SEEDS = [1, 4, 8, 9, 10, 11, 12];
-/* Seconds a game may take here: the slowest held seed takes about nine on this suite's machines, alone. */
+const SEEDS = [1, 2, 4, 6, 7, 8, 9, 10, 11, 12];
+/* Seconds a game may take here: the slowest held seed (10) takes about eleven on this suite's machines, alone. */
 const BUDGET_MS = 45000;
 
-const all = Object.values(DEFINITIONS).map((d) => d.name);
+const all = JSON.parse(readFileSync(new URL("./fixtures/room-games-pool.json", import.meta.url), "utf8")).names;
 const isLand = (d) => (d.types ?? []).includes("Land");
 const spells = all.filter((n) => { const d = tableCards(n); return !isLand(d) && d.manaCost && !(d.types ?? []).includes("Planeswalker"); });
 const commanders = all.filter((n) => commanderLegal(tableCards(n)));

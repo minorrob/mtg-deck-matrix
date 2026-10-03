@@ -53,7 +53,7 @@
 import {cardsIn, recordUse} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf} from "./layers.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
 import {givePoison, changeLife, infects, addCounters} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
 import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack} from "./statics.mjs";
@@ -162,6 +162,20 @@ export const attackers = {
   },
 
   resolve(state, awaiting, indices) {
+    /* What is declared, read before anything changes: every object derived once (rules/layers.mjs, deriving). */
+    const picked = deriving(state, () => attackers.declared(state, awaiting, indices));
+    const events = [];
+    if (picked.length === 0) {
+      /* CR 506.5: with no attackers, the declare blockers and combat damage steps do not happen.
+         `combat` stays null, which is what the turn table's condition reads. */
+      state.awaiting = null;
+      return events;
+    }
+    return attackers.payAndAttack(state, awaiting, picked, events);
+  },
+
+  /* The answer read against the question, the creatures that must attack anyway added: only reads. */
+  declared(state, awaiting, indices) {
     const choice = attackers.choice(state, awaiting);
     const picked = indices.map((index) => {
       const option = choice.options[index];
@@ -193,15 +207,11 @@ export const attackers = {
       const owed = mustAttackOf(state, id).filter((d) => defendersFor(state, awaiting.player).includes(d) && !cantAttack(state, id, d) && attackTax(state, [{defenderId: d}]) === 0);
       if (owed.length) picked.push({cardId: id, defenderId: owed[0]});
     }
+    return picked;
+  },
 
-    const events = [];
-    if (picked.length === 0) {
-      /* CR 506.5: with no attackers, the declare blockers and combat damage steps do not happen.
-         `combat` stays null, which is what the turn table's condition reads. */
-      state.awaiting = null;
-      return events;
-    }
-
+  /* The attack made: what it costs paid, then the attackers declared. */
+  payAndAttack(state, awaiting, picked, events) {
     /* CR 508.1h-j: what attacking costs (Propaganda), paid now -- from the pool and the player's plain mana sources, as an
        "unless" cost is -- or this is not an attack that can be declared. The attackers are tapped first (508.1f), so none
        of them pays unless it has vigilance. Which mana pays is the player's when the ways to pay differ (CR 508.1i). */
@@ -327,28 +337,8 @@ export const blockers = {
   },
 
   resolve(state, awaiting, indices) {
-    const choice = blockers.choice(state, awaiting);
-    const picked = indices.map((index) => {
-      const option = choice.options[index];
-      if (!option) throw new Error("Invalid selection");
-      return option;
-    });
-    /* CR 509.1a: one creature blocks one attacker, unless an effect says otherwise. */
-    if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
-      throw new Error("A creature can block only one attacker; the same blocker was declared twice");
-
-    /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
-       declaration is in. Every individual blocker was legal or it would not have been offered. */
-    const bySeat = new Map();
-    for (const option of picked) {
-      if (!bySeat.has(option.attackerId)) bySeat.set(option.attackerId, []);
-      bySeat.get(option.attackerId).push(option.cardId);
-    }
-    for (const [attackerId, ids] of bySeat) {
-      if (blockersAreLegal(state, attackerId, ids)) continue;
-      throw new Error(whyBlockersAreIllegal(state, attackerId, ids));
-    }
-
+    /* What is declared, read before anything changes: every object derived once (rules/layers.mjs, deriving). */
+    const picked = deriving(state, () => blockers.declared(state, awaiting, indices));
     const events = [];
     for (const option of picked) {
       const attack = state.combat.attacks.find((a) => a.attacker === option.attackerId);
@@ -372,6 +362,32 @@ export const blockers = {
     const next = nextDefenderToDeclare(state, awaiting.player);
     state.awaiting = next === null ? null : {kind: "declare-blockers", player: next};
     return events;
+  },
+
+  /* The answer read against the question, the set of blocks checked: only reads. */
+  declared(state, awaiting, indices) {
+    const choice = blockers.choice(state, awaiting);
+    const picked = indices.map((index) => {
+      const option = choice.options[index];
+      if (!option) throw new Error("Invalid selection");
+      return option;
+    });
+    /* CR 509.1a: one creature blocks one attacker, unless an effect says otherwise. */
+    if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
+      throw new Error("A creature can block only one attacker; the same blocker was declared twice");
+
+    /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
+       declaration is in. Every individual blocker was legal or it would not have been offered. */
+    const bySeat = new Map();
+    for (const option of picked) {
+      if (!bySeat.has(option.attackerId)) bySeat.set(option.attackerId, []);
+      bySeat.get(option.attackerId).push(option.cardId);
+    }
+    for (const [attackerId, ids] of bySeat) {
+      if (blockersAreLegal(state, attackerId, ids)) continue;
+      throw new Error(whyBlockersAreIllegal(state, attackerId, ids));
+    }
+    return picked;
   },
 };
 

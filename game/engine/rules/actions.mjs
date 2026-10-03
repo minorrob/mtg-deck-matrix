@@ -68,7 +68,7 @@ import {costReduction, costIncrease, playerStatics, freeCast, flashGranted, cast
 import {countMana, amountOf, countEffect} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -517,6 +517,10 @@ function playableElsewhere(state, player, kind) {
  * that treats it as "nothing to do" is right.
  */
 export function legalActions(state, player) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => offers(state, player));
+}
+function offers(state, player) {
   if (state.priorityPlayer !== player) return [];
 
   const actions = [{kind: "pass"}];
@@ -725,6 +729,9 @@ const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPE
  * colors are not matched, so a doubtful case is asked rather than passed for the player.
  */
 export function nothingToDo(state, player, actions = legalActions(state, player)) {
+  return deriving(state, () => idle(state, player, actions));
+}
+function idle(state, player, actions) {
   if (state.priorityPlayer !== player || state.stack.length) return false;
   if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
   /* Each source counted once, at the most it can add net of what it costs -- a Sol Ring is two, a Signet one, and a

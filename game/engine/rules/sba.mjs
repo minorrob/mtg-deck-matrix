@@ -46,7 +46,7 @@
 
 import {moveObject, PER_PLAYER, PUBLIC_ZONES} from "../state/index.mjs";
 import {applyReplacements, regenerated} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf} from "./layers.mjs";
+import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne} from "../script/effects/zones.mjs";
@@ -201,7 +201,18 @@ export function checkStateBasedActions(state) {
       acted = true;
     }
 
+    /* THE CHECK, THEN THE ACTIONS (CR 704.3): which creatures are at zero toughness or have lethal damage or deathtouch
+       damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
+       for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
+       that only a death in this pass brings down dies in the next check. */
+    const lethal = deriving(state, () => new Set(state.zones.battlefield.filter((id) => {
+      const object = state.objects[id];
+      if (!typesOf(state, id).includes("Creature")) return false;
+      const toughness = toughnessOf(state, id);
+      return toughness <= 0 || (object.deathtouched === true && toughness > 0) || (object.damage > 0 && object.damage >= toughness);
+    })));
     for (const id of [...state.zones.battlefield]) {
+      if (!lethal.has(id) || !state.objects[id]) continue;
       const object = state.objects[id];
       /* Through the layers: a land animated this turn is a creature and dies like one, and a
          creature set to 0 toughness by an effect dies whatever its printed toughness says. */
@@ -282,7 +293,8 @@ export function checkStateBasedActions(state) {
          command zone, so the engine stops and asks (rules/commander.mjs). Last, once the rest has settled: a player
          who lost is not asked, and a game that is over asks nobody anything. */
       if (!state.awaiting && !gameOver(state)) {
-        const ask = legendToAsk(state) ?? commanderToAsk(state);
+        /* Only read: every object derived once (rules/layers.mjs, deriving). */
+        const ask = deriving(state, () => legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
       }
       break;

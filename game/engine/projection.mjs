@@ -27,7 +27,7 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
-import {characteristicsOf} from "./rules/layers.mjs";
+import {characteristicsOf, deriving} from "./rules/layers.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
@@ -166,6 +166,10 @@ function playerFor(state, player, viewer) {
  *                          the safe default for anyone not in a seat
  */
 export function projectFor(state, viewer) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => project(state, viewer));
+}
+function project(state, viewer) {
   if (viewer !== null && !state.players[viewer])
     throw new Error(`There is no seat ${viewer} at this table to project for`);
 

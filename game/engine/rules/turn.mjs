@@ -50,6 +50,7 @@ import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
 import {chooseTargetsChoice, resolveChooseTargets, escapeCostChoice, resolveEscapeCost} from "./actions.mjs";
+import {deriving} from "./layers.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -227,6 +228,10 @@ function cleanup(state, events) {
  * and hands it to `resolveAwaiting`.
  */
 export function awaitingChoice(state) {
+  /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
+  return deriving(state, () => choiceFor(state));
+}
+function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom")

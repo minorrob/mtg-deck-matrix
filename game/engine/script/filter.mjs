@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 
@@ -179,15 +179,15 @@ export function compileSelector(selector) {
 
     /* Colors through the layers (CR 105.2): "a blue spell" is one with blue among its colors; listing two asks for both. */
     /* "Colorless spells" (CR 105.2c): no color at all, through the layers. */
-    if (selector.colorless === true && (characteristicsOf(state, id).colors ?? []).length > 0) return false;
+    if (selector.colorless === true && colorsOf(state, id).length > 0) return false;
     /* "Permanents that are one or more colors" (All Is Dust). */
-    if (selector.colorless === false && (characteristicsOf(state, id).colors ?? []).length === 0) return false;
+    if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     if (selector.colors) {
-      const current = characteristicsOf(state, id).colors ?? [];
+      const current = colorsOf(state, id);
       if (!selector.colors.every((color) => current.includes(color))) return false;
     }
     /* "Target nonblack creature" (Snuff Out): none of these colors. */
-    if (selector.nonColors && selector.nonColors.some((color) => (characteristicsOf(state, id).colors ?? []).includes(color))) return false;
+    if (selector.nonColors && selector.nonColors.some((color) => colorsOf(state, id).includes(color))) return false;
 
     /* Types through the layers: a land animated this turn IS a creature, and a selector that read
        the printed type line would not find it. */
@@ -200,7 +200,7 @@ export function compileSelector(selector) {
        with its types. "A Forest" is a land with the subtype Forest, basic or not (CR 305.6). */
     /* A changeling is every creature type (CR 702.73a; keywords/types.mjs), in every zone. */
     if (selector.subtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if (!selector.subtypes.every((subtype) => hasSubtype(current, every, subtype))) return false;
     }
 
@@ -212,7 +212,7 @@ export function compileSelector(selector) {
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
     if (selector.nonTypes || selector.nonSubtypes) {
-      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = characteristicsOf(state, id).everyCreatureType;
+      const current = [...typesOf(state, id), ...(object.subtypes ?? [])], every = everyCreatureTypeOf(state, id);
       if ((selector.nonTypes ?? []).some((type) => current.includes(type))) return false;
       /* "Non-Elf": a changeling is an Elf. */
       if ((selector.nonSubtypes ?? []).some((subtype) => hasSubtype(current, every, subtype))) return false;
@@ -262,7 +262,7 @@ export function compileSelector(selector) {
        subtypes is one of a permanent's the selector describes, itself aside -- a creature's subtypes are creature types
        (CR 205.3m), the layers' included. */
     if (selector.sharesCreatureType) {
-      const mine = new Set(object.subtypes ?? []), mineAll = characteristicsOf(state, id).everyCreatureType;
+      const mine = new Set(object.subtypes ?? []), mineAll = everyCreatureTypeOf(state, id);
       const others = selectMatching(state, {what: "permanent", ...selector.sharesCreatureType}, context).filter((other) => other !== id);
       /* A changeling shares every creature type (CR 702.73a): with anything that has one. */
       const shares = (other) => {
