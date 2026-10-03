@@ -69,9 +69,12 @@ Nothing else.
 
 ## Part 8 -- The prompt that starts the executing session
 
-Paste this, unchanged, as the first message of the new session (Opus) in `C:\Users\robmi\CrankMagic\repo`:
+The session's working brief, with the merge procedure, the container's limits and the designs and test shapes for the
+first fixes, is **`docs/prompt-execution-2026-10-03.md`**; it is read right after this prompt. Paste this, unchanged, as
+the first message of the new session (Opus), or hand it to the session that continues this one:
 
-> Read `AGENTS.md`, then `docs/ACTIVE.md`, then `docs/plan-execution-2026-10-03.md` in full: it is the plan you execute,
+> Read `AGENTS.md`, then `docs/ACTIVE.md`, then `docs/plan-execution-2026-10-03.md` in full, then
+> `docs/prompt-execution-2026-10-03.md` (your working brief): the plan is what you execute,
 > in its order, and its decisions table is settled (take the recommended answer wherever Rob has not written another beside
 > it, and say so in the PR). `docs/plan-to-done-2026-09-30.md` is still the contract (Part 0) and the road (Part 7's
 > gates and the two sentences); `docs/plan-review-2026-10-03.md` is why the order is what it is, and its Part 6 holds the
