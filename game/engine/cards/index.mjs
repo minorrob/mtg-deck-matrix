@@ -137,10 +137,16 @@ const TRIGGERS = {
      read as the thing last existed (CR 603.10a). */
   dies: (t) => (ARRIVALS.includes(t.who ?? "self")
     ? {on: "GameEventCardChangeZone", from: "Battlefield", to: "Graveyard", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever a token you control leaves the battlefield" (Nadier's Nightblade): to anywhere, `filter` read as it last
+     existed (CR 603.10a). */
+  leaves: (t) => (ARRIVALS.includes(t.who ?? "self")
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
      `filter` the spell (CR 601.2i). */
   "spell cast": (t) => ({on: "GameEventSpellAbilityCast", caster: t.caster ?? "you", ...(t.filter ? {filter: t.filter} : {}), ...(t.firstThisTurn ? {firstThisTurn: true} : {}),
+    /* "Their second spell each turn" (Monologue Tax): the caster's Nth this turn the filter fits. */
+    ...(Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 2 ? {nthThisTurn: t.nthThisTurn} : {}),
     /* "From your hand" (Jodah): where it was cast from (rules/actions.mjs). */
     ...(t.from ? {castFrom: t.from} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */

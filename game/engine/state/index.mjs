@@ -258,6 +258,10 @@ export function moveObject(state, id, zone, player = null) {
   const at = fromList.indexOf(id);
   if (at >= 0) fromList.splice(at, 1);
   delete state.objects[id];
+  /* Revolt's "if a permanent left the battlefield under your control this turn" (Hidden Stockpile): counted for its
+     controller as it left -- every departure moves through here (script/amount.mjs, permanentsLeftThisTurn; cleared as a
+     turn begins, rules/turn.mjs). */
+  if (from.zone === "battlefield" && state.players[from.controller]) state.players[from.controller].leftThisTurn = (state.players[from.controller].leftThisTurn ?? 0) + 1;
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else

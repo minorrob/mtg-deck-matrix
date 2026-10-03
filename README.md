@@ -476,7 +476,8 @@ holds a counted target ("up to two target creatures", "any number of target play
 pick-several before anything moves, never the same object twice, none chosen still resolving. `engine-afterlife-tokens`
 holds Afterlife's Spirits and "whenever you create one or more creature tokens": once for all made at once, never for
 another player's. `engine-turn-records` holds what a player did this turn, counted and compared: life gained (lifelink in
-combat too) and tokens made, each player's, cleared as a turn begins; "an opponent controls more lands than you". `engine-escape`
+combat too), tokens made and permanents gone (revolt), each player's, cleared as a turn begins; "an opponent controls more
+lands than you"; a token leaving the battlefield; an opponent's second spell. `engine-escape`
 holds escape: offered once from its owner's graveyard at its type's speed, the other cards it exiles picked before anything
 moves, "escapes with" counters only when it escaped, never exiled afterward, and Underworld Breach's escape beside a card's
 own. `engine-encore` holds encore: offered from its owner's graveyard at sorcery speed, the card exiled as its cost, a hasty

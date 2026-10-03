@@ -883,6 +883,9 @@ export const chooseCard = {
       const where = awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
       if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
       if (where.to === "top") { tops.push(id); return; }
+      /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
+         remembered for what follows ("the blighted creature", 701.68c). */
+      if (where.to === "stay") { found.push(id); return; }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {

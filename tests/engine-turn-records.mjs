@@ -24,12 +24,14 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 const index = loadCardIndex();
 const at = (seat, zone, ...cards) => ({seat, zone, cards});
 const FIX = {
+  Bear: {types: ["Creature"], subtypes: ["Bear"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
   Leech: {types: ["Creature"], manaCost: "{1}{B}", colors: ["B"], power: 2, toughness: 2, keywords: ["Lifelink"]},
   "Big Heal": {types: ["Instant"], manaCost: "{W}", colors: ["W"], spell: {id: "s0", text: "You gain 3 life.", targets: [], effects: [{effect: "gainLife", amount: 3}]}},
   "Two Soldiers": {types: ["Sorcery"], manaCost: "{W}", colors: ["W"], spell: {id: "s0", text: "Create two 1/1 white Soldier creature tokens.", targets: [],
     effects: [{effect: "createToken", count: 2, token: {name: "Soldier", types: ["Creature"], subtypes: ["Soldier"], colors: ["W"], power: 1, toughness: 1}}]}},
 };
 const play = (name, setup, steps) => runScenario({name, setup, steps}, index.definition, FIX).state;
+const named = (s, card) => Object.values(s.objects).filter((o) => o.card === card && o.zone === "battlefield");
 
 {
   /* Lifelink in combat is life gained: the Patrician's 1 and the Leech's 2 are 3 this turn. */
@@ -73,8 +75,41 @@ const play = (name, setup, steps) => runScenario({name, setup, steps}, index.def
   ok(conditionProblems({compare: {count: {lifeGainedThisTurn: "you"}, most: 3}}).some((p) => /no key "most"/.test(p)), "or has a key it does not know");
   ok(conditionProblems({compare: {count: {lifeGainedThisTurn: "everyone"}, atLeast: 1}}).some((p) => /"you" or "that player"/.test(p)), "or counts for a player it cannot name");
 }
+{
+  /* Revolt (X5i): each permanent that leaves the battlefield is counted for the player who controlled it as it left --
+     Rob's Bear sacrificed is his, Maya's Bear destroyed by his Bolt is hers -- and the count is gone as a turn begins. */
+  const s = play("left", [at(0, "battlefield", "Hidden Stockpile", "Bear", "Wastes", "Mountain"), at(0, "hand", "Lightning Bolt"), at(1, "battlefield", "Bear")],
+    [{tap: "Wastes"}, {activate: "Hidden Stockpile", sacrifice: "Bear"}, {resolve: true}, {settle: true},
+      {tap: "Mountain"}, {cast: "Lightning Bolt", targets: [{card: "Bear", seat: 1}]}, {resolve: true}]);
+  eq([s.players[0].leftThisTurn, s.players[1].leftThisTurn], [1, 1], "Rob's sacrificed Bear counts for him, Maya's destroyed Bear for her");
+  ok(conditionHolds(s, {compare: {count: {permanentsLeftThisTurn: "you"}, atLeast: 1}}, {controller: 0}), "\"if a permanent left the battlefield under your control this turn\" holds for Rob");
+  const next = play("next turn", [at(0, "battlefield", "Hidden Stockpile", "Bear", "Wastes")],
+    [{tap: "Wastes"}, {activate: "Hidden Stockpile", sacrifice: "Bear"}, {resolve: true}, {settle: true}, {to: {turn: 2, phase: "MAIN1", settle: true}}]);
+  eq(next.players[0].leftThisTurn ?? 0, 0, "and by Maya's turn it is gone");
+  ok(conditionProblems({compare: {count: {permanentsLeftThisTurn: "everyone"}, atLeast: 1}}).some((p) => /"you" or "that player"/.test(p)), "counted for a player it can name only");
+}
+{
+  /* "Whenever a token you control leaves the battlefield" (Nadier's Nightblade): exiled, not only dying. */
+  const s = play("exiled", [at(0, "battlefield", "Nadier's Nightblade", "Plains", "Plains", "Swamp"), at(0, "hand", "Two Soldiers", "Silverquill Charm")],
+    [{tap: "Plains"}, {cast: "Two Soldiers"}, {resolve: true}, {tap: "Plains"}, {tap: "Swamp"},
+      {cast: "Silverquill Charm", modes: [1], targets: [{card: "Soldier"}]}, {resolve: true}, {resolve: true}]);
+  eq([s.players[1].life, s.players[0].life], [39, 41], "a Soldier token exiled leaves the battlefield: Maya loses 1, Rob gains 1");
+}
+{
+  /* "Whenever an opponent casts their second spell each turn" (Monologue Tax): the second, not the first or the third. */
+  const s = play("second spell", [at(0, "battlefield", "Monologue Tax"), at(1, "battlefield", "Plains", "Plains", "Plains"), at(1, "hand", "Big Heal", "Big Heal", "Big Heal")],
+    [{to: {turn: 2, phase: "MAIN1"}}, {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}]);
+  eq(s.stack.length, 1, "Maya's first spell: nothing triggers");
+  const t = play("second spell", [at(0, "battlefield", "Monologue Tax"), at(1, "battlefield", "Plains", "Plains", "Plains"), at(1, "hand", "Big Heal", "Big Heal", "Big Heal")],
+    [{to: {turn: 2, phase: "MAIN1"}}, {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}, {resolve: true}, {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}]);
+  eq(t.stack.length, 2, "her second: Monologue Tax triggers");
+  const u = play("third spell", [at(0, "battlefield", "Monologue Tax"), at(1, "battlefield", "Plains", "Plains", "Plains"), at(1, "hand", "Big Heal", "Big Heal", "Big Heal")],
+    [{to: {turn: 2, phase: "MAIN1"}}, {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}, {resolve: true}, {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}, {resolve: true}, {resolve: true},
+      {tap: "Plains", seat: 1}, {cast: "Big Heal", seat: 1}]);
+  eq([u.stack.length, named(u, "Treasure").length], [1, 1], "her third: nothing more; one Treasure in all");
+}
 eq(missingFor({options: ["CheckSVar", "SVarCompare", "ConditionCheckSVar", "ConditionSVarCompare"], counts: ["LifeYouGainedThisTurn"]}), [],
   "the catalog credits a counted value and a counted comparison, in an ability's condition and an effect's, and life gained this turn");
-for (const name of ["Idol of Oblivion", "Indulging Patrician", "Weathered Wayfarer"]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
+for (const name of ["Idol of Oblivion", "Indulging Patrician", "Weathered Wayfarer", "Hidden Stockpile", "Monologue Tax", "Nadier's Nightblade"]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);
 
-console.log(`engine-turn-records: ${checks} checks passed -- life gained this turn (lifelink in combat too) and tokens made this turn, each player's, cleared as a turn begins; "an opponent controls more lands than you"; a condition that counts and compares.`);
+console.log(`engine-turn-records: ${checks} checks passed -- life gained this turn (lifelink in combat too), tokens made and permanents gone this turn, each player's, cleared as a turn begins; "an opponent controls more lands than you"; a condition that counts and compares; a token leaving; an opponent's second spell.`);
